@@ -367,6 +367,7 @@ function createWindow(options) {
         }
         windows[windowId].window = null;
         delete windows[windowId];
+        clientsChanged();
     });
 
     window.once('ready-to-show', () => {
@@ -570,6 +571,7 @@ app.on('ready', () => {
             window.setTopBrowserView(clients[id].view);
             window.setMenu(clients[id].menu);
             focusClient(window, true);
+            clients[id].view.webContents.once('dom-ready', () => clientsChanged);
             window.webContents.once('dom-ready', () => {
                 window.webContents.send('new-client', { id: id });
             });
@@ -616,6 +618,7 @@ app.on('activate', () => {
             window.setTopBrowserView(clients[id].view);
             window.setMenu(clients[id].menu);
             focusClient(window, true);
+            clients[id].view.webContents.once('dom-ready', () => clientsChanged);
             window.webContents.once('dom-ready', () => {
                 window.webContents.send('new-client', { id: id });
             });
@@ -990,6 +993,7 @@ ipcMain.on('new-client', (event) => {
     windows[windowId].clients.push(id);
     clients[id].parent = window;
     window.webContents.send('new-client', { id: id });
+    clients[id].view.webContents.once('dom-ready', () => clientsChanged);
 });
 
 ipcMain.on('switch-client', (event, id, offset) => {
@@ -1079,6 +1083,7 @@ ipcMain.on('dock-client', (event, id, options) => {
         window.webContents.once('dom-ready', () => {
             window.webContents.send('new-client', { id: id });
             focusClient(window, true);
+            clientsChanged();
         });
         return;
     }
@@ -1106,6 +1111,7 @@ ipcMain.on('dock-client', (event, id, options) => {
         window.webContents.send('new-client', { id: id, index: options.index });
     else
         window.webContents.send('new-client', { id: id });
+    clientsChanged();
     states['manager.html'] = saveWindowState(window);
 });
 
@@ -1329,6 +1335,7 @@ async function removeClient(id) {
     clients[id] = null;
     delete clients[id];
     window.webContents.send('removed-client', id);
+    clientsChanged();
 }
 
 function closeClientWindows(id) {
@@ -1359,6 +1366,14 @@ function setClientWindowsParent(id, parent, oldParent) {
             else if (!oldParent && window.getParentWindow())
                 window.setParentWindow(parent);
         }
+    }
+}
+
+function clientsChanged() {
+    for (clientId in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId))
+            continue;
+        clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, windows[getWindowId(clients[clientId].parent)].clients.length);
     }
 }
 
@@ -2127,6 +2142,7 @@ function loadWindowLayout(file) {
             window.window.setMenu(clients[current].menu);
             if (data.focusedWindow === getWindowId(window))
                 focusClient(window, true);
+            clientsChanged();
         });
     }
     return true;
@@ -2198,6 +2214,7 @@ function createMenu() {
                                     mWindow.setMenu(clients[id].menu);
                                     mWindow.webContents.send('new-client', { id: id });
                                     focusClient(mWindow, true);
+                                    clientsChanged();
                                 });
                             }
                         },
@@ -2220,6 +2237,7 @@ function createMenu() {
                                     mWindow.webContents.send('new-client', { id: id });
                                     clients[id].view.webContents.send('connection-settings', { dev: true });
                                     focusClient(mWindow, true);
+                                    clientsChanged();
                                 });
                             }
                         },
@@ -2259,6 +2277,7 @@ function createMenu() {
                                 window.addBrowserView(clients[id].view);
                                 window.setTopBrowserView(clients[id].view);
                                 window.setMenu(clients[id].menu);
+                                clients[id].view.webContents.once('dom-ready', () => clientsChanged);
                                 window.webContents.once('dom-ready', () => {
                                     window.webContents.send('new-client', { id: id });
                                     focusClient(window, true);
@@ -2297,6 +2316,7 @@ function createMenu() {
                                 window.addBrowserView(clients[id].view);
                                 window.setTopBrowserView(clients[id].view);
                                 window.setMenu(clients[id].menu);
+                                clients[id].view.webContents.once('dom-ready', () => clientsChanged);
                                 window.webContents.once('dom-ready', () => {
                                     window.webContents.send('new-client', { id: id });
                                     clients[id].view.webContents.send('connection-settings', { dev: true });

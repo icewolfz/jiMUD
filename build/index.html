@@ -2791,6 +2791,19 @@
 
         });
 
+        ipcRenderer.on('clients-changed', (event, windows, clients) => {
+            clientsChanged(windows, clients);
+        });
+
+        function clientsChanged(windows, clients) {
+            if (!document.getElementById('drag-grip'))
+                setTimeout(() => { clientsChanged(windows, clients) }, 100);
+            else if (clients === 1 && windows > 1)
+                document.getElementById('drag-grip').style.display = 'inline-block';
+            else
+                document.getElementById('drag-grip').style.display = 'none';
+        }
+
         // eslint-disable-next-line no-unused-vars
         function childClosed(url, name) {
             if (path.basename(url) === 'characters.html')
@@ -3293,7 +3306,7 @@
             <i class="fa fa-edit"></i>
         </a>
     </div>
-    <a href="javascript:void(0)" id="drag-grip" title="Drag grip" draggable="true" class="drag-grip"><span>⠿</span></a>
+    <a href="javascript:void(0)" id="drag-grip" title="Drag grip" draggable="true" class="drag-grip" style="display: none"><span>⠿</span></a>
     <a href="javascript:void(0)" id="bb-scroll-up" class="hidden button"><i class="fa fa-chevron-up"></i></a>
     <a href="javascript:void(0)" id="bb-scroll-down" class="hidden button"><i class="fa fa-chevron-down"></i></a>
     <div id="buttonbar">
