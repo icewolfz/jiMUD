@@ -621,7 +621,7 @@ export class TabStrip extends EventEmitter {
         tab.tab.appendChild(close);
         tab.title.classList.add('title');
         tab.icon.classList.add('icon');
-        tab.title.innerHTML = options.title || '&nbsp';
+        tab.title.innerHTML = options.title;
         tab.title.title = options.tooltip || options.title || '';
         tab.tab.title = options.tooltip || options.title || '';
         if (tab.iconCls) {
@@ -883,7 +883,7 @@ export class TabStrip extends EventEmitter {
         else
             tab = this.getTab(tab);
         if (!tab) return;
-        tab.title.innerHTML = text || '&nbsp';
+        tab.title.innerHTML = text;
         if (!noMenu) return;
         const idx = this.getTabIndex(tab);
         $(`#cm-scroll-dropdown-menu-${idx}-title`).html(text);
