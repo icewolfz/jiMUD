@@ -108,12 +108,12 @@
                 //ipcRenderer.send('dock-client', tab.client, { x: e.screenX - e.clientX, y: e.screenY - e.clientY, clientX: e.clientX, clientY: e.clientY });
             }
         });
-        window.addEventListener('blur', e=> {
+        window.addEventListener('blur', e => {
             console.log('blur');
         });
-        window.addEventListener('focus', e=> {
+        window.addEventListener('focus', e => {
             console.log('focus');
-        });        
+        });
         document.addEventListener('keydown', (e) => {
             console.log(e);
             if (e.key === 'Alt' && _capture) {
@@ -1216,6 +1216,30 @@
                 menubar = new MenubarNavigation(menubarNavs[i]);
             }
         });
+
+        var connectionSettings = {};
+        ipcRenderer.on('connection-settings', (event, options) => {
+            connectionSettings.dev = options.dev;
+            if(options.dev)
+                ipcRenderer.send('update-title', {icon: 'fa fa-code'});
+            else
+                ipcRenderer.send('update-title', {icon: 'disconnected-icon'});
+        });
+
+        ipcRenderer.on('change-connection-settings', (event, options) => {
+            connectionSettings.dev = options.dev;
+            if(options.dev)
+                ipcRenderer.send('update-title', {icon: 'text-disconnected-icon fa fa-code'});
+            else
+                ipcRenderer.send('update-title', {icon: 'disconnected-icon'});
+        });     
+        
+        ipcRenderer.on('window-reloaded', event=> {
+            if(connectionSettings.dev)
+                ipcRenderer.send('update-title', {icon: 'text-disconnected-icon fa fa-code'});
+            else
+                ipcRenderer.send('update-title', {icon: 'disconnected-icon'});
+        });
     </script>
     <style>
         html {
@@ -1575,7 +1599,7 @@
     "><span style="transform: rotate(-90deg);display: inline-block;position: absolute;
     left: 7px;
     top: -7px;">⠿</span></div>
-<!--<i class="fa fa-ellipsis-h"></i>-->
+    <!--<i class="fa fa-ellipsis-h"></i>-->
     <script type="text/javascript">
         var drag = document.getElementById('customdrag');
         var _dragStart;

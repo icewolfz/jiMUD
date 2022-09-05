@@ -266,8 +266,10 @@ function createWindow(options) {
         window.webContents.once('dom-ready', () => {
             const windowId = getWindowId(window);
             const cl = windows[windowId].clients.length;
-            for (var idx = 0; idx < cl; idx++)
+            for (var idx = 0; idx < cl; idx++) {
                 window.webContents.send('new-client', { id: windows[windowId].clients[idx], current: windows[windowId].current === windows[windowId].clients[idx] });
+                clients[windows[windowId].clients[idx]].view.webContents.send('window-reloaded');
+            }
             window.webContents.send('switch-client', windows[windowId].current);
         });
     });
@@ -1140,6 +1142,17 @@ ipcMain.on('can-close-all-windows', async (event) => {
 
 ipcMain.on('execute-main', (event, code) => {
     executeScript(code, win);
+});
+
+ipcMain.on('update-title', (event, options) => {
+    for (clientId in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId))
+            continue;
+        if (clients[clientId].view.webContents === event.sender) {
+            clients[clientId].parent.webContents.send('update-title', getClientId(clients[clientId].view), options);
+            break;
+        }
+    }
 });
 
 //bounds, id, data, file
@@ -2275,14 +2288,14 @@ function createMenu() {
                             label: 'Change Current to &Main',
                             id: '',
                             click: (item, mWindow) => {
-                                getActiveClient().view.webContents.send('change-connection-settings', { dev: false });
+                                getActiveClient(mWindow).view.webContents.send('change-connection-settings', { dev: false });
                             }
                         },
                         {
                             label: 'C&hange Current to Development',
                             id: '',
                             click: (item, mWindow) => {
-                                getActiveClient().view.webContents.send('change-connection-settings', { dev: true });
+                                getActiveClient(mWindow).view.webContents.send('change-connection-settings', { dev: true });
                             }
                         }
                     ]

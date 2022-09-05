@@ -93,6 +93,7 @@
                     ipcRenderer.send('switch-client', e.tab.client, tabstrip.height);
                     _current = e.tab.client;
                 }
+                document.title = 'jiMUD - ' + e.tab.title.innerText;
             })
             tabstrip.on('tab-moved', e => {
                 ipcRenderer.send('reorder-client', useDockPanel ? e.panel.client : e.tab.client, e.index, e.oldIndex);
@@ -295,13 +296,34 @@
             }
         });
 
+        ipcRenderer.on('update-title', (event, id, options) => {
+            if (!options) return;
+            const tabs = useDockPanel ? tabstrip.panels : tabstrip.tabs;
+            for (var t = 0, tl = tabs.length; t < tl; t++) {
+                if (tabs[t].client === id) {
+                    if (options.title) {
+                        tabstrip.setTabTitle(options.title, t);
+                        if (!options.tooltip)
+                            tabstrip.setTabTooltip(options.title, t);
+                        if (tabstrip.active === tabs[t])
+                            document.title = 'jiMUD - ' + options.title;
+                    }
+                    if (options.icon)
+                        tabstrip.setTabIconClass(options.icon, t, true);
+                    if (options.tooltip)
+                        tabstrip.setTabTooltip(options.tooltip, t);
+                    break;
+                }
+            }
+        });
+
         function addClient(client) {
             let tab;
             console.log('addClient: ' + client.id);
             if (typeof client.index !== 'undefined' && client.index !== -1 && client.index < _clients.length)
-                tab = useDockPanel ? tabstrip.insertPanel(client.index, '' + client.id, 'disconnected-icon') : tabstrip.insertTab(client.index, '' + client.id, 'disconnected-icon');
+                tab = useDockPanel ? tabstrip.insertPanel(client.index, '' + client.id, client.icon || 'disconnected-icon') : tabstrip.insertTab(client.index, '' + client.id, client.icon || 'disconnected-icon');
             else
-                tab = useDockPanel ? tabstrip.addPanel('' + client.id, 'disconnected-icon') : tabstrip.addTab({ title: '' + client.id, icon: 'disconnected-icon', noActivate: true, silent: true });
+                tab = useDockPanel ? tabstrip.addPanel('' + client.id, client.icon || 'disconnected-icon') : tabstrip.addTab({ title: '' + client.id, icon: client.icon || 'disconnected-icon', noActivate: true, silent: true });
             tab.client = client.id;
             if (client.current)
                 _current = client.id;
@@ -319,7 +341,7 @@
             for (var c = 0, cl = clients.length; c < cl; c++) {
                 const client = clients[c];
                 _clients.push(client.id);
-                let tab = useDockPanel ? tabstrip.createPanel('' + client.id, 'disconnected-icon') : tabstrip.createTab({ title: '' + client.id, icon: 'disconnected-icon', noActivate: true, silent: true });
+                let tab = useDockPanel ? tabstrip.createPanel('' + client.id, client.icon || 'disconnected-icon') : tabstrip.createTab({ title: '' + client.id, icon: client.icon || 'disconnected-icon', noActivate: true, silent: true });
                 tab.client = client.id;
                 tabs.push(tab);
                 if (client.current) {
@@ -332,6 +354,7 @@
             for (var c = 0, cl = clients.length; c < cl; c++) {
                 ipcRenderer.send('update-client', clients[c].id, useDockPanel ? tabstrip.activePane.tabstripHeight : tabstrip.height);
             }
+            document.title = 'jiMUD - ' + tabstrip.active.title.innerText;
         }
 
         function switchToClient(id) {
@@ -384,6 +407,7 @@
 
         .text-disconnected-icon {
             color: red;
+            font-weight: bold;
         }
     </style>
 </head>
