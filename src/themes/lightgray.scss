@@ -16,11 +16,6 @@ body {
     border: 1px solid #{$borderColor};
 }
 
-#display-border {
-    display: none;
-    right: 168px;
-}
-
 #display-split-bar {
     border-top: 1px solid #{$borderColor};
     border-bottom: 1px solid #{$borderColor};

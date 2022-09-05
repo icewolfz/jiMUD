@@ -1,5 +1,5 @@
 $images: "./../../assets";
-$borderColor: "#908271";
+$borderColor: "#655B4D";
 $color: "wheat";
 
 body {
@@ -7,24 +7,14 @@ body {
 }
 
 #display {
-    left: 35px;
-    right: 181px;
-    top: 3px;
-    bottom: 29px;
-    border: 1px solid #{$borderColor};
-}
-
-#display-border {
-    border-image: url(#{$images}/border.png) 0 0 10 0 repeat;
-    border-image-slice: 95 95;
-    border-image-repeat: round;
-    background-color: transparent;
-    border-width: 95px;
     left: 32px;
+    right: 170px;
     top: 0px;
-    right: 178px;
     bottom: 26px;
-    border-style: solid;
+    border: 1px solid #{$borderColor};
+    border: 3px solid transparent;
+    border-image: url(../../assets/border.png);
+    border-image-slice: 30;
 }
 
 #display-split-bar {
@@ -92,14 +82,14 @@ body {
 }
 
 #buttonbar {
-    top: 0;
+    top: 16px;
     left: 0;
     bottom: 0;
 }
 
 #bb-scroll-up {
     left: 0;
-    top: 0;
+    top: 16px;
     background-size: contain;
 }
 

@@ -257,7 +257,6 @@ export class Status extends EventEmitter {
             $('#display').css('right', this._spitterDistance);
             $('#status').css('width', this._spitterDistance - p);
             $('#status-border').css('width', this._spitterDistance);
-            $('#display-border').css('right', this._spitterDistance);
             $('#command').css('right', this._spitterDistance);
         }
         this.emit('split-moved', this._spitterDistance);

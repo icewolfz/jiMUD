@@ -32,11 +32,6 @@ body {
     border: 1px solid #{$borderColor};
 }
 
-#display-border {
-    display: none;
-    right: 168px;
-}
-
 #display-split-bar {
     background: #{$background};
     border-top: 1px solid #{$borderColor};

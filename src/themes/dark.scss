@@ -10,15 +10,10 @@ body {
 
 #display {
     left: 36px;
-    right: 170px;
+    right: 168px;
     top: 2px;
     bottom: 29px;
     border: 1px solid #{$borderColor};
-}
-
-#display-border {
-    display: none;
-    right: 168px;
 }
 
 #display-split-bar {

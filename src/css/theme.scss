@@ -239,6 +239,11 @@ button.active.focus {
     vertical-align: middle;
 }
 
+.drag-grip[style*='display: none'] ~ #bb-scroll-up,
+.drag-grip[style*='display: none'] ~ #buttonbar {
+    top: 0;
+}
+
 .drag-grip span {
     transform: rotate(-90deg);
     display: inline-block;
