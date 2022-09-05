@@ -2141,10 +2141,10 @@ function createMenu() {
             id: 'file',
             submenu: [
                 {
-                    label: '&New',
+                    label: '&Connection',
                     submenu: [
                         {
-                            label: '&Connection',
+                            label: '&New',
                             id: 'newConnect',
                             accelerator: 'CmdOrCtrl+Shift+N',
                             click: (item, mWindow) => {
@@ -2166,7 +2166,7 @@ function createMenu() {
                             }
                         },
                         {
-                            label: '&Connection Development',
+                            label: 'New to &Development',
                             id: 'newConnect',
                             click: (item, mWindow) => {
                                 let windowId = getWindowId(mWindow);
@@ -2182,13 +2182,16 @@ function createMenu() {
                                     mWindow.setTopBrowserView(clients[id].view);
                                     mWindow.setMenu(clients[id].menu);
                                     mWindow.webContents.send('new-client', { id: id });
-                                    mWindow.webContents.send('setting', 'dev', true);
+                                    clients[id].view.webContents.send('connection-settings', { dev: true });
                                     focusClient(mWindow, true);
                                 });
                             }
                         },
                         {
-                            label: '&Window',
+                            type: 'separator'
+                        },
+                        {
+                            label: 'New &Window',
                             id: '',
                             accelerator: 'CmdOrCtrl+Alt+N',
                             click: (item, mWindow) => {
@@ -2227,7 +2230,7 @@ function createMenu() {
                             }
                         },
                         {
-                            label: '&Window Development',
+                            label: 'New Window to D&evelopment',
                             id: '',
                             click: (item, mWindow) => {
                                 //save the current states so it has the latest for new window
@@ -2260,9 +2263,26 @@ function createMenu() {
                                 window.setMenu(clients[id].menu);
                                 window.webContents.once('dom-ready', () => {
                                     window.webContents.send('new-client', { id: id });
-                                    window.webContents.send('setting', 'dev', true);
+                                    clients[id].view.webContents.send('connection-settings', { dev: true });
                                     focusClient(window, true);
                                 });
+                            }
+                        },
+                        {
+                            type: 'separator'
+                        },
+                        {
+                            label: 'Change Current to &Main',
+                            id: '',
+                            click: (item, mWindow) => {
+                                getActiveClient().view.webContents.send('change-connection-settings', { dev: false });
+                            }
+                        },
+                        {
+                            label: 'C&hange Current to Development',
+                            id: '',
+                            click: (item, mWindow) => {
+                                getActiveClient().view.webContents.send('change-connection-settings', { dev: true });
                             }
                         }
                     ]
