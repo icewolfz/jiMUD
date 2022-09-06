@@ -376,52 +376,52 @@
                     view = view.split('.');
                     client.options.buttons[view[1]] = !client.options.buttons[view[1]];
                     doUpdate(33);
-                    ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', view[1] + 'button'], checked: client.options.buttons[view[1]] });
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', view[1] + 'button'], options: { checked: client.options.buttons[view[1]] } });
                     break;
                 case 'buttons':
                     client.options.showButtonBar = !client.options.showButtonBar;
                     doUpdate(33);
-                    ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'buttonsvisible'], checked: client.options.showButtonBar });
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'buttonsvisible'], options: { checked: client.options.showButtonBar } });
                     break;
                 case 'status':
                     client.options.showStatus = !client.options.showStatus;
                     doUpdate(33);
-                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'statusvisible'], checked: client.options.showStatus });
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'statusvisible'], options: { checked: client.options.showStatus } });
                     break;
                 case 'lagmeter':
                     client.options.lagMeter = !client.options.lagMeter;
                     doUpdate(33);
-                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'lagmeter'], checked: client.options.lagMeter });
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'lagmeter'], options: { checked: client.options.lagMeter } });
                     break;
                 case 'weather':
                     client.options.showStatusWeather = !client.options.showStatusWeather;
                     doUpdate(33);
-                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'weather'], checked: client.options.showStatusWeather });
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'weather'], options: { checked: client.options.showStatusWeather } });
                     break;
                 case 'limbs':
                     client.options.showStatusLimbs = !client.options.showStatusLimbs;
                     doUpdate(33);
-                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbs'], checked: client.options.showStatusLimbs });
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbs'], options: { checked: client.options.showStatusLimbs } });
                     break;
                 case 'health':
                     client.options.showStatusHealth = !client.options.showStatusHealth;
                     doUpdate(33);
-                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'health'], checked: client.options.showStatusHealth });
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'health'], options: { checked: client.options.showStatusHealth } });
                     break;
                 case 'experience':
                     client.options.showStatusExperience = !client.options.showStatusExperience;
                     doUpdate(33);
-                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'experience'], checked: client.options.showStatusExperience });
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'experience'], options: { checked: client.options.showStatusExperience } });
                     break;
                 case 'partyhealth':
                     client.options.showStatusPartyHealth = !client.options.showStatusPartyHealth;
                     doUpdate(33);
-                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'partyhealth'], checked: client.options.showStatusPartyHealth });
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'partyhealth'], options: { checked: client.options.showStatusPartyHealth } });
                     break;
                 case 'combathealth':
                     client.options.showStatusCombatHealth = !client.options.showStatusCombatHealth;
                     doUpdate(33);
-                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'combathealth'], checked: client.options.showStatusCombatHealth });
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'combathealth'], options: { checked: client.options.showStatusCombatHealth } });
                     break;
                 case 'limbhealth':
                     _status.ac = false;
@@ -699,6 +699,7 @@
                     ipcRenderer.send('set-overlay', 0);
                 client.raise('focus');
                 $('#commandinput').focus();
+                doUpdate(4);
             });
             window.addEventListener('resize', function () {
                 //client.UpdateWindow();
@@ -812,14 +813,14 @@
                 switch (e.data.event) {
                     case 'started':
                         $('#log').addClass('on');
-                        ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: e.data.args });
+                        ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], options: { checked: e.data.args } });
                         break;
                     case 'stopped':
                         $('#log').removeClass('on');
-                        ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: e.data.args });
+                        ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], options: { checked: e.data.args } });
                         break;
                     case 'logging':
-                        ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], checked: e.data.args });
+                        ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], options: { checked: e.data.args } });
                         break;
                     case 'error':
                         client.error(e.data.args);
@@ -872,7 +873,7 @@
                     client.display.clearSelection();
                 }
                 else
-                    ipcRenderer.send('update-menuitem', { menu: ['edit', 'copyHTML'], enabled: client.display.hasSelection });
+                    ipcRenderer.send('update-menuitem', { menu: ['edit', 'copyHTML'], options: { enabled: client.display.hasSelection } });
             });
 
             client.display.on('context-menu', (e) => {
@@ -1129,7 +1130,7 @@
             });
             client.on('profile-updated', (profile, noChanges, type) => {
                 if (!noChanges) {
-                    ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: client.enabledProfiles.indexOf(profile) != -1 });
+                    ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], options: { checked: client.enabledProfiles.indexOf(profile) != -1 } });
                     //only update if buttons changed
                     if (!type || (type & ProfileSaveType.Button) === ProfileSaveType.Button)
                         doUpdate(8);
@@ -1141,7 +1142,7 @@
             });
 
             client.on('profile-toggled', (profile, enabled) => {
-                ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: enabled });
+                ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], options: { checked: enabled } });
                 doUpdate(24);
                 ipcRenderer.send('profile-toggled', profile, enabled);
             });
@@ -1406,7 +1407,7 @@
             });
 
             client.on('scroll-lock', (lock) => {
-                ipcRenderer.send('update-menuitem', { menu: ['view', 'lock'], checked: lock });
+                ipcRenderer.send('update-menuitem', { menu: ['view', 'lock'], options: { checked: lock } });
                 if (lock) {
                     $('#lock').prop('title', 'Unlock display');
                     $('#lock').addClass('on');
@@ -1429,9 +1430,11 @@
                     $('#connect').css('display', 'none');
                     $('#disconnect').css('display', '');
                 }
-                ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: false });
-                ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: true });
-                ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], visible: false });
+                ipcRenderer.send('update-menuitems', [
+                    { menu: ['file', 'connect'], options: { enabled: false } },
+                    { menu: ['file', 'disconnect'], options: { enabled: true } },
+                    { menu: ['window', 'immortal'], options: { visible: false } }
+                ]);
                 $('#immortal').css('display', 'none');
                 ipcRenderer.send('set-overlay', 1);
                 _logger.postMessage({ action: 'connected', args: client.connected });
@@ -1451,8 +1454,10 @@
                     $('#disconnect').css('display', 'none');
                 }
                 autoLoginCounter = 0;
-                ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: true });
-                ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: false });
+                ipcRenderer.send('update-menuitems', [
+                    { menu: ['file', 'connect'], options: { enabled: true } },
+                    { menu: ['file', 'disconnect'], options: { enabled: false } }
+                ]);
                 ipcRenderer.send('set-overlay', 0);
                 ipcRenderer.send('closed');
                 _logger.postMessage({ action: 'connected', args: client.connected });
@@ -1583,7 +1588,7 @@
                       break;
                       */
                     case 'IED.init':
-                        ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], visible: true });
+                        ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], options: { visible: true } });
                         $('#immortal').css('display', 'block');
                         break;
                 }
@@ -1761,8 +1766,10 @@
                 if (client.options.showArmor != _status.ac) {
                     client.options.showArmor = _status.ac;
                     doUpdate(32);
-                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbhealth'], checked: !client.options.showArmor });
-                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbarmor'], checked: client.options.showArmor });
+                    ipcRenderer.send('update-menuitems', [
+                        { menu: ['view', 'status', 'limbsmenu', 'limbhealth'], options: { checked: !client.options.showArmor } },
+                        { menu: ['view', 'status', 'limbsmenu', 'limbarmor'], options: { checked: client.options.showArmor } }
+                    ]);
                 }
             });
             _status.on('split-moved', value => {
@@ -1798,7 +1805,6 @@
                 $('#character-name').text(_charName);
             }
             updateInterface();
-            doUpdate(7);
             _logger.postMessage({
                 action: 'options', args: {
                     path: parseTemplate(client.options.logPath),
@@ -1815,6 +1821,7 @@
             });
             let closeWindow = false;
 
+            /*
             window.onbeforeunload = function (evt) {
                 var choice, count = 0;
                 var windows;
@@ -1931,6 +1938,7 @@
                 ipcRenderer.invoke('window', 'close');
                 return;
             };
+            */
             $('#status').on('contextmenu', (e) => {
                 e.preventDefault();
                 var c = new Menu();
@@ -2205,25 +2213,8 @@
                 showCharacters();
             createWatcher();
             autoConnect();
-            doUpdate(64);
+            doUpdate(71); //1,2,4,65
             client.raise('opened');
-        }
-
-        function initMenu() {
-            /*
-            updateMenuItem({ menu: ['view', 'status', 'statusvisible'], checked: set.showStatus });
-            updateMenuItem({ menu: ['view', 'status', 'weather'], checked: set.showStatusWeather });
-            updateMenuItem({ menu: ['view', 'status', 'limbsmenu', 'limbs'], checked: set.showStatusLimbs });
-            updateMenuItem({ menu: ['view', 'status', 'limbsmenu', 'limbhealth'], checked: !set.showArmor });
-            updateMenuItem({ menu: ['view', 'status', 'limbsmenu', 'limbarmor'], checked: set.showArmor });
-
-            updateMenuItem({ menu: ['view', 'status', 'health'], checked: set.showStatusHealth });
-            updateMenuItem({ menu: ['view', 'status', 'experience'], checked: set.showStatusExperience });
-            updateMenuItem({ menu: ['view', 'status', 'partyhealth'], checked: set.showStatusPartyHealth });
-            updateMenuItem({ menu: ['view', 'status', 'combathealth'], checked: set.showStatusCombatHealth });
-            updateMenuItem({ menu: ['view', 'status', 'lagmeter'], checked: set.lagMeter });
-            updateMenuItem({ menu: ['view', 'buttons'], checked: set.showButtonBar });
-            */
         }
 
         function executeContext(item) {
@@ -2419,26 +2410,40 @@
 
         function updateMenu() {
             doUpdate(16);
+            var menu = [
+                { menu: ['view', 'buttons', 'buttonsvisible'], options: { checked: client.options.showButtonBar } },
+                { menu: ['view', 'status', 'statusvisible'], options: { checked: client.options.showStatus } },
+                { menu: ['view', 'status', 'weather'], options: { checked: client.options.showStatusWeather } },
+                { menu: ['view', 'status', 'lagmeter'], options: { checked: client.options.lagMeter } },
+                { menu: ['view', 'status', 'limbsmenu', 'limbs'], options: { checked: client.options.showStatusLimbs } },
+                { menu: ['view', 'status', 'limbsmenu', 'limbhealth'], options: { checked: !client.options.showArmor } },
+                { menu: ['view', 'status', 'limbsmenu', 'limbarmor'], options: { checked: client.options.showArmor } },
+                { menu: ['view', 'status', 'health'], options: { checked: set.showStatusHealth } },
+                { menu: ['view', 'status', 'experience'], options: { checked: set.showStatusExperience } },
+                { menu: ['view', 'status', 'partyhealth'], options: { checked: set.showStatusPartyHealth } },
+                { menu: ['view', 'status', 'combathealth'], options: { checked: set.showStatusCombatHealth } },
+                { menu: ['view', 'status', 'lagmeter'], options: { checked: set.lagMeter } },
+                { menu: ['view', 'buttons'], options: { checked: set.showButtonBar } },
+                { menu: ['view', 'lock'], options: { checked: client.options.scrollLocked } },
+                { menu: ['view', 'buttons', 'connectbutton'], options: { checked: client.options.buttons.connect } },
+                { menu: ['view', 'buttons', 'preferencesbutton'], options: { checked: client.options.buttons.preferences } },
+                { menu: ['view', 'buttons', 'logbutton'], options: { checked: client.options.buttons.log } },
+                { menu: ['view', 'buttons', 'clearbutton'], options: { checked: client.options.buttons.clear } },
+                { menu: ['view', 'buttons', 'lockbutton'], options: { checked: client.options.buttons.lock } },
+                { menu: ['view', 'buttons', 'mapbutton'], options: { checked: client.options.buttons.map } },
+                { menu: ['view', 'buttons', 'mailbutton'], options: { checked: client.options.buttons.mail } },
+                { menu: ['view', 'buttons', 'composebutton'], options: { checked: client.options.buttons.compose } },
+                { menu: ['view', 'buttons', 'userbutton'], options: { checked: client.options.buttons.user } },
+                { menu: ['file', 'connect'], options: { enabled: !client.connected } },
+                { menu: ['file', 'disconnect'], options: { enabled: client.connected } },
+                { menu: ['file', 'enableParsing'], options: { checked: client.enableParsing } },
+                { menu: ['file', 'enableTriggers'], options: { checked: client.enableTriggers } }
+            ];
             for (var profile in client.profiles.items)
-                ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: client.enabledProfiles.indexOf(profile) != -1 });
-
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'buttonsvisible'], checked: client.options.showButtonBar });
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'statusvisible'], checked: client.options.showStatus });
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'lagmeter'], checked: client.options.lagMeter });
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'lock'], checked: client.options.scrollLocked });
-            ipcRenderer.send('update-menuitem', { menu: ['file', 'connect'], enabled: !client.connected });
-            ipcRenderer.send('update-menuitem', { menu: ['file', 'disconnect'], enabled: client.connected });
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'connectbutton'], checked: client.options.buttons.connect });
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'preferencesbutton'], checked: client.options.buttons.preferences });
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'logbutton'], checked: client.options.buttons.log });
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'clearbutton'], checked: client.options.buttons.clear });
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'lockbutton'], checked: client.options.buttons.lock });
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'mapbutton'], checked: client.options.buttons.map });
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'mailbutton'], checked: client.options.buttons.mail });
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'composebutton'], checked: client.options.buttons.compose });
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'userbutton'], checked: client.options.buttons.user });
-            ipcRenderer.send('update-menuitem', { menu: ['file', 'enableParsing'], checked: client.enableParsing });
-            ipcRenderer.send('update-menuitem', { menu: ['file', 'enableTriggers'], checked: client.enableTriggers });
+                menu.push({ menu: ['profiles', profile], options: { checked: client.enabledProfiles.indexOf(profile) != -1 } });
+            
+            ipcRenderer.send('reset-profiles-menu');
+            ipcRenderer.send('update-menuitems', menu);
             _logger.postMessage({ action: 'logging' });
         }
 
@@ -2952,13 +2957,13 @@
         // eslint-disable-next-line no-unused-vars
         function toggleParsing() {
             client.enableParsing = !client.enableParsing;
-            ipcRenderer.send('update-menuitem', { menu: ['file', 'enableParsing'], checked: client.enableParsing });
+            ipcRenderer.send('update-menuitem', { menu: ['file', 'enableParsing'], options: { checked: client.enableParsing } });
         }
 
         // eslint-disable-next-line no-unused-vars
         function toggleTriggers() {
             client.enableTriggers = !client.enableTriggers;
-            ipcRenderer.send('update-menuitem', { menu: ['file', 'enableTriggers'], checked: client.enableTriggers });
+            ipcRenderer.send('update-menuitem', { menu: ['file', 'enableTriggers'], options: { checked: client.enableTriggers } });
         }
 
         function copyAsHTML() {

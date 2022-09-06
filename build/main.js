@@ -654,8 +654,6 @@ app.on('before-quit', async (e) => {
     }
 });
 
-ipcMain.on('check-for-updates', checkForUpdatesManual);
-
 ipcMain.on('log', (event, raw) => {
     console.log(raw);
 });
@@ -774,6 +772,7 @@ ipcMain.on('get-app-sync', async (event, key, ...args) => {
     }
 });
 
+//#region IPC dialogs
 ipcMain.on('show-dialog-sync', (event, type, ...args) => {
     var sWindow = BrowserWindow.fromWebContents(event.sender);
     if (type === 'showMessageBox')
@@ -795,7 +794,8 @@ ipcMain.handle('show-dialog', (event, type, ...args) => {
             dialog.showOpenDialog(sWindow, ...args).then(resolve).catch(reject);
     });
 });
-
+//#endregion
+//#region IPC Show context menu
 ipcMain.on('show-context-sync', (event, template, options, show, close) => {
     showContext(event, template, options, show, close);
     event.returnValue = true;
@@ -832,6 +832,8 @@ function showContext(event, template, options, show, close) {
     cMenu.popup(options);
 }
 
+//#endregion
+
 ipcMain.on('trash-item', (event, file) => {
     if (!file)
         return;
@@ -841,10 +843,6 @@ ipcMain.on('trash-item', (event, file) => {
 ipcMain.on('trash-item-sync', async (event, file) => {
     await shell.trashItem(file).catch(err => logError(err));
     event.returnValue = true;
-});
-
-ipcMain.on('parseTemplate', (event, str, data) => {
-    event.returnValue = parseTemplate(str, data);
 });
 
 ipcMain.handle('window', (event, action, ...args) => {
@@ -865,9 +863,7 @@ ipcMain.handle('window', (event, action, ...args) => {
     else if (action === 'show')
         current.show();
     else if (action === 'toggle') {
-        if (args && args.length)
-            showSelectedWindow(args[0], args.slice(1));
-        else if (current.isVisible()) {
+        if (current.isVisible()) {
             if (args[0])
                 current.hide();
             else
@@ -888,20 +884,6 @@ ipcMain.handle('window', (event, action, ...args) => {
         current.reload();
     else if (action === 'setIcon')
         current.setIcon(...args);
-    else if (action === 'closeWindows')
-        closeWindows(true, false);
-});
-
-ipcMain.handle('attach-context-event', event => {
-    event.sender.on('context-menu', (e, props) => {
-        executeScriptContents(`executeContextMenu(${JSON.stringify(props)})`, event.sender);
-    });
-});
-
-ipcMain.handle('attach-context-event-prevent', event => {
-    event.sender.on('context-menu', (e, props) => {
-        executeScriptContents(`executeContextMenu(${JSON.stringify(props)})`, event.sender);
-    });
 });
 
 ipcMain.on('window-info', (event, info, id, ...args) => {
@@ -991,6 +973,7 @@ ipcMain.on('inspect', (event, x, y) => {
     event.sender.inspectElement(x || 0, y || 0);
 });
 
+//#region Client creation, docking, and related management
 ipcMain.on('new-client', (event) => {
     let window = BrowserWindow.fromWebContents(event.sender);
     let id = createClient({ bounds: window.getContentBounds() });
@@ -1139,6 +1122,8 @@ ipcMain.on('update-client', (event, id, offset) => {
         });
     }
 });
+
+//#endregion
 
 ipcMain.on('can-close-client', async (event, id) => {
     event.returnValue = await canCloseClient(id);
@@ -1427,6 +1412,10 @@ function executeCloseHooks(window) {
     executeScript('if(typeof closeHidden === "function") closeHidden();', window);
 }
 
+ipcMain.on('parseTemplate', (event, str, data) => {
+    event.returnValue = parseTemplate(str, data);
+});
+
 function parseTemplate(str, data) {
     str = str.replace(/{home}/g, app.getPath('home'));
     str = str.replace(/{path}/g, app.getAppPath());
@@ -1453,6 +1442,7 @@ function parseTemplate(str, data) {
     return str;
 }
 
+//#region File system functions
 function isDirSync(aPath) {
     try {
         return fs.statSync(aPath).isDirectory();
@@ -1485,6 +1475,7 @@ function isFileSync(aPath) {
         }
     }
 }
+//#endregion
 
 function logError(err, skipClient) {
     var msg = '';
@@ -1591,6 +1582,7 @@ function updateJumpList() {
     }
 }
 
+//#region Auto updates
 function createUpdater() {
     const autoUpdater = require('electron-updater').autoUpdater;
     autoUpdater.on('download-progress', progressObj => {
@@ -1744,6 +1736,9 @@ function checkForUpdatesManual() {
     autoUpdater.checkForUpdates();
 }
 
+ipcMain.on('check-for-updates', checkForUpdatesManual);
+//#endregion
+
 function showAbout(mWindow) {
     var b;
     mWindow = mWindow || getActiveWindow();
@@ -1815,38 +1810,8 @@ function showAbout(mWindow) {
     });
 }
 
-// eslint-disable-next-line no-unused-vars
-async function executeScript(script, w, f) {
-    return new Promise((resolve, reject) => {
-        if (!w || !w.webContents) {
-            reject();
-            return;
-        }
-        w.webContents.executeJavaScript(script).then(results => resolve(results)).catch(err => {
-            if (err)
-                logError(err);
-            reject();
-        });
-    });
-    //if (f)
-    //w.webContents.focus();
-}
 
-// eslint-disable-next-line no-unused-vars
-async function executeScriptContents(script, w) {
-    return new Promise((resolve, reject) => {
-        if (!w) {
-            reject();
-            return;
-        }
-        w.executeJavaScript(script).then(results => resolve(results)).catch(err => {
-            if (err)
-                logError(err);
-            reject();
-        });
-    });
-}
-
+//#region Window build/position functions
 function getWindowX(x, w) {
     if (set.fixHiddenWindows) {
         const { width } = screen.getPrimaryDisplay().workAreaSize;
@@ -1936,7 +1901,8 @@ function buildOptions(details, window, settings) {
     }
     return options;
 }
-
+//#endregion
+//#region Window/client query functions
 function getActiveClient(window) {
     if (!window) return clients[focusedClient];
     return clients[windows[getWindowId(window)].current];
@@ -1954,16 +1920,6 @@ function getWindowId(window) {
 function getClientId(client) {
     if (!client) return focusedClient;
     return idMap.get(client);
-}
-
-function focusClient(window, focusWindow) {
-    let client = getActiveClient(window);
-    if (!client) return;
-    if (focusWindow) {
-        client.parent.focus();
-        client.parent.webContents.focus();
-    }
-    client.view.webContents.focus();
 }
 
 function browserViewFromContents(contents) {
@@ -1999,6 +1955,50 @@ function clientFromContents(contents) {
     return null;
 }
 
+//#endregion
+function focusClient(window, focusWindow) {
+    let client = getActiveClient(window);
+    if (!client) return;
+    if (focusWindow) {
+        client.parent.focus();
+        client.parent.webContents.focus();
+    }
+    client.view.webContents.focus();
+}
+
+//#region Execute scripts in window/view
+// eslint-disable-next-line no-unused-vars
+async function executeScript(script, window, focus) {
+    return new Promise((resolve, reject) => {
+        if (!window || !window.webContents) {
+            reject();
+            return;
+        }
+        window.webContents.executeJavaScript(script).then(results => resolve(results)).catch(err => {
+            if (err)
+                logError(err);
+            reject();
+        });
+    });
+    //if (f)
+    //w.webContents.focus();
+}
+
+// eslint-disable-next-line no-unused-vars
+async function executeScriptContents(script, contents) {
+    return new Promise((resolve, reject) => {
+        if (!contents) {
+            reject();
+            return;
+        }
+        contents.executeJavaScript(script).then(results => resolve(results)).catch(err => {
+            if (err)
+                logError(err);
+            reject();
+        });
+    });
+}
+
 // eslint-disable-next-line no-unused-vars
 async function executeScriptClient(script, window, focus) {
     return new Promise(async (resolve, reject) => {
@@ -2008,7 +2008,7 @@ async function executeScriptClient(script, window, focus) {
         }
         const id = windows[getWindowId(window)].current;
         if (!clients[id]) return;
-        clients[id].webContents.executeJavaScript(script).then(results => resolve(results)).catch(err => {
+        clients[id].view.webContents.executeJavaScript(script).then(results => resolve(results)).catch(err => {
             if (err)
                 logError(err);
             reject();
@@ -2020,11 +2020,8 @@ async function executeScriptClient(script, window, focus) {
         }
     });
 }
-
-/**
- * Window layout functions
- */
-
+//#endregion
+//#region window layout systems
 async function saveWindowLayout(file) {
     if (!file)
         file = parseTemplate(path.join('{data}', 'window.layout'));
@@ -2188,11 +2185,8 @@ function restoreWindowState(window, state) {
     if (state.alwaysOnTop)
         window.setAlwaysOnTop(true);
 }
-
-/**
- * Menu related code
- */
-
+//#endregion
+//#region Client window menu code
 function createMenu() {
     var menuTemp = [
         //File
@@ -3208,3 +3202,65 @@ function createMenu() {
 function profileToggle(menuItem, mWindow) {
     executeScriptClient('client.toggleProfile("' + menuItem.label.toLowerCase() + '")', mWindow, true);
 }
+
+ipcMain.on('update-menuitem', (event, menuitem, rebuild) => {
+    updateMenuItem(BrowserWindow.fromWebContents(event.sender), menuitem, rebuild);
+});
+
+ipcMain.on('update-menuitems', (event, menuitems, rebuild) => {
+    updateMenuItems(BrowserWindow.fromWebContents(event.sender), menuitems, rebuild);
+});
+
+ipcMain.on('update-menuitem-all', (event, menuitem, rebuild) => {
+    updateMenuItemAll(menuitem, rebuild);
+});
+
+ipcMain.on('update-menuitems-all', (event, menuitems, rebuild) => {
+    updateMenuItemsAll(menuitems, rebuild);
+});
+
+ipcMain.on('reset-profiles-menu', (event) => {
+    resetProfilesMenu(BrowserWindow.fromWebContents(event.sender));
+});
+
+function resetProfilesMenu(window) {
+    if (!window || !windows[getWindowId(window)].menubar) return;
+    const profiles = windows[getWindowId(window)].menubar.getItem('profiles');
+    profiles.submenu.items.forEach(item => {
+        item.checked = false;
+    });
+}
+
+function updateMenuItem(window, menuitem, rebuild) {
+    if (!window || !windows[getWindowId(window)].menubar) return;
+    windows[getWindowId(window)].menubar.updateItem(menuitem);
+    if (rebuild)
+        windows[getWindowId(windows[window])].menubar.rebuild();
+}
+
+function updateMenuItems(window, menuitems, rebuild) {
+    if (!window || !windows[getWindowId(window)].menubar) return;
+    windows[getWindowId(window)].menubar.updateItems(menuitems);
+    windows[getWindowId(windows[window])].menubar.rebuild();
+}
+
+function updateMenuItemAll(menuitem, rebuild) {
+    for (window in windows) {
+        if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[getWindowId(windows[window])].menubar)
+            continue;
+        windows[getWindowId(windows[window])].menubar.updateItem(menuitem);
+    }
+    if (rebuild)
+        windows[getWindowId(windows[window])].menubar.rebuild();
+}
+
+function updateMenuItemsAll(menuitems, rebuild) {
+    for (window in windows) {
+        if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[getWindowId(windows[window])].menubar)
+            continue;
+        windows[getWindowId(windows[window])].menubar.updateItems(menuitems);
+    }
+    if (rebuild)
+        windows[getWindowId(windows[window])].menubar.rebuild();
+}
+//#endregion

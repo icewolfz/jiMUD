@@ -101,7 +101,7 @@ export class Menubar {
         return item;
     }
 
-    public updateItem(menu: (string | string[]), options?) {
+    public updateItem(menu: (string | string[] | MenuItem), options?) {
         if (this.$busy || (this.$updating & 1) === 1) {
             setTimeout(() => {
                 this.updateItem(menu, options);
@@ -111,11 +111,17 @@ export class Menubar {
             this._updateItem(menu, options);
     }
 
-    private _updateItem(menu: (string | string[]), options, noRebuild?) {
+    private _updateItem(menu: (string | string[] | MenuItem), options?, noRebuild?) {
         let item;
         let items;
         let tItem;
-        items = this.getItem(menu, ItemType.both);
+        //If not a string or an array its a menuitem so convert to local variables for easy processing
+        if (typeof menu !== 'string' && !Array.isArray(menu)) {
+            noRebuild = options;
+            options = menu.options;
+            menu = menu.menu;
+        }
+        items = this.getItem(<string | string[]>menu, ItemType.both);
         if (!items) return;
         item = items[0];
         tItem = items[1];
@@ -183,7 +189,7 @@ export class Menubar {
         let build = false;
         for (let m = 0; m < ml; m++) {
             items = this.getItem(menuitems[m].menu, ItemType.both);
-            if (!items) return;
+            if (!items) continue;
             const options = menuitems[m].options;
             item = items[0];
             tItem = items[1];
@@ -272,7 +278,7 @@ export class Menubar {
         if (!type) return;
         this.$updating |= type;
         //no updates or already running so wait until it finishes
-        if (this.$updating === 0 || this.timer === 0)
+        if (this.$updating === 0 || this.timer !== 0)
             return;
         let upFun = () => {
             this.timer = 0;
