@@ -250,6 +250,12 @@ function createWindow(options) {
 
     window.on('focus', () => {
         focusedWindow = getWindowId(window);
+        window.webContents.send('focus');
+    });
+
+    window.on('blur', () => {
+        if (window && !window.isDestroyed() && window.webContents)
+            window.webContents.send('blur');
     });
 
     window.on('minimize', () => {
@@ -575,7 +581,7 @@ app.on('ready', () => {
             window.setTopBrowserView(clients[id].view);
             //clients[id].menu.window = window;
             //window.setMenu(clients[id].menu);
-            focusClient(window, true);
+            focusWindow(window, true);
             clients[id].view.webContents.once('dom-ready', () => clientsChanged);
             window.webContents.once('dom-ready', () => {
                 window.webContents.send('new-client', { id: id });
@@ -623,7 +629,7 @@ app.on('activate', () => {
             window.setTopBrowserView(clients[id].view);
             //clients[id].menu.window = mWindow;
             //window.setMenu(clients[id].menu);
-            focusClient(window, true);
+            focusWindow(window, true);
             clients[id].view.webContents.once('dom-ready', () => clientsChanged);
             window.webContents.once('dom-ready', () => {
                 window.webContents.send('new-client', { id: id });
@@ -1010,7 +1016,7 @@ ipcMain.on('switch-client', (event, id, offset) => {
         window.setTopBrowserView(clients[id].view);
         //clients[id].menu.window = window;
         //window.setMenu(clients[id].menu);
-        focusClient(window, true);
+        focusWindow(window, true);
     }
 });
 
@@ -1076,7 +1082,7 @@ ipcMain.on('dock-client', (event, id, options) => {
         //window.setMenu(clients[id].menu);
         window.webContents.once('dom-ready', () => {
             window.webContents.send('new-client', { id: id });
-            focusClient(window, true);
+            focusWindow(window, true);
             clientsChanged();
         });
         return;
@@ -1108,8 +1114,25 @@ ipcMain.on('dock-client', (event, id, options) => {
         window.webContents.send('new-client', { id: id, index: options.index });
     else
         window.webContents.send('new-client', { id: id });
+    focusWindow(window, true);
     clientsChanged();
     states['manager.html'] = saveWindowState(window);
+});
+
+ipcMain.on('position-client', (event, id, options) => {
+    if (!clients[id]) return;
+    let window = BrowserWindow.fromWebContents(event.sender);
+    const oldWindow = clients[id].parent;
+    const oldWindowId = getWindowId(oldWindow);
+    if (options && window === oldWindow && windows[oldWindowId].clients.length === 1) {
+        window.setPosition(options.x || 0, options.y || 0);
+    }
+});
+
+ipcMain.on('focus-client', (event, id) => {
+    if (!clients[id]) return;
+    let window = BrowserWindow.fromWebContents(event.sender);
+    focusClient(id);
 });
 
 ipcMain.on('execute-client', (event, id, code) => {
@@ -1969,7 +1992,7 @@ function clientFromContents(contents) {
 }
 
 //#endregion
-function focusClient(window, focusWindow) {
+function focusWindow(window, focusWindow) {
     let client = getActiveClient(window);
     if (!client) return;
     if (focusWindow) {
@@ -1979,6 +2002,15 @@ function focusClient(window, focusWindow) {
     client.view.webContents.focus();
 }
 
+function focusClient(clientId, focusWindow) {
+    if(!clients[clientId]) return;
+    client = clients[clientId];
+    if (focusWindow) {
+        client.parent.focus();
+        client.parent.webContents.focus();
+    }
+    client.view.webContents.focus();
+}
 //#region Execute scripts in window/view
 // eslint-disable-next-line no-unused-vars
 async function executeScript(script, window, focus) {
@@ -2163,7 +2195,7 @@ function loadWindowLayout(file) {
             //clients[current].menu.window = window.window;
             //window.window.setMenu(clients[current].menu);
             if (data.focusedWindow === getWindowId(window))
-                focusClient(window, true);
+                focusWindow(window, true);
             clientsChanged();
         });
     }
@@ -2233,7 +2265,7 @@ function createMenu() {
                                     //clients[id].menu.window = mWindow;
                                     //mWindow.setMenu(clients[id].menu);
                                     mWindow.webContents.send('new-client', { id: id });
-                                    focusClient(mWindow, true);
+                                    focusWindow(mWindow, true);
                                     clientsChanged();
                                 });
                             }
@@ -2257,7 +2289,7 @@ function createMenu() {
                                     //mWindow.setMenu(clients[id].menu);
                                     mWindow.webContents.send('new-client', { id: id });
                                     clients[id].view.webContents.send('connection-settings', { dev: true });
-                                    focusClient(mWindow, true);
+                                    focusWindow(mWindow, true);
                                     clientsChanged();
                                 });
                             }
@@ -2302,7 +2334,7 @@ function createMenu() {
                                 clients[id].view.webContents.once('dom-ready', () => clientsChanged);
                                 window.webContents.once('dom-ready', () => {
                                     window.webContents.send('new-client', { id: id });
-                                    focusClient(window, true);
+                                    focusWindow(window, true);
                                 });
                             }
                         },
@@ -2343,7 +2375,7 @@ function createMenu() {
                                 window.webContents.once('dom-ready', () => {
                                     window.webContents.send('new-client', { id: id });
                                     clients[id].view.webContents.send('connection-settings', { dev: true });
-                                    focusClient(window, true);
+                                    focusWindow(window, true);
                                 });
                             }
                         },
@@ -2553,7 +2585,7 @@ function createMenu() {
                     label: 'Find',
                     accelerator: 'CmdOrCtrl+F',
                     click: (item, mWindow) => {
-                        focusClient(mWindow, true);
+                        focusWindow(mWindow, true);
                         executeScriptClient('client.display.showFind()', mWindow);
                     }
                 },
@@ -2834,7 +2866,7 @@ function createMenu() {
                                     mWindow.webContents.closeDevTools();
                                 else
                                     mWindow.webContents.openDevTools();
-                                focusClient(mWindow);
+                                focusWindow(mWindow);
                             }
                         },
                         {
@@ -2845,7 +2877,7 @@ function createMenu() {
                                     view.webContents.closeDevTools();
                                 else if (view)
                                     view.webContents.openDevTools();
-                                focusClient(mWindow);
+                                focusWindow(mWindow);
                             }
                         },
                         {
@@ -2860,7 +2892,7 @@ function createMenu() {
                                     view.webContents.closeDevTools();
                                 else if (view)
                                     view.webContents.openDevTools();
-                                focusClient(mWindow);
+                                focusWindow(mWindow);
                             }
                         }
                     ]
@@ -3059,7 +3091,7 @@ function createMenu() {
                     label: '&jiMUD website...',
                     click: (item, mWindow) => {
                         shell.openExternal('https://github.com/icewolfz/jiMUD/tree/master/docs', '_blank');
-                        focusClient(mWindow);
+                        focusWindow(mWindow);
                     }
                 },
                 { type: 'separator' },

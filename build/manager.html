@@ -81,7 +81,7 @@
             });
             tabstrip.on('tab-drag-end', e => {
                 //dropped outside of client area so new window if more then 1 tab
-                if (e.event.dataTransfer.items.length === 0 && (e.event.clientX < 0 || e.event.clientY < 0 || e.event.clientX >= document.body.clientHeight || e.event.clientY >= document.body.clientWidth)) {
+                if (e.event.dataTransfer.items.length === 0 && (e.event.clientX < 0 || e.event.clientY < 0 || e.event.clientX >= document.body.clientWidth || e.event.clientY >= document.body.clientHeight)) {
                     e.event.stopPropagation();
                     e.event.preventDefault();
                     var x = e.event.screenX;
@@ -154,6 +154,13 @@
                     ipcRenderer.send('dock-client', tab.client, { x: x, y: y });
                 }
             });
+            window.addEventListener('focus', e => {
+                tabstrip.focused = true;
+                ipcRenderer.send('focus-client', _current);
+            })
+            window.addEventListener('blur', e => {
+                //tabstrip.focused = false;
+            })
             _loading++;
             if (_load.length) {
                 setClients(_load);
@@ -305,7 +312,16 @@
             else
                 document.title = 'jiMUD';
         }
-    </script>
+
+        ipcRenderer.on('focus', event => {
+            tabstrip.focused = true;
+            ipcRenderer.send('focus-client', _current);
+        })
+
+        ipcRenderer.on('blur', event => {
+            tabstrip.focused = false;
+        })
+</script>
 </head>
 
 <body id="client-container">

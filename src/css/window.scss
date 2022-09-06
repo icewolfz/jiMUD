@@ -315,3 +315,80 @@ body {
 .dropdown-menu>li.visible {
     border-right: 3px solid #999;
 }
+
+.cm-tabstrip li.connected {
+    background-color: lighten(rgb(178, 226, 255), 10%) !important;
+    border-color: lighten(rgb(94, 185, 242), 10%) !important;
+    opacity: 1;
+    color: black;
+}
+
+.cm-tabstrip li.connected:hover {
+    background-color: rgb(178, 226, 255) !important;
+    border-color: rgb(94, 185, 242) !important;
+    opacity: 1;
+    color: black;
+}
+
+.cm-tabstrip li.connectednonactive {
+    background-color: lighten(rgb(218, 255, 181), 10%) !important;
+    border-color: lighten(rgb(119, 168, 69), 10%) !important;
+    opacity: 1;
+    color: black;
+}
+
+.cm-tabstrip li.connectednonactive:hover {
+    background-color: rgb(218, 255, 181) !important;
+    border-color: rgb(119, 168, 69) !important;
+    opacity: 1;
+    color: black;
+}
+
+.cm-tabstrip li.disconnected {
+    background-color:lighten(rgb(255, 187, 178), 10%) !important;
+    border-color: lighten(rgb(242, 104, 94), 10%) !important;    
+    opacity: 1;
+    color: black;
+}
+
+.cm-tabstrip li.disconnected:hover {
+    background-color: rgb(255, 187, 178) !important;
+    border-color: rgb(242, 104, 94) !important;    
+    opacity: 1;
+    color: black;
+}
+
+.focused .cm-tabstrip li.active {
+    background-color: rgb(249, 242, 217);
+    border-color: rgb(247, 216, 106);
+    opacity: 1;
+    color: black;
+}
+
+.focused .cm-tabstrip li.connectednonactive.active:hover {
+    background-color: darken(rgb(218, 255, 181), 10%) !important;
+    border-color: darken(rgb(119, 168, 69), 10%) !important;
+    opacity: 1;
+    color: black;
+}
+
+.focused .cm-tabstrip li.connected.active:hover {
+    background-color: darken(rgb(178, 226, 255), 10%) !important;
+    border-color: darken(rgb(94, 185, 242), 10%) !important;
+    opacity: 1;
+    color: black;
+}
+
+.focused .cm-tabstrip li.disconnected.active:hover {
+    background-color: darken(rgb(255, 187, 178), 10%) !important;
+    border-color: darken(rgb(242, 104, 94), 10%) !important;
+    opacity: 1;
+    color: black;
+}
+
+.focused .cm-tabstrip li.active:hover {
+    background-color: darken(rgb(249, 242, 217), 10%);
+    border-color: darken(rgb(247, 216, 106), 10%);
+    opacity: 1;
+    color: black;
+}

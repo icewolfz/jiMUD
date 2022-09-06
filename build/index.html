@@ -793,10 +793,10 @@
                 e.dataTransfer.dropEffect = 'move';
                 e.dataTransfer.effectAllowed = 'move';
                 var bounds = document.getElementById('drag-grip').getBoundingClientRect();
-                e.dataTransfer.setData('jimud/tab', JSON.stringify({ client: _id, clientX: e.clientX, clientY: e.clientY, offset: { x: Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth)), y: Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight)) } }));
+                e.dataTransfer.setData('jimud/tab', JSON.stringify({ grip: true, client: _id, clientX: e.clientX, clientY: e.clientY, offset: { x: Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth)), y: Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight)) } }));
             });
             document.getElementById('drag-grip').addEventListener("dragend", (e) => {
-                if (e.dataTransfer.items.length === 0 && (e.clientX < 0 || e.clientY < 0 || e.clientX >= document.body.clientHeight || e.clientY >= document.body.clientWidth)) {
+                if (e.dataTransfer.items.length === 0 && (e.clientX < 0 || e.clientY < 0 || e.clientX >= document.body.clientWidth || e.clientY >= document.body.clientHeight)) {
                     e.stopPropagation();
                     e.preventDefault();
                     var x = e.screenX;
@@ -804,7 +804,7 @@
                     var bounds = document.getElementById('drag-grip').getBoundingClientRect();
                     x -= Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth));
                     y -= Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight));
-                    ipcRenderer.send('dock-client', _id, { x: x, y: y });
+                    ipcRenderer.send('position-client', _id, { x: x, y: y });
                 }
             });
             _logger = new Worker('./js/logging.js');
