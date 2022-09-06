@@ -290,6 +290,9 @@ function createWindow(options) {
     window.webContents.on('did-create-window', (childWindow, details) => {
         let frameName = details.frameName;
         let url = details.url;
+        let file = url;
+        if (url.startsWith('file:///' + __dirname.replace(/\\/g, '/')))
+            file = url.substring(__dirname.length + 9);
         require("@electron/remote/main").enable(childWindow.webContents);
         childWindow.removeMenu();
         childWindow.once('ready-to-show', () => {
@@ -321,23 +324,23 @@ function createWindow(options) {
         });
 
         childWindow.on('resize', () => {
-            states[details.url] = saveWindowState(childWindow);
+            states[file] = saveWindowState(childWindow);
         });
 
         childWindow.on('move', () => {
-            states[details.url] = saveWindowState(childWindow);
+            states[file] = saveWindowState(childWindow);
         });
 
         childWindow.on('maximize', () => {
-            states[details.url] = saveWindowState(childWindow);
+            states[file] = saveWindowState(childWindow);
         });
 
         childWindow.on('unmaximize', () => {
-            states[details.url] = saveWindowState(childWindow);
+            states[file] = saveWindowState(childWindow);
         });
 
         childWindow.on('resized', () => {
-            states[details.url] = saveWindowState(childWindow);
+            states[file] = saveWindowState(childWindow);
         });
 
         childWindow.on('closed', () => {
@@ -346,7 +349,7 @@ function createWindow(options) {
             }
         });
         childWindow.on('close', () => {
-            states[details.url] = saveWindowState(childWindow);
+            states[file] = saveWindowState(childWindow);
         })
     });
 
@@ -1001,11 +1004,12 @@ ipcMain.on('switch-client', (event, id, offset) => {
         });
         if (windowId === focusedWindow)
             focusedClient = id;
-        clients[windows[windowId].current].view.webContents.send('deactivated');
+        if (windows[windowId].current && clients[windows[windowId].current])
+            clients[windows[windowId].current].view.webContents.send('deactivated');
         windows[windowId].current = id;
         clients[id].view.webContents.send('activated');
         //window.setBrowserView(clients[id].view);
-        window.setTopBrowserView(clients[id].view);        
+        window.setTopBrowserView(clients[id].view);
         //clients[id].menu.window = window;
         //window.setMenu(clients[id].menu);
         focusClient(window, true);
@@ -1096,7 +1100,8 @@ ipcMain.on('dock-client', (event, id, options) => {
     clients[id].parent.addBrowserView(clients[id].view);
     if (windowId === focusedWindow)
         focusedClient = id;
-    clients[windows[windowId].current].view.webContents.send('deactivated');
+    if (windows[windowId].current && clients[windows[windowId].current])
+        clients[windows[windowId].current].view.webContents.send('deactivated');
     windows[windowId].current = id;
     clients[id].view.webContents.send('activated');
     window.setTopBrowserView(clients[id].view);
@@ -1199,6 +1204,9 @@ function createClient(options) {
     view.webContents.on('did-create-window', (childWindow, details) => {
         let frameName = details.frameName;
         let url = details.url;
+        let file = url;
+        if (url.startsWith('file:///' + __dirname.replace(/\\/g, '/')))
+            file = url.substring(__dirname.length + 9);
         require("@electron/remote/main").enable(childWindow.webContents);
         childWindow.removeMenu();
         childWindow.once('ready-to-show', () => {
@@ -1230,23 +1238,23 @@ function createClient(options) {
         });
 
         childWindow.on('resize', () => {
-            states[details.url] = saveWindowState(childWindow);
+            states[file] = saveWindowState(childWindow);
         });
 
         childWindow.on('move', () => {
-            states[details.url] = saveWindowState(childWindow);
+            states[file] = saveWindowState(childWindow);
         });
 
         childWindow.on('maximize', () => {
-            states[details.url] = saveWindowState(childWindow);
+            states[file] = saveWindowState(childWindow);
         });
 
         childWindow.on('unmaximize', () => {
-            states[details.url] = saveWindowState(childWindow);
+            states[file] = saveWindowState(childWindow);
         });
 
         childWindow.on('resized', () => {
-            states[details.url] = saveWindowState(childWindow);
+            states[file] = saveWindowState(childWindow);
         });
 
         childWindow.on('closed', () => {
@@ -1264,7 +1272,7 @@ function createClient(options) {
         });
 
         childWindow.on('close', () => {
-            states[details.url] = saveWindowState(childWindow);
+            states[file] = saveWindowState(childWindow);
         });
 
         clients[getClientId(view)].windows.push({ window: childWindow, details: details });
@@ -1841,6 +1849,9 @@ function getWindowY(y, h) {
 }
 
 function buildOptions(details, window, settings) {
+    let file = details.url;
+    if (file.startsWith('file:///' + __dirname.replace(/\\/g, '/')))
+        file = file.substring(__dirname.length + 9);
     options = {
         backgroundColor: '#000',
         show: false,
@@ -1868,18 +1879,18 @@ function buildOptions(details, window, settings) {
                 options[feature[0]] = feature[1];
         }
         //not set so all other bounds are missing so use previous saved if found
-        if (typeof options.x === 'undefined' && states[details.url] && states[details.url].bounds) {
-            options.x = states[details.url].bounds.x;
-            options.y = states[details.url].bounds.y;
-            options.width = states[details.url].bounds.width;
-            options.height = states[details.url].bounds.height;
+        if (typeof options.x === 'undefined' && states[file] && states[file].bounds) {
+            options.x = states[file].bounds.x;
+            options.y = states[file].bounds.y;
+            options.width = states[file].bounds.width;
+            options.height = states[file].bounds.height;
         }
     }//not passed so see if any previous openings to use them
-    else if (states[details.url] && states[details.url].bounds) {
-        options.x = states[details.url].bounds.x;
-        options.y = states[details.url].bounds.y;
-        options.width = states[details.url].bounds.width;
-        options.height = states[details.url].bounds.height;
+    else if (states[file] && states[file].bounds) {
+        options.x = states[file].bounds.x;
+        options.y = states[file].bounds.y;
+        options.width = states[file].bounds.width;
+        options.height = states[file].bounds.height;
     }
     if (details.frameName === 'modal') {
         // open window as modal
@@ -2133,7 +2144,10 @@ function loadWindowLayout(file) {
     il = data.windows.length;
     for (i = 0; i < il; i++) {
         const window = windows[data.windows[i].id];
-        const current = data.windows[i].current;
+        let current = data.windows[i].current;
+        //current is wrong for what ever reason so fall back to first client
+        if (!clients[current])
+            current = window.clients[0];
         window.window.webContents.once('ready-to-show', () => {
             for (var c = 0, cl = window.clients.length; c < cl; c++) {
                 const clientId = window.clients[c];
@@ -2146,6 +2160,7 @@ function loadWindowLayout(file) {
                     noUpdate: true
                 };
             }, current));
+
             window.window.setTopBrowserView(clients[current].view);
             //clients[current].menu.window = window.window;
             //window.window.setMenu(clients[current].menu);
