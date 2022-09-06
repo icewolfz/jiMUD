@@ -1611,7 +1611,7 @@
             e.dataTransfer.setData('jimud/tab', JSON.stringify({ client: _id, clientX: e.clientX, clientY: e.clientY, offset: { x: Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth)), y: Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight)) } }));
         });
         drag.addEventListener("dragend", (e) => {
-            if (e.dataTransfer.dropEffect !== 'move' && (e.clientX < 0 || e.clientY < 0 || e.clientX >= document.body.clientHeight || e.clientY >= document.body.clientWidth)) {
+            if (e.event.dataTransfer.items.length === 0 && (e.clientX < 0 || e.clientY < 0 || e.clientX >= document.body.clientHeight || e.clientY >= document.body.clientWidth)) {
                 console.log('Custom drag end');
                 console.log(e);
                 console.log(_dragStart);

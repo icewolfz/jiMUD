@@ -81,11 +81,11 @@
             });
             tabstrip.on('tab-drag-end', e => {
                 //dropped outside of client area so new window if more then 1 tab
-                if (e.event.dataTransfer.dropEffect !== 'move' && (e.event.clientX < 0 || e.event.clientY < 0 || e.event.clientX >= document.body.clientHeight || e.event.clientY >= document.body.clientWidth)) {
+                if (e.event.dataTransfer.items.length === 0 && (e.event.clientX < 0 || e.event.clientY < 0 || e.event.clientX >= document.body.clientHeight || e.event.clientY >= document.body.clientWidth)) {
                     e.event.stopPropagation();
                     e.event.preventDefault();
-                    var x = e.screenX;
-                    var y = e.screenY;
+                    var x = e.event.screenX;
+                    var y = e.event.screenY;
                     var bounds = e.tab.tab.getBoundingClientRect();
                     x -= Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth));
                     y -= Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight));

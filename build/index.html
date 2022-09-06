@@ -796,7 +796,7 @@
                 e.dataTransfer.setData('jimud/tab', JSON.stringify({ client: _id, clientX: e.clientX, clientY: e.clientY, offset: { x: Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth)), y: Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight)) } }));
             });
             document.getElementById('drag-grip').addEventListener("dragend", (e) => {
-                if (e.dataTransfer.dropEffect !== 'move' && (e.clientX < 0 || e.clientY < 0 || e.clientX >= document.body.clientHeight || e.clientY >= document.body.clientWidth)) {
+                if (e.dataTransfer.items.length === 0 && (e.clientX < 0 || e.clientY < 0 || e.clientX >= document.body.clientHeight || e.clientY >= document.body.clientWidth)) {
                     e.stopPropagation();
                     e.preventDefault();
                     var x = e.screenX;
