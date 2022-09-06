@@ -438,7 +438,9 @@ function createWindow(options) {
             _windowID++;
         options.id = _windowID;
     }
-    windows[options.id] = { window: window, clients: [], current: 0 };
+    windows[options.id] = { window: window, clients: [], current: 0, menubar: options.menubar };
+    if (options.menubar)
+        options.menubar.window = window;
     idMap.set(window, options.id);
     return options.id;
 }
@@ -559,7 +561,7 @@ app.on('ready', () => {
         if (!_loaded) {
             //use default unless ignoring layouts
             _loaded = _ignore;
-            let windowId = createWindow();
+            let windowId = createWindow({ menubar: createMenu() });
             let window = windows[windowId].window;
             let id = createClient({ bounds: window.getContentBounds() });
             focusedWindow = windowId;
@@ -570,7 +572,7 @@ app.on('ready', () => {
             //window.setBrowserView(clients[id].view);
             window.addBrowserView(clients[id].view);
             window.setTopBrowserView(clients[id].view);
-            clients[id].menu.window = window;
+            //clients[id].menu.window = window;
             //window.setMenu(clients[id].menu);
             focusClient(window, true);
             clients[id].view.webContents.once('dom-ready', () => clientsChanged);
@@ -608,7 +610,7 @@ app.on('activate', () => {
         if (!_loaded) {
             //use default unless ignoring layouts
             _loaded = _ignore;
-            let windowId = createWindow();
+            let windowId = createWindow({ menubar: createMenu() });
             let window = windows[windowId].window;
             let id = createClient({ bounds: window.getContentBounds() });
             focusedWindow = windowId;
@@ -618,7 +620,7 @@ app.on('activate', () => {
             clients[id].parent = window;
             window.addBrowserView(clients[id].view);
             window.setTopBrowserView(clients[id].view);
-            clients[id].menu.window = mWindow;
+            //clients[id].menu.window = mWindow;
             //window.setMenu(clients[id].menu);
             focusClient(window, true);
             clients[id].view.webContents.once('dom-ready', () => clientsChanged);
@@ -1019,7 +1021,7 @@ ipcMain.on('switch-client', (event, id, offset) => {
         windows[windowId].current = id;
         //window.setBrowserView(clients[id].view);
         window.setTopBrowserView(clients[id].view);
-        clients[id].menu.window = window;
+        //clients[id].menu.window = window;
         //window.setMenu(clients[id].menu);
         focusClient(window, true);
     }
@@ -1069,7 +1071,7 @@ ipcMain.on('dock-client', (event, id, options) => {
             states['manager.html'].bounds.x = options.x || states['manager.html'].bounds.x;
             states['manager.html'].bounds.y = options.y || states['manager.html'].bounds.y;
         }
-        windowId = createWindow();
+        windowId = createWindow({ menubar: createMenu() });
         window = windows[windowId].window;
         //no state so manually set the position
         if (options && !states['manager.html']) {
@@ -1083,7 +1085,7 @@ ipcMain.on('dock-client', (event, id, options) => {
         //window.setBrowserView(clients[id].view);
         window.addBrowserView(clients[id].view);
         window.setTopBrowserView(clients[id].view);
-        clients[id].menu.window = window;
+        //clients[id].menu.window = window;
         //window.setMenu(clients[id].menu);
         window.webContents.once('dom-ready', () => {
             window.webContents.send('new-client', { id: id });
@@ -1308,7 +1310,7 @@ function createClient(options) {
             _clientID++;
         options.id = _clientID;
     }
-    clients[options.id] = { view: view, menu: options.noMenu ? null : createMenu(), windows: [], parent: null, file: options.file !== 'build/index.html' ? options.file : 0 };
+    clients[options.id] = { view: view, windows: [], parent: null, file: options.file !== 'build/index.html' ? options.file : 0 };
     idMap.set(view, options.id);
     executeScript(`if(typeof setId === "function") setId(${options.id});`, clients[options.id].view);
     if (options.data)
@@ -2115,7 +2117,7 @@ function loadWindowLayout(file) {
     //create windows
     let i, il = data.windows.length;
     for (i = 0; i < il; i++) {
-        createWindow({ id: data.windows[i].id, data: { data: data.windows[i].data, state: data.windows[i].state, states: data.states } });
+        createWindow({ id: data.windows[i].id, data: { data: data.windows[i].data, state: data.windows[i].state, states: data.states }, menubar: createMenu() });
         windows[data.windows[i].id].current = data.windows[i].current;
         windows[data.windows[i].id].clients = data.windows[i].clients;
     }
@@ -2144,7 +2146,7 @@ function loadWindowLayout(file) {
                 };
             }, current));
             window.window.setTopBrowserView(clients[current].view);
-            clients[current].menu.window = window.window;
+            //clients[current].menu.window = window.window;
             //window.window.setMenu(clients[current].menu);
             if (data.focusedWindow === getWindowId(window))
                 focusClient(window, true);
@@ -2217,7 +2219,7 @@ function createMenu() {
                                     //mWindow.setBrowserView(clients[id].view);
                                     mWindow.addBrowserView(clients[id].view);
                                     mWindow.setTopBrowserView(clients[id].view);
-                                    clients[id].menu.window = mWindow;
+                                    //clients[id].menu.window = mWindow;
                                     //mWindow.setMenu(clients[id].menu);
                                     mWindow.webContents.send('new-client', { id: id });
                                     focusClient(mWindow, true);
@@ -2240,7 +2242,7 @@ function createMenu() {
                                     //mWindow.setBrowserView(clients[id].view);
                                     mWindow.addBrowserView(clients[id].view);
                                     mWindow.setTopBrowserView(clients[id].view);
-                                    clients[id].menu.window = mWindow;
+                                    //clients[id].menu.window = mWindow;
                                     //mWindow.setMenu(clients[id].menu);
                                     mWindow.webContents.send('new-client', { id: id });
                                     clients[id].view.webContents.send('connection-settings', { dev: true });
@@ -2273,7 +2275,7 @@ function createMenu() {
                                 if (states['manager.html'].bounds.y - states['manager.html'].bounds.height - 10 < 0)
                                     states['manager.html'].bounds.y = 0;
 
-                                let windowId = createWindow();
+                                let windowId = createWindow({ menubar: createMenu() });
                                 let window = windows[windowId].window;
                                 let id = createClient({ bounds: window.getContentBounds() });
                                 focusedWindow = windowId;
@@ -2284,7 +2286,7 @@ function createMenu() {
                                 //window.setBrowserView(clients[id].view);
                                 window.addBrowserView(clients[id].view);
                                 window.setTopBrowserView(clients[id].view);
-                                clients[id].menu.window = window;
+                                //clients[id].menu.window = window;
                                 //window.setMenu(clients[id].menu);
                                 clients[id].view.webContents.once('dom-ready', () => clientsChanged);
                                 window.webContents.once('dom-ready', () => {
@@ -2313,7 +2315,7 @@ function createMenu() {
                                 if (states['manager.html'].bounds.y - states['manager.html'].bounds.height - 10 < 0)
                                     states['manager.html'].bounds.y = 0;
 
-                                let windowId = createWindow();
+                                let windowId = createWindow({ menubar: createMenu() });
                                 let window = windows[windowId].window;
                                 let id = createClient({ bounds: window.getContentBounds() });
                                 focusedWindow = windowId;
@@ -2324,7 +2326,7 @@ function createMenu() {
                                 //window.setBrowserView(clients[id].view);
                                 window.addBrowserView(clients[id].view);
                                 window.setTopBrowserView(clients[id].view);
-                                clients[id].menu.window = window;
+                                //clients[id].menu.window = window;
                                 //window.setMenu(clients[id].menu);
                                 clients[id].view.webContents.once('dom-ready', () => clientsChanged);
                                 window.webContents.once('dom-ready', () => {
