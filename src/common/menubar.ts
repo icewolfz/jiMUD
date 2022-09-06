@@ -1,10 +1,23 @@
-const remote = require('@electron/remote');
-const { Menu } = remote;
+let BrowserWindow, Menu;
+const isRender = typeof process === 'undefined' || !process || process.type === 'renderer';
+if (isRender) {
+    BrowserWindow = require('@electron/remote').BrowserWindow;
+    Menu = require('@electron/remote').menu;
+}
+else {
+    BrowserWindow = require('electron').BrowserWindow;
+    Menu = require('electron').Menu;
+}
 
 export enum ItemType {
     menu = 0,
     raw = 1,
     both = 2
+}
+
+interface MenuItem {
+    menu: string | string[];
+    options;
 }
 
 /**
@@ -16,19 +29,20 @@ export enum ItemType {
  * @class Menubar
  */
 export class Menubar {
-    public window: Electron.BrowserWindow;
+    private _window: Electron.BrowserWindow;
     public menu: any[];
     private _menubar;
     private $cache = {};
     private $updating;
     private $enabled = true;
     private $busy = false;
+    private timer;
 
     constructor(menu: any[], window?: Electron.BrowserWindow) {
         if (!window)
-            this.window = remote.getCurrentWindow();
+            this._window = BrowserWindow.getCurrentWindow ? BrowserWindow.getCurrentWindow() : null;
         else
-            this.window = window;
+            this._window = window;
         this.menu = (menu || []).map(i => {
             i.root = true;
             i.enabled = true;
@@ -157,6 +171,75 @@ export class Menubar {
         }
     }
 
+    public updateItems(menuitems: MenuItem[]) {
+        this._updateItems(menuitems);
+    }
+
+    private _updateItems(menuitems: MenuItem[], noRebuild?) {
+        let item;
+        let items;
+        let tItem;
+        const ml = menuitems.length;
+        let build = false;
+        for (let m = 0; m < ml; m++) {
+            items = this.getItem(menuitems[m].menu, ItemType.both);
+            if (!items) return;
+            const options = menuitems[m].options;
+            item = items[0];
+            tItem = items[1];
+            if (options.hasOwnProperty('enabled')) {
+                if (tItem.hasOwnProperty('rootEnabled'))
+                    tItem.rootEnabled = options.enabled ? true : false;
+                else
+                    item.enabled = options.enabled ? true : false;
+            }
+            if (options.checked != null)
+                item.checked = options.checked ? true : false;
+            if (options.icon != null)
+                item.icon = options.icon;
+            if (options.visible != null)
+                item.visible = options.visible ? true : false;
+            if (options.position != null)
+                item.position = options.position;
+
+            if (!tItem.hasOwnProperty('rootEnabled'))
+                tItem.enabled = item.enabled;
+            tItem.checked = item.checked;
+            tItem.icon = item.icon;
+            tItem.visible = item.visible;
+            tItem.position = item.position;
+            if (options.submenu != null) {
+                tItem.submenu = options.submenu;
+                build = build || true;
+            }
+            if (tItem.root && !tItem.enabled) {
+                tItem.submenu.forEach(f => {
+                    if (f.hasOwnProperty('rootEnabled'))
+                        return f;
+                    if (!f.hasOwnProperty('enabled'))
+                        f.rootEnabled = true;
+                    else
+                        f.rootEnabled = f.enabled || false;
+                    f.enabled = false;
+                    return f;
+                });
+                build = build || true;
+            }
+            else if (tItem.root && tItem.enabled) {
+                tItem.submenu.forEach(f => {
+                    if (!f.hasOwnProperty('rootEnabled')) return f;
+                    f.enabled = f.rootEnabled || false;
+                    delete f.rootEnabled;
+                    return f;
+                });
+                build = build || true;
+            }
+        }
+        if (build && !noRebuild)
+            this.doUpdate(1);
+    }
+
+
     public get enabled() {
         return this.$enabled;
     }
@@ -180,21 +263,41 @@ export class Menubar {
 
     public rebuild() {
         this._menubar = Menu.buildFromTemplate(this.menu);
-        this.window.setMenu(this._menubar);
+        if (this._window)
+            this._window.setMenu(this._menubar);
         this.$cache = {};
     }
 
     private doUpdate(type) {
         if (!type) return;
         this.$updating |= type;
-        if (this.$updating === 0)
+        //no updates or already running so wait until it finishes
+        if (this.$updating === 0 || this.timer === 0)
             return;
-        window.requestAnimationFrame(() => {
+        let upFun = () => {
+            this.timer = 0;
             if ((this.$updating & 1) === 1) {
                 this.rebuild();
                 this.$updating &= ~1;
             }
             this.doUpdate(this.$updating);
-        });
+        };
+        if (typeof window !== 'undefined')
+            this.timer = window.requestAnimationFrame(upFun);
+        else
+            this.timer = setTimeout(upFun, 100);
+    }
+
+    public set window(value) {
+        if (this._window === value) return;
+        //clear old window
+        if (this._window)
+            this._window.setMenu(null);
+        this._window = value;
+        this._window.setMenu(this._menubar);
+    }
+
+    public get window() {
+        return this._window;
     }
 }

@@ -9,6 +9,7 @@ const fs = require('fs');
 const url = require('url');
 const settings = require('./js/settings');
 const { TrayClick } = require('./js/types');
+const { Menubar } = require('./js/menubar');
 
 require('@electron/remote/main').initialize()
 
@@ -569,7 +570,8 @@ app.on('ready', () => {
             //window.setBrowserView(clients[id].view);
             window.addBrowserView(clients[id].view);
             window.setTopBrowserView(clients[id].view);
-            window.setMenu(clients[id].menu);
+            clients[id].menu.window = window;
+            //window.setMenu(clients[id].menu);
             focusClient(window, true);
             clients[id].view.webContents.once('dom-ready', () => clientsChanged);
             window.webContents.once('dom-ready', () => {
@@ -616,7 +618,8 @@ app.on('activate', () => {
             clients[id].parent = window;
             window.addBrowserView(clients[id].view);
             window.setTopBrowserView(clients[id].view);
-            window.setMenu(clients[id].menu);
+            clients[id].menu.window = mWindow;
+            //window.setMenu(clients[id].menu);
             focusClient(window, true);
             clients[id].view.webContents.once('dom-ready', () => clientsChanged);
             window.webContents.once('dom-ready', () => {
@@ -1016,7 +1019,8 @@ ipcMain.on('switch-client', (event, id, offset) => {
         windows[windowId].current = id;
         //window.setBrowserView(clients[id].view);
         window.setTopBrowserView(clients[id].view);
-        window.setMenu(clients[id].menu);
+        clients[id].menu.window = window;
+        //window.setMenu(clients[id].menu);
         focusClient(window, true);
     }
 });
@@ -1079,7 +1083,8 @@ ipcMain.on('dock-client', (event, id, options) => {
         //window.setBrowserView(clients[id].view);
         window.addBrowserView(clients[id].view);
         window.setTopBrowserView(clients[id].view);
-        window.setMenu(clients[id].menu);
+        clients[id].menu.window = window;
+        //window.setMenu(clients[id].menu);
         window.webContents.once('dom-ready', () => {
             window.webContents.send('new-client', { id: id });
             focusClient(window, true);
@@ -2139,7 +2144,8 @@ function loadWindowLayout(file) {
                 };
             }, current));
             window.window.setTopBrowserView(clients[current].view);
-            window.window.setMenu(clients[current].menu);
+            clients[current].menu.window = window.window;
+            //window.window.setMenu(clients[current].menu);
             if (data.focusedWindow === getWindowId(window))
                 focusClient(window, true);
             clientsChanged();
@@ -2211,7 +2217,8 @@ function createMenu() {
                                     //mWindow.setBrowserView(clients[id].view);
                                     mWindow.addBrowserView(clients[id].view);
                                     mWindow.setTopBrowserView(clients[id].view);
-                                    mWindow.setMenu(clients[id].menu);
+                                    clients[id].menu.window = mWindow;
+                                    //mWindow.setMenu(clients[id].menu);
                                     mWindow.webContents.send('new-client', { id: id });
                                     focusClient(mWindow, true);
                                     clientsChanged();
@@ -2233,7 +2240,8 @@ function createMenu() {
                                     //mWindow.setBrowserView(clients[id].view);
                                     mWindow.addBrowserView(clients[id].view);
                                     mWindow.setTopBrowserView(clients[id].view);
-                                    mWindow.setMenu(clients[id].menu);
+                                    clients[id].menu.window = mWindow;
+                                    //mWindow.setMenu(clients[id].menu);
                                     mWindow.webContents.send('new-client', { id: id });
                                     clients[id].view.webContents.send('connection-settings', { dev: true });
                                     focusClient(mWindow, true);
@@ -2276,7 +2284,8 @@ function createMenu() {
                                 //window.setBrowserView(clients[id].view);
                                 window.addBrowserView(clients[id].view);
                                 window.setTopBrowserView(clients[id].view);
-                                window.setMenu(clients[id].menu);
+                                clients[id].menu.window = window;
+                                //window.setMenu(clients[id].menu);
                                 clients[id].view.webContents.once('dom-ready', () => clientsChanged);
                                 window.webContents.once('dom-ready', () => {
                                     window.webContents.send('new-client', { id: id });
@@ -2315,7 +2324,8 @@ function createMenu() {
                                 //window.setBrowserView(clients[id].view);
                                 window.addBrowserView(clients[id].view);
                                 window.setTopBrowserView(clients[id].view);
-                                window.setMenu(clients[id].menu);
+                                clients[id].menu.window = window;
+                                //window.setMenu(clients[id].menu);
                                 clients[id].view.webContents.once('dom-ready', () => clientsChanged);
                                 window.webContents.once('dom-ready', () => {
                                     window.webContents.send('new-client', { id: id });
@@ -3189,72 +3199,10 @@ function createMenu() {
             accelerator: 'CmdOrCtrl+P'
 
         });
-    return Menu.buildFromTemplate(menuTemp);
+    return new Menubar(menuTemp);
+    //return Menu.buildFromTemplate(menuTemp);
 }
 
 function profileToggle(menuItem, mWindow) {
     executeScriptClient('client.toggleProfile("' + menuItem.label.toLowerCase() + '")', mWindow, true);
-}
-
-function updateMenuItem(args) {
-    var item, i = 0, items;
-    var tItem, tItems;
-    if (!menubar || args == null || args.menu == null) return;
-
-    if (!Array.isArray(args.menu))
-        args.menu = args.menu.split('|');
-
-    items = menubar.items;
-    tItems = menuTemp;
-    for (i = 0; i < args.menu.length; i++) {
-        if (!items || items.length === 0) break;
-        for (var m = 0; m < items.length; m++) {
-            if (!items[m].id) continue;
-            if (items[m].id === args.menu[i]) {
-                item = items[m];
-                tItem = tItems[m];
-                if (item.submenu) {
-                    items = item.submenu.items;
-                    tItems = tItem.submenu;
-                }
-                else
-                    items = null;
-                break;
-            }
-        }
-    }
-    if (!item)
-        return;
-    if (args.enabled != null)
-        item.enabled = args.enabled ? true : false;
-    if (args.checked != null)
-        item.checked = args.checked ? true : false;
-    if (args.icon != null)
-        item.icon = args.icon;
-    if (args.visible != null)
-        item.visible = args.visible ? true : false;
-    if (args.position != null)
-        item.position = args.position;
-
-    tItem.enabled = item.enabled;
-    tItem.checked = item.checked;
-    tItem.icon = item.icon;
-    tItem.visible = item.visible;
-    tItem.position = item.position;
-}
-
-function loadMenu() {
-    set = settings.Settings.load(global.settingsFile);
-    updateMenuItem({ menu: ['view', 'status', 'statusvisible'], checked: set.showStatus });
-    updateMenuItem({ menu: ['view', 'status', 'weather'], checked: set.showStatusWeather });
-    updateMenuItem({ menu: ['view', 'status', 'limbsmenu', 'limbs'], checked: set.showStatusLimbs });
-    updateMenuItem({ menu: ['view', 'status', 'limbsmenu', 'limbhealth'], checked: !set.showArmor });
-    updateMenuItem({ menu: ['view', 'status', 'limbsmenu', 'limbarmor'], checked: set.showArmor });
-
-    updateMenuItem({ menu: ['view', 'status', 'health'], checked: set.showStatusHealth });
-    updateMenuItem({ menu: ['view', 'status', 'experience'], checked: set.showStatusExperience });
-    updateMenuItem({ menu: ['view', 'status', 'partyhealth'], checked: set.showStatusPartyHealth });
-    updateMenuItem({ menu: ['view', 'status', 'combathealth'], checked: set.showStatusCombatHealth });
-    updateMenuItem({ menu: ['view', 'status', 'lagmeter'], checked: set.lagMeter });
-    updateMenuItem({ menu: ['view', 'buttons'], checked: set.showButtonBar });
 }
