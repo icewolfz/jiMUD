@@ -2408,6 +2408,7 @@
         }
 
         function updateMenu() {
+            if(!client || !client.options) return;
             doUpdate(16);
             var menu = [
                 { menu: ['view', 'buttons', 'buttonsvisible'], options: { checked: client.options.showButtonBar } },
@@ -2417,12 +2418,12 @@
                 { menu: ['view', 'status', 'limbsmenu', 'limbs'], options: { checked: client.options.showStatusLimbs } },
                 { menu: ['view', 'status', 'limbsmenu', 'limbhealth'], options: { checked: !client.options.showArmor } },
                 { menu: ['view', 'status', 'limbsmenu', 'limbarmor'], options: { checked: client.options.showArmor } },
-                { menu: ['view', 'status', 'health'], options: { checked: set.showStatusHealth } },
-                { menu: ['view', 'status', 'experience'], options: { checked: set.showStatusExperience } },
-                { menu: ['view', 'status', 'partyhealth'], options: { checked: set.showStatusPartyHealth } },
-                { menu: ['view', 'status', 'combathealth'], options: { checked: set.showStatusCombatHealth } },
-                { menu: ['view', 'status', 'lagmeter'], options: { checked: set.lagMeter } },
-                { menu: ['view', 'buttons'], options: { checked: set.showButtonBar } },
+                { menu: ['view', 'status', 'health'], options: { checked: client.options.showStatusHealth } },
+                { menu: ['view', 'status', 'experience'], options: { checked: client.options.showStatusExperience } },
+                { menu: ['view', 'status', 'partyhealth'], options: { checked: client.options.showStatusPartyHealth } },
+                { menu: ['view', 'status', 'combathealth'], options: { checked: client.options.showStatusCombatHealth } },
+                { menu: ['view', 'status', 'lagmeter'], options: { checked: client.options.lagMeter } },
+                { menu: ['view', 'buttons'], options: { checked: client.options.showButtonBar } },
                 { menu: ['view', 'lock'], options: { checked: client.options.scrollLocked } },
                 { menu: ['view', 'buttons', 'connectbutton'], options: { checked: client.options.buttons.connect } },
                 { menu: ['view', 'buttons', 'preferencesbutton'], options: { checked: client.options.buttons.preferences } },
