@@ -699,7 +699,6 @@
                     ipcRenderer.send('set-overlay', 0);
                 client.raise('focus');
                 $('#commandinput').focus();
-                doUpdate(4);
             });
             window.addEventListener('resize', function () {
                 //client.UpdateWindow();
@@ -2815,6 +2814,10 @@
 
         ipcRenderer.on('clients-changed', (event, windows, clients) => {
             clientsChanged(windows, clients);
+        });
+
+        ipcRenderer.on('activated', event => {
+            doUpdate(4);
         });
 
         function clientsChanged(windows, clients) {
