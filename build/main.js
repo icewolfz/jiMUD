@@ -1155,7 +1155,7 @@ ipcMain.on('update-client', (event, id, offset) => {
 //#endregion
 
 //#region Quit/close related functions
-ipcMain.on('quit',quitApp)
+ipcMain.on('quit', quitApp)
 
 async function quitApp() {
     if (await canCloseAllWindows()) {
@@ -2277,6 +2277,9 @@ function loadWindowLayout(file) {
             for (var c = 0, cl = window.clients.length; c < cl; c++) {
                 const clientId = window.clients[c];
                 window.window.addBrowserView(clients[clientId].view);
+                clients[clientId].view.webContents.once('dom-ready', () => {
+                    clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, windows[getWindowId(clients[clientId].parent)].clients.length);
+                });
             }
             window.window.webContents.send('set-clients', window.clients.map(x => {
                 return {
@@ -2291,7 +2294,6 @@ function loadWindowLayout(file) {
             //window.window.setMenu(clients[current].menu);
             if (data.focusedWindow === getWindowId(window))
                 focusWindow(window, true);
-            clientsChanged();
         });
     }
     return true;

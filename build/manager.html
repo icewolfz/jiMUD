@@ -297,6 +297,7 @@
             else
                 tab = tabstrip.addTab({ title: '', icon: client.icon || 'disconnected-icon', noActivate: true, silent: true });
             tab.client = client.id;
+            tab.tab.classList.add('disconnected');
             if (client.current)
                 _current = client.id;
             if (!client.noUpdate)
@@ -312,6 +313,7 @@
                 _clients.push(client.id);
                 let tab = tabstrip.createTab({ title: '', icon: client.icon || 'disconnected-icon', noActivate: true, silent: true });
                 tab.client = client.id;
+                tab.tab.classList.add('disconnected');
                 tabs.push(tab);
                 if (client.current) {
                     _current = client.id;
