@@ -247,7 +247,38 @@
                         if (tabstrip.active === tabs[t])
                             setTitle(options.title);
                     }
-                    if (options.icon)
+                    tabstrip.tabs[t].tab.classList.remove('connected');
+                    tabstrip.tabs[t].tab.classList.remove('disconnected');
+                    tabstrip.tabs[t].tab.classList.remove('connectednonactive');
+                    if (typeof options.icon === 'number') {
+                        switch (options.icon) {
+                            case 1:
+                                tabstrip.setTabIconClass('connected-icon', t, true);
+                                tabstrip.tabs[t].tab.classList.add('connected');
+                                break;
+                            case 2:
+                                tabstrip.setTabIconClass('connectednonactive-icon', t, true);
+                                tabstrip.tabs[t].tab.classList.add('connectednonactive');
+                                break;
+                            case 3:
+                                tabstrip.setTabIconClass('text-disconnected-icon fa fa-code', t, true);
+                                tabstrip.tabs[t].tab.classList.add('disconnected');
+                                break;
+                            case 4:
+                                tabstrip.setTabIconClass('text-connected-icon fa fa-code', t, true);
+                                tabstrip.tabs[t].tab.classList.add('connected');
+                                break;
+                            case 5:
+                                tabstrip.setTabIconClass('text-connectednonactive-icon fa fa-code', t, true);
+                                tabstrip.tabs[t].tab.classList.add('connectednonactive');
+                                break;
+                            default:
+                                tabstrip.setTabIconClass('disconnected-icon', t, true);
+                                tabstrip.tabs[t].tab.classList.add('disconnected');
+                                break;
+                        }
+                    }
+                    else if (options.icon)
                         tabstrip.setTabIconClass(options.icon, t, true);
                     if (options.tooltip)
                         tabstrip.setTabTooltip(options.tooltip, t);
@@ -321,7 +352,7 @@
         ipcRenderer.on('blur', event => {
             tabstrip.focused = false;
         })
-</script>
+    </script>
 </head>
 
 <body id="client-container">

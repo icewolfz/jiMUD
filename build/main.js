@@ -582,7 +582,7 @@ app.on('ready', () => {
             //clients[id].menu.window = window;
             //window.setMenu(clients[id].menu);
             focusWindow(window, true);
-            clients[id].view.webContents.once('dom-ready', () => clientsChanged);
+            clients[id].view.webContents.once('dom-ready', clientsChanged);
             window.webContents.once('dom-ready', () => {
                 window.webContents.send('new-client', { id: id });
             });
@@ -630,7 +630,7 @@ app.on('activate', () => {
             //clients[id].menu.window = mWindow;
             //window.setMenu(clients[id].menu);
             focusWindow(window, true);
-            clients[id].view.webContents.once('dom-ready', () => clientsChanged);
+            clients[id].view.webContents.once('dom-ready', clientsChanged);
             window.webContents.once('dom-ready', () => {
                 window.webContents.send('new-client', { id: id });
             });
@@ -988,7 +988,7 @@ ipcMain.on('new-client', (event) => {
     windows[windowId].clients.push(id);
     clients[id].parent = window;
     window.webContents.send('new-client', { id: id });
-    clients[id].view.webContents.once('dom-ready', () => clientsChanged);
+    clients[id].view.webContents.once('dom-ready', clientsChanged);
 });
 
 ipcMain.on('switch-client', (event, id, offset) => {
@@ -1333,6 +1333,8 @@ function createClient(options) {
     executeScript(`if(typeof setId === "function") setId(${options.id});`, clients[options.id].view);
     if (options.data)
         executeScript('if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify({ data: options.data.data, windows: options.data.windows }) + ');', clients[options.id].view);
+    else
+        executeScript('if(typeof restoreWindow === "function") restoreWindow({data: {}, windows: []});', clients[options.id].view);
     //win.setTopBrowserView(view)    
     //addBrowserView
     //setBrowserView  
@@ -2331,7 +2333,7 @@ function createMenu() {
                                 window.setTopBrowserView(clients[id].view);
                                 //clients[id].menu.window = window;
                                 //window.setMenu(clients[id].menu);
-                                clients[id].view.webContents.once('dom-ready', () => clientsChanged);
+                                clients[id].view.webContents.once('dom-ready', clientsChanged);
                                 window.webContents.once('dom-ready', () => {
                                     window.webContents.send('new-client', { id: id });
                                     focusWindow(window, true);
@@ -2371,7 +2373,7 @@ function createMenu() {
                                 window.setTopBrowserView(clients[id].view);
                                 //clients[id].menu.window = window;
                                 //window.setMenu(clients[id].menu);
-                                clients[id].view.webContents.once('dom-ready', () => clientsChanged);
+                                clients[id].view.webContents.once('dom-ready', clientsChanged);
                                 window.webContents.once('dom-ready', () => {
                                     window.webContents.send('new-client', { id: id });
                                     clients[id].view.webContents.send('connection-settings', { dev: true });
@@ -2394,6 +2396,13 @@ function createMenu() {
                             id: '',
                             click: (item, mWindow) => {
                                 getActiveClient(mWindow).view.webContents.send('change-connection-settings', { dev: true });
+                            }
+                        },
+                        {
+                            label: 'C&hange Current to Default',
+                            id: '',
+                            click: (item, mWindow) => {
+                                getActiveClient(mWindow).view.webContents.send('change-connection-settings', { defaultConnect: true });
                             }
                         }
                     ]
