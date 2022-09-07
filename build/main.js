@@ -62,7 +62,8 @@ argv = require('yargs-parser')(argv, {
         's': ['settings'],
         'mf': ['map', 'm'],
         'c': ['character', 'char'],
-        'pf': ['profiles']
+        'pf': ['profiles'],
+        'e': ['editor']
     },
     configuration: {
         'short-option-groups': false
@@ -1529,20 +1530,6 @@ app.on('ready', () => {
         }
         global.editorOnly = true;
     }
-    if (argv.e) {
-        showCodeEditor();
-        if (Array.isArray(argv.eo)) {
-            al = argv.eo.length;
-            a = 0;
-            for (; a < al; a++) {
-                if (typeof argv.eo[a] === 'string')
-                    openEditor(argv.eo[a]);
-            }
-        }
-        else if (typeof argv.eo === 'string') {
-            openEditor(argv.eo);
-        }
-    }
 
     if (Array.isArray(argv.c)) {
         global.character = argv.c[0];
@@ -1572,6 +1559,21 @@ app.on('ready', () => {
     else {
         createTray();
         createWindow();
+        //only load after as it requires a client window
+        if (argv.e) {
+            showCodeEditor();
+            if (Array.isArray(argv.e)) {
+                al = argv.eo.length;
+                a = 0;
+                for (; a < al; a++) {
+                    if (typeof argv.eo[a] === 'string')
+                        openEditor(argv.eo[a]);
+                }
+            }
+            else if (typeof argv.e === 'string') {
+                openEditor(argv.e);
+            }
+        }
     }
 });
 

@@ -10,6 +10,7 @@
     - Fixed --map/-mf not correctly setting the map file and breaking settings
     - Fixed --profiles/-pf not correctly setting the profile list and breaking settings
     - Fixed --character/-c when more then one is set, now if more then one, only first is used
+    - Fixed --editor/-e to work and load new files in code editor while opening default client
   - Fixed issues with display scrollbar corner in several themes
 - **Changed:**
   - Update electron 19.0.14 to 19.0.15
