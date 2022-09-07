@@ -67,7 +67,7 @@
             });
             tabstrip.on('removed', panel => {
                 if (tabstrip.hideTabstrip && tabstrip.tabs.length === 1) {
-                    ipcRenderer.send('update-client', _current, 0);
+                    ipcRenderer.send('update-client', tabstrip.tabs[0].client, 0);
                 }
             });
             tabstrip.on('activated', e => {
@@ -230,6 +230,9 @@
                 if (tabs[t].client === id) {
                     //remove the tab with out events or you get a loop
                     tabstrip.removeTab(t, true);
+                    if (tabstrip.hideTabstrip && tabstrip.tabs.length === 1) {
+                        ipcRenderer.send('update-client', tabstrip.tabs[0].client, 0);
+                    }
                     break;
                 }
             }
@@ -315,6 +318,8 @@
                     cTab = c;
                 }
             }
+            if (!_current)
+                _current = clients[0];
             tabstrip.addTabs(tabs, cTab);
             tabstrip.refresh();
             for (var c = 0, cl = clients.length; c < cl; c++) {

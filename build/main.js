@@ -1152,8 +1152,20 @@ ipcMain.on('update-client', (event, id, offset) => {
         });
     }
 });
-
 //#endregion
+
+//#region Quit/close related functions
+ipcMain.on('quit',quitApp)
+
+async function quitApp() {
+    if (await canCloseAllWindows()) {
+        if (_loaded && !_saved) {
+            await saveWindowLayout();
+            _saved = true;
+        }
+        app.quit();
+    }
+}
 
 ipcMain.on('can-close-client', async (event, id) => {
     event.returnValue = await canCloseClient(id);
@@ -1167,7 +1179,7 @@ ipcMain.on('can-close-all-client', async (event) => {
 ipcMain.on('can-close-all-windows', async (event) => {
     event.returnValue = await canCloseAllWindows();
 });
-
+//#endregion
 ipcMain.on('execute-main', (event, code) => {
     executeScript(code, win);
 });
@@ -1178,7 +1190,7 @@ ipcMain.on('update-title', (event, options) => {
         client.parent.webContents.send('update-title', getClientId(clients[clientId].view), options);
         if (options && typeof options.icon === 'number') {
             client.overlay = options.icon;
-            updateOverlay(client.parent);
+            updateIcon(client.parent);
         }
     }
 });
@@ -1452,34 +1464,80 @@ function executeCloseHooks(window) {
     executeScript('if(typeof closeHidden === "function") closeHidden();', window);
 }
 
-function updateOverlay(window) {
+function updateIcon(window) {
     //@TODO needs better logic to handle focus/unfocused of multiple windows
     const windowId = getWindowId(window);
     switch (clients[windows[windowId].current].overlay) {
         case 4:
         case 1:
             window.setIcon(path.join(__dirname, '../assets/icons/png/connected2.png'));
+            break;
+        case 5:
+        case 2:
+            window.setIcon(path.join(__dirname, '../assets/icons/png/connectednonactive2.png'));
+            break;
+        case 'code':
+            window.setIcon(path.join(__dirname, '../assets/icons/png/code.png'));
+            break;
+        default:
+            window.setIcon(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
+            break;
+    }
+    updateOverlay();
+}
+
+function updateOverlay() {
+    let overlay = 0;
+    let window = BrowserWindow.getFocusedWindow();
+    let windowId;
+    if (window) {
+        windowId = getWindowId(window);
+        overlay = clients[windows[windowId].current].overlay;
+    }
+    else {
+        //use the last active window as the target to update info
+        window = getActiveWindow().window
+        for (windowId in windows) {
+            if (!Object.prototype.hasOwnProperty.call(windows, windowId))
+                continue;
+            const cl = windows[windowId].clients.length;
+            for (let idx = 0; idx < cl; idx++) {
+                switch (clients[windows[windowId].clients[idx]].overlay) {
+                    case 4:
+                    case 1:
+                        if (overlay < 1)
+                            overlay = 1;
+                        break;
+                    case 5:
+                    case 2:
+                        if (overlay < 2)
+                            overlay = 2;
+                        break;
+                }
+            }
+        }
+    }
+    switch (overlay) {
+        case 4:
+        case 1:
             if (process.platform !== 'linux')
                 window.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connected.png'), 'Connected');
             break;
         case 5:
         case 2:
-            window.setIcon(path.join(__dirname, '../assets/icons/png/connectednonactive2.png'));
             if (process.platform !== 'linux')
                 window.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connectednonactive.png'), 'Received data');
             break;
         case 'code':
-            window.setIcon(path.join(__dirname, '../assets/icons/png/code.png'));
             if (process.platform !== 'linux')
                 window.setOverlayIcon(path.join(__dirname, '../assets/icons/png/codeol.png'), 'Received data');
             break;
         default:
-            window.setIcon(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
             if (process.platform !== 'linux')
                 window.setOverlayIcon(path.join(__dirname, '../assets/icons/png/disconnected.png'), 'Disconnected');
             break;
     }
-    updateTray();
+    //@TODO updateTray when addded
 }
 
 ipcMain.on('parseTemplate', (event, str, data) => {
@@ -2545,15 +2603,7 @@ function createMenu() {
                 {
                     label: 'E&xit',
                     //role: 'quit'
-                    click: async (item, mWindow) => {
-                        if (await canCloseAllWindows()) {
-                            if (_loaded && !_saved) {
-                                await saveWindowLayout();
-                                _saved = true;
-                            }
-                            app.quit();
-                        }
-                    }
+                    click: quitApp
                 }
             ]
         },
