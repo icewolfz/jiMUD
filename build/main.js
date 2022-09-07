@@ -1174,8 +1174,13 @@ ipcMain.on('execute-main', (event, code) => {
 
 ipcMain.on('update-title', (event, options) => {
     const client = clientFromContents(event.sender);
-    if (client)
+    if (client) {
         client.parent.webContents.send('update-title', getClientId(clients[clientId].view), options);
+        if (options && typeof options.icon === 'number') {
+            client.overlay = options.icon;
+            updateOverlay(client.parent);
+        }
+    }
 });
 
 //bounds, id, data, file
@@ -1445,6 +1450,36 @@ function executeCloseHooks(window) {
     executeScript('if(typeof closing === "function") closing();', window);
     executeScript('if(typeof closed === "function") closed();', window);
     executeScript('if(typeof closeHidden === "function") closeHidden();', window);
+}
+
+function updateOverlay(window) {
+    //@TODO needs better logic to handle focus/unfocused of multiple windows
+    const windowId = getWindowId(window);
+    switch (clients[windows[windowId].current].overlay) {
+        case 4:
+        case 1:
+            window.setIcon(path.join(__dirname, '../assets/icons/png/connected2.png'));
+            if (process.platform !== 'linux')
+                window.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connected.png'), 'Connected');
+            break;
+        case 5:
+        case 2:
+            window.setIcon(path.join(__dirname, '../assets/icons/png/connectednonactive2.png'));
+            if (process.platform !== 'linux')
+                window.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connectednonactive.png'), 'Received data');
+            break;
+        case 'code':
+            window.setIcon(path.join(__dirname, '../assets/icons/png/code.png'));
+            if (process.platform !== 'linux')
+                window.setOverlayIcon(path.join(__dirname, '../assets/icons/png/codeol.png'), 'Received data');
+            break;
+        default:
+            window.setIcon(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
+            if (process.platform !== 'linux')
+                window.setOverlayIcon(path.join(__dirname, '../assets/icons/png/disconnected.png'), 'Disconnected');
+            break;
+    }
+    updateTray();
 }
 
 ipcMain.on('parseTemplate', (event, str, data) => {
@@ -2005,7 +2040,7 @@ function focusWindow(window, focusWindow) {
 }
 
 function focusClient(clientId, focusWindow) {
-    if(!clients[clientId]) return;
+    if (!clients[clientId]) return;
     client = clients[clientId];
     if (focusWindow) {
         client.parent.focus();

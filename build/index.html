@@ -960,8 +960,7 @@
                 lst += '<li><a href="#" onclick="showCommandHistory()">Show history window...</a></li>';
                 $('.command-history ul').html(lst);
             });
-
-            ipcRenderer.send('set-overlay', 0);
+            ipcRenderer.send('update-title', { icon: 0 });
             window.addEventListener('blur', function () {
                 active = false;
                 client.raise('blur');
@@ -969,9 +968,9 @@
             window.addEventListener('focus', function () {
                 active = true;
                 if (client && client.connected)
-                    ipcRenderer.send('set-overlay', 1);
+                    ipcRenderer.send('update-title', { icon: client.port === 1035 ? 4 : 1 });
                 else if (client && !client.connecting)
-                    ipcRenderer.send('set-overlay', 0);
+                    ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
                 client.raise('focus');
                 $('#commandinput').focus();
             });
@@ -1711,7 +1710,7 @@
                     { menu: ['window', 'immortal'], options: { visible: false } }
                 ]);
                 $('#immortal').css('display', 'none');
-                ipcRenderer.send('set-overlay', 1);
+                ipcRenderer.send('update-title', { icon: client.port === 1035 ? 4 : 1 });
                 _logger.postMessage({ action: 'connected', args: client.connected });
                 _logger.postMessage({
                     action: 'start', args: {
@@ -1733,7 +1732,7 @@
                     { menu: ['file', 'connect'], options: { enabled: true } },
                     { menu: ['file', 'disconnect'], options: { enabled: false } }
                 ]);
-                ipcRenderer.send('set-overlay', 0);
+                ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
                 ipcRenderer.send('closed');
                 _logger.postMessage({ action: 'connected', args: client.connected });
                 _logger.postMessage({ action: 'stop' });
@@ -1839,7 +1838,7 @@
 
             client.on('received-data', (data) => {
                 if (!active && client.connected && data.value.length > 0)
-                    ipcRenderer.send('set-overlay', 2);
+                    ipcRenderer.send('update-title', { icon: client.port === 1035 ? 5 : 2 });
             });
 
             client.on('parse-done', () => {
@@ -3073,7 +3072,17 @@
 
 
         ipcRenderer.on('connection-settings', (event, options) => {
-
+            if(!options) return;
+            if('defaultConnect' in options) {
+                delete _windowState.data.dev;
+                client.port = client.options.dev ? 1035 : 1030;
+                ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
+            }
+            else if ('dev' in options) {
+                _windowState.data.dev = options.dev;
+                client.port = ((_windowState && 'dev' in _windowState.data) ? (_windowState.data.dev || false) : client.options.dev) ? 1035 : 1030;
+                ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
+            }
         });
 
         ipcRenderer.on('change-connection-settings', (event, options) => {
@@ -3083,7 +3092,7 @@
                 client.port = client.options.dev ? 1035 : 1030;
                 ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
             }
-            if ('dev' in options) {
+            else if ('dev' in options) {
                 _windowState.data.dev = options.dev;
                 client.port = ((_windowState && 'dev' in _windowState.data) ? (_windowState.data.dev || false) : client.options.dev) ? 1035 : 1030;
                 ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
