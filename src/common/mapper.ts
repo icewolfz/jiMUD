@@ -6,7 +6,6 @@ const fs = require('fs');
 const path = require('path');
 const sqlite3 = require('better-sqlite3');
 const PF = require('./../../lib/pathfinding.js');
-import { isFileSync } from './library';
 
 export enum RoomDetails {
     None = 0,
