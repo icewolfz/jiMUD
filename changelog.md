@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.19.0
+
+- **New:**
+  - New Multiple Document Interface:
+    - Allows multiple clients to be docked in one window with tabbed interface or seperate windows
+    - Full drag and drop support between windows of the same instance
+    - Color coded tabs based on client activity
+    - Tab icons based on main or dev connection
+    - Overall reduced memory and performance speed ups
+    - Remembers all last open clients and child windows
+    - Can save current layout to be loaded as it was saved
+    - Changed how child windows interact with clients to improve between window lag
+  - Character manager now uses sqlite as backend
+    - Reduced memory and load times
+    - Tracks connection time
+    - Keeps last connected date
+    - Import old character manager data
+  - Command line arguments:
+    - Added -l/--layout to allow loading of a saved layout
+    - Added il/--ignore-layout to ignore loading last used layout or --layout
+    - Changed -s/--setting to set the global preference file to use
+    - Changed -m/--map to set working global map file for generic new connections
+    - Removed -mf argument to keep argument name scheme flowing
+
 ## 0.19.4
 
 - **Fixed:**

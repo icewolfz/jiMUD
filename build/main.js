@@ -37,7 +37,7 @@ else //not found use native
     argv = process.argv;
 
 argv = require('yargs-parser')(argv, {
-    string: ['data-dir', 's', 'setting', 'm', 'mf', 'map', 'c', 'character', 'pf', 'profiles', 'l', 'layout'],
+    string: ['data-dir', 's', 'setting', 'm', 'map', 'c', 'character', 'pf', 'profiles', 'l', 'layout'],
     boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout'],
     alias: {
         'd': ['debug'],
@@ -46,7 +46,7 @@ argv = require('yargs-parser')(argv, {
         'v': ['version'],
         'no-pd': ['no-portable-dir'],
         's': ['settings'],
-        'mf': ['map', 'm'],
+        'm': ['map'],
         'c': ['character', 'char'],
         'pf': ['profiles'],
         'l': ['layout'],
@@ -69,11 +69,11 @@ if (!process.env.PORTABLE_EXECUTABLE_DIR) {
         console.log('-h, --help                          Print console help');
         console.log('-d, --debug                         Enable dev tools for all windows');
         console.log('-s=[file], --setting=[file]         Override default setting file');
-        console.log('-mf=[file], --map=[file]            Override default map file');
+        console.log('-m=[file], --map=[file]             Override default map file');
         console.log('-c=[name], --character=[name]       Allows you to load/create a character from character database');
         console.log('-pf=[list], --profiles[]            Set which profiles will be enabled, if not found will default');
         console.log('-v, --version                       Print current version');
-        console.log('-e, --e, -e=[file], --e=[file]      Open code editor');
+        console.log('-e, --e, -e=[file], --e=[file]      Open code editor with current/new client');
         console.log('-eo, --eo, -eo=[file], --eo=[file]  Open only the code editor');
         console.log('-no-pd, -no-portable-dir            Do not use portable dir');
         console.log('-data-dir=[file]                    Set a custom directory to store saved data');
@@ -469,11 +469,11 @@ app.on('ready', () => {
             msg += '-h, --help - Print console help\n';
             msg += '-d, --debug - Enable dev tools for all windows\n';
             msg += '-s=[file], --setting=[file] - Override default setting file\n';
-            msg += '-mf=[file], --map=[file] - Override default map file\n';
+            msg += '-m=[file], --map=[file] - Override default map file\n';
             msg += '-c=[name], --character=[name] - Allows you to load/create a character from character database\n';
             msg += '-pf=[list], --profiles[] - Set which profiles will be enabled, if not found will default\n';
             msg += '-v, --version - Print current version\n';
-            msg += '-e, --e, -e=[file], --e=[file] - Open code editor\n';
+            msg += '-e, --e, -e=[file], --e=[file] - Open code editor with current/new client\n';
             msg += '-eo, --eo, -eo=[file], --eo=[file] - Open only the code editor\n';
             msg += '-no-pd, -no-portable-dir - Do not use portable dir\n';
             msg += '-data-dir=[file] - Set a custom directory to store saved data\n';
@@ -486,11 +486,11 @@ app.on('ready', () => {
             console.log('-h, --help                          Print console help');
             console.log('-d, --debug                         Enable dev tools for all windows');
             console.log('-s=[file], --setting=[file]         Override default setting file');
-            console.log('-mf=[file], --map=[file]            Override default map file');
+            console.log('-m=[file], --map=[file]             Override default map file');
             console.log('-c=[name], --character=[name]       Allows you to load/create a character from character database');
             console.log('-pf=[list], --profiles[]            Set which profiles will be enabled, if not found will default');
             console.log('-v, --version                       Print current version');
-            console.log('-e, --e, -e=[file], --e=[file]      Open code editor');
+            console.log('-e, --e, -e=[file], --e=[file]      Open code editor with current/new client');
             console.log('-eo, --eo, -eo=[file], --eo=[file]  Open only the code editor');
             console.log('-no-pd, -no-portable-dir            Do not use portable dir');
             console.log('-data-dir=[file]                    Set a custom directory to store saved data');

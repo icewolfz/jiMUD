@@ -56,12 +56,12 @@ Basic questions answered about jiMUD
 
 - `-h, --help`                                Print console help
 - `-d, --debug`                               Enable dev tools for all windows
-- `-s=[file], --settings=[file]`               Override default setting file
-- `-mf=[file], --map=[file]`                  Override default map file
+- `-s=[file], --settings=[file]`              Override default setting file
+- `-m=[file], --map=[file]`                   Override default map file
 - `-c=[name], --character=[name]`             Allows you to load/create a character from character database
 - `-pf=[list], --profiles[]`                  Set which profiles will be enabled, if not found will default
 - `-v, --version`                             Print current version
-- `-e, --editor, -e=[file], --editor=[file]`  Open code editor
+- `-e, --editor, -e=[file], --editor=[file]`  Open code editor with current/new client
 - `-eo, --eo, -eo=[file], --eo=[file]`        Open only the code editor
 - `-no-pd, -no-portable-dir`                  When using portable exe use default local data directory
 - `-data-dir=[file]`                          Set a custom directory to store saved data
