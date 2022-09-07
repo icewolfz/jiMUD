@@ -1023,7 +1023,7 @@
                         x -= tab.offset.x;
                         y -= tab.offset.y;
                     }
-                    ipcRenderer.send('dock-client', tab.client, { x: x, y: y, clientX: e.clientX, clientY: e.clientY });
+                    ipcRenderer.send('dock-client', tab.client, { x: x, y: y, pid: ipcRenderer.sendSync('get-pid') });
                 }
             });
             document.getElementById('buttonbar').addEventListener('wheel', (e) => {

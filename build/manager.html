@@ -89,7 +89,7 @@
                     var bounds = e.tab.tab.getBoundingClientRect();
                     x -= Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth));
                     y -= Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight));
-                    ipcRenderer.send('dock-client', tabstrip.dragTab.client, { x: x, y: y });
+                    ipcRenderer.send('dock-client', tabstrip.dragTab.client, { x: x, y: y, pid: ipcRenderer.sendSync('get-pid')  });
                 }
             });
             tabstrip.on('tab-drop', e => {
@@ -104,7 +104,7 @@
                     e.event.preventDefault();
                     const tab = JSON.parse(e.event.dataTransfer.getData('jimud/tab'));
                     e.tab.tab.classList.remove('drop');
-                    ipcRenderer.send('dock-client', tab.client, { index: tabstrip.getTabIndex(e.tab) });
+                    ipcRenderer.send('dock-client', tab.client, { index: tabstrip.getTabIndex(e.tab), pid: ipcRenderer.sendSync('get-pid')  });
                 }
             });
 
@@ -151,7 +151,7 @@
                         x -= tab.offset.x;
                         y -= tab.offset.y;
                     }
-                    ipcRenderer.send('dock-client', tab.client, { x: x, y: y });
+                    ipcRenderer.send('dock-client', tab.client, { x: x, y: y, pid: ipcRenderer.sendSync('get-pid')  });
                 }
             });
             window.addEventListener('focus', e => {

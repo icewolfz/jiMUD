@@ -104,8 +104,7 @@
                     x -= tab.offset.x;
                     y -= tab.offset.y;
                 }
-                ipcRenderer.send('dock-client', tab.client, { x: x, y: y, clientX: e.clientX, clientY: e.clientY });
-                //ipcRenderer.send('dock-client', tab.client, { x: e.screenX - e.clientX, y: e.screenY - e.clientY, clientX: e.clientX, clientY: e.clientY });
+                ipcRenderer.send('dock-client', tab.client, { x: x, y: y, pid: ipcRenderer.sendSync('get-pid')  });
             }
         });
         window.addEventListener('blur', e => {
@@ -1622,7 +1621,7 @@
                 var bounds = drag.getBoundingClientRect();
                 x -= Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth));
                 y -= Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight));
-                ipcRenderer.send('dock-client', _id, { x: x, y: y });
+                ipcRenderer.send('dock-client', _id, { x: x, y: y, pid: ipcRenderer.sendSync('get-pid')  });
             }
         });
 

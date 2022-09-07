@@ -740,6 +740,10 @@ ipcMain.on('set-global', (event, key, value) => {
     }
 });
 
+ipcMain.on('get-pid', (event) => {
+    event.returnValue = process.pid;
+});
+
 ipcMain.handle('get-app', async (event, key, ...args) => {
     switch (key) {
         case 'getAppMetrics':
@@ -1037,6 +1041,8 @@ ipcMain.on('reorder-client', (event, id, index, oldIndex) => {
 
 ipcMain.on('dock-client', (event, id, options) => {
     if (!clients[id]) return;
+    //tab from a different instant, can not transfer due to process structure
+    if (options && 'pid' in options && options.pid !== process.pid) return;
     let window = BrowserWindow.fromWebContents(event.sender);
     let windowId = getWindowId(window);
     const oldWindow = clients[id].parent;
