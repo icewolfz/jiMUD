@@ -573,19 +573,20 @@ app.on('ready', () => {
             window.webContents.once('dom-ready', () => {
                 window.webContents.send('new-client', { id: id });
             });
-        //only load after as it requires a client window
-        if (argv.e) {
-            //showCodeEditor();
-            if (Array.isArray(argv.e)) {
-                al = argv.eo.length;
-                a = 0;
-                for (; a < al; a++) {
-                    if (typeof argv.eo[a] === 'string')
-                        openEditor(argv.eo[a]);
+            //only load after as it requires a client window
+            if (argv.e) {
+                //showCodeEditor();
+                if (Array.isArray(argv.e)) {
+                    al = argv.eo.length;
+                    a = 0;
+                    for (; a < al; a++) {
+                        if (typeof argv.eo[a] === 'string')
+                            openEditor(argv.eo[a]);
+                    }
                 }
-            }
-            else if (typeof argv.e === 'string') {
-                openEditor(argv.e);
+                else if (typeof argv.e === 'string') {
+                    openEditor(argv.e);
+                }
             }
         }
     }

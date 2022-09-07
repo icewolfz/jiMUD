@@ -947,6 +947,11 @@
         }
 
         function init() {
+            //state not ready so delay init until it is ready, this ensures correct settings and other needed data if required
+            if (!_windowState) {
+                setTimeout(init, 10);
+                return;
+            }
             $('.dropdown').on('show.bs.dropdown', () => {
                 $('.command-history ul').css('max-height', $('#display').outerHeight() + 'px');
                 $('.command-history ul').css('max-width', ($('#command').outerWidth() - 100) + 'px');
@@ -1124,7 +1129,7 @@
                 else
                     client.error(e);
             };
-            client = new Client($('#display'), $('#commandinput'), ipcRenderer.sendSync('get-global', 'settingsFile'));
+            client = new Client($('#display'), $('#commandinput'), _windowState.data.settings);
 
             client.sendChat = updateChat;
 
@@ -1394,7 +1399,7 @@
 
             client.version = version;
             client.host = 'www.shadowmud.com';
-            client.port = ((_windowState && 'dev' in _windowState.data) ? (_windowState.data.dev || false) : client.options.dev) ? 1035 : 1030;
+            client.port = ('dev' in _windowState.data ? (_windowState.data.dev || false) : client.options.dev) ? 1035 : 1030;
             client.telnet.GMCPSupports.push('Room 1');
             client.telnet.GMCPSupports.push('IED 1');
             client.telnet.GMCPSupports.push('Client.Media 1');
@@ -1837,7 +1842,7 @@
                         else {
                             document.getElementById('disconnect-close').style.display = '';
                             document.getElementById('disconnectDialog').style.height = '239px';
-                        }                        
+                        }
                         $('#disconnectDialog')[0].showModal();
                         $('#disconnectDialogReconnect').focus();
                         break;
@@ -2499,8 +2504,15 @@
             client.display.MatchWord = client.options.find.word;
             client.display.Reverse = client.options.find.reverse;
             client.display.RegularExpression = client.options.find.regex;
-            if (_windowState)
-                restoreWindow(_windowState);
+            ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
+            if (client.options.find.show)
+                client.display.showFind();
+            if (client.options.showCharacterManager)
+                showCharacters();
+            createWatcher();
+            autoConnect();
+            doUpdate(71); //1,2,4,65
+            client.raise('opened');
         }
 
         function executeContext(item) {
@@ -2857,7 +2869,7 @@
 
         ipcRenderer.on('change-options', () => {
             _skipDisconnect = 0;
-            client.settingsFile = ipcRenderer.sendSync('get-global', 'settingsFile');
+            client.settingsFile = _windowState.data.settings;
             autoConnect();
         });
 
@@ -3091,6 +3103,14 @@
 
         ipcRenderer.on('connection-settings', (event, options) => {
             if (!options) return;
+            if (!_windowState) {
+                setTimeout(() => { connectionSettings(options) }, 10);
+                return;
+            }
+            connectionSettings(options);
+        });
+
+        function connectionSettings(options) {
             if ('defaultConnect' in options) {
                 delete _windowState.data.dev;
                 client.port = client.options.dev ? 1035 : 1030;
@@ -3101,7 +3121,7 @@
                 client.port = ((_windowState && 'dev' in _windowState.data) ? (_windowState.data.dev || false) : client.options.dev) ? 1035 : 1030;
                 ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
             }
-        });
+        }
 
         ipcRenderer.on('change-connection-settings', (event, options) => {
             if (!options) return;
@@ -3589,17 +3609,13 @@
         function restoreWindow(data) {
             if (data)
                 _windowState = data;
-            if (!client) return;
-            client.port = ((_windowState && 'dev' in _windowState.data) ? (_windowState.data.dev || false) : client.options.dev) ? 1035 : 1030;
-            ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
-            if (client.options.find.show)
-                client.display.showFind();
-            if (client.options.showCharacterManager)
-                showCharacters();
-            createWatcher();
-            autoConnect();
-            doUpdate(71); //1,2,4,65
-            client.raise('opened');
+            else
+                _windowState = {
+                    data: {
+                        settings: ipcRenderer.sendSync('get-global', 'settingsFile')
+                    }
+
+                };
         }
 
         //#region Id functions
