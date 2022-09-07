@@ -76,6 +76,8 @@ export class Mapper extends EventEmitter {
             this._db.exec('CREATE UNIQUE INDEX IF NOT EXISTS ' + prefix + 'index_id ON Characters (ID);')
                 .exec('CREATE INDEX IF NOT EXISTS ' + prefix + 'Title_id ON Characters (Title);')
                 .exec('CREATE INDEX IF NOT EXISTS ' + prefix + 'Name_id ON Characters (Name);')
+                .exec('CREATE INDEX IF NOT EXISTS ' + prefix + 'Login_id ON Characters (Name, Password);')
+
         }
         catch (err) {
             this.emit('error', err);
@@ -196,6 +198,7 @@ export class Mapper extends EventEmitter {
                     CREATE UNIQUE INDEX IF NOT EXISTS Disk.index_id ON Characters (ID);
                     CREATE INDEX IF NOT EXISTS Disk.Title_id ON Characters (Title);
                     CREATE INDEX IF NOT EXISTS Disk.Name_id ON Characters (Name);
+                    CREATE INDEX IF NOT EXISTS Disk.Login_id ON Characters (Name, Password);
                     VACUUM Disk;
                     DETACH DATABASE Disk
                 `);
