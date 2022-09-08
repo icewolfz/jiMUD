@@ -190,7 +190,34 @@
                             <td colspan="4">
                                 <div class="input-group" style="width:100%;">
                                     <input class="form-control" type="text" id="trigger-pattern">
+                                    <textarea id="trigger-editor-dropdown" class="form-control dropdown-menu" aria-labelledby="trigger-editor-adv" style="resize:both;position: absolute;display: none;border-radius: 4px;padding: 6px 12px;height: 200px"></textarea>
                                     <input type="hidden" id="state">
+                                    <span class="input-group-btn" style="width: 17px;">
+                                        <button id="trigger-editor-adv" style="padding: 6px 4px;width:100%;border-radius: 0;padding-left:4px;padding-right:4px;border-left:0px;" class="btn btn-default" type="button" title="Open advanced pattern editor">
+                                            <i class="fa fa-edit"></i>
+                                        </button>
+                                        <script>
+                                            document.getElementById('trigger-editor-dropdown').addEventListener('blur', (e) => {
+                                                if(e.relatedTarget === document.getElementById('trigger-editor-adv')) return;
+                                                document.getElementById('trigger-pattern').value = document.getElementById('trigger-editor-dropdown').value;
+                                                document.getElementById('trigger-editor-dropdown').style.display = 'none';
+                                                document.getElementById('trigger-pattern').focus();
+                                            });
+                                            document.getElementById('trigger-editor-adv').addEventListener('click', (e) => {
+                                                if (document.getElementById('trigger-editor-dropdown').style.display == 'inline-block') {
+                                                    document.getElementById('trigger-pattern').value = document.getElementById('trigger-editor-dropdown').value;
+                                                    document.getElementById('trigger-editor-dropdown').style.display = 'none';
+                                                    document.getElementById('trigger-pattern').focus();
+                                                }
+                                                else {
+                                                    document.getElementById('trigger-editor-dropdown').value = document.getElementById('trigger-pattern').value;
+                                                    document.getElementById('trigger-editor-dropdown').style.display = 'inline-block';
+                                                    document.getElementById('trigger-editor-dropdown').focus();
+                                                }
+                                            });
+
+                                        </script>
+                                    </span>
                                     <span class="input-group-btn" style="width: 17px;">
                                         <button title="Select state" id="trigger-states" class="btn btn-default" style="width:100%;border-radius: 0;padding-left:4px;padding-right:4px;border-left:0px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-boundary="window">
                                             <span class="caret"></span>
@@ -290,7 +317,7 @@
                                                 <option value="4096" data-type="sub" hidden>Loop Pattern</option>
                                                 <option value="8192" data-type="sub" hidden>Loop Lines</option>
                                                 <option value="16384" data-type="sub" hidden>Duration</option>
-                                                <option value="32768" data-type="sub" hidden>Within Lines</option>                                                
+                                                <option value="32768" data-type="sub" hidden>Within Lines</option>
                                                 <option value="65536" data-type="sub" hidden>Manual</option>
                                                 <option value="131072" data-type="sub" hidden>ReParse</option>
                                                 <option value="262144" data-type="sub" hidden>ReParse Pattern</option>
@@ -334,7 +361,7 @@
                                 <div style="width:100%">
                                     <input class="form-control" style="width: 100%" type="number" id="trigger-params">
                                     <div id="triggers-params-suffix" class="input-group-addon" style="display: none;width: 40px;">ms</div>
-                                </div>                                
+                                </div>
                             </td>
                         </tr>
                         <tr class="panel-adv-body">

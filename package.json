@@ -57,12 +57,12 @@
     "@types/jquery": "^3.5.14",
     "@types/node": "^18.7.15",
     "babel-minify": "^0.5.2",
-    "electron": "^19.0.15",
+    "electron": "^19.0.16",
     "electron-builder": "^23.3.3",
     "electron-rebuild": "^3.2.9",
     "eslint": "^8.23.0",
     "eslint-plugin-html": "^7.1.0",
-    "sass": "^1.54.8"
+    "sass": "^1.54.9"
   },
   "build": {
     "appId": "jiMUD",
