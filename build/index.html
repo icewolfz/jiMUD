@@ -308,6 +308,9 @@
             });
         });
 
+        if (process.platform === 'linux')
+            document.body.classList.add('linux');
+
         Object.defineProperty(window, '$selected', {
             get: function () {
                 if (!client) return '';
