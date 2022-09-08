@@ -16,7 +16,7 @@
     - Reduced memory and load times
     - Tracks connection time
     - Keeps last connected date
-    - Import old character manager data
+    - Import old character manager data and rename old to .bak
   - Command line arguments:
     - Added -l/--layout to allow loading of a saved layout
     - Added il/--ignore-layout to ignore loading last used layout or --layout

@@ -8,6 +8,7 @@ const url = require('url');
 const settings = require('./js/settings');
 const { TrayClick } = require('./js/types');
 const { Menubar } = require('./js/menubar');
+const { Characters } = require('./js/characters');
 
 require('@electron/remote/main').initialize()
 
@@ -110,6 +111,52 @@ let _windowID = 0;
 const idMap = new Map();
 let _saved = false;
 let _loaded = false;
+const _characters = new Characters();
+
+if (isFileSync(path.join(app.getPath('userData'), 'characters.json'))) {
+    const oldCharacters = fs.readFileSync(path.join(app.getPath('userData'), 'characters.json'), 'utf-8');
+    try {
+        //data try and convert and then import any found data
+        if (oldCharacters && oldCharacters.length > 0) {
+            oldCharacters = JSON.parse(oldCharacters);
+            for (title in oldCharacters.characters) {
+                if (!Object.prototype.hasOwnProperty.call(oldCharacters.characters, title))
+                    continue;
+                const character = oldCharacters.characters[title];
+                _characters.addCharacter({
+                    Title: title,
+                    Host: '',
+                    Address: '',
+                    Port: character.dev ? 1035 : 1030,
+                    AutoLoad: oldCharacters.load === title,
+                    Disconnect: character.disconnect,
+                    UseAddress: false,
+                    Days: 0,
+                    Name: character.name,
+                    Password: character.password,
+                    Preferences: character.settings,
+                    Map: character.map,
+                    SessionID: '',
+                    Icon: null,
+                    IconPath: '',
+                    Notes: null,
+                    TotalMilliseconds: 0,
+                    TotalDays: 0,
+                    LastConnected: 0,
+                });
+            }
+            oldCharacters = null;
+        }
+        // Rename the file old file as no longer needed just in case
+        fs.rename(path.join(app.getPath('userData'), 'characters.json'), path.join(app.getPath('userData'), 'characters.json.bak'), (err) => {
+            if (err)
+                logError(err);
+        });
+    }
+    catch (e) {
+        logError(e);
+    }
+}
 
 process.on('uncaughtException', (err) => {
     logError(err);
