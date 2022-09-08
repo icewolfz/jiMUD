@@ -1039,52 +1039,33 @@ ipcMain.handle('window', (event, action, ...args) => {
 
 ipcMain.on('window-info', (event, info, id, ...args) => {
     if (info === "child-count") {
-        var current = BrowserWindow.fromWebContents(event.sender);
-        event.returnValue = current.getChildWindows().length;;
+        event.returnValue = clients[id] ? clients[id].windows.length : 0;
     }
     else if (info === 'child-open') {
-        if (!args || args.length === 0) {
+        if (!clients[id] || !args || args.length === 0) {
             event.returnValue = 0;
             return
         }
-        var current = BrowserWindow.fromWebContents(event.sender);
-        var wins = current.getChildWindows();
-        for (var w = 0, wl = wins.length; w < wl; w++) {
-            if (wins[w] === current || !wins[w].isVisible())
-                continue;
-            if (wins[w].getTitle().startsWith(args[0]) && wins[w].getParentWindow() === current) {
-                event.returnValue = 1;
-                return;
+        for (window in clients[id].windows) {
+            const wl = clients[id].windows.length;
+            for (var idx = 0; idx < wl; id++) {
+                const window = clients[id].windows[idx].window;
+                //call any code hooks in the child windows
+                if (window && !window.isDestroyed() && window.getTitle().startsWith(args[0])) {
+                    event.returnValue = 1;
+                    return;
+                }
             }
         }
         event.returnValue = 0;
     }
     else if (info === 'child-close') {
-        var current = BrowserWindow.fromWebContents(event.sender);
-        var wins = current.getChildWindows();
-        var count = 0;
-        for (var w = 0, wl = wins.length; w < wl; w++) {
-            if (wins[w] === current || !wins[w].isVisible())
-                continue;
-            if (args.length && !wins[w].getTitle().startsWith(args[0])) {
-                //make sure proper close systems called
-                for (let name in windows) {
-                    if (!Object.prototype.hasOwnProperty.call(windows, name) || windows[name].window != wins[w])
-                        continue;
-                    executeCloseHooks(windows[name].window);
-                    set.windows[name] = getWindowState(name, windows[name].window);
-                    set.windows[name].options = copyWindowOptions(name);
-                    windows[name].window = null;
-                    delete windows[name];
-                }
-                wins[w].close();
-                continue;
-            }
-            if (wins[w].getParentWindow() !== current)
-                continue;
-            count++;
+        if (!clients[id])
+            event.returnValue = 0;
+        else {
+            event.returnValue = clients[id].windows.length;
+            closeClientWindows(id);
         }
-        event.returnValue = count;
     }
     else if (info === 'isVisible') {
         var current = BrowserWindow.fromWebContents(event.sender);
@@ -1102,22 +1083,6 @@ ipcMain.on('window-info', (event, info, id, ...args) => {
         var current = BrowserWindow.fromWebContents(event.sender);
         event.returnValue = current ? current.isMinimized() : 0;
     }
-});
-
-ipcMain.on('window-info-by-title', (event, title, info) => {
-    var current = BrowserWindow.getAllWindows().filter(w => w.getTitle() === title);
-    if (!current)
-        event.returnValue = 0;
-    else if (info === 'isVisible')
-        event.returnValue = current ? current.isVisible() : 0;
-    else if (info === 'isEnabled')
-        event.returnValue = current ? current.isEnabled() : 0;
-    else if (info === 'isDevToolsOpened')
-        event.returnValue = current ? current.isDevToolsOpened() : 0;
-    else if (info === 'isMinimized')
-        event.returnValue = current ? current.isMinimized() : 0;
-    else if (info === 'isDestroyed')
-        event.returnValue = current ? current.isDestroyed() : 0;
 });
 
 ipcMain.on('inspect', (event, x, y) => {
@@ -1531,9 +1496,8 @@ async function removeClient(id) {
 }
 
 function closeClientWindows(id) {
-    //@TODO add window state saving when possible
     //no windows so just bail
-    if (clients[id].windows.length === 0) return;
+    if (!clients[id] || clients[id].windows.length === 0) return;
     const wl = clients[id].windows.length;
     for (var idx = 0; idx < wl; id++) {
         const window = clients[id].windows[idx].window;
@@ -2028,8 +1992,6 @@ function getWindowX(x, w) {
 }
 
 function getWindowY(y, h) {
-    if (!set)
-        set = settings.Settings.load(global.settingsFile);
     if (set.fixHiddenWindows) {
         const { height } = screen.getPrimaryDisplay().workAreaSize;
         if (y + h >= height)
@@ -2198,21 +2160,6 @@ async function executeScript(script, window, focus) {
     });
     //if (f)
     //w.webContents.focus();
-}
-
-// eslint-disable-next-line no-unused-vars
-async function executeScriptContents(script, contents) {
-    return new Promise((resolve, reject) => {
-        if (!contents) {
-            reject();
-            return;
-        }
-        contents.executeJavaScript(script).then(results => resolve(results)).catch(err => {
-            if (err)
-                logError(err);
-            reject();
-        });
-    });
 }
 
 // eslint-disable-next-line no-unused-vars
