@@ -1,7 +1,7 @@
 //spell-checker:ignore pathfinding, vscroll, hscroll, AUTOINCREMENT, Arial, isdoor, isclosed, prevroom, islocked, cmds
 //spell-checker:ignore watersource, dirtroad, sanddesert, icesheet, highmountain, pavedroad, rockdesert
 import EventEmitter = require('events');
-import { parseTemplate, copy } from './library';
+import { parseTemplate } from './library';
 const fs = require('fs');
 const path = require('path');
 const sqlite3 = require('better-sqlite3');
@@ -12,6 +12,7 @@ class Character {
     public Host?: string;
     public Address?: string;
     public Port?: number;
+    public Type?: string;
     public AutoLoad?: boolean;
     public Disconnect?: boolean;
     public UseAddress?: boolean;
@@ -38,8 +39,7 @@ export interface CharactersOptions {
 export class Characters extends EventEmitter {
     private _db;
     private _changed: boolean = false;
-    private _cancelImport: boolean = false;
-    private _file = path.join(parseTemplate('{data}'), 'characters.sqlite');
+    private _file = '';
     private _memory: boolean;
     private _memorySavePeriod = 900000;
     private _memoryPeriod;
@@ -57,7 +57,7 @@ export class Characters extends EventEmitter {
             });
         }
     }
-    get mapFile(): string { return this._file; }
+    get file(): string { return this._file; }
 
     get memory(): boolean { return this._memory; }
     set memory(value: boolean) {
@@ -116,6 +116,8 @@ export class Characters extends EventEmitter {
     public initializeDatabase() {
         this.ready = false;
         try {
+            if (!this._file || this._file.length === 0)
+                throw new Error('Database file not set.');
             if (this._memory) {
                 this._db = new sqlite3(':memory:');
                 this._memoryPeriod = setInterval(this.save, this.memorySavePeriod);
@@ -166,15 +168,16 @@ export class Characters extends EventEmitter {
     public addCharacter(character: Character) {
         this._db.prepare('BEGIN').run();
         try {
-            this._db.prepare('INSERT OR REPLACE INTO Character (ID, Title, Host, Address, Port, Type, AutoLoad, Disconnect, UseAddress, Days, Name, Password, Preferences, Map, SessionID, Icon, IconPath, Notes, TotalMilliseconds, TotalDays, LastConnected) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ').run(
+            this._db.prepare('INSERT OR REPLACE INTO Characters (Title, Host, Address, Port, Type, AutoLoad, Disconnect, UseAddress, Days, Name, Password, Preferences, Map, SessionID, Icon, IconPath, Notes, TotalMilliseconds, TotalDays, LastConnected) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ').run(
                 [
                     character.Title,
                     character.Host,
                     character.Address,
                     character.Port,
-                    character.AutoLoad,
-                    character.Disconnect,
-                    character.UseAddress,
+                    character.Type,
+                    character.AutoLoad ? 1 : 0,
+                    character.Disconnect ? 1 : 0,
+                    character.UseAddress ? 1 : 0,
                     character.Days,
                     character.Name,
                     character.Password,
@@ -204,15 +207,16 @@ export class Characters extends EventEmitter {
         if (!character) return;
         this._db.prepare('BEGIN').run();
         try {
-            this._db.prepare('REPLACE INTO Character (Title, Host, Address, Port, Type, AutoLoad, Disconnect, UseAddress, Days, Name, Password, Preferences, Map, SessionID, Icon, IconPath, Notes, TotalMilliseconds, TotalDays, LastConnected) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) WHERE ID = ?').run(
+            this._db.prepare('UPDATE Characters Title = ?, Host = ?, Address = ?, Port = ?, Type = ?, AutoLoad = ?, Disconnect = ?, UseAddress = ?, Days = ?, Name = ?, Password = ?, Preferences = ?, Map = ?, SessionID = ?, Icon = ?, IconPath = ?, Notes = ?, TotalMilliseconds = ?, TotalDays = ?, LastConnected = ? WHERE ID = ?').run(
                 [
                     character.Title,
                     character.Host,
                     character.Address,
                     character.Port,
-                    character.AutoLoad,
-                    character.Disconnect,
-                    character.UseAddress,
+                    character.Type,
+                    character.AutoLoad ? 1 : 0,
+                    character.Disconnect ? 1 : 0,
+                    character.UseAddress ? 1 : 0,
                     character.Days,
                     character.Name,
                     character.Password,

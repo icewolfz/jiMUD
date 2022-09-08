@@ -111,10 +111,10 @@ let _windowID = 0;
 const idMap = new Map();
 let _saved = false;
 let _loaded = false;
-const _characters = new Characters();
+const _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
 
 if (isFileSync(path.join(app.getPath('userData'), 'characters.json'))) {
-    const oldCharacters = fs.readFileSync(path.join(app.getPath('userData'), 'characters.json'), 'utf-8');
+    let oldCharacters = fs.readFileSync(path.join(app.getPath('userData'), 'characters.json'), 'utf-8');
     try {
         //data try and convert and then import any found data
         if (oldCharacters && oldCharacters.length > 0) {
@@ -125,8 +125,6 @@ if (isFileSync(path.join(app.getPath('userData'), 'characters.json'))) {
                 const character = oldCharacters.characters[title];
                 _characters.addCharacter({
                     Title: title,
-                    Host: '',
-                    Address: '',
                     Port: character.dev ? 1035 : 1030,
                     AutoLoad: oldCharacters.load === title,
                     Disconnect: character.disconnect,
@@ -136,16 +134,13 @@ if (isFileSync(path.join(app.getPath('userData'), 'characters.json'))) {
                     Password: character.password,
                     Preferences: character.settings,
                     Map: character.map,
-                    SessionID: '',
-                    Icon: null,
-                    IconPath: '',
-                    Notes: null,
                     TotalMilliseconds: 0,
                     TotalDays: 0,
                     LastConnected: 0,
                 });
             }
             oldCharacters = null;
+            _characters.save();
         }
         // Rename the file old file as no longer needed just in case
         fs.rename(path.join(app.getPath('userData'), 'characters.json'), path.join(app.getPath('userData'), 'characters.json.bak'), (err) => {
@@ -1244,6 +1239,8 @@ ipcMain.on('update-title', (event, options) => {
     if (client) {
         client.parent.webContents.send('update-title', getClientId(clients[clientId].view), options);
         if (options && typeof options.icon === 'number') {
+            //only update if the overlay changed
+            if (client.overlay === options.icon) return;
             client.overlay = options.icon;
             updateIcon(client.parent);
         }
