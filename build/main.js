@@ -495,6 +495,80 @@ function createWindow(options) {
     return options.id;
 }
 
+function createDialog(options) {
+    if (!options)
+        options = {};
+    options.parent = options.parent || getActiveWindow();
+    const bounds = options.parent.getBounds();
+    //check coords first as x and y could be 0 and that returns false
+    if (!('x' in options))
+        options.x = Math.floor(bounds.x + bounds.width / 2 - (options.width || 500) / 2);
+    if (!('y' in options))
+        options.y = Math.floor(bounds.x + bounds.width / 2 - (options.width || 560) / 2);
+    const window = new BrowserWindow({
+        parent: options.parent,
+        modal: false,
+        x: options.x,
+        y: options.y,
+        width: options.width || 500,
+        height: options.height || 560,
+        movable: options.model ? false : true,
+        minimizable: false,
+        maximizable: false,
+        skipTaskbar: true,
+        resizable: options.model ? false : (options.resize || false),
+        title: options.title || 'jiMUD',
+        icon: options.icon || path.join(__dirname, '../assets/icons/png/64x64.png'),
+        webPreferences: {
+            nodeIntegration: true,
+            webviewTag: false,
+            sandbox: false,
+            spellcheck: set ? set.spellchecking : false,
+            enableRemoteModule: true,
+            contextIsolation: false,
+            backgroundThrottling: set ? set.enableBackgroundThrottling : true
+        }
+    });
+    require("@electron/remote/main").enable(window.webContents);
+    window.webContents.on('render-process-gone', (event, details) => {
+        logError(`About render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
+    });
+
+    window.on('unresponsive', () => {
+        dialog.showMessageBox({
+            type: 'info',
+            message: 'Unresponsive',
+            buttons: ['Reopen', 'Keep waiting', 'Close']
+        }).then(result => {
+            if (!window)
+                return;
+            if (result.response === 0) {
+                window.reload();
+                logError('Dialog unresponsive, reload.\n', true);
+            }
+            else if (result.response === 2) {
+                window.destroy();
+            }
+            else
+                logError('Dialog unresponsive, waiting.\n', true);
+        });
+    });
+
+    window.removeMenu();
+    // and load the index.html of the app.
+    window.loadURL(url.format({
+        pathname: options.url || path.join(__dirname, 'blank.html'),
+        protocol: 'file:',
+        slashes: true
+    }));
+
+    window.once('ready-to-show', () => {
+        if (options.show)
+            window.show();
+    });
+    return window;
+}
+
 if (argv['disable-gpu'])
     app.disableHardwareAcceleration();
 
@@ -789,7 +863,7 @@ ipcMain.on('get-pid', (event) => {
 });
 
 ipcMain.on('get-system-color', (event, color) => {
-    if(color === 'accent')
+    if (color === 'accent')
         event.returnValue = systemPreferences.getAccentColor();
     else
         event.returnValue = systemPreferences.getColor(color);
@@ -1925,78 +1999,6 @@ function checkForUpdatesManual() {
 
 ipcMain.on('check-for-updates', checkForUpdatesManual);
 //#endregion
-
-function showAbout(mWindow) {
-    var b;
-    mWindow = mWindow || getActiveWindow();
-    b = mWindow.getBounds();
-
-    let about = new BrowserWindow({
-        parent: mWindow,
-        modal: false,
-        x: Math.floor(b.x + b.width / 2 - 250),
-        y: Math.floor(b.y + b.height / 2 - 280),
-        width: 500,
-        height: 560,
-        movable: true,
-        minimizable: false,
-        maximizable: false,
-        skipTaskbar: true,
-        resizable: false,
-        title: 'About jiMUD',
-        icon: path.join(__dirname, '../assets/icons/png/64x64.png'),
-        webPreferences: {
-            nodeIntegration: true,
-            webviewTag: false,
-            sandbox: false,
-            spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true,
-            contextIsolation: false,
-            backgroundThrottling: set ? set.enableBackgroundThrottling : true
-        }
-    });
-    require("@electron/remote/main").enable(about.webContents);
-    about.webContents.on('render-process-gone', (event, details) => {
-        logError(`About render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
-    });
-
-    about.on('unresponsive', () => {
-        dialog.showMessageBox({
-            type: 'info',
-            message: 'Unresponsive',
-            buttons: ['Reopen', 'Keep waiting', 'Close']
-        }).then(result => {
-            if (!about)
-                return;
-            if (result.response === 0) {
-                about.reload();
-                logError('About unresponsive, reload.\n', true);
-            }
-            else if (result.response === 2) {
-                about.destroy();
-            }
-            else
-                logError('About unresponsive, waiting.\n', true);
-        });
-    });
-
-    about.removeMenu();
-    about.on('closed', () => {
-        about = null;
-    });
-
-    // and load the index.html of the app.
-    about.loadURL(url.format({
-        pathname: path.join(__dirname, 'about.html'),
-        protocol: 'file:',
-        slashes: true
-    }));
-
-    about.once('ready-to-show', () => {
-        about.show();
-    });
-}
-
 
 //#region Window build/position functions
 function getWindowX(x, w) {
@@ -3258,7 +3260,7 @@ function createMenu() {
                 { type: 'separator' },
                 {
                     label: '&About...',
-                    click: (item, mWindow) => showAbout(mWindow)
+                    click: (item, mWindow) => createDialog({ parent: mWindow, url: path.join(__dirname, 'about.html'), title: 'About jiMUD', width: 500, height: 560 })
                 }
             ]
         }
