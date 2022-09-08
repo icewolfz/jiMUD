@@ -231,7 +231,7 @@ function createWindow(options) {
     else if (states[options.file])
         bounds = states[options.file].bounds;
     else
-        bounds = {
+        bounds = options.bounds || {
             x: 0,
             y: 0,
             width: 800,
@@ -500,18 +500,33 @@ function createDialog(options) {
         options = {};
     options.parent = options.parent || getActiveWindow();
     const bounds = options.parent.getBounds();
-    //check coords first as x and y could be 0 and that returns false
-    if (!('x' in options))
-        options.x = Math.floor(bounds.x + bounds.width / 2 - (options.width || 500) / 2);
-    if (!('y' in options))
-        options.y = Math.floor(bounds.x + bounds.width / 2 - (options.width || 560) / 2);
+    //a bounds passed do some basic safety checks
+    if (options.bounds) {
+        //check for width/height if missing default
+        if (!('width' in options.bounds))
+            options.bounds.width = 500;
+        if (!('height' in options.bounds))
+            options.bounds.height = 560;
+        //check coords first as x and y could be 0 and that returns false
+        if (!('x' in options.bounds))
+            options.bounds.x = Math.floor(bounds.x + bounds.width / 2 - options.bounds.width / 2);
+        if (!('y' in options.bounds))
+            options.bounds.y = Math.floor(bounds.x + bounds.width / 2 - options.bounds.width / 2);
+    }
+    else
+        options.bounds = {
+            x: Math.floor(bounds.x + bounds.width / 2 - 250),
+            y: Math.floor(bounds.x + bounds.width / 2 - 280),
+            width: 500,
+            height: 560,
+        }
     const window = new BrowserWindow({
         parent: options.parent,
         modal: false,
-        x: options.x,
-        y: options.y,
-        width: options.width || 500,
-        height: options.height || 560,
+        x: options.bounds.x,
+        y: options.bounds.y,
+        width: options.bounds.width || 500,
+        height: options.bounds.height || 560,
         movable: options.model ? false : true,
         minimizable: false,
         maximizable: false,
@@ -3260,7 +3275,7 @@ function createMenu() {
                 { type: 'separator' },
                 {
                     label: '&About...',
-                    click: (item, mWindow) => createDialog({ parent: mWindow, url: path.join(__dirname, 'about.html'), title: 'About jiMUD', width: 500, height: 560 })
+                    click: (item, mWindow) => createDialog({ parent: mWindow, url: path.join(__dirname, 'about.html'), title: 'About jiMUD', bounds: { width: 500, height: 560 } })
                 }
             ]
         }
