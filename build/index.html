@@ -38,7 +38,11 @@
             <i class="fa fa-edit"></i>
         </a>
     </div>
-    <a href="javascript:void(0)" id="drag-grip" title="Drag grip" draggable="true" class="drag-grip" style="display: none"><span>⠿</span></a>
+    <a href="javascript:void(0)" id="drag-grip" title="Drag grip" draggable="true" class="drag-grip" style="display: none">
+        <svg class="svg-icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+            <path d="M256 576H128c-35.34 0-64 28.66-64 64v128c0 35.34 28.66 64 64 64h128c35.34 0 64-28.66 64-64v-128c0-35.34-28.66-64-64-64z m320 0h-128c-35.34 0-64 28.66-64 64v128c0 35.34 28.66 64 64 64h128c35.34 0 64-28.66 64-64v-128c0-35.34-28.66-64-64-64z m320 0h-128c-35.34 0-64 28.66-64 64v128c0 35.34 28.66 64 64 64h128c35.34 0 64-28.66 64-64v-128c0-35.34-28.66-64-64-64zM256 192H128c-35.34 0-64 28.66-64 64v128c0 35.34 28.66 64 64 64h128c35.34 0 64-28.66 64-64v-128c0-35.34-28.66-64-64-64z m320 0h-128c-35.34 0-64 28.66-64 64v128c0 35.34 28.66 64 64 64h128c35.34 0 64-28.66 64-64v-128c0-35.34-28.66-64-64-64z m320 0h-128c-35.34 0-64 28.66-64 64v128c0 35.34 28.66 64 64 64h128c35.34 0 64-28.66 64-64v-128c0-35.34-28.66-64-64-64z" fill="" />
+        </svg>
+    </a>
     <a href="javascript:void(0)" id="bb-scroll-up" class="hidden button"><i class="fa fa-chevron-up"></i></a>
     <a href="javascript:void(0)" id="bb-scroll-down" class="hidden button"><i class="fa fa-chevron-down"></i></a>
     <div id="buttonbar">
@@ -307,9 +311,6 @@
                 configurable: true
             });
         });
-
-        if (process.platform === 'linux')
-            document.body.classList.add('linux');
 
         Object.defineProperty(window, '$selected', {
             get: function () {

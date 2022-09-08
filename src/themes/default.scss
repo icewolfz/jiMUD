@@ -954,7 +954,8 @@ body {
     background-image: url(#{$images}/button.png);
     color: #{$color};
     background-color: maroon;
-    background-size: contain;
+    background-size: 100% 100%;
+    border-width: 0px;
 }
 
 .drag-grip:hover {

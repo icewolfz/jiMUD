@@ -228,15 +228,12 @@ button.active.focus {
     color: black;
     width: 32px;
     height: 16px;
-    text-align: center;
     border: 1px black solid;
     -webkit-app-region: drag;
-    font-size: 1.4em;
     overflow: hidden;
     position: relative;
     text-decoration: none;
     box-sizing: border-box;
-    vertical-align: middle;
 }
 
 .drag-grip[style*='display: none'] ~ #bb-scroll-up,
@@ -244,15 +241,9 @@ button.active.focus {
     top: 0;
 }
 
-.drag-grip span {
-    transform: rotate(-90deg);
-    display: inline-block;
-    position: absolute;
-    left: 8px;
-    top: -6px;
-}
-
-.linux .drag-grip span {
-    left: 10px !important;
-    top: -9px !important;
+.drag-grip svg {
+    width: 32px; 
+    height: 16px;
+    fill: currentColor;
+    overflow: hidden;
 }
