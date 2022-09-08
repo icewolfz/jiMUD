@@ -901,7 +901,7 @@ export class Client extends EventEmitter {
         });
 
         if (typeof command === 'string')
-            this.commandInput = $(command);
+            this.commandInput = document.getElementById(command);
         else
             this.commandInput = command;
 
@@ -937,7 +937,7 @@ export class Client extends EventEmitter {
             this.emit('item-removed', type, profile, idx);
         });
 
-        this.commandInput.val('');
+        this.commandInput.value = '';
         this.commandInput.focus();
 
         this.telnet = new Telnet();
@@ -1242,8 +1242,8 @@ export class Client extends EventEmitter {
         //can only update if display has been setup
         if (!this.display) return;
         this.display.updateFont(this.options.font, this.options.fontSize);
-        this.commandInput.css('font-size', this.options.cmdfontSize);
-        this.commandInput.css('font-family', this.options.cmdfont + ', monospace');
+        this.commandInput.style.fontSize = this.options.cmdfontSize;
+        this.commandInput.style.fontFamily = this.options.cmdfont + ', monospace';
     }
 
     public parse(txt: string) {
@@ -1355,9 +1355,9 @@ export class Client extends EventEmitter {
 
     public sendCommand(txt?: string, noEcho?: boolean, comments?: boolean) {
         if (txt == null) {
-            txt = this.commandInput.val();
+            txt = this.commandInput.value;
             if (!this.telnet.echo)
-                this.commandInput.val('');
+                this.commandInput.value = '';
             else
                 this._input.AddCommandToHistory(txt);
         }
@@ -1374,14 +1374,14 @@ export class Client extends EventEmitter {
         if (this.options.keepLastCommand)
             this.commandInput.select();
         else
-            this.commandInput.val('');
+            this.commandInput.value = '';
     }
 
     public sendBackground(txt: string, noEcho?: boolean, comments?: boolean) {
         if (txt == null) {
-            txt = this.commandInput.val();
+            txt = this.commandInput.value;
             if (!this.telnet.echo)
-                this.commandInput.val('');
+                this.commandInput.value = '';
             else
                 this._input.AddCommandToHistory(txt);
         }

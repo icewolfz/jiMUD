@@ -15,12 +15,13 @@
 </head>
 
 <body id="client">
+    <!--#region Main body-->
     <div id="display"></div>
     <div id="command">
         <div id="commandleft"></div>
         <div id="commandright"></div>
         <div id="commandbox">
-            <textarea type="text" id="commandinput" aria-live="polite" spellcheck="true" wrap="off" cols="20" rows="20"></textarea>
+            <textarea type="text" id="commandInput" aria-live="polite" spellcheck="true" wrap="off" cols="20" rows="20"></textarea>
         </div>
         <div class="dropdown dropup command-history">
             <a id="history-dropup" title="Show command history" class="button button-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" area-expanded="true">
@@ -200,6 +201,7 @@
             <div class="progressbar-value" style="width: 100%"></div>
         </div>
     </div>
+    <!--#region dialogs-->
     <dialog id="Progress" style="z-index:1000;text-align:center">
         <div id="ProgressTitle"></div>
         <div id="Progressbar">
@@ -214,7 +216,7 @@
     </dialog>
     <dialog id="pasteSpecial" style="z-index:1000;height:317px;width:350px;">
         <div class="dialog-header" style="font-weight: bold">
-            <button type="button" class="close" data-dismiss="modal" onclick="$('#pasteSpecial')[0].close();$('#commandinput').focus();">&times;</button>
+            <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('pasteSpecial').close();client.commandInput.focus();">&times;</button>
             <div style="padding-top: 2px;">Paste special...</div>
         </div>
         <div class="dialog-body" style="margin-top: 32px;">
@@ -223,7 +225,7 @@
                 <div class="input-group">
                     <input id="pasteSpecial-replace" class="form-control">
                     <div class="input-group-addon">
-                        <input type="checkbox" id="pasteSpecial-replace-enable" checked="checked" onclick="$('#pasteSpecial-replace').prop('disabled', !$(this).prop('checked'));" />
+                        <input type="checkbox" id="pasteSpecial-replace-enable" checked="checked" onclick="document.getElementById('pasteSpecial-replace').disabled = this.checked;" />
                     </div>
                 </div>
             </div>
@@ -232,7 +234,7 @@
                 <div class="input-group">
                     <input id="pasteSpecial-prefix" class="form-control">
                     <div class="input-group-addon">
-                        <input type="checkbox" id="pasteSpecial-prefix-enable" checked="checked" onclick="$('#pasteSpecial-prefix').prop('disabled', !$(this).prop('checked'));" />
+                        <input type="checkbox" id="pasteSpecial-prefix-enable" checked="checked" onclick="document.getElementById('pasteSpecial-prefix').disabled = this.checked;" />
                     </div>
                 </div>
             </div>
@@ -241,14 +243,14 @@
                 <div class="input-group">
                     <input id="pasteSpecial-postfix" class="form-control">
                     <div class="input-group-addon">
-                        <input type="checkbox" id="pasteSpecial-postfix-enable" checked="checked" onclick="$('#pasteSpecial-postfix').prop('disabled', !$(this).prop('checked'));" />
+                        <input type="checkbox" id="pasteSpecial-postfix-enable" checked="checked" onclick="document.getElementById('pasteSpecial-postfix').disabled = this.checked;" />
                     </div>
                 </div>
             </div>
         </div>
         <div class="dialog-footer">
-            <button style="float: left" type="button" class="btn btn-default" onclick="$('#pasteSpecial-replace').prop('disabled', false);$('#pasteSpecial-replace-enable').prop('checked', true);$('#pasteSpecial-replace').val('');$('#pasteSpecial-prefix').prop('disabled', false);$('#pasteSpecial-postfix').prop('disabled', false);$('#pasteSpecial-prefix').val('');$('#pasteSpecial-postfix').val('');$('#pasteSpecial-prefix-enable').prop('checked', true);$('#pasteSpecial-postfix-enable').prop('checked', true);">Reset</button>
-            <button id="pasteSpecial-cancel" style="float: right" type="button" class="btn btn-default" onclick="$('#pasteSpecial')[0].close();$('#commandinput').focus();">Cancel</button>
+            <button style="float: left" type="button" class="btn btn-default" onclick="document.getElementById('pasteSpecial-replace').disabled = false;document.getElementById('pasteSpecial-replace-enable').checked = true;document.getElementByI('pasteSpecial-replace').value = '';document.getElementById('pasteSpecial-prefix').disabled = false;document.getElementById('pasteSpecial-postfix').disabled = false;document.getElementById('pasteSpecial-prefix').value = '';document.getElementById('pasteSpecial-postfix').value = '';document.getElementById('pasteSpecial-prefix-enable').checked = true;document.getElementById('pasteSpecial-postfix-enable').checked = true;">Reset</button>
+            <button id="pasteSpecial-cancel" style="float: right" type="button" class="btn btn-default" onclick="document.getElementById('pasteSpecial').close();client.commandInput.focus();">Cancel</button>
             <button id="pasteSpecial-ok" style="float: right" type="button" class="btn btn-primary" onclick="pasteSpecialOk()">Ok</button>
         </div>
     </dialog>
@@ -293,15 +295,22 @@
             </div>
         </div>
     </dialog>
+    <!--#endregion dialogs-->
+    <!--#endregion-->
     <script type="text/javascript">
+        //store module as inline scripts break
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js"></script>
     <script src="../lib/bootstrap.min.js"></script>
     <script type="text/javascript">
         //spell-checker:ignore ismap hellip selectall lagmeter repeatnum buttonvisible statusvisible limbsmenu partyhealth combathealth limb armor limbhealth
-        if (window.module) module = window.module;
+        //restore the module after scripts loaded
+        if (window.module) {
+            module = window.module;
+        }
 
+        //#region global variables for scripting
         ['repeatnum', 'i'].forEach((a) => {
             Object.defineProperty(window, a, {
                 get: function () {
@@ -323,8 +332,8 @@
         Object.defineProperty(window, '$character', {
             get: function () {
                 if (_status)
-                    return _status.name || _charName || ipcRenderer.sendSync('get-global', 'characterLogin') || '';
-                return _charName || ipcRenderer.sendSync('get-global', 'characterLogin') || '';
+                    return _status.name || _windowState.data.character || '';
+                return _windowState.data.character || '';
             },
             configurable: true
         });
@@ -349,11 +358,11 @@
                 let value = client._input.vStack['$selurl'] || _selurl || '';
                 if (value) return value;
                 if (!lastMouse) return '';
-                var parent = $(lastMouse.srcElement.parentNode);
-                if (parent && parent.hasClass('URLLink'))
+                var parent = lastMouse.srcElement.parentNode;
+                if (parent && parent.classList.contains('URLLink'))
                     return parent.title;
-                else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0)
-                    return parent.data('href');
+                else if (parent && parent.classList.contains('MXPLink') && parent.dataset && parent.dataset.href && parent.dataset.href.length > 0)
+                    return parent.dataset.href;
                 return '';
             },
             configurable: true
@@ -384,11 +393,11 @@
                 let value = client._input.vStack['$selectedurl'] || _selurl || '';
                 if (value) return value;
                 if (!lastMouse) return '';
-                var parent = $(lastMouse.srcElement.parentNode);
-                if (parent && parent.hasClass('URLLink'))
+                var parent = lastMouse.srcElement.parentNode;
+                if (parent && parent.classList.contains('URLLink'))
                     return parent.title;
-                else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0)
-                    return parent.data('href');
+                else if (parent && parent.classList.contains('MXPLink') && parent.dataset && parent.dataset.href && parent.dataset.href.length > 0)
+                    return parent.dataset.href;
                 return '';
             },
             configurable: true
@@ -407,8 +416,51 @@
             configurable: true
         });
 
+        //#endregion
+
+        const Client = require('./js/client.js').Client;
+        const Status = require('./js/status.js').Status;
+        const Backup = require('./js/backup.js').Backup;
+        const { Settings } = require('./js/settings');
+        const { shell, clipboard, ipcRenderer, webFrame, nativeImage } = require('electron');
+        const remote = require('@electron/remote');
+        const { Menu, MenuItem } = remote;
+        const { parseTemplate, setSelectionRange, isFileSync, decrypt } = require('./js/library.js');
+        const { ProfileSaveType } = require('./js/types.js');
+        const path = require('path');
+        const { version } = require('../package.json');
+        var _id;
+        var autoConnectID;
+        var autoLoginCounter = 0;
+        var lastMouse;
+        var chatWin;
+        var _nextClear = Date.now() + 3600000;
+
+        loadTheme(ipcRenderer.sendSync('get-global', 'theme'));
+
+        var client, _status, _backup;
+        var _logger;
+        var active = document.hasFocus();
+        var capture = 0, captureReview = 0;
+        var _captures = [], _captureReviews = [];
+        var _noCapture = false;
+        var _noCaptureStore = 0;
+        var _cLoading = false;
+        var _context;
+        var $contextMenu;
+        var _selword = '';
+        var _selurl = '';
+        var _selline = '';
+        var _disconnectTimerID;
+        var _disconnectTimer = 0;
+        var _disconnectCounter = 0;
+        var _skipDisconnect = 0;
+        var _watcher = null;
+        var _windowState;
+
+        //#region window events
         window.addEventListener('keydown', (event) => {
-            if ($('#disconnectDialog')[0].open) {
+            if (document.getElementById('disconnectDialog').open) {
                 if (event.which === 81) {
                     closeDisconnectDialog(true);
                     window.close();
@@ -432,24 +484,30 @@
                     event.preventDefault();
                     event.cancelBubble = true;
                 }
-                //67 - c
+                //c
+                else if (!(_clients.windows === 1 && _clients.clients === 1) && event.which == 67) {
+                    closeDisconnectDialog(true);
+                    showCharacters();
+                    event.preventDefault();
+                    event.cancelBubble = true;
+                }
                 //68 - d
             }
-            else if ($('#pasteSpecial')[0].open) {
+            else if (document.getElementById('pasteSpecial').open) {
                 if (event.which === 13) {
                     var i;
                     if (document.activeElement.id === 'pasteSpecial-replace') {
-                        if (!$('#pasteSpecial-prefix').prop('disabled'))
+                        if (!document.getElementById('pasteSpecial-prefix').disabled)
                             i = document.getElementById('pasteSpecial-prefix');
-                        else if (!$('#pasteSpecial-postfix').prop('disabled'))
+                        else if (!document.getElementById('pasteSpecial-postfix').disabled)
                             i = document.getElementById('pasteSpecial-postfix');
                     }
-                    else if (document.activeElement.id === 'pasteSpecial-prefix' && !$('#pasteSpecial-postfix').prop('disabled'))
+                    else if (document.activeElement.id === 'pasteSpecial-prefix' && !document.getElementById('pasteSpecial-postfix').disabled)
                         i = document.getElementById('pasteSpecial-postfix');
                     if (i)
                         i.focus();
                     else
-                        $('#pasteSpecial-ok').trigger('click');
+                        pasteSpecialOk();
                 }
             }
             else if (event.which === 33) //page up
@@ -458,79 +516,39 @@
                 client.display.pageDown();
 
         });
-        const Client = require('./js/client.js').Client;
-        const Status = require('./js/status.js').Status;
-        const Backup = require('./js/backup.js').Backup;
-        const { Settings } = require('./js/settings');
-        const { shell, clipboard, ipcRenderer, webFrame, nativeImage } = require('electron');
-        const remote = require('@electron/remote');
-        const { Menu, MenuItem } = remote;
-        const { parseTemplate, setSelectionRange, isFileSync, decrypt } = require('./js/library.js');
-        const { ProfileSaveType } = require('./js/types.js');
-        //    const fs = require('fs');
-        const path = require('path');
-        const { version } = require('../package.json');
-        var _id;
-        var autoConnectID;
-        var autoLoginCounter = 0;
-        var lastMouse;
-        var chatWin;
-        var _nextClear = Date.now() + 3600000;
-        var set = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
-        loadTheme(set.theme);
-        delete set;
 
-        var client, _status, _backup;
-        var _logger;
-        var active = document.hasFocus();
-        var capture = 0, captureReview = 0;
-        var _captures = [], _captureReviews = [];
-        //var _captureComm = false;
-        var _noCapture = false;
-        var _noCaptureStore = 0;
-        var _cLoading = false;
-        var _context;
-        var $contextMenu;
-        var _selword = '';
-        var _selurl = '';
-        var _selline = '';
-        var _disconnectTimerID;
-        var _disconnectTimer = 0;
-        var _disconnectCounter = 0;
-        var _charName = 0;
-        var _skipDisconnect = 0;
-        var _watcher = null;
-        var _windowState;
-
-        window.onerror = function (msg, url, line, col, error) {
+        window.addEventListener('error', (e) => {
+            const { message, filename, lineno, colno, error } = e;
             if (client) {
                 if (error)
                     client.error(error);
-                else if (msg.startsWith('Uncaught Error: '))
-                    client.error(`${msg.substr(16)}`);
+                else if (message.startsWith('Uncaught Error: '))
+                    client.error(`${message.substr(16)}`);
                 else
-                    client.error(`${msg}`);
+                    client.error(`${message}`);
                 if (client.options.enableDebug) {
-                    client.error('Url: ' + url);
-                    client.error('Line: ' + line);
-                    client.error('Column: ' + col);
+                    client.error('Url: ' + filename);
+                    client.error('Line: ' + lineno);
+                    client.error('Column: ' + colno);
                     client.error(error);
                 }
             }
             else {
-                console.error('Message: ' + msg);
-                console.error('Url: ' + url);
-                console.error('Line: ' + line);
-                console.error('Column: ' + col);
+                console.error('Message: ' + message);
+                console.error('Url: ' + filename);
+                console.error('Line: ' + lineno);
+                console.error('Column: ' + colno);
                 console.error(error);
             }
             return true;
-        };
+        });
 
-        window.onmousemove = function (e) {
-            lastMouse = e;
-        };
+        window.addEventListener('mousemove', event => {
+            lastMouse = event;
+        });
+        //#endregion
 
+        //#region MXP display hooks
         function doLink(url) {
             if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
@@ -543,7 +561,7 @@
                 shell.openExternal(encodeURI(url));
             setTimeout(() => {
                 if (client.options.CommandonClick)
-                    client.commandInput[0].focus();
+                    client.commandInput.focus();
             }, 0);
         }
 
@@ -562,7 +580,7 @@
                 shell.openExternal(encodeURI(url.replace('&text;', $(el).text())));
             setTimeout(() => {
                 if (client.options.CommandonClick)
-                    client.commandInput[0].focus();
+                    client.commandInput.focus();
             }, 0);
         }
 
@@ -603,27 +621,27 @@
             }
             else if (pmt) {
                 url = url.replace('&text;', $(el).text()) + extra;
-                client.commandInput.val(url);
-                setSelectionRange(client.commandInput[0], url.length, url.length);
+                client.commandInput.value = url;
+                setSelectionRange(client.commandInput, url.length, url.length);
             }
             else
                 client.send(url.replace('&text;', $(el).text()) + extra + '\n', true);
             setTimeout(() => {
                 if (client.options.CommandonClick)
-                    client.commandInput[0].focus();
+                    client.commandInput.focus();
             }, 0);
         }
 
         function MXPMenuHandler(cmd, pmt) {
             if (pmt) {
-                client.commandInput.val(cmd);
-                setSelectionRange(client.commandInput[0], cmd.length, cmd.length);
+                client.commandInput.value = cmd;
+                setSelectionRange(client.commandInput, cmd.length, cmd.length);
             }
             else
                 client.send(cmd, true);
             setTimeout(() => {
                 if (client.options.CommandonClick)
-                    client.commandInput[0].focus();
+                    client.commandInput.focus();
             }, 0);
         }
 
@@ -632,12 +650,12 @@
             el = $(el);
             el.prop('title', el.prop('title').replace('&text;', el.text()));
         }
-
+        //#endregion
         function selectAll() {
             client.display.selectAll();
             setTimeout(() => {
                 if (client.options.CommandonClick)
-                    client.commandInput[0].focus();
+                    client.commandInput.focus();
             }, 0);
         }
 
@@ -819,7 +837,7 @@
                         executeContext(item.item);
                         setTimeout(() => {
                             if (client.options.CommandonClick)
-                                client.commandInput[0].focus();
+                                client.commandInput.focus();
                         }, 0);
                     };
                     var sub = buildMenu(context[x].name || x, context);
@@ -884,7 +902,7 @@
                             executeContext(item.item);
                             setTimeout(() => {
                                 if (client.options.CommandonClick)
-                                    client.commandInput[0].focus();
+                                    client.commandInput.focus();
                             }, 0);
                         };
                         var sub = buildMenu(context[x].name || x, context);
@@ -983,7 +1001,7 @@
                 else if (client && !client.connecting)
                     ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
                 client.raise('focus');
-                $('#commandinput').focus();
+                client.commandInput.focus();
             });
             window.addEventListener('resize', function () {
                 //client.UpdateWindow();
@@ -1133,7 +1151,7 @@
                 else
                     client.error(e);
             };
-            client = new Client($('#display'), $('#commandinput'), _windowState.data.settings);
+            client = new Client('display', 'commandInput', _windowState.data.settings);
 
             client.sendChat = updateChat;
 
@@ -1161,8 +1179,8 @@
             });
 
             client.display.on('context-menu', (e) => {
-                $('#commandinput').data('selStart', client.commandInput[0].selectionStart);
-                $('#commandinput').data('selEnd', client.commandInput[0].selectionEnd);
+                client.commandInput.dataset.selStart = client.commandInput.selectionStart;
+                client.commandInput.dataset.selEnd, client.commandInput.selectionEnd;
                 e.preventDefault();
                 var parent = $(e.srcElement.parentNode);
                 _selword = e.word;
@@ -1219,7 +1237,7 @@
                                                 });
                                             setTimeout(() => {
                                                 if (client.options.CommandonClick)
-                                                    client.commandInput[0].focus();
+                                                    client.commandInput.focus();
                                             }, 0);
                                         });
                                     };
@@ -1241,7 +1259,7 @@
                                     clipboard.writeImage(nativeImage.createFromDataURL(canvas.toDataURL()));
                                     setTimeout(() => {
                                         if (client.options.CommandonClick)
-                                            client.commandInput[0].focus();
+                                            client.commandInput.focus();
                                     }, 0);
                                 };
                             }
@@ -1251,7 +1269,7 @@
                                 window.writeClipboard(e.srcElement.src);
                                 setTimeout(() => {
                                     if (client.options.CommandonClick)
-                                        client.commandInput[0].focus();
+                                        client.commandInput.focus();
                                 }, 0);
                             }
                         }));
@@ -1263,7 +1281,7 @@
                             label: 'Copy url', click: () => {
                                 window.writeClipboard(encodeURI(parent.attr('title'))); setTimeout(() => {
                                     if (client.options.CommandonClick)
-                                        client.commandInput[0].focus();
+                                        client.commandInput.focus();
                                 }, 0);
                             }
                         }));
@@ -1272,7 +1290,7 @@
                                 label: 'Copy url text', click: () => {
                                     window.writeClipboard(parent.text()); setTimeout(() => {
                                         if (client.options.CommandonClick)
-                                            client.commandInput[0].focus();
+                                            client.commandInput.focus();
                                     }, 0);
                                 }
                             }));
@@ -1285,7 +1303,7 @@
                             label: 'Copy url', click: () => {
                                 window.writeClipboard(encodeURI(parent.data('href'))); setTimeout(() => {
                                     if (client.options.CommandonClick)
-                                        client.commandInput[0].focus();
+                                        client.commandInput.focus();
                                 }, 0);
                             }
                         }));
@@ -1294,7 +1312,7 @@
                                 label: 'Copy url text', click: () => {
                                     window.writeClipboard(parent.text()); setTimeout(() => {
                                         if (client.options.CommandonClick)
-                                            client.commandInput[0].focus();
+                                            client.commandInput.focus();
                                     }, 0);
                                 }
                             }));
@@ -1307,7 +1325,7 @@
                             label: 'Copy mxp url text', click: () => {
                                 window.writeClipboard(parent.text()); setTimeout(() => {
                                     if (client.options.CommandonClick)
-                                        client.commandInput[0].focus();
+                                        client.commandInput.focus();
                                 }, 0);
                             }
                         }));
@@ -1322,7 +1340,7 @@
                                 copyAsHTML();
                                 setTimeout(() => {
                                     if (client.options.CommandonClick)
-                                        client.commandInput[0].focus();
+                                        client.commandInput.focus();
                                 }, 0);
                             }
                         }));
@@ -1338,7 +1356,7 @@
                             client.clear();
                             setTimeout(() => {
                                 if (client.options.CommandonClick)
-                                    client.commandInput[0].focus();
+                                    client.commandInput.focus();
                             }, 0);
                         }
                     }));
@@ -1363,7 +1381,7 @@
 
             ['cut', 'copy'].forEach(function (event) {
                 document.addEventListener(event, function (e) {
-                    if ($('#commandinput').data('context'))
+                    if (client.commandInput.dataset.context === 'true')
                         return;
                     if (client.display.hasSelection) {
                         window.writeClipboard(client.display.selection, client.display.selectionAsHTML);
@@ -1372,7 +1390,7 @@
                     }
                     setTimeout(() => {
                         if (client.options.CommandonClick)
-                            client.commandInput[0].focus();
+                            client.commandInput.focus();
                     }, 0);
                 });
             });
@@ -1451,12 +1469,12 @@
             client.on('add-line', (data) => {
                 var res, c, cl;
                 //no more then 3 tries
-                if (autoLoginCounter < 3 && client.options.autoLogin && _charName && _charName.length > 0) {
+                if (autoLoginCounter < 3 && client.options.autoLogin && _windowState.data.character && _windowState.data.character.length > 0) {
                     //testchar doesn't exist here. To create a new character, please type <new> at the name prompt.
-                    if (data.line === _charName + ' doesn\'t exist here. To create a new character, please type <new> at the name prompt.')
+                    if (data.line === _windowState.data.character + ' doesn\'t exist here. To create a new character, please type <new> at the name prompt.')
                         autoLoginCounter = 4;
                     if (data.fragment && data.line === 'Enter your character\'s name (or \'new\' for a new character): ') {
-                        setTimeout(() => client.sendCommand(_charName), 100);
+                        setTimeout(() => client.sendCommand(_windowState.data.character), 100);
                         autoLoginCounter++;
                     }
                     else if (data.fragment && data.line === 'Password: ') {
@@ -1606,8 +1624,8 @@
 
             /*
             client.on('MXP-tag-reply', (e) => {
-                if (client.options.autoLogin && e.tag === 'USER' && _charName && _charName.length > 0)
-                    client.send(_charName + '\r\n');
+                if (client.options.autoLogin && e.tag === 'USER' && _windowState.data.character && _windowState.data.character.length > 0)
+                    client.send(_windowState.data.character + '\r\n');
                 else if (client.options.autoLogin && e.tag === 'PASSWORD') {
                     var pass = ipcRenderer.sendSync('get-global', 'characterPass');
                     if (pass && pass.length > 0) {
@@ -2000,7 +2018,7 @@
                 setTimeout(() => {
                     ipcRenderer.invoke('window', 'focus');
                 }, 500);
-                $('#commandinput').focus();
+                client.commandInput.focus()
             });
 
             _backup.on('abort', (err) => {
@@ -2015,13 +2033,13 @@
                 setTimeout(() => {
                     ipcRenderer.invoke('window', 'focus');
                 }, 500);
-                $('#commandinput').focus();
+                client.commandInput.focus()
             });
 
             _backup.on('close', () => {
                 if ($('#Progress')[0].open)
                     $('#Progress')[0].close();
-                $('#commandinput').focus();
+                client.commandInput.focus()
                 setTimeout(() => {
                     ipcRenderer.invoke('window', 'focus');
                 }, 500);
@@ -2100,10 +2118,9 @@
                 _logger.postMessage({ action: 'name', args: title });
                 ipcRenderer.send('set-title', title);
             });
-            _charName = ipcRenderer.sendSync('get-global', 'characterLogin');
-            if (_charName && _charName.length > 0) {
-                _logger.postMessage({ action: 'name', args: _charName });
-                $('#character-name').text(_charName);
+            if (_windowState.data.character && _windowState.data.character.length > 0) {
+                _logger.postMessage({ action: 'name', args: _windowState.data.character });
+                $('#character-name').text(_windowState.data.character);
             }
             updateInterface();
             _logger.postMessage({
@@ -2576,15 +2593,15 @@
             if (item.send) {
                 if (!ret.endsWith('\n'))
                     ret += '\n';
-                if (item.chain && client.commandInput.val().endsWith(' ')) {
-                    client.commandInput.val(client.commandInput.val() + ret);
+                if (item.chain && client.commandInput.value.endsWith(' ')) {
+                    client.commandInput.value += ret;
                     client.sendCommand(null, null, client.options.allowCommentsFromCommand);
                 }
                 else
                     client.send(ret, true);
             }
             else if (item.append)
-                client.commandInput.val(client.commandInput.val() + ret);
+                client.commandInput.value += ret;
             return true;
         }
 
@@ -2632,7 +2649,7 @@
             if (ret == null) {
                 setTimeout(() => {
                     if (client.options.CommandonClick)
-                        client.commandInput[0].focus();
+                        client.commandInput.focus();
                 }, 0);
                 return true;
             }
@@ -2641,25 +2658,25 @@
             if (ret.length === 0 && !client.options.returnNewlineOnEmptyValue) {
                 setTimeout(() => {
                     if (client.options.CommandonClick)
-                        client.commandInput[0].focus();
+                        client.commandInput.focus();
                 }, 0);
                 return true;
             }
             if (button.send) {
                 if (!ret.endsWith('\n'))
                     ret += '\n';
-                if (button.chain && client.commandInput.val().endsWith(' ')) {
-                    client.commandInput.val(client.commandInput.val() + ret);
+                if (button.chain && client.commandInput.value.endsWith(' ')) {
+                    client.commandInput.value += ret;
                     client.sendCommand(null, null, client.options.allowCommentsFromCommand);
                 }
                 else
                     client.send(ret, true);
             }
             else if (button.append)
-                client.commandInput.val(client.commandInput.val() + ret);
+                client.commandInput.value += ret;
             setTimeout(() => {
                 if (client.options.CommandonClick)
-                    client.commandInput[0].focus();
+                    client.commandInput.focus();
             }, 0);
             return true;
         }
@@ -2806,7 +2823,7 @@
             if (!$('#update-progress')[0].open) {
                 $('#update-progress-title').html('Downloading update&hellip;');
                 $('#update-progress')[0].show();
-                client.commandInput[0].focus();
+                client.commandInput.focus();
             }
             $('#update-progressbar').val(progressObj.percent);
         });
@@ -3013,10 +3030,10 @@
             const { selectionText, isEditable } = params;
             if (isEditable) {
                 input = document.elementFromPoint(params.x, params.y);
-                if (input && input.id === 'commandinput') {
+                if (input && input.id === 'commandInput') {
                     //e.preventDefault();
-                    $('#commandinput').data('selStart', client.commandInput[0].selectionStart);
-                    $('#commandinput').data('selEnd', client.commandInput[0].selectionEnd);
+                    client.commandInput.dataset.selStart = client.commandInput.selectionStart;
+                    client.commandInput.dataset.selEnd = client.commandInput.selectionEnd;
                     inputMenu = Menu.buildFromTemplate([
                         { role: 'undo', accelerator: 'CmdOrCtrl+Z' },
                         { role: 'redo', accelerator: 'CmdOrCtrl+Y' },
@@ -3029,10 +3046,10 @@
                         { role: 'selectAll', accelerator: 'CmdOrCtrl+A' },
                     ]);
                     inputMenu.on('menu-will-show', () => {
-                        $('#commandinput').data('context', true);
+                        client.commandInput.dataset.context = true;
                     });
                     inputMenu.on('menu-will-close', () => {
-                        setTimeout(() => $('#commandinput').data('context', false), 200);
+                        setTimeout(() => client.commandInput.dataset.context = false, 200);
                     });
                 }
                 else
@@ -3220,8 +3237,8 @@
                     ipcRenderer.send('show-window', 'smhelp', { show: true, file: 'smhelp.html', icon: 'help', alwaysOnTopClient: true, width: 800, height: 600, x: window.screenTop + 100, y: window.screenLeft + 100 });
             }
             setTimeout(() => {
-                client.commandInput[0].blur();
-                client.commandInput[0].focus();
+                client.commandInput.blur();
+                client.commandInput.focus();
             }, 0);
         }
 
@@ -3237,8 +3254,8 @@
                     ipcRenderer.send('show-window', 'who', { show: true, file: 'who.html', icon: 'user', alwaysOnTopClient: true, width: 800, height: 600, x: window.screenTop + 100, y: window.screenLeft + 100 });
             }
             setTimeout(() => {
-                client.commandInput[0].blur();
-                client.commandInput[0].focus();
+                client.commandInput.blur();
+                client.commandInput.focus();
             }, 0);
         }
 
@@ -3371,32 +3388,32 @@
                 txt = pre + txt.replace(/\n/g, `\n${pre}`);
             else if (post && post.length)
                 txt = txt.replace(/\n/g, `${post}\n`) + post;
-            var startPos = client.commandInput.data('selStart');
-            var endPos = client.commandInput.data('selEnd');
-            client.commandInput[0].value = client.commandInput[0].value.substring(0, startPos)
+            var startPos = parseInt(client.commandInput.dataset.selStart, 10);
+            var endPos = parseInt(client.commandInput.dataset.selEnd, 10);
+            client.commandInput.value = client.commandInput.value.substring(0, startPos)
                 + txt
-                + client.commandInput[0].value.substring(endPos, client.commandInput[0].value.length);
-            client.commandInput[0].selectionStart = startPos;
-            client.commandInput[0].selectionEnd = startPos + txt.length;
+                + client.commandInput.value.substring(endPos, client.commandInput.value.length);
+            client.commandInput.selectionStart = startPos;
+            client.commandInput.selectionEnd = startPos + txt.length;
             setTimeout(() => {
                 if (client.options.CommandonClick)
-                    client.commandInput[0].focus();
+                    client.commandInput.focus();
             }, 0);
         }
 
         function paste() {
             if (clipboard.readText().length === 0)
                 return;
-            var startPos = client.commandInput.data('selStart');
-            var endPos = client.commandInput.data('selEnd');
-            client.commandInput[0].value = client.commandInput[0].value.substring(0, startPos)
+            var startPos = parseInt(client.commandInput.dataset.selStart, 10);
+            var endPos = parseInt(client.commandInput.dataset.selEnd, 10);
+            client.commandInput.value = client.commandInput.value.substring(0, startPos)
                 + clipboard.readText()
-                + client.commandInput[0].value.substring(endPos, client.commandInput[0].value.length);
-            client.commandInput[0].selectionStart = startPos;
-            client.commandInput[0].selectionEnd = startPos + clipboard.readText().length;
+                + client.commandInput.value.substring(endPos, client.commandInput.value.length);
+            client.commandInput.selectionStart = startPos;
+            client.commandInput.selectionEnd = startPos + clipboard.readText().length;
             setTimeout(() => {
                 if (client.options.CommandonClick)
-                    client.commandInput[0].focus();
+                    client.commandInput.focus();
             }, 0);
         }
 
@@ -3415,7 +3432,7 @@
                 _disconnectCounter = 0;
             }
             $('#disconnectDialog')[0].close();
-            $('#commandinput').focus();
+            client.commandInput.focus()
         }
 
         function updateChat(data) {
@@ -3611,14 +3628,28 @@
         }
 
         function restoreWindow(data) {
-            if (data)
+            if (data) {
                 _windowState = data;
+                //safety checks to make sure some basic objects
+                if (!'windows' in _windowState)
+                    _windowState.windows = [];
+                if (!'states' in _windowState)
+                    _windowState.states = {};
+                //make sure we have a settings file, default to global file
+                if (!'data' in _windowState)
+                    _windowState.data = {
+                        settings: ipcRenderer.sendSync('get-global', 'settingsFile')
+                    };
+                else if (!'settings' in +_windowState.data)
+                    _windowState.data.settings = ipcRenderer.sendSync('get-global', 'settingsFile');
+            }
             else
                 _windowState = {
                     data: {
                         settings: ipcRenderer.sendSync('get-global', 'settingsFile')
-                    }
-
+                    },
+                    windows: [],
+                    states: {}
                 };
         }
 

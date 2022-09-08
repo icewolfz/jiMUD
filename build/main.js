@@ -850,6 +850,9 @@ ipcMain.on('get-global', (event, key) => {
         case 'layout':
             event.returnValue = _layout;
             break;
+        case 'theme':
+            event.returnValue = set ? set.theme : '';
+            break;
         default:
             event.returnValue = null;
             break;
@@ -1390,22 +1393,27 @@ function createClient(options) {
 
         childWindow.on('resize', () => {
             states[file] = saveWindowState(childWindow);
+            client[getClientId(view)].states[file] = states[file];
         });
 
         childWindow.on('move', () => {
             states[file] = saveWindowState(childWindow);
+            client[getClientId(view)].states[file] = states[file];
         });
 
         childWindow.on('maximize', () => {
             states[file] = saveWindowState(childWindow);
+            client[getClientId(view)].states[file] = states[file];
         });
 
         childWindow.on('unmaximize', () => {
             states[file] = saveWindowState(childWindow);
+            client[getClientId(view)].states[file] = states[file];
         });
 
         childWindow.on('resized', () => {
             states[file] = saveWindowState(childWindow);
+            client[getClientId(view)].states[file] = states[file];
         });
 
         childWindow.on('closed', () => {
@@ -1424,6 +1432,7 @@ function createClient(options) {
 
         childWindow.on('close', () => {
             states[file] = saveWindowState(childWindow);
+            client[getClientId(view)].states[file] = states[file];
         });
 
         clients[getClientId(view)].windows.push({ window: childWindow, details: details });
@@ -1458,13 +1467,14 @@ function createClient(options) {
             _clientID++;
         options.id = _clientID;
     }
-    clients[options.id] = { view: view, windows: [], parent: null, file: options.file !== 'build/index.html' ? options.file : 0 };
+    clients[options.id] = { view: view, windows: [], parent: null, file: options.file !== 'build/index.html' ? options.file : 0, states: {} };
     idMap.set(view, options.id);
     executeScript(`if(typeof setId === "function") setId(${options.id});`, clients[options.id].view);
+    executeScript('if(typeof loadTheme === "function") loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');', clients[options.id].view);
     if (options.data)
-        executeScript('if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify({ data: options.data.data, windows: options.data.windows }) + ');', clients[options.id].view);
+        executeScript('if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify({ data: options.data.data, windows: options.data.windows, states: options.data.states }) + ');', clients[options.id].view);
     else
-        executeScript('if(typeof restoreWindow === "function") restoreWindow({data: {}, windows: []});', clients[options.id].view);
+        executeScript('if(typeof restoreWindow === "function") restoreWindow({data: {}, windows: [], states: {}});', clients[options.id].view);
     //win.setTopBrowserView(view)    
     //addBrowserView
     //setBrowserView  
@@ -2229,7 +2239,8 @@ async function saveWindowLayout(file) {
                 devTools: clients[id].view.webContents.isDevToolsOpened()
             },
             //get any custom data from window
-            data: await executeScript('if(typeof saveWindow === "function") saveWindow()', clients[id].view)
+            data: await executeScript('if(typeof saveWindow === "function") saveWindow()', clients[id].view),
+            states: clients[id].states
         }
         const wl = clients[id].windows.length;
         for (var idx = 0; idx < wl; id++) {
@@ -2665,14 +2676,14 @@ function createMenu() {
                     label: 'Paste',
                     accelerator: 'CmdOrCtrl+V',
                     click: (item, mWindow) => {
-                        executeScriptClient('$(\'#commandinput\').data(\'selStart\', client.commandInput[0].selectionStart);$(\'#commandinput\').data(\'selEnd\', client.commandInput[0].selectionEnd);paste()', mWindow, true);
+                        executeScriptClient('client.commandInput.dataset.selStart = client.commandInput.selectionStart;client.commandInput.dataset.selEnd = client.commandInput.selectionEnd;paste()', mWindow, true);
                     }
                 },
                 {
                     label: 'Paste special',
                     accelerator: 'CmdOrCtrl+Shift+V',
                     click: (item, mWindow) => {
-                        executeScriptClient('$(\'#commandinput\').data(\'selStart\', client.commandInput[0].selectionStart);$(\'#commandinput\').data(\'selEnd\', client.commandInput[0].selectionEnd);pasteSpecial()', mWindow, true);
+                        executeScriptClient('client.commandInput.dataset.selStart client.commandInput.selectionStart;client.commandInput.dataset.selEnd = client.commandInput.selectionEnd;pasteSpecial()', mWindow, true);
                     }
                 },
                 /*

@@ -1388,23 +1388,23 @@ export class Input extends EventEmitter {
             this.updatePads();
         });
 
-        this.client.commandInput.keyup((event) => {
-            if (event.which !== 27 && event.which !== 38 && event.which !== 40)
+        this.client.commandInput.addEventListener('keyup', event => {
+            if (event.key !== 'Escape' && event.key !== 'ArrowUp' && event.key !== 'ArrowDown')
                 this._historyIdx = this._commandHistory.length;
         });
 
-        this.client.commandInput.keydown((event) => {
-            switch (event.which) {
-                case 27: //esc
-                    client.commandInput.blur();
-                    client.commandInput.val('');
-                    client.commandInput.select();
+        this.client.commandInput.addEventListener('keydown', (event) => {
+            switch (event.key) {
+                case 'Escape': //esc
+                this.client.commandInput.blur();
+                    this.client.commandInput.value = '';
+                    this.client.commandInput.select();
                     this._historyIdx = this._commandHistory.length;
                     break;
-                case 38: //up
-                    if (this._historyIdx === this._commandHistory.length && this.client.commandInput.val().length > 0) {
-                        this.AddCommandToHistory(this.client.commandInput.val());
-                        if (this.client.commandInput.val() === this._commandHistory[this._historyIdx - 1])
+                case 'ArrowUp': //up
+                    if (this._historyIdx === this._commandHistory.length && this.client.commandInput.value.length > 0) {
+                        this.AddCommandToHistory(this.client.commandInput.value);
+                        if (this.client.commandInput.value === this._commandHistory[this._historyIdx - 1])
                             this._historyIdx--;
                     }
                     this._historyIdx--;
@@ -1412,59 +1412,51 @@ export class Input extends EventEmitter {
                         this._historyIdx = 0;
                     if (this._commandHistory.length < 0) {
                         this._historyIdx = -1;
-                        this.client.commandInput.val('');
+                        this.client.commandInput.value = '';
                     }
                     else {
                         if (this._commandHistory.length > 0 && this._historyIdx < this._commandHistory.length && this._historyIdx >= 0)
-                            this.client.commandInput.val(this._commandHistory[this._historyIdx]);
+                            this.client.commandInput.value = this._commandHistory[this._historyIdx];
                     }
                     setTimeout(() => this.client.commandInput.select(), 0);
                     break;
-                case 40: //down
-                    if (this._historyIdx === this._commandHistory.length && this.client.commandInput.val().length > 0)
-                        this.AddCommandToHistory(this.client.commandInput.val());
+                case 'ArrowDown': //down
+                    if (this._historyIdx === this._commandHistory.length && this.client.commandInput.value.length > 0)
+                        this.AddCommandToHistory(this.client.commandInput.value);
                     this._historyIdx++;
                     if (this._historyIdx >= this._commandHistory.length || this._commandHistory.length < 1) {
                         this._historyIdx = this._commandHistory.length;
-                        this.client.commandInput.val('');
+                        this.client.commandInput.value = '';
                     }
                     else {
                         if (this._commandHistory.length > 0 && this._historyIdx < this._commandHistory.length && this._historyIdx >= 0)
-                            this.client.commandInput.val(this._commandHistory[this._historyIdx]);
+                            this.client.commandInput.value = this._commandHistory[this._historyIdx];
                     }
                     setTimeout(() => this.client.commandInput.select(), 0);
                     break;
-                case 13: // return
+                case 'Enter': // return
                     switch (this.client.options.newlineShortcut) {
                         case NewLineType.Ctrl:
                             if (event.ctrlKey && !event.shiftKey && !event.metaKey && !event.altKey) {
-                                this.client.commandInput.val((i, val) => {
-                                    return val + '\n';
-                                });
+                                this.client.commandInput.value += '\n';
                                 return true;
                             }
                             break;
                         case NewLineType.CtrlAndShift:
                             if (event.ctrlKey && event.shiftKey && !event.metaKey && !event.altKey) {
-                                this.client.commandInput.val((i, val) => {
-                                    return val + '\n';
-                                });
+                                this.client.commandInput.value += '\n';
                                 return true;
                             }
                             break;
                         case NewLineType.CtrlOrShift:
                             if ((event.ctrlKey || event.shiftKey) && !event.metaKey && !event.altKey) {
-                                this.client.commandInput.val((i, val) => {
-                                    return val + '\n';
-                                });
+                                this.client.commandInput.value += '\n';
                                 return true;
                             }
                             break;
                         case NewLineType.Shift:
                             if ((event.ctrlKey && event.shiftKey) && !event.metaKey && !event.altKey) {
-                                this.client.commandInput.val((i, val) => {
-                                    return val + '\n';
-                                });
+                                this.client.commandInput.value += '\n';
                                 return true;
                             }
                             break;
@@ -7672,15 +7664,15 @@ export class Input extends EventEmitter {
         if (macro.send) {
             if (!ret.endsWith('\n'))
                 ret += '\n';
-            if (macro.chain && this.client.commandInput.val().endsWith(' ')) {
-                this.client.commandInput.val(this.client.commandInput.val() + ret);
+            if (macro.chain && this.client.commandInput.value.endsWith(' ')) {
+                this.client.commandInput.value = this.client.commandInput.value + ret;
                 this.client.sendCommand(null, null, this.client.options.allowCommentsFromCommand);
             }
             else
                 this.client.send(ret, true);
         }
         else if (macro.append)
-            this.client.commandInput.val(this.client.commandInput.val() + ret);
+            this.client.commandInput.value = this.client.commandInput.value + ret;
         return true;
     }
 

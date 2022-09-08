@@ -496,7 +496,7 @@ export class Display extends EventEmitter {
         this._ruler.style.visibility = 'hidden';
         document.body.appendChild(this._character);
 
-        this._charHeight = $(this._character).innerHeight();
+        this._charHeight = parseFloat(window.getComputedStyle(this._character).height)
         this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
         this.buildStyleSheet();
 
@@ -1175,7 +1175,7 @@ export class Display extends EventEmitter {
             this._contextFont = `${size} ${font}`;
             this._context.font = this._contextFont;
             //recalculate height/width of characters so display can be calculated
-            this._charHeight = $(this._character).innerHeight();
+            this._charHeight = parseFloat(window.getComputedStyle(this._character).height)
             this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
             this.buildStyleSheet();
             this.reCalculateLines();
@@ -1305,8 +1305,8 @@ export class Display extends EventEmitter {
 
     get WindowHeight(): number {
         if (this._HScroll.visible)
-            return Math.trunc((this._innerHeight - this._HScroll.size - this._padding[0] - this._padding[2]) / $(this._character).innerHeight()) - 1;
-        return Math.trunc((this._innerHeight - this._padding[0] - this._padding[2]) / $(this._character).innerHeight()) - 1;
+            return Math.trunc((this._innerHeight - this._HScroll.size - this._padding[0] - this._padding[2]) / parseFloat(window.getComputedStyle(this._character).height)) - 1;
+        return Math.trunc((this._innerHeight - this._padding[0] - this._padding[2]) / parseFloat(window.getComputedStyle(this._character).height)) - 1;
     }
 
     public click(callback) {
