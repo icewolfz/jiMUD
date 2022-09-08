@@ -357,14 +357,7 @@ body {
     opacity: 1;
     color: black;
 }
-
-.focused .cm-tabstrip li.active {
-    background-color: rgb(249, 242, 217);
-    border-color: rgb(247, 216, 106);
-    opacity: 1;
-    color: black;
-}
-
+/*
 .focused .cm-tabstrip li.connectednonactive.active:hover {
     background-color: darken(rgb(218, 255, 181), 10%) !important;
     border-color: darken(rgb(119, 168, 69), 10%) !important;
@@ -385,10 +378,18 @@ body {
     opacity: 1;
     color: black;
 }
+*/
+
+.focused .cm-tabstrip li.active {
+    background-color: rgb(240, 217, 249) !important;
+    border-color: rgb(195, 106, 247) !important;
+    opacity: 1;
+    color: black;
+}
 
 .focused .cm-tabstrip li.active:hover {
-    background-color: darken(rgb(249, 242, 217), 10%);
-    border-color: darken(rgb(247, 216, 106), 10%);
+    background-color: darken(rgb(239, 217, 249), 10%) !important;
+    border-color: darken(rgb(214, 106, 247), 10%) !important;
     opacity: 1;
     color: black;
 }
