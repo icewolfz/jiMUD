@@ -1,7 +1,7 @@
 //spell-checker:words submenu, pasteandmatchstyle, statusvisible, taskbar, colorpicker, mailto, forecolor, tinymce, unmaximize
 //spell-checker:ignore prefs, partyhealth, combathealth, commandinput, limbsmenu, limbhealth, selectall, editoronly, limbarmor, maximizable, minimizable
 //spell-checker:ignore limbsarmor, lagmeter, buttonsvisible, connectbutton, charactersbutton, Editorbutton, zoomin, zoomout, unmaximize, resizable
-const { app, BrowserWindow, BrowserView, shell, screen, Tray, dialog, Menu, MenuItem, ipcMain } = require('electron');
+const { app, BrowserWindow, BrowserView, shell, screen, Tray, dialog, Menu, MenuItem, ipcMain, systemPreferences } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const url = require('url');
@@ -786,6 +786,13 @@ ipcMain.on('set-global', (event, key, value) => {
 
 ipcMain.on('get-pid', (event) => {
     event.returnValue = process.pid;
+});
+
+ipcMain.on('get-system-color', (event, color) => {
+    if(color === 'accent')
+        event.returnValue = systemPreferences.getAccentColor();
+    else
+        event.returnValue = systemPreferences.getColor(color);
 });
 
 ipcMain.handle('get-app', async (event, key, ...args) => {
