@@ -6,7 +6,36 @@ const fs = require('fs');
 const path = require('path');
 const sqlite3 = require('better-sqlite3');
 
-export class Mapper extends EventEmitter {
+class Character {
+    public ID?: number;
+    public Title?: string;
+    public Host?: string;
+    public Address?: string;
+    public Port?: number;
+    public AutoLoad?: boolean;
+    public Disconnect?: boolean;
+    public UseAddress?: boolean;
+    public Days?: number;
+    public Name?: string;
+    public Password?: string;
+    public Preferences?: string;
+    public Map?: string;
+    public SessionID?: string;
+    public Icon?;
+    public IconPath?: string;
+    public Notes?: string;
+    public TotalMilliseconds?: number;
+    public TotalDays?: number;
+    public LastConnected?: number;
+
+}
+
+export interface CharactersOptions {
+    memory?: boolean;
+    memoryPeriod?: number;
+    file?: string;
+}
+export class Characters extends EventEmitter {
     private _db;
     private _changed: boolean = false;
     private _cancelImport: boolean = false;
@@ -110,7 +139,7 @@ export class Mapper extends EventEmitter {
             this._db.exec('ATTACH DATABASE \'' + this._file + '\' as Disk');
             this.createDatabase('Disk');
             this._db.exec('BEGIN TRANSACTION')
-                .exec('INSERT OR REPLACE INTO Characters (ID, Title, Host, Address, Port, Type, AutoLoad, Disconnect, UseAddress, Days, Name, Password, Preferences, Map, SessionID, Icon BLOB, IconPath, Notes, TotalMilliseconds, TotalDays, LastConnected) SELECT ID, Title, Host, Address, Port, Type, AutoLoad, Disconnect, UseAddress, Days, Name, Password, Preferences, Map, SessionID, Icon BLOB, IconPath, Notes, TotalMilliseconds, TotalDays, LastConnected FROM Disk.Characters')
+                .exec('INSERT OR REPLACE INTO Characters (ID, Title, Host, Address, Port, Type, AutoLoad, Disconnect, UseAddress, Days, Name, Password, Preferences, Map, SessionID, Icon, IconPath, Notes, TotalMilliseconds, TotalDays, LastConnected) SELECT ID, Title, Host, Address, Port, Type, AutoLoad, Disconnect, UseAddress, Days, Name, Password, Preferences, Map, SessionID, Icon, IconPath, Notes, TotalMilliseconds, TotalDays, LastConnected FROM Disk.Characters')
                 .exec('COMMIT TRANSACTION')
                 .exec('DETACH DATABASE Disk');
         }
@@ -121,19 +150,155 @@ export class Mapper extends EventEmitter {
         this.ready = true;
     }
 
-    constructor(memory?: boolean, memoryPeriod?: (number | string), map?: string) {
+    constructor(options?: CharactersOptions) {
         super();
-        if (typeof memoryPeriod === 'string') {
-            if (memoryPeriod.length > 0)
-                this._file = memoryPeriod;
+        if (options) {
+            if ('memoryPeriod' in options)
+                this._memorySavePeriod = options.memoryPeriod;
+            if ('memory' in options)
+                this._memory = options.memory;
+            if ('file' in options)
+                this._file = options.file;
         }
-        else {
-            this._memorySavePeriod = memoryPeriod;
-            if (map && map.length > 0)
-                this._file = map;
-        }
-        this._memory = memory;
         this.initializeDatabase();
+    }
+
+    public addCharacter(character: Character) {
+        this._db.prepare('BEGIN').run();
+        try {
+            this._db.prepare('INSERT OR REPLACE INTO Character (ID, Title, Host, Address, Port, Type, AutoLoad, Disconnect, UseAddress, Days, Name, Password, Preferences, Map, SessionID, Icon, IconPath, Notes, TotalMilliseconds, TotalDays, LastConnected) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ').run(
+                [
+                    character.Title,
+                    character.Host,
+                    character.Address,
+                    character.Port,
+                    character.AutoLoad,
+                    character.Disconnect,
+                    character.UseAddress,
+                    character.Days,
+                    character.Name,
+                    character.Password,
+                    character.Preferences,
+                    character.Map,
+                    character.SessionID,
+                    character.Icon,
+                    character.IconPath,
+                    character.Notes,
+                    character.TotalMilliseconds,
+                    character.TotalDays,
+                    character.LastConnected
+                ]);
+
+            this._changed = true;
+        }
+        catch (err) {
+            this.emit('error', err);
+            this._db.prepare('ROLLBACK').run();
+            return;
+        }
+        this._db.prepare('COMMIT').run();
+        this._changed = true;
+    }
+
+    public updateCharacter(character: Character) {
+        if (!character) return;
+        this._db.prepare('BEGIN').run();
+        try {
+            this._db.prepare('REPLACE INTO Character (Title, Host, Address, Port, Type, AutoLoad, Disconnect, UseAddress, Days, Name, Password, Preferences, Map, SessionID, Icon, IconPath, Notes, TotalMilliseconds, TotalDays, LastConnected) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) WHERE ID = ?').run(
+                [
+                    character.Title,
+                    character.Host,
+                    character.Address,
+                    character.Port,
+                    character.AutoLoad,
+                    character.Disconnect,
+                    character.UseAddress,
+                    character.Days,
+                    character.Name,
+                    character.Password,
+                    character.Preferences,
+                    character.Map,
+                    character.SessionID,
+                    character.Icon,
+                    character.IconPath,
+                    character.Notes,
+                    character.TotalMilliseconds,
+                    character.TotalDays,
+                    character.LastConnected,
+                    character.ID
+                ]);
+            this._changed = true;
+        }
+        catch (err) {
+            this.emit('error', err);
+            this._db.prepare('ROLLBACK').run();
+            return;
+        }
+        this._db.prepare('COMMIT').run();
+        this._changed = true;
+    }
+
+    public removeCharacter(character: number | Character) {
+        if (!character) return;
+        if (typeof character === 'number')
+            character = this.getCharacter(character);
+        this._db.prepare('DELETE FROM Characters WHERE ID = ?').run([character.ID]);
+        this.emit('removed', character);
+        this._changed = true;
+    }
+
+    public getCharacter(id: number): Character {
+        if (!id) return null;
+        try {
+            const rows = this._db.prepare('Select * FROM Characters WHERE ID = $id').all({
+                id: id
+            });
+            if (rows && rows.length)
+                return rows[0];
+        }
+        catch (err) {
+            this.emit('error', err);
+        }
+        return null;
+    }
+
+    public getCharactersByName(name: string): Character[] {
+        if (!name) return [];
+        try {
+            const rows = this._db.prepare('Select * FROM Characters WHERE Name = $name').all({
+                name: name
+            });
+            return rows || [];
+        }
+        catch (err) {
+            this.emit('error', err);
+        }
+        return [];
+    }
+
+    public getCharactersByTitle(title: string): Character[] {
+        if (!title) return [];
+        try {
+            const rows = this._db.prepare('Select * FROM Characters WHERE Title = $title').all({
+                title: title
+            });
+            return rows || [];
+        }
+        catch (err) {
+            this.emit('error', err);
+        }
+        return [];
+    }
+
+    public getCharacters(): Character[] {
+        try {
+            const rows = this._db.prepare('Select * FROM Characters').all();
+            return rows || [];
+        }
+        catch (err) {
+            this.emit('error', err);
+        }
+        return [];
     }
 
     public clearAll() {
@@ -193,7 +358,7 @@ export class Mapper extends EventEmitter {
                     CREATE TABLE IF NOT EXISTS Disk.Characters (ID INTEGER PRIMARY KEY AUTOINCREMENT, Title TEXT, Host TEXT, Address TEXT, Port INTEGER, Type TEXT, AutoLoad BOOLEAN, Disconnect BOOLEAN, UseAddress BOOLEAN, Days INTEGER, Name TEXT, Password TEXT, Preferences TEXT, Map TEXT, SessionID TEXT, Icon BLOB, IconPath TEXT, Notes TEXT, TotalMilliseconds UNSIGNED BIG INT, TotalDays UNSIGNED BIG INT, LastConnected UNSIGNED BIG INT);
                     BEGIN TRANSACTION;
                     DELETE FROM Disk.Characters;
-                    INSERT INTO Disk.Characters (ID, Title, Host, Address, Port, Type, AutoLoad, Disconnect, UseAddress, Days, Name, Password, Preferences, Map, SessionID, Icon BLOB, IconPath, Notes, TotalMilliseconds, TotalDays, LastConnected) SELECT ID, Title, Host, Address, Port, Type, AutoLoad, Disconnect, UseAddress, Days, Name, Password, Preferences, Map, SessionID, Icon BLOB, IconPath, Notes, TotalMilliseconds, TotalDays, LastConnected FROM Characters;
+                    INSERT INTO Disk.Characters (ID, Title, Host, Address, Port, Type, AutoLoad, Disconnect, UseAddress, Days, Name, Password, Preferences, Map, SessionID, Icon, IconPath, Notes, TotalMilliseconds, TotalDays, LastConnected) SELECT ID, Title, Host, Address, Port, Type, AutoLoad, Disconnect, UseAddress, Days, Name, Password, Preferences, Map, SessionID, Icon, IconPath, Notes, TotalMilliseconds, TotalDays, LastConnected FROM Characters;
                     COMMIT TRANSACTION;
                     CREATE UNIQUE INDEX IF NOT EXISTS Disk.index_id ON Characters (ID);
                     CREATE INDEX IF NOT EXISTS Disk.Title_id ON Characters (Title);
