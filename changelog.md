@@ -15,7 +15,7 @@
     - Fixed --editor/-e to work and load new files in code editor while opening default client
   - Fixed issues with display scrollbar corner in several themes
 - **Changed:**
-  - Update electron 19.0.14 to 19.0.15
+  - Update electron 19.0.14 to 19.0.16
 
 ## 0.19.3 2022-08-27
 
