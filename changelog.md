@@ -2,6 +2,8 @@
 
 ## 0.19.4
 
+- **New:**
+  - Profile Manager: Add a break out editor for trigger pattern to allow easier editing of more complex patterns
 - **Fixed:**
   - Auto update: close download dialog when error happens
   - Fixed an issue that caused window to now close correctly, causing the main window to hang and requiring a second close
