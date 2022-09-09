@@ -1075,7 +1075,7 @@
                     ipcRenderer.send('position-client', _id, { x: x, y: y });
                 }
             });
-            
+
             //#region setup logger
             _logger = new Worker('./js/logging.js');
             _logger.onmessage = (e) => {
@@ -2502,6 +2502,26 @@
                 client.display.showFind();
             if (client.options.showCharacterManager)
                 showCharacters();
+            //TODO re add known child windows with settings and combine with last known states
+            //TODO this should be a function as reloading settings will effect which windows are open/closed
+            /*
+                    if (set.showMapper)
+                        showMapper(true);
+                    else if (set.mapper.persistent || set.mapper.enabled)
+                        createMapper();
+            
+                    if (set.showEditor)
+                        showEditor(true);
+                    else if (set.editorPersistent)
+                        createEditor();
+                    if (set.showChat)
+                        showChat(true);
+                    else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
+                        createChat();
+            //TODO readd child windows based on settings/state data here   
+            //TODO add code editor support for when code editor is a child window
+            //TODO maybe sepreate the global editor settings from the child window settings
+            */
             createWatcher();
             autoConnect();
             doUpdate(71); //1,2,4,65
