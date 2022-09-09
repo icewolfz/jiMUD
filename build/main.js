@@ -1108,7 +1108,7 @@ ipcMain.on('switch-client', (event, id, offset) => {
         const window = BrowserWindow.fromWebContents(event.sender);
         const windowId = getWindowId(window);
         if (window != clients[id].parent) {
-            //@TODO probably wanting to dock from 1 window to another
+            //TODO probably wanting to dock from 1 window to another
             return;
         }
         const bounds = window.getContentBounds();
@@ -1340,6 +1340,11 @@ function createClient(options) {
     view.webContents.on('devtools-reload-page', () => {
         view.webContents.once('dom-ready', () => {
             executeScript(`if(typeof setId === "function") setId(${getClientId(view)});`, clients[getClientId(view)].view);
+            executeScript('if(typeof loadTheme === "function") loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');', clients[options.id].view);
+            if (options.data)
+                executeScript('if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify({ data: options.data.data, windows: options.data.windows, states: options.data.states }) + ');', clients[options.id].view);
+            else
+                executeScript('if(typeof restoreWindow === "function") restoreWindow({data: {}, windows: [], states: {}});', clients[options.id].view);            
         });
     });
 
@@ -1457,7 +1462,7 @@ function createClient(options) {
         if (global.debug)
             view.webContents.openDevTools();
     }
-    //@TODO change to index.html once basic window system is working
+    //TODO change to index.html once basic window system is working
     view.webContents.loadFile(options.file);
     require("@electron/remote/main").enable(view.webContents);
     if (!options.id) {
@@ -1587,7 +1592,7 @@ function executeCloseHooks(window) {
 }
 
 function updateIcon(window) {
-    //@TODO needs better logic to handle focus/unfocused of multiple windows
+    //TODO needs better logic to handle focus/unfocused of multiple windows
     const windowId = getWindowId(window);
     switch (clients[windows[windowId].current].overlay) {
         case 4:
@@ -1659,7 +1664,7 @@ function updateOverlay() {
                 window.setOverlayIcon(path.join(__dirname, '../assets/icons/png/disconnected.png'), 'Disconnected');
             break;
     }
-    //@TODO updateTray when addded
+    //TODO updateTray when added
 }
 
 ipcMain.on('parseTemplate', (event, str, data) => {
@@ -1788,13 +1793,13 @@ function updateJumpList() {
                 iconIndex: 0
             },
             /** 
-             * @TODO need to figure this out, 
+             * TODO need to figure this out, 
              * either need to use node-ipc or some way to communicate between instances, 
              * also to see if an instance is even open, can use requestSingleInstanceLock
              * but then everything has to be in 1 program even editor only and that
              * requires changing how that works when client is also open
              * 
-             * maybe offer an option to make all 1 instance or seperate, and add/remove
+             * maybe offer an option to make all 1 instance or separate, and add/remove
              * New connection as needed as if not single new connection would just open up a new window
              */
             /*
@@ -2232,7 +2237,6 @@ async function saveWindowLayout(file) {
             id: getClientId(clients[id].view), //use function to ensure proper id data type
             parent: clients[id].parent ? getWindowId(clients[id].parent) : -1,
             file: clients[id].file,
-            menu: null, //@TODO need to save current menu state some how, right now just have an access to menu object
             windows: [],
             state: {
                 bounds: clients[id].view.getBounds(),

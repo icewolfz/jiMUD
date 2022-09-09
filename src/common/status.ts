@@ -703,12 +703,10 @@ export class Status extends EventEmitter {
 
     public updateInterface(noSplitter?) {
         const display = $('#display');
-        const displayBorder = $('#display-border');
         const command = $('#command');
         const status = $('#status');
         const statusBorder = $('#status-border');
         display.css('right', '');
-        displayBorder.css('right', '');
         command.css('right', '');
         if (!this.client.options.showStatus) {
             const w = statusBorder.outerWidth();
@@ -727,13 +725,6 @@ export class Status extends EventEmitter {
                 r = t;
             if (r < 0) r = t;
             display.css('right', r + 'px');
-            r = parseInt(displayBorder.css('right'), 10) || 0;
-            if (w > 0)
-                r -= w;
-            else
-                r = 2;
-            if (r < 0) r = t;
-            displayBorder.css('right', r + 'px');
             r = parseInt(command.css('right'), 10) || 0;
             if (w > 0)
                 r -= w;

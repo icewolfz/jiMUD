@@ -1050,3 +1050,15 @@ body {
 #status-ghost-bar {
     background-color: #d70000;
 }
+
+#loader {
+    color: wheat;
+    background-color: black;
+}
+
+.loader {
+    border: 16px solid #790000;
+    /* Light grey */
+    border-top: 16px solid #d70000;
+    /* Blue */
+}

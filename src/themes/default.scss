@@ -993,3 +993,15 @@ body {
     background-color: #d70000;
     transition-delay: 1s;
 }
+
+#loader {
+    color: wheat;
+    background-color: black;
+}
+
+.loader {
+    border: 16px solid #790000;
+    /* Light grey */
+    border-top: 16px solid #d70000;
+    /* Blue */
+}

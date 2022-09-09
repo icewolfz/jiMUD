@@ -970,3 +970,15 @@ body {
     border: 1px solid #{$buttonHoverColor};  
     transition-delay:1s;
 }
+
+#loader {
+    color: #c3d3b2;
+    background-color: black;
+}
+
+.loader {
+    border: 16px solid #445942;
+    /* Light grey */
+    border-top: 16px solid #c3d3b2;
+    /* Blue */
+}

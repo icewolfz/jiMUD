@@ -16,6 +16,7 @@
 
 <body id="client">
     <!--#region Main body-->
+    <div id="loader"><div class="text">Loading... <div class="loader"></div></div></div>
     <div id="display"></div>
     <div id="command">
         <div id="commandleft"></div>
@@ -418,6 +419,7 @@
 
         //#endregion
 
+        //#region imports
         const Client = require('./js/client.js').Client;
         const Status = require('./js/status.js').Status;
         const Backup = require('./js/backup.js').Backup;
@@ -425,19 +427,18 @@
         const { shell, clipboard, ipcRenderer, webFrame, nativeImage } = require('electron');
         const remote = require('@electron/remote');
         const { Menu, MenuItem } = remote;
-        const { parseTemplate, setSelectionRange, isFileSync, decrypt } = require('./js/library.js');
+        const { parseTemplate, setSelectionRange, isFileSync, decrypt, offset } = require('./js/library.js');
         const { ProfileSaveType } = require('./js/types.js');
         const path = require('path');
         const { version } = require('../package.json');
+        //#endregion
+        //#region variable declarations
         var _id;
         var autoConnectID;
         var autoLoginCounter = 0;
         var lastMouse;
         var chatWin;
         var _nextClear = Date.now() + 3600000;
-
-        loadTheme(ipcRenderer.sendSync('get-global', 'theme'));
-
         var client, _status, _backup;
         var _logger;
         var active = document.hasFocus();
@@ -457,6 +458,8 @@
         var _skipDisconnect = 0;
         var _watcher = null;
         var _windowState;
+        //#endregion
+        loadTheme(ipcRenderer.sendSync('get-global', 'theme'));
 
         //#region window events
         window.addEventListener('keydown', (event) => {
@@ -577,7 +580,7 @@
                     buttons: ['Yes', 'No'],
                     defaultId: 1
                 }) === 0)
-                shell.openExternal(encodeURI(url.replace('&text;', $(el).text())));
+                shell.openExternal(encodeURI(url.replace('&text;', el.textContent)));
             setTimeout(() => {
                 if (client.options.CommandonClick)
                     client.commandInput.focus();
@@ -585,11 +588,10 @@
         }
 
         function doMXPSend(e, el, url, pmt, tt) {
-            el = $(el);
-            var im = el.find('img[ismap]');
+            var im = el.querySelector('img[ismap]');
             var extra = '';
-            if (im.length > 0) {
-                var offset = im.offset();
+            if (im > 0) {
+                var offset = offset(im);
                 var x = Math.floor(e.clientX - offset.left);
                 var y = Math.floor(e.clientY - offset.top);
                 extra = '?' + x + ',' + y;
@@ -599,7 +601,7 @@
                 var menu = new Menu();
                 var item;
                 for (var i = 0, il = url.length; i < il; i++) {
-                    url[i] = url[i].replace('&text;', $(el).text());
+                    url[i] = url[i].replace('&text;', el.textContent);
                     if (i < tt.length) {
                         item = new MenuItem({
                             label: tt[i], click(item) {
@@ -620,12 +622,12 @@
                 menu.popup({ window: remote.getCurrentWindow(), x: e.pageX, y: e.pageY });
             }
             else if (pmt) {
-                url = url.replace('&text;', $(el).text()) + extra;
+                url = url.replace('&text;', el.textContent) + extra;
                 client.commandInput.value = url;
                 setSelectionRange(client.commandInput, url.length, url.length);
             }
             else
-                client.send(url.replace('&text;', $(el).text()) + extra + '\n', true);
+                client.send(url.replace('&text;', el.textContent) + extra + '\n', true);
             setTimeout(() => {
                 if (client.options.CommandonClick)
                     client.commandInput.focus();
@@ -647,8 +649,7 @@
 
         // eslint-disable-next-line no-unused-vars
         function doMXPTooltip(el) {
-            el = $(el);
-            el.prop('title', el.prop('title').replace('&text;', el.text()));
+            el.title = el.title.replace('&text;', el.textContent);
         }
         //#endregion
         function selectAll() {
@@ -658,7 +659,7 @@
                     client.commandInput.focus();
             }, 0);
         }
-
+        //#region Interface functions
         function toggleView(view) {
             switch (view) {
                 case 'button.connect':
@@ -745,69 +746,63 @@
         function updateInterface() {
             if (!client || !client.options) return;
             loadTheme(client.options.theme);
-            $('#display').css('left', '');
-            $('#display-border').css('left', '');
-            $('#command').css('left', '');
+            const display = document.getElementById('display');
+            display.style.left = '';
+            document.getElementById('command').style.left = '';
+            document.getElementById('buttonbar').style.display = '';
             if (!client.options.showButtonBar) {
-                $('#buttonbar').css('display', 'none');
-                var w = parseInt($('#buttonbar').css('left'), 10);
+                const buttonBar = document.getElementById('buttonbar');
+                var w = parseInt(buttonBar.style.left, 10);
                 if (isNaN(w)) w = 0;
-                w += $('#buttonbar').outerWidth();
-
-                $('#display').css('left', $('#display').offset().left - w);
-                $('#display-border').css('left', $('#display-border').offset().left - w);
-                $('#command').css('left', $('#command').offset().left - w);
+                w += buttonBar.offsetWidth;
+                display.style.left = offset(display).left - w;
+                buttonBar.style.display = 'none';
+                document.getElementById('command').style.left = offset(document.getElementById('command')).left - w;
             }
-            else {
-                $('#buttonbar').css('display', '');
-            }
+            const lock = document.getElementById('lock');
             if (client.options.scrollLocked) {
-                $('#lock').prop('title', 'Unlock display');
-                $('#lock i').removeClass('fa-lock');
-                $('#lock i').addClass('fa-unlock');
-                $('#lock').addClass('on');
+                lock.title = 'Unlock display';
+                lock.firstElementChild.classList.remove('fa-lock');
+                lock.firstElementChild.classList.add('fa-unlock');
+                lock.classList.add('on');
             }
             else {
-                $('#lock').removeClass('on');
-                $('#lock').prop('title', 'Lock display');
-                $('#lock i').addClass('fa-lock');
-                $('#lock i').removeClass('fa-unlock');
+                lock.classList.remove('on');
+                lock.title = 'Lock display';
+                lock.firstElementChild.classList.add('fa-lock');
+                lock.firstElementChild.classList.remove('fa-unlock');
             }
             if (!client.options.buttons.connect) {
-                $('#connect').css('display', 'none');
-                $('#disconnect').css('display', 'none');
+                document.getElementById('command').style.display = 'none';
+                document.getElementById('disconnect').style.display = 'none';
             }
             else if (client.connecting || client.connected) {
-                $('#connect').css('display', 'none');
-                $('#disconnect').css('display', '');
+                document.getElementById('command').style.display = 'none';
+                document.getElementById('disconnect').style.display = '';
             }
             else {
-                $('#connect').css('display', '');
-                $('#disconnect').css('display', 'none');
+                document.getElementById('command').style.display = '';
+                document.getElementById('disconnect').style.display = 'none';
             }
-            $('#characters').css('display', client.options.buttons.characters ? '' : 'none');
-            $('#preferences').css('display', client.options.buttons.preferences ? '' : 'none');
-            $('#log').css('display', client.options.buttons.log ? '' : 'none');
-            $('#clear').css('display', client.options.buttons.clear ? '' : 'none');
-            $('#lock').css('display', client.options.buttons.lock ? '' : 'none');
-            $('#map').css('display', client.options.buttons.map ? '' : 'none');
-            $('#mail').css('display', client.options.buttons.mail ? '' : 'none');
-            $('#compose').css('display', client.options.buttons.compose ? '' : 'none');
-            $('#codeEditor').css('display', client.options.buttons.codeEditor ? '' : 'none');
+            document.getElementById('characters').style.display = client.options.buttons.characters ? '' : 'none';
+            document.getElementById('preferences').style.display = client.options.buttons.preferences ? '' : 'none';
+            document.getElementById('log').style.display = client.options.buttons.log ? '' : 'none';
+            document.getElementById('clear').style.display = client.options.buttons.clear ? '' : 'none';
+            document.getElementById('lock').style.display = client.options.buttons.lock ? '' : 'none';
+            document.getElementById('map').style.display = client.options.buttons.map ? '' : 'none';
+            //document.getElementById('mail').style.display = client.options.buttons.mail ? '' : 'none';
+            //document.getElementById('compose').style.display = client.options.buttons.compose ? '' : 'none';
+            document.getElementById('codeEditor').style.display = client.options.buttons.codeEditor ? '' : 'none';
+
             if (client.enableParsing)
-                $('#btnParsing').addClass('on');
+                document.getElementById('btnParsing').classList.add('on');
             else
-                $('#btnParsing').removeClass('on');
+                document.getElementById('btnParsing').classList.remove('on');
             if (client.enableTriggers)
-                $('#btnTriggers').addClass('on');
+                document.getElementById('btnTriggers').classList.add('on');
             else
-                $('#btnTriggers').removeClass('on');
+                document.getElementById('btnTriggers').classList.remove('on');
             buildButtons();
-            /*
-            client.display.update();
-            client.display.updateScrollbars();
-            client.UpdateWindow();
-            */
             setTimeout(() => {
                 _status.resize();
                 _status.updateInterface();
@@ -850,36 +845,7 @@
             }
             return items;
         }
-        /*
-            function buildMenuItems(items) {
-              if (!items || items.length === 0)
-                return [];
-              var menuItems = [], item;
-              for (var x = 0, xl = items.length; x < xl; x++) {
-                if (!items[x].enabled) continue;
-                if (items[x].caption === '-')
-                  item = { type: 'separator' };
-                else {
-                  item = {
-                    label: items[x].caption,
-                    item: items[x],
-                    click: (item) => {
-                      executeContext(item.item);
-                    }
-                  };
-                  if (items[x].items) {
-                    var sub = buildMenuItems(items[x].items);
-                    if (sub.length > 0)
-                      item.submenu = sub;
-                  }
-                  if (items[x].icon && items[x].icon.length > 0)
-                    item.icon = nativeImage.createFromPath(parseTemplate(items[x].icon)).resize({ width: 16, height: 16 });
-                }
-                menuItems.push(new MenuItem(item));
-              }
-              return menuItems;
-            }
-        */
+
         function buildContextMenu() {
             _context = [];
             $contextMenu = _context;
@@ -906,9 +872,6 @@
                             }, 0);
                         };
                         var sub = buildMenu(context[x].name || x, context);
-                        //if (context[x].items)
-                        //sub.push.apply(sub, buildMenuItems(context[x].items));
-
                         if (sub.length > 0)
                             menu.submenu = sub;
                         if (context[x].icon && context[x].icon.length > 0)
@@ -967,13 +930,14 @@
                 doUpdate(128);
             }, 100);
         }
-
+        //#endregion
         function init() {
             //state not ready so delay init until it is ready, this ensures correct settings and other needed data if required
             if (!_windowState) {
                 setTimeout(init, 10);
                 return;
             }
+            //TODO need to redo this if upgrade to newer bootstrap and move away from jquery but as of current used bootstrap impossible to remove
             $('.dropdown').on('show.bs.dropdown', () => {
                 $('.command-history ul').css('max-height', $('#display').outerHeight() + 'px');
                 $('.command-history ul').css('max-width', ($('#command').outerWidth() - 100) + 'px');
@@ -989,7 +953,7 @@
                 lst += '<li><a href="#" onclick="showCommandHistory()">Show history window...</a></li>';
                 $('.command-history ul').html(lst);
             });
-            ipcRenderer.send('update-title', { icon: 0 });
+            //#region Window events
             window.addEventListener('blur', function () {
                 active = false;
                 client.raise('blur');
@@ -1053,6 +1017,8 @@
                     ipcRenderer.send('dock-client', tab.client, { x: x, y: y, pid: ipcRenderer.sendSync('get-pid') });
                 }
             });
+            //#endregion
+            //#region Button bar events
             document.getElementById('buttonbar').addEventListener('wheel', (e) => {
                 if (e.deltaY >= 0)
                     document.getElementById('buttonbar').scrollTop += document.getElementById('buttonbar').clientWidth;
@@ -1091,7 +1057,7 @@
             document.getElementById('bb-scroll-down').onmouseleave = () => {
                 clearTimeout(_buttonTimer);
             };
-
+            //#endregion
             document.getElementById('drag-grip').addEventListener("dragstart", (e) => {
                 e.dataTransfer.dropEffect = 'move';
                 e.dataTransfer.effectAllowed = 'move';
@@ -1110,6 +1076,7 @@
                     ipcRenderer.send('position-client', _id, { x: x, y: y });
                 }
             });
+            //#region setup logger
             _logger = new Worker('./js/logging.js');
             _logger.onmessage = (e) => {
                 switch (e.data.event) {
@@ -1151,15 +1118,15 @@
                 else
                     client.error(e);
             };
+            //#endregion
+            //#region Setup client
             client = new Client('display', 'commandInput', _windowState.data.settings);
-
             client.sendChat = updateChat;
-
-            //window.$selectedurl = '';
-            //window.$selectedline = '';
-
+            /*
+            //TODO this is no longer supported as multi window, need to either remove or rethink this command line argument
             if (ipcRenderer.sendSync('get-global', 'profiles') && ipcRenderer.sendSync('get-global', 'profiles').length > 0)
                 client.enabledProfiles = ipcRenderer.sendSync('get-global', 'profiles');
+            */
             client.display.enableBell = false;
             client.display.on('bell', () => {
                 shell.beep();
@@ -1446,7 +1413,8 @@
             client.on('profile-toggled', (profile, enabled) => {
                 ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], options: { checked: enabled } });
                 doUpdate(24);
-                ipcRenderer.send('profile-toggled', profile, enabled);
+                //TODO figure out how to notify profile window, will require ipc if profiles is a global window
+                //ipcRenderer.send('profile-toggled', profile, enabled);
             });
 
             client.on('profiles-updated', (noChanges) => {
@@ -1642,7 +1610,7 @@
             });
 
             client.on('show', () => {
-                ipcRenderer.send('show-window');
+                ipcRenderer.invoke('window', 'show');
             });
 
             client.on('hide', () => {
@@ -1711,17 +1679,18 @@
 
             client.on('scroll-lock', (lock) => {
                 ipcRenderer.send('update-menuitem', { menu: ['view', 'lock'], options: { checked: lock } });
+                const _lock = document.getElementById('lock');
                 if (lock) {
-                    $('#lock').prop('title', 'Unlock display');
-                    $('#lock').addClass('on');
-                    $('#lock i').removeClass('fa-lock');
-                    $('#lock i').addClass('fa-unlock');
+                    _lock.title = 'Unlock display';
+                    _lock.firstElementChild.classList.remove('fa-lock');
+                    _lock.firstElementChild.classList.add('fa-unlock');
+                    _lock.classList.add('on');
                 }
                 else {
-                    $('#lock').removeClass('on');
-                    $('#lock').prop('title', 'Lock display');
-                    $('#lock i').addClass('fa-lock');
-                    $('#lock i').removeClass('fa-unlock');
+                    _lock.classList.remove('on');
+                    _lock.title = 'Lock display';
+                    _lock.firstElementChild.classList.add('fa-lock');
+                    _lock.firstElementChild.classList.remove('fa-unlock');
                 }
                 client.options.scrollLocked = lock;
                 doUpdate(32);
@@ -1730,15 +1699,15 @@
             client.on('connecting', () => {
                 autoLoginCounter = 0;
                 if (client.options.buttons.connect) {
-                    $('#connect').css('display', 'none');
-                    $('#disconnect').css('display', '');
+                    document.getElementById('connect').style.display = 'none';
+                    document.getElementById('disconnect').style.display = '';
                 }
                 ipcRenderer.send('update-menuitems', [
                     { menu: ['file', 'connect'], options: { enabled: false } },
                     { menu: ['file', 'disconnect'], options: { enabled: true } },
                     { menu: ['window', 'immortal'], options: { visible: false } }
                 ]);
-                $('#immortal').css('display', 'none');
+                document.getElementById('immortal').style.display = 'none';
                 ipcRenderer.send('update-title', { icon: client.port === 1035 ? 4 : 1 });
                 _logger.postMessage({ action: 'connected', args: client.connected });
                 _logger.postMessage({
@@ -1753,8 +1722,8 @@
 
             client.on('closed', () => {
                 if (client.options.buttons.connect) {
-                    $('#connect').css('display', '');
-                    $('#disconnect').css('display', 'none');
+                    document.getElementById('connect').style.display = '';
+                    document.getElementById('disconnect').style.display = 'none';                    
                 }
                 autoLoginCounter = 0;
                 ipcRenderer.send('update-menuitems', [
@@ -1771,7 +1740,7 @@
                         autoConnect();
                         break;
                     case 2: //dialog
-                        if ($('#disconnectDialog')[0].open)
+                        if (document.getElementById('disconnectDialog').open)
                             return;
                         if (_disconnectTimerID)
                             clearTimeout(_disconnectTimerID);
@@ -1791,9 +1760,9 @@
                                 client.connect();
                                 closeDisconnectDialog();
                             }
-                            $('#disconnectTimer').text(_disconnectTimer);
+                            document.getElementById('disconnectTimer').textContent  = _disconnectTimer;
                         }, 1000);
-                        $('#disconnectTimer').text(_disconnectTimer);
+                        document.getElementById('disconnectTimer').textContent  = _disconnectTimer;
                         if (_clients.windows === 1 && _clients.clients === 1) {
                             document.getElementById('disconnect-close').style.display = 'none';
                             document.getElementById('disconnectDialog').style.height = '205px';
@@ -1802,8 +1771,8 @@
                             document.getElementById('disconnect-close').style.display = '';
                             document.getElementById('disconnectDialog').style.height = '239px';
                         }
-                        $('#disconnectDialog')[0].showModal();
-                        $('#disconnectDialogReconnect').focus();
+                        document.getElementById('disconnectDialog').showModal();
+                        document.getElementById('disconnectDialogReconnect').focus();
                         break;
                     case 4: //character manger
                         showCharacters();
@@ -1836,7 +1805,7 @@
                         autoConnect();
                         break;
                     case 2: //dialog
-                        if ($('#disconnectDialog')[0].open)
+                        if (document.getElementById('disconnectDialog').open)
                             return;
                         if (_disconnectTimerID)
                             clearTimeout(_disconnectTimerID);
@@ -1854,9 +1823,9 @@
                                 client.connect();
                                 closeDisconnectDialog();
                             }
-                            $('#disconnectTimer').text(_disconnectTimer);
+                            document.getElementById('disconnectTimer').textContent  = _disconnectTimer;
                         }, 1000);
-                        $('#disconnectTimer').text(_disconnectTimer);
+                        document.getElementById('disconnectTimer').textContent  = _disconnectTimer;
                         if (_clients.windows === 1 && _clients.clients === 1) {
                             document.getElementById('disconnect-close').style.display = 'none';
                             document.getElementById('disconnectDialog').style.height = '205px';
@@ -1865,8 +1834,8 @@
                             document.getElementById('disconnect-close').style.display = '';
                             document.getElementById('disconnectDialog').style.height = '239px';
                         }
-                        $('#disconnectDialog')[0].showModal();
-                        $('#disconnectDialogReconnect').focus();
+                        document.getElementById('disconnectDialog').showModal();
+                        document.getElementById('disconnectDialogReconnect').focus();
                         break;
                     case 4: //character manger
                         showCharacters();
@@ -1908,7 +1877,7 @@
                       */
                     case 'IED.init':
                         ipcRenderer.send('update-menuitem', { menu: ['window', 'immortal'], options: { visible: true } });
-                        $('#immortal').css('display', 'block');
+                        document.getElementById('immortal').style.display = 'block';
                         break;
                 }
                 ipcRenderer.send('GMCP-received', { mod: mod, obj: obj });
@@ -1934,13 +1903,13 @@
 
             client.on('options-saved', () => {
                 if (client.enableParsing)
-                    $('#btnParsing').addClass('on');
+                    document.getElementById('btnParsing').classList.add('on');
                 else
-                    $('#btnParsing').removeClass('on');
+                    document.getElementById('btnParsing').classList.remove('on');
                 if (client.enableTriggers)
-                    $('#btnTriggers').addClass('on');
+                    document.getElementById('btnTriggers').classList.add('on');
                 else
-                    $('#btnTriggers').removeClass('on');
+                    document.getElementById('btnTriggers').classList.remove('on');
                 ipcRenderer.send('options-changed');
             });
 
@@ -1991,7 +1960,7 @@
                         throw new Error('Invalid window name must be: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills');
                 }
             });
-
+            //#endregion
             _backup = new Backup(client, ipcRenderer.sendSync('get-global', 'mapFile'));
             _backup.loadSelection = client.options.backupLoad;
             _backup.saveSelection = client.options.backupSave;
@@ -2534,6 +2503,7 @@
             autoConnect();
             doUpdate(71); //1,2,4,65
             client.raise('opened');
+            document.getElementById('loader').style.display = 'none';
         }
 
         function executeContext(item) {
@@ -3430,7 +3400,7 @@
                 _disconnectTimer = 0;
                 _disconnectCounter = 0;
             }
-            $('#disconnectDialog')[0].close();
+            document.getElementById('disconnectDialog').close();
             client.commandInput.focus()
         }
 
