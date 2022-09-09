@@ -106,6 +106,7 @@ export class Characters extends EventEmitter {
                 .exec('CREATE INDEX IF NOT EXISTS ' + prefix + 'Title_id ON Characters (Title);')
                 .exec('CREATE INDEX IF NOT EXISTS ' + prefix + 'Name_id ON Characters (Name);')
                 .exec('CREATE INDEX IF NOT EXISTS ' + prefix + 'Login_id ON Characters (Name, Password);')
+                .exec('CREATE INDEX IF NOT EXISTS ' + prefix + 'AutoLoad_id ON Characters (AutoLoad);')
 
         }
         catch (err) {
@@ -268,41 +269,30 @@ export class Characters extends EventEmitter {
 
     public getCharactersByName(name: string): Character[] {
         if (!name) return [];
-        try {
-            const rows = this._db.prepare('Select * FROM Characters WHERE Name = $name').all({
-                name: name
-            });
-            return rows || [];
-        }
-        catch (err) {
-            this.emit('error', err);
-        }
-        return [];
+        return this.getCharacters({ Name: name });
     }
 
     public getCharactersByTitle(title: string): Character[] {
         if (!title) return [];
-        try {
-            const rows = this._db.prepare('Select * FROM Characters WHERE Title = $title').all({
-                title: title
-            });
-            return rows || [];
-        }
-        catch (err) {
-            this.emit('error', err);
-        }
-        return [];
+        return this.getCharacters({ Title: title });
     }
 
-    public getCharacters(): Character[] {
+    public getCharacters(filter?, FilterOr?: boolean): Character[] {
+        let rows;
         try {
-            const rows = this._db.prepare('Select * FROM Characters').all();
-            return rows || [];
+            if (filter)
+                rows = this._db.prepare(`Select * FROM Characters WHERE ${Object.keys(filter).map(key => `${key} = $${key}`).join(FilterOr ? ' or ' : ' and ')}`).all(filter);
+            else
+                rows = this._db.prepare('Select * FROM Characters').all();
         }
         catch (err) {
             this.emit('error', err);
         }
-        return [];
+        return rows || [];
+    }
+
+    public getAutoLoadingCharacters(): Character[] {
+        return this.getCharacters({ AutoLoad: 1 });
     }
 
     public clearAll() {
