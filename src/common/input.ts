@@ -13,7 +13,7 @@ import { Alias, Trigger, Button, Profile, TriggerType, TriggerTypes, SubTriggerT
 import { NewLineType, ProfileSaveType } from './types';
 import { SettingList } from './settings';
 import { getAnsiColorCode, getColorCode, isMXPColor, getAnsiCode } from './ansi';
-import { create, all, factory } from 'mathjs';
+const { create, all, factory } =  require('./../../lib/math');
 
 /**
  * Contains custom operator overrides functions for MATHJS to add string support
