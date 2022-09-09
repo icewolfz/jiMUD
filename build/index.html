@@ -2752,6 +2752,7 @@
                 { menu: ['file', 'enableParsing'], options: { checked: client.enableParsing } },
                 { menu: ['file', 'enableTriggers'], options: { checked: client.enableTriggers } }
             ];
+            menu.push({ menu: ['file', 'preferences'], options: { visible: ipcRenderer.sendSync('get-global', 'settingsFile') !== _windowState.data.settings } })
             for (var profile in client.profiles.items)
                 menu.push({ menu: ['profiles', profile], options: { checked: client.enabledProfiles.indexOf(profile) != -1 } });
 
