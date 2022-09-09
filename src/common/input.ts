@@ -13,7 +13,9 @@ import { Alias, Trigger, Button, Profile, TriggerType, TriggerTypes, SubTriggerT
 import { NewLineType, ProfileSaveType } from './types';
 import { SettingList } from './settings';
 import { getAnsiColorCode, getColorCode, isMXPColor, getAnsiCode } from './ansi';
-const { create, all, factory } =  require('./../../lib/math');
+//use minified mathjs instead of default module for performance loading
+//const { create, all, factory } =  require('./../../lib/math');
+const { create, all, factory } = require('./../../node_modules/mathjs/lib/browser/math');
 
 /**
  * Contains custom operator overrides functions for MATHJS to add string support
