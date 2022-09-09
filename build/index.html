@@ -16,7 +16,10 @@
 
 <body id="client">
     <!--#region Main body-->
-    <div id="loader"><div class="text">Loading... <div class="loader"></div></div></div>
+    <div id="loader">
+        <div class="text">Loading... <div class="loader"></div>
+        </div>
+    </div>
     <div id="display"></div>
     <div id="command">
         <div id="commandleft"></div>
@@ -420,9 +423,9 @@
         //#endregion
 
         //#region imports
-        const Client = require('./js/client.js').Client;
-        const Status = require('./js/status.js').Status;
-        const Backup = require('./js/backup.js').Backup;
+        //const Client = require('./js/client.js').Client;
+        //const Status = require('./js/status.js').Status;
+        //const Backup = require('./js/backup.js').Backup;
         const { Settings } = require('./js/settings');
         const { shell, clipboard, ipcRenderer, webFrame, nativeImage } = require('electron');
         const remote = require('@electron/remote');
@@ -432,6 +435,7 @@
         const path = require('path');
         const { version } = require('../package.json');
         //#endregion
+
         //#region variable declarations
         var _id;
         var autoConnectID;
@@ -457,7 +461,7 @@
         var _disconnectCounter = 0;
         var _skipDisconnect = 0;
         var _watcher = null;
-        var _windowState;
+        var _windowState = getWindowOptions();
         //#endregion
         loadTheme(ipcRenderer.sendSync('get-global', 'theme'));
 
@@ -932,11 +936,6 @@
         }
         //#endregion
         function init() {
-            //state not ready so delay init until it is ready, this ensures correct settings and other needed data if required
-            if (!_windowState) {
-                setTimeout(init, 10);
-                return;
-            }
             //TODO need to redo this if upgrade to newer bootstrap and move away from jquery but as of current used bootstrap impossible to remove
             $('.dropdown').on('show.bs.dropdown', () => {
                 $('.command-history ul').css('max-height', $('#display').outerHeight() + 'px');
@@ -1076,6 +1075,7 @@
                     ipcRenderer.send('position-client', _id, { x: x, y: y });
                 }
             });
+            
             //#region setup logger
             _logger = new Worker('./js/logging.js');
             _logger.onmessage = (e) => {
@@ -1120,7 +1120,8 @@
             };
             //#endregion
             //#region Setup client
-            client = new Client('display', 'commandInput', _windowState.data.settings);
+            //client = new Client('display', 'commandInput', _windowState.data.settings);            
+            client = new (require('./js/client.js').Client)('display', 'commandInput', _windowState.data.settings);
             client.sendChat = updateChat;
             /*
             //TODO this is no longer supported as multi window, need to either remove or rethink this command line argument
@@ -1723,7 +1724,7 @@
             client.on('closed', () => {
                 if (client.options.buttons.connect) {
                     document.getElementById('connect').style.display = '';
-                    document.getElementById('disconnect').style.display = 'none';                    
+                    document.getElementById('disconnect').style.display = 'none';
                 }
                 autoLoginCounter = 0;
                 ipcRenderer.send('update-menuitems', [
@@ -1760,9 +1761,9 @@
                                 client.connect();
                                 closeDisconnectDialog();
                             }
-                            document.getElementById('disconnectTimer').textContent  = _disconnectTimer;
+                            document.getElementById('disconnectTimer').textContent = _disconnectTimer;
                         }, 1000);
-                        document.getElementById('disconnectTimer').textContent  = _disconnectTimer;
+                        document.getElementById('disconnectTimer').textContent = _disconnectTimer;
                         if (_clients.windows === 1 && _clients.clients === 1) {
                             document.getElementById('disconnect-close').style.display = 'none';
                             document.getElementById('disconnectDialog').style.height = '205px';
@@ -1823,9 +1824,9 @@
                                 client.connect();
                                 closeDisconnectDialog();
                             }
-                            document.getElementById('disconnectTimer').textContent  = _disconnectTimer;
+                            document.getElementById('disconnectTimer').textContent = _disconnectTimer;
                         }, 1000);
-                        document.getElementById('disconnectTimer').textContent  = _disconnectTimer;
+                        document.getElementById('disconnectTimer').textContent = _disconnectTimer;
                         if (_clients.windows === 1 && _clients.clients === 1) {
                             document.getElementById('disconnect-close').style.display = 'none';
                             document.getElementById('disconnectDialog').style.height = '205px';
@@ -1961,7 +1962,8 @@
                 }
             });
             //#endregion
-            _backup = new Backup(client, ipcRenderer.sendSync('get-global', 'mapFile'));
+            //_backup = new Backup(client, ipcRenderer.sendSync('get-global', 'mapFile'));
+            _backup = new (require('./js/backup.js').Backup)(client, ipcRenderer.sendSync('get-global', 'mapFile'));
             _backup.loadSelection = client.options.backupLoad;
             _backup.saveSelection = client.options.backupSave;
 
@@ -2040,7 +2042,8 @@
                 client.raise('backup-saved');
             });
 
-            _status = new Status(client);
+            //_status = new Status(client);
+            _status = new (require('./js/status.js').Status)(client);
             _status.spitterDistance = client.options.statusWidth;
             _status.on('display-changed', () => {
                 if (_status.ac) {
@@ -2789,6 +2792,7 @@
             }
         }
 
+        /*
         ipcRenderer.on('update-progress', (event, progressObj) => {
             if (!$('#update-progress')[0].open) {
                 $('#update-progress-title').html('Downloading update&hellip;');
@@ -3090,7 +3094,7 @@
             doUpdate(384);
         });
 
-
+        */
         ipcRenderer.on('connection-settings', (event, options) => {
             if (!options) return;
             if (!_windowState) {
@@ -3125,10 +3129,6 @@
                 client.port = ((_windowState && 'dev' in _windowState.data) ? (_windowState.data.dev || false) : client.options.dev) ? 1035 : 1030;
                 ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
             }
-        });
-
-        ipcRenderer.on('window-reloaded', event => {
-
         });
 
         ipcRenderer.on('clients-changed', (event, windows, clients) => {
@@ -3594,30 +3594,31 @@
             return _windowState.data;
         }
 
-        function restoreWindow(data) {
+        function getWindowOptions() {
+            let data = ipcRenderer.sendSync('get-options');
             if (data) {
-                _windowState = data;
                 //safety checks to make sure some basic objects
-                if (!'windows' in _windowState)
-                    _windowState.windows = [];
-                if (!'states' in _windowState)
-                    _windowState.states = {};
+                if (!('windows' in data))
+                    data.windows = [];
+                if (!('states' in data))
+                    data.states = {};
                 //make sure we have a settings file, default to global file
-                if (!'data' in _windowState)
-                    _windowState.data = {
+                if (!('data' in data))
+                    data.data = {
                         settings: ipcRenderer.sendSync('get-global', 'settingsFile')
                     };
-                else if (!'settings' in _windowState.data)
-                    _windowState.data.settings = ipcRenderer.sendSync('get-global', 'settingsFile');
+                else if (!('settings' in data.data))
+                    data.data.settings = ipcRenderer.sendSync('get-global', 'settingsFile');
             }
             else
-                _windowState = {
+                data = {
                     data: {
                         settings: ipcRenderer.sendSync('get-global', 'settingsFile')
                     },
                     windows: [],
                     states: {}
                 };
+            return data;
         }
 
         //#region Id functions
@@ -3654,7 +3655,7 @@
             return _close;
         }
         //#endregion
-        //$(document).ready(init);
+        //$(document).ready(init);     
         init();
     </script>
 </body>

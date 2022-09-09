@@ -23,6 +23,7 @@
     - Changed -s/--setting to set the global preference file to use
     - Changed -m/--map to set working global map file for generic new connections
     - Removed -mf argument to keep argument name scheme flowing
+  - Switch to mathjs minified file instead of module to reduce load times
 
 ## 0.19.4
 

@@ -422,7 +422,7 @@ function createWindow(options) {
     });
 
     window.once('ready-to-show', () => {
-        loadWindowScripts(window, 'manager');
+        loadWindowScripts(window, options.script || 'manager');
         executeScript(`if(typeof setId === "function") setId(${getWindowId(window)});`, window);
         executeScript('if(typeof loadTheme === "function") loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');', window);
         if (options.data && options.data.data)
@@ -1311,6 +1311,11 @@ ipcMain.on('update-title', (event, options) => {
     }
 });
 
+ipcMain.on('get-options', event => {
+    const view = browserViewFromContents(event.sender);
+    event.returnValue = clients[getClientId(view)].options;
+});
+
 //bounds, id, data, file
 function createClient(options) {
     options = options || {};
@@ -1341,10 +1346,12 @@ function createClient(options) {
         view.webContents.once('dom-ready', () => {
             executeScript(`if(typeof setId === "function") setId(${getClientId(view)});`, clients[getClientId(view)].view);
             executeScript('if(typeof loadTheme === "function") loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');', clients[options.id].view);
+            /*
             if (options.data)
                 executeScript('if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify({ data: options.data.data, windows: options.data.windows, states: options.data.states }) + ');', clients[options.id].view);
             else
-                executeScript('if(typeof restoreWindow === "function") restoreWindow({data: {}, windows: [], states: {}});', clients[options.id].view);            
+                executeScript('if(typeof restoreWindow === "function") restoreWindow({data: {}, windows: [], states: {}});', clients[options.id].view);
+            */
         });
     });
 
@@ -1474,12 +1481,14 @@ function createClient(options) {
     }
     clients[options.id] = { view: view, windows: [], parent: null, file: options.file !== 'build/index.html' ? options.file : 0, states: {} };
     idMap.set(view, options.id);
-    executeScript(`if(typeof setId === "function") setId(${options.id});`, clients[options.id].view);
-    executeScript('if(typeof loadTheme === "function") loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');', clients[options.id].view);
+    loadWindowScripts(view, options.script || 'user');
+    script = `if(typeof setId === "function") setId(${options.id});if(typeof loadTheme === "function") loadTheme('${set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'')}');`;
     if (options.data)
-        executeScript('if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify({ data: options.data.data, windows: options.data.windows, states: options.data.states }) + ');', clients[options.id].view);
+        clients[options.id].options = { data: options.data.data, windows: options.data.windows, states: options.data.states };
     else
-        executeScript('if(typeof restoreWindow === "function") restoreWindow({data: {}, windows: [], states: {}});', clients[options.id].view);
+        clients[options.id].options = { data: {}, windows: [], states: {} };
+    // + 'if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify(clients[options.id].options) + ');'
+    executeScript(script, clients[options.id].view);
     //win.setTopBrowserView(view)    
     //addBrowserView
     //setBrowserView  
