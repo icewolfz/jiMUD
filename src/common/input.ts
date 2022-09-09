@@ -1391,12 +1391,12 @@ export class Input extends EventEmitter {
         this.client.commandInput.addEventListener('keyup', event => {
             if (event.key !== 'Escape' && event.key !== 'ArrowUp' && event.key !== 'ArrowDown')
                 this._historyIdx = this._commandHistory.length;
-        });
-
-        this.client.commandInput.addEventListener('keydown', (event) => {
+        })
+        
+        this.client.commandInput.addEventListener('keydown', event => {
             switch (event.key) {
                 case 'Escape': //esc
-                this.client.commandInput.blur();
+                    this.client.commandInput.blur();
                     this.client.commandInput.value = '';
                     this.client.commandInput.select();
                     this._historyIdx = this._commandHistory.length;
@@ -1465,8 +1465,6 @@ export class Input extends EventEmitter {
                     this.client.sendCommand(null, null, this.client.options.allowCommentsFromCommand);
                     break;
             }
-        }).keypress((event) => {
-            return true;
         });
         //spell-checker:ignore gamepadconnected gamepaddisconnected
         window.addEventListener('gamepadconnected', (e) => {

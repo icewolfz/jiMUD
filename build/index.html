@@ -3031,7 +3031,6 @@
             if (isEditable) {
                 input = document.elementFromPoint(params.x, params.y);
                 if (input && input.id === 'commandInput') {
-                    //e.preventDefault();
                     client.commandInput.dataset.selStart = client.commandInput.selectionStart;
                     client.commandInput.dataset.selEnd = client.commandInput.selectionEnd;
                     inputMenu = Menu.buildFromTemplate([
@@ -3451,8 +3450,6 @@
             */
         }
 
-        $(document).ready(init);
-
         document.addEventListener('load', () => doUpdate(1));
 
         document.addEventListener('visibilitychange', () => {
@@ -3640,7 +3637,7 @@
                     _windowState.data = {
                         settings: ipcRenderer.sendSync('get-global', 'settingsFile')
                     };
-                else if (!'settings' in +_windowState.data)
+                else if (!'settings' in _windowState.data)
                     _windowState.data.settings = ipcRenderer.sendSync('get-global', 'settingsFile');
             }
             else
@@ -3687,6 +3684,8 @@
             return _close;
         }
         //#endregion
+        //$(document).ready(init);
+        init();
     </script>
 </body>
 
