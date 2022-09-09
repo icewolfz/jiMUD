@@ -5,15 +5,14 @@
 //spell-checker:ignore testfile testspeedfile testspeedfiler nosend printprompt printp pcol forall stringlist zcolor ipos trimleft trimright
 //spell-checker:ignore bitand bitnot bitor bitshift bittest bitnum bitxor isfloat isnumber
 import EventEmitter = require('events');
-import { MacroModifiers, MacroDisplay, Alias, Trigger, Button, Profile, TriggerType, TriggerTypes, SubTriggerTypes, convertPattern  } from './profile';
+import { MacroModifiers, MacroDisplay, Alias, Trigger, Button, Profile, TriggerType, TriggerTypes, SubTriggerTypes, convertPattern } from './profile';
 import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync, splitQuoted, isValidIdentifier, fileSizeSync } from './library';
 import { Client } from './client';
 import { Tests } from './test';
 import { NewLineType, ProfileSaveType } from './types';
 import { SettingList } from './settings';
 import { getAnsiColorCode, getColorCode, isMXPColor, getAnsiCode } from './ansi';
-const { create, all, factory } =  require('./../../lib/math');
-
+const { create, all, factory } = require('./../../lib/math');
 
 /**
  * Contains custom operator overrides functions for MATHJS to add string support
@@ -1392,7 +1391,7 @@ export class Input extends EventEmitter {
             if (event.key !== 'Escape' && event.key !== 'ArrowUp' && event.key !== 'ArrowDown')
                 this._historyIdx = this._commandHistory.length;
         })
-        
+
         this.client.commandInput.addEventListener('keydown', event => {
             switch (event.key) {
                 case 'Escape': //esc
