@@ -2391,7 +2391,7 @@ function createMenu() {
                     label: 'New &Connection',
                     id: 'newConnect',
                     accelerator: 'CmdOrCtrl+Shift+N',
-                    click: (item, mWindow) => {
+                    click: (item, mWindow, keyboard) => {
                         let windowId = getWindowId(mWindow);
                         let id = createClient({ bounds: mWindow.getContentBounds() });
                         focusedWindow = windowId;
@@ -2403,6 +2403,14 @@ function createMenu() {
                             mWindow.addBrowserView(clients[id].view);
                             mWindow.setTopBrowserView(clients[id].view);
                             mWindow.webContents.send('new-client', { id: id });
+                            //allow for some hidden ways to force open main/dev if needed with out the complex menus
+                            if(!keyboard.triggeredByAccelerator)
+                            {
+                                if(keyboard.ctrlKey)
+                                    clients[id].view.webContents.send('connection-settings', { dev: true });
+                                else if(keyboard.shiftKey)
+                                    clients[id].view.webContents.send('connection-settings', { dev: false });
+                            }                            
                             focusWindow(mWindow, true);
                             clientsChanged();
                         });
@@ -2412,7 +2420,7 @@ function createMenu() {
                     label: 'New &Window',
                     id: '',
                     accelerator: 'CmdOrCtrl+Alt+N',
-                    click: (item, mWindow) => {
+                    click: (item, mWindow, keyboard) => {
                         //save the current states so it has the latest for new window
                         states['manager.html'] = saveWindowState(mWindow);
                         //offset the state so it is not an exact overlap
@@ -2439,9 +2447,19 @@ function createMenu() {
                         clients[id].parent = window;
                         window.addBrowserView(clients[id].view);
                         window.setTopBrowserView(clients[id].view);
-                        clients[id].view.webContents.once('dom-ready', clientsChanged);
+                        clients[id].view.webContents.once('dom-ready', () => {
+                            clientsChanged();
+                            //allow for some hidden ways to force open main/dev if needed with out the complex menus
+                            if(!keyboard.triggeredByAccelerator)
+                            {
+                                if(keyboard.ctrlKey)
+                                    clients[id].view.webContents.send('connection-settings', { dev: true });
+                                else if(keyboard.shiftKey)
+                                    clients[id].view.webContents.send('connection-settings', { dev: false });
+                            }                            
+                        });
                         window.webContents.once('dom-ready', () => {
-                            window.webContents.send('new-client', { id: id });
+                            window.webContents.send('new-client', { id: id });                           
                             focusWindow(window, true);
                         });
                     }
