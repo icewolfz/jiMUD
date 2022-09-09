@@ -262,6 +262,9 @@ button.active.focus {
     width:100%;
     text-align:center;
     font-size:3em;
+    top: 50%;
+    position: absolute;
+    transform: translateY(-50%);
 }
 
 .loader {
