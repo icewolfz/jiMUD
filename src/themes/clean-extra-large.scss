@@ -79,11 +79,15 @@ body {
 }
 
 #buttonbar {
-    top: 2px;
+    top: 36px;
     left: 2px;
     bottom: 2px;
     width: 64px;
 }
+#bb-scroll-up {
+    top: 36px;
+}
+
 #bb-scroll-down, #bb-scroll-up {
     width: 64px;
 }
@@ -1049,6 +1053,44 @@ body {
 
 #status-ghost-bar {
     background-color: #d70000;
+}
+
+/** Grip button */
+.drag-grip {
+    color: #{$color};
+    background-color: maroon;
+    left: 2px;
+    top: 2px;    
+    height: 32px;
+}
+
+.drag-grip:hover {
+    background-color: #d70000;
+    color: #{$color};
+}
+
+.drag-grip:active {
+    background-color: #790000;
+    color: #{$color};
+}
+
+.drag-grip:focus {
+    color: #{$color};
+}
+
+.drag-grip span {
+    left: 8px;
+    top: -6px;
+}
+
+.drag-grip svg {
+    height: 28px;
+    top: 0px;
+}
+
+.drag-grip[style*='display: none']~#bb-scroll-up,
+.drag-grip[style*='display: none']~#buttonbar {
+    top: 2px;
 }
 
 #loader {

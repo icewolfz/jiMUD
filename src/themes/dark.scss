@@ -68,10 +68,18 @@ body {
 }
 
 #buttonbar {
-    top: 2px;
+    top: 20px;
     left: 2px;
     bottom: 2px;
     background-color: #{$panelBackground};
+}
+
+#bb-scroll-up {
+    top: 20px;
+}
+
+#bb-scroll-down {
+    bottom: 0px;
 }
 
 /* Let's get this party started */
@@ -931,6 +939,31 @@ body {
 #status-drag-bar:hover{
     background-color: #d4d4d4;    
     transition-delay: 1s;
+}
+
+/** Grip button */
+.drag-grip {
+    left: 2px;
+    top: 2px;    
+}
+
+.drag-grip:focus {
+    color: #{$color};
+}
+
+.drag-grip span {
+    left: 8px;
+    top: -6px;
+}
+
+.drag-grip svg {
+    left: -1px;
+    top: -12px;    
+}
+
+.drag-grip[style*='display: none']~#bb-scroll-up,
+.drag-grip[style*='display: none']~#buttonbar {
+    top: 2px;
 }
 
 #loader {

@@ -952,24 +952,8 @@ body {
 /** Grip button */
 .drag-grip {
     background-image: url(#{$images}/button.png);
-    color: #{$color};
-    background-color: maroon;
     background-size: 100% 100%;
     border-width: 0px;
-}
-
-.drag-grip:hover {
-    background-color: #d70000;
-    color: #{$color};
-}
-
-.drag-grip:active {
-    background-color: #790000;
-    color: #{$color};
-}
-
-.drag-grip:focus {
-    color: #{$color};
 }
 
 .drag-grip span {

@@ -72,7 +72,7 @@ body {
 }
 
 #buttonbar {
-    top: 0px;
+    top: 18px;
     left: 0px;
     bottom: 0px;
     background-color: #{$panelBackground};
@@ -81,7 +81,7 @@ body {
 
 #bb-scroll-up {
     left: 1px;
-    top: 0px;
+    top: 18px;
     width: 31px;
     margin-top: 0;
 }
@@ -1013,9 +1013,34 @@ body {
     transition-delay: 1s;
 }
 
+/** Grip button */
+.drag-grip {
+    left: 1px;
+    top: 2px;    
+}
+
+.drag-grip:focus {
+    color: #{$color};
+}
+
+.drag-grip span {
+    left: 8px;
+    top: -6px;
+}
+
+.drag-grip svg {
+    left: -1px;
+    top: -12px;    
+}
+
+.drag-grip[style*='display: none']~#bb-scroll-up,
+.drag-grip[style*='display: none']~#buttonbar {
+    top: 0;
+}
+
 #loader {
     color: #333;
-    background-color: black;
+    background-color: #{$panelBackground};
 }
 
 .loader {
