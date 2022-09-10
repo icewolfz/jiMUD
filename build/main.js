@@ -928,7 +928,7 @@ ipcMain.on('get-app-sync', async (event, key, ...args) => {
 });
 
 ipcMain.on('set-progress', (event, progress, mode) => {
-    const window = BrowserWindow.browserViewFromContents(event.sender);
+    const window = BrowserWindow.fromWebContents(event.sender);
     const clientId = getClientId(browserViewFromContents(event.sender));
     const windowId = getWindowId(window);
     clients[clientId].progress = progress.value;
@@ -945,7 +945,11 @@ ipcMain.on('set-progress', (event, progress, mode) => {
         totalProgress += clients[windows[windowId].clients[c]].progress;
         totalCount++;
     }
-    totalProgress /= totalCount;
+    if (!totalCount)
+        totalProgress = -1;
+    else
+        totalProgress /= totalCount;
+
     window.setProgressBar(totalProgress, { mode: progressMode });
 });
 

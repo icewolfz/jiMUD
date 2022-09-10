@@ -462,6 +462,7 @@
         var _watcher = null;
         var _windowState = getWindowOptions();
         var _windows = {};
+        let closeWindow = true;
         //#endregion
         loadTheme(ipcRenderer.sendSync('get-global', 'theme'));
 
@@ -2123,7 +2124,6 @@
                     colors: client.options.colors
                 }
             });
-            let closeWindow = true;
 
             document.getElementById('status').addEventListener('contextmenu', e => {
                 e.preventDefault();
@@ -2572,7 +2572,6 @@
 
         function buildButtons() {
             var buttons = document.getElementById('user-buttons');
-            var buttons = $('#user-buttons');
             buttons.replaceChildren();
             if (!client.options.buttons.user)
                 return;
