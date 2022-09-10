@@ -9,7 +9,6 @@ const settings = require('./js/settings');
 const { TrayClick } = require('./js/types');
 const { Menubar } = require('./js/menubar');
 const { Characters } = require('./js/characters');
-const { or } = require('mathjs');
 
 require('@electron/remote/main').initialize()
 
@@ -172,7 +171,7 @@ function addInputContext(window, spellcheck) {
                 { type: 'separator' },
                 { role: 'selectAll' },
             ]);
-            if (global.debug) {
+            if (global.debug || set.enableDebug) {
                 inputMenu.append(new MenuItem({ type: 'separator' }));
                 inputMenu.append(new MenuItem({
                     label: 'Inspect',
@@ -341,35 +340,7 @@ function createWindow(options) {
         let file = url;
         if (url.startsWith('file:///' + __dirname.replace(/\\/g, '/')))
             file = url.substring(__dirname.length + 9);
-        require("@electron/remote/main").enable(childWindow.webContents);
-        childWindow.removeMenu();
-        childWindow.once('ready-to-show', () => {
-            loadWindowScripts(childWindow, frameName);
-            addInputContext(childWindow, set && set.spellchecking);
-            childWindow.show();
-        });
-        childWindow.webContents.on('render-process-gone', (event, details) => {
-            logError(`${url} render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
-        });
-        childWindow.on('unresponsive', () => {
-            dialog.showMessageBox({
-                type: 'info',
-                message: 'Unresponsive',
-                buttons: ['Reopen', 'Keep waiting', 'Close']
-            }).then(result => {
-                if (!childWindow)
-                    return;
-                if (result.response === 0) {
-                    childWindow.reload();
-                    logError(`${url} unresponsive, reload.\n`, true);
-                }
-                else if (result.response === 2) {
-                    childWindow.destroy();
-                }
-                else
-                    logError(`${url} unresponsive, waiting.\n`, true);
-            });
-        });
+        initializeChildWindow(childWindow, url, details);
 
         childWindow.on('resize', () => {
             states[file] = saveWindowState(childWindow);
@@ -393,7 +364,7 @@ function createWindow(options) {
 
         childWindow.on('closed', () => {
             if (window && !window.isDestroyed()) {
-                executeScriptClient(`if(typeof childClosed === "function") childClosed('${url}', '${frameName}');`, window, true);
+                executeScriptClient(`if(typeof childClosed === "function") childClosed('${file}', '${url}', '${frameName}');`, window, true);
             }
         });
         childWindow.on('close', () => {
@@ -1111,7 +1082,7 @@ ipcMain.on('window-info', (event, info, id, ...args) => {
         }
         for (window in clients[id].windows) {
             const wl = clients[id].windows.length;
-            for (var idx = 0; idx < wl; id++) {
+            for (var idx = 0; idx < wl; idx++) {
                 const window = clients[id].windows[idx].window;
                 //call any code hooks in the child windows
                 if (window && !window.isDestroyed() && window.getTitle().startsWith(args[0])) {
@@ -1441,64 +1412,36 @@ function createClient(options) {
         let file = url;
         if (url.startsWith('file:///' + __dirname.replace(/\\/g, '/')))
             file = url.substring(__dirname.length + 9);
-        require("@electron/remote/main").enable(childWindow.webContents);
-        childWindow.removeMenu();
-        childWindow.once('ready-to-show', () => {
-            loadWindowScripts(childWindow, frameName);
-            addInputContext(childWindow, set && set.spellchecking);
-            childWindow.show();
-        });
-        childWindow.webContents.on('render-process-gone', (event, details) => {
-            logError(`${url} render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
-        });
-        childWindow.on('unresponsive', () => {
-            dialog.showMessageBox({
-                type: 'info',
-                message: 'Unresponsive',
-                buttons: ['Reopen', 'Keep waiting', 'Close']
-            }).then(result => {
-                if (!childWindow)
-                    return;
-                if (result.response === 0) {
-                    childWindow.reload();
-                    logError(`${url} unresponsive, reload.\n`, true);
-                }
-                else if (result.response === 2) {
-                    childWindow.destroy();
-                }
-                else
-                    logError(`${url} unresponsive, waiting.\n`, true);
-            });
-        });
+        initializeChildWindow(childWindow, url, details);
 
         childWindow.on('resize', () => {
             states[file] = saveWindowState(childWindow);
-            client[getClientId(view)].states[file] = states[file];
+            clients[getClientId(view)].states[file] = states[file];
         });
 
         childWindow.on('move', () => {
             states[file] = saveWindowState(childWindow);
-            client[getClientId(view)].states[file] = states[file];
+            clients[getClientId(view)].states[file] = states[file];
         });
 
         childWindow.on('maximize', () => {
             states[file] = saveWindowState(childWindow);
-            client[getClientId(view)].states[file] = states[file];
+            clients[getClientId(view)].states[file] = states[file];
         });
 
         childWindow.on('unmaximize', () => {
             states[file] = saveWindowState(childWindow);
-            client[getClientId(view)].states[file] = states[file];
+            clients[getClientId(view)].states[file] = states[file];
         });
 
         childWindow.on('resized', () => {
             states[file] = saveWindowState(childWindow);
-            client[getClientId(view)].states[file] = states[file];
+            clients[getClientId(view)].states[file] = states[file];
         });
 
         childWindow.on('closed', () => {
             if (view && view.webContents && !view.webContents.isDestroyed()) {
-                executeScript(`if(typeof childClosed === "function") childClosed('${url}', '${frameName}');`, view, true);
+                executeScript(`if(typeof childClosed === "function") childClosed('${file}', '${url}', '${frameName}');`, view, true);
             }
             //remove remove from list
             const id = getClientId(view);
@@ -1512,7 +1455,7 @@ function createClient(options) {
 
         childWindow.on('close', () => {
             states[file] = saveWindowState(childWindow);
-            client[getClientId(view)].states[file] = states[file];
+            clients[getClientId(view)].states[file] = states[file];
         });
 
         clients[getClientId(view)].windows.push({ window: childWindow, details: details });
@@ -1524,7 +1467,7 @@ function createClient(options) {
     })
     if (options.data && options.data.state) {
         view.setBounds(options.data.state.bounds);
-        if (options.data.state.devTools || global.debug)
+        if (options.data.state.devTools || global.debug || set.enableDebug)
             view.webContents.openDevTools();
     }
     else {
@@ -1534,7 +1477,7 @@ function createClient(options) {
             width: options.bounds.width,
             height: options.bounds.height
         });
-        if (global.debug)
+        if (global.debug || set.enableDebug)
             view.webContents.openDevTools();
     }
     //TODO change to index.html once basic window system is working
@@ -1591,7 +1534,7 @@ function closeClientWindows(id) {
     //no windows so just bail
     if (!clients[id] || clients[id].windows.length === 0) return;
     const wl = clients[id].windows.length;
-    for (var idx = 0; idx < wl; id++) {
+    for (var idx = 0; idx < wl; idx++) {
         const window = clients[id].windows[idx].window;
         //call any code hooks in the child windows
         if (window && !window.isDestroyed()) {
@@ -1605,7 +1548,7 @@ function setClientWindowsParent(id, parent, oldParent) {
     //no windows so just bail
     if (clients[id].windows.length === 0) return;
     const wl = clients[id].windows.length;
-    for (var idx = 0; idx < wl; id++) {
+    for (var idx = 0; idx < wl; idx++) {
         const window = clients[id].windows[idx].window;
         //call any code hooks in the child windows
         if (window && !window.isDestroyed()) {
@@ -1660,6 +1603,62 @@ async function canCloseAllWindows() {
             return false;
     }
     return true;
+}
+
+function initializeChildWindow(window, url, details) {
+    require("@electron/remote/main").enable(window.webContents);
+    window.removeMenu();
+    window.once('ready-to-show', () => {
+        loadWindowScripts(window, details.frameName);
+        addInputContext(window, set && set.spellchecking);
+        executeScript('(function(){window.oldFocus = window.focus; window.focus = ()=> { ipcRenderer.invoke("window", "focus"); };})();', window);
+        window.show();
+        if (global.debug || set.enableDebug)
+            window.webContents.openDevTools();        
+    });    
+    window.webContents.on('render-process-gone', (event, goneDetails) => {
+        logError(`${url} render process gone, reason: ${goneDetails.reason}, exitCode ${goneDetails.exitCode}\n`, true);
+    });    
+    window.on('unresponsive', () => {
+        dialog.showMessageBox({
+            type: 'info',
+            message: 'Unresponsive',
+            buttons: ['Reopen', 'Keep waiting', 'Close']
+        }).then(result => {
+            if (!childWindow)
+                return;
+            if (result.response === 0) {
+                childWindow.reload();
+                logError(`${url} unresponsive, reload.\n`, true);
+            }
+            else if (result.response === 2) {
+                childWindow.destroy();
+            }
+            else
+                logError(`${url} unresponsive, waiting.\n`, true);
+        });
+    });
+
+    window.webContents.setWindowOpenHandler((childDetails) => {
+        var u = new url.URL(childDetails.url);
+        if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'mailto:') {
+            shell.openExternal(childDetails.url);
+            return { action: 'deny' };
+        }
+        return {
+            action: 'allow',
+            overrideBrowserWindowOptions: buildOptions(childDetails, window, set)
+        }
+    });
+
+    window.webContents.on('did-create-window', (childWindow, childDetails) => {
+        let url = childDetails.url;
+        let file = url;
+        if (url.startsWith('file:///' + __dirname.replace(/\\/g, '/')))
+            file = url.substring(__dirname.length + 9);
+        initializeChildWindow(childWindow, url, childDetails);
+    });
+
 }
 
 function executeCloseHooks(window) {
@@ -1811,7 +1810,7 @@ function isFileSync(aPath) {
 
 function logError(err, skipClient) {
     var msg = '';
-    if (global.debug)
+    if (global.debug || set.enableDebug)
         console.error(err);
     if (!set)
         set = settings.Settings.load(global.settingsFile);
@@ -2324,7 +2323,7 @@ async function saveWindowLayout(file) {
             states: clients[id].states
         }
         const wl = clients[id].windows.length;
-        for (var idx = 0; idx < wl; id++) {
+        for (var idx = 0; idx < wl; idx++) {
             const window = clients[id].windows[idx].window;
             const wData = {
                 client: getClientId(clients[id].view), //use function to ensure proper id data type
@@ -2439,7 +2438,7 @@ function restoreWindowState(window, state) {
     window.show();
     if (state.fullscreen)
         window.setFullScreen(state.fullscreen);
-    if (state.devTools || global.debug)
+    if (state.devTools || global.debug || set.enableDebug)
         window.webContents.openDevTools();
     if (!state.enabled)
         window.setEnabled(false);
@@ -2579,7 +2578,7 @@ function createMenu() {
                     id: 'characters',
                     accelerator: 'CmdOrCtrl+H',
                     click: (item, mWindow) => {
-                        executeScriptClient('showCharacters()', mWindow, true);
+                        executeScriptClient('openWindow("characters")', mWindow, true);
                     }
                 },
                 { type: 'separator' },

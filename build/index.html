@@ -63,7 +63,7 @@
                 <path d="M6.4 10.4c0.2 0.1 0.6-0.1 0.8 0 0.1 0.1 0 0.7 0 0.8 0 0.3 0 0.5 0 0.8 -0.2 0.1-0.6-0.1-0.8 0 -0.1 0.1 0 0.7 0 0.8 0 0.1 0.1 0.8 0 0.8 -0.1 0.1-0.7 0-0.8 0 -0.1 0-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.8 0 0.8 -0.2 0.1-0.6 0-0.8 0 -0.2 0-0.6-0.1-0.8 0 -0.2 0.1-0.7-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.2 0.1-0.6-0.1-0.8 0 -0.1 0.1 0.1 0.7 0 0.8 -0.1 0.1-0.7 0-0.8 0 -0.3 0-0.5 0-0.8 0 0-0.5 0-1.1 0-1.6 0.2-0.1 0.7 0.1 0.8 0 0.1-0.1-0.1-0.7 0-0.8 0.2-0.1 0.6 0.1 0.8 0 0-0.3 0-0.5 0-0.8 0-0.2-0.1-0.6 0-0.8 0-0.1-0.1-0.7 0-0.8 0.1-0.1 0.8 0.1 0.8 0 0.1-0.2 0-0.6 0-0.8 0-0.1-0.1-0.7 0-0.8 0.2-0.1 0.6 0.1 0.8 0 0.3 0 0.5 0 0.8 0 0.1-0.1-0.1-0.8 0-0.8 0.1 0 0.8 0 0.8 0 0.1 0.1-0.1 0.7 0 0.8 0.2 0.1 0.6-0.1 0.8 0 0.2 0.1 0.7-0.1 0.8 0C6.5 9.8 6.3 10.3 6.4 10.4z" class="a" />
             </svg>
         </a>
-        <a href="javascript:void(0)" title="Characters" id="characters" class="button" onclick="showCharacters();">
+        <a href="javascript:void(0)" title="Characters" id="characters" class="button" onclick="openWindow('characters');">
             <i class="fa fa-user"></i>
         </a>
         <a href="javascript:void(0)" title="Immortal Tools" id="immortal" class="button" onclick="showImmortalTools()" style="display: none">
@@ -284,7 +284,7 @@
                     <i class="fa fa-refresh"></i>
                     <u>R</u>econnect</button>
                 <!--<button style="float: right" type="button" class="btn btn-primary" onclick="" accesskey="d"><i class="fa fa-terminal"></i><u>D</u>iffernt MUD...</button>-->
-                <button style="float: right" type="button" class="btn btn-default btn-block" onclick="closeDisconnectDialog(true);showCharacters();" accesskey="d">
+                <button style="float: right" type="button" class="btn btn-default btn-block" onclick="closeDisconnectDialog(true);openWindow('characters');" accesskey="d">
                     <i class="fa fa-user"></i> Character
                     <u>M</u>anager...</button>
                 <button style="float: right" type="button" class="btn btn-default btn-block" onclick="closeDisconnectDialog(true);" accesskey="o">
@@ -488,14 +488,14 @@
                 }
                 else if (event.which == 77) {
                     closeDisconnectDialog(true);
-                    showCharacters();
+                    openWindow('characters');
                     event.preventDefault();
                     event.cancelBubble = true;
                 }
                 //c
                 else if (!(_clients.windows === 1 && _clients.clients === 1) && event.which == 67) {
                     closeDisconnectDialog(true);
-                    showCharacters();
+                    openWindow('characters');
                     event.preventDefault();
                     event.cancelBubble = true;
                 }
@@ -1780,7 +1780,7 @@
                         document.getElementById('disconnectDialogReconnect').focus();
                         break;
                     case 4: //character manger
-                        showCharacters();
+                        openWindow('characters');
                         break;
                     case 8: //close
                         window.close();
@@ -1843,7 +1843,7 @@
                         document.getElementById('disconnectDialogReconnect').focus();
                         break;
                     case 4: //character manger
-                        showCharacters();
+                        openWindow('characters');
                         break;
                     case 8: //close
                         window.close();
@@ -1996,7 +1996,7 @@
                     message: err || 'Error importing or exporting data.'
                 });
                 setTimeout(() => {
-                    window.focus();
+                    ipcRenderer.invoke('window', 'focus');
                 }, 500);
                 client.commandInput.focus()
             });
@@ -2011,7 +2011,7 @@
                     message: err || 'Aborted importing or exporting data.'
                 });
                 setTimeout(() => {
-                    window.focus();
+                    ipcRenderer.invoke('window', 'focus');
                 }, 500);
                 client.commandInput.focus()
             });
@@ -2021,7 +2021,7 @@
                     document.getElementById('Progress').close();
                 client.commandInput.focus()
                 setTimeout(() => {
-                    window.focus();
+                    ipcRenderer.invoke('window', 'focus');
                 }, 500);
                 ipcRenderer.send('set-progress', { value: -1 });
             });
@@ -2407,7 +2407,7 @@
             if (client.options.find.show)
                 client.display.showFind();
             if (client.options.showCharacterManager)
-                showCharacters();
+                openWindow('characters');
             //TODO re add known child windows with settings and combine with last known states
             //TODO this should be a function as reloading settings will effect which windows are open/closed
             /*
@@ -3088,13 +3088,21 @@
         }
 
         // eslint-disable-next-line no-unused-vars
-        function childClosed(url, name) {
-            delete _windows[url];
+        function childClosed(file, url, name) {
+            delete _windows[file];
         }
 
-        function showCharacters() {
-            if (_windows['characters.html']) return;
-            _windows['characters.html'] = window.open('characters.html', 'modal', 'backgroundColor=#fff,height=555,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
+        function openWindow(name) {
+            if(_windows[name + '.html'])
+            {
+                _windows[name + '.html'].focus();
+                return;
+            }
+            switch(name) {
+                case 'characters':
+                    _windows['characters.html'] = window.open('characters.html', 'Characters', 'backgroundColor=#fff,height=555,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
+                    break;
+            }
         }
 
         // eslint-disable-next-line no-unused-vars
