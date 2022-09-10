@@ -87,8 +87,8 @@ this.print(name + ' says ' + message);
   - `args` an optional array of arguments to pass to the event, if you do not want to pass arguments but want a delay just pass 0 or []
   - `delay` the number of milliseconds to wait before firing event
   - Example" `client.raise('get all', [], 2000);`
-- `client.show()` show client
-- `client.hide()` hide client
+- `client.show()` show client's parent window
+- `client.hide()` hide client's parent window
 - `client.toggle()` toggle hide and show
 - `client.sendChat(text)` send text to chat window
 - `client.indices` return the current indices for trigger or an empty array same as [%x1..$x99](functions.md)

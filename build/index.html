@@ -1616,13 +1616,10 @@
             });
 
             client.on('hide', () => {
-                //TODO redo as multiple clients
-                /*
                 if (client.options.hideOnMinimize)
                     ipcRenderer.invoke('window', 'hide');
                 else
                     ipcRenderer.invoke('window', 'minimize');
-                */
             });
 
             client.on('toggle', () => {
@@ -2888,6 +2885,16 @@
             });
             doUpdate(76);
         });
+
+        ipcRenderer.on('debug', (event, msg) => {
+            if (client.options.enableDebug)
+                client.debug(msg);
+        });
+
+        ipcRenderer.on('error', (event, err) => {
+            client.error(err);
+        });
+
         /*
                 ipcRenderer.on('reload-options', () => {
                     client.loadOptions();
@@ -2907,17 +2914,8 @@
                     });
                     doUpdate(76);
                     client.sendGMCP('Core.Hello { "client": "' + client.telnet.terminal + '", "version": "' + client.telnet.version + '" }');
-                });
-        
-                ipcRenderer.on('debug', (event, msg) => {
-                    if (client.options.enableDebug)
-                        client.debug(msg);
-                });
-        
-                ipcRenderer.on('error', (event, err) => {
-                    client.error(err);
-                });
-        
+                });       
+
                 ipcRenderer.on('get-skills', (event, window) => {
                     ipcRenderer.send('skills', _status.skills, window);
                 });
@@ -3003,21 +3001,23 @@
                     }
                 })
         
-                ipcRenderer.on('restore', () => {
-                    doUpdate(256);
-                });
-                ipcRenderer.on('maximize', () => {
-                    doUpdate(256);
-                });
-                ipcRenderer.on('unmaximize', () => {
-                    doUpdate(256);
-                });
-        
-                ipcRenderer.on('resized', () => {
-                    doUpdate(384);
-                });
-        
                 */
+        //#region Parent window resize evens
+        ipcRenderer.on('restore', () => {
+            doUpdate(256);
+        });
+        ipcRenderer.on('maximize', () => {
+            doUpdate(256);
+        });
+        ipcRenderer.on('unmaximize', () => {
+            doUpdate(256);
+        });
+
+        ipcRenderer.on('resized', () => {
+            doUpdate(384);
+        });
+        //#endregion
+
         ipcRenderer.on('connection-settings', (event, options) => {
             if (!options) return;
             if (!_windowState) {
