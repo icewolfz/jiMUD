@@ -119,6 +119,10 @@ body {
     height: 21px;
 }
 
+.cm-tabstrip li .title::first-letter {
+    text-transform: uppercase;
+}
+
 .cm-tabstrip li.active .title {
     margin-top: -4px;
     position: relative;

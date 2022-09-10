@@ -1439,23 +1439,26 @@
             client.on('add-line', (data) => {
                 var res, c, cl;
                 //no more then 3 tries
-                if (autoLoginCounter < 3 && client.options.autoLogin && _windowState.data.character && _windowState.data.character.length > 0) {
-                    //testchar doesn't exist here. To create a new character, please type <new> at the name prompt.
-                    if (data.line === _windowState.data.character + ' doesn\'t exist here. To create a new character, please type <new> at the name prompt.')
-                        autoLoginCounter = 4;
-                    if (data.fragment && data.line === 'Enter your character\'s name (or \'new\' for a new character): ') {
-                        setTimeout(() => client.sendCommand(_windowState.data.character), 100);
-                        autoLoginCounter++;
-                    }
-                    else if (data.fragment && data.line === 'Password: ') {
-                        var pass = ipcRenderer.sendSync('get-global', 'characterPass');
-                        if (pass && pass.length > 0) {
-                            pass = pass.split(':');
-                            pass = decrypt(pass[0], pass[1], pass[2]);
-                            client.send(pass + '\n');
+                if (autoLoginCounter < 3 && client.options.autoLogin) {
+                    if (!_windowState.data.character && _windowState.data.characterId > 0)
+                        _windowState.data.character = ipcRenderer.sendSync('get-character', _windowState.data.characterId, 'Name');
+                    if (_windowState.data.character && _windowState.data.character.length > 0) {
+                        if (data.line === name + ' doesn\'t exist here. To create a new character, please type <new> at the name prompt.')
+                            autoLoginCounter = 4;
+                        if (data.fragment && data.line === 'Enter your character\'s name (or \'new\' for a new character): ') {
+                            setTimeout(() => client.sendCommand(name), 100);
+                            autoLoginCounter++;
                         }
-                        //sent password skip future auto login checks
-                        autoLoginCounter = 4;
+                        else if (data.fragment && data.line === 'Password: ') {
+                            var pass = ipcRenderer.sendSync('get-character', _windowState.data.characterId, 'Password');
+                            if (pass && pass.length > 0) {
+                                pass = pass.split(':');
+                                pass = decrypt(pass[0], pass[1], pass[2]);
+                                client.send(pass + '\n');
+                            }
+                            //sent password skip future auto login checks
+                            autoLoginCounter = 4;
+                        }
                     }
                 }
                 if (client.options.autoTakeoverLogin && data.line === 'Do you want to take over this login? (y/n)' && data.fragment)
@@ -1882,7 +1885,8 @@
                         document.getElementById('immortal').style.display = 'block';
                         break;
                 }
-                ipcRenderer.send('GMCP-received', { mod: mod, obj: obj });
+                //TODO loop opened windows and send using a function hook instead
+                //ipcRenderer.send('GMCP-received', { mod: mod, obj: obj });
             });
 
             client.on('item-added', (type, profile, item) => {
@@ -1916,6 +1920,7 @@
             });
 
             client.on('window', (window, args) => {
+                //TODO recode this to use windows variable and open functions as needed
                 switch (window) {
                     case 'mapper':
                     case 'editor':
@@ -1961,6 +1966,10 @@
                     default:
                         throw new Error('Invalid window name must be: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills');
                 }
+            });
+            //xterm set title support
+            client.on('set-title', title => {
+                ipcRenderer.send('update-title', { title: title });
             });
             //#endregion
             //_backup = new Backup(client, ipcRenderer.sendSync('get-global', 'mapFile'));
@@ -2094,17 +2103,21 @@
             });
 
             _status.ac = client.options.showArmor;
-            _status.on('set-title', (title) => {
+            _status.on('set-title', (title, lag) => {
                 //TODO Add setting to control empty/defaults
                 if (client.options.autoCreateCharacter)
                     ipcRenderer.send('change-char', title, true);
                 _logger.postMessage({ action: 'name', args: title });
-                ipcRenderer.send('update-title', { title: title });
+                if (lag && lag.length)
+                    ipcRenderer.send('update-title', { title: `${title} - ${lag}` });
+                else
+                    ipcRenderer.send('update-title', { title: title });
                 _windowState.data.character = title;
             });
             if (_windowState.data.character && _windowState.data.character.length > 0) {
                 _logger.postMessage({ action: 'name', args: _windowState.data.character });
                 $('#character-name').text(_windowState.data.character);
+                ipcRenderer.send('update-title', { title: _windowState.data.character });
             }
             updateInterface();
             _logger.postMessage({

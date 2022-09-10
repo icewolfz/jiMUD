@@ -384,16 +384,12 @@ export class Status extends EventEmitter {
 
     public setTitle(title: string, lag?: string) {
         if (!title || title.length === 0) {
-            window.document.title = 'jiMUD';
             $('#character-name').html('&nbsp;');
         }
         else {
-            window.document.title = 'jiMUD - ' + title;
             $('#character-name').text(title);
         }
-        if (lag && lag.length)
-            window.document.title += ' - ' + lag;
-        this.emit('set-title', title || '');
+        this.emit('set-title', title || '', lag || '');
     }
 
     public updateOverall() {

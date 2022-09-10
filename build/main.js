@@ -973,6 +973,19 @@ ipcMain.on('reload-profile', (event, profile) => {
     }
 });
 
+ipcMain.on('get-character', (event, id, property) => {
+    let character = _characters.getCharacter(id);
+    event.returnValue = character ? (property ? character[property] : character) : null;
+});
+
+ipcMain.on('update-character', (event, character, ...args) => {
+    if (typeof character === 'number') {
+        args[0].ID = id;
+        character = args[0];
+    }
+    _characters.updateCharacter(character);
+});
+
 //#region IPC dialogs
 ipcMain.on('show-dialog-sync', (event, type, ...args) => {
     var sWindow = BrowserWindow.fromWebContents(event.sender);

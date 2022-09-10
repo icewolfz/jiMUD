@@ -112,7 +112,7 @@
             const tabs = tabstrip.tabs;
             for (var t = 0, tl = tabs.length; t < tl; t++) {
                 if (tabs[t].client === id) {
-                    if (options.title) {
+                    if ('title' in options) {
                         tabstrip.setTabTitle(options.title, t);
                         if (!options.tooltip)
                             tabstrip.setTabTooltip(options.title, t);

@@ -760,7 +760,7 @@ export class Client extends EventEmitter {
                             this.saveProfile(parent.profile.name, false, ProfileSaveType.Trigger);
                             this.emit('item-updated', 'trigger', parent.profile, parent.profile.triggers.indexOf(parent), parent);
                         });
-                    }                    
+                    }
                     throw e;
                 }
                 alarm = patterns[a];
@@ -1104,12 +1104,10 @@ export class Client extends EventEmitter {
             this.emit('parse-done');
         });
         this.display.on('set-title', (title, type) => {
-
             if (typeof title === 'undefined' || title == null || title.length === 0)
-                window.document.title = this.defaultTitle;
+                this.emit('set-title', this.defaultTitle);
             else if (type !== 1)
-                window.document.title = this.options.title.replace('$t', title);
-
+                this.emit('set-title', this.options.title.replace('$t', title))
         });
         this.display.on('music', (data) => {
             this.MSP.music(data);

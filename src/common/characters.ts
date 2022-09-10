@@ -208,30 +208,7 @@ export class Characters extends EventEmitter {
         if (!character) return;
         this._db.prepare('BEGIN').run();
         try {
-            this._db.prepare('UPDATE Characters Title = ?, Host = ?, Address = ?, Port = ?, Type = ?, AutoLoad = ?, Disconnect = ?, UseAddress = ?, Days = ?, Name = ?, Password = ?, Preferences = ?, Map = ?, SessionID = ?, Icon = ?, IconPath = ?, Notes = ?, TotalMilliseconds = ?, TotalDays = ?, LastConnected = ? WHERE ID = ?').run(
-                [
-                    character.Title,
-                    character.Host,
-                    character.Address,
-                    character.Port,
-                    character.Type,
-                    character.AutoLoad ? 1 : 0,
-                    character.Disconnect ? 1 : 0,
-                    character.UseAddress ? 1 : 0,
-                    character.Days,
-                    character.Name,
-                    character.Password,
-                    character.Preferences,
-                    character.Map,
-                    character.SessionID,
-                    character.Icon,
-                    character.IconPath,
-                    character.Notes,
-                    character.TotalMilliseconds,
-                    character.TotalDays,
-                    character.LastConnected,
-                    character.ID
-                ]);
+            this._db.prepare(`UPDATE Characters ${Object.keys(character).filter(key => key !== 'ID').map(key => `${key} = $${key}`).join(', ')} WHERE ID = $ID`).run(character);
             this._changed = true;
         }
         catch (err) {
