@@ -9,6 +9,7 @@ const settings = require('./js/settings');
 const { TrayClick } = require('./js/types');
 const { Menubar } = require('./js/menubar');
 const { Characters } = require('./js/characters');
+const { or } = require('mathjs');
 
 require('@electron/remote/main').initialize()
 
@@ -926,6 +927,48 @@ ipcMain.on('get-app-sync', async (event, key, ...args) => {
     }
 });
 
+ipcMain.on('set-progress', (event, progress, mode) => {
+    const window = BrowserWindow.browserViewFromContents(event.sender);
+    const clientId = getClientId(browserViewFromContents(event.sender));
+    const windowId = getWindowId(window);
+    clients[clientId].progress = progress.value;
+    clients[clientId].progressMode = mode;
+    const cl = windows[windowId].clients.length;
+    let totalProgress = 0.0;
+    let totalCount = 0;
+    let mode = 'normal';
+    for (let c = 0; c < cl; c++) {
+        if (clients[windows[windowId].clients[c]].progress === -1 || !('progress' in clients[windows[windowId].clients[c]]))
+            continue;
+        if (clients[clientId].progressMode && clients[clientId].progressMode.length)
+            mode = clients[clientId].progressMode;
+        totalProgress += clients[windows[windowId].clients[c]].progress;
+        totalCount++;
+    }
+    totalProgress /= totalCount;
+    window.setProgressBar(totalProgress, { mode: progressMode });
+});
+
+ipcMain.on('reload-profiles', event => {
+    for (client in clients) {
+        for (clientId in clients) {
+            if (!Object.prototype.hasOwnProperty.call(clients, clientId))
+                continue;
+            clients[clientId].view.webContents.send('reload-profiles');
+        }
+    }
+});
+
+ipcMain.on('reload-profile', (event, profile) => {
+    for (client in clients) {
+        for (clientId in clients) {
+            if (!Object.prototype.hasOwnProperty.call(clients, clientId))
+                continue;
+            clients[clientId].view.webContents.send('reload-profile', profile);
+        }
+    }
+});
+
 //#region IPC dialogs
 ipcMain.on('show-dialog-sync', (event, type, ...args) => {
     var sWindow = BrowserWindow.fromWebContents(event.sender);
@@ -1314,6 +1357,14 @@ ipcMain.on('update-title', (event, options) => {
 ipcMain.on('get-options', event => {
     const view = browserViewFromContents(event.sender);
     event.returnValue = clients[getClientId(view)].options;
+});
+
+ipcMain.on('get-preference', (event, preference) => {
+    event.returnValue = set[preference];
+});
+
+ipcMain.on('set-preference', (event, preference, value) => {
+    set[preference] = value;
 });
 
 //bounds, id, data, file
@@ -2404,13 +2455,12 @@ function createMenu() {
                             mWindow.setTopBrowserView(clients[id].view);
                             mWindow.webContents.send('new-client', { id: id });
                             //allow for some hidden ways to force open main/dev if needed with out the complex menus
-                            if(!keyboard.triggeredByAccelerator)
-                            {
-                                if(keyboard.ctrlKey)
+                            if (!keyboard.triggeredByAccelerator) {
+                                if (keyboard.ctrlKey)
                                     clients[id].view.webContents.send('connection-settings', { dev: true });
-                                else if(keyboard.shiftKey)
+                                else if (keyboard.shiftKey)
                                     clients[id].view.webContents.send('connection-settings', { dev: false });
-                            }                            
+                            }
                             focusWindow(mWindow, true);
                             clientsChanged();
                         });
@@ -2450,16 +2500,15 @@ function createMenu() {
                         clients[id].view.webContents.once('dom-ready', () => {
                             clientsChanged();
                             //allow for some hidden ways to force open main/dev if needed with out the complex menus
-                            if(!keyboard.triggeredByAccelerator)
-                            {
-                                if(keyboard.ctrlKey)
+                            if (!keyboard.triggeredByAccelerator) {
+                                if (keyboard.ctrlKey)
                                     clients[id].view.webContents.send('connection-settings', { dev: true });
-                                else if(keyboard.shiftKey)
+                                else if (keyboard.shiftKey)
                                     clients[id].view.webContents.send('connection-settings', { dev: false });
-                            }                            
+                            }
                         });
                         window.webContents.once('dom-ready', () => {
-                            window.webContents.send('new-client', { id: id });                           
+                            window.webContents.send('new-client', { id: id });
                             focusWindow(window, true);
                         });
                     }

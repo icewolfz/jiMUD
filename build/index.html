@@ -450,7 +450,6 @@
         var _captures = [], _captureReviews = [];
         var _noCapture = false;
         var _noCaptureStore = 0;
-        var _cLoading = false;
         var _context;
         var $contextMenu;
         var _selword = '';
@@ -462,6 +461,7 @@
         var _skipDisconnect = 0;
         var _watcher = null;
         var _windowState = getWindowOptions();
+        var _windows = {};
         //#endregion
         loadTheme(ipcRenderer.sendSync('get-global', 'theme'));
 
@@ -1124,7 +1124,7 @@
             client = new (require('./js/client.js').Client)('display', 'commandInput', _windowState.data.settings);
             client.sendChat = updateChat;
             /*
-            //TODO this is no longer supported as multi window, need to either remove or rethink this command line argument
+            //TODO this is no longer supported as multi window, need to either remove or rethink this commafparent.classList.containsnd line argument
             if (ipcRenderer.sendSync('get-global', 'profiles') && ipcRenderer.sendSync('get-global', 'profiles').length > 0)
                 client.enabledProfiles = ipcRenderer.sendSync('get-global', 'profiles');
             */
@@ -1150,7 +1150,7 @@
                 client.commandInput.dataset.selStart = client.commandInput.selectionStart;
                 client.commandInput.dataset.selEnd, client.commandInput.selectionEnd;
                 e.preventDefault();
-                var parent = $(e.srcElement.parentNode);
+                var parent = e.srcElement.parentNode;
                 _selword = e.word;
                 _selurl = e.url;
                 _selline = e.line;
@@ -1158,9 +1158,9 @@
                 if (!_context)
                     buildContextMenu();
                 var iUrl = 0;
-                if (parent && (parent.hasClass('URLLink') || (parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0)))
+                if (parent && (parent.classList.contains('URLLink') || (parent.classList.contains('MXPLink') && parent.dataset.href && parent.dataset.href.length > 0)))
                     iUrl = 1;
-                else if (parent && parent.hasClass('MXPLink'))
+                else if (parent && parent.classList.contains('MXPLink'))
                     iUrl = 2;
                 client.raise('context-pre-build', [iUrl]);
                 _context.forEach((item) => {
@@ -1243,20 +1243,20 @@
                         }));
                         c.append(new MenuItem({ type: 'separator' }));
                     }
-                    if (parent && parent.hasClass('URLLink')) {
-                        c.append(new MenuItem({ label: 'Open url', click: () => { doLink(parent.attr('title')); } }));
+                    if (parent && parent.classList.contains('URLLink')) {
+                        c.append(new MenuItem({ label: 'Open url', click: () => { doLink(parent.title); } }));
                         c.append(new MenuItem({
                             label: 'Copy url', click: () => {
-                                window.writeClipboard(encodeURI(parent.attr('title'))); setTimeout(() => {
+                                window.writeClipboard(encodeURI(parent.title)); setTimeout(() => {
                                     if (client.options.CommandonClick)
                                         client.commandInput.focus();
                                 }, 0);
                             }
                         }));
-                        if (parent.text() !== parent.attr('title'))
+                        if (parent.textContent !== parent.title)
                             c.append(new MenuItem({
                                 label: 'Copy url text', click: () => {
-                                    window.writeClipboard(parent.text()); setTimeout(() => {
+                                    window.writeClipboard(parent.textContent); setTimeout(() => {
                                         if (client.options.CommandonClick)
                                             client.commandInput.focus();
                                     }, 0);
@@ -1265,20 +1265,20 @@
                         c.append(new MenuItem({ type: 'separator' }));
                         iUrl = 1;
                     }
-                    else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0) {
-                        c.append(new MenuItem({ label: 'Open url', click: () => { parent.trigger('click'); } }));
+                    else if (parent && parent.classList.contains('MXPLink') && parent.dataset.href && parent.dataset.href.length > 0) {
+                        c.append(new MenuItem({ label: 'Open url', click: () => { parent.dispatchEvent(new Event('click', { bubbles: true })); } }));
                         c.append(new MenuItem({
                             label: 'Copy url', click: () => {
-                                window.writeClipboard(encodeURI(parent.data('href'))); setTimeout(() => {
+                                window.writeClipboard(encodeURI(parent.dataset.href)); setTimeout(() => {
                                     if (client.options.CommandonClick)
                                         client.commandInput.focus();
                                 }, 0);
                             }
                         }));
-                        if (parent.text() !== parent.attr('href'))
+                        if (parent.textContent !== parent.href)
                             c.append(new MenuItem({
                                 label: 'Copy url text', click: () => {
-                                    window.writeClipboard(parent.text()); setTimeout(() => {
+                                    window.writeClipboard(parent.textContent); setTimeout(() => {
                                         if (client.options.CommandonClick)
                                             client.commandInput.focus();
                                     }, 0);
@@ -1287,11 +1287,11 @@
                         c.append(new MenuItem({ type: 'separator' }));
                         iUrl = 1;
                     }
-                    else if (parent && parent.hasClass('MXPLink')) {
-                        c.append(new MenuItem({ label: 'Open mxp url', click: () => { parent.trigger('click'); } }));
+                    else if (parent && parent.classList.contains('MXPLink')) {
+                        c.append(new MenuItem({ label: 'Open mxp url', click: () => { parent.dispatchEvent(new Event('click', { bubbles: true })); } }));
                         c.append(new MenuItem({
                             label: 'Copy mxp url text', click: () => {
-                                window.writeClipboard(parent.text()); setTimeout(() => {
+                                window.writeClipboard(parent.textContent); setTimeout(() => {
                                     if (client.options.CommandonClick)
                                         client.commandInput.focus();
                                 }, 0);
@@ -1615,10 +1615,13 @@
             });
 
             client.on('hide', () => {
+                //TODO redo as multiple clients
+                /*
                 if (client.options.hideOnMinimize)
                     ipcRenderer.invoke('window', 'hide');
                 else
                     ipcRenderer.invoke('window', 'minimize');
+                */
             });
 
             client.on('toggle', () => {
@@ -1969,16 +1972,15 @@
 
             _backup.on('progress-start', (title) => {
                 ipcRenderer.send('set-progress', { value: 0 });
-                ipcRenderer.send('flush', title);
                 client.debug('Flushing map');
-                $('#Progressbar').html('<progress max="100"></progress>');
-                $('#ProgressTitle').html(title || 'Importing data&hellip;');
-                $('#Progress')[0].showModal();
+                document.getElementById('Progressbar').innerHTML = '<progress max="100"></progress>';
+                document.getElementById('ProgressTitle').innerHTML = title || 'Importing data&hellip;';
+                document.getElementById('Progress').showModal();
             });
 
             _backup.on('error', (err) => {
-                if ($('#Progress')[0].open)
-                    $('#Progress')[0].close();
+                if (document.getElementById('Progress').open)
+                    document.getElementById('Progress').close();
                 ipcRenderer.send('set-progress', { value: -1 });
                 client.error(err);
                 ipcRenderer.invoke('show-dialog', 'showMessageBox', {
@@ -1987,14 +1989,14 @@
                     message: err || 'Error importing or exporting data.'
                 });
                 setTimeout(() => {
-                    ipcRenderer.invoke('window', 'focus');
+                    window.focus();
                 }, 500);
                 client.commandInput.focus()
             });
 
             _backup.on('abort', (err) => {
-                if ($('#Progress')[0].open)
-                    $('#Progress')[0].close();
+                if (document.getElementById('Progress').open)
+                    document.getElementById('Progress').close();
                 ipcRenderer.send('set-progress', { value: -1 });
                 ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                     type: 'error',
@@ -2002,17 +2004,17 @@
                     message: err || 'Aborted importing or exporting data.'
                 });
                 setTimeout(() => {
-                    ipcRenderer.invoke('window', 'focus');
+                    window.focus();
                 }, 500);
                 client.commandInput.focus()
             });
 
             _backup.on('close', () => {
-                if ($('#Progress')[0].open)
-                    $('#Progress')[0].close();
+                if (document.getElementById('Progress').open)
+                    document.getElementById('Progress').close();
                 client.commandInput.focus()
                 setTimeout(() => {
-                    ipcRenderer.invoke('window', 'focus');
+                    window.focus();
                 }, 500);
                 ipcRenderer.send('set-progress', { value: -1 });
             });
@@ -2023,7 +2025,13 @@
             });
 
             _backup.on('import-map', (data) => {
-                ipcRenderer.send('import-map', data);
+                //TODO open map window and reload map as new data imported, needs access to the new mapper window
+                //ipcRenderer.send('import-map', data);
+                /*
+                if(!windows['mapper']) 
+                    openMapper(true);
+                windows['mapper'].import(data);
+                */
             });
 
             _backup.on('imported-profiles', () => {
@@ -2047,12 +2055,12 @@
             _status.spitterDistance = client.options.statusWidth;
             _status.on('display-changed', () => {
                 if (_status.ac) {
-                    $('#health').removeClass('on');
-                    $('#armor').addClass('on');
+                    document.getElementById('health').classList.remove('on');
+                    document.getElementById('armor').classList.add('on');
                 }
                 else {
-                    $('#health').addClass('on');
-                    $('#armor').removeClass('on');
+                    document.getElementById('health').classList.add('on');
+                    document.getElementById('armor').classList.remove('on');
                 }
                 if (client.options.showArmor != _status.ac) {
                     client.options.showArmor = _status.ac;
@@ -2076,10 +2084,15 @@
                 }
             });
             _status.on('skill updated', (skill, data) => {
-                ipcRenderer.send('skill-updated', skill, data);
+                //TODO skill window update, add once window system setup
+                //ipcRenderer.send('skill-updated', skill, data);
+                //if(windows['skills'])
+                //  windows['skills'].update(skill, data);
             });
             _status.on('skill init', (skill, data) => {
-                ipcRenderer.send('skills-reset');
+                //TODO skill window reset, add once window system setup
+                //if(windows['skills'])
+                //  windows['skills'].reset();                
             });
 
             _status.ac = client.options.showArmor;
@@ -2088,7 +2101,8 @@
                 if (client.options.autoCreateCharacter)
                     ipcRenderer.send('change-char', title, true);
                 _logger.postMessage({ action: 'name', args: title });
-                ipcRenderer.send('set-title', title);
+                ipcRenderer.send('update-title', { title: title });
+                _windowState.data.character = title;
             });
             if (_windowState.data.character && _windowState.data.character.length > 0) {
                 _logger.postMessage({ action: 'name', args: _windowState.data.character });
@@ -2109,127 +2123,9 @@
                     colors: client.options.colors
                 }
             });
-            let closeWindow = false;
+            let closeWindow = true;
 
-            /*
-            window.onbeforeunload = function (evt) {
-                var choice, count = 0;
-                var windows;
-                var current;
-                if (ipcRenderer.sendSync('get-global', 'updating'))
-                    closeWindow = true;
-                if (!closeWindow && client.options.askonclose && client.connected) {
-                    evt.returnValue = false;
-                    setTimeout(() => {
-                        if (client.options.askonchildren) {
-                            if (ipcRenderer.sendSync('window-info', 'child-open', 'Code Editor')) {
-                                choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                                    {
-                                        type: 'warning',
-                                        title: 'Code editor open',
-                                        message: 'Code editor open, will lose any unsaved work, close anyways?',
-                                        buttons: ['Yes', 'No', 'Never ask again'],
-                                        defaultId: 1
-                                    });
-                                if (choice === 2) {
-                                    client.options.askonchildren = false;
-                                    client.saveOptions();
-                                }
-                                if (choice === 1) {
-                                    evt.returnValue = false;
-                                    return 'no';
-                                }
-                            }
-                        }
-                        choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                            {
-                                type: 'warning',
-                                title: 'Connected',
-                                message: 'Closing will disconnect you from the mud, close anyway?',
-                                buttons: ['Yes', 'No', 'Never ask again'],
-                                defaultId: 1
-                            });
-                        if (choice === 2) {
-                            client.raise('closed');
-                            _logger.postMessage({ action: 'flush' });
-                            client.options.askonclose = false;
-                            client.saveOptions();
-                            closeWindow = true;
-                            clearWatcher();
-                            ipcRenderer.invoke('window', 'closeWindows');
-                            ipcRenderer.invoke('window', 'close');
-                            return;
-                        }
-                        if (choice !== 0) {
-                            evt.returnValue = false;
-                            return 'no';
-                        }
-                        client.raise('closed');
-                        _logger.postMessage({ action: 'flush' });
-                        closeWindow = true;
-                        clearWatcher();
-                        ipcRenderer.invoke('window', 'closeWindows');
-                        ipcRenderer.invoke('window', 'close');
-                    });
-                    return;
-                }
-                else if (!closeWindow && client.options.askonchildren) {
-                    evt.returnValue = false;
-                    setTimeout(() => {
-                        if (ipcRenderer.sendSync('window-info', 'child-close', 'Code Editor')) {
-                            choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                                {
-                                    type: 'warning',
-                                    title: 'Code editor open',
-                                    message: 'Code editor open, will lose any unsaved work, close anyways?',
-                                    buttons: ['Yes', 'No', 'Never ask again'],
-                                    defaultId: 1
-                                });
-                            if (choice === 2) {
-                                client.options.askonchildren = false;
-                                client.saveOptions();
-                            }
-                            else if (choice === 1) {
-                                evt.returnValue = false;
-                                return 'no';
-                            }
-                        }
-                        client.raise('closed');
-                        _logger.postMessage({ action: 'flush' });
-                        closeWindow = true;
-                        clearWatcher();
-                        ipcRenderer.invoke('window', 'closeWindows');
-                        ipcRenderer.invoke('window', 'close');
-                    });
-                    return;
-                }
-                else if (!closeWindow) {
-                    setTimeout(() => {
-                        for (var w = 0, wl = windows.length; w < wl; w++) {
-                            if (windows[w] === current || !windows[w].isVisible())
-                                continue;
-                            if (windows[w].getParentWindow() !== current)
-                                continue;
-                            windows[w].close();
-                        }
-                        client.raise('closed');
-                        _logger.postMessage({ action: 'flush' });
-                        closeWindow = true;
-                        clearWatcher();
-                        ipcRenderer.invoke('window', 'closeWindows');
-                        ipcRenderer.invoke('window', 'close');
-                    });
-                }
-                client.raise('closed');
-                _logger.postMessage({ action: 'flush' });
-                closeWindow = true;
-                clearWatcher();
-                ipcRenderer.invoke('window', 'closeWindows');
-                ipcRenderer.invoke('window', 'close');
-                return;
-            };
-            */
-            $('#status').on('contextmenu', (e) => {
+            document.getElementById('status').addEventListener('contextmenu', e => {
                 e.preventDefault();
                 var c = new Menu();
                 c.append(new MenuItem({
@@ -2337,7 +2233,7 @@
                 c.popup({ window: remote.getCurrentWindow() });
             });
 
-            $('#buttonbar').on('contextmenu', (e) => {
+            document.getElementById('buttonbar').addEventListener('contextmenu', e => {
                 e.preventDefault();
                 var c = new Menu();
                 c.append(new MenuItem({
@@ -2675,47 +2571,54 @@
         }
 
         function buildButtons() {
+            var buttons = document.getElementById('user-buttons');
             var buttons = $('#user-buttons');
-            buttons.empty();
+            buttons.replaceChildren();
             if (!client.options.buttons.user)
                 return;
             var pButtons = client.buttons;
             //pButtons.sort(SortArrayByPriority);
             var bl = pButtons.length;
             if (bl > 0) {
+                var frag = document.createDocumentFragment();
                 for (var b = 0; b < bl; b++) {
                     var item = pButtons[b];
                     if (!item.enabled) continue;
-                    var button;
+                    var button = document.createElement('a');
+                    button.href = 'javascript:void(0)';
+                    button.classList.add('button');
+                    button.dataset.buttonIndex = b;
+                    button.addEventListener('click', () => {
+                        executeButton(parseInt(button.dataset.buttonIndex, 10));
+                    });
                     var p = '';
                     if (item.profile) {
-                        p = ' data-profile="' + (item.profile ? item.profile.name : '') + '"';
-                        p += ' data-index="' + client.profiles.items[item.profile.name.toLowerCase()].buttons.indexOf(item) + '"';
+                        button.dataset.profile = item.profile.name || '';
+                        button.dataset.index = client.profiles.items[item.profile.name.toLowerCase()].buttons.indexOf(item);
                     }
                     if (item.name && item.name.length > 0)
-                        button = $('<a id="' + item.name + '" href="javascript:void(0)" class="button" onclick="executeButton(' + b + ')"' + p + '></a>');
-                    else
-                        button = $('<a href="javascript:void(0)" class="button" onclick="executeButton(' + b + ')"' + p + '></a>');
+                        button.id = item.name;
                     if (item.stretch)
-                        button.addClass('button-stretch');
+                        button.classList.add('button-stretch');
                     if (item.parse)
-                        button.prop('title', item.caption);
+                        button.title = item.caption;
                     else
-                        button.prop('title', client.parseInline(item.caption));
+                        button.title = client.parseInline(item.caption);
                     if (item.icon.startsWith('fa-'))
-                        button.html('<i class="fa ' + item.icon + '"></i>');
+                        button.innerHTML = '<i class="fa ' + item.icon + '"></i>';
                     else if (item.icon.startsWith('gi-'))
-                        button.html('<i class="glyphicon glyphicon-' + item.icon.substring(3) + '"></i>');
+                        button.innerHTML = '<i class="glyphicon glyphicon-' + item.icon.substring(3) + '"></i>';
                     else if (item.icon.startsWith('glyphicon-'))
-                        button.html('<i class="glyphicon ' + item.icon + '"></i>');
+                        button.innerHTML = '<i class="glyphicon ' + item.icon + '"></i>';
                     else if (item.icon.startsWith('.'))
-                        button.html('<i class="fa button-icon ' + item.icon.substring(1) + '"></i>');
+                        button.innerHTML = '<i class="fa button-icon ' + item.icon.substring(1) + '"></i>';
                     else if (item.icon.length > 0)
-                        button.html('<img src="' + parseTemplate(item.icon) + '" /><div class="overlay"></div>');
+                        button.innerHTML = '<img src="' + parseTemplate(item.icon) + '" /><div class="overlay"></div>';
                     else
-                        button.html('<i class="fa fa-question"></i>');
-                    buttons.append(button);
+                        button.innerHTML = '<i class="fa fa-question"></i>';
+                    frag.appendChild(button);
                 }
+                buttons.append(frag);
             }
             doUpdate(192);
         }
@@ -2966,7 +2869,7 @@
             if (!client) return;
             doUpdate(4);
         });
-
+*/
         ipcRenderer.on('reload-profiles', () => {
             //client.loadProfiles();
             client.loadOptions();
@@ -2986,136 +2889,136 @@
             });
             doUpdate(76);
         });
-
-        ipcRenderer.on('reload-options', () => {
-            client.loadOptions();
-            _logger.postMessage({
-                action: 'options', args: {
-                    path: parseTemplate(client.options.logPath),
-                    offline: client.options.logOffline,
-                    gagged: client.options.logGagged,
-                    enabled: client.options.logEnabled,
-                    unique: client.options.logUniqueOnConnect,
-                    prepend: client.options.logPrepend,
-                    what: client.options.logWhat,
-                    debug: client.options.enableDebug,
-                    format: client.options.logTimeFormat,
-                    colors: client.options.colors
-                }
-            });
-            doUpdate(76);
-            client.sendGMCP('Core.Hello { "client": "' + client.telnet.terminal + '", "version": "' + client.telnet.version + '" }');
-        });
-
-        ipcRenderer.on('debug', (event, msg) => {
-            if (client.options.enableDebug)
-                client.debug(msg);
-        });
-
-        ipcRenderer.on('error', (event, err) => {
-            client.error(err);
-        });
-
-        ipcRenderer.on('get-skills', (event, window) => {
-            ipcRenderer.send('skills', _status.skills, window);
-        });
-
-        ipcRenderer.on('context-menu', (event, params) => {
-            var inputMenu, start, end, w, input;
-            const { selectionText, isEditable } = params;
-            if (isEditable) {
-                input = document.elementFromPoint(params.x, params.y);
-                if (input && input.id === 'commandInput') {
-                    client.commandInput.dataset.selStart = client.commandInput.selectionStart;
-                    client.commandInput.dataset.selEnd = client.commandInput.selectionEnd;
-                    inputMenu = Menu.buildFromTemplate([
-                        { role: 'undo', accelerator: 'CmdOrCtrl+Z' },
-                        { role: 'redo', accelerator: 'CmdOrCtrl+Y' },
-                        { type: 'separator' },
-                        { role: 'cut', accelerator: 'CmdOrCtrl+X' },
-                        { role: 'copy', accelerator: 'CmdOrCtrl+C' },
-                        { label: 'Paste', accelerator: 'CmdOrCtrl+V', click: paste },
-                        { label: 'Paste special', accelerator: 'CmdOrCtrL+Shift+V', click: () => { pasteSpecial(); } },
-                        { type: 'separator' },
-                        { role: 'selectAll', accelerator: 'CmdOrCtrl+A' },
-                    ]);
-                    inputMenu.on('menu-will-show', () => {
-                        client.commandInput.dataset.context = true;
-                    });
-                    inputMenu.on('menu-will-close', () => {
-                        setTimeout(() => client.commandInput.dataset.context = false, 200);
-                    });
-                }
-                else
-                    inputMenu = Menu.buildFromTemplate([
-                        { role: 'undo' },
-                        { role: 'redo' },
-                        { type: 'separator' },
-                        { role: 'cut' },
-                        { role: 'copy' },
-                        { role: 'paste' },
-                        { type: 'separator' },
-                        { role: 'selectAll' },
-                    ]);
-                if (client.options.enableDebug || ipcRenderer.sendSync('get-global', 'debug')) {
-                    inputMenu.append(new MenuItem({ type: 'separator' }));
-                    inputMenu.append(new MenuItem({
-                        label: 'Inspect', click: () => {
-                            ipcRenderer.send('inspect', params.x, params.y);
+        /*
+                ipcRenderer.on('reload-options', () => {
+                    client.loadOptions();
+                    _logger.postMessage({
+                        action: 'options', args: {
+                            path: parseTemplate(client.options.logPath),
+                            offline: client.options.logOffline,
+                            gagged: client.options.logGagged,
+                            enabled: client.options.logEnabled,
+                            unique: client.options.logUniqueOnConnect,
+                            prepend: client.options.logPrepend,
+                            what: client.options.logWhat,
+                            debug: client.options.enableDebug,
+                            format: client.options.logTimeFormat,
+                            colors: client.options.colors
                         }
-                    }));
-                }
-                if (client.options.spellchecking && params.dictionarySuggestions.length) {
-                    inputMenu.insert(0, new MenuItem({ type: 'separator' }));
-                    start = input.selectionStart + params.selectionText.indexOf(params.misspelledWord);
-                    end = start + params.misspelledWord.length;
-                    for (w = params.dictionarySuggestions.length - 1; w >= 0; w--) {
-                        inputMenu.insert(0, new MenuItem({
-                            label: params.dictionarySuggestions[w],
-                            start: start,
-                            end: end,
-                            sel: params.selectionText.length - params.misspelledWord.length,
-                            x: params.x,
-                            y: params.y,
-                            click: function (item) {
-                                var el = $(document.elementFromPoint(item.x, item.y));
-                                var value = el.val();
-                                var start = el[0].selectionStart;
-                                value = value.substring(0, item.start) + item.label + value.substring(item.end);
-                                el.val(value);
-                                el[0].selectionStart = start;
-                                el[0].selectionEnd = start + item.label.length + item.sel;
-                                el.blur();
-                                el.focus();
+                    });
+                    doUpdate(76);
+                    client.sendGMCP('Core.Hello { "client": "' + client.telnet.terminal + '", "version": "' + client.telnet.version + '" }');
+                });
+        
+                ipcRenderer.on('debug', (event, msg) => {
+                    if (client.options.enableDebug)
+                        client.debug(msg);
+                });
+        
+                ipcRenderer.on('error', (event, err) => {
+                    client.error(err);
+                });
+        
+                ipcRenderer.on('get-skills', (event, window) => {
+                    ipcRenderer.send('skills', _status.skills, window);
+                });
+        
+                ipcRenderer.on('context-menu', (event, params) => {
+                    var inputMenu, start, end, w, input;
+                    const { selectionText, isEditable } = params;
+                    if (isEditable) {
+                        input = document.elementFromPoint(params.x, params.y);
+                        if (input && input.id === 'commandInput') {
+                            client.commandInput.dataset.selStart = client.commandInput.selectionStart;
+                            client.commandInput.dataset.selEnd = client.commandInput.selectionEnd;
+                            inputMenu = Menu.buildFromTemplate([
+                                { role: 'undo', accelerator: 'CmdOrCtrl+Z' },
+                                { role: 'redo', accelerator: 'CmdOrCtrl+Y' },
+                                { type: 'separator' },
+                                { role: 'cut', accelerator: 'CmdOrCtrl+X' },
+                                { role: 'copy', accelerator: 'CmdOrCtrl+C' },
+                                { label: 'Paste', accelerator: 'CmdOrCtrl+V', click: paste },
+                                { label: 'Paste special', accelerator: 'CmdOrCtrL+Shift+V', click: () => { pasteSpecial(); } },
+                                { type: 'separator' },
+                                { role: 'selectAll', accelerator: 'CmdOrCtrl+A' },
+                            ]);
+                            inputMenu.on('menu-will-show', () => {
+                                client.commandInput.dataset.context = true;
+                            });
+                            inputMenu.on('menu-will-close', () => {
+                                setTimeout(() => client.commandInput.dataset.context = false, 200);
+                            });
+                        }
+                        else
+                            inputMenu = Menu.buildFromTemplate([
+                                { role: 'undo' },
+                                { role: 'redo' },
+                                { type: 'separator' },
+                                { role: 'cut' },
+                                { role: 'copy' },
+                                { role: 'paste' },
+                                { type: 'separator' },
+                                { role: 'selectAll' },
+                            ]);
+                        if (client.options.enableDebug || ipcRenderer.sendSync('get-global', 'debug')) {
+                            inputMenu.append(new MenuItem({ type: 'separator' }));
+                            inputMenu.append(new MenuItem({
+                                label: 'Inspect', click: () => {
+                                    ipcRenderer.send('inspect', params.x, params.y);
+                                }
+                            }));
+                        }
+                        if (client.options.spellchecking && params.dictionarySuggestions.length) {
+                            inputMenu.insert(0, new MenuItem({ type: 'separator' }));
+                            start = input.selectionStart + params.selectionText.indexOf(params.misspelledWord);
+                            end = start + params.misspelledWord.length;
+                            for (w = params.dictionarySuggestions.length - 1; w >= 0; w--) {
+                                inputMenu.insert(0, new MenuItem({
+                                    label: params.dictionarySuggestions[w],
+                                    start: start,
+                                    end: end,
+                                    sel: params.selectionText.length - params.misspelledWord.length,
+                                    x: params.x,
+                                    y: params.y,
+                                    click: function (item) {
+                                        var el = $(document.elementFromPoint(item.x, item.y));
+                                        var value = el.val();
+                                        var start = el[0].selectionStart;
+                                        value = value.substring(0, item.start) + item.label + value.substring(item.end);
+                                        el.val(value);
+                                        el[0].selectionStart = start;
+                                        el[0].selectionEnd = start + item.label.length + item.sel;
+                                        el.blur();
+                                        el.focus();
+                                    }
+                                }));
                             }
-                        }));
+                        }
+                        inputMenu.popup({ window: remote.getCurrentWindow() });
+                    } else if (selectionText && selectionText.trim() !== '') {
+                        Menu.buildFromTemplate([
+                            { role: 'copy' },
+                            { type: 'separator' },
+                            { role: 'selectAll' },
+                        ]).popup({ window: remote.getCurrentWindow() });
                     }
-                }
-                inputMenu.popup({ window: remote.getCurrentWindow() });
-            } else if (selectionText && selectionText.trim() !== '') {
-                Menu.buildFromTemplate([
-                    { role: 'copy' },
-                    { type: 'separator' },
-                    { role: 'selectAll' },
-                ]).popup({ window: remote.getCurrentWindow() });
-            }
-        })
-
-        ipcRenderer.on('restore', () => {
-            doUpdate(256);
-        });
-        ipcRenderer.on('maximize', () => {
-            doUpdate(256);
-        });
-        ipcRenderer.on('unmaximize', () => {
-            doUpdate(256);
-        });
-
-        ipcRenderer.on('resized', () => {
-            doUpdate(384);
-        });
-
-        */
+                })
+        
+                ipcRenderer.on('restore', () => {
+                    doUpdate(256);
+                });
+                ipcRenderer.on('maximize', () => {
+                    doUpdate(256);
+                });
+                ipcRenderer.on('unmaximize', () => {
+                    doUpdate(256);
+                });
+        
+                ipcRenderer.on('resized', () => {
+                    doUpdate(384);
+                });
+        
+                */
         ipcRenderer.on('connection-settings', (event, options) => {
             if (!options) return;
             if (!_windowState) {
@@ -3174,18 +3077,17 @@
 
         // eslint-disable-next-line no-unused-vars
         function childClosed(url, name) {
-            if (path.basename(url) === 'characters.html')
-                _cLoading = false;
+            delete _windows[url];
         }
 
         function showCharacters() {
-            if (_cLoading) return;
-            _cLoading = true;
-            window.open('characters.html', 'modal', 'backgroundColor=#fff,height=555,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
+            if (_windows['characters.html']) return;
+            _windows['characters.html'] = window.open('characters.html', 'modal', 'backgroundColor=#fff,height=555,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
         }
 
         // eslint-disable-next-line no-unused-vars
         function showImmortalTools() {
+            //TODO make immortal tools work
             if (client.options.windows['immortal'] && client.options.windows['immortal'].options) {
                 client.options.windows['immortal'].options.show = true;
                 ipcRenderer.send('show-window', 'immortal', client.options.windows['immortal'].options);
@@ -3196,6 +3098,7 @@
 
         // eslint-disable-next-line no-unused-vars
         function showCommandHistory() {
+            //TODO make command history work
             if (client.options.windows['history'] && client.options.windows['history'].options) {
                 client.options.windows['history'].options.show = true;
                 ipcRenderer.send('show-window', 'history', client.options.windows['history'].options);
@@ -3206,6 +3109,7 @@
 
         // eslint-disable-next-line no-unused-vars
         function showHelp() {
+            //TODO make help work
             if (client.options.windows['help'] && client.options.windows['help'].options) {
                 client.options.windows['help'].options.show = true;
                 ipcRenderer.send('show-window', 'help', client.options.windows['help'].options);
@@ -3216,6 +3120,7 @@
 
         // eslint-disable-next-line no-unused-vars
         function showSMHelp() {
+            //TODO make SM help work
             if (client.options.externalHelp)
                 shell.openExternal('http://www.shadowmud.com/help.php', '_blank');
             else {
@@ -3236,6 +3141,7 @@
             if (client.options.externalWho)
                 shell.openExternal('http://www.shadowmud.com/who.php', '_blank');
             else {
+                //TODO make who window work
                 if (client.options.windows['who'] && client.options.windows['who'].options) {
                     client.options.windows['who'].options.show = true;
                     ipcRenderer.send('show-window', 'who', client.options.windows['who'].options);
@@ -3251,6 +3157,7 @@
 
         // eslint-disable-next-line no-unused-vars
         function showLogViewer() {
+            //TODO make log viewer window work
             if (client.options.windows['log-viewer'] && client.options.windows['log-viewer'].options) {
                 client.options.windows['log-viewer'].options.show = true;
                 ipcRenderer.send('show-window', 'log-viewer', client.options.windows['log-viewer'].options);
@@ -3261,21 +3168,26 @@
 
         // eslint-disable-next-line no-unused-vars
         function showCodeEditor() {
+            //TODO make code editor window work
             ipcRenderer.send('show-window', 'code-editor');
         }
 
         // eslint-disable-next-line no-unused-vars
         function showMail() {
+            //TODO make work, but can be hidden as mail system was never completed
+            /*
             if (client.options.windows['mail'] && client.options.windows['mail'].options) {
                 client.options.windows['mail'].options.show = true;
                 ipcRenderer.send('show-window', 'mail', client.options.windows['mail'].options);
             }
             else
                 ipcRenderer.send('show-window', 'mail', { show: true, file: 'mail.html', icon: 'mail', alwaysOnTopClient: true });
+            */
         }
 
         // eslint-disable-next-line no-unused-vars
         function showComposer() {
+            //TODO make work, as gmcp mail system never completed create a work around hat use sthe mail command to send/update
             if (client.options.windows['composer'] && client.options.windows['composer'].options) {
                 client.options.windows['composer'].options.show = true;
                 client.options.windows['composer'].options.persistent = false;
@@ -3287,6 +3199,7 @@
         }
 
         function showSkills() {
+            //make skill window work
             if (client.options.windows['skills'] && client.options.windows['skills'].options) {
                 client.options.windows['skills'].options.show = true;
                 ipcRenderer.send('show-window', 'skills', client.options.windows['skills'].options);
@@ -3321,26 +3234,25 @@
             if (clipboard.readText().length === 0)
                 return;
             if (!noDialog) {
-                $('#pasteSpecial-prefix').prop('disabled', !client.options.pasteSpecialPrefixEnabled);
-                $('#pasteSpecial-postfix').prop('disabled', !client.options.pasteSpecialPostfixEnabled);
-                $('#pasteSpecial-prefix').val(client.options.pasteSpecialPrefix);
-                $('#pasteSpecial-postfix').val(client.options.pasteSpecialPostfix);
-                $('#pasteSpecial-prefix-enable').prop('checked', client.options.pasteSpecialPrefixEnabled);
-                $('#pasteSpecial-postfix-enable').prop('checked', client.options.pasteSpecialPostfixEnabled);
-
-                $('#pasteSpecial-replace').val(client.options.pasteSpecialReplace);
-                $('#pasteSpecial-replace').prop('disabled', !client.options.pasteSpecialReplaceEnabled);
-                $('#pasteSpecial-replace-enable').prop('checked', client.options.pasteSpecialReplaceEnabled);
-                if (!$('#pasteSpecial')[0].open)
-                    $('#pasteSpecial')[0].showModal();
-                if (!$('#pasteSpecial-replace').prop('disabled'))
-                    $('#pasteSpecial-replace').focus();
-                else if (!$('#pasteSpecial-prefix').prop('disabled'))
-                    $('#pasteSpecial-prefix').focus();
-                else if (!$('#pasteSpecial-postfix').prop('disabled'))
-                    $('#pasteSpecial-postfix').focus();
+                document.getElementById('pasteSpecial-prefix').disabled = !client.options.pasteSpecialPrefixEnabled;
+                document.getElementById('pasteSpecial-postfix').disabled = !client.options.pasteSpecialPostfixEnabled;
+                document.getElementById('pasteSpecial-prefix').value = client.options.pasteSpecialPrefix;
+                document.getElementById('pasteSpecial-postfix').value = client.options.pasteSpecialPostfix;
+                document.getElementById('pasteSpecial-prefix-enable').checked = client.options.pasteSpecialPrefixEnabled;
+                document.getElementById('pasteSpecial-postfix-enable').checked = client.options.pasteSpecialPostfixEnabled;
+                document.getElementById('pasteSpecial-replace').value = client.options.pasteSpecialReplace;
+                document.getElementById('pasteSpecial-replace').disabled = !client.options.pasteSpecialReplaceEnabled;
+                document.getElementById('pasteSpecial-replace-enable').checked = client.options.pasteSpecialReplaceEnabled;
+                if (!document.getElementById('pasteSpecial')[0].open)
+                    document.getElementById('pasteSpecial')[0].showModal();
+                if (!document.getElementById('pasteSpecial-replace').disabled)
+                    document.getElementById('pasteSpecial-replace').focus();
+                else if (!document.getElementById('pasteSpecial-prefix').disabled)
+                    document.getElementById('pasteSpecial-prefix').focus();
+                else if (!document.getElementById('pasteSpecial-postfix').disabled)
+                    document.getElementById('pasteSpecial-postfix').focus();
                 else
-                    $('#pasteSpecial-cancel').focus();
+                    document.getElementById('pasteSpecial-cancel').focus();
 
             }
             else
@@ -3349,16 +3261,14 @@
 
         function pasteSpecialOk(noDialog) {
             if (!noDialog) {
-                client.options.pasteSpecialPrefix = $('#pasteSpecial-prefix').val();
-                client.options.pasteSpecialPostfix = $('#pasteSpecial-postfix').val();
-                client.options.pasteSpecialPrefixEnabled = $('#pasteSpecial-prefix-enable').prop('checked');
-                client.options.pasteSpecialPostfixEnabled = $('#pasteSpecial-postfix-enable').prop('checked');
-
-                client.options.pasteSpecialReplace = $('#pasteSpecial-replace').val();
-                client.options.pasteSpecialReplaceEnabled = $('#pasteSpecial-replace-enable').prop('checked');
-
+                client.options.pasteSpecialPrefix = document.getElementById('pasteSpecial-prefix').value;
+                client.options.pasteSpecialPostfix = document.getElementById('pasteSpecial-postfix').value;
+                client.options.pasteSpecialPrefixEnabled = document.getElementById('pasteSpecial-prefix-enable').checked;
+                client.options.pasteSpecialPostfixEnabled = document.getElementById('pasteSpecial-postfix-enable').checked;
+                client.options.pasteSpecialReplace = document.getElementById('pasteSpecial-replace').value;
+                client.options.pasteSpecialReplaceEnabled = document.getElementById('pasteSpecial-replace-enable').checked;
                 doUpdate(32);
-                $('#pasteSpecial')[0].close();
+                document.getElementById('pasteSpecial').close();
             }
             var post = client.options.pasteSpecialPostfixEnabled ? client.options.pasteSpecialPostfix : 0;
             var pre = client.options.pasteSpecialPrefixEnabled ? client.options.pasteSpecialPrefix : 0;
@@ -3426,7 +3336,9 @@
         }
 
         function updateChat(data) {
-            ipcRenderer.send('chat', data);
+            //TODO refine when new chat window finished
+            if (windows['chat.html'])
+                windows['chat.html'].add(data);
             /*
             if (typeof data === 'string') {
                 display.append(data);
@@ -3442,12 +3354,6 @@
         }
 
         document.addEventListener('load', () => doUpdate(1));
-
-        document.addEventListener('visibilitychange', () => {
-            //fake minimize due ot bug in linux not supporting minimize event
-            if (document.visibilityState === 'hidden' && client && client.options && client.options.hideOnMinimize && process.platform === 'linux' && ipcRenderer.sendSync('window-info', 'isMinimized'))
-                ipcRenderer.invoke('window', 'hide');
-        });
 
         var $updating = 0;
         var _rTimeout = 0;
@@ -3653,13 +3559,13 @@
         //#endregion
 
         //#region Close hooks
-        let _close = true;
         function close() {
-            return _close;
+            return closeWindow;
         }
 
         function closeable() {
-            if (!_close) {
+            //TODO convert the old  onbeforeunload to new closeable hook
+            if (!closeWindow) {
                 var choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                     {
                         type: 'warning',
@@ -3669,11 +3575,129 @@
                         defaultId: 1
                     });
                 if (choice === 0) {
-                    _close = true;
+                    closeWindow = true;
                     return true;
                 }
             }
-            return _close;
+            return closeWindow;
+            /*
+            window.onbeforeunload = function (evt) {
+                var choice, count = 0;
+                var windows;
+                var current;
+                if (ipcRenderer.sendSync('get-global', 'updating'))
+                    closeWindow = true;
+                if (!closeWindow && client.options.askonclose && client.connected) {
+                    evt.returnValue = false;
+                    setTimeout(() => {
+                        if (client.options.askonchildren) {
+                            if (ipcRenderer.sendSync('window-info', 'child-open', 'Code Editor')) {
+                                choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                                    {
+                                        type: 'warning',
+                                        title: 'Code editor open',
+                                        message: 'Code editor open, will lose any unsaved work, close anyways?',
+                                        buttons: ['Yes', 'No', 'Never ask again'],
+                                        defaultId: 1
+                                    });
+                                if (choice === 2) {
+                                    client.options.askonchildren = false;
+                                    client.saveOptions();
+                                }
+                                if (choice === 1) {
+                                    evt.returnValue = false;
+                                    return 'no';
+                                }
+                            }
+                        }
+                        choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                            {
+                                type: 'warning',
+                                title: 'Connected',
+                                message: 'Closing will disconnect you from the mud, close anyway?',
+                                buttons: ['Yes', 'No', 'Never ask again'],
+                                defaultId: 1
+                            });
+                        if (choice === 2) {
+                            client.raise('closed');
+                            _logger.postMessage({ action: 'flush' });
+                            client.options.askonclose = false;
+                            client.saveOptions();
+                            closeWindow = true;
+                            clearWatcher();
+                            ipcRenderer.invoke('window', 'closeWindows');
+                            ipcRenderer.invoke('window', 'close');
+                            return;
+                        }
+                        if (choice !== 0) {
+                            evt.returnValue = false;
+                            return 'no';
+                        }
+                        client.raise('closed');
+                        _logger.postMessage({ action: 'flush' });
+                        closeWindow = true;
+                        clearWatcher();
+                        ipcRenderer.invoke('window', 'closeWindows');
+                        ipcRenderer.invoke('window', 'close');
+                    });
+                    return;
+                }
+                else if (!closeWindow && client.options.askonchildren) {
+                    evt.returnValue = false;
+                    setTimeout(() => {
+                        if (ipcRenderer.sendSync('window-info', 'child-close', 'Code Editor')) {
+                            choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                                {
+                                    type: 'warning',
+                                    title: 'Code editor open',
+                                    message: 'Code editor open, will lose any unsaved work, close anyways?',
+                                    buttons: ['Yes', 'No', 'Never ask again'],
+                                    defaultId: 1
+                                });
+                            if (choice === 2) {
+                                client.options.askonchildren = false;
+                                client.saveOptions();
+                            }
+                            else if (choice === 1) {
+                                evt.returnValue = false;
+                                return 'no';
+                            }
+                        }
+                        client.raise('closed');
+                        _logger.postMessage({ action: 'flush' });
+                        closeWindow = true;
+                        clearWatcher();
+                        ipcRenderer.invoke('window', 'closeWindows');
+                        ipcRenderer.invoke('window', 'close');
+                    });
+                    return;
+                }
+                else if (!closeWindow) {
+                    setTimeout(() => {
+                        for (var w = 0, wl = windows.length; w < wl; w++) {
+                            if (windows[w] === current || !windows[w].isVisible())
+                                continue;
+                            if (windows[w].getParentWindow() !== current)
+                                continue;
+                            windows[w].close();
+                        }
+                        client.raise('closed');
+                        _logger.postMessage({ action: 'flush' });
+                        closeWindow = true;
+                        clearWatcher();
+                        ipcRenderer.invoke('window', 'closeWindows');
+                        ipcRenderer.invoke('window', 'close');
+                    });
+                }
+                client.raise('closed');
+                _logger.postMessage({ action: 'flush' });
+                closeWindow = true;
+                clearWatcher();
+                ipcRenderer.invoke('window', 'closeWindows');
+                ipcRenderer.invoke('window', 'close');
+                return;
+            };
+            */
         }
         //#endregion
         //$(document).ready(init);     

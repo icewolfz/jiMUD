@@ -16,6 +16,9 @@
     </script>
     <script src="../lib/jquery.min.js"></script>
     <script src="../lib/bootstrap.min.js"></script>
+</head>
+
+<body id="client-container">
     <script type="text/javascript">
         const { ipcRenderer } = require('electron');
         const { parseTemplate, isFileSync } = require('./js/library.js');
@@ -35,140 +38,6 @@
             if (el.getAttribute('href') !== theme || force)
                 el.setAttribute('href', theme);
         }
-
-        $(document).ready(() => {
-            tabstrip = new TabStrip();
-            tabstrip.useNativeMenus = true;
-            tabstrip.on('tab-strip-hidden', () => {
-                ipcRenderer.send('update-client', _current, 0);
-            });
-            tabstrip.on('tab-strip-shown', () => {
-                ipcRenderer.send('update-client', _current, tabstrip.height);
-            });
-            tabstrip.on('add', e => {
-                if (_loading) return;
-                const tabs = tabstrip.tabs;
-                if (tabs.length === 2) {
-                    //force a refresh as will not update while hidden
-                    tabstrip.refresh();
-                    //resize previous tab just to ensure all are same size
-                    ipcRenderer.send('update-client', tabs[0].client, tabstrip.height);
-                    ipcRenderer.send('update-client', _current, tabstrip.height);
-                }
-            });
-            tabstrip.on('tab-click', e => {
-                ipcRenderer.send('switch-client', e.tab.client, tabstrip.height);
-                _current = e.tab.client;
-            });
-            tabstrip.on('remove', e => {
-                ipcRenderer.send('remove-client', e.tab.client);
-                //cancel the remove as we want to make sure it is called after browser view is cleaned up as it may cancel based on user input
-                e.cancel = true;
-            });
-            tabstrip.on('removed', panel => {
-                if (tabstrip.hideTabstrip && tabstrip.tabs.length === 1) {
-                    ipcRenderer.send('update-client', tabstrip.tabs[0].client, 0);
-                }
-            });
-            tabstrip.on('activated', e => {
-                if (_loading) return;
-                ipcRenderer.send('switch-client', e.tab.client, tabstrip.height);
-                _current = e.tab.client;
-                setTitle(e.tab.title.innerText);
-            })
-            tabstrip.on('tab-moved', e => {
-                ipcRenderer.send('reorder-client', e.tab.client, e.index, e.oldIndex);
-            });
-            tabstrip.on('tab-drag-end', e => {
-                //dropped outside of client area so new window if more then 1 tab
-                if (e.event.dataTransfer.items.length === 0 && (e.event.clientX < 0 || e.event.clientY < 0 || e.event.clientX >= document.body.clientWidth || e.event.clientY >= document.body.clientHeight)) {
-                    e.event.stopPropagation();
-                    e.event.preventDefault();
-                    var x = e.event.screenX;
-                    var y = e.event.screenY;
-                    var bounds = e.tab.tab.getBoundingClientRect();
-                    x -= Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth));
-                    y -= Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight));
-                    ipcRenderer.send('dock-client', tabstrip.dragTab.client, { x: x, y: y, pid: ipcRenderer.sendSync('get-pid')  });
-                }
-            });
-            tabstrip.on('tab-drop', e => {
-                //if not dragging its from a different window so its a undock/dock
-                if (e.tab === tabstrip.dragTab) {
-                    e.event.preventDefault();
-                    e.event.stopPropagation();
-                }
-                if (!tabstrip.dragPanel && !tabstrip.dragTab) {
-                    e.preventDefault = true;
-                    e.event.stopPropagation();
-                    e.event.preventDefault();
-                    const tab = JSON.parse(e.event.dataTransfer.getData('jimud/tab'));
-                    e.tab.tab.classList.remove('drop');
-                    ipcRenderer.send('dock-client', tab.client, { index: tabstrip.getTabIndex(e.tab), pid: ipcRenderer.sendSync('get-pid')  });
-                }
-            });
-
-            window.addEventListener('dragstart', (e) => {
-                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
-                    e.dataTransfer.dropEffect = 'move';
-                }
-            });
-            window.addEventListener('dragleave', (e) => {
-                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
-                    e.dataTransfer.dropEffect = 'move';
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-            });
-            window.addEventListener('dragover', (e) => {
-                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
-                    e.dataTransfer.dropEffect = 'move';
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-            });
-            window.addEventListener('dragenter', (e) => {
-                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
-                    e.dataTransfer.dropEffect = 'move';
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-            });
-            window.addEventListener('dragend', (e) => {
-                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
-                    e.dataTransfer.dropEffect = 'move';
-                }
-            });
-            window.addEventListener('drop', (e) => {
-                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
-                    e.dataTransfer.dropEffect = 'move';
-                    e.stopPropagation();
-                    e.preventDefault();
-                    const tab = JSON.parse(e.dataTransfer.getData('jimud/tab'));
-                    var x = e.screenX;
-                    var y = e.screenY;
-                    if (tab.offset) {
-                        x -= tab.offset.x;
-                        y -= tab.offset.y;
-                    }
-                    ipcRenderer.send('dock-client', tab.client, { x: x, y: y, pid: ipcRenderer.sendSync('get-pid')  });
-                }
-            });
-            window.addEventListener('focus', e => {
-                tabstrip.focused = true;
-                ipcRenderer.send('focus-client', _current);
-            })
-            window.addEventListener('blur', e => {
-                //tabstrip.focused = false;
-            })
-            _loading++;
-            if (_load.length) {
-                setClients(_load);
-                if (_current)
-                    switchToClient(_current);
-            }
-            _loading--;
-        });
 
         function getActiveClient() {
             return _current;
@@ -359,10 +228,148 @@
         ipcRenderer.on('blur', event => {
             tabstrip.focused = false;
         })
-    </script>
-</head>
 
-<body id="client-container">
+        document.addEventListener('visibilitychange', () => {
+            //fake minimize due ot bug in linux not supporting minimize event
+            if (document.visibilityState === 'hidden' && process.platform === 'linux' && ipcRenderer.sendSync('window-info', 'isMinimized') && ipcRenderer.sendSync('get-preference', 'hideOnMinimize'))
+                ipcRenderer.invoke('window', 'hide');
+        });
+
+        function init() {
+            tabstrip = new TabStrip();
+            tabstrip.useNativeMenus = true;
+            tabstrip.on('tab-strip-hidden', () => {
+                ipcRenderer.send('update-client', _current, 0);
+            });
+            tabstrip.on('tab-strip-shown', () => {
+                ipcRenderer.send('update-client', _current, tabstrip.height);
+            });
+            tabstrip.on('add', e => {
+                if (_loading) return;
+                const tabs = tabstrip.tabs;
+                if (tabs.length === 2) {
+                    //force a refresh as will not update while hidden
+                    tabstrip.refresh();
+                    //resize previous tab just to ensure all are same size
+                    ipcRenderer.send('update-client', tabs[0].client, tabstrip.height);
+                    ipcRenderer.send('update-client', _current, tabstrip.height);
+                }
+            });
+            tabstrip.on('tab-click', e => {
+                ipcRenderer.send('switch-client', e.tab.client, tabstrip.height);
+                _current = e.tab.client;
+            });
+            tabstrip.on('remove', e => {
+                ipcRenderer.send('remove-client', e.tab.client);
+                //cancel the remove as we want to make sure it is called after browser view is cleaned up as it may cancel based on user input
+                e.cancel = true;
+            });
+            tabstrip.on('removed', panel => {
+                if (tabstrip.hideTabstrip && tabstrip.tabs.length === 1) {
+                    ipcRenderer.send('update-client', tabstrip.tabs[0].client, 0);
+                }
+            });
+            tabstrip.on('activated', e => {
+                if (_loading) return;
+                ipcRenderer.send('switch-client', e.tab.client, tabstrip.height);
+                _current = e.tab.client;
+                setTitle(e.tab.title.innerText);
+            })
+            tabstrip.on('tab-moved', e => {
+                ipcRenderer.send('reorder-client', e.tab.client, e.index, e.oldIndex);
+            });
+            tabstrip.on('tab-drag-end', e => {
+                //dropped outside of client area so new window if more then 1 tab
+                if (e.event.dataTransfer.items.length === 0 && (e.event.clientX < 0 || e.event.clientY < 0 || e.event.clientX >= document.body.clientWidth || e.event.clientY >= document.body.clientHeight)) {
+                    e.event.stopPropagation();
+                    e.event.preventDefault();
+                    var x = e.event.screenX;
+                    var y = e.event.screenY;
+                    var bounds = e.tab.tab.getBoundingClientRect();
+                    x -= Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth));
+                    y -= Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight));
+                    ipcRenderer.send('dock-client', tabstrip.dragTab.client, { x: x, y: y, pid: ipcRenderer.sendSync('get-pid') });
+                }
+            });
+            tabstrip.on('tab-drop', e => {
+                //if not dragging its from a different window so its a undock/dock
+                if (e.tab === tabstrip.dragTab) {
+                    e.event.preventDefault();
+                    e.event.stopPropagation();
+                }
+                if (!tabstrip.dragPanel && !tabstrip.dragTab) {
+                    e.preventDefault = true;
+                    e.event.stopPropagation();
+                    e.event.preventDefault();
+                    const tab = JSON.parse(e.event.dataTransfer.getData('jimud/tab'));
+                    e.tab.tab.classList.remove('drop');
+                    ipcRenderer.send('dock-client', tab.client, { index: tabstrip.getTabIndex(e.tab), pid: ipcRenderer.sendSync('get-pid') });
+                }
+            });
+
+            window.addEventListener('dragstart', (e) => {
+                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                    e.dataTransfer.dropEffect = 'move';
+                }
+            });
+            window.addEventListener('dragleave', (e) => {
+                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                    e.dataTransfer.dropEffect = 'move';
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            });
+            window.addEventListener('dragover', (e) => {
+                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                    e.dataTransfer.dropEffect = 'move';
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            });
+            window.addEventListener('dragenter', (e) => {
+                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                    e.dataTransfer.dropEffect = 'move';
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            });
+            window.addEventListener('dragend', (e) => {
+                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                    e.dataTransfer.dropEffect = 'move';
+                }
+            });
+            window.addEventListener('drop', (e) => {
+                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                    e.dataTransfer.dropEffect = 'move';
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const tab = JSON.parse(e.dataTransfer.getData('jimud/tab'));
+                    var x = e.screenX;
+                    var y = e.screenY;
+                    if (tab.offset) {
+                        x -= tab.offset.x;
+                        y -= tab.offset.y;
+                    }
+                    ipcRenderer.send('dock-client', tab.client, { x: x, y: y, pid: ipcRenderer.sendSync('get-pid') });
+                }
+            });
+            window.addEventListener('focus', e => {
+                tabstrip.focused = true;
+                ipcRenderer.send('focus-client', _current);
+            })
+            window.addEventListener('blur', e => {
+                //tabstrip.focused = false;
+            })
+            _loading++;
+            if (_load.length) {
+                setClients(_load);
+                if (_current)
+                    switchToClient(_current);
+            }
+            _loading--;
+        };
+        init();
+    </script>
 </body>
 
 </html>
