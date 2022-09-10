@@ -3983,10 +3983,6 @@ function createNewWindow(name, options) {
 
     windows[name].window.on('maximize', () => {
         trackWindowState(name, windows[name].window);
-    });
-
-    windows[name].window.on('maximize', () => {
-        trackWindowState(name, windows[name].window);
         states[name].maximized = true;
     });
 
