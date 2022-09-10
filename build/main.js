@@ -936,12 +936,12 @@ ipcMain.on('set-progress', (event, progress, mode) => {
     const cl = windows[windowId].clients.length;
     let totalProgress = 0.0;
     let totalCount = 0;
-    let mode = 'normal';
+    let progressMode = 'normal';
     for (let c = 0; c < cl; c++) {
         if (clients[windows[windowId].clients[c]].progress === -1 || !('progress' in clients[windows[windowId].clients[c]]))
             continue;
         if (clients[clientId].progressMode && clients[clientId].progressMode.length)
-            mode = clients[clientId].progressMode;
+            progressMode = clients[clientId].progressMode;
         totalProgress += clients[windows[windowId].clients[c]].progress;
         totalCount++;
     }
