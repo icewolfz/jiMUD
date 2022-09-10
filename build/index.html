@@ -3093,14 +3093,14 @@
         }
 
         function openWindow(name) {
-            if(_windows[name + '.html'])
-            {
+            if (_windows[name + '.html']) {
+                _windows[name + '.html'].show();
                 _windows[name + '.html'].focus();
                 return;
             }
-            switch(name) {
+            switch (name) {
                 case 'characters':
-                    _windows['characters.html'] = window.open('characters.html', 'Characters', 'backgroundColor=#fff,height=555,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
+                    _windows['characters.html'] = window.open('characters.html', 'Characters', 'alwaysOnTopClient=true,backgroundColor=#fff,height=555,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
                     break;
             }
         }

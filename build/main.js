@@ -362,14 +362,23 @@ function createWindow(options) {
             states[file] = saveWindowState(childWindow);
         });
 
-        childWindow.on('closed', () => {
-            if (window && !window.isDestroyed()) {
+        childWindow.on('closed', e => {
+            if (window && !window.isDestroyed())
                 executeScriptClient(`if(typeof childClosed === "function") childClosed('${file}', '${url}', '${frameName}');`, window, true);
+        });
+        childWindow.on('close', e => {
+            states[file] = saveWindowState(childWindow);
+            const id = getWindowId(window);
+            const index = getChildWindowIndex(windows[id].windows, childWindow);
+            if (window && !window.isDestroyed()) {
+                if (index !== -1 && windows[id].windows[index].details.options.persistent) {
+                    e.preventDefault();
+                    executeScript('if(typeof closeHidden === "function") closeHidden(true)', childWindow);
+                    windows[id].windows[index].window.hide();
+                }
             }
         });
-        childWindow.on('close', () => {
-            states[file] = saveWindowState(childWindow);
-        })
+        windows[getWindowId(window)].windows.push({ window: childWindow, details: details });
     });
 
     // Emitted when the window is closed.
@@ -460,7 +469,7 @@ function createWindow(options) {
             _windowID++;
         options.id = _windowID;
     }
-    windows[options.id] = { window: window, clients: [], current: 0, menubar: options.menubar };
+    windows[options.id] = { window: window, clients: [], current: 0, menubar: options.menubar, windows: [] };
     if (options.menubar)
         options.menubar.window = window;
     idMap.set(window, options.id);
@@ -1441,19 +1450,28 @@ function createClient(options) {
 
         childWindow.on('closed', () => {
             if (view && view.webContents && !view.webContents.isDestroyed()) {
+                const id = getClientId(view);
+                const index = getChildWindowIndex(clients[id].windows, childWindow);
                 executeScript(`if(typeof childClosed === "function") childClosed('${file}', '${url}', '${frameName}');`, view, true);
-            }
-            //remove remove from list
-            const id = getClientId(view);
-            for (var idx = 0, wl = clients[id].windows.length; idx < wl; idx++) {
-                if (clients[id].windows[idx].window !== childWindow) continue;
-                clients[id].windows[idx] = null;
-                clients[id].windows.splice(idx, 1);
-                break;
+                //remove remove from list
+                if (index !== -1) {
+                    clients[id].windows[index] = null;
+                    clients[id].windows.splice(index, 1);
+                }
             }
         });
 
-        childWindow.on('close', () => {
+        childWindow.on('close', e => {
+            const id = getClientId(view);
+            const index = getChildWindowIndex(clients[id].windows, childWindow);
+            if (index !== -1 && clients[id].windows[index].details.options.persistent) {
+                e.preventDefault();
+                executeScript('if(typeof closeHidden === "function") closeHidden(true)', childWindow);
+                clients[id].windows[index].window.hide();
+                states[file] = saveWindowState(childWindow);
+                clients[getClientId(view)].states[file] = states[file];
+                return;
+            }
             states[file] = saveWindowState(childWindow);
             clients[getClientId(view)].states[file] = states[file];
         });
@@ -1611,14 +1629,20 @@ function initializeChildWindow(window, url, details) {
     window.once('ready-to-show', () => {
         loadWindowScripts(window, details.frameName);
         addInputContext(window, set && set.spellchecking);
-        executeScript('(function(){window.oldFocus = window.focus; window.focus = ()=> { ipcRenderer.invoke("window", "focus"); };})();', window);
+        executeScript(`(function(){
+            window.oldFocus = window.focus; 
+            window.focus = () => { ipcRenderer.invoke("window", "focus"); };
+            window.show = () => { ipcRenderer.invoke("window", "show"); };
+            window.hide = () => { ipcRenderer.invoke("window", "hide"); };
+            window.toggle = () => { ipcRenderer.invoke("window", "toggle"); };
+        })();`, window);
         window.show();
         if (global.debug || set.enableDebug)
-            window.webContents.openDevTools();        
-    });    
+            window.webContents.openDevTools();
+    });
     window.webContents.on('render-process-gone', (event, goneDetails) => {
         logError(`${url} render process gone, reason: ${goneDetails.reason}, exitCode ${goneDetails.exitCode}\n`, true);
-    });    
+    });
     window.on('unresponsive', () => {
         dialog.showMessageBox({
             type: 'info',
@@ -1659,6 +1683,15 @@ function initializeChildWindow(window, url, details) {
         initializeChildWindow(childWindow, url, childDetails);
     });
 
+}
+
+function getChildWindowIndex(windows, childWindow) {
+    if (!windows | windows.length === 0) return -1;
+    for (var idx = 0, wl = windows.length; idx < wl; idx++) {
+        if (windows[idx].window === childWindow)
+            return idx;
+    }
+    return -1;
 }
 
 function executeCloseHooks(window) {
@@ -2118,11 +2151,28 @@ function buildOptions(details, window, settings) {
         features = details.features.split(',');
         for (var f = 0, fl = features.length; f < fl; f++) {
             feature = features[f].split('=');
-            if (feature[0] === "width" || feature[0] === "height" || feature[0] === 'x' || feature[0] === 'y')
-                options[feature[0]] = parseInt(feature[1], 10);
-            else
-                options[feature[0]] = feature[1];
+            switch (feature[0]) {
+                case "width":
+                case "height":
+                case "x":
+                case "y":
+                    options[feature[0]] = parseInt(feature[1], 10);
+                    break;
+                default:
+                    if (feature[1] === "true")
+                        options[feature[0]] = true;
+                    else if (feature[1] === "false")
+                        options[feature[0]] = false;
+                    else
+                        options[feature[0]] = feature[1];
+                    break;
+            }
         }
+        //if passed but showInTaskBar is passed set skipTaskbar based on that setting
+        if (!('skipTaskbar' in options) && 'showInTaskBar' in options)
+            options.skipTaskbar = (!options.showInTaskBar && (options.alwaysOnTopClient || options.alwaysOnTop)) ? true : false;
+        if (options.alwaysOnTopClient)
+            options.parent = window;
         //not set so all other bounds are missing so use previous saved if found
         if (typeof options.x === 'undefined' && states[file] && states[file].bounds) {
             options.x = states[file].bounds.x;
@@ -2148,7 +2198,6 @@ function buildOptions(details, window, settings) {
             skipTaskbar: true,
             resizable: false
         });
-
         var b = window.getBounds();
         options.x = Math.floor(b.x + b.width / 2 - options.width / 2);
         options.y = Math.floor(b.y + b.height / 2 - options.height / 2);
@@ -2331,6 +2380,11 @@ async function saveWindowLayout(file) {
                 details: clients[id].windows[idx].details,
                 //get any custom data from window
                 data: await executeScript('if(typeof saveWindow === "function") saveWindow()', window)
+            }
+            if (wData.details.parent)
+                wData.details.parent = true;
+            if (wData.details.options && wData.details.options.parent) {
+                wData.details.options.parent = true;
             }
             cData.windows.push(wData);
         }
