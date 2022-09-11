@@ -35,7 +35,6 @@
         var archiver, archive;
 
         var characters, current = '';
-        var charactersFile = parseTemplate(path.join('{data}', 'characters.json'));
         var changed = 0;
         var askonloadCharacter = true;
 
@@ -136,6 +135,8 @@
         }
 
         function updateCurrent() {
+            //TODO fix saving
+            return;
             if (!current) return;
             var v = templatePath($('#settings').val());
             if (v != characters.characters[current].settings) {
@@ -198,7 +199,7 @@
                 characters.characters[current].password = v;
                 changed++;
             }
-            fs.writeFileSync(path.join(parseTemplate('{data}'), 'characters', current + '.notes'), $('#notes').val());
+            fs.writeFileSync(path.join(parseTemplate('{characters}'), current + '.notes'), $('#notes').val());
         }
 
         function saveCharacters() {
@@ -228,46 +229,29 @@
         }
 
         function loadCharacters() {
-            if (isFileSync(charactersFile))
-                characters = fs.readFileSync(charactersFile, 'utf-8');
-
-            if (characters && characters.length > 0) {
-                try {
-                    characters = JSON.parse(characters);
-                    if (!characters)
-                        characters = { load: 0, characters: {} };
-                    if (!characters.characters)
-                        characters.characters = {};
-                }
-                catch (e) {
-                    console.error('Could not load: \'characters.json\'');
-                    characters = { load: 0, characters: {} };
-                }
-            }
-            else
-                characters = { load: 0, characters: {} };
+            characters = ipcRenderer.sendSync('get-characters', { sort: 'Name' });
             var list = $('#characters-list');
             list.empty();
             clearEditor();
-            var keys = Object.keys(characters.characters).sort();
-            var key;
-            for (key in keys)
-                createItem(keys[key], list);
+            const cl = characters.length;
+            for (let c = 0; c < cl; c++)
+                createItem(characters[c], c, list);
         }
 
-        function createItem(name, list) {
+        function createItem(character, index, list) {
             if (!list) list = $('#characters-list');
             var item = $('<li></li>', {
-                id: 'character-' + sanitizeID(name),
+                id: 'character-' + character.ID,
                 class: 'list-group-item'
-            }).text(name);
-            item.data('name', name);
+            }).text(character.Title);
+            item.data('id', character.ID);
+            item.data('index', index);
             item.on('click', function () {
-                if (current === $(this).data('name')) return;
+                if (current === parseInt($(this).data('index'), 10)) return;
                 updateCurrent();
                 $('.list-group-item').removeClass('selected');
                 $(this).addClass('selected');
-                current = $(this).data('name');
+                current = parseInt($(this).data('index'), 10);
                 $('#btn-rename').prop('disabled', false);
                 $('#btn-copy').prop('disabled', false);
                 $('#btn-delete').prop('disabled', false);
@@ -276,22 +260,24 @@
                 $('#character-editor input').prop('disabled', false);
                 $('#character-editor button').prop('disabled', false);
                 $('#character-editor textarea').prop('disabled', false);
-                $('#settings').val(characters.characters[current].settings);
-                $('#map').val(characters.characters[current].map);
-                $('#name').val(characters.characters[current].name || current);
-                $('#auto-load').prop('checked', current === characters.load);
-                $('#dev').prop('checked', characters.characters[current].dev);
-                $('#disconnect').prop('checked', characters.characters[current].disconnect);
+                $('#settings').val(characters[current].Preferences);
+                $('#notes-path').val(characters[current].Notes);
+                $('#map').val(characters[current].Map);
+                $('#name').val(characters[current].Name || characters[current].Title);
+                $('#auto-load').prop('checked', characters.AutoLoad);
+                $('#dev').prop('checked', characters[current].Port == 1035);
+                $('#disconnect').prop('checked', characters[current].Disconnect);
 
-                if (characters.characters[current].password && characters.characters[current].password.length > 0) {
-                    var pass = characters.characters[current].password.split(':');
+                if (characters[current].Password && characters[current].Password.length > 0) {
+                    var pass = characters[current].Password.split(':');
                     $('#password').val(decrypt(pass[0], pass[1], pass[2]));
                 }
                 else
                     $('#password').val('');
 
-                $('#title').text(name);
-                let notes = path.join(parseTemplate('{data}'), 'characters', current + '.notes');
+                $('#title').text(characters[current].Title);
+                $('#character-id').text(characters[current].ID);                
+                let notes = parseTemplate(characters[current].Notes);
                 if (isFileSync(notes))
                     $('#notes').val(fs.readFileSync(notes, 'utf-8'));
                 else
@@ -478,6 +464,7 @@
                 characters.characters[name] = clone(characters.characters[oldName]);
                 characters.characters[name].settings = path.join('{characters}', name + '.json');
                 characters.characters[name].map = path.join('{characters}', name + '.map');
+                characters.characters[name].Notes = path.join('{characters}', name + '.notes');
                 var f = parseTemplate(characters.characters[oldName].settings);
                 var sf = parseTemplate(characters.characters[name].settings);
                 var response;
@@ -962,9 +949,13 @@
             </ul>
         </div>
         <div id="content" class="panel panel-default" style="position: absolute;left:206px;right: 2px;top: 2px;bottom:2px;margin:0">
-            <div class="panel-heading">
+            <div class="panel-heading" style="position: relative;">
                 Character:
                 <span id="title"></span>
+                <div style="position: absolute; right: 0;right: 15px;top: 10px;">
+                    Unique ID:
+                    <span id="character-id"></span>
+                </div>
             </div>
             <div class="panel-body" id="character-editor" style="padding: 0px;">
                 <ul class="nav nav-tabs" role="tablist">
@@ -1005,6 +996,16 @@
                                 </span>
                             </div>
                         </label>
+                        <label class="control-label"> Notes
+                            <div class="input-group" style="width:100%;">
+                                <input disabled="disabled" class="form-control" style="width:100%" type="text" id="notes-path">
+                                <span class="input-group-btn">
+                                    <button disabled="disabled" class="btn btn-default" type="button" onclick="openFile('#notes-path', ['notes', 'txt'])">
+                                        &hellip;
+                                    </button>
+                                </span>
+                            </div>
+                        </label>
                         <label class="control-label col-sm-6" style="padding-left: 0;">
                             <input disabled="disabled" type="checkbox" id="auto-load" /> Auto load
                             <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Only one character can auto load, enabling this will disable previous auto loaded character</span>
@@ -1018,7 +1019,7 @@
                             <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Disconnect current connection</span>
                         </label>
                     </div>
-                    <div role="tabpanel" class="container tab-pane fade in" id="tab-notes">
+                    <div role="tabpanel" class="container tab-pane fade in" id="tab-notes" style="width: auto;">
                         <textarea id="notes" wrap="off" spellcheck="true" cols="20" rows="20" class="form-control" disabled="disabled"></textarea>
                     </div>
                 </div>

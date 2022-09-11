@@ -36,6 +36,14 @@ export interface CharactersOptions {
     memoryPeriod?: number;
     file?: string;
 }
+
+export interface getCharacterOptions {
+    filter?;
+    filterOr?: boolean;
+    sort?: string;
+    sortDesc?: boolean;
+    fields?: string[];
+}
 export class Characters extends EventEmitter {
     private _db;
     private _changed: boolean = false;
@@ -208,7 +216,7 @@ export class Characters extends EventEmitter {
         if (!character) return;
         this._db.prepare('BEGIN').run();
         try {
-            this._db.prepare(`UPDATE Characters ${Object.keys(character).filter(key => key !== 'ID').map(key => `${key} = $${key}`).join(', ')} WHERE ID = $ID`).run(character);
+            this._db.prepare(`UPDATE Characters SET ${Object.keys(character).filter(key => key !== 'ID').map(key => `${key} = $${key}`).join(', ')} WHERE ID = $ID`).run(character);
             this._changed = true;
         }
         catch (err) {
@@ -246,21 +254,27 @@ export class Characters extends EventEmitter {
 
     public getCharactersByName(name: string): Character[] {
         if (!name) return [];
-        return this.getCharacters({ Name: name });
+        return this.getCharacters({ filter: { Name: name }, sort: 'Name' });
     }
 
     public getCharactersByTitle(title: string): Character[] {
         if (!title) return [];
-        return this.getCharacters({ Title: title });
+        return this.getCharacters({ filter: { Title: title }, sort: 'Title' });
     }
 
-    public getCharacters(filter?, FilterOr?: boolean): Character[] {
+    public getCharacters(options: getCharacterOptions): Character[] {
         let rows;
         try {
-            if (filter)
-                rows = this._db.prepare(`Select * FROM Characters WHERE ${Object.keys(filter).map(key => `${key} = $${key}`).join(FilterOr ? ' or ' : ' and ')}`).all(filter);
+            let sort = '';
+            let fields = '*';
+            if (options.fields)
+                fields = options.fields.join(',');
+            if (options.sort)
+                sort = ` ORDER BY ${options.sort}${options.sortDesc ? ' DESC' : ' ASC'}`;
+            if (options.filter)
+                rows = this._db.prepare(`Select ${fields} FROM Characters WHERE ${Object.keys(options.filter).map(key => `${key} = $${key}`).join(options.filterOr ? ' or ' : ' and ')}${sort}`).all(options.filter);
             else
-                rows = this._db.prepare('Select * FROM Characters').all();
+                rows = this._db.prepare(`Select ${fields} FROM Characters${sort}`).all();
         }
         catch (err) {
             this.emit('error', err);
@@ -269,7 +283,7 @@ export class Characters extends EventEmitter {
     }
 
     public getAutoLoadingCharacters(): Character[] {
-        return this.getCharacters({ AutoLoad: 1 });
+        return this.getCharacters({ filter: { AutoLoad: 1 }, sort: 'Name' });
     }
 
     public clearAll() {

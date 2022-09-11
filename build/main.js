@@ -134,9 +134,10 @@ if (isFileSync(path.join(app.getPath('userData'), 'characters.json'))) {
                     Password: character.password,
                     Preferences: character.settings,
                     Map: character.map,
+                    Notes: path.join('{characters}', `${title}.notes`),
                     TotalMilliseconds: 0,
                     TotalDays: 0,
-                    LastConnected: 0,
+                    LastConnected: 0
                 });
             }
             oldCharacters = null;
@@ -962,6 +963,11 @@ ipcMain.on('reload-profile', (event, profile) => {
         }
     }
 });
+
+ipcMain.on('get-characters', (event, options) => {
+    event.returnValue = _characters.getCharacters(options);
+});
+
 
 ipcMain.on('get-character', (event, id, property) => {
     let character = _characters.getCharacter(id);
@@ -1804,6 +1810,7 @@ ipcMain.on('parseTemplate', (event, str, data) => {
 });
 
 function parseTemplate(str, data) {
+    if (!str) return str;
     str = str.replace(/{home}/g, app.getPath('home'));
     str = str.replace(/{path}/g, app.getAppPath());
     str = str.replace(/{appData}/g, app.getPath('appData'));
