@@ -17,13 +17,15 @@
     - Tracks connection time
     - Keeps last connected date
     - Import old character manager data and rename old to .bak
+      - Name is now the only way to set login name, the text displayed in the list is now just a display title for easy sorting
+      - Notes is now a tracked file path like settings and map and can be changed by the user
+      - All new characters will use a unique generated id number instead of title or name for data files to prevent sharing files by default
   - Command line arguments:
     - Added -l/--layout to allow loading of a saved layout
     - Added il/--ignore-layout to ignore loading last used layout or --layout
     - Changed -s/--setting to set the global preference file to use
     - Changed -m/--map to set working global map file for generic new connections
     - Removed -mf argument to keep argument name scheme flowing
-  - Switch to mathjs minified file instead of module to reduce load times
 
 ## 0.19.4
 

@@ -130,7 +130,7 @@ if (isFileSync(path.join(app.getPath('userData'), 'characters.json'))) {
                     Disconnect: character.disconnect,
                     UseAddress: false,
                     Days: 0,
-                    Name: character.name,
+                    Name: character.name || (title || '').replace(/[^a-zA-Z0-9]+/g, ''),
                     Password: character.password,
                     Preferences: character.settings,
                     Map: character.map,
