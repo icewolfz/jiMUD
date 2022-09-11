@@ -943,13 +943,13 @@
             </button>
             <button id="btn-load" type="button" disabled="disabled" class="btn btn-warning btn-xs" title="Load" onclick="if(load() === 0) window.close()">
                 <i class="fa fa-play"></i>
-            </button>            
-            <button id="btn-load-default" type="button" disabled="disabled"  class="btn btn-default btn-xs" title="Load new connection" onclick="">
+            </button>
+            <button id="btn-load-default" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Load new connection" onclick="">
                 <i class="fa fa-external-link"></i>
             </button>
-            <button id="btn-load-default" type="button" disabled="disabled"  class="btn btn-default btn-xs" title="Load new window" onclick="">
+            <button id="btn-load-default" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Load new window" onclick="">
                 <i class="fa fa-window-restore"></i>
-            </button>            
+            </button>
         </div>
         <button id="btn-close" type="button" class="btn btn-default btn-xs" style="display: none;float: right" title="Close" onclick="window.close()">
             <i class="fa fa-window-close"></i>
@@ -976,7 +976,7 @@
                     </li>
                 </ul>
                 <div class="tab-content" style="position: absolute;bottom: 0;top: 42px;overflow: auto;left: 0;right: 0;">
-                    <div role="tabpanel" class="container tab-pane fade in active" id="tab-general">
+                    <div role="tabpanel" class="container tab-pane fade in active" id="tab-general" style="width: 100%;">
                         <label class="control-label" style="width: 100%"> Login
                             <input disabled="disabled" class="form-control" style="width:100%" type="text" id="name">
                             <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Name to login as if different from character name</span>
@@ -1005,15 +1005,15 @@
                                 </span>
                             </div>
                         </label>
-                        <label class="control-label">
+                        <label class="control-label col-sm-6" style="padding-left: 0;">
                             <input disabled="disabled" type="checkbox" id="auto-load" /> Auto load
                             <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Only one character can auto load, enabling this will disable previous auto loaded character</span>
                         </label>
-                        <label class="control-label">
+                        <label class="control-label col-sm-6" style="padding-left: 0;">
                             <input disabled="disabled" type="checkbox" id="dev" /> Development
                             <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Connect to development port</span>
                         </label>
-                        <label class="control-label" style="float: right;">
+                        <label class="control-label col-sm-6" style="padding-left: 0;">
                             <input disabled="disabled" type="checkbox" id="disconnect" /> Disconnect on load
                             <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Disconnect current connection</span>
                         </label>

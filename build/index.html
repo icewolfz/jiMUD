@@ -2406,6 +2406,16 @@
             ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
             if (client.options.find.show)
                 client.display.showFind();
+            if (_windowState.windows.length) {
+                const _dir = 'file:///' + __dirname.replace(/\\/g, '/');
+                const wl = _windowState.windows.length;
+                for (let w = 0; w < wl; w++) {
+                    let file = _windowState.windows[w].details.url;
+                    if (file.startsWith(file))
+                        file = path.basename(file.substring(__dirname.length + 9), '.html');
+                    openWindow(file, _windowState.windows[w]);
+                }
+            }
             if (client.options.showCharacterManager)
                 openWindow('characters');
             //TODO re add known child windows with settings and combine with last known states
@@ -3092,17 +3102,31 @@
             delete _windows[file];
         }
 
-        function openWindow(name) {
+        function openWindow(name, data) {
             if (_windows[name + '.html']) {
                 _windows[name + '.html'].show();
                 _windows[name + '.html'].focus();
                 return;
             }
+            let _options = '';
             switch (name) {
                 case 'characters':
-                    _windows['characters.html'] = window.open('characters.html', 'Characters', 'alwaysOnTopClient=true,backgroundColor=#fff,height=555,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
+                    console.log(data);
+                    if (data && data.details)
+                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon']);
+                    if (data && data.state)
+                        _options += ',' + buildWindowOptions(data.state, ['bounds']);
+                    _windows['characters.html'] = window.open('characters.html', 'Characters', 'alwaysOnTopClient=true,defaultHeight=555,defaultWidth=650,backgroundColor=#fff,icon=' + path.join(__dirname, '../assets/icons/png/user.png') + _options);
                     break;
             }
+            if (data && data.data && typeof _windows[name + '.html'].restoreWindow !== 'undefined')
+                _windows[name + '.html'].restoreWindow(data.data);
+        }
+
+        function buildWindowOptions(options, filters) {
+            if (!options) return '';
+            if (!filters) filters = [];
+            return Object.keys(options).filter(key => filters.indexOf(key) !== -1).map(key => `${key}=${options[key]}`).join(',');
         }
 
         // eslint-disable-next-line no-unused-vars

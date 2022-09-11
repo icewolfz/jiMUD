@@ -2173,20 +2173,30 @@ function buildOptions(details, window, settings) {
             options.skipTaskbar = (!options.showInTaskBar && (options.alwaysOnTopClient || options.alwaysOnTop)) ? true : false;
         if (options.alwaysOnTopClient)
             options.parent = window;
-        //not set so all other bounds are missing so use previous saved if found
-        if (typeof options.x === 'undefined' && states[file] && states[file].bounds) {
-            options.x = states[file].bounds.x;
-            options.y = states[file].bounds.y;
-            options.width = states[file].bounds.width;
-            options.height = states[file].bounds.height;
-        }
-    }//not passed so see if any previous openings to use them
-    else if (states[file] && states[file].bounds) {
-        options.x = states[file].bounds.x;
-        options.y = states[file].bounds.y;
-        options.width = states[file].bounds.width;
-        options.height = states[file].bounds.height;
     }
+    //not passed so see if any previous openings to use them as defaults
+    if (states[file]) {
+        if (states[file].bounds) {
+            if (!('x' in options))
+                options.x = states[file].bounds.x;
+            if (!('y' in options))
+                options.y = states[file].bounds.y;
+            if (!('width' in options))
+                options.width = states[file].bounds.width;
+            if (!('height' in options))
+                options.height = states[file].bounds.height;
+        }
+        Object.keys(states[file]).map(key => {
+            if (key === 'bounds') return;
+            if (!(key in options))
+                options[key] = states[file][key];
+        });
+    }
+    //if no width or height see if a default was supplied
+    if (!('width' in options) && 'defaultWidth' in options)
+        options.width = options.defaultWidth;
+    if (!('height' in options) && 'defaultHeight' in options)
+        options.width = options.defaultHeight;    
     if (details.frameName === 'modal') {
         // open window as modal
         Object.assign(options, {
@@ -2206,7 +2216,7 @@ function buildOptions(details, window, settings) {
         if (Object.prototype.hasOwnProperty.call(options, 'x'))
             options.x = getWindowX(options.x, options.width);
         if (Object.prototype.hasOwnProperty.call(options, 'y'))
-            options.x = getWindowY(options.y, options.height);
+            options.y = getWindowY(options.y, options.height);
     }
     return options;
 }
