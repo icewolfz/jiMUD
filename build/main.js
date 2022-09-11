@@ -492,27 +492,27 @@ function createDialog(options) {
         if (!('x' in options.bounds))
             options.bounds.x = Math.floor(bounds.x + bounds.width / 2 - options.bounds.width / 2);
         if (!('y' in options.bounds))
-            options.bounds.y = Math.floor(bounds.x + bounds.width / 2 - options.bounds.width / 2);
+            options.bounds.y = Math.floor(bounds.y + bounds.height / 2 - options.bounds.height / 2);
     }
     else
         options.bounds = {
             x: Math.floor(bounds.x + bounds.width / 2 - 250),
-            y: Math.floor(bounds.x + bounds.width / 2 - 280),
+            y: Math.floor(bounds.y + bounds.height / 2 - 280),
             width: 500,
             height: 560,
         }
     const window = new BrowserWindow({
         parent: options.parent,
-        modal: false,
+        modal: options.modal,
         x: options.bounds.x,
         y: options.bounds.y,
         width: options.bounds.width || 500,
         height: options.bounds.height || 560,
-        movable: options.model ? false : true,
+        movable: options.modal ? false : true,
         minimizable: false,
         maximizable: false,
         skipTaskbar: true,
-        resizable: options.model ? false : (options.resize || false),
+        resizable: options.modal ? false : (options.resize || false),
         title: options.title || 'jiMUD',
         icon: options.icon || path.join(__dirname, '../assets/icons/png/64x64.png'),
         webPreferences: {
@@ -562,6 +562,7 @@ function createDialog(options) {
         if (options.show)
             window.show();
     });
+    addInputContext(window, set.spellchecking);
     return window;
 }
 
@@ -1521,6 +1522,7 @@ function createClient(options) {
     //win.setTopBrowserView(view)    
     //addBrowserView
     //setBrowserView  
+    addInputContext(view, set.spellchecking);
     return options.id;
 }
 
@@ -1628,7 +1630,7 @@ function initializeChildWindow(window, url, details) {
     window.removeMenu();
     window.once('ready-to-show', () => {
         loadWindowScripts(window, details.frameName);
-        addInputContext(window, set && set.spellchecking);
+        addInputContext(window, set.spellchecking);
         executeScript(`(function(){
             window.oldFocus = window.focus; 
             window.focus = () => { ipcRenderer.invoke("window", "focus"); };
@@ -2196,7 +2198,7 @@ function buildOptions(details, window, settings) {
     if (!('width' in options) && 'defaultWidth' in options)
         options.width = options.defaultWidth;
     if (!('height' in options) && 'defaultHeight' in options)
-        options.width = options.defaultHeight;    
+        options.width = options.defaultHeight;
     if (details.frameName === 'modal') {
         // open window as modal
         Object.assign(options, {
@@ -2669,7 +2671,20 @@ function createMenu() {
                     id: 'globalPreferences',
                     accelerator: 'CmdOrCtrl+Comma',
                     click: (item, mWindow) => {
-                        executeScriptClient('showPrefs(true)', mWindow, true);
+                        let window = getWindowId('prefs');
+                        if (window && !window.isDestroyed())
+                            window.focus();
+                        else {
+                            window = createDialog({
+                                parent: mWindow,
+                                url: path.join(__dirname, 'prefs.html'),
+                                title: 'Global Preferences',
+                                bounds: { width: 800, height: 460 },
+                                icon: path.join(__dirname, '../assets/icons/png/preferences.png'),
+                                modal: true
+                            });
+                            idMap.set("prefs", window);
+                        }
                     }
                 },
                 {
@@ -2677,7 +2692,7 @@ function createMenu() {
                     id: 'preferences',
                     accelerator: 'CmdOrCtrl+Comma',
                     click: (item, mWindow) => {
-                        executeScriptClient('showPrefs()', mWindow, true);
+                        executeScriptClient('openWindow("prefs");', mWindow, true);
                     }
                 },
                 {
