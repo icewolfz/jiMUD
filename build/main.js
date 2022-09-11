@@ -365,6 +365,7 @@ function createWindow(options) {
         childWindow.on('closed', e => {
             if (window && !window.isDestroyed())
                 executeScriptClient(`if(typeof childClosed === "function") childClosed('${file}', '${url}', '${frameName}');`, window, true);
+            idMap.delete(childWindow);
         });
         childWindow.on('close', e => {
             states[file] = saveWindowState(childWindow);
@@ -379,6 +380,7 @@ function createWindow(options) {
             }
         });
         windows[getWindowId(window)].windows.push({ window: childWindow, details: details });
+        idMap.set(childWindow, getWindowId(window));
     });
 
     // Emitted when the window is closed.
@@ -416,7 +418,7 @@ function createWindow(options) {
             restoreWindowState(window, states[options.file]);
         else
             window.show();
-        if(options.menubar)
+        if (options.menubar)
             options.menubar.enabled = true;
     });
 
@@ -1086,6 +1088,8 @@ ipcMain.handle('window', (event, action, ...args) => {
         current.reload();
     else if (action === 'setIcon')
         current.setIcon(...args);
+    else if (action === 'update')
+        updateWindow(current, getChildParentWindow(current), ...args);
 });
 
 ipcMain.on('window-info', (event, info, id, ...args) => {
@@ -1467,6 +1471,7 @@ function createClient(options) {
                     clients[id].windows.splice(index, 1);
                 }
             }
+            idMap.delete(childWindow);
         });
 
         childWindow.on('close', e => {
@@ -1485,6 +1490,7 @@ function createClient(options) {
         });
 
         clients[getClientId(view)].windows.push({ window: childWindow, details: details });
+        idMap.set(childWindow, getClientId(view));
     });
 
     view.setAutoResize({
@@ -1644,6 +1650,7 @@ function initializeChildWindow(window, url, details) {
             window.show = () => { ipcRenderer.invoke("window", "show"); };
             window.hide = () => { ipcRenderer.invoke("window", "hide"); };
             window.toggle = () => { ipcRenderer.invoke("window", "toggle"); };
+            window.update = (options) => { ipcRenderer.invoke("window", "update", options); };
         })();`, window);
         window.show();
         if (global.debug || set.enableDebug)
@@ -1691,7 +1698,6 @@ function initializeChildWindow(window, url, details) {
             file = url.substring(__dirname.length + 9);
         initializeChildWindow(childWindow, url, childDetails);
     });
-
 }
 
 function getChildWindowIndex(windows, childWindow) {
@@ -2302,6 +2308,46 @@ function focusClient(clientId, focusWindow) {
         client.parent.webContents.focus();
     }
     client.view.webContents.focus();
+}
+
+function updateWindow(window, parent, options) {
+    if (!window || !options) return;
+    window.setParentWindow(options.alwaysOnTopClient ? parent : null);
+    window.setAlwaysOnTop(options.alwaysOnTop);
+    window.setSkipTaskbar((!options.showInTaskBar && (options.alwaysOnTopClient || options.alwaysOnTop)) ? true : false);
+    window.webContents.setBackgroundThrottling(options.enableBackgroundThrottling);
+}
+
+function getChildParentWindow(child) {
+    if (!child) return null;
+    //if set use current parent
+    let parent = child.getParentWindow();
+    if (parent) return parent;
+    let id = getWindowId(child);
+    //if has a parent so find it
+    if (typeof id === 'number') {
+        //a main window is parent so return the window
+        if (windows[id])
+            return windows[id].window;
+        //if a client return the client parent
+        else if (clients[id])
+            return clients[id].parent;
+    }
+    //if all else fails try and drill client child windows
+    /*
+    for (id in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, id))
+            continue;
+        //search all the clients for child window
+        const wl = clients[id].windows.length;
+        for (var idx = 0; idx < wl; idx++) {
+            if (clients[id].windows[idx].window === child)
+                return clients[id].parent;
+        }
+    }
+    */
+    //parent not found so bail
+    return null;
 }
 //#region Execute scripts in window/view
 // eslint-disable-next-line no-unused-vars
