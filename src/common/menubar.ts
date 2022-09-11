@@ -36,7 +36,7 @@ export class Menubar {
     private $updating;
     private $enabled = true;
     private $busy = false;
-    private timer;
+    private timer: any = 0;
 
     constructor(menu: any[], window?: Electron.BrowserWindow) {
         if (!window)

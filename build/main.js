@@ -416,6 +416,8 @@ function createWindow(options) {
             restoreWindowState(window, states[options.file]);
         else
             window.show();
+        if(options.menubar)
+            options.menubar.enabled = true;
     });
 
     //close hack due to electron's dumb ability to not allow a simple sync call to return a true/false state
@@ -470,8 +472,10 @@ function createWindow(options) {
         options.id = _windowID;
     }
     windows[options.id] = { window: window, clients: [], current: 0, menubar: options.menubar, windows: [] };
-    if (options.menubar)
+    if (options.menubar) {
         options.menubar.window = window;
+        options.menubar.enabled = false;
+    }
     idMap.set(window, options.id);
     return options.id;
 }
@@ -512,6 +516,7 @@ function createDialog(options) {
         minimizable: false,
         maximizable: false,
         skipTaskbar: true,
+        show: false,
         resizable: options.modal ? false : (options.resize || false),
         title: options.title || 'jiMUD',
         icon: options.icon || path.join(__dirname, '../assets/icons/png/64x64.png'),
@@ -561,6 +566,8 @@ function createDialog(options) {
     window.once('ready-to-show', () => {
         if (options.show)
             window.show();
+        if (global.debug || set.enableDebug)
+            window.webContents.openDevTools();
     });
     addInputContext(window, set.spellchecking);
     return window;
@@ -2670,30 +2677,15 @@ function createMenu() {
                     label: 'Global &Preferences...',
                     id: 'globalPreferences',
                     accelerator: 'CmdOrCtrl+Comma',
-                    click: (item, mWindow) => {
-                        let window = getWindowId('prefs');
-                        if (window && !window.isDestroyed())
-                            window.focus();
-                        else {
-                            window = createDialog({
-                                parent: mWindow,
-                                url: path.join(__dirname, 'prefs.html'),
-                                title: 'Global Preferences',
-                                bounds: { width: 800, height: 460 },
-                                icon: path.join(__dirname, '../assets/icons/png/preferences.png'),
-                                modal: true
-                            });
-                            idMap.set("prefs", window);
-                        }
-                    }
+                    click: (item, mWindow) => openPreferences(mWindow)
                 },
                 {
                     label: 'Client &Preferences...',
                     id: 'preferences',
                     accelerator: 'CmdOrCtrl+Comma',
-                    click: (item, mWindow) => {
-                        executeScriptClient('openWindow("prefs");', mWindow, true);
-                    }
+                    click: (item, mWindow) => executeScriptClient('openWindow("prefs");', mWindow, true)
+                    ,
+                    visible: false
                 },
                 {
                     type: 'separator'
@@ -3305,7 +3297,7 @@ function createMenu() {
                 { type: 'separator' },
                 {
                     label: '&About...',
-                    click: (item, mWindow) => createDialog({ parent: mWindow, url: path.join(__dirname, 'about.html'), title: 'About jiMUD', bounds: { width: 500, height: 560 } })
+                    click: (item, mWindow) => createDialog({ show: true, parent: mWindow, url: path.join(__dirname, 'about.html'), title: 'About jiMUD', bounds: { width: 500, height: 560 } })
                 }
             ]
         }
@@ -3474,6 +3466,10 @@ ipcMain.on('reset-profiles-menu', (event) => {
     resetProfilesMenu(BrowserWindow.fromWebContents(event.sender));
 });
 
+ipcMain.on('show-global-preferences', event => {
+    openPreferences(BrowserWindow.fromWebContents(event.sender));
+})
+
 function resetProfilesMenu(window) {
     if (!window || !windows[getWindowId(window)].menubar) return;
     const profiles = windows[getWindowId(window)].menubar.getItem('profiles');
@@ -3513,5 +3509,23 @@ function updateMenuItemsAll(menuitems, rebuild) {
     }
     if (rebuild)
         windows[getWindowId(windows[window])].menubar.rebuild();
+}
+
+function openPreferences(parent) {
+    let window = getWindowId('prefs');
+    if (window && !window.isDestroyed())
+        window.focus();
+    else {
+        window = createDialog({
+            show: true,
+            parent: parent,
+            url: path.join(__dirname, 'prefs.html'),
+            title: 'Global Preferences',
+            bounds: { width: 800, height: 460 },
+            icon: path.join(__dirname, '../assets/icons/png/preferences.png'),
+            modal: true
+        });
+        idMap.set("prefs", window);
+    }
 }
 //#endregion

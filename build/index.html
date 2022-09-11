@@ -72,7 +72,7 @@
         <a href="javascript:void(0)" title="Code Editor" id="codeEditor" class="button" onclick="showCodeEditor()">
             <i class="fa fa-code"></i>
         </a>
-        <a href="javascript:void(0)" title="Preferences" id="preferences" class="button" onclick="ipcRenderer.send('show-window', 'prefs');">
+        <a href="javascript:void(0)" title="Preferences" id="preferences" class="button" onclick="openWindow('prefs');">
             <i class="fa fa-gears"></i>
         </a>
         <a href="javascript:void(0)" title="Toggle logging" id="log" class="button" onclick="toggleLogging();">
@@ -1938,7 +1938,10 @@
                     case 'prefs':
                     case 'options':
                     case 'preferences':
-                        ipcRenderer.send('show-window', 'prefs');
+                        if (ipcRenderer.sendSync('get-global', 'settingsFile') === _windowState.data.settings)
+                            ipcRenderer.send('show-global-preferences');
+                        else
+                            openWindow('prefs');
                         break;
                     case 'help':
                         showHelp();
