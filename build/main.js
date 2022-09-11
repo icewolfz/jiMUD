@@ -247,7 +247,7 @@ function createWindow(options) {
         backgroundColor: '#000',
         show: false,
         icon: path.join(__dirname, options.icon || '../assets/icons/png/64x64.png'),
-        skipTaskbar: !set.showInTaskBar ? true : false,
+        skipTaskbar: !set.showInTaskBar,
         webPreferences: {
             nodeIntegration: true,
             nodeIntegrationInWorker: true,
@@ -1090,7 +1090,15 @@ ipcMain.handle('window', (event, action, ...args) => {
         current.setIcon(...args);
     else if (action === 'update')
         updateWindow(current, getChildParentWindow(current), ...args);
+    else if (action === 'updateAll')
+        updateAll(...args);
 });
+
+ipcMain.handle('contents', (event, action, ...args) => {
+    if (event.sender.isDestroyed()) return;
+    if (action === 'update')
+        updateWebContents(event.sender, ...args);
+})
 
 ipcMain.on('window-info', (event, info, id, ...args) => {
     if (info === "child-count") {
@@ -2312,10 +2320,34 @@ function focusClient(clientId, focusWindow) {
 
 function updateWindow(window, parent, options) {
     if (!window || !options) return;
-    window.setParentWindow(options.alwaysOnTopClient ? parent : null);
-    window.setAlwaysOnTop(options.alwaysOnTop);
-    window.setSkipTaskbar((!options.showInTaskBar && (options.alwaysOnTopClient || options.alwaysOnTop)) ? true : false);
-    window.webContents.setBackgroundThrottling(options.enableBackgroundThrottling);
+    if ('alwaysOnTopClient' in options)
+        window.setParentWindow(options.alwaysOnTopClient ? parent : null);
+    if ('alwaysOnTop' in options)
+        window.setAlwaysOnTop(options.alwaysOnTop);
+    if ('showInTaskBar' in options)
+        window.setSkipTaskbar((!options.showInTaskBar && (options.alwaysOnTopClient || options.alwaysOnTop)) ? true : false);
+    updateWebContents(window.webContents, options);
+}
+
+function updateWebContents(contents, options) {
+    if (!contents || !options) return;
+    if ('enableBackgroundThrottling' in options)
+        window.webContents.setBackgroundThrottling(options.enableBackgroundThrottling);
+}
+
+function updateAll(options) {
+    const windows = BrowserWindow.getAllWindows();
+    const l = windows.length;
+    for (let idx = 0; idx < l; idx++) {
+        if (idMap.has(windows[windows[idx]]) && 'showInTaskBar' in options)
+            windows[idx].setSkipTaskbar(!options.showInTaskBar);
+        updateWebContents(windows[idx].webContents);
+    }
+    for (id in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, id))
+            continue;
+        updateWebContents(clients[id].view.webContents, options);
+    }
 }
 
 function getChildParentWindow(child) {

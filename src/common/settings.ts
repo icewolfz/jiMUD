@@ -487,6 +487,9 @@ export class Settings {
     public echoSpeedpaths: boolean = false;
     
 
+    /**
+     * @depreciated Allow window states have been moved to a separate layout system
+     */
     public windows = {};
     public buttons = {
         connect: true,
