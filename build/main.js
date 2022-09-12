@@ -1,7 +1,7 @@
 //spell-checker:words submenu, pasteandmatchstyle, statusvisible, taskbar, colorpicker, mailto, forecolor, tinymce, unmaximize
 //spell-checker:ignore prefs, partyhealth, combathealth, commandinput, limbsmenu, limbhealth, selectall, editoronly, limbarmor, maximizable, minimizable
 //spell-checker:ignore limbsarmor, lagmeter, buttonsvisible, connectbutton, charactersbutton, Editorbutton, zoomin, zoomout, unmaximize, resizable
-const { app, BrowserWindow, BrowserView, shell, screen, Tray, dialog, Menu, MenuItem, ipcMain, systemPreferences } = windowrequire('electron');
+const { app, BrowserWindow, BrowserView, shell, screen, Tray, dialog, Menu, MenuItem, ipcMain, systemPreferences } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const url = require('url');
@@ -1174,12 +1174,12 @@ ipcMain.on('inspect', (event, x, y) => {
 });
 
 //#region Client creation, docking, and related management
-ipcMain.on('new-client', (event, connection) => {
-    newConnection(BrowserWindow.fromWebContents(event.sender, connection));
+ipcMain.on('new-client', (event, connection, data) => {
+    newConnection(BrowserWindow.fromWebContents(event.sender), connection, data);
 });
 
-ipcMain.on('new-window', (event, connection) => {
-    newClientWindow(BrowserWindow.fromWebContents(event.sender), connection);
+ipcMain.on('new-window', (event, connection, data) => {
+    newClientWindow(BrowserWindow.fromWebContents(event.sender), connection, data);
 });
 
 ipcMain.on('switch-client', (event, id, offset) => {
@@ -1554,7 +1554,7 @@ function createClient(options) {
     loadWindowScripts(view, options.script || 'user');
     script = `if(typeof setId === "function") setId(${options.id});if(typeof loadTheme === "function") loadTheme('${set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'')}');`;
     if (options.data)
-        clients[options.id].options = { data: options.data.data, windows: options.data.windows, states: options.data.states };
+        clients[options.id].options = { data: options.data.data, windows: options.data.windows || [], states: options.data.states || {} };
     else
         clients[options.id].options = { data: {}, windows: [], states: {} };
     // + 'if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify(clients[options.id].options) + ');'
@@ -2402,9 +2402,13 @@ function getChildParentWindow(child) {
     return null;
 }
 
-function newConnection(window, connection) {
+function newConnection(window, connection, data) {
     let windowId = getWindowId(window);
-    let id = createClient({ bounds: window.getContentBounds() });
+    let id;
+    if (data)
+        id = createClient({ bounds: window.getContentBounds(), data: { data: data } });
+    else
+        id = createClient({ bounds: window.getContentBounds() });
     focusedWindow = windowId;
     focusedClient = id;
     windows[windowId].clients.push(id);
@@ -2421,7 +2425,7 @@ function newConnection(window, connection) {
     });
 }
 
-function newClientWindow(caller, connection) {
+function newClientWindow(caller, connection, data) {
     if (caller) {
         //save the current states so it has the latest for new window
         states['manager.html'] = saveWindowState(caller);
@@ -2441,7 +2445,10 @@ function newClientWindow(caller, connection) {
     }
     let windowId = createWindow({ menubar: createMenu() });
     let window = windows[windowId].window;
-    let id = createClient({ bounds: window.getContentBounds() });
+    if (data)
+        id = createClient({ bounds: window.getContentBounds(), data: { data: data } });
+    else
+        id = createClient({ bounds: window.getContentBounds() });
     focusedWindow = windowId;
     focusedClient = id;
     windows[windowId].clients.push(id);

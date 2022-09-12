@@ -866,6 +866,20 @@
                 sortList();
             }
         })
+
+        function newConnection(index) {
+            if (index === undefined)
+                index = current;
+            saveCharacters();
+            window.opener.send('new-client', null, { characterId: characters[index].ID, settings: parseTemplate(characters[index].Preferences), dev: characters[index].Port == 1035 });
+        }
+
+        function newWindow(index) {
+            if (index === undefined)
+                index = current;
+            saveCharacters();
+            window.opener.send('new-window', null, { characterId: characters[index].ID, settings: parseTemplate(characters[index].Preferences), dev: characters[index].Port == 1035 });
+        }
     </script>
     <style type="text/css">
         .form-control-feedback,
@@ -929,10 +943,10 @@
             <button id="btn-load" type="button" disabled="disabled" class="btn btn-warning btn-xs" title="Load" onclick="if(load() === 0) window.close()">
                 <i class="fa fa-play"></i>
             </button>
-            <button id="btn-load-connection" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Load new connection" onclick="">
+            <button id="btn-load-connection" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Load new connection" onclick="newConnection()">
                 <i class="fa fa-external-link"></i>
             </button>
-            <button id="btn-load-window" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Load new window" onclick="">
+            <button id="btn-load-window" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Load new window" onclick="newWindow()">
                 <i class="fa fa-window-restore"></i>
             </button>
         </div>

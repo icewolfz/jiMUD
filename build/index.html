@@ -290,7 +290,7 @@
                 <button style="float: right" type="button" class="btn btn-default btn-block" onclick="closeDisconnectDialog(true);" accesskey="o">
                     <i class="fa fa-pause"></i>
                     <u>O</u>ffline</button>
-                <button id="disconnect-close" style="float: right" type="button" class="btn btn-danger btn-block" onclick="closeDisconnectDialog(true);ipcRenderer.send('remove-client', _id);" accesskey="c">
+                <button id="disconnect-close" style="float: right" type="button" class="btn btn-danger btn-block" onclick="closeDisconnectDialog(true);_clients.clients === 1 ? window.close() : ipcRenderer.send('remove-client', _id);" accesskey="c">
                     <i class="fa fa-remove"></i>
                     <u>C</u>lose</button>
                 <button style="float: right" type="button" class="btn btn-danger btn-block" onclick="closeDisconnectDialog(true);ipcRenderer.send('quit');" accesskey="q">
@@ -1443,10 +1443,10 @@
                     if (!_windowState.data.character && _windowState.data.characterId > 0)
                         _windowState.data.character = ipcRenderer.sendSync('get-character', _windowState.data.characterId, 'Name');
                     if (_windowState.data.character && _windowState.data.character.length > 0) {
-                        if (data.line === name + ' doesn\'t exist here. To create a new character, please type <new> at the name prompt.')
+                        if (data.line === _windowState.data.character + ' doesn\'t exist here. To create a new character, please type <new> at the name prompt.')
                             autoLoginCounter = 4;
                         if (data.fragment && data.line === 'Enter your character\'s name (or \'new\' for a new character): ') {
-                            setTimeout(() => client.sendCommand(name), 100);
+                            setTimeout(() => client.sendCommand(_windowState.data.character), 100);
                             autoLoginCounter++;
                         }
                         else if (data.fragment && data.line === 'Password: ') {
@@ -2111,8 +2111,10 @@
                 if (client.options.autoCreateCharacter)
                     ipcRenderer.send('change-char', title, true);
                 _logger.postMessage({ action: 'name', args: title });
-                if (lag && lag.length)
+                if (title && title.length && lag && lag.length)
                     ipcRenderer.send('update-title', { title: `${title} - ${lag}` });
+                else if (lag && lag.length)
+                    ipcRenderer.send('update-title', { title: `${lag}` });
                 else
                     ipcRenderer.send('update-title', { title: title });
                 _windowState.data.character = title;
@@ -3114,7 +3116,6 @@
             let _options = '';
             switch (name) {
                 case 'characters':
-                    console.log(data);
                     if (data && data.details)
                         _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon']);
                     if (data && data.state)
@@ -3130,6 +3131,18 @@
             if (!options) return '';
             if (!filters) filters = [];
             return Object.keys(options).filter(key => filters.indexOf(key) !== -1).map(key => `${key}=${options[key]}`).join(',');
+        }
+
+        function send(channel, ...args) {
+            ipcRenderer.send(channel, ...args);
+        }
+
+        function sendSync(channel, ...args) {
+            return ipcRenderer.sendSync(channel, ...args);
+        }
+
+        function invoke(channel, ...args) {
+            ipcRenderer.invoke(channel, ...args);
         }
 
         function updateProgress(progress, mode) {
@@ -3576,12 +3589,12 @@
             let data = ipcRenderer.sendSync('get-options');
             if (data) {
                 //safety checks to make sure some basic objects
-                if (!('windows' in data))
+                if (!('windows' in data) || !data.windows)
                     data.windows = [];
-                if (!('states' in data))
+                if (!('states' in data) || !data.windows)
                     data.states = {};
                 //make sure we have a settings file, default to global file
-                if (!('data' in data))
+                if (!('data' in data) || !data.data)
                     data.data = {
                         settings: ipcRenderer.sendSync('get-global', 'settingsFile')
                     };
@@ -3610,7 +3623,7 @@
         //#endregion
 
         //#region Close hooks
-        function close() {
+        function closed() {
             return closeWindow;
         }
 
