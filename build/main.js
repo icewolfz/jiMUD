@@ -2637,7 +2637,7 @@ function loadWindowLayout(file) {
                     current: x === current,
                     noUpdate: true
                 };
-            }, current));
+            }), current);
 
             window.window.setTopBrowserView(clients[current].view);
             //clients[current].menu.window = window.window;
