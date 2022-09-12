@@ -247,6 +247,8 @@
                 $('#btn-copy').prop('disabled', false);
                 $('#btn-delete').prop('disabled', false);
                 $('#btn-load').prop('disabled', false);
+                $('#btn-load-connection').prop('disabled', false);
+                $('#btn-load-window').prop('disabled', false);
                 $('#btn-load-close').prop('disabled', false);
                 $('#character-editor input').prop('disabled', false);
                 $('#character-editor button').prop('disabled', false);
@@ -294,6 +296,8 @@
             $('#btn-copy').prop('disabled', true);
             $('#btn-delete').prop('disabled', true);
             $('#btn-load').prop('disabled', true);
+            $('#btn-load-connection').prop('disabled', true);
+            $('#btn-load-window').prop('disabled', true);
             $('#btn-load-close').prop('disabled', true);
             $('#character-editor input').prop('disabled', true);
             $('#character-editor input[type=text]').val('');
@@ -494,7 +498,7 @@
                 }
                 if (!nameId && characters[index].Map === path.join(parseTemplate('{characters}'), oldName + '.map')) {
                     f = path.join(parseTemplate('{characters}'), oldName + '.map');
-                    sf = path.join(parseTemplate('{characters}'), name + '.map');                    
+                    sf = path.join(parseTemplate('{characters}'), name + '.map');
                     characters[index].Map = path.join('{characters}', name + '.map');
                     if (isFileSync(sf)) {
                         response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
@@ -622,8 +626,8 @@
                     ipcRenderer.send('trash-item', sf);
                 let cl = characters.length;
                 //update all old index to new indexes
-                while(--cl >= 0 && cl > index) {
-                    $('#character-' + characters[index].ID).dataset.index = cl - 1;    
+                while (--cl >= 0 && cl > index) {
+                    $('#character-' + characters[index].ID).dataset.index = cl - 1;
                 }
 
                 characters.splice(index, 1);
@@ -673,14 +677,14 @@
             }
             var response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                 type: 'warning',
-                title: 'Load defaults',
-                message: 'Load defaults?',
+                title: 'Load global',
+                message: 'Load global?',
                 buttons: ['Yes', 'No', 'Never ask again'],
                 defaultId: 1,
             });
             if (response === 2) {
                 saveCharacters();
-                ipcRenderer.send('load-default', name);
+                ipcRenderer.send('load-global', name);
                 ipcRenderer.send('setting-changed', { type: 'normal', name: 'askonloadCharacter', value: false });
                 askonloadCharacter = false;
             }
@@ -919,16 +923,16 @@
             </button>
         </div>
         <div class="btn-group" role="group">
-            <button id="btn-load-default" type="button" class="btn btn-warning btn-xs" title="Load default" onclick="if(loadDefault() === 0) window.close()">
+            <button id="btn-load-default" type="button" class="btn btn-warning btn-xs" title="Load global" onclick="if(loadDefault() === 0) window.close()">
                 <i class="fa fa-step-backward"></i>
             </button>
             <button id="btn-load" type="button" disabled="disabled" class="btn btn-warning btn-xs" title="Load" onclick="if(load() === 0) window.close()">
                 <i class="fa fa-play"></i>
             </button>
-            <button id="btn-load-default" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Load new connection" onclick="">
+            <button id="btn-load-connection" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Load new connection" onclick="">
                 <i class="fa fa-external-link"></i>
             </button>
-            <button id="btn-load-default" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Load new window" onclick="">
+            <button id="btn-load-window" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Load new window" onclick="">
                 <i class="fa fa-window-restore"></i>
             </button>
         </div>

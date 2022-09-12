@@ -1,7 +1,7 @@
 //spell-checker:words submenu, pasteandmatchstyle, statusvisible, taskbar, colorpicker, mailto, forecolor, tinymce, unmaximize
 //spell-checker:ignore prefs, partyhealth, combathealth, commandinput, limbsmenu, limbhealth, selectall, editoronly, limbarmor, maximizable, minimizable
 //spell-checker:ignore limbsarmor, lagmeter, buttonsvisible, connectbutton, charactersbutton, Editorbutton, zoomin, zoomout, unmaximize, resizable
-const { app, BrowserWindow, BrowserView, shell, screen, Tray, dialog, Menu, MenuItem, ipcMain, systemPreferences } = require('electron');
+const { app, BrowserWindow, BrowserView, shell, screen, Tray, dialog, Menu, MenuItem, ipcMain, systemPreferences } = windowrequire('electron');
 const path = require('path');
 const fs = require('fs');
 const url = require('url');
@@ -678,24 +678,7 @@ app.on('ready', () => {
         if (!_loaded) {
             //use default unless ignoring layouts
             _loaded = _ignore;
-            let windowId = createWindow({ menubar: createMenu() });
-            let window = windows[windowId].window;
-            let id = createClient({ bounds: window.getContentBounds() });
-            focusedWindow = windowId;
-            focusedClient = id;
-            windows[windowId].clients.push(id);
-            windows[windowId].current = id;
-            clients[id].parent = window;
-            //window.setBrowserView(clients[id].view);
-            window.addBrowserView(clients[id].view);
-            window.setTopBrowserView(clients[id].view);
-            //clients[id].menu.window = window;
-            //window.setMenu(clients[id].menu);
-            focusWindow(window, true);
-            clients[id].view.webContents.once('dom-ready', clientsChanged);
-            window.webContents.once('dom-ready', () => {
-                window.webContents.send('new-client', { id: id });
-            });
+            newClientWindow();
             //only load after as it requires a client window
             if (argv.e) {
                 //showCodeEditor();
@@ -742,23 +725,7 @@ app.on('activate', () => {
         if (!_loaded) {
             //use default unless ignoring layouts
             _loaded = _ignore;
-            let windowId = createWindow({ menubar: createMenu() });
-            let window = windows[windowId].window;
-            let id = createClient({ bounds: window.getContentBounds() });
-            focusedWindow = windowId;
-            focusedClient = id;
-            windows[windowId].clients.push(id);
-            windows[windowId].current = id;
-            clients[id].parent = window;
-            window.addBrowserView(clients[id].view);
-            window.setTopBrowserView(clients[id].view);
-            //clients[id].menu.window = mWindow;
-            //window.setMenu(clients[id].menu);
-            focusWindow(window, true);
-            clients[id].view.webContents.once('dom-ready', clientsChanged);
-            window.webContents.once('dom-ready', () => {
-                window.webContents.send('new-client', { id: id });
-            });
+            newClientWindow();
         }
     }
 });
@@ -1207,14 +1174,12 @@ ipcMain.on('inspect', (event, x, y) => {
 });
 
 //#region Client creation, docking, and related management
-ipcMain.on('new-client', (event) => {
-    let window = BrowserWindow.fromWebContents(event.sender);
-    let id = createClient({ bounds: window.getContentBounds() });
-    let windowId = getWindowId(window);
-    windows[windowId].clients.push(id);
-    clients[id].parent = window;
-    window.webContents.send('new-client', { id: id });
-    clients[id].view.webContents.once('dom-ready', clientsChanged);
+ipcMain.on('new-client', (event, connection) => {
+    newConnection(BrowserWindow.fromWebContents(event.sender, connection));
+});
+
+ipcMain.on('new-window', (event, connection) => {
+    newClientWindow(BrowserWindow.fromWebContents(event.sender), connection);
 });
 
 ipcMain.on('switch-client', (event, id, offset) => {
@@ -2436,6 +2401,64 @@ function getChildParentWindow(child) {
     //parent not found so bail
     return null;
 }
+
+function newConnection(window, connection) {
+    let windowId = getWindowId(window);
+    let id = createClient({ bounds: window.getContentBounds() });
+    focusedWindow = windowId;
+    focusedClient = id;
+    windows[windowId].clients.push(id);
+    windows[windowId].current = id;
+    clients[id].parent = window;
+    clients[id].view.webContents.once('dom-ready', () => {
+        window.addBrowserView(clients[id].view);
+        window.setTopBrowserView(clients[id].view);
+        window.webContents.send('new-client', { id: id });
+        if (connection)
+            clients[id].view.webContents.send('connection-settings', connection);
+        focusWindow(window, true);
+        clientsChanged();
+    });
+}
+
+function newClientWindow(caller, connection) {
+    if (caller) {
+        //save the current states so it has the latest for new window
+        states['manager.html'] = saveWindowState(caller);
+        //offset the state so it is not an exact overlap
+        states['manager.html'].bounds.x += 20;
+        states['manager.html'].bounds.y += 20;
+        const { height, width } = screen.getPrimaryDisplay().workAreaSize;
+        //make sure the window appears on the screen
+        if (states['manager.html'].bounds.x > (width - 10))
+            states['manager.html'].bounds.x = width - states['manager.html'].bounds.width;
+        if (states['manager.html'].bounds.x < 10)
+            states['manager.html'].bounds.x = 10;
+        if (states['manager.html'].bounds.y > (height - 10))
+            states['manager.html'].bounds.y = height - states['manager.html'].bounds.height;
+        if (states['manager.html'].bounds.y < 10)
+            states['manager.html'].bounds.y = 10;
+    }
+    let windowId = createWindow({ menubar: createMenu() });
+    let window = windows[windowId].window;
+    let id = createClient({ bounds: window.getContentBounds() });
+    focusedWindow = windowId;
+    focusedClient = id;
+    windows[windowId].clients.push(id);
+    windows[windowId].current = id;
+    clients[id].parent = window;
+    window.addBrowserView(clients[id].view);
+    window.setTopBrowserView(clients[id].view);
+    clients[id].view.webContents.once('dom-ready', () => {
+        clientsChanged();
+        if (connection)
+            clients[id].view.webContents.send('connection-settings', connection);
+    });
+    window.webContents.once('dom-ready', () => {
+        window.webContents.send('new-client', { id: id });
+        focusWindow(window, true);
+    });
+}
 //#region Execute scripts in window/view
 // eslint-disable-next-line no-unused-vars
 async function executeScript(script, window, focus) {
@@ -2665,27 +2688,17 @@ function createMenu() {
                     id: 'newConnect',
                     accelerator: 'CmdOrCtrl+Shift+N',
                     click: (item, mWindow, keyboard) => {
-                        let windowId = getWindowId(mWindow);
-                        let id = createClient({ bounds: mWindow.getContentBounds() });
-                        focusedWindow = windowId;
-                        focusedClient = id;
-                        windows[windowId].clients.push(id);
-                        windows[windowId].current = id;
-                        clients[id].parent = mWindow;
-                        clients[id].view.webContents.once('dom-ready', () => {
-                            mWindow.addBrowserView(clients[id].view);
-                            mWindow.setTopBrowserView(clients[id].view);
-                            mWindow.webContents.send('new-client', { id: id });
-                            //allow for some hidden ways to force open main/dev if needed with out the complex menus
-                            if (!keyboard.triggeredByAccelerator) {
-                                if (keyboard.ctrlKey)
-                                    clients[id].view.webContents.send('connection-settings', { dev: true });
-                                else if (keyboard.shiftKey)
-                                    clients[id].view.webContents.send('connection-settings', { dev: false });
-                            }
-                            focusWindow(mWindow, true);
-                            clientsChanged();
-                        });
+                        //allow for some hidden ways to force open main/dev if needed with out the complex menus
+                        if (!keyboard.triggeredByAccelerator) {
+                            if (keyboard.ctrlKey)
+                                newConnection(mWindow, { dev: true });
+                            else if (keyboard.shiftKey)
+                                newConnection(mWindow, { dev: false });
+                            else
+                                newConnection(mWindow);
+                        }
+                        else
+                            newConnection(mWindow);
                     }
                 },
                 {
@@ -2693,46 +2706,17 @@ function createMenu() {
                     id: '',
                     accelerator: 'CmdOrCtrl+Alt+N',
                     click: (item, mWindow, keyboard) => {
-                        //save the current states so it has the latest for new window
-                        states['manager.html'] = saveWindowState(mWindow);
-                        //offset the state so it is not an exact overlap
-                        states['manager.html'].bounds.x += 20;
-                        states['manager.html'].bounds.y += 20;
-                        const { height, width } = screen.getPrimaryDisplay().workAreaSize;
-                        //make sure the window appears on the screen
-                        if (states['manager.html'].bounds.x > (width - 10))
-                            states['manager.html'].bounds.x = width - states['manager.html'].bounds.width;
-                        if (states['manager.html'].bounds.x - states['manager.html'].bounds.width - 10 < 0)
-                            states['manager.html'].bounds.x = 0;
-                        if (states['manager.html'].bounds.y > (height - 10) < 0)
-                            states['manager.html'].bounds.y = height - states['manager.html'].bounds.height;
-                        if (states['manager.html'].bounds.y - states['manager.html'].bounds.height - 10 < 0)
-                            states['manager.html'].bounds.y = 0;
-
-                        let windowId = createWindow({ menubar: createMenu() });
-                        let window = windows[windowId].window;
-                        let id = createClient({ bounds: window.getContentBounds() });
-                        focusedWindow = windowId;
-                        focusedClient = id;
-                        windows[windowId].clients.push(id);
-                        windows[windowId].current = id;
-                        clients[id].parent = window;
-                        window.addBrowserView(clients[id].view);
-                        window.setTopBrowserView(clients[id].view);
-                        clients[id].view.webContents.once('dom-ready', () => {
-                            clientsChanged();
-                            //allow for some hidden ways to force open main/dev if needed with out the complex menus
-                            if (!keyboard.triggeredByAccelerator) {
-                                if (keyboard.ctrlKey)
-                                    clients[id].view.webContents.send('connection-settings', { dev: true });
-                                else if (keyboard.shiftKey)
-                                    clients[id].view.webContents.send('connection-settings', { dev: false });
-                            }
-                        });
-                        window.webContents.once('dom-ready', () => {
-                            window.webContents.send('new-client', { id: id });
-                            focusWindow(window, true);
-                        });
+                        //allow for some hidden ways to force open main/dev if needed with out the complex menus
+                        if (!keyboard.triggeredByAccelerator) {
+                            if (keyboard.ctrlKey)
+                                newClientWindow(mWindow, { dev: true });
+                            else if (keyboard.shiftKey)
+                                newClientWindow(mWindow, { dev: false });
+                            else
+                                newClientWindow(mWindow);
+                        }
+                        else
+                            newClientWindow(mWindow);
                     }
                 },
                 {
