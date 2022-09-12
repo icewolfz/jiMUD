@@ -464,7 +464,7 @@
         var _windows = {};
         let closeWindow = true;
         //#endregion
-        loadTheme(ipcRenderer.sendSync('get-global', 'theme'));
+        loadTheme(ipcRenderer.sendSync('get-setting', 'theme'));
 
         //#region window events
         window.addEventListener('keydown', (event) => {
@@ -1981,7 +1981,7 @@
             _backup.saveSelection = client.options.backupSave;
 
             _backup.on('progress-start', (title) => {
-                ipcRenderer.send('set-progress', { value: 0 });
+                updateProgress({ value: 0 });
                 client.debug('Flushing map');
                 document.getElementById('Progressbar').innerHTML = '<progress max="100"></progress>';
                 document.getElementById('ProgressTitle').innerHTML = title || 'Importing data&hellip;';
@@ -1991,7 +1991,7 @@
             _backup.on('error', (err) => {
                 if (document.getElementById('Progress').open)
                     document.getElementById('Progress').close();
-                ipcRenderer.send('set-progress', { value: -1 });
+                updateProgress({ value: -1 });
                 client.error(err);
                 ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                     type: 'error',
@@ -2007,7 +2007,7 @@
             _backup.on('abort', (err) => {
                 if (document.getElementById('Progress').open)
                     document.getElementById('Progress').close();
-                ipcRenderer.send('set-progress', { value: -1 });
+                updateProgress({ value: -1 });
                 ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                     type: 'error',
                     title: 'Aborted',
@@ -2026,12 +2026,12 @@
                 setTimeout(() => {
                     ipcRenderer.invoke('window', 'focus');
                 }, 500);
-                ipcRenderer.send('set-progress', { value: -1 });
+                updateProgress({ value: -1 });
             });
 
             _backup.on('progress', (value) => {
                 $('#Progress progress').val(value);
-                ipcRenderer.send('set-progress', { value: value / 100.0 });
+                updateProgress({ value: value / 100.0 });
             });
 
             _backup.on('import-map', (data) => {
@@ -3130,6 +3130,10 @@
             if (!options) return '';
             if (!filters) filters = [];
             return Object.keys(options).filter(key => filters.indexOf(key) !== -1).map(key => `${key}=${options[key]}`).join(',');
+        }
+
+        function updateProgress(progress, mode) {
+            ipcRenderer.send('set-progress', progress, mode);
         }
 
         // eslint-disable-next-line no-unused-vars

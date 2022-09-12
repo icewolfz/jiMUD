@@ -13,9 +13,9 @@ class Character {
     public Address?: string;
     public Port?: number;
     public Type?: string;
-    public AutoLoad?: boolean;
-    public Disconnect?: boolean;
-    public UseAddress?: boolean;
+    public AutoLoad?: boolean | number;
+    public Disconnect?: boolean | number;
+    public UseAddress?: boolean | number;
     public Days?: number;
     public Name?: string;
     public Password?: string;
@@ -175,45 +175,28 @@ export class Characters extends EventEmitter {
     }
 
     public addCharacter(character: Character) {
-        this._db.prepare('BEGIN').run();
+        if (!character || Object.keys(character).length === 0)
+            this._db.prepare('BEGIN').run();
+        let info;
+        character = this.sanitizeCharacterIn(character);
         try {
-            this._db.prepare('INSERT OR REPLACE INTO Characters (Title, Host, Address, Port, Type, AutoLoad, Disconnect, UseAddress, Days, Name, Password, Preferences, Map, SessionID, Icon, IconPath, Notes, TotalMilliseconds, TotalDays, LastConnected) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ').run(
-                [
-                    character.Title,
-                    character.Host,
-                    character.Address,
-                    character.Port,
-                    character.Type,
-                    character.AutoLoad ? 1 : 0,
-                    character.Disconnect ? 1 : 0,
-                    character.UseAddress ? 1 : 0,
-                    character.Days,
-                    character.Name,
-                    character.Password,
-                    character.Preferences,
-                    character.Map,
-                    character.SessionID,
-                    character.Icon,
-                    character.IconPath,
-                    character.Notes,
-                    character.TotalMilliseconds,
-                    character.TotalDays,
-                    character.LastConnected
-                ]);
+            info = this._db.prepare(`INSERT OR REPLACE INTO Characters (${Object.keys(character).join(', ')}) VALUES (${Object.keys(character).map(key => `$${key}`).join(', ')}) `).run(character);
 
             this._changed = true;
         }
         catch (err) {
             this.emit('error', err);
             this._db.prepare('ROLLBACK').run();
-            return;
+            return 0;
         }
         this._db.prepare('COMMIT').run();
         this._changed = true;
+        return info ? info.lastInsertRowid : 0;
     }
 
     public updateCharacter(character: Character) {
         if (!character) return;
+        character = this.sanitizeCharacterIn(character);
         this._db.prepare('BEGIN').run();
         try {
             this._db.prepare(`UPDATE Characters SET ${Object.keys(character).filter(key => key !== 'ID').map(key => `${key} = $${key}`).join(', ')} WHERE ID = $ID`).run(character);
@@ -230,21 +213,29 @@ export class Characters extends EventEmitter {
 
     public removeCharacter(character: number | Character) {
         if (!character) return;
-        if (typeof character === 'number')
-            character = this.getCharacter(character);
-        this._db.prepare('DELETE FROM Characters WHERE ID = ?').run([character.ID]);
+        this._db.prepare('DELETE FROM Characters WHERE ID = ?').run([typeof character === 'number' ? character : character.ID]);
         this.emit('removed', character);
         this._changed = true;
+    }
+
+    public getNextId() {
+        try {
+            const rows = this._db.prepare('Select seq FROM sqlite_sequence WHERE name = \'Characters\'').all();
+            if (rows && rows.length)
+                return (rows[0].seq + 1) || 1;
+        }
+        catch (err) {
+            this.emit('error', err);
+        }
+        return 1;
     }
 
     public getCharacter(id: number): Character {
         if (!id) return null;
         try {
-            const rows = this._db.prepare('Select * FROM Characters WHERE ID = $id').all({
-                id: id
-            });
+            const rows = this._db.prepare('Select * FROM Characters WHERE ID = $id').all({ id: id });
             if (rows && rows.length)
-                return rows[0];
+                return this.sanitizeCharacterOut(rows[0]);
         }
         catch (err) {
             this.emit('error', err);
@@ -279,7 +270,9 @@ export class Characters extends EventEmitter {
         catch (err) {
             this.emit('error', err);
         }
-        return rows || [];
+        if (rows)
+            return rows.map(row => this.sanitizeCharacterOut(row));
+        return [];
     }
 
     public getAutoLoadingCharacters(): Character[] {
@@ -364,4 +357,27 @@ export class Characters extends EventEmitter {
             callback();
     }
 
+    private sanitizeCharacterIn(character) {
+        if (!character) return character;
+        //datatype checks as sqlite does not allow boolean type
+        if ('AutoLoad' in character)
+            character.AutoLoad = character.AutoLoad ? 1 : 0;
+        if ('Disconnect' in character)
+            character.Disconnect = character.Disconnect ? 1 : 0;
+        if ('UseAddress' in character)
+            character.UseAddress = character.UseAddress ? 1 : 0;
+        return character;
+    }
+
+    private sanitizeCharacterOut(character) {
+        if (!character) return character;
+        //datatype checks as sqlite does not allow boolean type
+        if ('AutoLoad' in character)
+            character.AutoLoad = character.AutoLoad ? true : false;
+        if ('Disconnect' in character)
+            character.Disconnect = character.Disconnect ? true : false;
+        if ('UseAddress' in character)
+            character.UseAddress = character.UseAddress ? true : false;
+        return character;
+    }
 }

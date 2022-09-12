@@ -845,6 +845,27 @@ ipcMain.on('get-global', (event, key) => {
         case 'theme':
             event.returnValue = set ? set.theme : '';
             break;
+        case 'askonloadCharacter':
+            event.returnValue = set ? set.askonloadCharacter : true;
+            break;
+        default:
+            event.returnValue = null;
+            break;
+    }
+});
+
+ipcMain.on('get-setting', (event, key) => {
+    if (!set) {
+        event.returnValue = null;
+        return;
+    }
+    switch (key) {
+        case 'theme':
+            event.returnValue = set.theme;
+            break;
+        case 'askonloadCharacter':
+            event.returnValue = set.askonloadCharacter;
+            break;
         default:
             event.returnValue = null;
             break;
@@ -864,6 +885,21 @@ ipcMain.on('set-global', (event, key, value) => {
             break;
         case 'updating':
             global.updating = value;
+            break;
+    }
+});
+
+ipcMain.on('set-setting', (event, key, value) => {
+    if (!set)
+        return;
+    switch (key) {
+        case 'theme':
+            set.theme = value;
+            set.save(global.settingsFile);
+            break;
+        case 'askonloadCharacter':
+            set.askonloadCharacter = value;
+            set.save(global.settingsFile);
             break;
     }
 });
@@ -980,6 +1016,18 @@ ipcMain.on('update-character', (event, character, ...args) => {
         character = args[0];
     }
     _characters.updateCharacter(character);
+});
+
+ipcMain.on('add-character', (event, character) => {
+    event.returnValue = _characters.addCharacter(character);
+});
+
+ipcMain.on('get-character-next-id', (event) => {
+    event.returnValue = _characters.getNextId();
+});
+
+ipcMain.on('remove-character', (event, id) => {
+    _characters.removeCharacter(id);
 });
 
 //#region IPC dialogs

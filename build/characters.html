@@ -34,9 +34,9 @@
         const crypto = require('crypto');
         var archiver, archive;
 
-        var characters, current = '';
+        var characters, current = -1;
         var changed = 0;
-        var askonloadCharacter = true;
+        var askonloadCharacter = ipcRenderer.sendSync("get-setting", 'askonloadCharacter');
 
         $(window).keydown((event) => {
             if (document.getElementById('progress-dialog').open) {
@@ -57,23 +57,21 @@
         $(document).ready(() => {
             if (process.platform === 'darwin')
                 document.getElementById('btn-close').style.display = 'block';
-            var set = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
-            askonloadCharacter = set.askonloadCharacter;
             $('#characters-list').contextmenu((event) => {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
                 var c = [];
-                var item = $(event.target).data('name');
+                var item = $(event.target).data('index');
                 c.push({ label: 'Add default', click: "add()" });
                 c.push({ label: 'Add empty', click: "addEmpty()" });
                 if (item !== undefined) {
                     c.push({ type: 'separator' });
-                    c.push({ label: 'Rename', click: `rename('${item}')` });
-                    c.push({ label: 'Copy', click: `copy('${item}')` });
-                    c.push({ label: 'Delete', click: `remove('${item})'` });
+                    c.push({ label: 'Rename', click: `rename(${item})` });
+                    c.push({ label: 'Copy', click: `copy(${item})` });
+                    c.push({ label: 'Delete', click: `remove(${item})` });
                     c.push({ type: 'separator' });
-                    c.push({ label: 'Load', click: `load('${item})'` });
+                    c.push({ label: 'Load', click: `load(${item})` });
                 }
                 ipcRenderer.invoke('show-context', c);
             });
@@ -109,7 +107,7 @@
                     $('#get-name-value').focus();
                     return;
                 }
-                if (characters.characters[$('#get-name-value').val().toLowerCase()]) {
+                if (characters[$('#get-name-value').val().toLowerCase()]) {
                     p.addClass('has-error');
                     p.addClass('has-feedback');
                     p.find('.form-error').html('<small class="aura-error"><span class=\'sr-only\'>Error:</span>Name exists</small>');
@@ -135,50 +133,43 @@
         }
 
         function updateCurrent() {
-            //TODO fix saving
-            return;
-            if (!current) return;
+            if (current === -1) return;
             var v = templatePath($('#settings').val());
-            if (v != characters.characters[current].settings) {
-                characters.characters[current].settings = v;
+            if (v != characters[current].Preferences) {
+                characters[current].Preferences = v;
                 changed++;
             }
             v = templatePath($('#map').val());
-            if (v != characters.characters[current].map) {
-                characters.characters[current].map = v;
+            if (v != characters[current].Map) {
+                characters[current].Map = v;
                 changed++;
             }
             v = $('#name').val();
-            if (v != characters.characters[current].name) {
-                characters.characters[current].name = v;
+            if (v != characters[current].Name) {
+                characters[current].Name = v;
                 changed++;
-            }
-            if (current === characters.load) {
-                if (!$('#auto-load').prop('checked')) {
-                    characters.load = 0;
-                    changed++;
-                }
-            }
-            else if ($('#auto-load').prop('checked')) {
-                changed++;
-                characters.load = current;
             }
 
-            if ($('#dev').prop('checked') != characters.characters[current].dev) {
+            if ($('#auto-load').prop('checked') != characters[current].AutoLoad) {
                 changed++;
-                characters.characters[current].dev = $('#dev').prop('checked');
+                characters[current].AutoLoad = $('#auto-load').prop('checked');
             }
 
-            if ($('#disconnect').prop('checked') != characters.characters[current].disconnect) {
+            if ($('#dev').prop('checked') != characters[current].Port == 1035) {
                 changed++;
-                characters.characters[current].disconnect = $('#disconnect').prop('checked');
+                characters[current].Port = $('#dev').prop('checked') ? 1035 : 1030;
+            }
+
+            if ($('#disconnect').prop('checked') != characters[current].Disconnect) {
+                changed++;
+                characters[current].Disconnect = $('#disconnect').prop('checked');
             }
 
             v = $('#password').val() || '';
             if (v && v.length > 0) {
                 var key, iv;
-                if (characters.characters[current].password) {
-                    key = characters.characters[current].password.split(':');
+                if (characters[current].Password) {
+                    key = characters[current].Password.split(':');
                     if (key.length === 3) {
                         iv = key[2];
                         key = key[1];
@@ -195,19 +186,19 @@
                 v = encrypt(v, key, iv) + ':' + key + ':' + iv;
             }
 
-            if (v != characters.characters[current].password) {
-                characters.characters[current].password = v;
+            if (v != characters[current].Password) {
+                characters[current].Password = v;
                 changed++;
             }
-            fs.writeFileSync(path.join(parseTemplate('{characters}'), current + '.notes'), $('#notes').val());
+            fs.writeFileSync(parseTemplate(characters[current].Notes), $('#notes').val());
         }
 
         function saveCharacters() {
             updateCurrent();
             if (changed === 0) return;
             changed = 0;
-            fs.writeFileSync(charactersFile, JSON.stringify(characters));
-            ipcRenderer.send('reload-characters');
+            //fs.writeFileSync(charactersFile, JSON.stringify(characters));
+            //ipcRenderer.send('reload-characters');
         }
 
         // eslint-disable-next-line no-unused-vars
@@ -263,7 +254,7 @@
                 $('#settings').val(characters[current].Preferences);
                 $('#notes-path').val(characters[current].Notes);
                 $('#map').val(characters[current].Map);
-                $('#name').val(characters[current].Name || characters[current].Title);
+                $('#name').val(characters[current].Name);
                 $('#auto-load').prop('checked', characters.AutoLoad);
                 $('#dev').prop('checked', characters[current].Port == 1035);
                 $('#disconnect').prop('checked', characters[current].Disconnect);
@@ -276,7 +267,7 @@
                     $('#password').val('');
 
                 $('#title').text(characters[current].Title);
-                $('#character-id').text(characters[current].ID);                
+                $('#character-id').text(characters[current].ID);
                 let notes = parseTemplate(characters[current].Notes);
                 if (isFileSync(notes))
                     $('#notes').val(fs.readFileSync(notes, 'utf-8'));
@@ -298,7 +289,7 @@
         }
 
         function clearEditor() {
-            current = 0;
+            current = -1;
             $('#btn-rename').prop('disabled', true);
             $('#btn-copy').prop('disabled', true);
             $('#btn-delete').prop('disabled', true);
@@ -342,7 +333,6 @@
                 }
                 return 0;
             });
-
             $listLI.detach().appendTo($list);
         }
 
@@ -366,8 +356,8 @@
 
         function add() {
             showGetName(function (event, name) {
-                characters.characters[name] = { name: name.replace(/[^a-zA-Z0-9]+/g, ''), settings: path.join('{characters}', name + '.json'), map: path.join('{characters}', name + '.map') };
-                var sf = parseTemplate(characters.characters[name].settings);
+                characters[name] = { name: name.replace(/[^a-zA-Z0-9]+/g, ''), settings: path.join('{characters}', name + '.json'), map: path.join('{characters}', name + '.Map') };
+                var sf = parseTemplate(characters[name].Preferences);
                 var response, d;
                 if (isFileSync(sf)) {
                     response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
@@ -386,7 +376,7 @@
                     d = Settings.load(parseTemplate(path.join('{data}', 'settings.json')));
                     d.save(sf);
                 }
-                sf = parseTemplate(characters.characters[name].map);
+                sf = parseTemplate(characters[name].Map);
                 if (isFileSync(sf)) {
                     response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
@@ -415,8 +405,8 @@
 
         function addEmpty() {
             showGetName(function (event, name) {
-                characters.characters[name] = { name: name.replace(/[^a-zA-Z0-9]+/g, ''), settings: path.join('{characters}', name + '.json'), map: path.join('{characters}', name + '.map') };
-                var sf = parseTemplate(characters.characters[name].settings);
+                characters[name] = { name: name.replace(/[^a-zA-Z0-9]+/g, ''), settings: path.join('{characters}', name + '.json'), map: path.join('{characters}', name + '.Map') };
+                var sf = parseTemplate(characters[name].Preferences);
                 var response, d;
                 if (isFileSync(sf)) {
                     response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
@@ -435,7 +425,7 @@
                     d = new Settings();
                     d.save(sf);
                 }
-                sf = parseTemplate(characters.characters[name].map);
+                sf = parseTemplate(characters[name].Map);
                 if (isFileSync(sf)) {
                     response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
@@ -457,71 +447,72 @@
             });
         }
 
-        function rename(name) {
-            if (name === undefined)
-                name = current;
-            showGetName(name, 0, 1, function (event, name, oldName) {
-                characters.characters[name] = clone(characters.characters[oldName]);
-                characters.characters[name].settings = path.join('{characters}', name + '.json');
-                characters.characters[name].map = path.join('{characters}', name + '.map');
-                characters.characters[name].Notes = path.join('{characters}', name + '.notes');
-                var f = parseTemplate(characters.characters[oldName].settings);
-                var sf = parseTemplate(characters.characters[name].settings);
-                var response;
-                if (isFileSync(sf)) {
-                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
-                        type: 'warning',
-                        title: 'File exists',
-                        message: 'Setting file for ' + name + ' exist, replace?',
-                        buttons: ['Yes', 'No'],
-                        defaultId: 1,
-                    });
-                    if (response === 0)
-                        fs.renameSync(f, sf);
-                }
-                else
-                    fs.renameSync(f, sf);
-                f = path.join(parseTemplate('{data}'), 'characters', oldName + '.notes');
-                sf = path.join(parseTemplate('{data}'), 'characters', name + '.notes');
-                if (isFileSync(sf)) {
-                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
-                        type: 'warning',
-                        title: 'File exists',
-                        message: 'Notes file for ' + name + ' exist, replace?',
-                        buttons: ['Yes', 'No'],
-                        defaultId: 1,
-                    });
-                    if (response === 0) {
-                        fs.renameSync(f, sf);
+        function rename(index) {
+            if (index === undefined)
+                index = current;
+            showGetName(characters[index].Title, 0, 1, function (event, name, oldName) {
+                characters[index].Title = name;
+                const nameId = parseInt(oldName, 10) === characters[index].ID;
+                //only replace if it matches the name.json format
+                if (!nameId && characters[index].Preferences === path.join(parseTemplate('{characters}'), oldName + '.json')) {
+                    var f = path.join(parseTemplate('{characters}'), oldName + '.notes');
+                    var sf = parseTemplate(path.join(parseTemplate('{characters}'), name + '.json'));
+                    characters[index].Preferences = path.join('{characters}', name + '.json');
+                    var response;
+                    if (isFileSync(sf)) {
+                        response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                            type: 'warning',
+                            title: 'File exists',
+                            message: 'Setting file for ' + name + ' exist, replace?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1,
+                        });
+                        if (response === 0)
+                            fs.renameSync(f, sf);
                     }
-                }
-                else
-                    fs.renameSync(f, sf);
-                f = parseTemplate(characters.characters[oldName].map);
-                sf = parseTemplate(characters.characters[name].map);
-                if (isFileSync(sf)) {
-                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
-                        type: 'warning',
-                        title: 'File exists',
-                        message: 'Map file for ' + name + ' exist, replace?',
-                        buttons: ['Yes', 'No'],
-                        defaultId: 1,
-                    });
-                    if (response === 0) {
+                    else
                         fs.renameSync(f, sf);
-                    }
                 }
-                else
-                    fs.renameSync(f, sf);
-
+                if (!nameId && characters[index].Notes === path.join(parseTemplate('{characters}'), oldName + '.notes')) {
+                    f = path.join(parseTemplate('{characters}'), oldName + '.notes');
+                    sf = path.join(parseTemplate('{characters}'), name + '.notes');
+                    characters[index].Notes = path.join('{characters}', name + '.notes');
+                    if (isFileSync(sf)) {
+                        response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                            type: 'warning',
+                            title: 'File exists',
+                            message: 'Notes file for ' + name + ' exist, replace?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1,
+                        });
+                        if (response === 0) {
+                            fs.renameSync(f, sf);
+                        }
+                    }
+                    else
+                        fs.renameSync(f, sf);
+                }
+                if (!nameId && characters[index].Map === path.join(parseTemplate('{characters}'), oldName + '.map')) {
+                    f = path.join(parseTemplate('{characters}'), oldName + '.map');
+                    sf = path.join(parseTemplate('{characters}'), name + '.map');                    
+                    characters[index].Map = path.join('{characters}', name + '.map');
+                    if (isFileSync(sf)) {
+                        response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                            type: 'warning',
+                            title: 'File exists',
+                            message: 'Map file for ' + name + ' exist, replace?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1,
+                        });
+                        if (response === 0) {
+                            fs.renameSync(f, sf);
+                        }
+                    }
+                    else
+                        fs.renameSync(f, sf);
+                }
                 changed++;
-                delete characters.characters[oldName];
-                $('#character-' + sanitizeID(oldName)).remove();
-                createItem(name);
-                if (current === oldName) {
-                    clearEditor();
-                    $('#character-' + sanitizeID(name)).click();
-                }
+                $('#character-' + characters[index]).text(characters[index].Title);
                 saveCharacters();
                 sortList();
             });
@@ -529,7 +520,7 @@
 
         function copyName(name) {
             var i = 0, n = name;
-            while (characters.characters[n]) {
+            while (characters[n]) {
                 if (i === 0)
                     n = name;
                 else
@@ -543,11 +534,11 @@
             if (name === undefined)
                 name = current;
             showGetName(name, copyName(name), function (event, name, oldName) {
-                characters.characters[name] = clone(characters.characters[oldName]);
-                characters.characters[name].settings = path.join('{characters}', name + '.json');
-                characters.characters[name].map = path.join('{characters}', name + '.map');
-                var f = parseTemplate(characters.characters[oldName].settings);
-                var sf = parseTemplate(characters.characters[name].settings);
+                characters[name] = clone(characters[oldName]);
+                characters[name].Preferences = path.join('{characters}', name + '.json');
+                characters[name].Map = path.join('{characters}', name + '.Map');
+                var f = parseTemplate(characters[oldName].Preferences);
+                var sf = parseTemplate(characters[name].Preferences);
                 var response;
                 if (isFileSync(sf)) {
                     response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
@@ -580,8 +571,8 @@
                 else if (isFileSync(f))
                     copyFile(f, sf);
 
-                f = parseTemplate(characters.characters[oldName].map);
-                sf = parseTemplate(characters.characters[name].map);
+                f = parseTemplate(characters[oldName].Map);
+                sf = parseTemplate(characters[name].Map);
                 if (isFileSync(sf)) {
                     response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
@@ -608,32 +599,36 @@
             });
         }
 
-        function remove(name) {
-            if (name === undefined)
-                name = current;
+        function remove(index) {
+            if (index === undefined)
+                index = current;
             var response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                 type: 'warning',
                 title: 'Remove character',
-                message: 'Remove ' + name + '?',
+                message: 'Remove ' + characters[index] + '?',
                 buttons: ['Yes', 'No'],
                 defaultId: 1,
             });
 
             if (response === 0) {
-                var sf = parseTemplate(characters.characters[name].settings);
+                var sf = parseTemplate(characters[index].Preferences);
                 if (isFileSync(sf))
                     ipcRenderer.send('trash-item', sf);
-                sf = parseTemplate(characters.characters[name].map);
+                sf = parseTemplate(characters[index].Map);
                 if (isFileSync(sf))
                     ipcRenderer.send('trash-item', sf);
-                sf = path.join(parseTemplate('{data}'), 'characters', name + '.notes');
+                sf = parseTemplate(characters[index].Notes);
                 if (isFileSync(sf))
                     ipcRenderer.send('trash-item', sf);
-                if (characters.load === name)
-                    characters.load = 0;
-                delete characters.characters[name];
-                $('#character-' + sanitizeID(name)).remove();
-                if (current === name)
+                let cl = characters.length;
+                //update all old index to new indexes
+                while(--cl >= 0 && cl > index) {
+                    $('#character-' + characters[index].ID).dataset.index = cl - 1;    
+                }
+
+                characters.splice(index, 1);
+                $('#character-' + characters[index].ID).remove();
+                if (current === index)
                     clearEditor();
                 changed++;
                 saveCharacters();
@@ -658,7 +653,7 @@
             if (response === 2) {
                 saveCharacters();
                 ipcRenderer.send('load-char', name);
-                ipcRenderer.send('setting-changed', { type: 'normal', name: 'askonloadCharacter', value: false });
+                ipcRenderer.send('set-setting', 'askonloadCharacter', false);
                 askonloadCharacter = false;
             }
             else if (response === 0) {
@@ -720,7 +715,7 @@
                 $('#get-name').on('get-name-ok', callback);
             $('#get-name-value').val(val || '');
             $('#get-name').data('type', type);
-            $('#get-name').data('name', name || current);
+            $('#get-name').data('name', name || characters[current].Title);
         }
 
         function copyFile(src, dest) {
@@ -751,14 +746,16 @@
             var data = parseTemplate('{data}');
             archive = new archiver.ZipFile();
 
-            if (isFileSync(charactersFile))
-                archive.addFile(charactersFile, 'characters.json');
+            if (isFileSync(path.join(data, 'characters.sqlite')))
+                archive.addFile(path.join(data, 'characters.sqlite'), 'characters.sqlite');
             if (isFileSync(path.join(data, 'map.sqlite')))
                 archive.addFile(path.join(data, 'map.sqlite'), 'map.sqlite');
             if (isFileSync(path.join(data, 'mail.sqlite')))
                 archive.addFile(path.join(data, 'mail.sqlite'), 'mail.sqlite');
             if (isFileSync(path.join(data, 'settings.json')))
                 archive.addFile(path.join(data, 'settings.json'), 'settings.json');
+            if (isFileSync(path.join(data, 'windows.layout')))
+                archive.addFile(path.join(data, 'windows.layout'), 'windows.layout');
 
             var files;
             if (isDirSync(path.join(data, 'profiles'))) {
@@ -790,8 +787,7 @@
         }
 
         function setProgressDialogValue(value) {
-            ipcRenderer.send('set-progress', { value: value });
-            ipcRenderer.send('set-progress-window', 'code-editor', { value: value });
+            window.opener.updateProgress({ value: value });
             document.getElementById('progress-dialog-progressbar').value = value * 100;
         }
 
@@ -811,13 +807,11 @@
             closeProgressDialog();
         }
 
-        //ipcRenderer.invoke('window', 'openDevTools');
-
         ipcRenderer.on('add-char', (event, char, empty, data, dialog) => {
             if (dialog)
                 showGetName(char, function (event, name) {
-                    characters.characters[name] = { name: name.replace(/[^a-zA-Z0-9]+/g, ''), settings: path.join('{characters}', name + '.json'), map: path.join('{characters}', name + '.map') };
-                    var sf = parseTemplate(characters.characters[name].settings);
+                    characters[name] = { name: name.replace(/[^a-zA-Z0-9]+/g, ''), settings: path.join('{characters}', name + '.json'), map: path.join('{characters}', name + '.Map') };
+                    var sf = parseTemplate(characters[name].Preferences);
                     var response, d;
                     if (isFileSync(sf)) {
                         response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
@@ -836,7 +830,7 @@
                         d = empty ? new Settings() : Settings.load(parseTemplate(path.join('{data}', 'settings.json')));
                         d.save(sf);
                     }
-                    sf = parseTemplate(characters.characters[name].map);
+                    sf = parseTemplate(characters[name].Map);
                     if (isFileSync(sf)) {
                         response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                             type: 'warning',
