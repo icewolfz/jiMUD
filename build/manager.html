@@ -362,9 +362,9 @@
             })
             //some type of bug on linux with double clicked titles not resizing correctly, hack around that
             if (process.platform === 'linux')
-                window.addEventListener('resize', e => {
+                ipcRenderer.on('maximize', event => {
                     ipcRenderer.send('update-client', _current, tabstrip.height);
-                });
+                })
             _loading++;
             if (_load.length) {
                 setClients(_load);
