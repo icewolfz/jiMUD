@@ -453,23 +453,19 @@ function createWindow(options) {
     window.on('restore', () => {
         getActiveClient(window).view.webContents.send('restore');
         states[options.file] = saveWindowState(window);
-        window.webContents.send('restore');
     });
     window.on('maximize', () => {
         getActiveClient(window).view.webContents.send('maximize');
         states[options.file] = saveWindowState(window);
-        window.webContents.send('maximize');
     });
     window.on('unmaximize', () => {
         getActiveClient(window).view.webContents.send('unmaximize');
         states[options.file] = saveWindowState(window);
-        window.webContents.send('unmaximize');
     });
 
     window.on('resized', () => {
         getActiveClient(window).view.webContents.send('resized');
         states[options.file] = saveWindowState(window);
-        window.webContents.send('resized');
     });
     if (!options.id) {
         _windowID++;

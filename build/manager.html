@@ -361,10 +361,16 @@
                 //tabstrip.focused = false;
             })
             //some type of bug on linux with double clicked titles not resizing correctly, hack around that
-            if (process.platform === 'linux')
-                ipcRenderer.on('maximize', event => {
-                    ipcRenderer.send('update-client', _current, tabstrip.height);
-                })
+            if (process.platform === 'linux') {
+                var _resize = 0;
+                window.addEventListener('resize', e => {
+                    if (_resize) return;
+                    _resize = setTimeout(() => {
+                        ipcRenderer.send('update-client', _current, tabstrip.height);
+                        _resize = 0;
+                    });
+                });
+            }
             _loading++;
             if (_load.length) {
                 setClients(_load);
