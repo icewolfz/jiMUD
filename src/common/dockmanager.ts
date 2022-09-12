@@ -53,6 +53,7 @@ export class DockManager extends EventEmitter {
     private $activePane: DockPane;
     public dragPanel;
     private _updating: UpdateType = UpdateType.none;
+    private _rTimeout = 0;
     private $widths: number[] = [];
     private $width;
     private $dropOutline;
@@ -664,13 +665,14 @@ export class DockManager extends EventEmitter {
     private doUpdate(type?: UpdateType) {
         if (!type) return;
         this._updating |= type;
-        if (this._updating === UpdateType.none)
+        if (this._updating === UpdateType.none || this._rTimeout)
             return;
-        window.requestAnimationFrame(() => {
+        this._rTimeout = window.requestAnimationFrame(() => {
             if ((this._updating & UpdateType.resize) === UpdateType.resize) {
                 this.resize();
                 this._updating &= ~UpdateType.resize;
             }
+            this._rTimeout = 0;
             this.doUpdate(this._updating);
         });
     }
@@ -749,6 +751,7 @@ export class DockPane extends EventEmitter {
     private $scrollMenu: HTMLUListElement;
 
     private _updating: UpdateType = UpdateType.none;
+    private _rTimeout = 0;
     private _scroll: number = 0;
     private _scrollTimer: NodeJS.Timer;
     private $addCache = [];
@@ -1741,9 +1744,9 @@ export class DockPane extends EventEmitter {
     private doUpdate(type?: UpdateType) {
         if (!type) return;
         this._updating |= type;
-        if (this._updating === UpdateType.none)
+        if (this._updating === UpdateType.none || this._rTimeout)
             return;
-        window.requestAnimationFrame(() => {
+        this._rTimeout = window.requestAnimationFrame(() => {
             if ((this._updating & UpdateType.batchAdd) === UpdateType.batchAdd) {
                 this.batchAdd();
                 this._updating &= ~UpdateType.batchAdd;
@@ -1769,6 +1772,7 @@ export class DockPane extends EventEmitter {
                 this.scrollToTab();
                 this._updating &= ~UpdateType.scrollToTab;
             }
+            this._rTimeout = 0;
             this.doUpdate(this._updating);
         });
     }

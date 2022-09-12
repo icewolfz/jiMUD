@@ -44,6 +44,7 @@
 - **Changed:**
   - Update electron 19.0.14 to 19.0.16
   - Switch mathjs from module to script to speed up load times
+  - Convert several internal functions into async to speed up load times
 
 ## 0.19.3 2022-08-27
 

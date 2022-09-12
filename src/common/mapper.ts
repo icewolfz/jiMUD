@@ -84,6 +84,7 @@ export class Mapper extends EventEmitter {
     private _cancelImport: boolean = false;
     private _mapFile = path.join(parseTemplate('{data}'), 'map.sqlite');
     private _updating: UpdateType = UpdateType.none;
+    private _rTimeout = 0;
     private $drawCache;
     private $focused = false;
     private _worker;
@@ -2672,13 +2673,14 @@ export class Mapper extends EventEmitter {
     private doUpdate(type?: UpdateType) {
         if (!type) return;
         this._updating |= type;
-        if (this._updating === UpdateType.none)
+        if (this._updating === UpdateType.none || this._rTimeout)
             return;
-        window.requestAnimationFrame(() => {
+        this._rTimeout = window.requestAnimationFrame(() => {
             if ((this._updating & UpdateType.draw) === UpdateType.draw) {
                 this.draw();
                 this._updating &= ~UpdateType.draw;
             }
+            this._rTimeout = 0;
             this.doUpdate(this._updating);
         });
     }

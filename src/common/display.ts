@@ -87,6 +87,7 @@ export class Display extends EventEmitter {
     private _background: HTMLElement;
     private _finder: Finder;
     private _maxView: number = 0;
+    private _aTimer = 0;
 
     private _maxLineLength: number = 0;
     private _currentSelection: Selection = {
@@ -125,6 +126,7 @@ export class Display extends EventEmitter {
     private _VScroll: ScrollBar;
     private _HScroll: ScrollBar;
     private _updating: UpdateType = UpdateType.none;
+    private _rTimeout = 0;
     private _splitHeight: number = -1;
 
     public split = null;
@@ -502,14 +504,14 @@ export class Display extends EventEmitter {
 
         this._VScroll = new ScrollBar({ parent: this._el, content: this._view, autoScroll: true, type: ScrollType.vertical });
         this._VScroll.on('scroll', (pos, changed) => {
-            if(!changed)
+            if (!changed)
                 this.doUpdate(UpdateType.view);
             else
                 this.doUpdate(UpdateType.scroll | UpdateType.view);
         });
         this._HScroll = new ScrollBar({ parent: this._el, content: this._view, type: ScrollType.horizontal, autoScroll: false });
         this._HScroll.on('scroll', (pos, changed) => {
-            if(changed)
+            if (changed)
                 this.doUpdate(UpdateType.scroll);
         });
         //this.update();
@@ -901,9 +903,9 @@ export class Display extends EventEmitter {
     private doUpdate(type?: UpdateType) {
         if (!type) return;
         this._updating |= type;
-        if (this._updating === UpdateType.none)
+        if (this._updating === UpdateType.none || this._rTimeout)
             return;
-        window.requestAnimationFrame(() => {
+        this._rTimeout = window.requestAnimationFrame(() => {
             if ((this._updating & UpdateType.layout) === UpdateType.layout) {
                 this.updateLayout();
                 this._updating &= ~UpdateType.layout;
@@ -986,6 +988,7 @@ export class Display extends EventEmitter {
                 this.scrollDisplay();
                 this._updating &= ~UpdateType.scrollEnd;
             }
+            this._rTimeout = 0;
             this.doUpdate(this._updating);
         });
     }
@@ -2582,7 +2585,7 @@ export class Display extends EventEmitter {
                     if (e > this.lines[sL].length)
                         e = this.lines[sL].length;
                     e = this.lineWidth(sL, s, e);
-                    s = this.lineWidth(sL, 0, s);                        
+                    s = this.lineWidth(sL, 0, s);
                     //e = this.textWidth(this.lines[sL].substring(s, e).replace(/ /g, '\u00A0'));
                     //s = this.textWidth(this.lines[sL].substring(0, s).replace(/ /g, '\u00A0'));
                 }
@@ -2625,10 +2628,10 @@ export class Display extends EventEmitter {
                     w = mw;
                 else if (sL === line)
                     w = this.lineWidth(line, s) + this._charWidth;
-                    //w = this.textWidth(this.lines[sL].substr(s)) + this._charWidth;
+                //w = this.textWidth(this.lines[sL].substr(s)) + this._charWidth;
                 else if (eL === line)
                     w = this.lineWidth(line, 0, e);
-                    //w = this.textWidth(tLine.substring(0, e));
+                //w = this.textWidth(tLine.substring(0, e));
                 else
                     w = this._lines[line].width + this._charWidth;
                 cl = this.lineWidth(line, 0, cl);
@@ -2639,18 +2642,18 @@ export class Display extends EventEmitter {
                         cr = mw;
                     else
                         cr = fl(eL === line ? this.lineWidth(line, 0, e) : (this._lines[line].width + this._charWidth));
-                        //cr = fl(eL === line ? this.textWidth(tLine.substring(0, e)) : (this._lines[line].width + this._charWidth));
+                    //cr = fl(eL === line ? this.textWidth(tLine.substring(0, e)) : (this._lines[line].width + this._charWidth));
                     if (line > sL) {
                         let pl = 0;
                         if (sL === line - 1) {
                             if (this.lineFormats[line - 1][0].hr)
                                 pl = 0;
                             else if (fl(this.lineWidth(sL, 0, s)) >= fl(this._lines[line - 1].width + this._charWidth))
-                            //else if (fl(this.textWidth(this.lines[sL].substr(0, s).replace(/ /g, '\u00A0'))) >= fl(this._lines[line - 1].width + this._charWidth))
+                                //else if (fl(this.textWidth(this.lines[sL].substr(0, s).replace(/ /g, '\u00A0'))) >= fl(this._lines[line - 1].width + this._charWidth))
                                 pl = fl(this._lines[line - 1].width) + this._charWidth;
                             else
                                 pl = fl(this.lineWidth(sL, 0, s));
-                                //pl = fl(this.textWidth(this.lines[sL].substring(0, s).replace(/ /g, '\u00A0')));
+                            //pl = fl(this.textWidth(this.lines[sL].substring(0, s).replace(/ /g, '\u00A0')));
                         }
                         const pr = this.lineFormats[line - 1][0].hr ? mw : fl(this._lines[line - 1].width + this._charWidth);
 
@@ -2672,7 +2675,7 @@ export class Display extends EventEmitter {
                             nr = mw;
                         else
                             nr = fl(eL === line + 1 ? this.lineWidth(line + 1, 0, e) : (this._lines[line + 1].width + this._charWidth));
-                            //nr = fl(eL === line + 1 ? this.textWidth(this.lines[line + 1].substring(0, e).replace(/ /g, '\u00A0')) : (this._lines[line + 1].width + this._charWidth));
+                        //nr = fl(eL === line + 1 ? this.textWidth(this.lines[line + 1].substring(0, e).replace(/ /g, '\u00A0')) : (this._lines[line + 1].width + this._charWidth));
                         if (fl(cl) === 0)
                             startStyle.bottom = CornerType.Flat;
                         else if (0 < fl(cl) && fl(cl) < nr)

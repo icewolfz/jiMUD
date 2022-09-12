@@ -748,7 +748,7 @@
                 client.display.updateLayout();
         }
 
-        function updateInterface() {
+        async function updateInterface() {
             if (!client || !client.options) return;
             loadTheme(client.options.theme);
             const display = document.getElementById('display');
@@ -851,7 +851,7 @@
             return items;
         }
 
-        function buildContextMenu() {
+        async function buildContextMenu() {
             _context = [];
             $contextMenu = _context;
             var context = client.contexts;
@@ -887,7 +887,7 @@
             }
         }
 
-        function updateButtonBar() {
+        async function updateButtonBar() {
             const $bar = document.getElementById('buttonbar');
             const $scrollUp = document.getElementById('bb-scroll-up');
             const $scrollDown = document.getElementById('bb-scroll-down');
@@ -2593,7 +2593,7 @@
             return true;
         }
 
-        function buildButtons() {
+        async function buildButtons() {
             var buttons = document.getElementById('user-buttons');
             buttons.replaceChildren();
             if (!client.options.buttons.user)

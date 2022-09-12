@@ -920,6 +920,7 @@ export class AreaDesigner extends EditorBase {
 
     private $focused: boolean;
     private _updating;
+    private _rTimeout = 0;
     private _os;
     private _wMove;
     private _wUp;
@@ -10447,9 +10448,9 @@ export class AreaDesigner extends EditorBase {
     private doUpdate(type?: UpdateType) {
         if (!type) return;
         this._updating |= type;
-        if (this._updating === UpdateType.none)
+        if (this._updating === UpdateType.none || this._rTimeout)
             return;
-        window.requestAnimationFrame(() => {
+        this._rTimeout = window.requestAnimationFrame(() => {
             if ((this._updating & UpdateType.buildMap) === UpdateType.buildMap) {
                 this.BuildMap();
                 this._updating &= ~UpdateType.buildMap;
@@ -10466,6 +10467,7 @@ export class AreaDesigner extends EditorBase {
                 this._updating &= ~UpdateType.drawMap;
                 this.DrawMap();
             }
+            this._rTimeout = 0;
             this.doUpdate(this._updating);
         });
     }

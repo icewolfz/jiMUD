@@ -34,9 +34,9 @@ export class Menubar {
     private _menubar;
     private $cache = {};
     private $updating;
+    private _rTimeout:any = 0;
     private $enabled = true;
     private $busy = false;
-    private timer: any = 0;
 
     constructor(menu: any[], window?: Electron.BrowserWindow) {
         if (!window)
@@ -278,20 +278,20 @@ export class Menubar {
         if (!type) return;
         this.$updating |= type;
         //no updates or already running so wait until it finishes
-        if (this.$updating === 0 || this.timer !== 0)
+        if (this.$updating === 0 || this._rTimeout !== 0)
             return;
         let upFun = () => {
-            this.timer = 0;
             if ((this.$updating & 1) === 1) {
                 this.rebuild();
                 this.$updating &= ~1;
             }
+            this._rTimeout = 0
             this.doUpdate(this.$updating);
         };
         if (typeof window !== 'undefined')
-            this.timer = window.requestAnimationFrame(upFun);
+            this._rTimeout = window.requestAnimationFrame(upFun);
         else
-            this.timer = setTimeout(upFun, 100);
+            this._rTimeout = setTimeout(upFun, 100);
     }
 
     public set window(value) {

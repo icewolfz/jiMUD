@@ -3718,12 +3718,13 @@
             _qUpdateID = null;
         }
 
+        var _rTimeout = 0;
         function doUpdate(type) {
             if (!type) return;
             _updating |= type;
-            if (_updating === 0)
+            if (_updating === 0 || _rTimeout)
                 return;
-            window.requestAnimationFrame(() => {
+            _rTimeout = window.requestAnimationFrame(() => {
                 if ((this._updating & 1) === 1) {
                     updateStatus();
                     _updating &= ~1;
