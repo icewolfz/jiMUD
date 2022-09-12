@@ -819,12 +819,13 @@
             $('#messages-list_wrapper .dataTables_scrollBody')[0].scrollTop = 0;
         }
 
+        var _rTimeout = 0;
         function doUpdate(type) {
             if (!type) return;
             _updating |= type;
             if (_updating === 0)
                 return;
-            window.requestAnimationFrame(() => {
+            _rTimeout = window.requestAnimationFrame(() => {
                 if ((this._updating & 1) === 1) {
                     //updateStatus();
                     _updating &= ~1;
@@ -842,6 +843,7 @@
                     logView[0].scrollTop = logView[0].scrollHeight;
                     _updating &= ~32;
                 }
+                _rTimeout = 0;
                 doUpdate(_updating);
             });
         }

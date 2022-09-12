@@ -336,6 +336,7 @@ export class Wizard extends EventEmitter {
     private $current = 0;
     private $nav: HTMLSelectElement;
     private $update: UpdateType;
+    private _rTimeout = 0;
     public defaults;
 
     get id() { return this.$id; }
@@ -738,9 +739,9 @@ export class Wizard extends EventEmitter {
     private doUpdate(type?: UpdateType) {
         if (!type) return;
         this.$update |= type;
-        if (this.$update === UpdateType.none)
+        if (this.$update === UpdateType.none || this._rTimeout)
             return;
-        window.requestAnimationFrame(() => {
+        this._rTimeout = window.requestAnimationFrame(() => {
             if ((this.$update & UpdateType.rebuildNav) === UpdateType.rebuildNav) {
                 this.rebuildNav();
                 this.$update &= ~UpdateType.rebuildNav;
@@ -753,6 +754,7 @@ export class Wizard extends EventEmitter {
                 this.refresh();
                 this.$update &= ~UpdateType.refresh;
             }
+            this._rTimeout = 0;
             this.doUpdate(this.$update);
         });
     }

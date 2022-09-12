@@ -43,6 +43,7 @@ export class DockManager extends EventEmitter {
     private $activePane: DockPane;
     public dragPanel;
     private _updating: UpdateType = UpdateType.none;
+    private _rTimeout = 0;
     private $widths: number[] = [];
     private $width;
     private $dropOutline;
@@ -631,13 +632,14 @@ export class DockManager extends EventEmitter {
     private doUpdate(type?: UpdateType) {
         if (!type) return;
         this._updating |= type;
-        if (this._updating === UpdateType.none)
+        if (this._updating === UpdateType.none || this._rTimeout)
             return;
-        window.requestAnimationFrame(() => {
+        this._rTimeout = window.requestAnimationFrame(() => {
             if ((this._updating & UpdateType.resize) === UpdateType.resize) {
                 this.resize();
                 this._updating &= ~UpdateType.resize;
             }
+            this._rTimeout = 0;
             this.doUpdate(this._updating);
         });
     }
@@ -708,6 +710,7 @@ export class DockPane extends EventEmitter {
     private $scrollMenu: HTMLUListElement;
 
     private _updating: UpdateType = UpdateType.none;
+    private _rTimeout = 0;
     private _scroll: number = 0;
     private _scrollTimer: NodeJS.Timer;
     private $addCache = [];
@@ -1127,10 +1130,10 @@ export class DockPane extends EventEmitter {
             for (let prop in panel) {
                 if (!Object.prototype.hasOwnProperty.call(panel, prop))
                     continue;
-                if(typeof panel[prop] === 'object' && !Array.isArray(panel[prop])) continue;
+                if (typeof panel[prop] === 'object' && !Array.isArray(panel[prop])) continue;
                 data[prop] = panel[prop];
             }
-            e.dataTransfer.setData('jimud/tab', JSON.stringify(data));            
+            e.dataTransfer.setData('jimud/tab', JSON.stringify(data));
             const eDrag = { id: panel.id, panel: panel, preventDefault: false, event: e };
             panel.dock.emit('tab-drag', eDrag);
             if (eDrag.preventDefault) return;
@@ -1157,7 +1160,7 @@ export class DockPane extends EventEmitter {
             const eDrag = { id: panel.id, panel: panel, preventDefault: false, event: e };
             this.emit('tab-drag-end', eDrag);
             if (eDrag.preventDefault) return;
-            if ( panel.dock.manager.dragPanel !== panel)
+            if (panel.dock.manager.dragPanel !== panel)
                 e.dataTransfer.dropEffect = 'move';
             panel.tab.classList.remove('drop');
             panel.dock.manager.dragPanel = null;
@@ -1578,9 +1581,9 @@ export class DockPane extends EventEmitter {
     private doUpdate(type?: UpdateType) {
         if (!type) return;
         this._updating |= type;
-        if (this._updating === UpdateType.none)
+        if (this._updating === UpdateType.none || this._rTimeout)
             return;
-        window.requestAnimationFrame(() => {
+        this._rTimeout = window.requestAnimationFrame(() => {
             if ((this._updating & UpdateType.batchAdd) === UpdateType.batchAdd) {
                 this.batchAdd();
                 this._updating &= ~UpdateType.batchAdd;
@@ -1606,6 +1609,7 @@ export class DockPane extends EventEmitter {
                 this.scrollToTab();
                 this._updating &= ~UpdateType.scrollToTab;
             }
+            this._rTimeout = 0;
             this.doUpdate(this._updating);
         });
     }
