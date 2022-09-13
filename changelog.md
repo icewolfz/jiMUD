@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.19.4
+## 0.19.4 2022-09-12
 
 - **New:**
   - Profile Manager: Add a break out editor for trigger pattern to allow easier editing of more complex patterns
@@ -17,6 +17,7 @@
 - **Changed:**
   - Update electron 19.0.14 to 19.0.16
   - Switch mathjs from module to script to speed up load times
+  - Update mathjs 11.1.0 to 11.2.0
   - Convert several internal functions into async to speed up load times
 
 ## 0.19.3 2022-08-27
