@@ -26,7 +26,7 @@
     "build:debug-quick": "electron-builder --dir --c.npmRebuild=false",
     "build:debug-quick-compile": "npm run compile && npm run build:debug-quick",
     "clean": "npm run clean:code && npm run clean:css",
-    "clean-linux": "npm run clean-linux:code && npm run clean-linux:css",
+    "clean:linux": "npm run clean:code-linux && npm run clean:css-linux",
     "compile": "npm run compile:css && npm run compile:themes && npm run compile:worker && npm run compile:common && npm run min && echo Compile Done",
     "compile:debug": "npm run compile:css && npm run compile:themes && npm run compile:worker-debug && npm run compile:common-debug && copy out\\*.js build\\js\\ && xcopy /Y /E /I out\\editor build\\js\\editor && echo Compile Done",
     "compile:debug-linux": "npm run compile:css && npm run compile:themes && npm run compile:worker-debug && npm run compile:common-debug && cp out/*.js build/js/ && cp -r out/editor build/js/editor && echo Compile Done",
