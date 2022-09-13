@@ -49,7 +49,7 @@
     "release:mac": "npm run compile && npm run package:mac",
     "clean:code": "del /q .\\out\\*.js && del /q .\\out\\editor\\*.js && del /q .\\build\\js\\*.js && del /q .\\build\\js\\editor\\*.js",
     "clean:css": "del /q .\\build\\css\\*.css",
-    "clean:code-linux": "rm ./out/*.js && rm ./out/editor/*.js && rm ./build/js/*.js && rm ./build/js/cditor/*.js",
+    "clean:code-linux": "rm ./out/*.js && rm ./out/editor/*.js && rm ./build/js/*.js && rm ./build/js/editor/*.js",
     "clean:css-linux": "rm ./build/css/*.css",
     "clean:dist": "rm -rf ./dist",
     "list": "asar l .\\dist\\win-unpacked\\resources\\app.asar > .\\dist\\files%npm_package_version%.txt",
