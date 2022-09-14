@@ -2788,7 +2788,7 @@
             var character = ipcRenderer.sendSync('get-character', _windowState.data.characterId);
             _windowState.data.settings = parseTemplate(character.Preferences);
             _windowState.data.map = parseTemplate(character.Map);
-            if(character.Port === 1035)
+            if (character.Port === 1035)
                 _windowState.data.dev = true;
             _skipDisconnect = 0;
             client.settingsFile = _windowState.data.settings;
@@ -2864,8 +2864,8 @@
             if (character.name && _windowState.data.character != character.name)
                 delete _windowState.data.character;
             _skipDisconnect = 0;
-            if(character.Port === 1035 !== _windowState.data.dev) {
-                if(character.Port === 1035)
+            if (character.Port === 1035 !== _windowState.data.dev) {
+                if (character.Port === 1035)
                     _windowState.data.dev = true;
                 else
                     delete _windowState.data.dev;
@@ -2887,8 +2887,15 @@
             autoConnect();
         }
 
-        ipcRenderer.on('update-character', (event, ID) => {
-            updateCharacter(ID);
+        ipcRenderer.on('character-updated', (event, character) => {
+            updateCharacter(character.ID);
+            if (_windows['characters.html'])
+                _windows['characters.html'].characterUpdated(character);
+        });
+
+        ipcRenderer.on('character-added', (event, character) => {
+            if (_windows['characters.html'])
+                _windows['characters.html'].characterAdded(character);
         });
         /*              
                 ipcRenderer.on('change-options', () => {

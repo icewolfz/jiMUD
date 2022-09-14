@@ -990,16 +990,22 @@ ipcMain.on('get-character', (event, id, property) => {
     event.returnValue = character ? (property ? character[property] : character) : null;
 });
 
-ipcMain.on('update-character', (event, character, ...args) => {
-    if (typeof character === 'number') {
-        args[0].ID = id;
-        character = args[0];
-    }
+ipcMain.on('update-character', (event, character, id) => {
     _characters.updateCharacter(character);
+    for (clientId in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId) || clientId === id)
+            continue;
+        clients[clientId].view.webContents.send('character-updated', character);
+    }
 });
 
 ipcMain.on('add-character', (event, character) => {
     event.returnValue = _characters.addCharacter(character);
+    for (clientId in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId))
+            continue;
+        clients[clientId].view.webContents.send('character-added', character);
+    }
 });
 
 ipcMain.on('get-character-next-id', (event) => {
@@ -1143,15 +1149,13 @@ ipcMain.on('window-info', (event, info, id, ...args) => {
             event.returnValue = 0;
             return
         }
-        for (window in clients[id].windows) {
-            const wl = clients[id].windows.length;
-            for (var idx = 0; idx < wl; idx++) {
-                const window = clients[id].windows[idx].window;
-                //call any code hooks in the child windows
-                if (window && !window.isDestroyed() && window.getTitle().startsWith(args[0])) {
-                    event.returnValue = 1;
-                    return;
-                }
+        const wl = clients[id].windows.length;
+        for (var idx = 0; idx < wl; idx++) {
+            const window = clients[id].windows[idx].window;
+            //call any code hooks in the child windows
+            if (window && !window.isDestroyed() && window.getTitle().startsWith(args[0])) {
+                event.returnValue = 1;
+                return;
             }
         }
         event.returnValue = 0;

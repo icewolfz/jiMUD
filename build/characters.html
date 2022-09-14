@@ -120,7 +120,7 @@
 
             $('#character-editor input').on('input', e => {
                 if ($(e.target).type === 'checkbox') {
-                    if($(e.target).data('field') === 'Port') {
+                    if ($(e.target).data('field') === 'Port') {
                         if (current && $(e.target).data('field') && ((current[$(e.target).data('field')] === 1035) !== $(e.target).prop('checked')))
                             changed++;
                     }
@@ -131,7 +131,7 @@
                     changed++;
             }).on('change', e => {
                 if ($(e.target).type === 'checkbox') {
-                    if($(e.target).data('field') === 'Port') {
+                    if ($(e.target).data('field') === 'Port') {
                         if (current && $(e.target).data('field') && ((current[$(e.target).data('field')] === 1035) !== $(e.target).prop('checked')))
                             changed++;
                     }
@@ -237,7 +237,7 @@
                     fs.renameSync(old, newNotes);
             }
             if (changed) {
-                ipcRenderer.send('update-character', changes);
+                ipcRenderer.send('update-character', changes, window.opener.getId());
                 window.opener.updateCharacter(current.ID);
                 changed = 0;
             }
@@ -575,7 +575,7 @@
                 $('#character-' + character).text(character.Title);
                 saveCharacters();
                 sortList();
-                ipcRenderer.send('update-character', changes);
+                ipcRenderer.send('update-character', changes, window.opener.getId());
                 if (current && character.ID == current.ID) {
                     current = 0;
                     $('#character-' + character.ID).click();
@@ -883,44 +883,45 @@
             closeProgressDialog();
         }
 
-        ipcRenderer.on('character-added', (event, character) => {
-            if (character) {
-                //already created so bail
-                if (typeof character === 'number')
-                    character = ipcRenderer.sendSync('get-character', character);
-                if ($('#character-' + character.ID).length === 1) return;
+        function characterAdded(character) {
+            if (!character) return;
+            if (typeof character === 'number')
+                character = ipcRenderer.sendSync('get-character', character);
+            if ($('#character-' + character.ID).length === 1) return;
+            createItem(character);
+            sortList();
+        }
+
+        function characterUpdated(character) {
+            if (!character) returnl
+            if (typeof character === 'number')
+                character = ipcRenderer.sendSync('get-character', character);
+            //already created so bail
+            if ($('#character-' + character.ID).length !== 1) {
                 createItem(character);
                 sortList();
             }
-        })
-
-        ipcRenderer.on('character-updated', (event, character) => {
-            //already created so bail
-            if (character) {
-                if (typeof character === 'number')
-                    character = ipcRenderer.sendSync('get-character', character);
-                if ($('#character-' + character.ID).length !== 1) {
-                    createItem(character);
-                    sortList();
+            else if (current && character.ID === current.ID) {
+                if (changed > 0) {
+                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        type: 'warning',
+                        title: 'Character updated',
+                        message: 'Reload? Any current changes will be lost.',
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1,
+                    }).then((result) => {
+                        if (result.response === 0) {
+                            current = 0;
+                            $('#character-' + character.ID).click();
+                        }
+                    });
                 }
-                else if (current && character.ID === current.ID) {
-                    if (changed > 0) {
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
-                            type: 'warning',
-                            title: 'Character updated',
-                            message: 'Reload? Any current changes will be lost.',
-                            buttons: ['Yes', 'No'],
-                            defaultId: 1,
-                        }).then((result) => {
-                            if (result.response === 0) {
-                                current = 0;
-                                $('#character-' + character.ID).click();
-                            }
-                        });
-                    }
+                else {
+                    current = 0;
+                    $('#character-' + character.ID).click();
                 }
             }
-        })
+        }
 
 
         function newConnection(ID) {
