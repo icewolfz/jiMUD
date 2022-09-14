@@ -995,16 +995,16 @@
             </button>
         </div>
         <div class="btn-group" role="group">
-            <button id="btn-load-default" type="button" class="btn btn-warning btn-xs" title="Load global" onclick="if(loadDefault() === 0) doClose()">
+            <button id="btn-load-default" type="button" class="btn btn-warning btn-xs" title="Load global in current" onclick="if(loadDefault() === 0) doClose()">
                 <i class="fa fa-step-backward"></i>
             </button>
-            <button id="btn-load" type="button" disabled="disabled" class="btn btn-warning btn-xs" title="Load" onclick="if(load() === 0) doClose()">
+            <button id="btn-load" type="button" disabled="disabled" class="btn btn-warning btn-xs" title="Load in current" onclick="if(load() === 0) doClose()">
                 <i class="fa fa-play"></i>
             </button>
-            <button id="btn-load-connection" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Load new connection" onclick="newConnection()">
-                <i class="fa fa-external-link"></i>
+            <button id="btn-load-connection" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Add as new connection" onclick="newConnection()">
+                <i class="fa fa-plus"></i>
             </button>
-            <button id="btn-load-window" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Load new window" onclick="newWindow()">
+            <button id="btn-load-window" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Load in new window" onclick="newWindow()">
                 <i class="fa fa-window-restore"></i>
             </button>
         </div>
