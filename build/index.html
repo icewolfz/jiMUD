@@ -3081,7 +3081,7 @@
                         }
                     }));
                 }
-                if (client.options.spellchecking && params.dictionarySuggestions.length) {
+                if (ipcRenderer.sendSync('get-setting', 'spellchecking') && params.dictionarySuggestions.length) {
                     inputMenu.insert(0, new MenuItem({ type: 'separator' }));
                     start = input.selectionStart + params.selectionText.indexOf(params.misspelledWord);
                     end = start + params.misspelledWord.length;

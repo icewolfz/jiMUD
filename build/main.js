@@ -831,24 +831,6 @@ ipcMain.on('get-global', (event, key) => {
     }
 });
 
-ipcMain.on('get-setting', (event, key) => {
-    if (!set) {
-        event.returnValue = null;
-        return;
-    }
-    switch (key) {
-        case 'theme':
-            event.returnValue = set.theme;
-            break;
-        case 'askonloadCharacter':
-            event.returnValue = set.askonloadCharacter;
-            break;
-        default:
-            event.returnValue = null;
-            break;
-    }
-});
-
 ipcMain.on('set-global', (event, key, value) => {
     switch (key) {
         case 'editorOnly':
@@ -869,6 +851,28 @@ ipcMain.on('set-global', (event, key, value) => {
     }
 });
 
+
+ipcMain.on('get-setting', (event, key) => {
+    if (!set) {
+        event.returnValue = null;
+        return;
+    }
+    switch (key) {
+        case 'theme':
+            event.returnValue = set.theme;
+            break;
+        case 'askonloadCharacter':
+            event.returnValue = set.askonloadCharacter;
+            break;
+        case 'spellchecking':
+            event.returnValue = set.spellchecking;
+            break;
+        default:
+            event.returnValue = null;
+            break;
+    }
+});
+
 ipcMain.on('set-setting', (event, key, value) => {
     if (!set)
         return;
@@ -879,6 +883,10 @@ ipcMain.on('set-setting', (event, key, value) => {
             break;
         case 'askonloadCharacter':
             set.askonloadCharacter = value;
+            set.save(global.settingsFile);
+            break;
+        case 'spellchecking':
+            set.spellchecking = value;
             set.save(global.settingsFile);
             break;
     }

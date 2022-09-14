@@ -2763,7 +2763,7 @@ function loadOptions() {
     _watch = options.profiles.watchFiles;
     _sort = options.profiles.sortOrder;
     _sortDir = options.profiles.sortDirection || 1;
-    _spellchecker = options.spellchecking || true;
+    _spellchecker = ipcRenderer.sendSync('get-setting', 'spellchecking') || true;
     _prependTrigger = options.prependTriggeredLine;
     _parameter = options.parametersChar;
     _nParameter = options.nParametersChar;

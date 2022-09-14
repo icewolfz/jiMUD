@@ -1117,7 +1117,7 @@
                             { type: 'separator' },
                             { role: 'selectAll' },
                         ]);
-                        if (options.spellchecking && params.dictionarySuggestions.length) {
+                        if (ipcRenderer.sendSync('get-setting', 'spellchecking') && params.dictionarySuggestions.length) {
                             cMenu.insert(0, new MenuItem({ type: 'separator' }));
                             for (w = params.dictionarySuggestions.length - 1; w >= 0; w--) {
                                 cMenu.insert(0, new MenuItem({
@@ -1145,7 +1145,7 @@
                     }
                     else {
                         cMenu = tinymce.activeEditor.plugins['shadowmud'].buildMenu();
-                        if (options.spellchecking && params.dictionarySuggestions.length) {
+                        if (ipcRenderer.sendSync('get-setting', 'spellchecking') && params.dictionarySuggestions.length) {
                             cMenu.insert(0, new MenuItem({ type: 'separator' }));
                             for (var w = params.dictionarySuggestions.length - 1; w >= 0; w--)
                                 cMenu.insert(0, new MenuItem({

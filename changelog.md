@@ -26,6 +26,10 @@
     - Changed -s/--setting to set the global preference file to use
     - Changed -m/--map to set working global map file for generic new connections
     - Removed -mf argument to keep argument name scheme flowing
+- **Changed:**
+  - Preferences that are now global:
+    - `Spellchecking` can only now be set as a global preference and requires a restart to effect any already opening clients or windows as it can only be set on window creation
+    - `Theme` only the global preference theme will be used for all clients
 
 ## 0.19.5
 
