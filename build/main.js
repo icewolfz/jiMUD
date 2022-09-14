@@ -1579,7 +1579,7 @@ function createClient(options) {
     //win.setTopBrowserView(view)    
     //addBrowserView
     //setBrowserView  
-    addInputContext(view, set.spellchecking);
+    //addInputContext(view, set.spellchecking);
     return options.id;
 }
 
