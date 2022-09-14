@@ -705,9 +705,13 @@
         }
 
         function load(ID) {
-            if (ID === undefined)
+            var character;
+            if (ID === undefined) {
                 ID = current.ID;
-            var character = ipcRenderer.sendSync('get-character', ID);
+                character = current;
+            }
+            else
+                character = ipcRenderer.sendSync('get-character', ID);
             if (!askonloadCharacter) {
                 saveCharacters();
                 window.opener.loadCharacter(ID);

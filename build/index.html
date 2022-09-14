@@ -778,15 +778,15 @@
                 lock.firstElementChild.classList.remove('fa-unlock');
             }
             if (!client.options.buttons.connect) {
-                document.getElementById('command').style.display = 'none';
+                document.getElementById('connect').style.display = 'none';
                 document.getElementById('disconnect').style.display = 'none';
             }
             else if (client.connecting || client.connected) {
-                document.getElementById('command').style.display = 'none';
+                document.getElementById('connect').style.display = 'none';
                 document.getElementById('disconnect').style.display = '';
             }
             else {
-                document.getElementById('command').style.display = '';
+                document.getElementById('connect').style.display = '';
                 document.getElementById('disconnect').style.display = 'none';
             }
             document.getElementById('characters').style.display = client.options.buttons.characters ? '' : 'none';
@@ -2786,8 +2786,10 @@
             delete _windowState.data.character;
             delete _windowState.data.dev;
             var character = ipcRenderer.sendSync('get-character', _windowState.data.characterId);
-            _windowState.data.settings = character.Preferences;
-            _windowState.data.map = character.Map;
+            _windowState.data.settings = parseTemplate(character.Preferences);
+            _windowState.data.map = parseTemplate(character.Map);
+            if(character.Port === 1035)
+                _windowState.data.dev = true;
             _skipDisconnect = 0;
             client.settingsFile = _windowState.data.settings;
             _backup.mapFile = _windowState.data.map;
@@ -2803,8 +2805,7 @@
                 _skipDisconnect = 1;
                 client.close();
             }
-            if (_prevID === ID)
-                autoConnect();
+            autoConnect();
         }
 
         function resetCharacter() {
@@ -2840,8 +2841,7 @@
                 _skipDisconnect = 1;
                 client.close();
             }
-            if (same)
-                autoConnect();
+            autoConnect();
         }
 
         function updateCharacter(ID) {
@@ -2864,6 +2864,12 @@
             if (character.name && _windowState.data.character != character.name)
                 delete _windowState.data.character;
             _skipDisconnect = 0;
+            if(character.Port === 1035 !== _windowState.data.dev) {
+                if(character.Port === 1035)
+                    _windowState.data.dev = true;
+                else
+                    delete _windowState.data.dev;
+            }
             var newPort = ((_windowState && 'dev' in _windowState.data) ? (_windowState.data.dev || false) : client.options.dev) ? 1035 : 1030;
             if (newPort !== client.port) {
                 client.port = newPort;
