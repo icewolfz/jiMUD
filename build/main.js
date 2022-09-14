@@ -94,6 +94,7 @@ if (!process.env.PORTABLE_EXECUTABLE_DIR) {
 Menu.setApplicationMenu(null);
 
 global.settingsFile = parseTemplate(path.join('{data}', 'settings.json'));
+global.mapFile = parseTemplate(path.join('{data}', 'map.sqlite'));
 let set = settings.Settings.load(global.settingsFile);
 global.debug = false;
 global.editorOnly = false;
@@ -654,6 +655,12 @@ app.on('ready', () => {
         global.settingsFile = parseTemplate(argv.s[0]);
     else if (argv.s)
         global.settingsFile = parseTemplate(argv.s);
+    if (Array.isArray(argv.m))
+        global.mapFile = parseTemplate(argv.m[0]);
+    else if (argv.m)
+        global.mapFile = parseTemplate(argv.m);
+
+
 
     if (Array.isArray(argv.l))
         _layout = parseTemplate(argv.l[0]);
@@ -800,6 +807,9 @@ ipcMain.on('get-global', (event, key) => {
         case 'settingsFile':
             event.returnValue = global.settingsFile;
             break;
+        case 'mapfile':
+            event.returnValue = global.mapfile;
+            break;
         case 'debug':
             event.returnValue = global.debug;
             break;
@@ -846,6 +856,9 @@ ipcMain.on('set-global', (event, key, value) => {
             break;
         case 'settingsFile':
             global.settingsFile = value;
+            break;
+        case 'mapfile':
+            global.mapfile = value;
             break;
         case 'debug':
             global.debug = value;
