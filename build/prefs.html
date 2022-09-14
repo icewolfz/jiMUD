@@ -106,7 +106,9 @@
         var currentColors;
         var archiver, archive;
 
+        var _settingsFile = window.opener ? window.opener._windowState.data.settings : ipcRenderer.sendSync('get-global', 'settingsFile');
         var _settings;
+
         if (window.module) module = window.module;
         $(window).keydown((event) => {
             if (document.getElementById('progress-dialog').open) {
@@ -118,7 +120,7 @@
         });
 
         $(document).ready(() => {
-
+            _settings = Settings.load(_settingsFile);
             $('#pref-tree').treeview({
                 showBorder: false,
                 showImage: true,
@@ -207,6 +209,10 @@
                 $('.linux').css('display', 'inline-block');
             else
                 $('.linux').css('display', 'none');
+            if(_settingsFile === ipcRenderer.sendSync('get-global', 'settingsFile'))
+                $('.global').css('display', '');
+            else
+                $('.linux').css('display', 'none');
             fontList.getFonts()
                 .then(fonts => {
                     var fl = fonts.length;
@@ -292,8 +298,6 @@
                 $('#chat-font-sample').css('font-family', $('#chat-font').val() + ', monospace');
                 $('#chat-font-sample').css('font-size', $('#chat-fontSize').val());
             });
-
-            _settings = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
             loadThemes();
             loadSettings();
 
