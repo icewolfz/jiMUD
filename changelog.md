@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.19.5
+## 0.19.5 2022-09-14
 
 - **Fixed:**
   - Immortal tools: Fixed a bug introduced in 19.4 performance updates
