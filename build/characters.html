@@ -117,6 +117,35 @@
                 if (event.which === 13)
                     $('#get-name-ok').click();
             });
+
+            $('#character-editor input').on('input', e => {
+                if ($(e.target).type === 'checkbox') {
+                    if($(e.target).data('field') === 'Port') {
+                        if (current && $(e.target).data('field') && ((current[$(e.target).data('field')] === 1035) !== $(e.target).prop('checked')))
+                            changed++;
+                    }
+                    else if (current && $(e.target).data('field') && current[$(e.target).data('field')] !== $(e.target).prop('checked'))
+                        changed++;
+                }
+                else if (current && $(e.target).data('field') && current[$(e.target).data('field')] !== $(e.target).val())
+                    changed++;
+            }).on('change', e => {
+                if ($(e.target).type === 'checkbox') {
+                    if($(e.target).data('field') === 'Port') {
+                        if (current && $(e.target).data('field') && ((current[$(e.target).data('field')] === 1035) !== $(e.target).prop('checked')))
+                            changed++;
+                    }
+                    else if (current && $(e.target).data('field') && current[$(e.target).data('field')] !== $(e.target).prop('checked'))
+                        changed++;
+                }
+                else if (current && $(e.target).data('field') && current[$(e.target).data('field')] !== $(e.target).val())
+                    changed++;
+            });
+            $('#character-editor textarea').on('input', e => {
+                changed++;
+            }).on('change', e => {
+                changed++;
+            });
         });
 
         function invalidFile(file) {
@@ -185,8 +214,6 @@
                 changes.Password = v;
                 changed++;
             }
-            if (changed)
-                ipcRenderer.send('update-character', changes);
             v = $('#notes-path').val() || '';
             if (current.Notes != v) {
                 fs.renameSync(f, sf);
@@ -208,34 +235,24 @@
                 }
                 else
                     fs.renameSync(old, newNotes);
-                changed++;
+            }
+            if (changed) {
+                ipcRenderer.send('update-character', changes);
+                window.opener.updateCharacter(current.ID);
+                changed = 0;
             }
         }
 
         function saveCharacters() {
             updateCurrent();
-            if (changed === 0) return;
-            changed = 0;
             //fs.writeFileSync(charactersFile, JSON.stringify(characters));
             //ipcRenderer.send('reload-characters');
         }
 
         // eslint-disable-next-line no-unused-vars
         function refresh() {
-            if (changed > 0) {
-                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
-                    type: 'warning',
-                    title: 'Refresh characters',
-                    message: 'All changes will be lost, refresh?',
-                    buttons: ['Yes', 'No'],
-                    defaultId: 1,
-                }).then((result) => {
-                    if (result.response === 0)
-                        loadCharacters();
-                });
-            }
-            else
-                loadCharacters();
+            updateCurrent();
+            loadCharacters();
         }
 
         function loadCharacters() {
@@ -299,6 +316,7 @@
                 else
                     $('#notes').val('');
                 $('.nav-tabs a[href="#tab-general"]').tab('show');
+                changed = 0;
             });
             item.on('dblclick', function () {
                 $(this).click();
@@ -430,7 +448,6 @@
                     copyFile(parseTemplate(path.join('{data}', 'map.sqlite')), sf);
                 else
                     fs.closeSync(fs.openSync(sf, 'w'));
-                changed++;
                 character.ID = ipcRenderer.sendSync('add-character', character);
                 createItem(character);
                 saveCharacters();
@@ -481,7 +498,6 @@
                 }
                 else
                     fs.closeSync(fs.openSync(sf, 'w'));
-                changed++;
                 character.ID = ipcRenderer.sendSync('add-character', character);
                 createItem(character);
                 saveCharacters();
@@ -556,7 +572,6 @@
                     else
                         fs.renameSync(f, sf);
                 }
-                changed++;
                 $('#character-' + character).text(character.Title);
                 saveCharacters();
                 sortList();
@@ -684,7 +699,6 @@
                 $('#character-' + character.ID).remove();
                 if (current && current.ID === character.ID)
                     clearEditor();
-                changed++;
                 ipcRenderer.send('remove-character', character.ID)
                 saveCharacters();
             }
@@ -865,15 +879,9 @@
             closeProgressDialog();
         }
 
-        ipcRenderer.on('add-char', (event, character, dialog) => {
-            //already created so bail
-            if (dialog || typeof character === 'string') {
-                if (typeof character === 'string')
-                    add(character);
-                else
-                    add();
-            }
-            else if (character) {
+        ipcRenderer.on('character-added', (event, character) => {
+            if (character) {
+                //already created so bail
                 if (typeof character === 'number')
                     character = ipcRenderer.sendSync('get-character', character);
                 if ($('#character-' + character.ID).length === 1) return;
@@ -881,6 +889,35 @@
                 sortList();
             }
         })
+
+        ipcRenderer.on('character-updated', (event, character) => {
+            //already created so bail
+            if (character) {
+                if (typeof character === 'number')
+                    character = ipcRenderer.sendSync('get-character', character);
+                if ($('#character-' + character.ID).length !== 1) {
+                    createItem(character);
+                    sortList();
+                }
+                else if (current && character.ID === current.ID) {
+                    if (changed > 0) {
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                            type: 'warning',
+                            title: 'Character updated',
+                            message: 'Reload? Any current changes will be lost.',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1,
+                        }).then((result) => {
+                            if (result.response === 0) {
+                                current = 0;
+                                $('#character-' + character.ID).click();
+                            }
+                        });
+                    }
+                }
+            }
+        })
+
 
         function newConnection(ID) {
             if (ID === undefined)
@@ -936,9 +973,6 @@
             </button>
             <button id="btn-save" type="button" class="btn btn-default btn-xs" title="Backup to zip" onclick="backup()">
                 <i class="fa fa-upload"></i>
-            </button>
-            <button id="btn-save" type="button" class="btn btn-default btn-xs" title="Save" onclick="saveCharacters()">
-                <i class="fa fa-save"></i>
             </button>
         </div>
         <div class="btn-group" role="group">
@@ -1005,16 +1039,16 @@
                 <div class="tab-content" style="position: absolute;bottom: 0;top: 42px;overflow: auto;left: 0;right: 0;">
                     <div role="tabpanel" class="container tab-pane fade in active" id="tab-general" style="width: 100%;">
                         <label class="control-label" style="width: 100%"> Login
-                            <input disabled="disabled" class="form-control" style="width:100%" type="text" id="name">
+                            <input disabled="disabled" class="form-control" style="width:100%" type="text" id="name" data-field="Title">
                             <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Name to login as if different from character name</span>
                         </label>
                         <label class="control-label" style="width: 100%"> Password
-                            <input disabled="disabled" class="form-control" style="width:100%" type="password" id="password">
+                            <input disabled="disabled" class="form-control" style="width:100%" type="password" id="password" data-field="Password">
                             <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Supply at own risk, the password is stored in basic encryption</span>
                         </label>
                         <label class="control-label"> Settings
                             <div class="input-group" style="width:100%;">
-                                <input disabled="disabled" class="form-control" style="width:100%" type="text" id="settings">
+                                <input disabled="disabled" class="form-control" style="width:100%" type="text" id="settings" data-field="Preferences">
                                 <span class="input-group-btn">
                                     <button disabled="disabled" class="btn btn-default" type="button" onclick="openFile('#settings', ['json'])">
                                         &hellip;
@@ -1024,7 +1058,7 @@
                         </label>
                         <label class="control-label"> Map
                             <div class="input-group" style="width:100%;">
-                                <input disabled="disabled" class="form-control" style="width:100%" type="text" id="map">
+                                <input disabled="disabled" class="form-control" style="width:100%" type="text" id="map" data-field="Map">
                                 <span class="input-group-btn">
                                     <button disabled="disabled" class="btn btn-default" type="button" onclick="openFile('#map', ['map', 'sqlite'])">
                                         &hellip;
@@ -1034,7 +1068,7 @@
                         </label>
                         <label class="control-label"> Notes
                             <div class="input-group" style="width:100%;">
-                                <input disabled="disabled" class="form-control" style="width:100%" type="text" id="notes-path">
+                                <input disabled="disabled" class="form-control" style="width:100%" type="text" id="notes-path" data-field="Notes">
                                 <span class="input-group-btn">
                                     <button disabled="disabled" class="btn btn-default" type="button" onclick="openFile('#notes-path', ['notes', 'txt'])">
                                         &hellip;
@@ -1043,15 +1077,15 @@
                             </div>
                         </label>
                         <label class="control-label col-sm-6" style="padding-left: 0;">
-                            <input disabled="disabled" type="checkbox" id="auto-load" /> Auto load
+                            <input disabled="disabled" type="checkbox" id="auto-load" data-field="AutoLoad" /> Auto load
                             <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Only one character can auto load, enabling this will disable previous auto loaded character</span>
                         </label>
                         <label class="control-label col-sm-6" style="padding-left: 0;">
-                            <input disabled="disabled" type="checkbox" id="dev" /> Development
+                            <input disabled="disabled" type="checkbox" id="dev" data-field="Port" /> Development
                             <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Connect to development port</span>
                         </label>
                         <label class="control-label col-sm-6" style="padding-left: 0;">
-                            <input disabled="disabled" type="checkbox" id="disconnect" /> Disconnect on load
+                            <input disabled="disabled" type="checkbox" id="disconnect" data-field="Disconnect" /> Disconnect on load
                             <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Disconnect current connection</span>
                         </label>
                     </div>
