@@ -27,6 +27,13 @@
     - Changed -m/--map to set working global map file for generic new connections
     - Removed -mf argument to keep argument name scheme flowing
 
+## 0.19.5
+
+- **Fixed:**
+  - Immortal tools: Fixed a bug introduced in 19.4 performance updates
+- **Changed:**
+  - About: rename memory tab to resources
+
 ## 0.19.4 2022-09-12
 
 - **New:**
