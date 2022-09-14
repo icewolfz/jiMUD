@@ -6,6 +6,7 @@
   - Immortal tools: Fixed a bug introduced in 19.4 performance updates
 - **Changed:**
   - About: rename memory tab to resources
+  - Exclude a bundled module to make packaged size smaller
 
 ## 0.19.4 2022-09-12
 
