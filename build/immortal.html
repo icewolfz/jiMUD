@@ -3772,6 +3772,7 @@
                     queueTable.rows().invalidate('data').draw();
                     _updating &= ~256;
                 }
+                _rTimeout = 0;
                 doUpdate(_updating);
             });
         }

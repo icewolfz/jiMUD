@@ -2,6 +2,8 @@
 
 ## 0.19.5
 
+- **Fixed:**
+  - Immortal tools: Fixed a bug introduced in 19.4 performance updates
 - **Changed:**
   - About: rename memory tab to resources
 
