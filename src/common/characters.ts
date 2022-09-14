@@ -176,7 +176,8 @@ export class Characters extends EventEmitter {
 
     public addCharacter(character: Character) {
         if (!character || Object.keys(character).length === 0)
-            this._db.prepare('BEGIN').run();
+            return;
+        this._db.prepare('BEGIN').run();
         let info;
         character = this.sanitizeCharacterIn(character);
         try {

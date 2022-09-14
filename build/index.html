@@ -2779,121 +2779,129 @@
             else if (sender === 'Loading data')
                 _backup.getChunk();
         });
+        */
+        function loadCharacter(ID) {
+            //TODO make loadCharacter work
+        }
 
-        ipcRenderer.on('load-char', (event, char, same) => {
-            _charName = ipcRenderer.sendSync('get-global', 'characterLogin');
-            if (!client.connected) {
-                _logger.postMessage({ action: 'name', args: _charName });
-                $('#character-name').text(_charName);
-            }
-            _backup.mapFile = ipcRenderer.sendSync('get-global', 'mapFile');
-            client.port = ((_windowState && 'dev' in _windowState.data) ? (_windowState.data.dev || false) : client.options.dev) ? 1035 : 1030;
-            ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
-            if (client.connected && ipcRenderer.sendSync('get-global', 'disconnect')) {
-                _skipDisconnect = 1;
-                client.close();
-            }
-            if (same)
-                autoConnect();
-        });
-
-        ipcRenderer.on('load-default', (same) => {
-            _charName = 0;
-            if (!client.connected) {
-                _logger.postMessage({ action: 'name', args: '' });
-                $('#character-name').text('&nbsp;');
-            }
-            _backup.mapFile = ipcRenderer.sendSync('get-global', 'mapFile');
-            if (client.connected && ipcRenderer.sendSync('get-global', 'disconnect'))
-                client.close();
-            if (same)
-                autoConnect();
-        });
-
-        ipcRenderer.on('change-options', () => {
-            _skipDisconnect = 0;
-            client.settingsFile = _windowState.data.settings;
-            autoConnect();
-        });
-
-        ipcRenderer.on('setting-changed', (event, data) => {
-            if (data.type === 'mapper') {
-                client.options.mapper[data.name] = data.value;
-                if (!data.noSave)
-                    doUpdate(32);
-            }
-            else if (data.type === 'profiles') {
-                client.options.profiles[data.name] = data.value;
-                if (data.name === 'enabled')
-                    updateMenu();
-                if (!data.noSave)
-                    doUpdate(32);
-            }
-            else if (data.type === 'chat') {
-                client.options.chat[data.name] = data.value;
-                if (!data.noSave)
-                    doUpdate(32);
-            }
-            else if (data.type === 'extensions') {
-                client.options.extensions[data.name] = data.value;
-                if (!data.noSave)
-                    doUpdate(32);
-            }
-            else if (data.type === 'windows') {
-                if (!client.options.windows[data.name])
-                    client.options.windows[data.name] = { options: {} };
-                else if (!client.options.windows[data.name].options)
-                    client.options.windows[data.name].options = {};
-                client.options.windows[data.name].options.alwaysOnTopClient = data.value.alwaysOnTopClient;
-                client.options.windows[data.name].options.persistent = data.value.persistent;
-                client.options.windows[data.name].options.alwaysOnTop = data.value.alwaysOnTop;
-                if (!data.noSave)
-                    doUpdate(32);
-            }
-            else if (data.type === 'windowOptions') {
-                if (!client.options.windows[data.name])
-                    client.options.windows[data.name] = {};
-                client.options.windows[data.name].options = data.value;
-                if (!data.noSave)
-                    doUpdate(32);
-            }
-            else if (data.type === 'window') {
-                client.options.windows[data.name] = data.value || {};
-                if (!data.noSave)
-                    doUpdate(32);
-            }
-            else if (data.type === 'normal') {
-                client.options[data.name] = data.value;
-                if (!data.noSave)
-                    doUpdate(32);
-            }
-        });
-
-        ipcRenderer.on('send-background', (event, command, noEcho, comments) => {
-            client.sendBackground(command, noEcho, comments);
-        });
-
-        ipcRenderer.on('send-command', (event, command, noEcho, comments) => {
-            client.sendCommand(command, noEcho, comments);
-        });
-
-        ipcRenderer.on('send-gmcp', (event, data) => {
-            client.sendGMCP(data);
-        });
-
-        ipcRenderer.on('send-raw', (event, raw) => {
-            client.sendRaw(raw);
-        });
-
-        ipcRenderer.on('send', (event, raw, echo) => {
-            client.send(raw, echo);
-        });
-
-        ipcRenderer.on('menu-reload', () => {
-            if (!client) return;
-            doUpdate(4);
-        });
-*/
+        function resetCharacter() {
+            //TODO make resetCharacter
+        }
+        /*
+                ipcRenderer.on('load-char', (event, char, same) => {
+                    _charName = ipcRenderer.sendSync('get-global', 'characterLogin');
+                    if (!client.connected) {
+                        _logger.postMessage({ action: 'name', args: _charName });
+                        $('#character-name').text(_charName);
+                    }
+                    _backup.mapFile = ipcRenderer.sendSync('get-global', 'mapFile');
+                    client.port = ((_windowState && 'dev' in _windowState.data) ? (_windowState.data.dev || false) : client.options.dev) ? 1035 : 1030;
+                    ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
+                    if (client.connected && ipcRenderer.sendSync('get-global', 'disconnect')) {
+                        _skipDisconnect = 1;
+                        client.close();
+                    }
+                    if (same)
+                        autoConnect();
+                });
+        
+                ipcRenderer.on('load-default', (same) => {
+                    _charName = 0;
+                    if (!client.connected) {
+                        _logger.postMessage({ action: 'name', args: '' });
+                        $('#character-name').text('&nbsp;');
+                    }
+                    _backup.mapFile = ipcRenderer.sendSync('get-global', 'mapFile');
+                    if (client.connected && ipcRenderer.sendSync('get-global', 'disconnect'))
+                        client.close();
+                    if (same)
+                        autoConnect();
+                });
+        
+                ipcRenderer.on('change-options', () => {
+                    _skipDisconnect = 0;
+                    client.settingsFile = _windowState.data.settings;
+                    autoConnect();
+                });
+        
+                ipcRenderer.on('setting-changed', (event, data) => {
+                    if (data.type === 'mapper') {
+                        client.options.mapper[data.name] = data.value;
+                        if (!data.noSave)
+                            doUpdate(32);
+                    }
+                    else if (data.type === 'profiles') {
+                        client.options.profiles[data.name] = data.value;
+                        if (data.name === 'enabled')
+                            updateMenu();
+                        if (!data.noSave)
+                            doUpdate(32);
+                    }
+                    else if (data.type === 'chat') {
+                        client.options.chat[data.name] = data.value;
+                        if (!data.noSave)
+                            doUpdate(32);
+                    }
+                    else if (data.type === 'extensions') {
+                        client.options.extensions[data.name] = data.value;
+                        if (!data.noSave)
+                            doUpdate(32);
+                    }
+                    else if (data.type === 'windows') {
+                        if (!client.options.windows[data.name])
+                            client.options.windows[data.name] = { options: {} };
+                        else if (!client.options.windows[data.name].options)
+                            client.options.windows[data.name].options = {};
+                        client.options.windows[data.name].options.alwaysOnTopClient = data.value.alwaysOnTopClient;
+                        client.options.windows[data.name].options.persistent = data.value.persistent;
+                        client.options.windows[data.name].options.alwaysOnTop = data.value.alwaysOnTop;
+                        if (!data.noSave)
+                            doUpdate(32);
+                    }
+                    else if (data.type === 'windowOptions') {
+                        if (!client.options.windows[data.name])
+                            client.options.windows[data.name] = {};
+                        client.options.windows[data.name].options = data.value;
+                        if (!data.noSave)
+                            doUpdate(32);
+                    }
+                    else if (data.type === 'window') {
+                        client.options.windows[data.name] = data.value || {};
+                        if (!data.noSave)
+                            doUpdate(32);
+                    }
+                    else if (data.type === 'normal') {
+                        client.options[data.name] = data.value;
+                        if (!data.noSave)
+                            doUpdate(32);
+                    }
+                });
+        
+                ipcRenderer.on('send-background', (event, command, noEcho, comments) => {
+                    client.sendBackground(command, noEcho, comments);
+                });
+        
+                ipcRenderer.on('send-command', (event, command, noEcho, comments) => {
+                    client.sendCommand(command, noEcho, comments);
+                });
+        
+                ipcRenderer.on('send-gmcp', (event, data) => {
+                    client.sendGMCP(data);
+                });
+        
+                ipcRenderer.on('send-raw', (event, raw) => {
+                    client.sendRaw(raw);
+                });
+        
+                ipcRenderer.on('send', (event, raw, echo) => {
+                    client.send(raw, echo);
+                });
+        
+                ipcRenderer.on('menu-reload', () => {
+                    if (!client) return;
+                    doUpdate(4);
+                });
+        */
         ipcRenderer.on('reload-profiles', () => {
             //client.loadProfiles();
             client.loadOptions();
