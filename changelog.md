@@ -2,6 +2,9 @@
 
 ## 0.19.5
 
+- **Changed:**
+  - About: rename memory tab to resources
+
 ## 0.19.4 2022-09-12
 
 - **New:**
