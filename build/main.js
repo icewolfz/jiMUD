@@ -738,7 +738,7 @@ app.on('activate', () => {
 });
 
 app.on('before-quit', async (e) => {
-    if (!await canCloseAllWindows()) {
+    if (!await canCloseAllWindows(true)) {
         e.preventDefault();
         return;
     }
@@ -1364,7 +1364,7 @@ ipcMain.on('update-client', (event, id, offset) => {
 ipcMain.on('quit', quitApp)
 
 async function quitApp() {
-    if (await canCloseAllWindows()) {
+    if (await canCloseAllWindows(true)) {
         if (_loaded && !_saved) {
             await saveWindowLayout();
             _saved = true;
@@ -1641,7 +1641,7 @@ function clientsChanged() {
     }
 }
 
-async function canCloseClient(id) {
+async function canCloseClient(id, warn) {
     const client = clients[id];
     let close = await executeScript('if(typeof closeable === "function") closeable()', client.view);
     //main client can not close so no need to check children
@@ -1650,28 +1650,38 @@ async function canCloseClient(id) {
     const wl = client.windows.length;
     for (let w = 0; w < wl; w++) {
         //check each child window just to be saft
-        close = await executeScript('if(typeof closeable === "function") closeable()', client.view);
+        close = await executeScript('if(typeof closeable === "function") closeable()', client.windows[w].window);
+        if (client.windows[w].window.isModal()) {
+            if (warn) {
+                dialog.showMessageBox(mWindow, {
+                    type: 'info',
+                    message: `All modal dialogs must be closed before you can exit.`
+                });
+                client.windows[w].window.focus();
+            }
+            return false;
+        }
         if (close === false)
             return false;
     }
     return true;;
 }
 
-async function canCloseAllClients(windowId) {
+async function canCloseAllClients(windowId, warn) {
     const cl = windows[windowId].clients.length;
     for (var idx = 0; idx < cl; idx++) {
-        const close = await canCloseClient(windows[windowId].clients[idx]);
+        const close = await canCloseClient(windows[windowId].clients[idx], warn);
         if (!close)
             return false;
     }
     return true;
 }
 
-async function canCloseAllWindows() {
+async function canCloseAllWindows(warn) {
     for (window in windows) {
         if (!Object.prototype.hasOwnProperty.call(windows, window))
             continue;
-        const close = await canCloseAllClients(window);
+        const close = await canCloseAllClients(window, warn);
         if (!close)
             return false;
     }
