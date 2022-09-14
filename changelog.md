@@ -7,6 +7,7 @@
 - **Changed:**
   - About: rename memory tab to resources
   - Exclude a bundled module to make packaged size smaller
+  - Update mathjs 11.2.0 to 11.2.1
 
 ## 0.19.4 2022-09-12
 
