@@ -299,7 +299,7 @@ export class Menubar {
             this._rTimeout = 0
             this.doUpdate(this.$updating);
         };
-        if (typeof window !== 'undefined')
+        if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function')
             this._rTimeout = window.requestAnimationFrame(upFun);
         else
             this._rTimeout = setTimeout(upFun, 100);
