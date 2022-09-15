@@ -571,7 +571,7 @@ function createDialog(options) {
         if (options.show)
             window.show();
         if (global.debug)
-            window.webContents.openDevTools({ activate: false });
+            openDevtools(window.webContents, { activate: false });
     });
     addInputContext(window, set.spellchecking);
     return window;
@@ -1595,9 +1595,9 @@ function createClient(options) {
     if (options.data && options.data.state) {
         view.setBounds(options.data.state.bounds);
         if (global.debug)
-            view.webContents.openDevTools({ activate: false });
+            openDevtools(view.webContents, { activate: false });
         else if (options.data.state.devTools)
-            view.webContents.openDevTools();
+            openDevtools(view.webContents);
     }
     else {
         view.setBounds({
@@ -1607,7 +1607,7 @@ function createClient(options) {
             height: options.bounds.height
         });
         if (global.debug)
-            view.webContents.openDevTools({ activate: false });
+            openDevtools(view.webContents, { activate: false });
     }
     //TODO change to index.html once basic window system is working
     view.webContents.loadFile(options.file);
@@ -1762,7 +1762,7 @@ function initializeChildWindow(window, link, details) {
         if (!details.options.hide)
             window.show();
         if (global.debug)
-            window.webContents.openDevTools({ activate: false });
+            openDevtools(window.webContents, { activate: false });
     });
     window.webContents.on('render-process-gone', (event, goneDetails) => {
         logError(`${link} render process gone, reason: ${goneDetails.reason}, exitCode ${goneDetails.exitCode}\n`, true);
@@ -2756,9 +2756,9 @@ function restoreWindowState(window, state) {
     if (state.fullscreen)
         window.setFullScreen(state.fullscreen);
     if (global.debug)
-        window.webContents.openDevTools({ activate: false });
+        openDevtools(window.webContents, { activate: false });
     else if (state.devTools)
-        window.webContents.openDevTools();
+        openDevtools(window.webContents);
     if (!state.enabled)
         window.setEnabled(false);
     if (state.alwaysOnTop)
@@ -3754,6 +3754,10 @@ function openPreferences(parent) {
     }
 }
 //#endregion
+
+async function openDevtools(window, options) {
+    window.openDevTools(options);
+}
 
 const timers = [];
 function StartDebugTimer() {

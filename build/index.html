@@ -936,6 +936,93 @@
             }, 100);
         }
         //#endregion
+        async function initBackup() {
+            //_backup = new Backup(client, ipcRenderer.sendSync('get-global', 'mapFile'));
+            _backup = new (require('./js/backup.js').Backup)(client, _windowState.data.map);
+            _backup.loadSelection = client.options.backupLoad;
+            _backup.saveSelection = client.options.backupSave;
+
+            _backup.on('progress-start', (title) => {
+                updateProgress({ value: 0 });
+                client.debug('Flushing map');
+                document.getElementById('Progressbar').innerHTML = '<progress max="100"></progress>';
+                document.getElementById('ProgressTitle').innerHTML = title || 'Importing data&hellip;';
+                document.getElementById('Progress').showModal();
+            });
+
+            _backup.on('error', (err) => {
+                if (document.getElementById('Progress').open)
+                    document.getElementById('Progress').close();
+                updateProgress({ value: -1 });
+                client.error(err);
+                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    type: 'error',
+                    title: 'Import error',
+                    message: err || 'Error importing or exporting data.'
+                });
+                setTimeout(() => {
+                    ipcRenderer.invoke('window', 'focus');
+                }, 500);
+                client.commandInput.focus()
+            });
+
+            _backup.on('abort', (err) => {
+                if (document.getElementById('Progress').open)
+                    document.getElementById('Progress').close();
+                updateProgress({ value: -1 });
+                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    type: 'error',
+                    title: 'Aborted',
+                    message: err || 'Aborted importing or exporting data.'
+                });
+                setTimeout(() => {
+                    ipcRenderer.invoke('window', 'focus');
+                }, 500);
+                client.commandInput.focus()
+            });
+
+            _backup.on('close', () => {
+                if (document.getElementById('Progress').open)
+                    document.getElementById('Progress').close();
+                client.commandInput.focus()
+                setTimeout(() => {
+                    ipcRenderer.invoke('window', 'focus');
+                }, 500);
+                updateProgress({ value: -1 });
+            });
+
+            _backup.on('progress', (value) => {
+                $('#Progress progress').val(value);
+                updateProgress({ value: value / 100.0 });
+            });
+
+            _backup.on('import-map', (data) => {
+                //TODO open map window and reload map as new data imported, needs access to the new mapper window
+                //ipcRenderer.send('import-map', data);
+                /*
+                if(!windows['mapper']) 
+                    openMapper(true);
+                windows['mapper'].import(data);
+                */
+            });
+
+            _backup.on('imported-profiles', () => {
+                ipcRenderer.send('reload-profiles');
+            });
+
+            _backup.on('imported-settings', () => {
+                doUpdate(3);
+            });
+
+            _backup.on('finish-load', () => {
+                client.raise('backup-loaded');
+            });
+
+            _backup.on('finish-save', () => {
+                client.raise('backup-saved');
+            });
+        }
+
         function init() {
             //TODO need to redo this if upgrade to newer bootstrap and move away from jquery but as of current used bootstrap impossible to remove
             $('.dropdown').on('show.bs.dropdown', () => {
@@ -1981,90 +2068,7 @@
                 ipcRenderer.send('update-title', { title: title });
             });
             //#endregion
-            //_backup = new Backup(client, ipcRenderer.sendSync('get-global', 'mapFile'));
-            _backup = new (require('./js/backup.js').Backup)(client, _windowState.data.map);
-            _backup.loadSelection = client.options.backupLoad;
-            _backup.saveSelection = client.options.backupSave;
-
-            _backup.on('progress-start', (title) => {
-                updateProgress({ value: 0 });
-                client.debug('Flushing map');
-                document.getElementById('Progressbar').innerHTML = '<progress max="100"></progress>';
-                document.getElementById('ProgressTitle').innerHTML = title || 'Importing data&hellip;';
-                document.getElementById('Progress').showModal();
-            });
-
-            _backup.on('error', (err) => {
-                if (document.getElementById('Progress').open)
-                    document.getElementById('Progress').close();
-                updateProgress({ value: -1 });
-                client.error(err);
-                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
-                    type: 'error',
-                    title: 'Import error',
-                    message: err || 'Error importing or exporting data.'
-                });
-                setTimeout(() => {
-                    ipcRenderer.invoke('window', 'focus');
-                }, 500);
-                client.commandInput.focus()
-            });
-
-            _backup.on('abort', (err) => {
-                if (document.getElementById('Progress').open)
-                    document.getElementById('Progress').close();
-                updateProgress({ value: -1 });
-                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
-                    type: 'error',
-                    title: 'Aborted',
-                    message: err || 'Aborted importing or exporting data.'
-                });
-                setTimeout(() => {
-                    ipcRenderer.invoke('window', 'focus');
-                }, 500);
-                client.commandInput.focus()
-            });
-
-            _backup.on('close', () => {
-                if (document.getElementById('Progress').open)
-                    document.getElementById('Progress').close();
-                client.commandInput.focus()
-                setTimeout(() => {
-                    ipcRenderer.invoke('window', 'focus');
-                }, 500);
-                updateProgress({ value: -1 });
-            });
-
-            _backup.on('progress', (value) => {
-                $('#Progress progress').val(value);
-                updateProgress({ value: value / 100.0 });
-            });
-
-            _backup.on('import-map', (data) => {
-                //TODO open map window and reload map as new data imported, needs access to the new mapper window
-                //ipcRenderer.send('import-map', data);
-                /*
-                if(!windows['mapper']) 
-                    openMapper(true);
-                windows['mapper'].import(data);
-                */
-            });
-
-            _backup.on('imported-profiles', () => {
-                ipcRenderer.send('reload-profiles');
-            });
-
-            _backup.on('imported-settings', () => {
-                doUpdate(3);
-            });
-
-            _backup.on('finish-load', () => {
-                client.raise('backup-loaded');
-            });
-
-            _backup.on('finish-save', () => {
-                client.raise('backup-saved');
-            });
+            initBackup();
 
             //_status = new Status(client);
             _status = new (require('./js/status.js').Status)(client);
@@ -3202,7 +3206,7 @@
             delete _windows[file];
         }
 
-        function openWindow(name, data) {
+        async function openWindow(name, data) {
             if (name === 'log-viewer')
                 name = 'log.viewer';
             else if (name === 'preferences' || name === 'options')
@@ -3260,7 +3264,7 @@
             return Object.keys(options).filter(key => filters.indexOf(key) !== -1).map(key => `${key}=${options[key]}`).join(',');
         }
 
-        function initWindows() {
+        async function initWindows() {
             var enableBackgroundThrottling = ipcRenderer.sendSync('get-setting', 'theme');
             if (!_windows['mapper.html']) {
                 if (client.options.showMapper)
