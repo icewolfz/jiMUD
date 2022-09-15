@@ -570,8 +570,8 @@ function createDialog(options) {
     window.once('ready-to-show', () => {
         if (options.show)
             window.show();
-        if (global.debug || set.enableDebug)
-            window.webContents.openDevTools();
+        if (global.debug)
+            window.webContents.openDevTools({ activate: false });
     });
     addInputContext(window, set.spellchecking);
     return window;
@@ -1594,7 +1594,9 @@ function createClient(options) {
     })
     if (options.data && options.data.state) {
         view.setBounds(options.data.state.bounds);
-        if (options.data.state.devTools || global.debug || set.enableDebug)
+        if (global.debug)
+            view.webContents.openDevTools({ activate: false });
+        else if (options.data.state.devTools)
             view.webContents.openDevTools();
     }
     else {
@@ -1604,8 +1606,8 @@ function createClient(options) {
             width: options.bounds.width,
             height: options.bounds.height
         });
-        if (global.debug || set.enableDebug)
-            view.webContents.openDevTools();
+        if (global.debug)
+            view.webContents.openDevTools({ activate: false });
     }
     //TODO change to index.html once basic window system is working
     view.webContents.loadFile(options.file);
@@ -1759,8 +1761,8 @@ function initializeChildWindow(window, link, details) {
         })();`, window);
         if (!details.options.hide)
             window.show();
-        if (global.debug || set.enableDebug)
-            window.webContents.openDevTools();
+        if (global.debug)
+            window.webContents.openDevTools({ activate: false });
     });
     window.webContents.on('render-process-gone', (event, goneDetails) => {
         logError(`${link} render process gone, reason: ${goneDetails.reason}, exitCode ${goneDetails.exitCode}\n`, true);
@@ -2734,7 +2736,7 @@ function saveWindowState(window) {
         fullscreen: window.isFullScreen(),
         maximized: window.isMaximized(),
         minimized: window.isMinimized(),
-        devTools: global.debug || set.enableDebug ? false : window.webContents.isDevToolsOpened(),
+        devTools: global.debug ? false : window.webContents.isDevToolsOpened(),
         visible: window.isVisible(),
         normal: window.isNormal(),
         enabled: window.isEnabled(),
@@ -2753,7 +2755,9 @@ function restoreWindowState(window, state) {
     window.show();
     if (state.fullscreen)
         window.setFullScreen(state.fullscreen);
-    if (state.devTools || global.debug || set.enableDebug)
+    if (global.debug)
+        window.webContents.openDevTools({ activate: false });
+    else if (state.devTools)
         window.webContents.openDevTools();
     if (!state.enabled)
         window.setEnabled(false);
