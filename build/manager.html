@@ -161,6 +161,7 @@
 
         ipcRenderer.on('reload-options', () => {
             tabstrip.hideTabstrip = !ipcRenderer.sendSync('get-setting', 'alwaysShowTabs');
+            tabstrip.refresh();
         })
         
         function addClient(client) {

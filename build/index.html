@@ -2665,7 +2665,14 @@
                 { menu: ['file', 'enableParsing'], options: { checked: client.enableParsing } },
                 { menu: ['file', 'enableTriggers'], options: { checked: client.enableTriggers } }
             ];
-            menu.push({ menu: ['file', 'preferences'], options: { visible: ipcRenderer.sendSync('get-global', 'settingsFile') !== _windowState.data.settings } })
+            if (ipcRenderer.sendSync('get-global', 'settingsFile') === _windowState.data.settings) {
+                menu.push({ menu: ['file', 'preferences'], options: { visible: false } })
+                menu.push({ menu: ['file', 'globalPreferences'], options: { label: '&Preferences...' } })
+            }
+            else {
+                menu.push({ menu: ['file', 'preferences'], options: { visible: true } })
+                menu.push({ menu: ['file', 'globalPreferences'], options: { label: '&Global Preferences...' } })
+            }
             for (var profile in client.profiles.items)
                 menu.push({ menu: ['profiles', profile], options: { checked: client.enabledProfiles.indexOf(profile) != -1 } });
 
@@ -3195,6 +3202,8 @@
         function openWindow(name, data) {
             if (name === 'log-viewer')
                 name = 'log.viewer';
+            else if (name === 'preferences' || name === 'options')
+                name = 'prefs';
             if (_windows[name + '.html']) {
                 _windows[name + '.html'].show();
                 _windows[name + '.html'].focus();
@@ -3229,6 +3238,9 @@
                     if (data && data.state)
                         _options += ',' + buildWindowOptions(data.state, ['bounds']);
                     _windows['chat.html'] = window.open('chat.html', 'Chat', `alwaysOnTopClient=${client.options.chat.alwaysOnTopClient},alwaysOnTop=${client.options.chat.alwaysOnTop},showInTaskBar=${client.options.chat.showInTaskBar},defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/chat.png')}${_options}`);
+                    break;
+                case 'prefs':
+                    _windows['prefs.html'] = window.open('prefs.html', 'modal', 'width=800,height=460,backgroundColor=#fff,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
                     break;
                 case 'code.editor':
                 case 'immortal':

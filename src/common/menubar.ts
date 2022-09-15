@@ -34,7 +34,7 @@ export class Menubar {
     private _menubar;
     private $cache = {};
     private $updating;
-    private _rTimeout:any = 0;
+    private _rTimeout: any = 0;
     private $enabled = true;
     private $busy = false;
 
@@ -139,13 +139,18 @@ export class Menubar {
             item.visible = options.visible ? true : false;
         if (options.position != null)
             item.position = options.position;
-
+        if (options.label != null) {
+            item.label = options.label;
+            if (!noRebuild)
+                this.doUpdate(1);
+        }
         if (!tItem.hasOwnProperty('rootEnabled'))
             tItem.enabled = item.enabled;
         tItem.checked = item.checked;
         tItem.icon = item.icon;
         tItem.visible = item.visible;
         tItem.position = item.position;
+        tItem.label = item.label;
         if (options.submenu != null) {
             tItem.submenu = options.submenu;
             if (!noRebuild)
@@ -207,6 +212,11 @@ export class Menubar {
                 item.visible = options.visible ? true : false;
             if (options.position != null)
                 item.position = options.position;
+            if (options.label != null) {
+                item.label = options.label;
+                if (!noRebuild)
+                    build = build || true;
+            }
 
             if (!tItem.hasOwnProperty('rootEnabled'))
                 tItem.enabled = item.enabled;
@@ -214,6 +224,7 @@ export class Menubar {
             tItem.icon = item.icon;
             tItem.visible = item.visible;
             tItem.position = item.position;
+            tItem.label = item.label;
             if (options.submenu != null) {
                 tItem.submenu = options.submenu;
                 build = build || true;

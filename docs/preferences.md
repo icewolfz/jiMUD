@@ -9,7 +9,7 @@ Reset - Resetting will revert all settings back to default values
 - `Auto login` Attempt to auto login using character and supplied password from character manager
 - `Auto takeover login` Automatically issue yes to takeover character after login
 - `Show character manager onload` open the character manager when the client first loads.
-- `Enable spellchecking` support spellchecking in command line and advanced editor **Requires restart**
+- `Enable spellchecking` support spellchecking in command line and advanced editor **Requires restart** <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
 - `Persistent advanced editor` causes the advanced editor to remain in memory to help speed up load times on future uses
 - `Theme` the theme for the main client window, the theme list is built from built in themes and themes located in {data}\themes folder and {documents}\jiMUD\themes, see [customizing](customizing.md#themes) doc for more themes information
 - `On disconnect do` What to do when disconnected from the mud
@@ -20,9 +20,9 @@ Reset - Resetting will revert all settings back to default values
   - `Close` close the client
 - `Auto connect delay` This determines the delay before an auto connect happens
 - `Max reconnect delay` set the maximum time in seconds, for reconnecting when using reconnect dialog, setting to 0 will revert to classic unlimited behavior.
-- `Check for updates on load` check for new version every time you load the client
+- `Check for updates on load` check for new version every time you load the client <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
 - `Enable sound` disable or enable sound globally
-- `Always show window tabs` always show tabs even if only one client open
+- `Always show window tabs` always show tabs even if only one client open <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
 
 ## Display
 
@@ -221,10 +221,10 @@ Controls what is captured into the chat window
 - `Enable debug` Will display debug data to the dev tool console
 - `Log errors` Log errors to {data}/jimud.error.log [FAQ - Predefined path variables](faq.md#what-predefined-variables-can-be-use-for-paths)
 - `Show extended error messages` Display extended stack information for errors
-- `Fix hidden windows` Move windows that have been hidden off screen to on onscreen
-- `Hide when minimized` will hide the main window and any window set as a child **note** due to bugs in linux this feature may not work
-- `Show in taskbar` will show or hide the main window from the system's taskbar
-- `Enable Background Throttling` disable or enable throttling when a window is in the background or hidden
+- `Fix hidden windows` Move windows that have been hidden off screen to on onscreen <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
+- `Hide when minimized` will hide the main window and any window set as a child **note** due to bugs in linux this feature may not work <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
+- `Show in taskbar` will show or hide the main window from the system's taskbar <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
+- `Enable Background Throttling` disable or enable throttling when a window is in the background or hidden <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
 - `Enable warning dialog when connected and closing client` disable or enable warning check when closing mud and connected
 - `Enable warning dialog when closing client and child windows are open` disable or enable warning dialog when closing and child windows are open
 - `Enable warning dialog when loading a character from manager` disable or enable warning dialog when loading a character
@@ -275,7 +275,7 @@ Controls what is captured into the chat window
 - `Profile to select on load` select which profile to pick when profile manager is first opened, falls back to Default if profile not found
 - `Expand selected profile on load` auto expand selected profile when profile manager is first opened
 
-## Advanced > Tray
+## Advanced > Tray <span style="font-size: 0.5em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preferences*</span>
 
 - `Show tray icon` display an icon in the system tray/notification area
 - `Tray icon single click` set what happens when the tray icon is clicked  **note** see known issues with linux

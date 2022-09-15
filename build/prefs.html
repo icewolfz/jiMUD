@@ -107,16 +107,17 @@
         var archiver, archive;
 
         var _settingsFile;
+        var _globalFile = ipcRenderer.sendSync('get-global', 'settingsFile');
         if (window.opener) {
             if (typeof window.opener.getSettings === 'function')
                 _settingsFile = window.opener.getSettings();
             else
                 _settingsFile = window.opener._windowState.data.settings;
-            if (_settingsFile === ipcRenderer.sendSync('get-global', 'settingsFile'))
+            if (_settingsFile === _globalFile)
                 document.title = 'Global Preferences';
         }
         else {
-            _settingsFile = ipcRenderer.sendSync('get-global', 'settingsFile');
+            _settingsFile = _globalFile;
             document.title = 'Global Preferences';
         }
         var _settings;
@@ -133,6 +134,57 @@
 
         $(document).ready(() => {
             _settings = Settings.load(_settingsFile);
+            data = [
+                { text: 'General' },
+                {
+                    text: 'Display',
+                    nodes: [
+                        { text: 'Fonts', dataAttr: { title: 'Display > Fonts', pane: 'display-fonts' } },
+                    ]
+                },
+                { text: 'Command line' },
+                { text: 'Colors' },
+                {
+                    text: 'Logging',
+                    nodes: [
+                        { text: 'Viewer', dataAttr: { title: 'Logging > Viewer', pane: 'logging-viewer' } },
+                    ]
+                },
+                { text: 'Telnet' },
+                {
+                    text: 'Mapper',
+                    nodes: [
+                        { text: 'Window', dataAttr: { title: 'Mapper > Window', pane: 'mapper-window' } },
+                    ]
+                },
+                {
+                    text: 'Chat',
+                    nodes: [
+                        { text: 'Display', dataAttr: { title: 'Chat > Display', pane: 'chat-display' } },
+                        { text: 'Window', dataAttr: { title: 'Chat > Window', pane: 'chat-window' } },
+                    ]
+                },
+                { text: 'Code Editor' },
+                { text: 'Status' },
+                {
+                    text: 'Scripting',
+                    nodes: [
+                        { text: 'Special characters', dataAttr: { title: 'Scripting > Special characters' } },
+                    ]
+                },
+                {
+                    text: 'Advanced',
+                    nodes: [
+                        { text: 'Backup' },
+                        { text: 'Connection' },
+                        { text: 'Profiles' },
+                        { text: 'Profile manager' }
+                    ]
+                },
+            ]
+            if (_settingsFile === _globalFile) {
+                data[data.length - 1].nodes.push({ text: 'Tray' });
+            }
             $('#pref-tree').treeview({
                 showBorder: false,
                 showImage: true,
@@ -158,55 +210,7 @@
                     else
                         $('#pref-title').html(node.text);
                 },
-                data: [
-                    { text: 'General' },
-                    {
-                        text: 'Display',
-                        nodes: [
-                            { text: 'Fonts', dataAttr: { title: 'Display > Fonts', pane: 'display-fonts' } },
-                        ]
-                    },
-                    { text: 'Command line' },
-                    { text: 'Colors' },
-                    {
-                        text: 'Logging',
-                        nodes: [
-                            { text: 'Viewer', dataAttr: { title: 'Logging > Viewer', pane: 'logging-viewer' } },
-                        ]
-                    },
-                    { text: 'Telnet' },
-                    {
-                        text: 'Mapper',
-                        nodes: [
-                            { text: 'Window', dataAttr: { title: 'Mapper > Window', pane: 'mapper-window' } },
-                        ]
-                    },
-                    {
-                        text: 'Chat',
-                        nodes: [
-                            { text: 'Display', dataAttr: { title: 'Chat > Display', pane: 'chat-display' } },
-                            { text: 'Window', dataAttr: { title: 'Chat > Window', pane: 'chat-window' } },
-                        ]
-                    },
-                    { text: 'Code Editor' },
-                    { text: 'Status' },
-                    {
-                        text: 'Scripting',
-                        nodes: [
-                            { text: 'Special characters', dataAttr: { title: 'Scripting > Special characters' } },
-                        ]
-                    },
-                    {
-                        text: 'Advanced',
-                        nodes: [
-                            { text: 'Backup' },
-                            { text: 'Connection' },
-                            { text: 'Profiles' },
-                            { text: 'Profile manager' },
-                            { text: 'Tray' }
-                        ]
-                    },
-                ],
+                data: data,
                 onInitialized: () => {
                     $('#pref-tree').treeview('expandAll', { levels: 5, silent: true });
                     const n = $('#pref-tree').treeview('findNodes', ['^General$', 'text']);
@@ -222,10 +226,10 @@
                 $('.linux').css('display', 'inline-block');
             else
                 $('.linux').css('display', 'none');
-            if (_settingsFile === ipcRenderer.sendSync('get-global', 'settingsFile'))
+            if (_settingsFile === _globalFile)
                 $('.global').css('display', '');
             else
-                $('.linux').css('display', 'none');
+                $('.global').css('display', 'none');
             fontList.getFonts()
                 .then(fonts => {
                     var fl = fonts.length;
@@ -1234,7 +1238,7 @@
             _settings.save(_settingsFile);
             ipcRenderer.send('reload-options', _settingsFile, window.opener && typeof window.opener.getId === 'function' ? window.opener.getId() : 0);
             if (window.opener && typeof window.opener.reloadOptions === 'function')
-                window.opener.reloadOptions(_settingsFile, ipcRenderer.sendSync('get-global', 'settingsFile') === _settingsFile);
+                window.opener.reloadOptions(_settingsFile, _globalFile === _settingsFile);
             window.close();
         }
 
@@ -1353,7 +1357,7 @@
                             <input type="checkbox" id="showCharacterManager" /> Show character manager on load
                         </label>
                     </div>
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-6 form-group global">
                         <label class="control-label">
                             <input type="checkbox" id="spellchecking" /> Enable spellchecking
                         </label>
@@ -1406,7 +1410,7 @@
                             </div>
                         </label>
                     </div>
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-6 form-group global">
                         <label class="control-label">
                             <input type="checkbox" id="checkForUpdates" /> Check for updates on load
                         </label>
@@ -1416,7 +1420,7 @@
                             <input type="checkbox" id="enableSound" /> Enable sound
                         </label>
                     </div>
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-6 form-group global">
                         <label class="control-label">
                             <input type="checkbox" id="alwaysShowTabs" /> Always show window tabs
                         </label>
@@ -2332,22 +2336,22 @@
                             <input type="checkbox" id="showErrorsExtended" /> Show extended error messages
                         </label>
                     </div>
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-6 form-group global">
                         <label class="control-label">
                             <input type="checkbox" id="fixHiddenWindows" /> Fix hidden windows
                         </label>
                     </div>
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-6 form-group global">
                         <label class="control-label">
                             <input type="checkbox" id="hideOnMinimize" /> Hide when minimized
                         </label>
                     </div>
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-6 form-group global">
                         <label class="control-label">
                             <input type="checkbox" id="showInTaskBar" /> Show in taskbar
                         </label>
                     </div>
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-6 form-group global">
                         <label class="control-label">
                             <input type="checkbox" id="enableBackgroundThrottling" /> Enable Background Throttling
                         </label>
@@ -2499,7 +2503,7 @@
                         </label>
                     </div>
                 </div>
-                <div role="tabpanel" class="pref-pane" id="tray">
+                <div role="tabpanel" class="pref-pane global" id="tray">
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="showTrayIcon" /> Show tray icon

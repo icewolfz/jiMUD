@@ -1446,8 +1446,8 @@ ipcMain.on('set-preference', (event, preference, value) => {
     set[preference] = value;
 });
 
-ipcMain.on('reload-options', (events, settings, clientId) => {
-    if (settings === global.settingsFile) {
+ipcMain.on('reload-options', (events, preferences, clientId) => {
+    if (preferences === global.settingsFile) {
         set = settings.Settings.load(global.settingsFile);
         for (window in windows) {
             if (!Object.prototype.hasOwnProperty.call(windows, window))
@@ -1459,7 +1459,7 @@ ipcMain.on('reload-options', (events, settings, clientId) => {
     for (id in clients) {
         if (!Object.prototype.hasOwnProperty.call(clients, id) || getClientId(clients[id].view) === clientId)
             continue;
-        clients[id].view.webContents.send('reload-options', settings, settings === global.settingsFile);
+        clients[id].view.webContents.send('reload-options', preferences, preferences === global.settingsFile);
         updateWebContents(clients[id].view.webContents, set);
     }
 });
@@ -2870,13 +2870,13 @@ function createMenu() {
                     type: 'separator'
                 },
                 {
-                    label: 'Global &Preferences...',
+                    label: '&Global Preferences...',
                     id: 'globalPreferences',
                     accelerator: 'CmdOrCtrl+Comma',
                     click: (item, mWindow) => openPreferences(mWindow)
                 },
                 {
-                    label: 'Client &Preferences...',
+                    label: '&Preferences...',
                     id: 'preferences',
                     accelerator: 'CmdOrCtrl+Comma',
                     click: (item, mWindow) => executeScriptClient('openWindow("prefs");', mWindow, true)
@@ -3684,7 +3684,8 @@ function updateMenuItem(window, menuitem, rebuild) {
 function updateMenuItems(window, menuitems, rebuild) {
     if (!window || !windows[getWindowId(window)].menubar) return;
     windows[getWindowId(window)].menubar.updateItems(menuitems);
-    windows[getWindowId(windows[window])].menubar.rebuild();
+    if (rebuild)
+        windows[getWindowId(windows[window])].menubar.rebuild();
 }
 
 function updateMenuItemAll(menuitem, rebuild) {
