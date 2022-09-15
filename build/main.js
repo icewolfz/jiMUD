@@ -2863,7 +2863,7 @@ function createMenu() {
                 {
                     label: '&View logs...',
                     click: (item, mWindow) => {
-                        executeScriptClient('showLogViewer()', mWindow, true);
+                        executeScriptClient('openWindow("log.viewer")', mWindow, true);
                     }
                 },
                 {
@@ -2879,21 +2879,23 @@ function createMenu() {
                     label: '&Preferences...',
                     id: 'preferences',
                     accelerator: 'CmdOrCtrl+Comma',
-                    click: (item, mWindow) => executeScriptClient('openWindow("prefs");', mWindow, true)
-                    ,
+                    click: (item, mWindow) => executeScriptClient('openWindow("prefs");', mWindow, true),
                     visible: false
                 },
                 {
                     type: 'separator'
                 },
                 {
-                    label: 'Clo&se Client',
+                    label: 'Clo&se',
                     id: 'close',
                     accelerator: 'CmdOrCtrl+W',
                     enabled: false,
                     visible: false,
                     click: (item, mWindow) => {
-
+                        if (windows[getWindowId(mWindow)].clients.length === 1)
+                            mWindow.close();
+                        else
+                            removeClient(windows[getWindowId(mWindow)].current, true);
                     }
                 },
                 {
@@ -3309,8 +3311,9 @@ function createMenu() {
         },
         //Window
         {
-            role: 'window',
+            //role: 'window',
             id: 'window',
+            label: '&Window',
             submenu: [
                 {
                     label: '&Advanced editor...',
@@ -3529,7 +3532,9 @@ function createMenu() {
                     type: 'separator'
                 },
                 {
-                    role: 'quit'
+                    label: 'E&xit',
+                    //role: 'quit'
+                    click: quitApp
                 }
             ]
         });
@@ -3554,9 +3559,14 @@ function createMenu() {
         // Window menu.
         menuTemp[5].submenu.push(
             {
-                label: 'Close',
+                label: 'Clo&se',
                 accelerator: 'CmdOrCtrl+W',
-                role: 'close'
+                click: (item, mWindow) => {
+                    if (windows[getWindowId(mWindow)].clients.length === 1)
+                        mWindow.close();
+                    else
+                        removeClient(windows[getWindowId(mWindow)].current, true);
+                }
             },
             {
                 label: 'Minimize',
@@ -3582,7 +3592,14 @@ function createMenu() {
                 role: 'minimize'
             },
             {
-                role: 'close'
+                label: 'Clo&se',
+                accelerator: 'CmdOrCtrl+W',
+                click: (item, mWindow) => {
+                    if (windows[getWindowId(mWindow)].clients.length === 1)
+                        mWindow.close();
+                    else
+                        removeClient(windows[getWindowId(mWindow)].current, true);
+                }
             }
         )
     }

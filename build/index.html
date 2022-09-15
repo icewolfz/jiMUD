@@ -1963,7 +1963,8 @@
                         break;
                     case 'log-viewer':
                     case 'logs':
-                        showLogViewer();
+                    case 'log.viewer':
+                        openWindow('log.viewer');
                         break;
                     case 'skills':
                         openWindow('skills');
@@ -2663,7 +2664,8 @@
                 { menu: ['file', 'connect'], options: { enabled: !client.connected } },
                 { menu: ['file', 'disconnect'], options: { enabled: client.connected } },
                 { menu: ['file', 'enableParsing'], options: { checked: client.enableParsing } },
-                { menu: ['file', 'enableTriggers'], options: { checked: client.enableTriggers } }
+                { menu: ['file', 'enableTriggers'], options: { checked: client.enableTriggers } },
+                { menu: ['file', 'close'], options: { visible: _clients.clients !== 1, enabled: _clients.clients !== 1 } }
             ];
             if (ipcRenderer.sendSync('get-global', 'settingsFile') === _windowState.data.settings) {
                 menu.push({ menu: ['file', 'preferences'], options: { visible: false } })
@@ -3192,6 +3194,7 @@
                 document.getElementById('drag-grip').style.display = 'inline-block';
             else
                 document.getElementById('drag-grip').style.display = 'none';
+            doUpdate(4);
         }
 
         // eslint-disable-next-line no-unused-vars
