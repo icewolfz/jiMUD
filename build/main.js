@@ -1736,7 +1736,7 @@ async function canCloseAllWindows(warn) {
     return true;
 }
 
-function initializeChildWindow(window, url, details) {
+function initializeChildWindow(window, link, details) {
     require("@electron/remote/main").enable(window.webContents);
     window.removeMenu();
     window.once('ready-to-show', () => {
@@ -1756,7 +1756,7 @@ function initializeChildWindow(window, url, details) {
             window.webContents.openDevTools();
     });
     window.webContents.on('render-process-gone', (event, goneDetails) => {
-        logError(`${url} render process gone, reason: ${goneDetails.reason}, exitCode ${goneDetails.exitCode}\n`, true);
+        logError(`${link} render process gone, reason: ${goneDetails.reason}, exitCode ${goneDetails.exitCode}\n`, true);
     });
     window.on('unresponsive', () => {
         dialog.showMessageBox({
@@ -1768,13 +1768,13 @@ function initializeChildWindow(window, url, details) {
                 return;
             if (result.response === 0) {
                 childWindow.reload();
-                logError(`${url} unresponsive, reload.\n`, true);
+                logError(`${link} unresponsive, reload.\n`, true);
             }
             else if (result.response === 2) {
                 childWindow.destroy();
             }
             else
-                logError(`${url} unresponsive, waiting.\n`, true);
+                logError(`${link} unresponsive, waiting.\n`, true);
         });
     });
 

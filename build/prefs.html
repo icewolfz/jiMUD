@@ -106,7 +106,15 @@
         var currentColors;
         var archiver, archive;
 
-        var _settingsFile = window.opener ? window.opener._windowState.data.settings : ipcRenderer.sendSync('get-global', 'settingsFile');
+        var _settingsFile;
+        if (window.opener) {
+            if (typeof window.opener.getSettings === 'function')
+                _settingsFile = window.opener.getSettings();
+            else
+                _settingsFile = window.opener._windowState.data.settings;
+        }
+        else
+            _settingsFile = ipcRenderer.sendSync('get-global', 'settingsFile');
         var _settings;
 
         if (window.module) module = window.module;
@@ -1220,8 +1228,8 @@
         function saveSettings() {
             _settings.chat.lines = $('#chat-lines').val().split(',');
             _settings.save(_settingsFile);
-            ipcRenderer.send('reload-options', _settingsFile, window.opener ? window.opener.getId() : 0);
-            if (window.opener)
+            ipcRenderer.send('reload-options', _settingsFile, window.opener && typeof window.opener.getId === 'function' ? window.opener.getId() : 0);
+            if (window.opener && typeof window.opener.reloadOptions === 'function')
                 window.opener.reloadOptions(_settingsFile, ipcRenderer.sendSync('get-global', 'settingsFile') === _settingsFile);
             window.close();
         }
@@ -1408,7 +1416,7 @@
                         <label class="control-label">
                             <input type="checkbox" id="alwaysShowTabs" /> Always show window tabs
                         </label>
-                    </div>                    
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="display">
                     <div class="col-sm-6 form-group">

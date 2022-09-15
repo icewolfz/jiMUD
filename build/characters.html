@@ -420,12 +420,12 @@
                         defaultId: 1,
                     });
                     if (response === 0) {
-                        d = Settings.load(parseTemplate(path.join('{data}', 'settings.json')));
+                        d = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
                         d.save(sf);
                     }
                 }
                 else {
-                    d = Settings.load(parseTemplate(path.join('{data}', 'settings.json')));
+                    d = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
                     d.save(sf);
                 }
                 sf = parseTemplate(character.Map);
@@ -946,6 +946,18 @@
             //TODO an option to close window after load
             //window.close();
         }
+
+        function getSettings() {
+            if (!current) return ipcRenderer.sendSync('get-global', 'settingsFile');
+            return parseTemplate(current.Preferences);
+        }
+
+        function openPreferences() {
+            var prefs = window.open('prefs.html', 'modal', 'width=800,height=460,backgroundColor=#fff,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
+            prefs.addEventListener('load', ()=> {
+                prefs.document.title = 'Preferences for ' + current.Title;
+            });            
+        }
     </script>
     <style type="text/css">
         .form-control-feedback,
@@ -1055,7 +1067,10 @@
                             <div class="input-group" style="width:100%;">
                                 <input disabled="disabled" class="form-control" style="width:100%" type="text" id="settings" data-field="Preferences">
                                 <span class="input-group-btn">
-                                    <button disabled="disabled" class="btn btn-default" type="button" onclick="openFile('#settings', ['json'])">
+                                    <button disabled="disabled" class="btn btn-default" title="Edit character preferences" type="button" onclick="openPreferences()">
+                                        <i class="fa fa-gears"></i>
+                                    </button>
+                                    <button disabled="disabled" class="btn btn-default" title="Browse for preference file" type="button" onclick="openFile('#settings', ['json'])">
                                         &hellip;
                                     </button>
                                 </span>
@@ -1065,7 +1080,7 @@
                             <div class="input-group" style="width:100%;">
                                 <input disabled="disabled" class="form-control" style="width:100%" type="text" id="map" data-field="Map">
                                 <span class="input-group-btn">
-                                    <button disabled="disabled" class="btn btn-default" type="button" onclick="openFile('#map', ['map', 'sqlite'])">
+                                    <button disabled="disabled" class="btn btn-default" title="Browse for map database file" type="button" onclick="openFile('#map', ['map', 'sqlite'])">
                                         &hellip;
                                     </button>
                                 </span>
@@ -1075,7 +1090,7 @@
                             <div class="input-group" style="width:100%;">
                                 <input disabled="disabled" class="form-control" style="width:100%" type="text" id="notes-path" data-field="Notes">
                                 <span class="input-group-btn">
-                                    <button disabled="disabled" class="btn btn-default" type="button" onclick="openFile('#notes-path', ['notes', 'txt'])">
+                                    <button disabled="disabled" class="btn btn-default" type="button" title="Browse for notes file" onclick="openFile('#notes-path', ['notes', 'txt'])">
                                         &hellip;
                                     </button>
                                 </span>
