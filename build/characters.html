@@ -821,7 +821,7 @@
             archive = new archiver.ZipFile();
 
             if (isFileSync(path.join(data, 'characters.json.bak')))
-                archive.addFile(path.join(data, 'characters.sqlite'), 'characters.json.bak');
+                archive.addFile(path.join(data, 'characters.json.bak'), 'characters.json.bak');
             if (isFileSync(path.join(data, 'characters.sqlite')))
                 archive.addFile(path.join(data, 'characters.sqlite'), 'characters.sqlite');
             if (isFileSync(path.join(data, 'map.sqlite')))

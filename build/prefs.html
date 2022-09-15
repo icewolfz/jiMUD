@@ -893,13 +893,28 @@
         }
 
         function resetWindows() {
-            if (!_settings.windows) return;
+            /*
+            var choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                    {
+                        type: 'warning',
+                        title: 'Reset windows',
+                        message: 'Windows are stored separately, once reset positions can not be restored, reset?',
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1
+                    });
+                if (choice === 0) {
+                    //RESET
+                }      
+                */      
+            //if (!_settings.windows) return;
+            /*
             for (var name in _settings.windows) {
                 _settings.windows[name].x = 0;
                 _settings.windows[name].y = 0;
                 _settings.windows[name].width = 800;
                 _settings.windows[name].height = 600;
             }
+            */
         }
 
         function setColor(id, color, noChange) {
@@ -1260,8 +1275,10 @@
             var data = parseTemplate('{data}');
             archive = new archiver.ZipFile();
 
-            if (isFileSync(path.join(data, 'characters.json')))
-                archive.addFile(path.join(data, 'characters.json'), 'characters.json');
+            if (isFileSync(path.join(data, 'characters.json.bak')))
+                archive.addFile(path.join(data, 'characters.json.bak'), 'characters.json.bak');
+            if (isFileSync(path.join(data, 'characters.sqlite')))
+                archive.addFile(path.join(data, 'characters.sqlite'), 'characters.sqlite');
             if (isFileSync(path.join(data, 'map.sqlite')))
                 archive.addFile(path.join(data, 'map.sqlite'), 'map.sqlite');
             if (isFileSync(path.join(data, 'mail.sqlite')))
@@ -2756,7 +2773,8 @@
     <div class="dialog-footer">
         <button style="float: left" type="button" class="btn btn-default" onclick="resetSettings()">Reset</button>
         <button style="float: left" type="button" class="btn btn-default" onclick="backup()">Backup</button>
-        <button style="float: left" type="button" class="btn btn-default" onclick="resetWindows()">Reset Windows</button>
+        <!--TODO readd reset windows, this requires rethinking as states are stored in real time and updated based on window-->
+        <!--<button style="float: left" type="button" class="btn btn-default" onclick="resetWindows()">Reset Windows</button>-->
         <button style="float: right" type="button" class="btn btn-default" onclick="window.close()">Cancel</button>
         <button style="float: right" type="button" class="btn btn-primary" onclick="saveSettings()">Ok</button>
     </div>
