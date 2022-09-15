@@ -161,6 +161,7 @@
 
         ipcRenderer.on('reload-options', () => {
             tabstrip.hideTabstrip = !ipcRenderer.sendSync('get-setting', 'alwaysShowTabs');
+            tabstrip.showAddNewButton = ipcRenderer.sendSync('get-setting', 'showTabsAddNewButton');
             tabstrip.refresh();
         })
         
@@ -244,6 +245,7 @@
             tabstrip = new TabStrip();
             tabstrip.useNativeMenus = true;
             tabstrip.hideTabstrip = !ipcRenderer.sendSync('get-setting', 'alwaysShowTabs');
+            tabstrip.showAddNewButton = ipcRenderer.sendSync('get-setting', 'showTabsAddNewButton');            
             tabstrip.on('tab-strip-hidden', () => {
                 ipcRenderer.send('update-client', _current, 0);
             });
@@ -260,6 +262,9 @@
                     ipcRenderer.send('update-client', tabs[0].client, tabstrip.height);
                     ipcRenderer.send('update-client', _current, tabstrip.height);
                 }
+            });
+            tabstrip.on('add-tab', () => {
+                ipcRenderer.send('new-client');
             });
             tabstrip.on('tab-click', e => {
                 ipcRenderer.send('switch-client', e.tab.client, tabstrip.height);

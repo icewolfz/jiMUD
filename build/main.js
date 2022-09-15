@@ -878,6 +878,9 @@ ipcMain.on('get-setting', (event, key) => {
         case 'enableBackgroundThrottling':
             event.returnValue = set.enableBackgroundThrottling;
             return;
+        case 'showTabsAddNewButton':
+            event.returnValue = set.showTabsAddNewButton;
+            return;
         default:
             event.returnValue = null;
             break;
@@ -908,6 +911,10 @@ ipcMain.on('set-setting', (event, key, value) => {
             set.enableBackgroundThrottling = value;
             set.save(global.settingsFile);
             break;
+        case 'showTabsAddNewButton':
+            set.showTabsAddNewButton = value;
+            set.save(global.settingsFile);
+            break
     }
 });
 

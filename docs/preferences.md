@@ -23,6 +23,7 @@ Reset - Resetting will revert all settings back to default values
 - `Check for updates on load` check for new version every time you load the client <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
 - `Enable sound` disable or enable sound globally
 - `Always show window tabs` always show tabs even if only one client open <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
+- `Show add new button next to tabs` add a button to allow creation of new connections from tab strip <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
 
 ## Display
 

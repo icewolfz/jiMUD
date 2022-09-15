@@ -46,14 +46,25 @@ export class TabStrip extends EventEmitter {
     private $scrollRight: HTMLAnchorElement;
     private $scrollDropDown: HTMLButtonElement;
     private $scrollMenu: HTMLUListElement;
+    private $addNewButton: HTMLDivElement;
 
     private _updating: UpdateType = UpdateType.none;
     private _scroll: number = 0;
     private _scrollTimer: NodeJS.Timer;
     private $addCache = [];
     private $measure: HTMLElement;
+    private _showAddButton: boolean = true;
 
     private _tabID = 0;
+
+    public set showAddNewButton(value) {
+        if(this._showAddButton === value) return;
+        this.$addNewButton.style.display = value ? '' : 'none';
+        this._showAddButton = value;
+    }
+    public get showAddNewButton() {
+        return this._showAddButton;
+    }
 
     public set focused(value) {
         if (value)
@@ -187,6 +198,19 @@ export class TabStrip extends EventEmitter {
             this._scroll = 0;
         if (this._scroll > this.$tabstrip.scrollWidth - this.$tabstrip.clientWidth)
             this._scroll = this.$tabstrip.scrollWidth - this.$tabstrip.clientWidth;
+
+        if (this.tabs.length === 0) {
+            this.$addNewButton.style.right = '';
+            this.$addNewButton.style.left = '0px';
+        }
+        else if (this.$tabstrip.scrollWidth > this.$tabstrip.clientWidth) {
+            this.$addNewButton.style.left = '';
+            this.$addNewButton.style.right = '12px';
+        }
+        else {
+            this.$addNewButton.style.right = '';
+            this.$addNewButton.style.left = this.$tabstrip.lastElementChild.getBoundingClientRect().right + 'px';
+        }
         this.updateScrollButtons();
     }
 
@@ -292,7 +316,7 @@ export class TabStrip extends EventEmitter {
             return;
         if (!this.$scrollMenu || this.$scrollMenu.children.length !== this.tabs.length || this.$scrollMenu.children.length === 0 || !this.$scrollMenu.parentElement.classList.contains('open')) return;
         const tl = this.tabs.length;
-        const w = this._scroll + this.$tabstrip.clientWidth - this.$scrollLeft.offsetWidth - this.$scrollRight.offsetWidth - this.$scrollDropDown.offsetWidth;
+        const w = this._scroll + this.$tabstrip.clientWidth - this.$scrollLeft.offsetWidth - this.$scrollRight.offsetWidth - this.$scrollDropDown.offsetWidth - this.$addNewButton.offsetWidth;
         const l = this._scroll + this.$scrollLeft.offsetWidth;
         for (let t = 0; t < tl; t++) {
             if (this.tabs[t].tab.offsetLeft + this.tabs[t].tab.clientWidth >= l && this.tabs[t].tab.offsetLeft < w)
@@ -372,6 +396,16 @@ export class TabStrip extends EventEmitter {
         };
         this.$scrollLeft.classList.add('hidden');
         this.$el.appendChild(this.$scrollLeft);
+        this.$addNewButton = document.createElement('div');
+        this.$addNewButton.innerHTML = '<a  href="javascript:void(0)"><i class="fa fa-plus"></i></a>';
+        this.$addNewButton.id = 'cm-add-tab';
+        this.$addNewButton.firstElementChild.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            this.emit('add-tab');
+            //$(this.$scrollDropDown).trigger('click.bs.dropdown');
+        });
+        this.$el.appendChild(this.$addNewButton);        
         this.$scrollRight = document.createElement('a');
         this.$scrollRight.innerHTML = '<i class="fa fa-chevron-right"></i>';
         this.$scrollRight.id = 'cm-scroll-right';
@@ -390,6 +424,8 @@ export class TabStrip extends EventEmitter {
         };
         this.$scrollRight.classList.add('hidden');
         this.$el.appendChild(this.$scrollRight);
+
+
 
         const d = document.createElement('div');
         d.classList.add('dropdown');
@@ -464,6 +500,15 @@ export class TabStrip extends EventEmitter {
         if (!tab) return;
         const idx = this.getTabIndex(tab);
         if (idx === -1) return;
+        var bounds = tab.tab.getBoundingClientRect();
+        if (bounds.left <= this._scroll - 20) {
+            this._scroll = bounds.left - 20;
+        }
+        else if (this._showAddButton && !(bounds.left > this._scroll && bounds.right < this._scroll + this.$tabstrip.clientWidth - 56))
+            this._scroll = bounds.right;
+        else if (!this._showAddButton && !(bounds.left > this._scroll && bounds.right < this._scroll + this.$tabstrip.clientWidth - 32))
+            this._scroll = bounds.right;        
+        /*
         let i = 0;
         //TODO formula should be width - padding + borders, calculate padding/border sizes
         i = idx * (tab.tab.clientWidth - 8);
@@ -473,9 +518,10 @@ export class TabStrip extends EventEmitter {
         else {
             i += tab.tab.clientWidth - 8;
             //50 is tab strip right padding + width of scroll button + shadow width + drop down with
-            if (i >= this._scroll + this.$tabstrip.clientWidth - 58)
-                this._scroll = i + 58 - this.$tabstrip.clientWidth;
+            if (i >= this._scroll + this.$tabstrip.clientWidth - 136)
+                this._scroll = i + 136 - this.$tabstrip.clientWidth;
         }
+        */
         this.doUpdate(UpdateType.scroll);
     }
 
@@ -641,7 +687,7 @@ export class TabStrip extends EventEmitter {
     public addTab(title?: string | TabOptions, icon?: string, tooltip?: string) {
         var options: TabOptions = {};
         if (typeof title === 'string' || title instanceof String)
-            options = { title: <string>title, icon: icon, tooltip: tooltip ||  <string>title || ''};
+            options = { title: <string>title, icon: icon, tooltip: tooltip || <string>title || '' };
         else
             options = title || {};
         $('.dropdown.open').removeClass('open');
