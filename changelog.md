@@ -31,12 +31,14 @@
     - `Spellchecking` can only now be set as a global preference and requires a restart to effect any already opening clients or windows as it can only be set on window creation
     - `Theme` only the global preference theme will be used for all clients
 
-## 0.19.5
+## 0.19.5 2022-09-14
 
 - **Fixed:**
   - Immortal tools: Fixed a bug introduced in 19.4 performance updates
 - **Changed:**
   - About: rename memory tab to resources
+  - Exclude a bundled module to make packaged size smaller
+  - Update mathjs 11.2.0 to 11.2.1
 
 ## 0.19.4 2022-09-12
 
