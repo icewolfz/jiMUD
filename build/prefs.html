@@ -112,9 +112,13 @@
                 _settingsFile = window.opener.getSettings();
             else
                 _settingsFile = window.opener._windowState.data.settings;
+            if (_settingsFile === ipcRenderer.sendSync('get-global', 'settingsFile'))
+                document.title = 'Global Preferences';
         }
-        else
+        else {
             _settingsFile = ipcRenderer.sendSync('get-global', 'settingsFile');
+            document.title = 'Global Preferences';
+        }
         var _settings;
 
         if (window.module) module = window.module;
