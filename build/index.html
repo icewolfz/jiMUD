@@ -3029,61 +3029,6 @@
             }
             initWindows();
         }
-
-        function initWindows() {
-            var enableBackgroundThrottling = ipcRenderer.sendSync('get-setting', 'theme');
-            if (!_windows['mapper.html']) {
-                if (client.options.showMapper)
-                    openWindow('mapper');
-                else if (client.options.mapper.enabled || client.options.mapper.persistent)
-                    openWindow('mapper', { details: { hide: true } });
-            }
-            else
-                _windows['mapper.html'].update({
-                    alwaysOnTopClient: client.options.mapper.alwaysOnTop,
-                    alwaysOnTop: client.options.mapper.alwaysOnTopClient,
-                    showInTaskBar: client.options.mapper.showInTaskBar,
-                    enableBackgroundThrottling: enableBackgroundThrottling
-                });
-            if (!_windows['editor.html']) {
-                if (client.options.showEditor)
-                    openWindow('editor');
-                else if (client.options.editorPersistent)
-                    openWindow('editor', { details: { hide: true } });
-            }
-            else
-                _windows['editor.html'].update({
-                    enableBackgroundThrottling: enableBackgroundThrottling
-                });
-            if (!_windows['chat.html']) {
-                if (client.options.showChat)
-                    openWindow('chat');
-                else if (client.options.chat.persistent || client.options.chat.captureTells || client.options.chat.captureTalk || client.options.chat.captureLines)
-                    openWindow('chat', { details: { hide: true } });
-            }
-            else
-                _windows['chat.html'].update({
-                    alwaysOnTopClient: client.options.chat.alwaysOnTop,
-                    alwaysOnTop: client.options.chat.alwaysOnTopClient,
-                    showInTaskBar: client.options.chat.showInTaskBar,
-                    enableBackgroundThrottling: enableBackgroundThrottling
-                });
-            if (!_windows['code.editor.html']) {
-                if (client.options.showCodeEditor)
-                    openWindow('code.editor');
-                else if (client.options.codeEditor.persistent)
-                    openWindow('code.editor', { details: { hide: true } });
-            }
-            else
-                _windows['code.editor.html'].update({
-                    alwaysOnTopClient: client.options.codeEditor.alwaysOnTop,
-                    alwaysOnTop: client.options.codeEditor.alwaysOnTopClient,
-                    showInTaskBar: client.options.codeEditor.showInTaskBar,
-                    enableBackgroundThrottling: enableBackgroundThrottling
-                });
-            //TODO add code editor support for when code editor is a child window
-            //TODO maybe separate the global editor settings from the child window settings
-        }
         /*
                         ipcRenderer.on('get-skills', (event, window) => {
                             ipcRenderer.send('skills', _status.skills, window);
@@ -3248,6 +3193,8 @@
         }
 
         function openWindow(name, data) {
+            if (name === 'log-viewer')
+                name = 'log.viewer';
             if (_windows[name + '.html']) {
                 _windows[name + '.html'].show();
                 _windows[name + '.html'].focus();
@@ -3284,6 +3231,8 @@
                     _windows['chat.html'] = window.open('chat.html', 'Chat', `alwaysOnTopClient=${client.options.chat.alwaysOnTopClient},alwaysOnTop=${client.options.chat.alwaysOnTop},showInTaskBar=${client.options.chat.showInTaskBar},defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/chat.png')}${_options}`);
                     break;
                 case 'code.editor':
+                case 'immortal':
+                case 'log.viewer':
                     break;
             }
             if (data && data.data && typeof _windows[name + '.html'].restoreWindow !== 'undefined')
@@ -3294,6 +3243,85 @@
             if (!options) return '';
             if (!filters) filters = [];
             return Object.keys(options).filter(key => filters.indexOf(key) !== -1).map(key => `${key}=${options[key]}`).join(',');
+        }
+
+        function initWindows() {
+            var enableBackgroundThrottling = ipcRenderer.sendSync('get-setting', 'theme');
+            if (!_windows['mapper.html']) {
+                if (client.options.showMapper)
+                    openWindow('mapper');
+                else if (client.options.mapper.enabled || client.options.mapper.persistent)
+                    openWindow('mapper', { details: { hide: true } });
+            }
+            else
+                _windows['mapper.html'].update({
+                    alwaysOnTopClient: client.options.mapper.alwaysOnTop,
+                    alwaysOnTop: client.options.mapper.alwaysOnTopClient,
+                    showInTaskBar: client.options.mapper.showInTaskBar,
+                    enableBackgroundThrottling: enableBackgroundThrottling
+                });
+            if (!_windows['editor.html']) {
+                if (client.options.showEditor)
+                    openWindow('editor');
+                else if (client.options.editorPersistent)
+                    openWindow('editor', { details: { hide: true } });
+            }
+            else
+                _windows['editor.html'].update({
+                    enableBackgroundThrottling: enableBackgroundThrottling
+                });
+            if (!_windows['chat.html']) {
+                if (client.options.showChat)
+                    openWindow('chat');
+                else if (client.options.chat.persistent || client.options.chat.captureTells || client.options.chat.captureTalk || client.options.chat.captureLines)
+                    openWindow('chat', { details: { hide: true } });
+            }
+            else
+                _windows['chat.html'].update({
+                    alwaysOnTopClient: client.options.chat.alwaysOnTop,
+                    alwaysOnTop: client.options.chat.alwaysOnTopClient,
+                    showInTaskBar: client.options.chat.showInTaskBar,
+                    enableBackgroundThrottling: enableBackgroundThrottling
+                });
+            if (!_windows['code.editor.html']) {
+                if (client.options.showCodeEditor)
+                    openWindow('code.editor');
+                else if (client.options.codeEditor.persistent)
+                    openWindow('code.editor', { details: { hide: true } });
+            }
+            else
+                _windows['code.editor.html'].update({
+                    alwaysOnTopClient: client.options.codeEditor.alwaysOnTop,
+                    alwaysOnTop: client.options.codeEditor.alwaysOnTopClient,
+                    showInTaskBar: client.options.codeEditor.showInTaskBar,
+                    enableBackgroundThrottling: enableBackgroundThrottling
+                });
+            //TODO add code editor support for when code editor is a child window
+            //TODO maybe separate the global editor settings from the child window settings
+            if (client.options.windows)
+                for (name in client.options.windows) {
+                    //only worry about windows that have options as anything else is outdated state data no longer required
+                    if (!name || !client.options.windows[name] || !client.options.windows[name].options)
+                        continue;
+                    if (!_windows[name + '.html']) {
+                        if (client.options.windows[name].options.show) {
+                            if ('hide' in client.options.windows[name].options)
+                                delete client.options.windows[name].options.hide;
+                            openWindow(name, { details: client.options.windows[name].options });
+                        }
+                        else if (client.options.windows[name].options.persistent) {
+                            client.options.windows[name].options.hide = true;
+                            openWindow(name, { details: client.options.windows[name].options });
+                        }
+                    }
+                    else
+                        _windows[name + '.html'].update({
+                            alwaysOnTopClient: client.options.windows[name].options.alwaysOnTop,
+                            alwaysOnTop: client.options.windows[name].options.alwaysOnTopClient,
+                            showInTaskBar: client.options.windows[name].options.showInTaskBar,
+                            enableBackgroundThrottling: enableBackgroundThrottling
+                        });
+                }
         }
 
         function send(channel, ...args) {
