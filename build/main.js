@@ -1,7 +1,7 @@
 //spell-checker:words submenu, pasteandmatchstyle, statusvisible, taskbar, colorpicker, mailto, forecolor, tinymce, unmaximize
 //spell-checker:ignore prefs, partyhealth, combathealth, commandinput, limbsmenu, limbhealth, selectall, editoronly, limbarmor, maximizable, minimizable
 //spell-checker:ignore limbsarmor, lagmeter, buttonsvisible, connectbutton, charactersbutton, Editorbutton, zoomin, zoomout, unmaximize, resizable
-const { app, BrowserWindow, BrowserView, shell, screen, Tray, dialog, Menu, MenuItem, ipcMain, systemPreferences } = require('electron');
+const { app, BrowserWindow, BrowserView, shell, screen, Tray, dialog, Menu, MenuItem, ipcMain, systemPreferences, ipcRenderer } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const url = require('url');
@@ -2734,7 +2734,7 @@ function saveWindowState(window) {
         fullscreen: window.isFullScreen(),
         maximized: window.isMaximized(),
         minimized: window.isMinimized(),
-        devTools: window.webContents.isDevToolsOpened(),
+        devTools: global.debug || set.enableDebug ? false : window.webContents.isDevToolsOpened(),
         visible: window.isVisible(),
         normal: window.isNormal(),
         enabled: window.isEnabled(),
@@ -3750,3 +3750,22 @@ function openPreferences(parent) {
     }
 }
 //#endregion
+
+const timers = [];
+function StartDebugTimer() {
+    timers.push(Date.now());
+}
+
+function EndDebugTimer(label) {
+    label = label || `Timer: ${timers.length}`;
+    const start = timers.pop();
+    console.log(`${label} ${Date.now() - start}`);
+}
+
+ipcMain.on('StartDebugTimer', event => {
+    StartDebugTimer();
+});
+
+ipcMain.on('EndDebugTimer', (event, label) => {
+    EndDebugTimer(label);
+});
