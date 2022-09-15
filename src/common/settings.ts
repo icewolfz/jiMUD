@@ -101,6 +101,13 @@ export class Chat {
     public showInTaskBar: boolean = false;
 }
 
+export class CodeEditor {
+    public showInTaskBar: boolean = false;
+    public persistent: boolean = false;
+    public alwaysOnTop: boolean = false;
+    public alwaysOnTopClient: boolean = true;
+}
+
 /*
 format: setting, key, type, default value, max length
 types:
@@ -113,32 +120,32 @@ types:
 
 list = [];
 var fmt = (arr, obj, prefix) => {
-	arr.forEach(p => {
-		if(prefix && prefix.length !== 0)
-			key = prefix + '.' + p;
-		else
-			key = p;
-		if(SettingList.SettingList.filter(s => s[0] === key || s[1] === key).length) return;
-		var i = [key, 0, 0, obj[p]];
-		switch(typeof(obj[p]))
-		{
-			case 'boolean':
-				i[2] = 1;
-				break;
-			case 'number':
-				i[2] = 2;
-				break;
-			case 'object':
-				if(obj[p]) {
-					fmt(Object.keys(obj[p]), obj[p], key);
-					return;
-				}
-				else
-					i =[key, 0, 0, null];
-				break;
-		}
-		list.push(i);
-	});
+    arr.forEach(p => {
+        if(prefix && prefix.length !== 0)
+            key = prefix + '.' + p;
+        else
+            key = p;
+        if(SettingList.SettingList.filter(s => s[0] === key || s[1] === key).length) return;
+        var i = [key, 0, 0, obj[p]];
+        switch(typeof(obj[p]))
+        {
+            case 'boolean':
+                i[2] = 1;
+                break;
+            case 'number':
+                i[2] = 2;
+                break;
+            case 'object':
+                if(obj[p]) {
+                    fmt(Object.keys(obj[p]), obj[p], key);
+                    return;
+                }
+                else
+                    i =[key, 0, 0, null];
+                break;
+        }
+        list.push(i);
+    });
 }
 fmt(props, s);
 */
@@ -366,6 +373,7 @@ export class Settings {
     public mapper: Mapper = new Mapper();
     public profiles: Profiles = new Profiles();
     public chat: Chat = new Chat();
+    public codeEditor: CodeEditor = new CodeEditor();
     public showScriptErrors: boolean = false;
     public title: string = '$t';
     public flashing: boolean = false;
@@ -485,7 +493,8 @@ export class Settings {
     public pathDelay: number = 0;
     public pathDelayCount: number = 1;
     public echoSpeedpaths: boolean = false;
-    
+
+    public alwaysShowTabs: boolean = false;
 
     /**
      * @depreciated Allow window states have been moved to a separate layout system
@@ -542,6 +551,7 @@ export class Settings {
     public showChat: boolean = false;
     public showEditor: boolean = false;
     public showArmor: boolean = false;
+    public showCodeEditor: boolean = false;
     public showStatusWeather: boolean = true;
     public showStatusLimbs: boolean = true;
     public showStatusHealth: boolean = true;

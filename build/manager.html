@@ -159,6 +159,10 @@
             }
         });
 
+        ipcRenderer.on('reload-options', () => {
+            tabstrip.hideTabstrip = !ipcRenderer.sendSync('get-setting', 'alwaysShowTabs');
+        })
+        
         function addClient(client) {
             let tab;
             if (typeof client.index !== 'undefined' && client.index !== -1 && client.index < _clients.length)
@@ -238,6 +242,7 @@
         function init() {
             tabstrip = new TabStrip();
             tabstrip.useNativeMenus = true;
+            tabstrip.hideTabstrip = !ipcRenderer.sendSync('get-setting', 'alwaysShowTabs');
             tabstrip.on('tab-strip-hidden', () => {
                 ipcRenderer.send('update-client', _current, 0);
             });

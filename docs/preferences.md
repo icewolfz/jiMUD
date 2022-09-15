@@ -22,6 +22,7 @@ Reset - Resetting will revert all settings back to default values
 - `Max reconnect delay` set the maximum time in seconds, for reconnecting when using reconnect dialog, setting to 0 will revert to classic unlimited behavior.
 - `Check for updates on load` check for new version every time you load the client
 - `Enable sound` disable or enable sound globally
+- `Always show window tabs` always show tabs even if only one client open
 
 ## Display
 
@@ -81,7 +82,7 @@ Reset - Resetting will revert all settings back to default values
 ## Logging > Viewer
 
 - `Remember opened files on reload` Restore any files that where opened last time the viewer was closed
-- `Always on top of the main window` Force viewer window to always be above main client window, when ever client window is focused it will bring the viewer window along with it. _When disabled requires viewer to be closed to fully exits client_ **Requires restart on windows**
+- `Always on top of the main window` Force viewer window to always be above main client window, when ever client window is focused it will bring the viewer window along with it. **Requires restart on windows**
 - `Always on top of all windows` Force viewer window to always be on top of all windows
 - `Persistent` causes the viewer window to remain in memory to help speed up load times on future uses
 
@@ -115,7 +116,7 @@ Settings to control how to handle telnet options and emulation
 
 - `Open on load` Open the mapper when you load the client
 - `Persistent` causes the mapper window to remain in memory to help speed up load times on future uses, note this setting only has effect if mapper is not enabled
-- `Always on top of the main window` Force mapper window to always be above main client window, when ever client window is focused it will bring the mapper along with it. _When disabled requires mapper to be closed to fully exits client_ **Requires restart on windows**
+- `Always on top of the main window` Force mapper window to always be above main client window, when ever client window is focused it will bring the mapper along with it. **Requires restart on windows**
 - `Always on top of all windows` Force mapper to always be on top of all windows
 - `Show in taskbar` Always show mapper window in taskbar **Ignored when Always on top enabled in windows**
 
@@ -134,6 +135,13 @@ Controls what is captured into the chat window
 
 **Note:** line names are case sensitive.
 
+## Code Editor
+
+- `Persistent` causes the code editor window to remain in memory to help speed up load times on future uses
+- `Always on top of the main window` Force code editor window to always be above main client window, when ever client window is focused it will bring the code editor along with it. **Requires restart on windows**
+- `Always on top of all windows` Force code editor to always be on top of all windows
+- `Show in taskbar` Always show code editor window in taskbar **Ignored when Always on top enabled in windows**
+
 ## Chat > Display
 
 - `Font` The font for the display area, mono spaced fonts work the best.
@@ -147,7 +155,7 @@ Controls what is captured into the chat window
 
 ## Chat > Window
 
-- `Always on top of the main window` Force chat window to always be above main client window, when ever client window is focused it will bring the chat window along with it. _When disabled requires chat to be closed to fully exits client_ **Requires restart on windows**
+- `Always on top of the main window` Force chat window to always be above main client window, when ever client window is focused it will bring the chat window along with it. **Requires restart on windows**
 - `Always on top of all windows` Force chat window to always be on top of all windows
 - `Persistent` causes the chat window to remain in memory to help speed up load times on future uses, note this setting only has effect if capture settings are off
 - `Show in taskbar` Always show mapper window in taskbar **Ignored when Always on top enabled in windows**

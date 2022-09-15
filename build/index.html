@@ -39,7 +39,7 @@
         <a href="javascript:void(0)" title="Toggle triggers" class="button button-sm" id="btnTriggers" onclick="toggleTriggers()">
             <i class="fa fa-bolt"></i>
         </a>
-        <a href="javascript:void(0)" title="Show advanced editor" class="button button-sm" id="advedit" onclick="ipcRenderer.send('show-window', 'editor');">
+        <a href="javascript:void(0)" title="Show advanced editor" class="button button-sm" id="advedit" onclick="openWindow('editor');">
             <i class="fa fa-edit"></i>
         </a>
     </div>
@@ -66,10 +66,10 @@
         <a href="javascript:void(0)" title="Characters" id="characters" class="button" onclick="openWindow('characters');">
             <i class="fa fa-user"></i>
         </a>
-        <a href="javascript:void(0)" title="Immortal Tools" id="immortal" class="button" onclick="showImmortalTools()" style="display: none">
+        <a href="javascript:void(0)" title="Immortal Tools" id="immortal" class="button" onclick="openWindow('immortal')" style="display: none">
             <i class="fa fa-code-fork"></i>
         </a>
-        <a href="javascript:void(0)" title="Code Editor" id="codeEditor" class="button" onclick="showCodeEditor()">
+        <a href="javascript:void(0)" title="Code Editor" id="codeEditor" class="button" onclick="openWindow('code.editor')">
             <i class="fa fa-code"></i>
         </a>
         <a href="javascript:void(0)" title="Preferences" id="preferences" class="button" onclick="openWindow('prefs');">
@@ -87,7 +87,7 @@
         <a href="javascript:void(0)" title="Lock display" id="lock" class="button" onclick="client.toggleScrollLock()">
             <i class="fa fa-lock"></i>
         </a>
-        <a href="javascript:void(0)" title="Show mapper" id="map" class="button" onclick="ipcRenderer.send('show-window', 'mapper');">
+        <a href="javascript:void(0)" title="Show mapper" id="map" class="button" onclick="openWindow('mapper')">
             <i class="fa fa-map"></i>
         </a>
         <!--
@@ -1924,11 +1924,16 @@
                 switch (window) {
                     case 'mapper':
                     case 'editor':
-                    case 'profiles':
                     case 'chat':
+                        openWindow(window);
+                        break;
+                    case 'profiles':
                     case 'about':
-                    case 'code-editor':
                         ipcRenderer.send('show-window', window);
+                        break;
+                    case 'code-editor':
+                    case 'code.editor':
+                        openWindow('code.editor');
                         break;
                     case 'profiles-manager':
                     case 'profile-manager':
@@ -1950,18 +1955,18 @@
                         showSMHelp();
                         break;
                     case 'immortals':
-                        showImmortalTools();
+                        openWindow('immortal');
                         break;
                     case 'history':
                     case 'command-history':
-                        showCommandHistory()
+                        openWindow('history');
                         break;
                     case 'log-viewer':
                     case 'logs':
                         showLogViewer();
                         break;
                     case 'skills':
-                        showSkills();
+                        openWindow('skills');
                         break;
                     case 'who':
                         showWho();
@@ -2423,26 +2428,7 @@
             }
             if (client.options.showCharacterManager)
                 openWindow('characters');
-            //TODO re add known child windows with settings and combine with last known states
-            //TODO this should be a function as reloading settings will effect which windows are open/closed
-            /*
-                    if (set.showMapper)
-                        showMapper(true);
-                    else if (set.mapper.persistent || set.mapper.enabled)
-                        createMapper();
-            
-                    if (set.showEditor)
-                        showEditor(true);
-                    else if (set.editorPersistent)
-                        createEditor();
-                    if (set.showChat)
-                        showChat(true);
-                    else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
-                        createChat();
-            //TODO readd child windows based on settings/state data here   
-            //TODO add code editor support for when code editor is a child window
-            //TODO maybe sepreate the global editor settings from the child window settings
-            */
+            initWindows();
             createWatcher();
             autoConnect();
             doUpdate(71); //1,2,4,65
@@ -3011,31 +2997,98 @@
             client.error(err);
         });
 
-        /*
-                ipcRenderer.on('reload-options', () => {
-                    client.loadOptions();
-                    _logger.postMessage({
-                        action: 'options', args: {
-                            path: parseTemplate(client.options.logPath),
-                            offline: client.options.logOffline,
-                            gagged: client.options.logGagged,
-                            enabled: client.options.logEnabled,
-                            unique: client.options.logUniqueOnConnect,
-                            prepend: client.options.logPrepend,
-                            what: client.options.logWhat,
-                            debug: client.options.enableDebug,
-                            format: client.options.logTimeFormat,
-                            colors: client.options.colors
-                        }
-                    });
-                    doUpdate(76);
-                    client.sendGMCP('Core.Hello { "client": "' + client.telnet.terminal + '", "version": "' + client.telnet.version + '" }');
-                });       
+        ipcRenderer.on('reload-options', (event, settings, global) => {
+            reloadOptions(settings, global);
+        });
 
-                ipcRenderer.on('get-skills', (event, window) => {
-                    ipcRenderer.send('skills', _status.skills, window);
+        function reloadOptions(settings, global) {
+            if (global) loadTheme(ipcRenderer.sendSync('get-setting', 'theme'));
+            if (settings !== _windowState.data.settings) return;
+            client.loadOptions();
+            _logger.postMessage({
+                action: 'options', args: {
+                    path: parseTemplate(client.options.logPath),
+                    offline: client.options.logOffline,
+                    gagged: client.options.logGagged,
+                    enabled: client.options.logEnabled,
+                    unique: client.options.logUniqueOnConnect,
+                    prepend: client.options.logPrepend,
+                    what: client.options.logWhat,
+                    debug: client.options.enableDebug,
+                    format: client.options.logTimeFormat,
+                    colors: client.options.colors
+                }
+            });
+            doUpdate(76);
+            client.sendGMCP('Core.Hello { "client": "' + client.telnet.terminal + '", "version": "' + client.telnet.version + '" }');
+            //notify child windows that options where reloaded for any custom handling
+            for (window in _windows) {
+                if (!Object.prototype.hasOwnProperty.call(_windows, window))
+                    continue;
+                _windows[window].reloadOptions();
+            }
+            initWindows();
+        }
+
+        function initWindows() {
+            var enableBackgroundThrottling = ipcRenderer.sendSync('get-setting', 'theme');
+            if (!_windows['mapper.html']) {
+                if (client.options.showMapper)
+                    openWindow('mapper');
+                else if (client.options.mapper.enabled || client.options.mapper.persistent)
+                    openWindow('mapper', { details: { hide: true } });
+            }
+            else
+                _windows['mapper.html'].update({
+                    alwaysOnTopClient: client.options.mapper.alwaysOnTop,
+                    alwaysOnTop: client.options.mapper.alwaysOnTopClient,
+                    showInTaskBar: client.options.mapper.showInTaskBar,
+                    enableBackgroundThrottling: enableBackgroundThrottling
                 });
-        */
+            if (!_windows['editor.html']) {
+                if (client.options.showEditor)
+                    openWindow('editor');
+                else if (client.options.editorPersistent)
+                    openWindow('editor', { details: { hide: true } });
+            }
+            else
+                _windows['editor.html'].update({
+                    enableBackgroundThrottling: enableBackgroundThrottling
+                });
+            if (!_windows['chat.html']) {
+                if (client.options.showChat)
+                    openWindow('chat');
+                else if (client.options.chat.persistent || client.options.chat.captureTells || client.options.chat.captureTalk || client.options.chat.captureLines)
+                    openWindow('chat', { details: { hide: true } });
+            }
+            else
+                _windows['chat.html'].update({
+                    alwaysOnTopClient: client.options.chat.alwaysOnTop,
+                    alwaysOnTop: client.options.chat.alwaysOnTopClient,
+                    showInTaskBar: client.options.chat.showInTaskBar,
+                    enableBackgroundThrottling: enableBackgroundThrottling
+                });
+            if (!_windows['code.editor.html']) {
+                if (client.options.showCodeEditor)
+                    openWindow('code.editor');
+                else if (client.options.codeEditor.persistent)
+                    openWindow('code.editor', { details: { hide: true } });
+            }
+            else
+                _windows['code.editor.html'].update({
+                    alwaysOnTopClient: client.options.codeEditor.alwaysOnTop,
+                    alwaysOnTop: client.options.codeEditor.alwaysOnTopClient,
+                    showInTaskBar: client.options.codeEditor.showInTaskBar,
+                    enableBackgroundThrottling: enableBackgroundThrottling
+                });
+            //TODO add code editor support for when code editor is a child window
+            //TODO maybe separate the global editor settings from the child window settings
+        }
+        /*
+                        ipcRenderer.on('get-skills', (event, window) => {
+                            ipcRenderer.send('skills', _status.skills, window);
+                        });
+                */
         ipcRenderer.on('context-menu', (event, params) => {
             var inputMenu, start, end, w, input;
             const { selectionText, isEditable } = params;
@@ -3208,6 +3261,29 @@
                     if (data && data.state)
                         _options += ',' + buildWindowOptions(data.state, ['bounds']);
                     _windows['characters.html'] = window.open('characters.html', 'Characters', 'alwaysOnTopClient=true,defaultHeight=555,defaultWidth=650,backgroundColor=#fff,icon=' + path.join(__dirname, '../assets/icons/png/user.png') + _options);
+                    break;
+                case 'mapper':
+                    if (data && data.details)
+                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon']);
+                    if (data && data.state)
+                        _options += ',' + buildWindowOptions(data.state, ['bounds']);
+                    _windows['mapper.html'] = window.open('mapper.html', 'Mapper', `alwaysOnTopClient=${client.options.mapper.alwaysOnTopClient},alwaysOnTop=${client.options.mapper.alwaysOnTop},showInTaskBar=${client.options.mapper.showInTaskBar},defaultHeight=600,defaultWidth=800,backgroundColor=#eae4d6,icon=${path.join(__dirname, '../assets/icons/png/map.png')}${_options}`);
+                    break;
+                case 'editor':
+                    if (data && data.details)
+                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon']);
+                    if (data && data.state)
+                        _options += ',' + buildWindowOptions(data.state, ['bounds']);
+                    _windows['editor.html'] = window.open('editor.html', 'Advanced Editor', `defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/edit.png')}${_options}`);
+                    break;
+                case 'chat':
+                    if (data && data.details)
+                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon']);
+                    if (data && data.state)
+                        _options += ',' + buildWindowOptions(data.state, ['bounds']);
+                    _windows['chat.html'] = window.open('chat.html', 'Chat', `alwaysOnTopClient=${client.options.chat.alwaysOnTopClient},alwaysOnTop=${client.options.chat.alwaysOnTop},showInTaskBar=${client.options.chat.showInTaskBar},defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/chat.png')}${_options}`);
+                    break;
+                case 'code.editor':
                     break;
             }
             if (data && data.data && typeof _windows[name + '.html'].restoreWindow !== 'undefined')

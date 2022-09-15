@@ -651,10 +651,15 @@ app.on('ready', () => {
         global.editorOnly = true;
     }
 
-    if (Array.isArray(argv.s))
+    if (Array.isArray(argv.s)) {
         global.settingsFile = parseTemplate(argv.s[0]);
-    else if (argv.s)
+        set = settings.Settings.load(global.settingsFile);
+    }
+    else if (argv.s) {
         global.settingsFile = parseTemplate(argv.s);
+        set = settings.Settings.load(global.settingsFile);
+    }
+
     if (Array.isArray(argv.m))
         global.mapFile = parseTemplate(argv.m[0]);
     else if (argv.m)
@@ -867,6 +872,12 @@ ipcMain.on('get-setting', (event, key) => {
         case 'spellchecking':
             event.returnValue = set.spellchecking;
             break;
+        case 'alwaysShowTabs':
+            event.returnValue = set.alwaysShowTabs;
+            break;
+        case 'enableBackgroundThrottling':
+            event.returnValue = set.enableBackgroundThrottling;
+            return;
         default:
             event.returnValue = null;
             break;
@@ -887,6 +898,14 @@ ipcMain.on('set-setting', (event, key, value) => {
             break;
         case 'spellchecking':
             set.spellchecking = value;
+            set.save(global.settingsFile);
+            break;
+        case 'alwaysShowTabs':
+            set.alwaysShowTabs = value;
+            set.save(global.settingsFile);
+            break;
+        case 'enableBackgroundThrottling':
+            set.enableBackgroundThrottling = value;
             set.save(global.settingsFile);
             break;
     }
@@ -991,7 +1010,6 @@ ipcMain.on('reload-profile', (event, profile) => {
 ipcMain.on('get-characters', (event, options) => {
     event.returnValue = _characters.getCharacters(options);
 });
-
 
 ipcMain.on('get-character', (event, id, property) => {
     let character = _characters.getCharacter(id);
@@ -1428,6 +1446,24 @@ ipcMain.on('set-preference', (event, preference, value) => {
     set[preference] = value;
 });
 
+ipcMain.on('reload-options', (events, settings, clientId) => {
+    if (settings === global.settingsFile) {
+        set = settings.Settings.load(global.settingsFile);
+        for (window in windows) {
+            if (!Object.prototype.hasOwnProperty.call(windows, window))
+                continue;
+            windows[window].window.webContents.send('reload-options');
+        }
+        //TODO add tray support back
+    }
+    for (id in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, id) || getClientId(clients[id].view) === clientId)
+            continue;
+        clients[id].view.webContents.send('reload-options', settings, settings === global.settingsFile);
+        updateWebContents(clients[id].view.webContents, set);
+    }
+});
+
 //bounds, id, data, file
 function createClient(options) {
     options = options || {};
@@ -1714,7 +1750,8 @@ function initializeChildWindow(window, url, details) {
             window.toggle = () => { ipcRenderer.invoke("window", "toggle"); };
             window.update = (options) => { ipcRenderer.invoke("window", "update", options); };
         })();`, window);
-        window.show();
+        if (!details.options.hide)
+            window.show();
         if (global.debug || set.enableDebug)
             window.webContents.openDevTools();
     });
@@ -2387,7 +2424,7 @@ function updateWindow(window, parent, options) {
 function updateWebContents(contents, options) {
     if (!contents || !options) return;
     if ('enableBackgroundThrottling' in options)
-        window.webContents.setBackgroundThrottling(options.enableBackgroundThrottling);
+        contents.setBackgroundThrottling(options.enableBackgroundThrottling);
 }
 
 function updateAll(options) {
@@ -3287,7 +3324,7 @@ function createMenu() {
                     label: '&Chat...',
                     id: 'chat',
                     click: (item, mWindow) => {
-                        executeScriptClient('showChat()', mWindow, true);
+                        executeScriptClient('openWindow("chat")', mWindow, true);
                     },
                     accelerator: 'CmdOrCtrl+L'
                 },
@@ -3295,7 +3332,7 @@ function createMenu() {
                     label: '&Immortal tools...',
                     id: 'immortal',
                     click: (item, mWindow) => {
-                        executeScriptClient('showImmortalTools()', mWindow, true);
+                        executeScriptClient('openWindow("immortal")', mWindow, true);
                     },
                     visible: false,
                     accelerator: 'CmdOrCtrl+I'
@@ -3304,13 +3341,13 @@ function createMenu() {
                     label: 'Code &editor...',
                     id: 'codeeditor',
                     click: (item, mWindow) => {
-                        executeScriptClient('showCodeEditor()', mWindow, true);
+                        executeScriptClient('openWindow("code.editor")', mWindow, true);
                     },
                 },
                 {
                     label: '&Map...',
                     click: (item, mWindow) => {
-                        executeScriptClient('showMapper()', mWindow, true);
+                        executeScriptClient('openWindow("mapper")', mWindow, true);
                     },
                     accelerator: 'CmdOrCtrl+T'
                 },
@@ -3318,7 +3355,7 @@ function createMenu() {
                     label: '&Skills...',
                     id: 'skills',
                     click: (item, mWindow) => {
-                        executeScriptClient('showSkills()', mWindow, true);
+                        executeScriptClient('openWindow("skills)', mWindow, true);
                     },
                     accelerator: 'CmdOrCtrl+S'
                 },
@@ -3326,7 +3363,7 @@ function createMenu() {
                     label: 'Command &history...',
                     id: 'history',
                     click: (item, mWindow) => {
-                        executeScriptClient('showCommandHistory()', mWindow, true);
+                        executeScriptClient('openWindow("history")', mWindow, true);
                     },
                     accelerator: 'CmdOrCtrl+Shift+H'
                 },
