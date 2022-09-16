@@ -2,6 +2,9 @@
 
 ## 0.19.6
 
+- **Fixed:**
+  - Fixed disconnect dialog when screen size is small 
+
 ## 0.19.5 2022-09-14
 
 - **Fixed:**
