@@ -1591,19 +1591,31 @@ function createClient(options) {
             idMap.delete(childWindow);
         });
 
-        childWindow.on('close', e => {
+        let _close = false;
+        childWindow.on('close', async e => {
+            if (_close)
+                return;
+            e.preventDefault();
+            _close = await executeScript('if(typeof closeable === "function") closeable()', childWindow);
+            //dont close
+            if (_close !== true) {
+                return;
+            }
             const id = getClientId(view);
             const index = getChildWindowIndex(clients[id].windows, childWindow);
             if (index !== -1 && clients[id].windows[index].details.options.persistent) {
-                e.preventDefault();
+                _close = false;
                 executeScript('if(typeof closeHidden === "function") closeHidden(true)', childWindow);
                 clients[id].windows[index].window.hide();
                 states[file] = saveWindowState(childWindow);
                 clients[getClientId(view)].states[file] = states[file];
                 return;
             }
-            states[file] = saveWindowState(childWindow);
-            clients[getClientId(view)].states[file] = states[file];
+            if (_close) {
+                states[file] = saveWindowState(childWindow);
+                clients[getClientId(view)].states[file] = states[file];
+                childWindow.close();
+            }
         });
 
         clients[getClientId(view)].windows.push({ window: childWindow, details: details });
