@@ -952,12 +952,38 @@
             return parseTemplate(current.Preferences);
         }
 
+        var prefs;
         function openPreferences() {
-            var prefs = window.open('prefs.html', 'modal', 'width=800,height=460,backgroundColor=#fff,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
-            prefs.addEventListener('load', ()=> {
+            prefs = window.open('prefs.html', 'modal', 'width=800,height=460,backgroundColor=#fff,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
+            prefs.addEventListener('load', () => {
                 prefs.document.title = 'Preferences for ' + current.Title;
-            });            
+            });
         }
+
+        window.addEventListener('beforeunload', e => {
+            if (!closeable()) {
+                e.returnValue = false;
+                return 'no';
+            }
+        });
+
+        let closeWindow = false;
+        function closeable(all) {
+            if (!closeWindow) {
+                if (prefs && !prefs.closed) {
+                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        type: 'error',
+                        title: 'Preferences dialog open',
+                        message: 'You must close the preferences dialog before you can close character manager.',
+                        defaultId: 1
+                    });
+                    closeWindow = false;
+                }
+                else
+                    closeWindow = true;
+            }
+            return closeWindow;
+        }        
     </script>
     <style type="text/css">
         .form-control-feedback,

@@ -1660,7 +1660,8 @@ function createClient(options) {
 
 async function removeClient(id) {
     const client = clients[id];
-    const cancel = await executeScript('if(typeof closeable === "function") closeable()', client.view);
+    const cancel = await canCloseClient(id, true);
+    //const cancel = await executeScript('if(typeof closeable === "function") closeable()', client.view);
     //dont close
     if (cancel !== true)
         return;
@@ -1803,14 +1804,14 @@ function initializeChildWindow(window, link, details) {
             message: 'Unresponsive',
             buttons: ['Reopen', 'Keep waiting', 'Close']
         }).then(result => {
-            if (!childWindow)
+            if (!window)
                 return;
             if (result.response === 0) {
-                childWindow.reload();
+                window.reload();
                 logError(`${link} unresponsive, reload.\n`, true);
             }
             else if (result.response === 2) {
-                childWindow.destroy();
+                window.destroy();
             }
             else
                 logError(`${link} unresponsive, waiting.\n`, true);
