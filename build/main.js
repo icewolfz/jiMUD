@@ -824,6 +824,12 @@ ipcMain.on('get-global', (event, key) => {
         case 'updating':
             event.returnValue = global.updating;
             break;
+        case 'closeAll':
+            event.returnValue = global.closeAll || false;
+            break;
+        case 'noCloseAll':
+            event.returnValue = global.noCloseAll || false;
+            break;
         case 'layout':
             event.returnValue = _layout;
             break;
@@ -856,6 +862,12 @@ ipcMain.on('set-global', (event, key, value) => {
         case 'updating':
             global.updating = value;
             break;
+        case 'closeAll':
+            global.closeAll = value;
+            break;
+        case 'noCloseAll':
+            global.noCloseAll = value;
+            break;
     }
 });
 
@@ -883,6 +895,9 @@ ipcMain.on('get-setting', (event, key) => {
             return;
         case 'showTabsAddNewButton':
             event.returnValue = set.showTabsAddNewButton;
+            return;
+        case 'askOnCloseAll':
+            event.returnValue = set.askOnCloseAll;
             return;
         default:
             event.returnValue = null;
@@ -916,6 +931,10 @@ ipcMain.on('set-setting', (event, key, value) => {
             break;
         case 'showTabsAddNewButton':
             set.showTabsAddNewButton = value;
+            set.save(global.settingsFile);
+            break
+        case 'askOnCloseAll':
+            set.askOnCloseAll = value;
             set.save(global.settingsFile);
             break
     }
@@ -1701,16 +1720,16 @@ function clientsChanged() {
     }
 }
 
-async function canCloseClient(id, warn) {
+async function canCloseClient(id, warn, all, allWindows) {
     const client = clients[id];
-    let close = await executeScript('if(typeof closeable === "function") closeable()', client.view);
+    let close = await executeScript(`if(typeof closeable === "function") closeable(${all}, ${allWindows})`, client.view);
     //main client can not close so no need to check children
     if (close === false)
         return false;
     const wl = client.windows.length;
     for (let w = 0; w < wl; w++) {
         //check each child window just to be saft
-        close = await executeScript('if(typeof closeable === "function") closeable()', client.windows[w].window);
+        close = await executeScript(`if(typeof closeable === "function") closeable(${all}, ${allWindows})`, client.windows[w].window);
         if (client.windows[w].window.isModal()) {
             if (warn) {
                 dialog.showMessageBox(mWindow, {
@@ -1727,10 +1746,15 @@ async function canCloseClient(id, warn) {
     return true;;
 }
 
-async function canCloseAllClients(windowId, warn) {
+async function canCloseAllClients(windowId, warn, all) {
+    //reset all tracking unless its all windows trying to close
+    if (!all) {
+        global.closeAll = false;
+        global.noCloseAll = false;
+    }
     const cl = windows[windowId].clients.length;
     for (var idx = 0; idx < cl; idx++) {
-        const close = await canCloseClient(windows[windowId].clients[idx], warn);
+        const close = await canCloseClient(windows[windowId].clients[idx], warn, true, all);
         if (!close)
             return false;
     }
@@ -1738,10 +1762,13 @@ async function canCloseAllClients(windowId, warn) {
 }
 
 async function canCloseAllWindows(warn) {
+    //reset all tracking
+    global.closeAll = false;
+    global.noCloseAll = false;
     for (window in windows) {
         if (!Object.prototype.hasOwnProperty.call(windows, window))
             continue;
-        const close = await canCloseAllClients(window, warn);
+        const close = await canCloseAllClients(window, warn, true);
         if (!close)
             return false;
     }

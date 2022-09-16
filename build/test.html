@@ -30,7 +30,7 @@
             return _close;
         }
 
-        function closeable() {
+        function closeable(all) {
             if (!_close) {
                 var choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                     {

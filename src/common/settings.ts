@@ -367,6 +367,7 @@ export class Settings {
     public AutoCopySelectedToClipboard: boolean = false;
     public autoCreateCharacter: boolean = false;
     public askonclose: boolean = true;
+    public askOnCloseAll: boolean = true;
     public askonloadCharacter: boolean = true;
     public askonchildren: boolean = true;
     public dev: boolean = false;

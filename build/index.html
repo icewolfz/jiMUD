@@ -462,7 +462,7 @@
         var _watcher = null;
         var _windowState = getWindowOptions();
         var _windows = {};
-        let closeWindow = true;
+        let closeWindow = false;
         //#endregion
         loadTheme(ipcRenderer.sendSync('get-setting', 'theme'));
 
@@ -3855,33 +3855,89 @@
 
         //#region Close hooks
         function closed() {
+            client.raise('closed');
+            _logger.postMessage({ action: 'flush' });
+            clearWatcher();
             return closeWindow;
         }
 
-        function closeable() {
+        function closeable(all, allWindows) {
+            if (ipcRenderer.sendSync('get-global', 'updating'))
+                return true;
             //TODO convert the old  onbeforeunload to new closeable hook
             if (!closeWindow) {
-                var choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                    {
-                        type: 'warning',
-                        title: 'Unclosable',
-                        message: 'Window is unclosable, close anyways?',
-                        buttons: ['Yes', 'No'],
-                        defaultId: 1
-                    });
-                if (choice === 0) {
-                    closeWindow = true;
-                    return true;
+                if (client.options.askonchildren) {
+                    //TODO may not need this any more as all child windows have a closable function that is called and required to be true
                 }
+                //if closing all windows, and more then 1 client use ask all setting or if not all or 1 client use per client ask
+                if (client.connected) {
+                    if (all && (_clients.clients > 1 || _clients.windows > 1) && ipcRenderer.sendSync('get-setting', 'askOnCloseAll')) {
+                        if (ipcRenderer.sendSync('get-global', 'closeAll')) {
+                            closeWindow = true;
+                            return closeWindow;
+                        }
+                        else if (ipcRenderer.sendSync('get-global', 'noCloseAll')) {
+                            closeWindow = false;
+                            return closeWindow;
+                        }
+                        choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                            {
+                                type: 'warning',
+                                title: 'Connected',
+                                message: 'Closing will disconnect you from the mud, close anyway?',
+                                buttons: ['Yes', 'No', 'Yes to all', 'No to all', 'Never ask again for all'],
+                                defaultId: 1
+                            });
+                        if (choice === 2) { //yes to all
+                            closeWindow = true;
+                            ipcRenderer.send('set-global', 'closeAll', true);
+                        }
+                        else if (choice === 3) { //no to all
+                            closeWindow = false;
+                            ipcRenderer.send('set-global', 'noCloseAll', true);
+                        }
+                        else if (choice === 4) {
+                            client.options.askonclose = false;
+                            client.saveOptions();
+                            closeWindow = true;
+                        }
+                        else if (choice === 5) {
+                            ipcRenderer.send('set-setting', 'askOnCloseAll', false);
+                            closeWindow = true;
+                        }
+                        else if (choice !== 0)
+                            closeWindow = false;
+                        else
+                            closeWindow = true;
+                    }
+                    else if ((!all || (_clients.clients === 1 && _clients.windows === 1)) && client.options.askonclose) {
+                        choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                            {
+                                type: 'warning',
+                                title: 'Connected',
+                                message: 'Closing will disconnect you from the mud, close anyway?',
+                                buttons: ['Yes', 'No', 'Never ask again'],
+                                defaultId: 1
+                            });
+                        if (choice === 2) {
+                            client.options.askonclose = false;
+                            client.saveOptions();
+                            closeWindow = true;
+                        }
+                        else if (choice !== 0)
+                            closeWindow = false;
+                        else
+                            closeWindow = true;
+                    }
+                    else
+                        closeWindow = true;
+                }
+                else
+                    closeWindow = true;
             }
             return closeWindow;
             /*
             window.onbeforeunload = function (evt) {
-                var choice, count = 0;
-                var windows;
-                var current;
-                if (ipcRenderer.sendSync('get-global', 'updating'))
-                    closeWindow = true;
                 if (!closeWindow && client.options.askonclose && client.connected) {
                     evt.returnValue = false;
                     setTimeout(() => {

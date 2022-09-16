@@ -590,9 +590,9 @@ export class Display extends EventEmitter {
                 e.preventDefault();
                 e.cancelBubble = true;
                 const os = this._os;
-                if (e.pageX - os.left > this._innerWidth)
+                if (e.pageX - os?.left > this._innerWidth)
                     return;
-                if (e.pageY - os.top > this._innerHeight)
+                if (e.pageY - os?.top > this._innerHeight)
                     return;
                 this._currentSelection.drag = true;
                 this._prevSelection = {
