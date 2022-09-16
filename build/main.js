@@ -258,14 +258,15 @@ function createWindow(options) {
             webviewTag: false,
             sandbox: false,
             spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true,
+            enableRemoteModule: 'remote' in options ? options.remote : true,
             contextIsolation: false,
             backgroundThrottling: set ? set.enableBackgroundThrottling : true
         },
         //titleBarStyle: 'hidden',
         //titleBarOverlay: true
     });
-    require("@electron/remote/main").enable(window.webContents);
+    if (!('remote' in options) || options.true)
+        require("@electron/remote/main").enable(window.webContents);
 
     // and load the file of the app.
     window.loadURL(url.format({
@@ -1309,7 +1310,7 @@ ipcMain.on('dock-client', (event, id, options) => {
             states['manager.html'].bounds.x = options.x || states['manager.html'].bounds.x;
             states['manager.html'].bounds.y = options.y || states['manager.html'].bounds.y;
         }
-        windowId = createWindow({ menubar: createMenu() });
+        windowId = createWindow({ menubar: createMenu(), remote: false });
         window = windows[windowId].window;
         //no state so manually set the position
         if (options && !states['manager.html']) {
@@ -2526,7 +2527,7 @@ function newClientWindow(caller, connection, data) {
         if (states['manager.html'].bounds.y < 10)
             states['manager.html'].bounds.y = 10;
     }
-    let windowId = createWindow({ menubar: createMenu() });
+    let windowId = createWindow({ menubar: createMenu(), remote: false });
     let window = windows[windowId].window;
     if (data)
         id = createClient({ bounds: window.getContentBounds(), data: { data: data } });
@@ -2687,7 +2688,7 @@ function loadWindowLayout(file) {
     //create windows
     let i, il = data.windows.length;
     for (i = 0; i < il; i++) {
-        createWindow({ id: data.windows[i].id, data: { data: data.windows[i].data, state: data.windows[i].state, states: data.states }, menubar: createMenu() });
+        createWindow({ id: data.windows[i].id, data: { data: data.windows[i].data, state: data.windows[i].state, states: data.states }, menubar: createMenu(), remote: false });
         windows[data.windows[i].id].current = data.windows[i].current;
         windows[data.windows[i].id].clients = data.windows[i].clients;
     }
