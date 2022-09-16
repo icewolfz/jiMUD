@@ -1579,10 +1579,10 @@ function createClient(options) {
 
         childWindow.on('closed', () => {
             if (view && view.webContents && !view.webContents.isDestroyed()) {
-                const id = getClientId(view);
-                const index = getChildWindowIndex(clients[id].windows, childWindow);
                 executeScript(`if(typeof childClosed === "function") childClosed('${file}', '${url}', '${frameName}');`, view, true);
                 //remove remove from list
+                const id = getClientId(view);
+                const index = getChildWindowIndex(clients[id].windows, childWindow);
                 if (index !== -1) {
                     clients[id].windows[index] = null;
                     clients[id].windows.splice(index, 1);
@@ -1591,31 +1591,20 @@ function createClient(options) {
             idMap.delete(childWindow);
         });
 
-        let _close = false;
-        childWindow.on('close', async e => {
-            if (_close)
-                return;
-            e.preventDefault();
-            _close = await executeScript('if(typeof closeable === "function") closeable()', childWindow);
-            //dont close
-            if (_close !== true) {
-                return;
-            }
+        childWindow.on('close', e => {
             const id = getClientId(view);
             const index = getChildWindowIndex(clients[id].windows, childWindow);
             if (index !== -1 && clients[id].windows[index].details.options.persistent) {
-                _close = false;
+                e.preventDefault();
                 executeScript('if(typeof closeHidden === "function") closeHidden(true)', childWindow);
                 clients[id].windows[index].window.hide();
                 states[file] = saveWindowState(childWindow);
                 clients[getClientId(view)].states[file] = states[file];
                 return;
             }
-            if (_close) {
-                states[file] = saveWindowState(childWindow);
-                clients[getClientId(view)].states[file] = states[file];
-                childWindow.close();
-            }
+            states[file] = saveWindowState(childWindow);
+            clients[id].states[file] = states[file];
+            executeCloseHooks(childWindow);
         });
 
         clients[getClientId(view)].windows.push({ window: childWindow, details: details });
@@ -1703,7 +1692,7 @@ function closeClientWindows(id) {
         const window = clients[id].windows[idx].window;
         //call any code hooks in the child windows
         if (window && !window.isDestroyed()) {
-            executeCloseHooks(window);
+            //executeCloseHooks(window);
             window.close();
         }
     }
@@ -1861,6 +1850,7 @@ function getChildWindowIndex(windows, childWindow) {
 }
 
 function executeCloseHooks(window) {
+    if (!window) return;
     executeScript('if(typeof closing === "function") closing();', window);
     executeScript('if(typeof closed === "function") closed();', window);
     executeScript('if(typeof closeHidden === "function") closeHidden();', window);

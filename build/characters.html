@@ -960,6 +960,13 @@
             });
         }
 
+        window.addEventListener('beforeunload', e => {
+            if (!closeable()) {
+                e.returnValue = true;
+                return 'no';
+            }
+        })
+
         let closeWindow = false;
         function closeable(all) {
             if (!closeWindow) {
