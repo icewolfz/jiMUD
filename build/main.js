@@ -1,7 +1,7 @@
 //spell-checker:words submenu, pasteandmatchstyle, statusvisible, taskbar, colorpicker, mailto, forecolor, tinymce, unmaximize
 //spell-checker:ignore prefs, partyhealth, combathealth, commandinput, limbsmenu, limbhealth, selectall, editoronly, limbarmor, maximizable, minimizable
 //spell-checker:ignore limbsarmor, lagmeter, buttonsvisible, connectbutton, charactersbutton, Editorbutton, zoomin, zoomout, unmaximize, resizable
-const { app, BrowserWindow, BrowserView, shell, screen, Tray, dialog, Menu, MenuItem, ipcMain, systemPreferences, ipcRenderer } = require('electron');
+const { app, BrowserWindow, BrowserView, shell, screen, Tray, dialog, Menu, MenuItem, ipcMain, systemPreferences } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const url = require('url');
@@ -10,7 +10,9 @@ const { TrayClick } = require('./js/types');
 const { Menubar } = require('./js/menubar');
 const { Characters } = require('./js/characters');
 
-require('@electron/remote/main').initialize()
+const timers = [];
+
+require('@electron/remote/main').initialize();
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -246,7 +248,7 @@ function createWindow(options) {
         y: getWindowY(bounds.y, bounds.height),
         width: bounds.width,
         height: bounds.height,
-        backgroundColor: '#000',
+        backgroundColor: options.backgroundColor || '#000',
         show: false,
         icon: path.join(__dirname, options.icon || '../assets/icons/png/64x64.png'),
         skipTaskbar: !set.showInTaskBar,
@@ -3759,7 +3761,6 @@ async function openDevtools(window, options) {
     window.openDevTools(options);
 }
 
-const timers = [];
 function StartDebugTimer() {
     timers.push(Date.now());
 }
