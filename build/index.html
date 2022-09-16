@@ -265,7 +265,7 @@
         </div>
         <div class="dialog-body" style="padding-top:25px">
 
-            <div class="col-sm-7 form-group">
+            <div class="col-xs-7 form-group">
                 <p>You have been Disconnected.</p>
                 <p>
                     The reason for this may vary:
@@ -279,7 +279,7 @@
                     <span id="disconnectTimer"></span>
                 </p>
             </div>
-            <div class="col-sm-5 form-group">
+            <div class="col-xs-5 form-group">
                 <button id="disconnectDialogReconnect" style="float: right" type="button" class="btn btn-primary btn-block" onclick="closeDisconnectDialog();client.connect();" accesskey="r">
                     <i class="fa fa-refresh"></i>
                     <u>R</u>econnect</button>
@@ -2851,10 +2851,12 @@
                 _logger.postMessage({ action: 'name', args: '' });
                 $('#character-name').text('&nbsp;');
             }
+            /*
             else if (client.connected && character.Disconnect) {
                 _skipDisconnect = 1;
                 client.close();
             }
+            */
             autoConnect();
         }
 
