@@ -1625,7 +1625,7 @@ function createClient(options) {
     else {
         view.setBounds({
             x: 0,
-            y: 0,
+            y: options.offset || 0,
             width: options.bounds.width,
             height: options.bounds.height
         });
@@ -2520,17 +2520,19 @@ function newConnection(window, connection, data) {
     let windowId = getWindowId(window);
     let id;
     if (data)
-        id = createClient({ bounds: window.getContentBounds(), data: { data: data } });
+        id = createClient({ offset: windows[windowId].clients.length ? clients[windows[windowId].current].view.getBounds().y : 0, bounds: window.getContentBounds(), data: { data: data } });
     else
-        id = createClient({ bounds: window.getContentBounds() });
+        id = createClient({ offset: windows[windowId].clients.length ? clients[windows[windowId].current].view.getBounds().y : 0, bounds: window.getContentBounds() });
     focusedWindow = windowId;
     focusedClient = id;
     windows[windowId].clients.push(id);
     windows[windowId].current = id;
     clients[id].parent = window;
+    //did-navigate //fires before dom-ready but view seems to still not be loaded and delayed
+    //did-finish-load //slowest but ensures the view is in the window and visible before firing
+    window.addBrowserView(clients[id].view);
+    window.setTopBrowserView(clients[id].view);
     clients[id].view.webContents.once('dom-ready', () => {
-        window.addBrowserView(clients[id].view);
-        window.setTopBrowserView(clients[id].view);
         window.webContents.send('new-client', { id: id });
         if (connection)
             clients[id].view.webContents.send('connection-settings', connection);
