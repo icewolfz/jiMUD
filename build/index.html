@@ -1012,7 +1012,7 @@
             });
 
             _backup.on('import-map', (data) => {
-                if(!windows['mapper']) 
+                if (!windows['mapper'])
                     openWindow('mapper').then(() => windows['mapper'].importData(data));
                 else
                     windows['mapper'].importData(data);
@@ -2828,6 +2828,7 @@
                 client.close();
             }
             autoConnect();
+            window.dispatchEvent(new CustomEvent('loadCharacter', { detail: { ID: ID } }));
         }
 
         function resetCharacter() {
@@ -2866,6 +2867,7 @@
             }
             */
             autoConnect();
+            window.dispatchEvent(new Event('resetCharacter'));
         }
 
         function updateCharacter(ID) {
@@ -2909,6 +2911,7 @@
                 client.close();
             }
             autoConnect();
+            window.dispatchEvent(new CustomEvent('updateCharacter', { detail: { ID: ID } }));
         }
 
         ipcRenderer.on('character-updated', (event, character) => {
@@ -3382,6 +3385,22 @@
 
         function updateProgress(progress, mode) {
             ipcRenderer.send('set-progress', progress, mode);
+        }
+
+        function getCharacter() {
+            if (!_windowState.data.character && _windowState.data.characterId > 0)
+                return ipcRenderer.sendSync('get-character', _windowState.data.characterId);
+            return null;
+        }
+
+        function getCharacterName() {
+            if (!_windowState.data.character && _windowState.data.characterId > 0)
+                _windowState.data.character = ipcRenderer.sendSync('get-character', _windowState.data.characterId, 'Name');
+            return _windowState.data.character;
+        }
+
+        function getMapFile() {
+            return _windowState.data.map;
         }
 
         // eslint-disable-next-line no-unused-vars

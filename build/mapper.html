@@ -144,6 +144,8 @@
         var mapper;
         var MapperNavDown = false;
 
+        var abortController = new AbortController();
+
         function MapperNavClicked(x, y) {
             if (!MapperNavDown) return;
             mapper.scrollBy(x, y);
@@ -210,28 +212,23 @@
         let $closeWindow = false;
 
         // eslint-disable-next-line no-unused-vars
-        function closeHidden() {
-            if (mapper) {
+        function closeHidden(hidden) {
+            if (mapper)
                 save();
-            }
         }
 
         // eslint-disable-next-line no-unused-vars
-        function closeWindow() {
-            if (mapper) save(() => {
-                if (!mapper.ready) {
-                    setTimeout(() => closeWindow(), 10);
-                    return;
-                }
-                ipcRenderer.invoke('window', 'close');
-            });
+        function closing() {
+            if (mapper)
+                save();
         }
 
         window.onbeforeunload = function (evt) {
             if (!mapper.ready) {
                 evt.returnValue = false;
                 setTimeout(() => {
-                    ipcRenderer.invoke('window', 'close');
+                    abortController.abort();
+                    window.close();
                 }, 10);
                 return 'no';
             }
@@ -240,29 +237,30 @@
                 setTimeout(() => {
                     if (mapper) save(() => {
                         $closeWindow = true;
-                        ipcRenderer.invoke('window', 'close');
+                        abortController.abort();
+                        window.close();
                     });
                 });
                 return 'no';
             }
             $closeWindow = true;
-            ipcRenderer.invoke('window', 'close');
-            return;
+            abortController.abort();
+            window.close();
         };
 
         $(document).ready(() => {
             try {
-                if (ipcRenderer.sendSync('get-global', 'character') && ipcRenderer.sendSync('get-global', 'character').length > 0)
-                    document.title = 'Mapper - ' + ipcRenderer.sendSync('get-global', 'character');
+                const characterName = window.opener.getCharacterName();
+                if (characterName && characterName.length > 0)
+                    document.title = 'Mapper - ' + characterName;
                 else
                     document.title = 'Mapper';
                 $('#mapper-room input').prop('disabled', true);
                 $('#mapper-room textarea').prop('disabled', true);
                 $('#mapper-room select').prop('disabled', true);
                 $('#mapper-room button').prop('disabled', true);
-
-                var options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
-                mapper = new Mapper(document.getElementById('MapperCanvas'), options.mapper.memory, options.mapper.memorySavePeriod, ipcRenderer.sendSync('get-global', 'mapFile'));
+                const options = window.opener.client.options;
+                mapper = new Mapper(document.getElementById('MapperCanvas'), options.mapper.memory, options.mapper.memorySavePeriod, window.opener.getMapFile());
 
                 document.getElementById('MapperCanvas').addEventListener('wheel', (e) => {
                     if (e.deltaY >= 0)
@@ -366,7 +364,8 @@
                     menubar.updateItem('edit|Remove current room', { enabled: mapper.current.ID && room.ID });
                     menubar.updateItem('actions|highlight path', { enabled: mapper.current.ID && room.ID && mapper.current.ID != room.ID });
                     menubar.updateItem('actions|walk path', { enabled: mapper.current.ID && room.ID && mapper.current.ID != room.ID });
-                    ipcRenderer.send('setting-changed', { type: 'mapper', name: 'active', value: room });
+                    window.opener.client.options.mapper.active = room;
+                    window.opener.client.saveOptions();                    
                 });
 
                 mapper.on('current-room-changed', (room) => {
@@ -455,9 +454,10 @@
                     if (value != -1) {
                         if (_progress.action === 1 || _progress.action === 2)
                             $('#mapProgressbar progress').val(value);
-                        else
-                            ipcRenderer.send('progress', { percent: value });
-                        ipcRenderer.send('set-progress-window', 'mapper', { value: value / 100.0 });
+                        //TODO use window.open to creat a progress dialog
+                        //else
+                        //ipcRenderer.send('progress', { percent: value });
+                        window.setProgress(value / 100.0);
                     }
                 });
 
@@ -465,10 +465,11 @@
                     updateAreas();
                     if (_progress.action === 1 || _progress.action === 2)
                         closeProgress();
-                    else
-                        ipcRenderer.send('progress-close');
-                    ipcRenderer.send('set-progress-window', 'mapper', { value: -1 });
-                    ipcRenderer.send('send-gmcp', 'Room.Info');
+                    //TODO close progress dialog and set value to -
+                    //else
+                    //ipcRenderer.send('progress-close');
+                    window.setProgress(-1);
+                    window.opener.client.sendGMCP('Room.Info');
                 });
 
                 mapper.on('setting-changed', (setting, value) => {
@@ -477,7 +478,8 @@
                         $('#MapLevel').val(value.z);
                         $('#MapZone').val(value.zone);
                     }
-                    ipcRenderer.send('setting-changed', { type: 'mapper', name: setting, value: value });
+                    window.opener.client.options.mapper[setting] = value;
+                    window.opener.client.saveOptions();
                 });
 
                 mapper.on('remove-done', () => {
@@ -495,7 +497,7 @@
                 });
 
                 mapper.on('send-commands', (commands) => {
-                    ipcRenderer.send('send-raw', commands);
+                    window.opener.client.sendRaw(commands);
                 });
 
                 mapper.on('context-menu', (room) => {
@@ -556,9 +558,9 @@
 
                 mapper.on('error', (err) => {
                     if (typeof err === 'string')
-                        ipcRenderer.send('error', err);
+                        window.opener.client.error(err);
                     else
-                        ipcRenderer.send('error', err.stack || err.message);
+                        window.opener.client.error(err.stack || err.message);
                 });
 
                 $(window).on('resize', () => {
@@ -689,98 +691,96 @@
                 updateAreas();
                 zoomMap(options.mapper.scale);
                 mapper.scrollTo(options.mapper.vscroll, options.mapper.hscroll);
-                ipcRenderer.send('send-gmcp', 'Room.Info');
+                window.opener.client.sendGMCP('Room.Info');
+                window.opener.client.on('received-GMCP', processGMCP, { signal: controller.signal });
+                window.opener._status.on('set-title', (title, lag) => {
+                    if (title && title.length > 0)
+                        document.title = 'Mapper - ' + title;
+                    else
+                        document.title = 'Mapper';
+                }, { signal: controller.signal })
+                window.addEventListener('loadCharacter', updateCharacter, { signal: controller.signal });
+                window.addEventListener('updateCharacter', updateCharacter, { signal: controller.signal });
+                window.addEventListener('resetCharacter', e => {
+                    const char = window.opener.getCharacterName();
+                    if (char && char.length > 0)
+                        document.title = 'Mapper - ' + char;
+                    else
+                        document.title = 'Mapper';
+                }, { signal: controller.signal })
             }
             catch (err) {
                 if (typeof err === 'string')
-                    ipcRenderer.send('error', err);
+                    window.opener.client.error(err);
                 else
-                    ipcRenderer.send('error', err.stack || err.message);
+                    window.opener.client.error(err.stack || err.message);
             }
         });
 
-        ipcRenderer.on('GMCP-received', (event, data) => {
-            processGMCP(data);
-        });
-
-        ipcRenderer.on('progress-canceled', progressCanceled);
-
-        function progressCanceled() {
-            if (_progress.action < 3) {
-                mapper.cancelImport();
-                ipcRenderer.send('progress-close');
-                ipcRenderer.send('set-progress-window', 'mapper', { value: -1 });
-            }
-        }
-
-        ipcRenderer.on('progress-closed', () => {
-            if (_progress.action < 3)
-                mapper.cancelImport();
-        });
-
-        ipcRenderer.on('progress-loaded', () => {
-            if (_progress.action === 0) {
-                mapper.import(_progress.data, _progress.type);
-                if (_progress.room)
-                    ipcRenderer.send('send-gmcp', 'Room.Info');
-            }
-            else if (_progress.action === 1)
-                mapper.exportArea(_progress.file);
-            else if (_progress.action === 2)
-                mapper.exportAll(_progress.file);
-            else if (_progress.action === 3)
-                _exportImage(_progress.file);
-            else if (_progress.action === 4)
-                _exportCurrentImage(_progress.file);
-        });
-
-        function processGMCP(data) {
-            if (!mapper || !mapper.ready)
-                setTimeout(() => {
-                    processGMCP(data);
-                }, 100);
-            else
-                mapper.processGMCP(data.mod, data.obj);
-        }
-
-        ipcRenderer.on('load-char', (event, char) => {
+        function updateCharacter(e) {
+            const char = window.opener.getCharacterName();
             if (char && char.length > 0)
                 document.title = 'Mapper - ' + char;
             else
                 document.title = 'Mapper';
             try {
-                mapper.mapFile = ipcRenderer.sendSync('get-global', 'mapFile');
+                mapper.mapFile = window.opener.getMapFile();
             }
             catch (err) {
                 if (typeof err === 'string')
-                    ipcRenderer.send('error', err);
+                    window.opener.client.error(err);
                 else
-                    ipcRenderer.send('error', err.stack || err.message);
+                    window.opener.client.error(err.stack || err.message);
             }
-        });
+        }
 
-        ipcRenderer.on('load-default', () => {
-            if (ipcRenderer.sendSync('get-global', 'character') && ipcRenderer.sendSync('get-global', 'character').length > 0)
-                document.title = 'Mapper - ' + ipcRenderer.sendSync('get-global', 'character');
+        function progressCanceled() {
+            if (_progress.action < 3) {
+                mapper.cancelImport();
+                //TODO handle custom dialog
+                //ipcRenderer.send('progress-close');
+                window.setProgress(-1);
+            }
+        }
+        /*
+        //TODO convert to window.open dialog
+                ipcRenderer.on('progress-closed', () => {
+                    if (_progress.action < 3)
+                        mapper.cancelImport();
+                });
+        
+                ipcRenderer.on('progress-loaded', () => {
+                    if (_progress.action === 0) {
+                        mapper.import(_progress.data, _progress.type);
+                        if (_progress.room)
+                            window.opener.client.sendGMCP('Room.Info');
+                    }
+                    else if (_progress.action === 1)
+                        mapper.exportArea(_progress.file);
+                    else if (_progress.action === 2)
+                        mapper.exportAll(_progress.file);
+                    else if (_progress.action === 3)
+                        _exportImage(_progress.file);
+                    else if (_progress.action === 4)
+                        _exportCurrentImage(_progress.file);
+                });
+        */
+        function processGMCP(mod, obj) {
+            if (!mapper || !mapper.ready)
+                setTimeout(() => {
+                    processGMCP(mod, obj);
+                }, 100);
             else
-                document.title = 'Mapper';
-        });
+                mapper.processGMCP(mod, obj);
+        }
 
-        ipcRenderer.on('set-title', (title) => {
-            if (title && title.length > 0)
-                document.title = 'Mapper - ' + title;
-            else
-                document.title = 'Mapper';
-        });
-
-        ipcRenderer.on('reload-options', () => {
+        function reloadOptions() {
             save(function () {
                 try {
-                    var options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
+                    var options = window.opener.client.options;
                     mapper.memorySavePeriod = options.mapper.memorySavePeriod;
                     mapper.memory = options.mapper.memory;
-                    mapper.mapFile = ipcRenderer.sendSync('get-global', 'mapFile');
-
+                    mapper.mapFile = window.opener.getMapFile();
                     mapper.commandDelay = options.commandDelay;
                     mapper.commandDelayCount = options.commandDelayCount;
                     importType = options.mapper.importType;
@@ -788,20 +788,18 @@
                 }
                 catch (err) {
                     if (typeof err === 'string')
-                        ipcRenderer.send('error', err);
+                        window.opener.client.error(err);
                     else
-                        ipcRenderer.send('error', err.stack || err.message);
+                        window.opener.client.error(err.stack || err.message);
                 }
-                //ipcRenderer.invoke('window', 'reload');
             });
-        });
+        }
 
         function importData(data) {
             window.show();
             window.setProgress(0);
-            //TODO window.open a progress dialog using the progress.html
-            //ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
             _progress = { action: 0, data: data, type: importType, room: true };
+            //TODO window.open a progress dialog using the progress.html
             //ipcRenderer.send('progress-show', { title: 'Importing map data&hellip;', percent: 0, noClose: true });
         }
 
@@ -874,8 +872,8 @@
                 $('#btn-room').removeClass('active');
             }
             $(window).trigger('resize');
-            ipcRenderer.send('setting-changed', { type: 'mapper', name: 'room', value: roomEditor });
-
+            window.opener.client.options.mapper.room = roomEditor;
+            window.opener.client.saveOptions();
             $('#btn-room').prop('aria-pressed', roomEditor);
             menubar.updateItem('view|room properties', { checked: roomEditor });
         }
@@ -919,10 +917,11 @@
                 if (results.filePath === undefined || results.filePath.length === 0) {
                     return;
                 }
-                ipcRenderer.send('show-window', 'mapper');
-                ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
+                window.show();
+                window.setProgress(0);
                 _progress = { action: 3, file: results.filePath };
-                ipcRenderer.send('progress-show', { title: 'Exporting image&hellip;', percent: -1, cancelable: false });
+                //TODO convert ot use window.open progres dialog
+                //ipcRenderer.send('progress-show', { title: 'Exporting image&hellip;', percent: -1, cancelable: false });
             });
 
         }
@@ -930,8 +929,9 @@
         function _exportImage(file) {
             mapper.getRooms(mapper.active.area, mapper.active.z, mapper.active.zone, (rooms) => {
                 if (!rooms || rooms.length === 0) {
-                    ipcRenderer.send('progress-close');
-                    ipcRenderer.send('set-progress-window', 'mapper', { value: -1 });
+                    //TODO convert to window.open dialog
+                    //ipcRenderer.send('progress-close');
+                    window.setProgress(-1);
                     ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                         type: 'error',
                         title: 'Error generating',
@@ -1023,8 +1023,9 @@
                             title: 'Error generating',
                             message: 'Could not save map'
                         });
-                    ipcRenderer.send('progress-close');
-                    ipcRenderer.send('set-progress-window', 'mapper', { value: -1 });
+                    //TODO close window.open dialog
+                    //ipcRenderer.send('progress-close');
+                    window.setProgress(-1);
                 });
             });
         }
@@ -1043,10 +1044,11 @@
                 if (results.filePath === undefined || results.filePath.length === 0) {
                     return;
                 }
-                ipcRenderer.send('show-window', 'mapper');
-                ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
+                window.show();
+                window.setProgress(0);
                 _progress = { action: 4, file: results.filePath };
-                ipcRenderer.send('progress-show', { title: 'Exporting image&hellip;', percent: -1, cancelable: false });
+                //TODO convert to window.open dialog
+                //ipcRenderer.send('progress-show', { title: 'Exporting image&hellip;', percent: -1, cancelable: false });
             });
         }
 
@@ -1064,8 +1066,9 @@
                             title: 'Error generating',
                             message: 'Could not save map'
                         });
-                    ipcRenderer.send('progress-close');
-                    ipcRenderer.send('set-progress-window', 'mapper', { value: -1 });
+                    //TODO convert to window.open
+                    //ipcRenderer.send('progress-close');
+                    window.setProgress(-1);
                 });
             });
         }
@@ -1083,8 +1086,10 @@
                 if (results.filePath === undefined || results.filePath.length === 0) {
                     return;
                 }
-                ipcRenderer.send('set-progress', { value: 0 });
-                ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
+                window.opener.updateProgress(0);
+                window.setProgress(0);
+                //TODO window.open rpgress dialog
+                //ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });                        
                 _progress = { action: 1, file: results.filePath };
                 showProgress('Exporting area data&hellip;', true);
                 mapper.exportArea(_progress.file);
@@ -1104,8 +1109,8 @@
                 if (results.filePath === undefined || results.filePath.length === 0) {
                     return;
                 }
-                ipcRenderer.send('set-progress', { value: 0 });
-                ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
+                window.opener.updateProgress(0);
+                window.setProgress(0);
                 _progress = { action: 2, file: results.filePath };
                 showProgress('Exporting map data&hellip;', true);
                 mapper.exportAll(_progress.file);
@@ -1136,9 +1141,10 @@
                                 });
                                 return;
                             }
-                            ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
+                            window.setProgress(0);
                             _progress = { action: 0, data: data, type: ImportType.Merge };
-                            ipcRenderer.send('progress-show', { title: 'Importing map data&hellip;', percent: 0, noClose: true });
+                            //TODO window.open progress dialog
+                            //ipcRenderer.send('progress-show', { title: 'Importing map data&hellip;', percent: 0, noClose: true });
                         });
                 });
         }
@@ -1167,8 +1173,9 @@
                                 });
                                 return;
                             }
-                            ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
-                            ipcRenderer.send('progress-show', { title: 'Importing map data&hellip;', percent: 0, noClose: true });
+                            window.setProgress(0);
+                            //TODO window.open dialog
+                            //ipcRenderer.send('progress-show', { title: 'Importing map data&hellip;', percent: 0, noClose: true });
                             _progress = { action: 0, data: data, type: ImportType.Replace };
                         });
                 });
@@ -1246,8 +1253,8 @@
 
         function showProgress(title, cancel) {
             menubar.enabled = false;
-            ipcRenderer.send('set-progress', { value: 0 });
-            ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
+            window.opener.updateProgress(0);
+            window.setProgress(0);
             $('#mapProgressbar').html('<progress max="100"></progress>');
             $('#mapProgressTitle').html(title);
             if (cancel)
@@ -1261,8 +1268,8 @@
             menubar.enabled = true;
             if ($('#mapProgress')[0].open)
                 $('#mapProgress')[0].close();
-            ipcRenderer.send('set-progress', { value: -1 });
-            ipcRenderer.send('set-progress-window', 'mapper', { value: -1 });
+            window.opener.updateProgress(-1);   
+            window.setProgress(-1);
         }
 
         function zoomMap(amt, rng) {

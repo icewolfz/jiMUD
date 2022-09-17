@@ -48,6 +48,8 @@
     if (window.module) module = window.module;
     function doCancel() {
         ipcRenderer.send('progress-canceled');
+        if(window.opener && typeof window.opener.progressCanceled === 'function')
+            window.opener.progressCanceled();
         if (!noClose)
             window.close();
     }
@@ -61,7 +63,7 @@
     let noCancel = false;
     let noClose = false;
 
-    ipcRenderer.on('progress', (event, progressObj) => {
+    function setProgress(progressObj) {
         if (progressObj.title) {
             document.getElementById('title').innerHTML = progressObj.title;
             document.title = document.getElementById('title').textContent;
@@ -84,12 +86,20 @@
             document.getElementById('progressbar').removeAttribute('value');
         else if (Object.prototype.hasOwnProperty.call(progressObj, 'percent'))
             document.getElementById('progressbar').value = progressObj.percent;
+    }
+
+    ipcRenderer.on('progress', (event, progressObj) => {
+        setProgress(progressObj);
     });
 
-    ipcRenderer.on('progress-title', (event, title) => {
-        console.log(title);
+    function progressTitle(title) {
+        //console.log(title);
         document.getElementById('title').innerHTML = title;
         document.title = document.getElementById('title').textContent;
+    }
+
+    ipcRenderer.on('progress-title', (event, title) => {
+        progressTitle(tile);
     });
 
     ipcRenderer.on('progress-close', () => {
@@ -97,7 +107,7 @@
         ipcRenderer.send('progress-closed');
     });
 
-    ipcRenderer.on('progress-cancelable', (event, hide) => {
+    function progressCancelable(hide) {
         noCancel = !hide;
         if (noCancel) {
             document.getElementById('cancel').style.display = 'none';
@@ -106,8 +116,11 @@
         else {
             document.getElementById('cancel').style.display = '';
             document.body.style.paddingTop = '';
-
         }
+    }
+
+    ipcRenderer.on('progress-cancelable', (event, hide) => {
+        progressCancelable(hide);
     });
 
     ipcRenderer.send('progress-loaded');
