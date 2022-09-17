@@ -944,7 +944,22 @@
 
             _backup.on('progress-start', (title) => {
                 updateProgress({ value: 0 });
-                client.debug('Flushing map');
+                //if mapper window exist save the current data then start sending
+                client.debug(title);
+                if (_windows['mapper.html']) {
+                    client.debug('Saving map');
+                    _windows['mapper.html'].save(() => {
+                        client.debug('Finished saving map');
+                        if (title === 'Saving data')
+                            _backup.save(2);
+                        else if (title === 'Loading data')
+                            _backup.getChunk();
+                    });
+                }
+                else if (title === 'Saving data')
+                    _backup.save(2);
+                else if (title === 'Loading data')
+                    _backup.getChunk();
                 document.getElementById('Progressbar').innerHTML = '<progress max="100"></progress>';
                 document.getElementById('ProgressTitle').innerHTML = title || 'Importing data&hellip;';
                 document.getElementById('Progress').showModal();
@@ -997,13 +1012,10 @@
             });
 
             _backup.on('import-map', (data) => {
-                //TODO open map window and reload map as new data imported, needs access to the new mapper window
-                //ipcRenderer.send('import-map', data);
-                /*
                 if(!windows['mapper']) 
-                    openMapper(true);
-                windows['mapper'].import(data);
-                */
+                    openWindow('mapper').then(() => windows['mapper'].importData(data));
+                else
+                    windows['mapper'].importData(data);
             });
 
             _backup.on('imported-profiles', () => {
@@ -1729,7 +1741,7 @@
                         document.getElementById('immortal').style.display = 'block';
                         break;
                 }
-                //TODO loop opened windows and send using a function hook instead
+                //TODO loop opened windows and send using a function hook instead  or just have child windows do window.opener.client.on(...) directly, note will need to also make sure they unhook event when closed
                 //ipcRenderer.send('GMCP-received', { mod: mod, obj: obj });
             });
 
@@ -2620,7 +2632,7 @@
                     button.dataset.buttonIndex = b;
                     button.addEventListener('click', e => {
                         let idx;
-                        if(e.srcElement.dataset.buttonIndex)
+                        if (e.srcElement.dataset.buttonIndex)
                             idx = e.srcElement.dataset.buttonIndex;
                         else
                             idx = e.srcElement.closest('a').dataset.buttonIndex;
@@ -2788,15 +2800,6 @@
 
         ipcRenderer.on('add-command-history', (event, cmd) => {
             client.AddCommandToHistory(cmd);
-        });
-
-        ipcRenderer.on('flush-end', (event, sender) => {
-            client.debug('Finished map');
-            client.debug(sender);
-            if (sender === 'Saving data')
-                _backup.save(2);
-            else if (sender === 'Loading data')
-                _backup.getChunk();
         });
         */
         function loadCharacter(ID) {

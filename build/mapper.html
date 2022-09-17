@@ -796,18 +796,14 @@
             });
         });
 
-        ipcRenderer.on('import', (event, data) => {
-            ipcRenderer.send('show-window', 'mapper');
-            ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
+        function importData(data) {
+            window.show();
+            window.setProgress(0);
+            //TODO window.open a progress dialog using the progress.html
+            //ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
             _progress = { action: 0, data: data, type: importType, room: true };
-            ipcRenderer.send('progress-show', { title: 'Importing map data&hellip;', percent: 0, noClose: true });
-        });
-
-        ipcRenderer.on('flush', (event, sender) => {
-            save(() => {
-                ipcRenderer.send('flush-end', sender);
-            });
-        });
+            //ipcRenderer.send('progress-show', { title: 'Importing map data&hellip;', percent: 0, noClose: true });
+        }
 
         function updateAreas() {
             $('#select-area option').remove();
