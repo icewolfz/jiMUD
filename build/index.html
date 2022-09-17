@@ -2618,8 +2618,13 @@
                     button.href = 'javascript:void(0)';
                     button.classList.add('button');
                     button.dataset.buttonIndex = b;
-                    button.addEventListener('click', () => {
-                        executeButton(parseInt(button.dataset.buttonIndex, 10));
+                    button.addEventListener('click', e => {
+                        let idx;
+                        if(e.srcElement.dataset.buttonIndex)
+                            idx = e.srcElement.dataset.buttonIndex;
+                        else
+                            idx = e.srcElement.closest('a').dataset.buttonIndex;
+                        executeButton(parseInt(idx, 10));
                     });
                     var p = '';
                     if (item.profile) {
