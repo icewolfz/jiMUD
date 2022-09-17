@@ -2293,7 +2293,7 @@
 
         }
 
-        function init() {
+        async function init() {
             //TODO need to redo this if upgrade to newer bootstrap and move away from jquery but as of current used bootstrap impossible to remove
             $('.dropdown').on('show.bs.dropdown', () => {
                 $('.command-history ul').css('max-height', $('#display').outerHeight() + 'px');
@@ -2653,7 +2653,7 @@
             doUpdate(192);
         }
 
-        function updateMenu() {
+        async function updateMenu() {
             if (!client || !client.options) return;
             doUpdate(16);
             var menu = [
@@ -2708,7 +2708,7 @@
          * Builds an array of regular expressions to text lines against to know if they should be captured, built
          * based on chat capture preferences
         */
-        function buildCaptures() {
+        async function buildCaptures() {
             _captures = [];
             _captureReviews = [];
             if (client.options.chat.captureTells) {

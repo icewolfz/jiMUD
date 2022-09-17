@@ -12,58 +12,14 @@ import { Tests } from './test';
 import { NewLineType, ProfileSaveType } from './types';
 import { SettingList } from './settings';
 import { getAnsiColorCode, getColorCode, isMXPColor, getAnsiCode } from './ansi';
-//use minified mathjs instead of default module for performance loading
-//const { create, all, factory } =  require('./../../lib/math');
-const { create, all, factory } = require('./../../node_modules/mathjs/lib/browser/math');
-
-/**
- * Contains custom operator overrides functions for MATHJS to add string support
- * @constant
- * @type {object}
- * 
- */
-const allWithCustomFunctions = {
-    ...all,
-
-    createEqual: factory('equal', [], () => function equal(a, b) {
-        return a === b
-    }),
-
-    createUnequal: factory('unequal', [], () => function unequal(a, b) {
-        return a !== b
-    }),
-
-    createSmaller: factory('smaller', [], () => function smaller(a, b) {
-        return a < b
-    }),
-
-    createSmallerEq: factory('smallerEq', [], () => function smallerEq(a, b) {
-        return a <= b
-    }),
-
-    createLarger: factory('larger', [], () => function larger(a, b) {
-        return a > b
-    }),
-
-    createLargerEq: factory('largerEq', [], () => function largerEq(a, b) {
-        return a >= b
-    }),
-
-    createCompare: factory('compare', [], () => function compare(a, b) {
-        return a > b ? 1 : a < b ? -1 : 0
-    }),
-
-    createAdd: factory('add', [], () => function add(a, b) {
-        return a + b
-    })
-};
 
 /**
  * MATHJS expression engine
  * @constant
  * @type {object}
  */
-const mathjs = create(allWithCustomFunctions, {});
+let mathjs;
+let _mathjs;
 /**
  * Buzz sound library
  * @type {object}
@@ -264,7 +220,7 @@ export class Input extends EventEmitter {
 
     public evaluate(expression) {
         let scope = this.getScope();
-        let results = mathjs.evaluate(expression, scope);
+        let results = mathjs().evaluate(expression, scope);
         this.setScope(scope);
         return results;
     }
@@ -361,12 +317,60 @@ export class Input extends EventEmitter {
         return res;
     }
 
-    constructor(client: Client) {
-        super();
-        if (!client)
-            throw new Error('Invalid client!');
-        this.client = client;
+    private initMathJS() {
+        //use minified mathjs instead of default module for performance loading
+        //const { create, all, factory } =  require('./../../lib/math');
+        const { create, all, factory } = require('./../../node_modules/mathjs/lib/browser/math'); //slow but overall fastest version and kept up today
+        //import {create, all, factory} from 'mathjs'; //nearly 4.5 times slower then browser version
 
+        /**
+         * Contains custom operator overrides functions for MATHJS to add string support
+         * @constant
+         * @type {object}
+         * 
+         */
+        const allWithCustomFunctions = {
+            ...all,
+
+            createEqual: factory('equal', [], () => function equal(a, b) {
+                return a === b
+            }),
+
+            createUnequal: factory('unequal', [], () => function unequal(a, b) {
+                return a !== b
+            }),
+
+            createSmaller: factory('smaller', [], () => function smaller(a, b) {
+                return a < b
+            }),
+
+            createSmallerEq: factory('smallerEq', [], () => function smallerEq(a, b) {
+                return a <= b
+            }),
+
+            createLarger: factory('larger', [], () => function larger(a, b) {
+                return a > b
+            }),
+
+            createLargerEq: factory('largerEq', [], () => function largerEq(a, b) {
+                return a >= b
+            }),
+
+            createCompare: factory('compare', [], () => function compare(a, b) {
+                return a > b ? 1 : a < b ? -1 : 0
+            }),
+
+            createAdd: factory('add', [], () => function add(a, b) {
+                return a + b
+            })
+        };
+
+        /**
+         * MATHJS expression engine
+         * @constant
+         * @type {object}
+         */
+         _mathjs = create(allWithCustomFunctions, {});
         const funs = {
             esc: '\x1b',
             cr: '\n',
@@ -1350,8 +1354,20 @@ export class Input extends EventEmitter {
             }
             funs[fun].rawArgs = true;
         }
-        mathjs.import(funs, {});
+        _mathjs.import(funs, {});
+    }
 
+    constructor(client: Client) {
+        super();
+        if (!client)
+            throw new Error('Invalid client!');
+        this.client = client;
+        //wrap mathjs to load on demand for speed as not every may need math
+        mathjs = () => {
+            if(_mathjs) return _mathjs;
+            this.initMathJS();
+            return _mathjs;
+        }
         this._tests = new Tests(client);
         this._commandHistory = [];
         $(document).keydown((event) => {
@@ -6594,7 +6610,7 @@ export class Input extends EventEmitter {
             case 'selword.proper':
                 return ProperCase(this.vStack['$' + text.substr(0, text.length - 7)] || window['$' + text.substr(0, text.length - 7)]);
             case 'random':
-                return mathjs.randomInt(0, 100);
+                return mathjs().randomInt(0, 100);
             case 'charcomment':
             case 'charnotes':
                 c = ipcRenderer.sendSync('get-global', 'character') || '';
@@ -6909,9 +6925,9 @@ export class Input extends EventEmitter {
                 args = this.parseInline(res[2]).split(',');
                 if (args.length === 0) throw new Error('Invalid random');
                 if (args.length === 1)
-                    return mathjs.randomInt(0, parseInt(args[0], 10) + 1);
+                    return mathjs().randomInt(0, parseInt(args[0], 10) + 1);
                 else if (args.length === 2)
-                    return mathjs.randomInt(parseInt(args[0], 10), parseInt(args[1], 10) + 1);
+                    return mathjs().randomInt(parseInt(args[0], 10), parseInt(args[1], 10) + 1);
                 else
                     throw new Error('Too many arguments for random');
             case 'case': //case(index,n1,n2...)
