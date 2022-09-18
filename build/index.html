@@ -1810,6 +1810,7 @@
                     case 'smhelp':
                         showSMHelp();
                         break;
+                    case 'immortal':
                     case 'immortals':
                         openWindow('immortal');
                         break;
@@ -3275,10 +3276,20 @@
                     _windows['chat.html'] = window.open('chat.html', 'Chat-' + getId(), `alwaysOnTopClient=${client.options.chat.alwaysOnTopClient},alwaysOnTop=${client.options.chat.alwaysOnTop},showInTaskBar=${client.options.chat.showInTaskBar},defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/chat.png')}${_options}`);
                     break;
                 case 'prefs':
-                    _windows['prefs.html'] = window.open('prefs.html', 'modal', 'width=800,height=460,backgroundColor=#fff,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
+                    _windows['prefs.html'] = window.open('prefs.html', 'modal-' + getId(), 'width=800,height=460,backgroundColor=#fff,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
                     break;
-                case 'code.editor':
                 case 'immortal':
+                    if (data && data.details)
+                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon']);
+                    if (data && data.state)
+                        _options += ',' + buildWindowOptions(data.state, ['bounds']);
+                    if (client.options.windows.immortal && client.options.windows.immortal.options)
+                        _options += `,alwaysOnTopClient=${client.options.windows.immortal.options.alwaysOnTopClient},alwaysOnTop=${client.options.windows.immortal.options.alwaysOnTop},showInTaskBar=${client.options.windows.immortal.options.showInTaskBar}`;
+                    else
+                        _options += `,alwaysOnTopClient=true`;
+                    _windows['immortal.html'] = window.open('immortal.html', 'Immortal-' + getId(), `backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/ied.png')}${_options}`);
+                    break
+                case 'code.editor':
                 case 'log.viewer':
                     break;
             }
@@ -3401,17 +3412,6 @@
 
         function getMapFile() {
             return _windowState.data.map;
-        }
-
-        // eslint-disable-next-line no-unused-vars
-        function showImmortalTools() {
-            //TODO make immortal tools work
-            if (client.options.windows['immortal'] && client.options.windows['immortal'].options) {
-                client.options.windows['immortal'].options.show = true;
-                ipcRenderer.send('show-window', 'immortal', client.options.windows['immortal'].options);
-            }
-            else
-                ipcRenderer.send('show-window', 'immortal', { show: true, file: 'immortal.html', icon: 'ied', alwaysOnTopClient: true });
         }
 
         // eslint-disable-next-line no-unused-vars
@@ -3819,7 +3819,7 @@
         }
 
         function createDialog(title, width, height, doOk, doReturn, doClose, body, footer) {
-            var dlg = window.open('dialog.html', 'modal', `width=${width || 800},height=${height || 600}`);
+            var dlg = window.open('dialog.html', 'modal-' + getId(), `width=${width || 800},height=${height || 600}`);
             dlg.document.title = title;
             dlg.doReturn = doReturn;
             dlg.doClose = doClose;

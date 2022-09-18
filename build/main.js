@@ -2353,7 +2353,7 @@ function buildOptions(details, window, settings) {
         options.width = options.defaultWidth;
     if (!('height' in options) && 'defaultHeight' in options)
         options.width = options.defaultHeight;
-    if (details.frameName === 'modal') {
+    if (details.frameName === 'modal' || details.frameName.startsWith('modal-')) {
         // open window as modal
         Object.assign(options, {
             modal: true,
