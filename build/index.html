@@ -3251,28 +3251,28 @@
                         _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon']);
                     if (data && data.state)
                         _options += ',' + buildWindowOptions(data.state, ['bounds']);
-                    _windows['characters.html'] = window.open('characters.html', 'Characters', 'alwaysOnTopClient=true,defaultHeight=555,defaultWidth=650,backgroundColor=#fff,icon=' + path.join(__dirname, '../assets/icons/png/user.png') + _options);
+                    _windows['characters.html'] = window.open('characters.html', 'Characters-' + getId(), 'alwaysOnTopClient=true,defaultHeight=555,defaultWidth=650,backgroundColor=#fff,icon=' + path.join(__dirname, '../assets/icons/png/user.png') + _options);
                     break;
                 case 'mapper':
                     if (data && data.details)
                         _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon']);
                     if (data && data.state)
                         _options += ',' + buildWindowOptions(data.state, ['bounds']);
-                    _windows['mapper.html'] = window.open('mapper.html', 'Mapper', `alwaysOnTopClient=${client.options.mapper.alwaysOnTopClient},alwaysOnTop=${client.options.mapper.alwaysOnTop},showInTaskBar=${client.options.mapper.showInTaskBar},defaultHeight=600,defaultWidth=800,backgroundColor=#eae4d6,icon=${path.join(__dirname, '../assets/icons/png/map.png')}${_options}`);
+                    _windows['mapper.html'] = window.open('mapper.html', 'Mapper-' + getId(), `alwaysOnTopClient=${client.options.mapper.alwaysOnTopClient},alwaysOnTop=${client.options.mapper.alwaysOnTop},showInTaskBar=${client.options.mapper.showInTaskBar},defaultHeight=600,defaultWidth=800,backgroundColor=#eae4d6,icon=${path.join(__dirname, '../assets/icons/png/map.png')}${_options}`);
                     break;
                 case 'editor':
                     if (data && data.details)
                         _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon']);
                     if (data && data.state)
                         _options += ',' + buildWindowOptions(data.state, ['bounds']);
-                    _windows['editor.html'] = window.open('editor.html', 'Advanced Editor', `defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/edit.png')}${_options}`);
+                    _windows['editor.html'] = window.open('editor.html', 'Advanced Editor-' + getId(), `defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/edit.png')}${_options}`);
                     break;
                 case 'chat':
                     if (data && data.details)
                         _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon']);
                     if (data && data.state)
                         _options += ',' + buildWindowOptions(data.state, ['bounds']);
-                    _windows['chat.html'] = window.open('chat.html', 'Chat', `alwaysOnTopClient=${client.options.chat.alwaysOnTopClient},alwaysOnTop=${client.options.chat.alwaysOnTop},showInTaskBar=${client.options.chat.showInTaskBar},defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/chat.png')}${_options}`);
+                    _windows['chat.html'] = window.open('chat.html', 'Chat-' + getId(), `alwaysOnTopClient=${client.options.chat.alwaysOnTopClient},alwaysOnTop=${client.options.chat.alwaysOnTop},showInTaskBar=${client.options.chat.showInTaskBar},defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/chat.png')}${_options}`);
                     break;
                 case 'prefs':
                     _windows['prefs.html'] = window.open('prefs.html', 'modal', 'width=800,height=460,backgroundColor=#fff,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
