@@ -2319,7 +2319,7 @@ function buildOptions(details, window, settings) {
                     options[feature[0]] = parseInt(feature[1], 10);
                     break;
                 default:
-                    if (feature[1] === "true")
+                    if (feature.length === 1 || feature[1] === "true")
                         options[feature[0]] = true;
                     else if (feature[1] === "false")
                         options[feature[0]] = false;
