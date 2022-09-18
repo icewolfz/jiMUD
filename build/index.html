@@ -1741,7 +1741,7 @@
                         document.getElementById('immortal').style.display = 'block';
                         break;
                 }
-                //TODO loop opened windows and send using a function hook instead  or just have child windows do window.opener.client.on(...) directly, note will need to also make sure they unhook event when closed
+                //TODO just have child windows do window.opener.client.on(...) directly, note will need to also make sure they unhook event when closed
                 //ipcRenderer.send('GMCP-received', { mod: mod, obj: obj });
             });
 

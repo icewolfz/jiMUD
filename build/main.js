@@ -1835,11 +1835,7 @@ function initializeChildWindow(window, link, details) {
     });
 
     window.webContents.on('did-create-window', (childWindow, childDetails) => {
-        let url = childDetails.url;
-        let file = url;
-        if (url.startsWith('file:///' + __dirname.replace(/\\/g, '/')))
-            file = url.substring(__dirname.length + 9);
-        initializeChildWindow(childWindow, url, childDetails);
+        initializeChildWindow(childWindow, childDetails.url, childDetails);
     });
 }
 
