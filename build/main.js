@@ -1792,7 +1792,7 @@ function initializeChildWindow(window, link, details) {
             window.hide = () => { ipcRenderer.invoke("window", "hide"); };
             window.toggle = () => { ipcRenderer.invoke("window", "toggle"); };
             window.update = (options) => { ipcRenderer.invoke("window", "update", options); };
-            window.setProgress = (value, mode) => { ipcRenderer.invoke("window", "setProgressBar", value, mode); };
+            window.setProgressBar = (value, mode) => { ipcRenderer.invoke("window", "setProgressBar", value, mode); };
         })();`, window);
         if (!details.options.hide)
             window.show();

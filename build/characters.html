@@ -864,7 +864,7 @@
 
         function setProgressDialogValue(value) {
             window.opener.updateProgress({ value: value });
-            window.setProgress(value);
+            window.setProgressBar(value);
             document.getElementById('progress-dialog-progressbar').value = value * 100;
         }
 

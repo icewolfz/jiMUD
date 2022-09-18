@@ -16,6 +16,7 @@
             height: 100%;
             margin: 0;
             padding: 0;
+            overflow: hidden;
         }
 
         body {
@@ -48,7 +49,7 @@
     if (window.module) module = window.module;
     function doCancel() {
         ipcRenderer.send('progress-canceled');
-        if(window.opener && typeof window.opener.progressCanceled === 'function')
+        if (window.opener && typeof window.opener.progressCanceled === 'function')
             window.opener.progressCanceled();
         if (!noClose)
             window.close();
@@ -124,4 +125,5 @@
     });
 
     ipcRenderer.send('progress-loaded');
+    window.dispatchEvent(new Event('loaded'));
 </script>

@@ -2200,3 +2200,7 @@ export function isEqual(a, b): boolean {
         return isObjectEqual(a, b);
     return a === b;
 }
+
+export function createProgressDialog(title) {
+    return window.open('progress.html', 'modal', 'title=' + title + ',width=200,height=70,backgroundColor=#fff,icon=' + path.join(__dirname, '../../assets/icons/png/progress.png'));
+}
