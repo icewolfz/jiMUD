@@ -943,7 +943,7 @@
             _backup.saveSelection = client.options.backupSave;
 
             _backup.on('progress-start', (title) => {
-                updateProgress({ value: 0 });
+                updateProgress(0);
                 //if mapper window exist save the current data then start sending
                 client.debug(title);
                 if (_windows['mapper.html']) {
@@ -968,7 +968,7 @@
             _backup.on('error', (err) => {
                 if (document.getElementById('Progress').open)
                     document.getElementById('Progress').close();
-                updateProgress({ value: -1 });
+                updateProgress(-1);
                 client.error(err);
                 ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                     type: 'error',
@@ -984,7 +984,7 @@
             _backup.on('abort', (err) => {
                 if (document.getElementById('Progress').open)
                     document.getElementById('Progress').close();
-                updateProgress({ value: -1 });
+                updateProgress(-1);
                 ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                     type: 'error',
                     title: 'Aborted',
@@ -1003,12 +1003,12 @@
                 setTimeout(() => {
                     ipcRenderer.invoke('window', 'focus');
                 }, 500);
-                updateProgress({ value: -1 });
+                updateProgress(-1);
             });
 
             _backup.on('progress', (value) => {
                 $('#Progress progress').val(value);
-                updateProgress({ value: value / 100.0 });
+                updateProgress(value / 100.0);
             });
 
             _backup.on('import-map', (data) => {
@@ -3256,24 +3256,24 @@
                     break;
                 case 'mapper':
                     if (data && data.details)
-                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon']);
+                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent', 'alwaysOnTop', 'showInTaskBar']);
                     if (data && data.state)
                         _options += ',' + buildWindowOptions(data.state, ['bounds']);
-                    _windows['mapper.html'] = window.open('mapper.html', 'Mapper-' + getId(), `alwaysOnTopClient=${client.options.mapper.alwaysOnTopClient},alwaysOnTop=${client.options.mapper.alwaysOnTop},showInTaskBar=${client.options.mapper.showInTaskBar},defaultHeight=600,defaultWidth=800,backgroundColor=#eae4d6,icon=${path.join(__dirname, '../assets/icons/png/map.png')}${_options}`);
+                    _windows['mapper.html'] = window.open('mapper.html', 'Mapper-' + getId(), `persistent=${client.options.mapper.persistent},alwaysOnTopClient=${client.options.mapper.alwaysOnTopClient},alwaysOnTop=${client.options.mapper.alwaysOnTop},showInTaskBar=${client.options.mapper.showInTaskBar},defaultHeight=600,defaultWidth=800,backgroundColor=#eae4d6,icon=${path.join(__dirname, '../assets/icons/png/map.png')}${_options}`);
                     break;
                 case 'editor':
                     if (data && data.details)
-                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon']);
+                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent']);
                     if (data && data.state)
                         _options += ',' + buildWindowOptions(data.state, ['bounds']);
-                    _windows['editor.html'] = window.open('editor.html', 'Advanced Editor-' + getId(), `defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/edit.png')}${_options}`);
+                    _windows['editor.html'] = window.open('editor.html', 'Advanced Editor-' + getId(), `persistent=${client.options.editorPersistent},defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/edit.png')}${_options}`);
                     break;
                 case 'chat':
                     if (data && data.details)
-                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon']);
+                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent', 'alwaysOnTop', 'showInTaskBar']);
                     if (data && data.state)
                         _options += ',' + buildWindowOptions(data.state, ['bounds']);
-                    _windows['chat.html'] = window.open('chat.html', 'Chat-' + getId(), `alwaysOnTopClient=${client.options.chat.alwaysOnTopClient},alwaysOnTop=${client.options.chat.alwaysOnTop},showInTaskBar=${client.options.chat.showInTaskBar},defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/chat.png')}${_options}`);
+                    _windows['chat.html'] = window.open('chat.html', 'Chat-' + getId(), `persistent=${client.options.chat.persistent},alwaysOnTopClient=${client.options.chat.alwaysOnTopClient},alwaysOnTop=${client.options.chat.alwaysOnTop},showInTaskBar=${client.options.chat.showInTaskBar},defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/chat.png')}${_options}`);
                     break;
                 case 'prefs':
                     _windows['prefs.html'] = window.open('prefs.html', 'modal-' + getId(), 'width=800,height=460,backgroundColor=#fff,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
@@ -3284,7 +3284,7 @@
                     if (data && data.state)
                         _options += ',' + buildWindowOptions(data.state, ['bounds']);
                     if (client.options.windows.immortal && client.options.windows.immortal.options)
-                        _options += `,alwaysOnTopClient=${client.options.windows.immortal.options.alwaysOnTopClient},alwaysOnTop=${client.options.windows.immortal.options.alwaysOnTop},showInTaskBar=${client.options.windows.immortal.options.showInTaskBar}`;
+                        _options += `,persistent=${client.options.windows.immortal.options.persistent},alwaysOnTopClient=${client.options.windows.immortal.options.alwaysOnTopClient},alwaysOnTop=${client.options.windows.immortal.options.alwaysOnTop || false},showInTaskBar=${client.options.windows.immortal.options.showInTaskBar || false}`;
                     else
                         _options += `,alwaysOnTopClient=true`;
                     _windows['immortal.html'] = window.open('immortal.html', 'Immortal-' + getId(), `backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/ied.png')}${_options}`);
@@ -3300,11 +3300,11 @@
         function buildWindowOptions(options, filters) {
             if (!options) return '';
             if (!filters) filters = [];
-            return Object.keys(options).filter(key => filters.indexOf(key) !== -1).map(key => `${key}=${options[key]}`).join(',');
+            return Object.keys(options).filter(key => filters.indexOf(key) === -1).map(key => `${key}=${options[key]}`).join(',');
         }
 
         async function initWindows() {
-            var enableBackgroundThrottling = ipcRenderer.sendSync('get-setting', 'theme');
+            var enableBackgroundThrottling = ipcRenderer.sendSync('get-setting', 'enableBackgroundThrottling');
             if (!_windows['mapper.html']) {
                 if (client.options.showMapper)
                     openWindow('mapper');
@@ -3312,11 +3312,12 @@
                     openWindow('mapper', { details: { hide: true } });
             }
             else
-                _windows['mapper.html'].update({
+                updateWindow(_windows['mapper.html'], {
                     alwaysOnTopClient: client.options.mapper.alwaysOnTop,
                     alwaysOnTop: client.options.mapper.alwaysOnTopClient,
                     showInTaskBar: client.options.mapper.showInTaskBar,
-                    enableBackgroundThrottling: enableBackgroundThrottling
+                    enableBackgroundThrottling: enableBackgroundThrottling,
+                    persistent: client.options.mapper.persistent
                 });
             if (!_windows['editor.html']) {
                 if (client.options.showEditor)
@@ -3325,8 +3326,9 @@
                     openWindow('editor', { details: { hide: true } });
             }
             else
-                _windows['editor.html'].update({
-                    enableBackgroundThrottling: enableBackgroundThrottling
+                updateWindow(_windows['editor.html'], {
+                    enableBackgroundThrottling: enableBackgroundThrottling,
+                    persistent: client.options.editorPersistent
                 });
             if (!_windows['chat.html']) {
                 if (client.options.showChat)
@@ -3335,11 +3337,12 @@
                     openWindow('chat', { details: { hide: true } });
             }
             else
-                _windows['chat.html'].update({
+                updateWindow(_windows['chat.html'], {
                     alwaysOnTopClient: client.options.chat.alwaysOnTop,
                     alwaysOnTop: client.options.chat.alwaysOnTopClient,
                     showInTaskBar: client.options.chat.showInTaskBar,
-                    enableBackgroundThrottling: enableBackgroundThrottling
+                    enableBackgroundThrottling: enableBackgroundThrottling,
+                    persistent: client.options.chat.persistent
                 });
             if (!_windows['code.editor.html']) {
                 if (client.options.showCodeEditor)
@@ -3348,11 +3351,12 @@
                     openWindow('code.editor', { details: { hide: true } });
             }
             else
-                _windows['code.editor.html'].update({
+                updateWindow(_windows['code.editor.html'], {
                     alwaysOnTopClient: client.options.codeEditor.alwaysOnTop,
                     alwaysOnTop: client.options.codeEditor.alwaysOnTopClient,
                     showInTaskBar: client.options.codeEditor.showInTaskBar,
-                    enableBackgroundThrottling: enableBackgroundThrottling
+                    enableBackgroundThrottling: enableBackgroundThrottling,
+                    persistent: client.options.codeEditor.persistent
                 });
             //TODO add code editor support for when code editor is a child window
             //TODO maybe separate the global editor settings from the child window settings
@@ -3372,14 +3376,29 @@
                             openWindow(name, { details: client.options.windows[name].options });
                         }
                     }
-                    else
-                        _windows[name + '.html'].update({
-                            alwaysOnTopClient: client.options.windows[name].options.alwaysOnTop,
-                            alwaysOnTop: client.options.windows[name].options.alwaysOnTopClient,
+                    else {
+                        updateWindow(_windows[name + '.html'], {
+                            alwaysOnTopClient: client.options.windows[name].options.alwaysOnTopClient,
+                            alwaysOnTop: client.options.windows[name].options.alwaysOnTop,
                             showInTaskBar: client.options.windows[name].options.showInTaskBar,
-                            enableBackgroundThrottling: enableBackgroundThrottling
+                            enableBackgroundThrottling: enableBackgroundThrottling,
+                            persistent: client.options.windows[name].options.persistent
                         });
+                    }
                 }
+        }
+
+        function updateWindow(win, data) {
+            if (!win.update) {
+                setTimeout(() => {
+                    updateWindow(win, data);
+                }, 10);
+                return
+            }
+            console.log(win);
+            console.log(win.update);
+            console.log(win.ipcRenderer);
+            win.update(data);
         }
 
         function send(channel, ...args) {
@@ -3394,8 +3413,10 @@
             ipcRenderer.invoke(channel, ...args);
         }
 
-        function updateProgress(progress, mode) {
-            ipcRenderer.send('set-progress', progress, mode);
+        function updateProgress(progress) {
+            if (typeof progress === 'number')
+                progress = { value: progress };
+            ipcRenderer.send('set-progress', progress);
         }
 
         function getCharacter() {
@@ -3878,6 +3899,8 @@
         }
 
         function getId() {
+            if (!_id)
+                _id = ipcRenderer.sendSync('get-client-id') || 0;
             return _id;
         }
         //#endregion

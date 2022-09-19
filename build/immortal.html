@@ -37,7 +37,8 @@
         const moment = require('moment');
 
         var chokidar = require('chokidar');
-
+        var abortController = new AbortController();
+        //#region Variables
         var _ied, options;
         var _local = {}, _remote = {}, _downloads = {};
         var info = { localDirs: 0, localFiles: 0, remoteDirs: 0, remoteFiles: 0, uploads: 0, downloads: 0, active: 0 };
@@ -51,7 +52,8 @@
         var _qUpdate, _qUpdateID;
         var _qUpdateTracker;
         var _focusRemote, _focusLocal;
-
+        var _prefs;
+        //#endregion
         var menubar = new Menubar([
             {
                 label: '&File',
@@ -74,7 +76,7 @@
                         label: '&Preferences...',
                         accelerator: 'CmdOrCtrl+Comma',
                         click: () => {
-                            window.open('immortal.prefs.html', 'modal', 'backgroundColor=#fff,height=320,width=600,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
+                            _prefs = window.open('immortal.prefs.html', 'modal-immortal-' + window.opener.getId(), 'backgroundColor=#fff,height=320,width=600,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
                         }
                     },
                     { type: 'separator' },
@@ -210,9 +212,9 @@
                                     var data = localTable.rows({ selected: true }).data().pluck('path');
                                     for (var d = 0, dl = data.length; d < dl; d++) {
                                         if (_remote[path.basename(data[d])])
-                                            ipcRenderer.send('open-editor', data[d], options.remote + '/' + path.basename(data[d]));
+                                            openEditor(data[d], options.remote + '/' + path.basename(data[d]));
                                         else
-                                            ipcRenderer.send('open-editor', data[d]);
+                                            openEditor(data[d]);
                                     }
                                 }
                             },
@@ -256,9 +258,9 @@
                                     var selected = remoteTable.rows({ selected: true }).data();
                                     if (!selected.length) return;
                                     if (selected[0].size === -2)
-                                        ipcRenderer.send('send-command', `cd ${selected[0].path}`);
+                                        window.opener.client.sendCommand(`cd ${selected[0].path}`);
                                     else
-                                        ipcRenderer.send('send-command', `cd ${path.dirname(selected[0].path)}`);
+                                        window.opener.client.sendCommand(`cd ${path.dirname(selected[0].path)}`);
                                 }
                             },
                             { type: 'separator' },
@@ -365,7 +367,7 @@
                         label: '&Editor',
                         accelerator: 'CmdOrCtrl+E',
                         click: () => {
-                            ipcRenderer.send('open-editor', '');
+                            openEditor();
                         }
                     },
                     {
@@ -563,10 +565,8 @@
         }());
 
         function loadOptions(data) {
-            if (!data) {
-                var set = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
-                options = set.extensions['immortal'];
-            }
+            if (!data)
+                options = window.opener.client.options.extensions.immortal;
             else
                 options = data;
             if (!options) {
@@ -643,7 +643,8 @@
                 _ied.compressDownload = options.compress;
                 _ied.compressDir = options.compress;
             }
-            ipcRenderer.send('setting-changed', { type: 'extensions', name: 'immortal', value: options });
+            window.opener.client.options.extensions.immortal = options;
+            window.opener.client.saveOptions();
         }
 
         function updateLocal(p) {
@@ -858,101 +859,68 @@
 
         var updatingMenu = false;
 
-        function updateMenu() {
+        async function updateMenu() {
             if (updatingMenu) return;
             updatingMenu = true;
             key = '';
-            setTimeout(() => {
-                //var remote = $("#remote-list").hasClass("focused");
-                //var local = $("#local-list").hasClass("focused");
-                //var queue = $("#queue-list").hasClass("focused");
-                //var either = remote || local;
-                //var localFilesOnly = false;
-                //var localFoldersOnly = false;
-                var localSelected = false;
-                //var remoteSelectedFiles = false;
-                //var remoteFoldersOnly = false;
-                var remoteSelected = false;
-                var queueSelected = false;
 
-                var data = localTable.rows({ selected: true }).data().pluck('size');
-                localSelected = data.length != 0;
-                /*
-                var dirs = 0;
-                var d, dl;
-                for (d = 0, dl = data.length; d < data.length; d++) {
-                    if (data[d] === -2) {
-                        dirs++;
-                    }
-                }
-                */
-                //localFilesOnly = dirs != data.length;
-                //localFoldersOnly = dirs === data.length;
+            var localSelected = false;
+            var remoteSelected = false;
+            var queueSelected = false;
 
-                data = remoteTable.rows({ selected: true }).data().pluck('size');
-                remoteSelected = data.length !== 0;
-                //remoteSelectedFiles = data.filter(f => f !== -2).length !== 0;
-                /*
-                dirs = 0;
-                for (d = 0; d < data.length; d++) {
-                    if (data[d] === -2) {
-                        dirs++;
-                    }
-                }
-                */
-                //remoteFilesOnly = dirs != data.length;
-                //remoteFoldersOnly = dirs === data.length;
+            var data = localTable.rows({ selected: true }).data().pluck('size');
+            localSelected = data.length != 0;
+            data = remoteTable.rows({ selected: true }).data().pluck('size');
+            remoteSelected = data.length !== 0;
 
-                data = queueTable.rows({ selected: true }).data();
-                queueSelected = data.length != 0;
+            data = queueTable.rows({ selected: true }).data();
+            queueSelected = data.length != 0;
 
-                menubar.updateItem('file|upload', { enabled: localSelected });
-                menubar.updateItem('file|download', { enabled: remoteSelected });
+            menubar.updateItem('file|upload', { enabled: localSelected });
+            menubar.updateItem('file|download', { enabled: remoteSelected });
 
-                menubar.updateItem('queue|start', { enabled: queueSelected });
-                menubar.updateItem('queue|pause', { enabled: queueSelected });
-                menubar.updateItem('queue|stop', { enabled: queueSelected });
+            menubar.updateItem('queue|start', { enabled: queueSelected });
+            menubar.updateItem('queue|pause', { enabled: queueSelected });
+            menubar.updateItem('queue|stop', { enabled: queueSelected });
 
-                menubar.updateItem('edit|local|rename', { enabled: localSelected });
-                menubar.updateItem('edit|local|delete', { enabled: localSelected });
+            menubar.updateItem('edit|local|rename', { enabled: localSelected });
+            menubar.updateItem('edit|local|delete', { enabled: localSelected });
 
-                menubar.updateItem('edit|local|reveal in explorer...', { enabled: localSelected });
-                menubar.updateItem('edit|local|open...', { enabled: localSelected });
-                menubar.updateItem('edit|local|open with editor...', { enabled: localSelected });
-                menubar.updateItem('edit|local|open with external editor...', { enabled: localSelected && options.editor && options.editor.length > 0 });
+            menubar.updateItem('edit|local|reveal in explorer...', { enabled: localSelected });
+            menubar.updateItem('edit|local|open...', { enabled: localSelected });
+            menubar.updateItem('edit|local|open with editor...', { enabled: localSelected });
+            menubar.updateItem('edit|local|open with external editor...', { enabled: localSelected && options.editor && options.editor.length > 0 });
 
-                menubar.updateItem('edit|remote|goto', { enabled: remoteSelected });
-                menubar.updateItem('edit|remote|change to directory', { enabled: remoteSelected });
-                menubar.updateItem('edit|remote|update', { enabled: remoteSelected });
-                menubar.updateItem('edit|remote|renew', { enabled: remoteSelected });
-                menubar.updateItem('edit|remote|clone', { enabled: remoteSelected });
-                menubar.updateItem('edit|remote|dest', { enabled: remoteSelected });
-                menubar.updateItem('edit|remote|backup', { enabled: remoteSelected });
-                menubar.updateItem('edit|remote|copy full path', { enabled: remoteSelected });
-                menubar.updateItem('edit|remote|edit...', { enabled: remoteSelected });
+            menubar.updateItem('edit|remote|goto', { enabled: remoteSelected });
+            menubar.updateItem('edit|remote|change to directory', { enabled: remoteSelected });
+            menubar.updateItem('edit|remote|update', { enabled: remoteSelected });
+            menubar.updateItem('edit|remote|renew', { enabled: remoteSelected });
+            menubar.updateItem('edit|remote|clone', { enabled: remoteSelected });
+            menubar.updateItem('edit|remote|dest', { enabled: remoteSelected });
+            menubar.updateItem('edit|remote|backup', { enabled: remoteSelected });
+            menubar.updateItem('edit|remote|copy full path', { enabled: remoteSelected });
+            menubar.updateItem('edit|remote|edit...', { enabled: remoteSelected });
 
-                menubar.updateItem('edit|remote|rename', { enabled: remoteSelected });
-                menubar.updateItem('edit|remote|delete', { enabled: remoteSelected });
+            menubar.updateItem('edit|remote|rename', { enabled: remoteSelected });
+            menubar.updateItem('edit|remote|delete', { enabled: remoteSelected });
 
-                $('#btn-rename-local').prop('disabled', !localSelected);
-                $('#btn-delete-local').prop('disabled', !localSelected);
-                $('#btn-upload-local').prop('disabled', !localSelected);
-                $('#btn-reveal-local').prop('disabled', !localSelected);
-                $('#btn-open-local').prop('disabled', !localSelected);
-                $('#btn-editor-local').prop('disabled', !localSelected);
-                //$("#btn-editor-local").prop('disabled', !(localSelected && options.editor && options.editor.length > 0));
+            $('#btn-rename-local').prop('disabled', !localSelected);
+            $('#btn-delete-local').prop('disabled', !localSelected);
+            $('#btn-upload-local').prop('disabled', !localSelected);
+            $('#btn-reveal-local').prop('disabled', !localSelected);
+            $('#btn-open-local').prop('disabled', !localSelected);
+            $('#btn-editor-local').prop('disabled', !localSelected);
 
-                $('#btn-rename-remote').prop('disabled', !remoteSelected);
-                $('#btn-delete-remote').prop('disabled', !remoteSelected);
-                $('#btn-download-remote').prop('disabled', !remoteSelected);
-                $('#btn-edit-remote').prop('disabled', !remoteSelected);
+            $('#btn-rename-remote').prop('disabled', !remoteSelected);
+            $('#btn-delete-remote').prop('disabled', !remoteSelected);
+            $('#btn-download-remote').prop('disabled', !remoteSelected);
+            $('#btn-edit-remote').prop('disabled', !remoteSelected);
 
-                $('#btn-start').prop('disabled', !queueSelected);
-                $('#btn-pause').prop('disabled', !queueSelected);
-                $('#btn-stop').prop('disabled', !queueSelected);
-                doUpdate(1);
-                updatingMenu = false;
-            }, 0);
+            $('#btn-start').prop('disabled', !queueSelected);
+            $('#btn-pause').prop('disabled', !queueSelected);
+            $('#btn-stop').prop('disabled', !queueSelected);
+            doUpdate(1);
+            updatingMenu = false;
         }
 
         function renderFile(data, type, full) {
@@ -1035,7 +1003,6 @@
         }
 
         $(document).ready(() => {
-
             $('#local-list').DataTable({
                 keys: true,
                 paging: false,
@@ -1243,6 +1210,16 @@
                 ]
             });
             loadOptions();
+            window.opener.client.on('options-loaded', () => {
+                loadOptions();
+            }, { signal: abortController.signal });
+            window.opener.client.on('received-GMCP', (mod, obj) => {
+                if (options && options.debug)
+                    console.log({ mod: mod, obj: obj });
+                if (_ied)
+                    _ied.processGMCP(mod, obj);
+            }, { signal: abortController.signal });
+
             _ied = new IED(options.local, options.remote);
             _ied.prefix = 'manager-';
             _ied.local = options.local;
@@ -1258,6 +1235,9 @@
                 else
                     _ied.getDir(options.remote);
             });
+            _ied.on('send-gmcp', (data) => {
+                window.opener.client.sendGMCP(data);
+            })
             _ied.on('error', (error) => {
                 if (error && error.code) {
                     switch (error.code) {
@@ -1350,8 +1330,8 @@
                 info.active = 0;
                 queueTable.rows().remove();
                 doUpdate(9);
-                ipcRenderer.send('set-progress-window', 'immortal', { value: -1 });
-                ipcRenderer.send('set-progress', { value: -1 });
+                window.setProgressBar(-1);
+                window.opener.updateProgress(-1);
             });
             _ied.on('dir', (dir, files, tag, local) => {
                 var f, fl, file;
@@ -1831,7 +1811,10 @@
                 //$("body")[0].scrollTop = 0
                 row.select();
                 //hack, seems this gets set wrong and causes shift click selection to act wonky, setting to current item index seems to fix it
-                localTable.context[0]._select_lastCell.row = row.index();
+                if (localTable.context[0]._select_lastCell)
+                    localTable.context[0]._select_lastCell.row = row.index();
+                else
+                    localTable.context[0]._select_lastCell = { row: row.index(), column: 0, columnVisible: 0 };
                 clearTimeout(keyClearID);
                 keyClearID = setTimeout(() => {
                     key = '';
@@ -1880,7 +1863,10 @@
                 //$("body")[0].scrollTop = 0
                 row.select();
                 //hack, seems this gets set wrong and causes shift click selection to act wonky, setting to current item index seems to fix it
-                remoteTable.context[0]._select_lastCell.row = row.index();
+                if (remoteTable.context[0]._select_lastCell)
+                    remoteTable.context[0]._select_lastCell.row = row.index();
+                else
+                    remoteTable.context[0]._select_lastCell = { row: row.index(), column: 0, columnVisible: 0 };
                 clearTimeout(keyClearID);
                 keyClearID = setTimeout(() => {
                     key = '';
@@ -2583,6 +2569,11 @@
             $(window).trigger('resize');
 
             window.onbeforeunload = function () {
+                if (!closeable()) {
+                    evt.returnValue = false;
+                    return 'no';
+                }
+                abortController.abort();
                 clearWatcher();
             };
         });
@@ -2707,9 +2698,9 @@
                         var selected = remoteTable.rows({ selected: true }).data();
                         if (!selected.length) return;
                         if (selected[0].size === -2)
-                            ipcRenderer.send('send-command', `cd ${selected[0].path}`);
+                            window.opener.client.sendCommand(`cd ${selected[0].path}`);
                         else
-                            ipcRenderer.send('send-command', `cd ${path.dirname(selected[0].path)}`);
+                            window.opener.client.sendCommand(`cd ${path.dirname(selected[0].path)}`);
                     }
                 }));
                 c.append(new MenuItem({ type: 'separator' }));
@@ -2756,7 +2747,7 @@
                 c.append(new MenuItem({
                     label: 'Change to directory',
                     click: () => {
-                        ipcRenderer.send('send-command', `cd ${options.remote}`);
+                        window.opener.client.sendCommand(`cd ${options.remote}`);
                     }
                 }));
             }
@@ -2898,6 +2889,21 @@
             shell.openPath(path);
         }
 
+        function openEditor(file, remote, remoteEdit) {
+            if (!window.opener._windows['code.editor']) {
+                window.opener.openWindow('code.editor').then(() => {
+                    //not opened for what ever reason
+                    if (!window.opener._windows['code.editor']) return;
+                    window.opener._windows['code.editor'].openEditor(file, remote, remoteEdit);
+                    window.opener._windows['code.editor'].focus();
+                });
+                return;
+            }
+            else
+                window.opener._windows['code.editor'].openEditor(file, remoteEdit); window.opener._windows['code.editor'].openEditor(data, remote, remoteEdit);
+            window.opener._windows['code.editor'].focus();
+        }
+
         function download() {
             var data = remoteTable.rows({ selected: true }).data();
             _ied.begin();
@@ -3025,6 +3031,24 @@
         // eslint-disable-next-line no-unused-vars
         function closeHidden() {
             ipcRenderer.invoke('window', 'hide');
+        }
+
+        $closeWindow = false;
+        function closeable(all) {
+            if (!$closeWindow) {
+                if (_prefs && !_prefs.closed) {
+                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        type: 'error',
+                        title: 'Preferences dialog open',
+                        message: 'You must close the Preferences dialog before you can close immortal tools.',
+                        defaultId: 1
+                    });
+                    $closeWindow = false;
+                }
+                else
+                    $closeWindow = true;
+            }
+            return $closeWindow;
         }
 
         function clearWatcher() {
@@ -3452,10 +3476,10 @@
                 if (selected[s].size === -2) continue;
                 if (noExt) {
                     var name = path.basename(selected[s].name, selected[s].type);
-                    ipcRenderer.send('send-command', `${cmd} ${options.remote}/${name}`);
+                    window.opener.client.sendCommand(`${cmd} ${options.remote}/${name}`);
                 }
                 else
-                    ipcRenderer.send('send-command', `${cmd} ${selected[s].path}`);
+                    window.opener.client.sendCommand(`${cmd} ${selected[s].path}`);
             }
         }
 
@@ -3464,7 +3488,7 @@
             var selected = remoteTable.rows({ selected: true }).data();
             for (var s = 0, sl = selected.length; s < sl; s++) {
                 if (selected[s].size === -2) continue;
-                ipcRenderer.send('send-command', `${cmd} ${selected[s].path}`);
+                window.opener.client.sendCommand(`${cmd} ${selected[s].path}`);
                 break;
             }
         }
@@ -3531,32 +3555,6 @@
             }, 500);
         }
 
-        ipcRenderer.on('GMCP-received', (event, data) => {
-            if (options && options.debug)
-                console.log(data);
-            if (_ied)
-                _ied.processGMCP(data.mod, data.obj);
-        });
-
-        ipcRenderer.on('reload-options', () => {
-            loadOptions();
-        });
-
-        ipcRenderer.on('setting-changed', (event, data) => {
-            if (data.type === 'extensions' && data.name === 'immortal') {
-                loadOptions(data.value);
-                if (_ied) {
-                    _ied.local = options.local;
-                    _ied.remote = options.remote;
-                    _ied.bufferSize = options.bufferSize;
-                    _ied.useTemp = options.tempFile;
-                    _ied.compressUpload = options.compress;
-                    _ied.compressDownload = options.compress;
-                    _ied.compressDir = options.compress;
-                }
-            }
-        });
-
         function bulkQueueRemove() {
             if (!_remove || _remove.length === 0) {
                 _removeID = null;
@@ -3583,7 +3581,7 @@
                             }
                         }
                         else
-                            ipcRenderer.send('open-editor', item.local, item.remote);
+                            openEditor(item.local, item.remote);
                     }
                     info.downloads--;
                 }
@@ -3654,16 +3652,7 @@
             info.active = rows.count();
             */
             doUpdate(25);
-            if (info.downloads + info.uploads === 0)
-                info.active = 0;
-            if (info.active > 0) {
-                ipcRenderer.send('set-progress-window', 'immortal', { value: 1.0 - (info.downloads + info.uploads) / info.active });
-                ipcRenderer.send('set-progress', { value: 1.0 - (info.downloads + info.uploads) / info.active });
-            }
-            else {
-                ipcRenderer.send('set-progress-window', 'immortal', { value: -1 });
-                ipcRenderer.send('set-progress', { value: -1 });
-            }
+            updateQueueProgress();
             _remove = null;
             _removeID = null;
         }
@@ -3673,8 +3662,8 @@
                 _qUpdate = null;
                 _qUpdateTracker = null;
                 _qUpdateID = null;
-                ipcRenderer.send('set-progress-window', 'immortal', { value: -1 });
-                ipcRenderer.send('set-progress', { value: -1 });
+                window.setProgressBar(-1);
+                window.opener.updateProgress(-1);
                 return;
             }
             var uc = _qUpdate.length;
@@ -3703,19 +3692,45 @@
             });
             info.active = rows.count();
             */
-            if (info.downloads + info.uploads === 0)
-                info.active = 0;
-            if (info.active > 0) {
-                ipcRenderer.send('set-progress-window', 'immortal', { value: 1.0 - (info.downloads + info.uploads) / info.active });
-                ipcRenderer.send('set-progress', { value: 1.0 - (info.downloads + info.uploads) / info.active });
-            }
-            else {
-                ipcRenderer.send('set-progress-window', 'immortal', { value: -1 });
-                ipcRenderer.send('set-progress', { value: -1 });
-            }
+            updateQueueProgress();
             _qUpdate = null;
             _qUpdateTracker = null;
             _qUpdateID = null;
+        }
+
+        function updateQueueProgress() {
+            //var rows = localTable.rows().data().pluck('progress');
+            var progress = 0;
+            var count = 0;
+            queueTable.rows().every(function (rowIdx, tableLoop, rowLoop) {
+                var data = this.data();
+                if (!data.error || data.error.length === 0) {
+                    progress += data.progress;
+                    count++;
+                }
+            });
+
+            if (count === 0) {
+                window.setProgressBar(-1);
+                window.opener.updateProgress(-1);
+            }
+            else {
+                progress /= count;
+                window.setProgressBar(progress);
+                window.opener.updateProgress(progress);
+            }
+            /*
+                if (info.downloads + info.uploads === 0)
+                    info.active = 0;
+                if (info.active > 0) {
+                    window.setProgressBar(1.0 - (info.downloads + info.uploads) / info.active);
+                    window.opener.updateProgress(1.0 - (info.downloads + info.uploads) / info.active);
+                }
+                else {
+                    window.setProgressBar(-1);
+                    window.opener.updateProgress(-1);
+                }
+                */
         }
 
         var _rTimeout = 0;
@@ -3798,9 +3813,9 @@
             for (var d = 0, dl = selected.length; d < dl; d++) {
                 if (selected[d].size === -2) continue;
                 if (_remote[path.basename(selected[d].path)])
-                    ipcRenderer.send('open-editor', selected[d].path, options.remote + '/' + path.basename(selected[d].path));
+                    openEditor(selected[d].path, options.remote + '/' + path.basename(selected[d].path));
                 else
-                    ipcRenderer.send('open-editor', selected[d].path);
+                    openEditor(selected[d].path);
             }
         }
 
@@ -3808,7 +3823,7 @@
             var selected = remoteTable.rows({ selected: true }).data();
             for (var d = 0, dl = selected.length; d < dl; d++) {
                 if (selected[d].size === -2) continue;
-                ipcRenderer.send('open-editor', null, options.remote + '/' + path.basename(selected[d].path), true);
+                openEditor(null, options.remote + '/' + path.basename(selected[d].path), true);
             }
         }
 

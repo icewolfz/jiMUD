@@ -995,7 +995,7 @@ ipcMain.on('set-progress', (event, progress, mode) => {
     const clientId = getClientId(browserViewFromContents(event.sender));
     const windowId = getWindowId(window);
     clients[clientId].progress = progress.value;
-    clients[clientId].progressMode = mode;
+    clients[clientId].progressMode = progress.mode || mode;
     const cl = windows[windowId].clients.length;
     let totalProgress = 0.0;
     let totalCount = 0;
@@ -1017,22 +1017,18 @@ ipcMain.on('set-progress', (event, progress, mode) => {
 });
 
 ipcMain.on('reload-profiles', event => {
-    for (client in clients) {
-        for (clientId in clients) {
-            if (!Object.prototype.hasOwnProperty.call(clients, clientId))
-                continue;
-            clients[clientId].view.webContents.send('reload-profiles');
-        }
+    for (clientId in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId))
+            continue;
+        clients[clientId].view.webContents.send('reload-profiles');
     }
 });
 
 ipcMain.on('reload-profile', (event, profile) => {
-    for (client in clients) {
-        for (clientId in clients) {
-            if (!Object.prototype.hasOwnProperty.call(clients, clientId))
-                continue;
-            clients[clientId].view.webContents.send('reload-profile', profile);
-        }
+    for (clientId in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId))
+            continue;
+        clients[clientId].view.webContents.send('reload-profile', profile);
     }
 });
 
@@ -1146,6 +1142,55 @@ ipcMain.on('trash-item-sync', async (event, file) => {
 
 ipcMain.handle('window', (event, action, ...args) => {
     var current = BrowserWindow.fromWebContents(event.sender);
+    if (!current || current.isDestroyed()) return;
+    if (action === "focus")
+        current.focus();
+    else if (action === "hide")
+        current.hide();
+    else if (action === "minimize")
+        current.minimize();
+    else if (action === "close")
+        current.close();
+    else if (action === 'clearCache')
+        return current.webContents.session.clearCache();
+    else if (action === 'openDevTools')
+        current.openDevTools();
+    else if (action === 'show')
+        current.show();
+    else if (action === 'toggle') {
+        if (current.isVisible()) {
+            if (args[0])
+                current.hide();
+            else
+                current.minimize();
+        }
+        else
+            current.show();
+    }
+    else if (action === 'setEnabled')
+        current.setEnabled(...args);
+    else if (action === 'toggleDevTools') {
+        if (current.isDevToolsOpened())
+            current.closeDevTools();
+        else
+            current.openDevTools();
+    }
+    else if (action === 'reload')
+        current.reload();
+    else if (action === 'setIcon')
+        current.setIcon(...args);
+    else if (action === 'update')
+        updateWindow(current, getChildParentWindow(current), ...args);
+    else if (action === 'updateAll')
+        updateAll(...args);
+    else if (action === 'setProgress' || action === 'setProgressBar')
+        current.setProgressBar(...args);
+});
+
+ipcMain.handle('parent-window', (event, action, ...args) => {
+    var current = BrowserWindow.fromWebContents(event.sender);
+    //get parent or default back to caller
+    current = current.getParentWindow() || current;
     if (!current || current.isDestroyed()) return;
     if (action === "focus")
         current.focus();
@@ -1447,9 +1492,6 @@ ipcMain.on('can-close-all-windows', async (event) => {
     event.returnValue = await canCloseAllWindows();
 });
 //#endregion
-ipcMain.on('execute-main', (event, code) => {
-    executeScript(code, win);
-});
 
 ipcMain.on('update-title', (event, options) => {
     const client = clientFromContents(event.sender);
@@ -1495,6 +1537,9 @@ ipcMain.on('reload-options', (events, preferences, clientId) => {
     }
 });
 
+ipcMain.on('get-client-id', event => {
+    event.returnValue = getClientId(browserViewFromContents(event.sender));
+})
 //bounds, id, data, file
 function createClient(options) {
     options = options || {};
@@ -1846,6 +1891,13 @@ function getChildWindowIndex(windows, childWindow) {
             return idx;
     }
     return -1;
+}
+
+function getWindowClientId(window) {
+    const clientId = idMap.get(window);
+    if (clients[clientId])
+        return clientId;
+    return null;
 }
 
 function executeCloseHooks(window) {
@@ -2319,7 +2371,7 @@ function buildOptions(details, window, settings) {
                         options[feature[0]] = true;
                     else if (feature[1] === "false")
                         options[feature[0]] = false;
-                    else
+                    else if (feature[1] !== '[object Object]')
                         options[feature[0]] = feature[1];
                     break;
             }
@@ -2460,6 +2512,20 @@ function updateWindow(window, parent, options) {
     if ('showInTaskBar' in options)
         window.setSkipTaskbar((!options.showInTaskBar && (options.alwaysOnTopClient || options.alwaysOnTop)) ? true : false);
     updateWebContents(window.webContents, options);
+    const clientId = getWindowClientId(window);
+    for (child in clients[clientId].windows) {
+        if (!Object.prototype.hasOwnProperty.call(clients[clientId].windows, child))
+            continue;
+        if (clients[clientId].windows[child].window === window) {
+            //update live options to ensure any window data is saved correctly
+            const details = clients[clientId].windows[child].details;
+            for (option in options) {
+                if (!Object.prototype.hasOwnProperty.call(options, option)) continue;
+                details.options[option] = options[option];
+            }
+            break;
+        }
+    }
 }
 
 function updateWebContents(contents, options) {

@@ -1,7 +1,7 @@
 let BrowserWindow, Menu;
 const isRender = typeof process === 'undefined' || !process || process.type === 'renderer';
 if (isRender) {
-    BrowserWindow = require('@electron/remote').BrowserWindow;
+    BrowserWindow = require('@electron/remote');
     Menu = require('@electron/remote').Menu;
 }
 else {

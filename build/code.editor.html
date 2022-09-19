@@ -4463,6 +4463,10 @@
     });
 
     ipcRenderer.on('open-editor', (event, file, remoteFile, remoteEdit) => {
+        openEditor(file, remoteFile, remoteEdit );
+    });
+
+    function openEditor(file, remoteFile, remoteEdit) {
         if (_loading) {
             if (!_open)
                 _open = [];
@@ -4470,7 +4474,7 @@
         }
         else
             openFile(file, remoteFile, null, remoteEdit);
-    });
+    }
 
     ipcRenderer.on('send-editor', (event, text, window) => {
         if (!manager.active || !manager.active.editor || window != 'code-editor')

@@ -905,7 +905,7 @@
                 if (choice === 0) {
                     //RESET
                 }      
-                */      
+                */
             //if (!_settings.windows) return;
             /*
             for (var name in _settings.windows) {
@@ -1317,8 +1317,10 @@
         }
 
         function setProgressDialogValue(value) {
-            ipcRenderer.send('set-progress', { value: value });
-            ipcRenderer.send('set-progress-window', 'code-editor', { value: value });
+            if (window.opener)
+                window.opener.updateProgress(value);
+            else //global open so set to parent window
+                ipcRenderer.send('parent-window', 'setProgressBar', value);
             document.getElementById('progress-dialog-progressbar').value = value * 100;
         }
 
@@ -1447,7 +1449,7 @@
                             <input type="checkbox" id="showTabsAddNewButton" /> Show add new button next to tabs
                         </label>
                     </div>
-                    
+
                 </div>
                 <div role="tabpanel" class="pref-pane" id="display">
                     <div class="col-sm-6 form-group">
@@ -2388,7 +2390,7 @@
                         <label class="control-label">
                             <input type="checkbox" id="askOnCloseAll" /> Enable warning dialog when any client is connected and closing window with more then 1 client
                         </label>
-                    </div>                    
+                    </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="askonchildren" /> Enable warning dialog when closing client and child windows are open
