@@ -3545,7 +3545,7 @@ function createMenu(window) {
                 {
                     label: 'Load default Layout',
                     id: 'defaultLayout',
-                    click: () => {
+                    click: (item, mWindow) => {
                         dialog.showMessageBox({
                             type: 'info',
                             message: 'Load default layout?',
@@ -3606,7 +3606,7 @@ function createMenu(window) {
                 },
                 {
                     label: '&jiMUD...',
-                    click: () => {
+                    click: (item, mWindow) => {
                         executeScriptClient('showHelp()', window || mWindow, true);
                     }
                 },
