@@ -320,8 +320,8 @@
         });
 
         $(document).ready(() => {
-            if (!ipcRenderer.sendSync('get-global', 'editorOnly')) {
-                options = window.opener.opener.client.on('options-loaded', () => {
+            if (!window.getGlobal('editorOnly')) {
+                window.opener.opener.client.on('options-loaded', () => {
                     loadColors();
                 }, { signal: abortController.signal });
             }
@@ -343,8 +343,8 @@
         }
 
         function loadColors() {
-            if (ipcRenderer.sendSync('get-global', 'editorOnly'))
-                options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
+            if (window.getGlobal('editorOnly'))
+                options = Settings.load(window.getGlobal('settingsFile'));
             else
                 options = window.opener.opener.client.options;
             var _dColors = getColors();

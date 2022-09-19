@@ -621,7 +621,7 @@
                     selected = !sel.isCollapsed && sel.type === 'Range' && manager.active.viewer.contains(sel.anchorNode);
                 }
                 let inputMenu;
-                if (ipcRenderer.sendSync('get-global', 'debug')) {
+                if (window.getGlobal('debug')) {
                     if (selected) {
                         inputMenu = Menu.buildFromTemplate([
                             {

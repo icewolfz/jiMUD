@@ -33,7 +33,7 @@
         const fs = require('fs');
         const path = require('path');
 
-        var editorOnly = ipcRenderer.sendSync('get-global', 'editorOnly');
+        var editorOnly = window.getGlobal('editorOnly');
         var abortController = new AbortController();
         var _colors, _ColorTable, options, _colorCodes;
         var _colorDialog;
@@ -463,7 +463,7 @@
             var codes = [];
             var color, d, dl, rgb;
             if (options.enableDebug)
-                ipcRenderer.send('debug', 'Advanced Editor Get Raw HTML: ' + tinymce.activeEditor.getContent({ format: 'raw' }));
+                window.opener.client.debug('Advanced Editor Get Raw HTML: ' + tinymce.activeEditor.getContent({ format: 'raw' }));
             for (d = data.length - 1; d >= 0; d--) {
                 if (!data[d].startsWith('"') && data[d] != 'BR' && data[d] != 'RESET')
                     data.pop();
@@ -1136,7 +1136,7 @@
                     });
                     editor.on('PastePreProcess', function (e) {
                         if (options.enableDebug)
-                            ipcRenderer.send('debug', 'Advanced Before Editor PastePreProcess: ' + e.content);
+                            window.opener.client.debug('Advanced Before Editor PastePreProcess: ' + e.content);
                         clearReverse($('.reverse', $(editor.getDoc()).contents()));
                         e.content = e.content.replace(/<\/p>/g, '<br>');
                         e.content = e.content.replace(/<\/h[1-6]>/g, '<br>');
@@ -1150,7 +1150,7 @@
                             e.content = e.content.substring(0, m.index) + e.content.substring(m.index, regex.lastIndex).replace(/\n/g, '<br>') + e.content.substring(regex.lastIndex);
                         }
                         if (options.enableDebug)
-                            ipcRenderer.send('debug', 'Advanced After Editor PastePreProcess: ' + e.content);
+                            window.opener.client.debug('Advanced After Editor PastePreProcess: ' + e.content);
                     });
                     editor.on('PastePreProcess', function () {
                         addReverse($('.reverse', $(editor.getDoc()).contents()));
@@ -1172,7 +1172,7 @@
                 //if (isEditable) {
                 if ((params.y) < 37) return;
                 var cMenu = tinymce.activeEditor.plugins['shadowmud'].buildMenu(params.editFlags);
-                if (ipcRenderer.sendSync('get-setting', 'spellchecking') && params.dictionarySuggestions.length) {
+                if (window.getSetting('spellchecking') && params.dictionarySuggestions.length) {
                     cMenu.insert(0, new MenuItem({ type: 'separator' }));
                     for (var w = params.dictionarySuggestions.length - 1; w >= 0; w--)
                         cMenu.insert(0, new MenuItem({
@@ -1323,7 +1323,7 @@
         function loadOptions() {
             //if editor only different settings so fall back to global settngs
             if (editorOnly)
-                options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
+                options = Settings.load(window.getGlobal('settingsFile'));
             else
                 options = window.opener.client.options;
             $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-size', options.cmdfontSize);

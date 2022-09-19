@@ -464,7 +464,7 @@
         var _windows = {};
         let closeWindow = false;
         //#endregion
-        loadTheme(ipcRenderer.sendSync('get-setting', 'theme'));
+        loadTheme(window.getSetting('theme'));
 
         //#region window events
         window.addEventListener('keydown', (event) => {
@@ -937,7 +937,6 @@
         }
         //#endregion
         async function initBackup() {
-            //_backup = new Backup(client, ipcRenderer.sendSync('get-global', 'mapFile'));
             _backup = new (require('./js/backup.js').Backup)(client, _windowState.data.map);
             _backup.loadSelection = client.options.backupLoad;
             _backup.saveSelection = client.options.backupSave;
@@ -1234,7 +1233,7 @@
                             }, 0);
                         }
                     }));
-                    if (client.options.enableDebug || ipcRenderer.sendSync('get-global', 'debug')) {
+                    if (client.options.enableDebug || window.getGlobal('debug')) {
                         c.append(new MenuItem({ type: 'separator' }));
                         c.append(new MenuItem({
                             label: 'Inspect', click: () => {
@@ -1455,7 +1454,7 @@
                 if (client.options.autoLogin && e.tag === 'USER' && _windowState.data.character && _windowState.data.character.length > 0)
                     client.send(_windowState.data.character + '\r\n');
                 else if (client.options.autoLogin && e.tag === 'PASSWORD') {
-                    var pass = ipcRenderer.sendSync('get-global', 'characterPass');
+                    var pass = window.getGlobal('characterPass');
                     if (pass && pass.length > 0) {
                     pass = pass.split(':');
                     pass = decrypt(pass[0], pass[1], pass[2]);
@@ -1797,7 +1796,7 @@
                     case 'prefs':
                     case 'options':
                     case 'preferences':
-                        if (ipcRenderer.sendSync('get-global', 'settingsFile') === _windowState.data.settings)
+                        if (window.getGlobal('settingsFile') === _windowState.data.settings)
                             ipcRenderer.send('show-global-preferences');
                         else
                             openWindow('prefs');
@@ -2091,7 +2090,7 @@
                         }
                     }));
                 }
-                if (client.options.enableDebug || ipcRenderer.sendSync('get-global', 'debug')) {
+                if (client.options.enableDebug || window.getGlobal('debug')) {
                     c.append(new MenuItem({ type: 'separator' }));
                     c.append(new MenuItem({
                         label: 'Inspect', click: () => {
@@ -2291,7 +2290,7 @@
                         toggleView('lagmeter');
                     }
                 }));
-                if (client.options.enableDebug || ipcRenderer.sendSync('get-global', 'debug')) {
+                if (client.options.enableDebug || window.getGlobal('debug')) {
                     c.append(new MenuItem({ type: 'separator' }));
                     c.append(new MenuItem({
                         label: 'Inspect', click: () => {
@@ -2375,8 +2374,8 @@
             client.sendChat = updateChat;
             /*
             //TODO this is no longer supported as multi window, need to either remove or rethink this commafparent.classList.containsnd line argument
-            if (ipcRenderer.sendSync('get-global', 'profiles') && ipcRenderer.sendSync('get-global', 'profiles').length > 0)
-                client.enabledProfiles = ipcRenderer.sendSync('get-global', 'profiles');
+            if (window.getGlobal('profiles') && window.getGlobal('profiles').length > 0)
+                client.enabledProfiles = window.getGlobal('profiles');
             */
             client.display.enableBell = false;
             window.client = client;
@@ -2702,7 +2701,7 @@
                 { menu: ['file', 'enableTriggers'], options: { checked: client.enableTriggers } },
                 { menu: ['file', 'close'], options: { visible: _clients.clients !== 1, enabled: _clients.clients !== 1 } }
             ];
-            if (ipcRenderer.sendSync('get-global', 'settingsFile') === _windowState.data.settings) {
+            if (window.getGlobal('settingsFile') === _windowState.data.settings) {
                 menu.push({ menu: ['file', 'preferences'], options: { visible: false } })
                 menu.push({ menu: ['file', 'globalPreferences'], options: { label: '&Preferences...' } })
             }
@@ -2820,13 +2819,13 @@
             delete _windowState.data.character;
             delete _windowState.data.dev;
             var same = true;
-            if (_windowState.data.settings !== ipcRenderer.sendSync('get-global', 'settingsFile')) {
-                _windowState.data.settings = ipcRenderer.sendSync('get-global', 'settingsFile');
+            if (_windowState.data.settings !== window.getGlobal('settingsFile')) {
+                _windowState.data.settings = window.getGlobal('settingsFile');
                 client.settingsFile = _windowState.data.settings;
                 same = false;
             }
-            if (_windowState.data.map !== ipcRenderer.sendSync('get-global', 'mapFile')) {
-                _windowState.data.map = ipcRenderer.sendSync('get-global', 'mapFile')
+            if (_windowState.data.map !== window.getGlobal('mapFile')) {
+                _windowState.data.map = window.getGlobal('mapFile')
                 _backup.mapFile = _windowState.data.map;
                 if (_windows['mapper.html'])
                     _windows['mapper.html'].setMap(_windowState.data.map);
@@ -3005,7 +3004,7 @@
         });
 
         function reloadOptions(settings, global) {
-            if (global) loadTheme(ipcRenderer.sendSync('get-setting', 'theme'));
+            if (global) loadTheme(window.getSetting('theme'));
             if (settings !== _windowState.data.settings) return;
             client.loadOptions();
             _logger.postMessage({
@@ -3068,7 +3067,7 @@
                         { type: 'separator' },
                         { role: 'selectAll' },
                     ]);
-                if (client.options.enableDebug || ipcRenderer.sendSync('get-global', 'debug')) {
+                if (client.options.enableDebug || window.getGlobal('debug')) {
                     inputMenu.append(new MenuItem({ type: 'separator' }));
                     inputMenu.append(new MenuItem({
                         label: 'Inspect', click: () => {
@@ -3076,7 +3075,7 @@
                         }
                     }));
                 }
-                if (ipcRenderer.sendSync('get-setting', 'spellchecking') && params.dictionarySuggestions.length) {
+                if (window.getSetting('spellchecking') && params.dictionarySuggestions.length) {
                     inputMenu.insert(0, new MenuItem({ type: 'separator' }));
                     start = input.selectionStart + params.selectionText.indexOf(params.misspelledWord);
                     end = start + params.misspelledWord.length;
@@ -3256,7 +3255,7 @@
         }
 
         async function initWindows() {
-            var enableBackgroundThrottling = ipcRenderer.sendSync('get-setting', 'enableBackgroundThrottling');
+            var enableBackgroundThrottling = window.getSetting('enableBackgroundThrottling');
             if (!_windows['mapper.html']) {
                 if (client.options.showMapper)
                     openWindow('mapper');
@@ -3379,6 +3378,15 @@
                 _windowState.data.character = ipcRenderer.sendSync('get-character', _windowState.data.characterId, 'Name');
             return _windowState.data.character;
         }
+
+        function getCharacterNotes(createName) {
+            if (_windowState.data.characterId > 0)
+                return parseTemplate(ipcRenderer.sendSync('get-character', _windowState.data.characterId, 'Notes') || '');
+            if (createName && _windowState.data.character && _windowState.data.character.length > 0)
+                return parseTemplate(path.join('{characters}', _windowState.data.character + '.notes'));
+            return '';
+        }
+
 
         function getMapFile() {
             return _windowState.data.map;
@@ -3803,21 +3811,21 @@
                 //make sure we have a settings file, default to global file
                 if (!('data' in data) || !data.data)
                     data.data = {
-                        settings: ipcRenderer.sendSync('get-global', 'settingsFile'),
-                        map: ipcRenderer.sendSync('get-global', 'mapFile')
+                        settings: window.getGlobal('settingsFile'),
+                        map: window.getGlobal('mapFile')
                     };
                 else {
                     if (!('settings' in data.data))
-                        data.data.settings = ipcRenderer.sendSync('get-global', 'settingsFile');
+                        data.data.settings = window.getGlobal('settingsFile');
                     if (!('map' in data.data))
-                        data.data.map = ipcRenderer.sendSync('get-global', 'mapFile');
+                        data.data.map = window.getGlobal('mapFile');
                 }
             }
             else
                 data = {
                     data: {
-                        settings: ipcRenderer.sendSync('get-global', 'settingsFile'),
-                        map: ipcRenderer.sendSync('get-global', 'mapFile')
+                        settings: window.getGlobal('settingsFile'),
+                        map: window.getGlobal('mapFile')
                     },
                     windows: [],
                     states: {}
@@ -3846,7 +3854,7 @@
         }
 
         function closeable(all, allWindows) {
-            if (ipcRenderer.sendSync('get-global', 'updating'))
+            if (window.getGlobal('updating'))
                 return true;
             //TODO convert the old  onbeforeunload to new closeable hook
             if (!closeWindow) {
@@ -3855,12 +3863,12 @@
                 }
                 //if closing all windows, and more then 1 client use ask all setting or if not all or 1 client use per client ask
                 if (client.connected) {
-                    if (all && (_clients.clients > 1 || _clients.windows > 1) && ipcRenderer.sendSync('get-setting', 'askOnCloseAll')) {
-                        if (ipcRenderer.sendSync('get-global', 'closeAll')) {
+                    if (all && (_clients.clients > 1 || _clients.windows > 1) && window.getSetting('askOnCloseAll')) {
+                        if (window.getGlobal('closeAll')) {
                             closeWindow = true;
                             return closeWindow;
                         }
-                        else if (ipcRenderer.sendSync('get-global', 'noCloseAll')) {
+                        else if (window.getGlobal('noCloseAll')) {
                             closeWindow = false;
                             return closeWindow;
                         }
@@ -3874,11 +3882,11 @@
                             });
                         if (choice === 2) { //yes to all
                             closeWindow = true;
-                            ipcRenderer.send('set-global', 'closeAll', true);
+                            window.setGlobal('closeAll', true);
                         }
                         else if (choice === 3) { //no to all
                             closeWindow = false;
-                            ipcRenderer.send('set-global', 'noCloseAll', true);
+                            window.setGlobal('noCloseAll', true);
                         }
                         else if (choice === 4) {
                             client.options.askonclose = false;
@@ -3886,7 +3894,7 @@
                             closeWindow = true;
                         }
                         else if (choice === 5) {
-                            ipcRenderer.send('set-setting', 'askOnCloseAll', false);
+                            window.setSetting('askOnCloseAll', false);
                             closeWindow = true;
                         }
                         else if (choice !== 0)

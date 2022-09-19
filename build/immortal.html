@@ -3421,7 +3421,7 @@
                     { type: 'separator' },
                     { role: 'selectAll' },
                 ];
-                if (ipcRenderer.sendSync('get-global', 'debug')) {
+                if (window.getGlobal('debug')) {
                     menu.push({ type: 'separator' });
                     menu.push({ label: 'Inspect', click: `ipcRenderer.send('inspect', ${e.pageX}, ${e.pageY})` });
                 }

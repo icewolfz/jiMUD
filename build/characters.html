@@ -420,12 +420,12 @@
                         defaultId: 1,
                     });
                     if (response === 0) {
-                        d = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
+                        d = Settings.load(window.getGlobal('settingsFile'));
                         d.save(sf);
                     }
                 }
                 else {
-                    d = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
+                    d = Settings.load(window.getGlobal('settingsFile'));
                     d.save(sf);
                 }
                 sf = parseTemplate(character.Map);
@@ -727,7 +727,7 @@
             if (response === 2) {
                 saveCharacters();
                 window.opener.loadCharacter(ID);
-                ipcRenderer.send('set-setting', 'askonloadCharacter', false);
+                window.setSetting('askonloadCharacter', false);
                 askonloadCharacter = false;
             }
             else if (response === 0) {
@@ -953,7 +953,7 @@
         }
 
         function getSettings() {
-            if (!current) return ipcRenderer.sendSync('get-global', 'settingsFile');
+            if (!current) return window.getGlobal('settingsFile');
             return parseTemplate(current.Preferences);
         }
 

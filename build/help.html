@@ -45,7 +45,7 @@
             }
             return old_render(tokens, idx, options, env, self);
         };
-
+        var abortController = new AbortController();
         var container;
         var contents;
         var tree;
@@ -88,7 +88,7 @@
             {
                 text: 'Functions',
                 id: 'functions',
-                nodes:[]
+                nodes: []
             },
             {
                 text: 'Preferences',
@@ -237,8 +237,8 @@
 
         function loadOptions(data) {
             if (!data) {
-                var set = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
-                options = set.extensions['help'];
+
+                options = window.opener.client.options.extensions['help'];
             }
             else
                 options = data;
@@ -255,7 +255,10 @@
         }
 
         function saveOptions() {
-            ipcRenderer.send('setting-changed', { type: 'extensions', name: 'help', value: options });
+            if (!window.opener.client.options.extensions.help)
+                window.opener.client.options.extensions.help = {};
+            window.opener.client.options.extensions.help = options;
+            window.opener.client.options.saveOptions();
         }
 
 
@@ -456,6 +459,11 @@
                     dragging = false;
                 }
             });
+            if (!window.getGlobal('editorOnly')) {
+                window.opener.client.on('options-loaded', () => {
+                    loadOptions();
+                }, { signal: abortController.signal });
+            }
         });
 
         function executeContextItem(idx, id, label, role) {
@@ -465,15 +473,9 @@
             updateButtons();
         }
 
-        ipcRenderer.on('reload-options', () => {
-            loadOptions();
-        });
-
-        ipcRenderer.on('setting-changed', (event, data) => {
-            if (data.type === 'extensions' && data.name === 'help') {
-                loadOptions(data.value);
-            }
-        });        
+        window.onbeforeunload = function (evt) {
+            abortController.abort();
+        };       
     </script>
 </head>
 

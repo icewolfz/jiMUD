@@ -13,6 +13,12 @@ const fs = require('fs');
 //const trash = require('trash');
 
 declare let ace;
+declare global {
+    interface Window {
+        getGlobal: any;
+        getSetting: any;
+    }
+}
 
 let profiles = new ProfileCollection();
 let currentProfile;
@@ -264,7 +270,7 @@ function addInputContext() {
             { type: 'separator' },
             { role: 'selectAll' }
         ]);
-        if (ipcRenderer.sendSync('get-global', 'debug')) {
+        if (window.getGlobal('debug')) {
             inputMenu.append(new MenuItem({ type: 'separator' }));
             inputMenu.append(new MenuItem(<MenuItemConstructorOptionsCustom>{
                 label: 'Inspect',
@@ -2763,7 +2769,7 @@ function loadOptions() {
     _watch = options.profiles.watchFiles;
     _sort = options.profiles.sortOrder;
     _sortDir = options.profiles.sortDirection || 1;
-    _spellchecker = ipcRenderer.sendSync('get-setting', 'spellchecking') || true;
+    _spellchecker = window.getSetting('spellchecking') || true;
     _prependTrigger = options.prependTriggeredLine;
     _parameter = options.parametersChar;
     _nParameter = options.nParametersChar;

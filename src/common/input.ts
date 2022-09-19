@@ -14,6 +14,7 @@ import { SettingList } from './settings';
 import { getAnsiColorCode, getColorCode, isMXPColor, getAnsiCode } from './ansi';
 declare let ipcRenderer;
 
+declare let getCharacterNotes;
 /**
  * MATHJS expression engine
  * @constant
@@ -371,7 +372,7 @@ export class Input extends EventEmitter {
          * @constant
          * @type {object}
          */
-         _mathjs = create(allWithCustomFunctions, {});
+        _mathjs = create(allWithCustomFunctions, {});
         const funs = {
             esc: '\x1b',
             cr: '\n',
@@ -1305,21 +1306,16 @@ export class Input extends EventEmitter {
             },
             charcomment: (args, math, scope) => {
                 let notes;
-                let c
                 if (args.length === 0) {
-                    c = ipcRenderer.sendSync('get-global', 'character') || '';
-                    if (!c || !c.length) return '';
-                    notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                    notes = getCharacterNotes();
                     if (isFileSync(notes))
                         return fs.readFileSync(notes, 'utf-8');
                     return '';
                 }
                 else if (args.length > 1)
                     throw new Error('Too many arguments for charcomment');
-                c = ipcRenderer.sendSync('get-global', 'character') || '';
-                if (!c || !c.length) return;
                 args[0] = args[0].compile().evaluate(scope).toString();
-                notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                notes = getCharacterNotes();
                 if (args[0].length === 0 || !isFileSync(notes))
                     fs.writeFileSync(notes, '');
                 else if (!fileSizeSync(notes))
@@ -1330,20 +1326,15 @@ export class Input extends EventEmitter {
             },
             charnotes: (args, math, scope) => {
                 let notes;
-                let c;
                 if (args.length === 0) {
-                    c = ipcRenderer.sendSync('get-global', 'character') || '';
-                    if (!c || !c.length) return '';
-                    notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                    notes = getCharacterNotes();
                     if (isFileSync(notes))
                         return fs.readFileSync(notes, 'utf-8');
                     return '';
                 }
                 else if (args.length > 1)
                     throw new Error('Too many arguments for charnotes');
-                c = ipcRenderer.sendSync('get-global', 'character') || '';
-                if (!c || !c.length) return;
-                notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                notes = getCharacterNotes();
                 args[0] = args[0].compile().evaluate(scope).toString();
                 fs.writeFileSync(notes, args[0]);
                 return;
@@ -1365,7 +1356,7 @@ export class Input extends EventEmitter {
         this.client = client;
         //wrap mathjs to load on demand for speed as not every may need math
         mathjs = () => {
-            if(_mathjs) return _mathjs;
+            if (_mathjs) return _mathjs;
             this.initMathJS();
             return _mathjs;
         }
@@ -6614,9 +6605,7 @@ export class Input extends EventEmitter {
                 return mathjs().randomInt(0, 100);
             case 'charcomment':
             case 'charnotes':
-                c = ipcRenderer.sendSync('get-global', 'character') || '';
-                if (!c || !c.length) return '';
-                notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                notes = getCharacterNotes();
                 if (isFileSync(notes))
                     return fs.readFileSync(notes, 'utf-8');
                 return '';
@@ -7486,9 +7475,7 @@ export class Input extends EventEmitter {
             case 'charcomment':
                 args = this.splitByQuotes(this.parseInline(res[2]), ',');
                 if (args.length === 0) {
-                    c = ipcRenderer.sendSync('get-global', 'character') || '';
-                    if (!c || !c.length) return '';
-                    notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                    notes = getCharacterNotes();
                     if (isFileSync(notes))
                         return fs.readFileSync(notes, 'utf-8');
                     return '';
@@ -7496,10 +7483,7 @@ export class Input extends EventEmitter {
                 else if (args.length > 1)
                     throw new Error('Too many arguments for charcomment');
                 if (this.client.options.allowEval) return null;
-                c = ipcRenderer.sendSync('get-global', 'character') || '';
-                if (!c || !c.length) return null;
-                args[0] = this.stripQuotes(args[0], true);
-                notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                notes = getCharacterNotes();
                 if (args[0].length === 0 || !isFileSync(notes))
                     fs.writeFileSync(notes, '');
                 else if (!fileSizeSync(notes))
@@ -7510,9 +7494,7 @@ export class Input extends EventEmitter {
             case 'charnotes':
                 args = this.splitByQuotes(this.parseInline(res[2]), ',');
                 if (args.length === 0) {
-                    c = ipcRenderer.sendSync('get-global', 'character') || '';
-                    if (!c || !c.length) return '';
-                    notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                    notes = getCharacterNotes();
                     if (isFileSync(notes))
                         return fs.readFileSync(notes, 'utf-8');
                     return '';
@@ -7520,10 +7502,8 @@ export class Input extends EventEmitter {
                 else if (args.length > 1)
                     throw new Error('Too many arguments for charnotes');
                 if (this.client.options.allowEval) return null;
-                c = ipcRenderer.sendSync('get-global', 'character') || '';
-                if (!c || !c.length) return null;
+                notes = getCharacterNotes();
                 args[0] = this.stripQuotes(args[0], true);
-                notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
                 fs.writeFileSync(notes, args[0]);
                 return null;
         }

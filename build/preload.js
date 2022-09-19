@@ -16,6 +16,8 @@ window.getGlobal = (variable) => ipcRenderer.sendSync('get-global', variable);
 window.setGlobal = (variable, value) => ipcRenderer.send('set-global', variable, value);
 window.getSetting = (variable) => ipcRenderer.sendSync('get-setting', variable);
 window.setSetting = (variable, value) => ipcRenderer.send('set-setting', variable, value);
+window.error = (error) => ipcRenderer.send('error', error);
+window.debug = (message) => ipcRenderer.send('debug', message);
 
 dialog = {
     showOpenDialog: (options) => ipcRenderer.invoke('show-dialog', 'showOpenDialog', options),

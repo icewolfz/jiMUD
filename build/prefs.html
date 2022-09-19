@@ -107,7 +107,7 @@
         var archiver, archive;
 
         var _settingsFile;
-        var _globalFile = ipcRenderer.sendSync('get-global', 'settingsFile');
+        var _globalFile = window.getGlobal('settingsFile');
         if (window.opener) {
             if (typeof window.opener.getSettings === 'function')
                 _settingsFile = window.opener.getSettings();
@@ -265,7 +265,7 @@
                     el.change();
                 })
                 .catch(err => {
-                    ipcRenderer.send('error', err);
+                    window.error(err);
                 });
 
             var p = path.join(parseTemplate('{data}'), 'profiles');

@@ -2375,7 +2375,7 @@
                 {
                     label: '&jiMUD...',
                     click: () => {
-                        var set = require('./js/settings').Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
+                        var set = require('./js/settings').Settings.load(window.getGlobal('settingsFile'));
                         if (set.windows['help'] && set.windows['help'].options) {
                             set.windows['help'].options.show = true;
                             ipcRenderer.send('show-window', 'help', set.windows['help'].options);
