@@ -490,7 +490,7 @@ function createWindow(options) {
 function createDialog(options) {
     if (!options)
         options = {};
-    options.parent = options.parent || getActiveWindow();
+    options.parent = options.parent || getActiveWindow().window;
     const bounds = options.parent.getBounds();
     //a bounds passed do some basic safety checks
     if (options.bounds) {
@@ -2926,6 +2926,7 @@ function createMenu() {
                     id: 'connect',
                     accelerator: 'CmdOrCtrl+N',
                     click: (item, mWindow) => {
+                        console.log(mWindow.getTitle());
                         executeScriptClient('client.connect()', mWindow, true);
                     }
                 },
