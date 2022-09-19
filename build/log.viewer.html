@@ -198,7 +198,7 @@
                 {
                     label: '&Toggle Developer Tools',
                     click: () => {
-                        ipcRenderer.invoke('window', 'toggleDevTools');
+                        window.toggleDevTools();
                     },
                     enabled: true
                 },
@@ -1026,7 +1026,7 @@
         }
         if (!savedOpened())
             return;
-        ipcRenderer.invoke('window', 'hide');
+        window.hide();
     }
 
     // eslint-disable-next-line no-unused-vars

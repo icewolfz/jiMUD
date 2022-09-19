@@ -1833,15 +1833,6 @@ function initializeChildWindow(window, link, details) {
         loadWindowScripts(window, details.frameName);
         if (!details.options.noInputContext)
             addInputContext(window, set.spellchecking);
-        executeScript(`(function(){
-            window.oldFocus = window.focus; 
-            window.focus = () => { ipcRenderer.invoke("window", "focus"); };
-            window.show = () => { ipcRenderer.invoke("window", "show"); };
-            window.hide = () => { ipcRenderer.invoke("window", "hide"); };
-            window.toggle = () => { ipcRenderer.invoke("window", "toggle"); };
-            window.update = (options) => { ipcRenderer.invoke("window", "update", options); };
-            window.setProgressBar = (value, mode) => { ipcRenderer.invoke("window", "setProgressBar", value, mode); };
-        })();`, window);
         if (!details.options.hide)
             window.show();
         if (global.debug)
@@ -2353,7 +2344,8 @@ function buildOptions(details, window, settings) {
             spellcheck: settings ? settings.spellchecking : false,
             enableRemoteModule: true,
             contextIsolation: false,
-            backgroundThrottling: settings ? settings.enableBackgroundThrottling : true
+            backgroundThrottling: settings ? settings.enableBackgroundThrottling : true,
+            preload: path.join(__dirname, 'child.preload.js'),
         }
     };
     if (details.features.length) {

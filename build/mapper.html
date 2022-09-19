@@ -98,7 +98,7 @@
                     {
                         label: '&Toggle Developer Tools',
                         click: () => {
-                            ipcRenderer.invoke('window', 'toggleDevTools');
+                            window.toggleDevTools();
                         }
                     },
                     {
@@ -737,16 +737,10 @@
                         document.title = 'Mapper - ' + title;
                     else
                         document.title = 'Mapper';
-                }, { signal: abortController.signal })
-                window.addEventListener('loadCharacter', updateCharacter, { signal: abortController.signal });
-                window.addEventListener('updateCharacter', updateCharacter, { signal: abortController.signal });
-                window.addEventListener('resetCharacter', e => {
-                    const char = window.opener.getCharacterName();
-                    if (char && char.length > 0)
-                        document.title = 'Mapper - ' + char;
-                    else
-                        document.title = 'Mapper';
-                }, { signal: abortController.signal })
+                }, { signal: abortController.signal });
+                window.opener.addEventListener('loadCharacter', updateCharacter, { signal: abortController.signal });
+                window.opener.addEventListener('updateCharacter', updateCharacter, { signal: abortController.signal });
+                window.opener.addEventListener('resetCharacter', updateCharacter, { signal: abortController.signal });
             }
             catch (err) {
                 if (typeof err === 'string')

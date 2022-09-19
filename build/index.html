@@ -1390,11 +1390,7 @@
                 if (_noCapture || _noCaptureStore > 0) return;
 
                 if (client.options.chat.CaptureOnlyOpen) {
-                    if (!chatWin || chatWin.isDestroyed()) {
-                        chatWin = remote.BrowserWindow.getAllWindows().filter(w => w.getTitle() === 'Chat');
-                        chatWin = chatWin.length !== 0 ? chatWin[0] : null;
-                    }
-                    if (!chatWin || !chatWin.isVisible() || chatWin.isMinimized())
+                    if (!_windows['chat.html'] || !_windows['chat.html'].isVisible() || _windows['chat.html'].isMinimized())
                         return;
                 }
 
@@ -1721,7 +1717,6 @@
 
             client.on('parse-done', () => {
                 client.display.find(false);
-                //ipcRenderer.send('chat-done');
             });
 
             client.on('received-GMCP', (mod, obj) => {
@@ -2972,29 +2967,8 @@
                     }
                 });
         
-                ipcRenderer.on('send-background', (event, command, noEcho, comments) => {
-                    client.sendBackground(command, noEcho, comments);
-                });
-        
-                ipcRenderer.on('send-command', (event, command, noEcho, comments) => {
-                    client.sendCommand(command, noEcho, comments);
-                });
-        
                 ipcRenderer.on('send-gmcp', (event, data) => {
                     client.sendGMCP(data);
-                });
-        
-                ipcRenderer.on('send-raw', (event, raw) => {
-                    client.sendRaw(raw);
-                });
-        
-                ipcRenderer.on('send', (event, raw, echo) => {
-                    client.send(raw, echo);
-                });
-        
-                ipcRenderer.on('menu-reload', () => {
-                    if (!client) return;
-                    doUpdate(4);
                 });
         */
         ipcRenderer.on('reload-profiles', () => {
@@ -3242,7 +3216,7 @@
                     break;
                 case 'editor':
                     if (data && data.details)
-                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent', 'defaultWidth', 'defaultHeight','showInTaskBar', 'noInputContext']);
+                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent', 'defaultWidth', 'defaultHeight', 'showInTaskBar', 'noInputContext']);
                     _windows['editor.html'] = window.open('editor.html', 'Advanced Editor-' + getId(), `noInputContext=true,alwaysOnTopClient=true,showInTaskBar=${client.options.showEditorInTaskBar},persistent=${client.options.editorPersistent},defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/edit.png')}${_options}`);
                     break;
                 case 'chat':
@@ -3373,9 +3347,6 @@
                 }, 10);
                 return
             }
-            console.log(win);
-            console.log(win.update);
-            console.log(win.ipcRenderer);
             win.update(data);
         }
 
@@ -3638,7 +3609,7 @@
         function updateChat(data) {
             //TODO refine when new chat window finished
             if (windows['chat.html'])
-                windows['chat.html'].add(data);
+                windows['chat.html'].updateChat(data);
             /*
             if (typeof data === 'string') {
                 display.append(data);

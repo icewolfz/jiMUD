@@ -21,7 +21,7 @@
     <script src="../lib/bootstrap-select.min.js"></script>
     <script type="text/javascript">
         if (window.module) module = window.module;
-        const { clipboard, ipcRenderer, webFrame } = require('electron');
+        const { clipboard, webFrame } = require('electron');
         const { parseTemplate } = require('./js/library.js');
         const { Settings } = require('./js/settings');
         const { Display } = require('./js/display');
@@ -31,7 +31,7 @@
         var display, _logger, _zoom = 1.0;
 
         function loadOptions() {
-            options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
+            options = window.opener.client.options;
             if (display) {
                 display.updateFont(options.chat.font, options.chat.fontSize);
                 display.maxLines = options.chat.bufferSize;
@@ -91,7 +91,8 @@
             display = new Display('display');
 
             display.on('split-move-done', (h) => {
-                ipcRenderer.send('setting-changed', { type: 'chat', name: 'splitHeight', value: h });
+                window.opener.client.options.chat.splitHeight = h;
+                window.opener.client.saveOptions();
             });
 
             display.on('selection-done', () => {
@@ -112,11 +113,13 @@
                 switch (e.data.event) {
                     case 'started':
                         $('#btn-enable').button('toggle');
-                        ipcRenderer.send('setting-changed', { chat: 'chat', name: 'log', value: e.data.args });
+                        window.opener.client.options.chat.log = e.data.args;
+                        window.opener.client.saveOptions();
                         break;
                     case 'stopped':
                         $('#btn-enable').button('toggle');
-                        ipcRenderer.send('setting-changed', { chat: 'chat', name: 'log', value: e.data.args });
+                        window.opener.client.options.chat.log = e.data.args;
+                        window.opener.client.saveOptions();
                         break;
                     case 'logging':
                         break;
@@ -129,7 +132,8 @@
                         break;
                     case 'toggled':
                         options.chat.log = e.data.args;
-                        ipcRenderer.send('setting-changed', { chat: 'chat', name: 'log', value: e.data.args });
+                        window.opener.client.options.chat.log = e.data.args;
+                        window.opener.client.saveOptions();
                         break;
                     case 'startInternal':
                     case 'start':
@@ -197,7 +201,7 @@
             display.showFind();
         }
 
-        ipcRenderer.on('chat', (event, data) => {
+        function updateChat(data) {
             if (typeof data === 'string') {
                 display.append(data);
                 data = {
@@ -211,37 +215,30 @@
             if (!options)
                 loadOptions();
             _logger.postMessage({ action: 'add-line', args: data });
-        });
+        }
 
-        /*
-        ipcRenderer.on('chat-done', (event, data) => {
-
-        });
-        */
-
-        ipcRenderer.on('set-title', (event, title) => {
+        var abortController = new AbortController();
+        window.opener._status.on('set-title', (title, lag) => {
             if (!options)
                 loadOptions();
             _logger.postMessage({ action: 'name', args: title });
-        });
+        }, { signal: abortController.signal });
 
-        ipcRenderer.on('load-char', (event, char) => {
-            _logger.postMessage({ action: 'name', args: char });
-        });
+        function updateCharacter(e) {
+            _logger.postMessage({ action: 'name', args: window.opener.getCharacterName() || '' });
+        }
 
-        ipcRenderer.on('load-default', () => {
-            _logger.postMessage({ action: 'name', args: '' });
-        });
-
-        ipcRenderer.on('reload-options', () => {
+        window.opener.addEventListener('loadCharacter', updateCharacter, { signal: abortController.signal });
+        window.opener.addEventListener('updateCharacter', updateCharacter, { signal: abortController.signal });
+        window.opener.addEventListener('resetCharacter', updateCharacter, { signal: abortController.signal });
+        window.opener.client.on('options-loaded', () => {
             loadOptions();
-        });
-
-        ipcRenderer.on('connected', () => {
+        }, { signal: abortController.signal });
+        window.opener.client.on('connecting', () => {
             if (!options)
                 loadOptions();
-            _logger.postMessage({ action: 'connected', args: true });
-        });
+            _logger.postMessage({ action: 'connected', args: client.connected });
+        }, { signal: abortController.signal });
 
         // eslint-disable-next-line no-unused-vars
         function toggle() {
@@ -262,13 +259,18 @@
             if (z === _zoom) return;
             _zoom = z;
             webFrame.setZoomFactor(z);
-            ipcRenderer.send('setting-changed', { chat: 'chat', name: 'zoom', value: z });
+            window.opener.client.options.chat.zoom = z;
+            window.opener.client.saveOptions();
         }
 
         // eslint-disable-next-line no-unused-vars
         function closeHidden() {
-            ipcRenderer.invoke('window', 'hide');
+            window.hide();
         }
+
+        window.onbeforeunload = function (evt) {
+            abortController.abort();
+        };        
     </script>
 </head>
 

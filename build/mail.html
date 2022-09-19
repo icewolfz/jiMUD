@@ -264,7 +264,7 @@
                     {
                         label: '&Toggle Developer Tools',
                         click: () => {
-                            ipcRenderer.invoke('window', 'toggleDevtools');
+                            window.toggleDevTools();
                         }
                     },
                     {
@@ -1004,7 +1004,7 @@
 
         // eslint-disable-next-line no-unused-vars
         function closeHidden() {
-            ipcRenderer.invoke('window', 'hide');
+            window.hide();
         }
     </script>
 </head>

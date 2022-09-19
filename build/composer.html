@@ -1415,12 +1415,12 @@
             else if (mail)
                 mail.close();
             closeWindow = true;
-            ipcRenderer.invoke('window', 'close');
+            window.close();
         };
 
         // eslint-disable-next-line no-unused-vars
         function closeHidden() {
-            ipcRenderer.invoke('window', 'hide');
+            window.hide();
         }
     </script>
     <style>
