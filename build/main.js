@@ -1376,7 +1376,9 @@ ipcMain.on('dock-client', (event, id, options) => {
             states['manager.html'].bounds.x = options.x || states['manager.html'].bounds.x;
             states['manager.html'].bounds.y = options.y || states['manager.html'].bounds.y;
         }
-        windowId = createWindow({ menubar: createMenu(), remote: false });
+        windowId = createWindow({ remote: false });
+        windows[windowId].menubar = createMenu(windows[windowId].window);
+        //windows[windowId].menubar.enabled = false;
         window = windows[windowId].window;
         //no state so manually set the position
         if (options && !states['manager.html']) {
@@ -2633,7 +2635,9 @@ function newClientWindow(caller, connection, data) {
         if (states['manager.html'].bounds.y < 10)
             states['manager.html'].bounds.y = 10;
     }
-    let windowId = createWindow({ menubar: createMenu(), remote: false });
+    let windowId = createWindow({ remote: false });
+    windows[windowId].menubar = createMenu(windows[windowId].window);
+    //windows[windowId].menubar.enabled = false;    
     let window = windows[windowId].window;
     if (data)
         id = createClient({ bounds: window.getContentBounds(), data: { data: data } });
@@ -2794,7 +2798,9 @@ function loadWindowLayout(file) {
     //create windows
     let i, il = data.windows.length;
     for (i = 0; i < il; i++) {
-        createWindow({ id: data.windows[i].id, data: { data: data.windows[i].data, state: data.windows[i].state, states: data.states }, menubar: createMenu(), remote: false });
+        createWindow({ id: data.windows[i].id, data: { data: data.windows[i].data, state: data.windows[i].state, states: data.states }, remote: false });
+        windows[data.windows[i].id].menubar = createMenu(windows[data.windows[i].id].window);
+        //windows[data.windows[i].id].menubar.enabled = false;
         windows[data.windows[i].id].current = data.windows[i].current;
         windows[data.windows[i].id].clients = data.windows[i].clients;
     }
@@ -2875,7 +2881,7 @@ function restoreWindowState(window, state) {
 }
 //#endregion
 //#region Client window menu code
-function createMenu() {
+function createMenu(window) {
     var menuTemp = [
         //File
         {
@@ -2890,14 +2896,14 @@ function createMenu() {
                         //allow for some hidden ways to force open main/dev if needed with out the complex menus
                         if (!keyboard.triggeredByAccelerator) {
                             if (keyboard.ctrlKey)
-                                newConnection(mWindow, { dev: true });
+                                newConnection(window || mWindow, { dev: true });
                             else if (keyboard.shiftKey)
-                                newConnection(mWindow, { dev: false });
+                                newConnection(window || mWindow, { dev: false });
                             else
-                                newConnection(mWindow);
+                                newConnection(window || mWindow);
                         }
                         else
-                            newConnection(mWindow);
+                            newConnection(window || mWindow);
                     }
                 },
                 {
@@ -2908,14 +2914,14 @@ function createMenu() {
                         //allow for some hidden ways to force open main/dev if needed with out the complex menus
                         if (!keyboard.triggeredByAccelerator) {
                             if (keyboard.ctrlKey)
-                                newClientWindow(mWindow, { dev: true });
+                                newClientWindow(window || mWindow, { dev: true });
                             else if (keyboard.shiftKey)
-                                newClientWindow(mWindow, { dev: false });
+                                newClientWindow(window || mWindow, { dev: false });
                             else
-                                newClientWindow(mWindow);
+                                newClientWindow(window || mWindow);
                         }
                         else
-                            newClientWindow(mWindow);
+                            newClientWindow(window || mWindow);
                     }
                 },
                 {
@@ -2926,8 +2932,7 @@ function createMenu() {
                     id: 'connect',
                     accelerator: 'CmdOrCtrl+N',
                     click: (item, mWindow) => {
-                        console.log(mWindow.getTitle());
-                        executeScriptClient('client.connect()', mWindow, true);
+                        executeScriptClient('client.connect()', window || mWindow, true);
                     }
                 },
                 {
@@ -2936,7 +2941,7 @@ function createMenu() {
                     accelerator: 'CmdOrCtrl+D',
                     enabled: false,
                     click: (item, mWindow) => {
-                        executeScriptClient('client.close()', mWindow, true);
+                        executeScriptClient('client.close()', window || mWindow, true);
                     }
                 },
                 {
@@ -2948,7 +2953,7 @@ function createMenu() {
                     type: 'checkbox',
                     checked: true,
                     click: (item, mWindow) => {
-                        executeScriptClient('toggleParsing()', mWindow, true);
+                        executeScriptClient('toggleParsing()', window || mWindow, true);
                     }
                 },
                 {
@@ -2957,7 +2962,7 @@ function createMenu() {
                     type: 'checkbox',
                     checked: true,
                     click: (item, mWindow) => {
-                        executeScriptClient('toggleTriggers()', mWindow, true);
+                        executeScriptClient('toggleTriggers()', window || mWindow, true);
                     }
                 },
                 {
@@ -2968,7 +2973,7 @@ function createMenu() {
                     id: 'characters',
                     accelerator: 'CmdOrCtrl+H',
                     click: (item, mWindow) => {
-                        executeScriptClient('openWindow("characters")', mWindow, true);
+                        executeScriptClient('openWindow("characters")', window || mWindow, true);
                     }
                 },
                 { type: 'separator' },
@@ -2978,13 +2983,13 @@ function createMenu() {
                     type: 'checkbox',
                     checked: false,
                     click: (item, mWindow) => {
-                        executeScriptClient('toggleLogging()', mWindow, true);
+                        executeScriptClient('toggleLogging()', window || mWindow, true);
                     }
                 },
                 {
                     label: '&View logs...',
                     click: (item, mWindow) => {
-                        executeScriptClient('openWindow("log.viewer")', mWindow, true);
+                        executeScriptClient('openWindow("log.viewer")', window || mWindow, true);
                     }
                 },
                 {
@@ -2994,13 +2999,13 @@ function createMenu() {
                     label: '&Global Preferences...',
                     id: 'globalPreferences',
                     accelerator: 'CmdOrCtrl+Comma',
-                    click: (item, mWindow) => openPreferences(mWindow)
+                    click: (item, mWindow) => openPreferences(window || mWindow)
                 },
                 {
                     label: '&Preferences...',
                     id: 'preferences',
                     accelerator: 'CmdOrCtrl+Comma',
-                    click: (item, mWindow) => executeScriptClient('openWindow("prefs");', mWindow, true),
+                    click: (item, mWindow) => executeScriptClient('openWindow("prefs");', window || mWindow, true),
                     visible: false
                 },
                 {
@@ -3013,6 +3018,7 @@ function createMenu() {
                     enabled: false,
                     visible: false,
                     click: (item, mWindow) => {
+                        mWindow = window || mWindow;
                         if (windows[getWindowId(mWindow)].clients.length === 1)
                             mWindow.close();
                         else
@@ -3052,21 +3058,21 @@ function createMenu() {
                     id: 'copyHTML',
                     enabled: false,
                     click: (item, mWindow) => {
-                        executeScriptClient('copyAsHTML();', mWindow, true);
+                        executeScriptClient('copyAsHTML();', window || mWindow, true);
                     }
                 },
                 {
                     label: 'Paste',
                     accelerator: 'CmdOrCtrl+V',
                     click: (item, mWindow) => {
-                        executeScriptClient('client.commandInput.dataset.selStart = client.commandInput.selectionStart;client.commandInput.dataset.selEnd = client.commandInput.selectionEnd;paste()', mWindow, true);
+                        executeScriptClient('client.commandInput.dataset.selStart = client.commandInput.selectionStart;client.commandInput.dataset.selEnd = client.commandInput.selectionEnd;paste()', window || mWindow, true);
                     }
                 },
                 {
                     label: 'Paste special',
                     accelerator: 'CmdOrCtrl+Shift+V',
                     click: (item, mWindow) => {
-                        executeScriptClient('client.commandInput.dataset.selStart client.commandInput.selectionStart;client.commandInput.dataset.selEnd = client.commandInput.selectionEnd;pasteSpecial()', mWindow, true);
+                        executeScriptClient('client.commandInput.dataset.selStart client.commandInput.selectionStart;client.commandInput.dataset.selEnd = client.commandInput.selectionEnd;pasteSpecial()', window || mWindow, true);
                     }
                 },
                 /*
@@ -3081,7 +3087,7 @@ function createMenu() {
                     label: 'Select All',
                     accelerator: 'CmdOrCtrl+A',
                     click: (item, mWindow) => {
-                        executeScriptClient('selectAll()', mWindow, true);
+                        executeScriptClient('selectAll()', window || mWindow, true);
                     }
                 },
                 {
@@ -3090,7 +3096,7 @@ function createMenu() {
                 {
                     label: 'Clear',
                     click: (item, mWindow) => {
-                        executeScriptClient('client.clear()', mWindow, true);
+                        executeScriptClient('client.clear()', window || mWindow, true);
                     }
                 },
                 { type: 'separator' },
@@ -3098,8 +3104,8 @@ function createMenu() {
                     label: 'Find',
                     accelerator: 'CmdOrCtrl+F',
                     click: (item, mWindow) => {
-                        focusWindow(mWindow, true);
-                        executeScriptClient('client.display.showFind()', mWindow);
+                        focusWindow(window || mWindow, true);
+                        executeScriptClient('client.display.showFind()', window || mWindow);
                     }
                 },
             ]
@@ -3121,13 +3127,13 @@ function createMenu() {
                     type: 'checkbox',
                     checked: false,
                     click: (item, mWindow) => {
-                        executeScriptClient('client.toggleScrollLock()', mWindow, true);
+                        executeScriptClient('client.toggleScrollLock()', window || mWindow, true);
                     }
                 },
                 {
                     label: '&Who is on?...',
                     click: (item, mWindow) => {
-                        executeScriptClient('showWho()', mWindow, true);
+                        executeScriptClient('showWho()', window || mWindow, true);
                     }
                 },
                 {
@@ -3143,14 +3149,14 @@ function createMenu() {
                             type: 'checkbox',
                             checked: true,
                             click: (item, mWindow) => {
-                                executeScriptClient('toggleView("status")', mWindow, true);
+                                executeScriptClient('toggleView("status")', window || mWindow, true);
                             }
                         },
                         {
                             label: '&Refresh',
                             id: 'refresh',
                             click: (item, mWindow) => {
-                                executeScriptClient('client.sendGMCP(\'Core.Hello { "client": "\' + client.telnet.terminal + \'", "version": "\' + client.telnet.version + \'" }\');', mWindow, true);
+                                executeScriptClient('client.sendGMCP(\'Core.Hello { "client": "\' + client.telnet.terminal + \'", "version": "\' + client.telnet.version + \'" }\');', window || mWindow, true);
                             }
                         },
                         { type: 'separator' },
@@ -3160,7 +3166,7 @@ function createMenu() {
                             type: 'checkbox',
                             checked: true,
                             click: (item, mWindow) => {
-                                executeScriptClient('toggleView("weather")', mWindow, true);
+                                executeScriptClient('toggleView("weather")', window || mWindow, true);
                             }
                         },
                         {
@@ -3173,7 +3179,7 @@ function createMenu() {
                                     type: 'checkbox',
                                     checked: true,
                                     click: (item, mWindow) => {
-                                        executeScriptClient('toggleView("limbs")', mWindow, true);
+                                        executeScriptClient('toggleView("limbs")', window || mWindow, true);
                                     }
                                 },
                                 { type: 'separator' },
@@ -3183,7 +3189,7 @@ function createMenu() {
                                     type: 'checkbox',
                                     checked: true,
                                     click: (item, mWindow) => {
-                                        executeScriptClient('toggleView("limbhealth")', mWindow, true);
+                                        executeScriptClient('toggleView("limbhealth")', window || mWindow, true);
                                     }
                                 },
                                 {
@@ -3192,7 +3198,7 @@ function createMenu() {
                                     type: 'checkbox',
                                     checked: true,
                                     click: (item, mWindow) => {
-                                        executeScriptClient('toggleView("limbarmor")', mWindow, true);
+                                        executeScriptClient('toggleView("limbarmor")', window || mWindow, true);
                                     }
                                 },
                             ]
@@ -3203,7 +3209,7 @@ function createMenu() {
                             type: 'checkbox',
                             checked: true,
                             click: (item, mWindow) => {
-                                executeScriptClient('toggleView("health")', mWindow, true);
+                                executeScriptClient('toggleView("health")', window || mWindow, true);
                             }
                         },
                         {
@@ -3212,7 +3218,7 @@ function createMenu() {
                             type: 'checkbox',
                             checked: true,
                             click: (item, mWindow) => {
-                                executeScriptClient('toggleView("experience")', mWindow, true);
+                                executeScriptClient('toggleView("experience")', window || mWindow, true);
                             }
                         },
                         {
@@ -3221,7 +3227,7 @@ function createMenu() {
                             type: 'checkbox',
                             checked: true,
                             click: (item, mWindow) => {
-                                executeScriptClient('toggleView("partyhealth")', mWindow, true);
+                                executeScriptClient('toggleView("partyhealth")', window || mWindow, true);
                             }
                         },
                         {
@@ -3230,7 +3236,7 @@ function createMenu() {
                             type: 'checkbox',
                             checked: true,
                             click: (item, mWindow) => {
-                                executeScriptClient('toggleView("combathealth")', mWindow, true);
+                                executeScriptClient('toggleView("combathealth")', window || mWindow, true);
                             }
                         },
                         {
@@ -3239,7 +3245,7 @@ function createMenu() {
                             type: 'checkbox',
                             checked: true,
                             click: (item, mWindow) => {
-                                executeScriptClient('toggleView("lagmeter")', mWindow, true);
+                                executeScriptClient('toggleView("lagmeter")', window || mWindow, true);
                             }
                         }
                     ]
@@ -3251,7 +3257,7 @@ function createMenu() {
                     type: 'checkbox',
                     checked: true,
                     click: (item, mWindow) => {
-                      executeScript('toggleView("buttons")', mWindow.getBrowserView() || mWindow, true);
+                      executeScript('toggleView("buttons")', window || mWindow, true);
                     },
                     */
                     submenu: [
@@ -3261,7 +3267,7 @@ function createMenu() {
                             type: 'checkbox',
                             checked: true,
                             click: (item, mWindow) => {
-                                executeScriptClient('toggleView("buttons")', mWindow, true);
+                                executeScriptClient('toggleView("buttons")', window || mWindow, true);
                             }
                         },
                         { type: 'separator' },
@@ -3271,7 +3277,7 @@ function createMenu() {
                             type: 'checkbox',
                             checked: true,
                             click: (item, mWindow) => {
-                                executeScriptClient('toggleView("button.connect")', mWindow, true);
+                                executeScriptClient('toggleView("button.connect")', window || mWindow, true);
                             }
                         },
                         {
@@ -3280,7 +3286,7 @@ function createMenu() {
                             type: 'checkbox',
                             checked: true,
                             click: (item, mWindow) => {
-                                executeScriptClient('toggleView("button.characters")', mWindow, true);
+                                executeScriptClient('toggleView("button.characters")', window || mWindow, true);
                             }
                         },
                         {
@@ -3295,7 +3301,7 @@ function createMenu() {
                             type: 'checkbox',
                             checked: true,
                             click: (item, mWindow) => {
-                                executeScriptClient('toggleView("button.preferences")', mWindow, true);
+                                executeScriptClient('toggleView("button.preferences")', window || mWindow, true);
                             }
                         },
                         {
@@ -3304,7 +3310,7 @@ function createMenu() {
                             type: 'checkbox',
                             checked: true,
                             click: (item, mWindow) => {
-                                executeScriptClient('toggleView("button.log")', mWindow, true);
+                                executeScriptClient('toggleView("button.log")', window || mWindow, true);
                             }
                         },
                         {
@@ -3313,7 +3319,7 @@ function createMenu() {
                             type: 'checkbox',
                             checked: true,
                             click: (item, mWindow) => {
-                                executeScriptClient('toggleView("button.clear")', mWindow, true);
+                                executeScriptClient('toggleView("button.clear")', window || mWindow, true);
                             }
                         },
                         {
@@ -3322,7 +3328,7 @@ function createMenu() {
                             type: 'checkbox',
                             checked: true,
                             click: (item, mWindow) => {
-                                executeScriptClient('toggleView("button.lock")', mWindow, true);
+                                executeScriptClient('toggleView("button.lock")', window || mWindow, true);
                             }
                         },
                         {
@@ -3331,7 +3337,7 @@ function createMenu() {
                             type: 'checkbox',
                             checked: true,
                             click: (item, mWindow) => {
-                                executeScriptClient('toggleView("button.map")', mWindow, true);
+                                executeScriptClient('toggleView("button.map")', window || mWindow, true);
                             }
                         },
                         /*
@@ -3341,7 +3347,7 @@ function createMenu() {
                           type: 'checkbox',
                           checked: true,
                           click: (item, mWindow) => {
-                            executeScriptClient('toggleView("button.mail")', mWindow, true);
+                            executeScriptClient('toggleView("button.mail")', window || mWindow, true);
                           }
                         },
                         {
@@ -3350,7 +3356,7 @@ function createMenu() {
                           type: 'checkbox',
                           checked: true,
                           click: (item, mWindow) => {
-                            executeScriptClient('toggleView("button.compose")', mWindow, true);
+                            executeScriptClient('toggleView("button.compose")', window || mWindow, true);
                           }
                         },
                         */
@@ -3360,7 +3366,7 @@ function createMenu() {
                             type: 'checkbox',
                             checked: true,
                             click: (item, mWindow) => {
-                                executeScriptClient('toggleView("button.user")', mWindow, true);
+                                executeScriptClient('toggleView("button.user")', window || mWindow, true);
                             }
                         },
                     ]
@@ -3375,6 +3381,7 @@ function createMenu() {
                         {
                             label: '&Toggle Window ',
                             click: (item, mWindow) => {
+                                mWindow = window || mWindow;
                                 if (mWindow.webContents.isDevToolsOpened())
                                     mWindow.webContents.closeDevTools();
                                 else
@@ -3385,6 +3392,7 @@ function createMenu() {
                         {
                             label: 'Toggle Active &Client',
                             click: async (item, mWindow) => {
+                                mWindow = window || mWindow;
                                 var view = getActiveClient(mWindow).view;
                                 if (view && view.webContents.isDevToolsOpened())
                                     view.webContents.closeDevTools();
@@ -3396,6 +3404,7 @@ function createMenu() {
                         {
                             label: 'Toggle &Both',
                             click: async (item, mWindow) => {
+                                mWindow = window || mWindow;
                                 if (mWindow.webContents.isDevToolsOpened())
                                     mWindow.webContents.closeDevTools();
                                 else
@@ -3440,7 +3449,7 @@ function createMenu() {
                     label: '&Advanced editor...',
                     id: 'editor',
                     click: (item, mWindow) => {
-                        executeScriptClient('showEditor()', mWindow, true);
+                        executeScriptClient('showEditor()', window || mWindow, true);
                     },
                     accelerator: 'CmdOrCtrl+E'
                 },
@@ -3448,7 +3457,7 @@ function createMenu() {
                     label: '&Chat...',
                     id: 'chat',
                     click: (item, mWindow) => {
-                        executeScriptClient('openWindow("chat")', mWindow, true);
+                        executeScriptClient('openWindow("chat")', window || mWindow, true);
                     },
                     accelerator: 'CmdOrCtrl+L'
                 },
@@ -3456,7 +3465,7 @@ function createMenu() {
                     label: '&Immortal tools...',
                     id: 'immortal',
                     click: (item, mWindow) => {
-                        executeScriptClient('openWindow("immortal")', mWindow, true);
+                        executeScriptClient('openWindow("immortal")', window || mWindow, true);
                     },
                     visible: false,
                     accelerator: 'CmdOrCtrl+I'
@@ -3465,13 +3474,13 @@ function createMenu() {
                     label: 'Code &editor...',
                     id: 'codeeditor',
                     click: (item, mWindow) => {
-                        executeScriptClient('openWindow("code.editor")', mWindow, true);
+                        executeScriptClient('openWindow("code.editor")', window || mWindow, true);
                     },
                 },
                 {
                     label: '&Map...',
                     click: (item, mWindow) => {
-                        executeScriptClient('openWindow("mapper")', mWindow, true);
+                        executeScriptClient('openWindow("mapper")', window || mWindow, true);
                     },
                     accelerator: 'CmdOrCtrl+T'
                 },
@@ -3479,7 +3488,7 @@ function createMenu() {
                     label: '&Skills...',
                     id: 'skills',
                     click: (item, mWindow) => {
-                        executeScriptClient('openWindow("skills)', mWindow, true);
+                        executeScriptClient('openWindow("skills)', window || mWindow, true);
                     },
                     accelerator: 'CmdOrCtrl+S'
                 },
@@ -3487,7 +3496,7 @@ function createMenu() {
                     label: 'Command &history...',
                     id: 'history',
                     click: (item, mWindow) => {
-                        executeScriptClient('openWindow("history")', mWindow, true);
+                        executeScriptClient('openWindow("history")', window || mWindow, true);
                     },
                     accelerator: 'CmdOrCtrl+Shift+H'
                 },
@@ -3496,7 +3505,7 @@ function createMenu() {
                     label: 'Save &Layout',
                     id: 'saveLayout',
                     click: (item, mWindow) => {
-                        var file = dialog.showSaveDialogSync(mWindow, {
+                        var file = dialog.showSaveDialogSync(window || mWindow, {
                             title: 'Save as...',
                             defaultPath: path.join(parseTemplate('{documents}'), 'jiMUD-characters-data.zip'),
                             filters: [
@@ -3513,7 +3522,7 @@ function createMenu() {
                     label: 'L&oad Layout',
                     id: 'loadLayout',
                     click: (item, mWindow) => {
-                        dialog.showOpenDialog(mWindow, {
+                        dialog.showOpenDialog(window || mWindow, {
                             defaultPath: app.getPath('userData'),
                             filters: [
                                 { name: 'Layout files (*.layout)', extensions: ['layout'] },
@@ -3524,7 +3533,7 @@ function createMenu() {
                                 return;
                             _layout = result.filePaths[0];
                             if (!loadWindowLayout(result.filePaths[0]))
-                                dialog.showMessageBox(mWindow, {
+                                dialog.showMessageBox(window || mWindow, {
                                     type: 'error',
                                     message: `Error loading: '${result.filePaths[0]}'.`
                                 });
@@ -3546,7 +3555,7 @@ function createMenu() {
                                 _layout = parseTemplate(path.join('{data}', 'window.layout'));
                                 if (isFileSync(path.join(app.getPath('userData'), 'window.layout'))) {
                                     if (!loadWindowLayout())
-                                        dialog.showMessageBox(mWindow, {
+                                        dialog.showMessageBox(window || mWindow, {
                                             type: 'error',
                                             message: `Error loading: default layout.`
                                         });
@@ -3554,7 +3563,7 @@ function createMenu() {
                                         _loaded = true;
                                 }
                                 else
-                                    dialog.showMessageBox(mWindow, {
+                                    dialog.showMessageBox(window || mWindow, {
                                         type: 'error',
                                         message: 'Unable to load, default layout not found.'
                                     });
@@ -3566,7 +3575,7 @@ function createMenu() {
                 {
                   label: '&Mail...',
                   click: (item, mWindow) => {
-                    executeScriptClient('showMail()', mWindow, true);
+                    executeScriptClient('showMail()', window || mWindow, true);
                   },
                   visible: true,
                   //accelerator: 'CmdOrCtrl+M'
@@ -3574,7 +3583,7 @@ function createMenu() {
                 {
                   label: '&Compose mail...',
                   click: (item, mWindow) => {
-                    executeScriptClient('showComposer()', mWindow, true);
+                    executeScriptClient('showComposer()', window || mWindow, true);
                   },
                   visible: true,
                   //accelerator: 'CmdOrCtrl+M'
@@ -3592,20 +3601,20 @@ function createMenu() {
                 {
                     label: '&ShadowMUD...',
                     click: (item, mWindow) => {
-                        executeScriptClient('showSMHelp()', mWindow, true);
+                        executeScriptClient('showSMHelp()', window || mWindow, true);
                     }
                 },
                 {
                     label: '&jiMUD...',
                     click: () => {
-                        executeScriptClient('showHelp()', mWindow, true);
+                        executeScriptClient('showHelp()', window || mWindow, true);
                     }
                 },
                 {
                     label: '&jiMUD website...',
                     click: (item, mWindow) => {
                         shell.openExternal('https://github.com/icewolfz/jiMUD/tree/master/docs', '_blank');
-                        focusWindow(mWindow);
+                        focusWindow(window || mWindow);
                     }
                 },
                 { type: 'separator' },
@@ -3617,7 +3626,7 @@ function createMenu() {
                 { type: 'separator' },
                 {
                     label: '&About...',
-                    click: (item, mWindow) => createDialog({ show: true, parent: mWindow, url: path.join(__dirname, 'about.html'), title: 'About jiMUD', bounds: { width: 500, height: 560 } })
+                    click: (item, mWindow) => createDialog({ show: true, parent: window || mWindow, url: path.join(__dirname, 'about.html'), title: 'About jiMUD', bounds: { width: 500, height: 560 } })
                 }
             ]
         }
@@ -3683,6 +3692,7 @@ function createMenu() {
                 label: 'Clo&se',
                 accelerator: 'CmdOrCtrl+W',
                 click: (item, mWindow) => {
+                    mWindow = window || mWindow;
                     if (windows[getWindowId(mWindow)].clients.length === 1)
                         mWindow.close();
                     else
@@ -3716,6 +3726,7 @@ function createMenu() {
                 label: 'Clo&se',
                 accelerator: 'CmdOrCtrl+W',
                 click: (item, mWindow) => {
+                    mWindow = window || mWindow;
                     if (windows[getWindowId(mWindow)].clients.length === 1)
                         mWindow.close();
                     else
@@ -3739,7 +3750,7 @@ function createMenu() {
             checked: false,
             id: 'default',
             click: (item, mWindow) => {
-                executeScriptClient('client.toggleProfile("default")', mWindow, true);
+                executeScriptClient('client.toggleProfile("default")', window || mWindow, true);
             }
         });
 
@@ -3772,7 +3783,7 @@ function createMenu() {
             accelerator: 'CmdOrCtrl+P'
 
         });
-    return new Menubar(menuTemp);
+    return new Menubar(menuTemp, window);
     //return Menu.buildFromTemplate(menuTemp);
 }
 
