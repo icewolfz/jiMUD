@@ -1079,15 +1079,18 @@ ipcMain.on('show-dialog-sync', (event, type, ...args) => {
 });
 
 ipcMain.handle('show-dialog', (event, type, ...args) => {
-    return new Promise((resolve, reject) => {
-        var sWindow = BrowserWindow.fromWebContents(event.sender);
-        if (type === 'showMessageBox')
-            dialog.showMessageBox(sWindow, ...args).then(resolve).catch(reject);
-        else if (type === 'showSaveDialog')
-            dialog.showSaveDialog(sWindow, ...args).then(resolve).catch(reject);
-        else if (type === 'showOpenDialog')
-            dialog.showOpenDialog(sWindow, ...args).then(resolve).catch(reject);
-    });
+    var sWindow = BrowserWindow.fromWebContents(event.sender);
+    if (type === 'showMessageBox')
+        return dialog.showMessageBox(sWindow, ...args);
+    else if (type === 'showSaveDialog')
+        return dialog.showSaveDialog(sWindow, ...args);
+    else if (type === 'showOpenDialog')
+        return dialog.showOpenDialog(sWindow, ...args);
+    return new Promise();
+});
+
+ipcMain.on('show-error-box', (event, title, contents) => {
+    dialog.showErrorBox(title, contents);
 });
 //#endregion
 //#region IPC Show context menu
