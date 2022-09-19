@@ -868,6 +868,10 @@
             document.getElementById('progress-dialog-progressbar').value = value * 100;
         }
 
+        function updateProgress(progress) {
+            window.opener.updateProgress(progress);
+        }
+
         function closeProgressDialog() {
             var progress = document.getElementById('progress-dialog');
             if (progress.open)
