@@ -2095,7 +2095,7 @@
             {
                 label: '&Toggle Developer Tools',
                 click: () => {
-                    ipcRenderer.invoke('window', 'toggleDevTools');
+                    window.toggleDevTools();
                 },
                 enabled: true
             },
@@ -4388,12 +4388,12 @@
         }
         if (!savedOpened())
             return;
-        ipcRenderer.invoke('window', 'hide');
+        window.hide();
     }
 
     // eslint-disable-next-line no-unused-vars
     function closeWindow() {
-        ipcRenderer.invoke('window', 'close');
+        window.close();
     }
 
     window.onbeforeunload = function (evt) {
@@ -4427,14 +4427,14 @@
                 if (watcher)
                     watcher.close();
                 $closeWindow = true;
-                ipcRenderer.invoke('window', 'close');
+                window.close();
             });
             return 'no';
         }
         if (watcher)
             watcher.close();
         $closeWindow = true;
-        ipcRenderer.invoke('window', 'close');
+        window.close();
         return;
     };
 

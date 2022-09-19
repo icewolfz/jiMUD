@@ -976,7 +976,7 @@
                     message: err || 'Error importing or exporting data.'
                 });
                 setTimeout(() => {
-                    ipcRenderer.invoke('window', 'focus');
+                    window.focus();
                 }, 500);
                 client.commandInput.focus()
             });
@@ -991,7 +991,7 @@
                     message: err || 'Aborted importing or exporting data.'
                 });
                 setTimeout(() => {
-                    ipcRenderer.invoke('window', 'focus');
+                    window.focus();
                 }, 500);
                 client.commandInput.focus()
             });
@@ -1001,7 +1001,7 @@
                     document.getElementById('Progress').close();
                 client.commandInput.focus()
                 setTimeout(() => {
-                    ipcRenderer.invoke('window', 'focus');
+                    window.focus();
                 }, 500);
                 updateProgress(-1);
             });
@@ -1470,18 +1470,18 @@
             });
 
             client.on('show', () => {
-                ipcRenderer.invoke('window', 'show');
+                window.show();
             });
 
             client.on('hide', () => {
                 if (client.options.hideOnMinimize)
-                    ipcRenderer.invoke('window', 'hide');
+                    window.hide();
                 else
-                    ipcRenderer.invoke('window', 'minimize');
+                    window.minimize();
             });
 
             client.on('toggle', () => {
-                ipcRenderer.invoke('window', 'toggle', 'main');
+                window.toggle();
             });
 
             client.on('notify', (title, message, options) => {
@@ -3961,7 +3961,7 @@
                             closeWindow = true;
                             clearWatcher();
                             ipcRenderer.invoke('window', 'closeWindows');
-                            ipcRenderer.invoke('window', 'close');
+                            window.close();
                             return;
                         }
                         if (choice !== 0) {
@@ -3973,7 +3973,7 @@
                         closeWindow = true;
                         clearWatcher();
                         ipcRenderer.invoke('window', 'closeWindows');
-                        ipcRenderer.invoke('window', 'close');
+                        window.close()
                     });
                     return;
                 }
@@ -4003,7 +4003,7 @@
                         closeWindow = true;
                         clearWatcher();
                         ipcRenderer.invoke('window', 'closeWindows');
-                        ipcRenderer.invoke('window', 'close');
+                        window.close();
                     });
                     return;
                 }
@@ -4021,7 +4021,7 @@
                         closeWindow = true;
                         clearWatcher();
                         ipcRenderer.invoke('window', 'closeWindows');
-                        ipcRenderer.invoke('window', 'close');
+                        window.close();
                     });
                 }
                 client.raise('closed');
@@ -4029,7 +4029,7 @@
                 closeWindow = true;
                 clearWatcher();
                 ipcRenderer.invoke('window', 'closeWindows');
-                ipcRenderer.invoke('window', 'close');
+                window.close();
                 return;
             };
             */

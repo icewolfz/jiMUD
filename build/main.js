@@ -260,7 +260,8 @@ function createWindow(options) {
             spellcheck: set ? set.spellchecking : false,
             enableRemoteModule: 'remote' in options ? options.remote : true,
             contextIsolation: false,
-            backgroundThrottling: set ? set.enableBackgroundThrottling : true
+            backgroundThrottling: set ? set.enableBackgroundThrottling : true,
+            preload: path.join(__dirname, 'preload.js')
         },
         //titleBarStyle: 'hidden',
         //titleBarOverlay: true
@@ -534,8 +535,9 @@ function createDialog(options) {
             spellcheck: set ? set.spellchecking : false,
             enableRemoteModule: true,
             contextIsolation: false,
-            backgroundThrottling: set ? set.enableBackgroundThrottling : true
-        }
+            backgroundThrottling: set ? set.enableBackgroundThrottling : true,
+            preload: path.join(__dirname, 'preload.js')
+        }        
     });
     require("@electron/remote/main").enable(window.webContents);
     window.webContents.on('render-process-gone', (event, details) => {
@@ -1559,7 +1561,8 @@ function createClient(options) {
             spellcheck: set ? set.spellchecking : false,
             enableRemoteModule: true,
             contextIsolation: false,
-            backgroundThrottling: set ? set.enableBackgroundThrottling : true
+            backgroundThrottling: set ? set.enableBackgroundThrottling : true,
+            preload: path.join(__dirname, 'preload.js')
         }
     });
 
@@ -2348,7 +2351,7 @@ function buildOptions(details, window, settings) {
             enableRemoteModule: true,
             contextIsolation: false,
             backgroundThrottling: settings ? settings.enableBackgroundThrottling : true,
-            preload: path.join(__dirname, 'child.preload.js'),
+            preload: path.join(__dirname, 'preload.js')
         }
     };
     if (details.features.length) {

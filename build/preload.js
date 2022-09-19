@@ -4,6 +4,7 @@ window.oldFocus = window.focus;
 window.focus = () => { ipcRenderer.invoke("window", "focus"); };
 window.show = () => { ipcRenderer.invoke("window", "show"); };
 window.hide = () => { ipcRenderer.invoke("window", "hide"); };
+window.minimize = () => { ipcRenderer.invoke("window", "minimize"); };
 window.toggle = () => { ipcRenderer.invoke("window", "toggle"); };
 window.update = (options) => { ipcRenderer.invoke("window", "update", options); };
 window.setProgressBar = (value, mode) => { ipcRenderer.invoke("window", "setProgressBar", value, mode); };

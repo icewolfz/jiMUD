@@ -1063,12 +1063,12 @@
                 while (p--)
                     closeViewer(_viewers[keys[p]]);
                 $closeWindow = true;
-                ipcRenderer.invoke('window', 'close');
+                window.close();
             });
             return 'no';
         }
         $closeWindow = true;
-        ipcRenderer.invoke('window', 'close');
+        window.close();
         return;
     };
 

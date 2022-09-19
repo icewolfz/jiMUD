@@ -1379,7 +1379,7 @@
                         }, () => {
                             mail.close();
                             closeWindow = true;
-                            ipcRenderer.invoke('window', 'close');
+                            window.close();
                         });
                         return;
                     }
@@ -1389,7 +1389,7 @@
                         ipcRenderer.send('setting-changed', { type: 'extensions', name: 'mail', value: options.extensions['mail'] });
                     }
                     closeWindow = true;
-                    ipcRenderer.invoke('window', 'close');
+                    window.close();
                 });
                 return;
             }
@@ -1408,7 +1408,7 @@
                 }, () => {
                     mail.close();
                     closeWindow = true;
-                    ipcRenderer.invoke('window', 'close');
+                    window.close();
                 });
                 return;
             }

@@ -237,8 +237,8 @@
 
         document.addEventListener('visibilitychange', () => {
             //fake minimize due ot bug in linux not supporting minimize event
-            if (document.visibilityState === 'hidden' && process.platform === 'linux' && ipcRenderer.sendSync('window-info', 'isMinimized') && ipcRenderer.sendSync('get-preference', 'hideOnMinimize'))
-                ipcRenderer.invoke('window', 'hide');
+            if (document.visibilityState === 'hidden' && process.platform === 'linux' && window.isMinimized() && window.getSetting('hideOnMinimize'))
+                window.hide();
         });
 
         function init() {
