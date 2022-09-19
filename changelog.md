@@ -34,7 +34,10 @@
 ## 0.19.6
 
 - **Fixed:**
-  - Fixed disconnect dialog when screen size is small 
+  - Fixed disconnect dialog when screen size is small
+  - Immortal tools: Fixed error when navigating by using keyboard
+- **Changed:**
+  - Update electron 19.0.16 to 19.0.17
 
 ## 0.19.5 2022-09-14
 

@@ -60,7 +60,7 @@
     "@types/jquery": "^3.5.14",
     "@types/node": "^18.7.18",
     "babel-minify": "^0.5.2",
-    "electron": "^19.0.16",
+    "electron": "^19.0.17",
     "electron-builder": "^23.3.3",
     "electron-rebuild": "^3.2.9",
     "eslint": "^8.23.1",
@@ -117,7 +117,7 @@
       "!node_modules/javascript-natural-sort/**/*",
       "!node_modules/seedrandom/**/*",
       "!node_modules/tiny-emitter/**/*",
-      "!node_modules/typed-function/**/*",   
+      "!node_modules/typed-function/**/*",
       "./node_modules/mathjs/lib/browser/math.js",
       "node_modules/monaco-editor/min/**/*",
       "node_modules/@electron/remote/**/*"
