@@ -2355,6 +2355,7 @@ function buildOptions(details, window, settings) {
     };
     if (details.features.length) {
         features = details.features.split(',');
+        options.features = {};
         for (var f = 0, fl = features.length; f < fl; f++) {
             feature = features[f].split('=');
             switch (feature[0]) {
@@ -2365,14 +2366,21 @@ function buildOptions(details, window, settings) {
                 case "x":
                 case "y":
                     options[feature[0]] = parseInt(feature[1], 10);
+                    options.features[feature[0]] = options[feature[0]];
                     break;
                 default:
-                    if (feature.length === 1 || feature[1] === "true")
+                    if (feature.length === 1 || feature[1] === "true") {
                         options[feature[0]] = true;
-                    else if (feature[1] === "false")
+                        options.features[feature[0]] = options[feature[0]];
+                    }
+                    else if (feature[1] === "false") {
                         options[feature[0]] = false;
-                    else if (feature[1] !== '[object Object]')
+                        options.features[feature[0]] = options[feature[0]];
+                    }
+                    else if (feature[1] !== '[object Object]') {
                         options[feature[0]] = feature[1];
+                        options.features[feature[0]] = options[feature[0]];
+                    }
                     break;
             }
         }
@@ -2741,7 +2749,7 @@ async function saveWindowLayout(file) {
             const wData = {
                 client: getClientId(clients[id].view), //use function to ensure proper id data type
                 state: saveWindowState(window),
-                details: clients[id].windows[idx].details,
+                details: { url: clients[id].windows[idx].details.url, options: clients[id].windows[idx].details.options.features },
                 //get any custom data from window
                 data: await executeScript('if(typeof saveWindow === "function") saveWindow()', window)
             }

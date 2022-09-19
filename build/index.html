@@ -3238,7 +3238,7 @@
             switch (name) {
                 case 'characters':
                     if (data && data.details)
-                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon']);
+                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultWidth', 'defaultHeight']);
                     _windows['characters.html'] = window.open('characters.html', 'Characters-' + getId(), 'alwaysOnTopClient=true,defaultHeight=555,defaultWidth=650,backgroundColor=#fff,icon=' + path.join(__dirname, '../assets/icons/png/user.png') + _options);
                     break;
                 case 'mapper':
@@ -3248,7 +3248,7 @@
                     break;
                 case 'editor':
                     if (data && data.details)
-                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent']);
+                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent', 'defaultWidth', 'defaultHeight']);
                     _windows['editor.html'] = window.open('editor.html', 'Advanced Editor-' + getId(), `persistent=${client.options.editorPersistent},defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/edit.png')}${_options}`);
                     break;
                 case 'chat':
@@ -3270,7 +3270,7 @@
                     break
                 case 'history':
                     if (data && data.details)
-                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon']);
+                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultWidth', 'defaultHeight']);
                     _windows['history.html'] = window.open('history.html', 'History-' + getId(), `defaultWidth=400,defaultHeight=275,alwaysOnTopClient=true,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/history.png')}${_options}`);
                     break;
                 case 'code.editor':
@@ -3297,8 +3297,8 @@
             }
             else
                 updateWindow(_windows['mapper.html'], {
-                    alwaysOnTopClient: client.options.mapper.alwaysOnTop,
-                    alwaysOnTop: client.options.mapper.alwaysOnTopClient,
+                    alwaysOnTopClient: client.options.mapper.alwaysOnTopClient,
+                    alwaysOnTop: client.options.mapper.alwaysOnTop,
                     showInTaskBar: client.options.mapper.showInTaskBar,
                     enableBackgroundThrottling: enableBackgroundThrottling,
                     persistent: client.options.mapper.persistent
@@ -3322,8 +3322,8 @@
             }
             else
                 updateWindow(_windows['chat.html'], {
-                    alwaysOnTopClient: client.options.chat.alwaysOnTop,
-                    alwaysOnTop: client.options.chat.alwaysOnTopClient,
+                    alwaysOnTopClient: client.options.mapper.alwaysOnTopClient,
+                    alwaysOnTop: client.options.mapper.alwaysOnTop,
                     showInTaskBar: client.options.chat.showInTaskBar,
                     enableBackgroundThrottling: enableBackgroundThrottling,
                     persistent: client.options.chat.persistent
@@ -3336,8 +3336,8 @@
             }
             else
                 updateWindow(_windows['code.editor.html'], {
-                    alwaysOnTopClient: client.options.codeEditor.alwaysOnTop,
-                    alwaysOnTop: client.options.codeEditor.alwaysOnTopClient,
+                    alwaysOnTopClient: client.options.mapper.alwaysOnTopClient,
+                    alwaysOnTop: client.options.mapper.alwaysOnTop,
                     showInTaskBar: client.options.codeEditor.showInTaskBar,
                     enableBackgroundThrottling: enableBackgroundThrottling,
                     persistent: client.options.codeEditor.persistent
