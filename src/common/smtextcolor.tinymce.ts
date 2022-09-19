@@ -14,7 +14,7 @@
  * @class tinymce.textcolor.Plugin
  * @private
  */
-declare let tinymce, ipcRenderer, rgbcolor;
+declare let tinymce, openColorDialog, rgbcolor;
 
 // tslint:disable-next-line:only-arrow-functions
 tinymce.PluginManager.add('smtextcolor', function (editor, url) {
@@ -114,7 +114,7 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
 
     const applyColor = (editor, format, value, onChoice: (v: string) => void) => {
         if (value === 'custom') {
-            ipcRenderer.send('show-window', 'color', { type: format, color: '', window: 'editor' });
+            openColorDialog(format, '');
         } else if (value === 'remove') {
             onChoice('');
             editor.execCommand('mceRemoveTextcolor', format);

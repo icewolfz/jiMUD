@@ -1831,7 +1831,8 @@ function initializeChildWindow(window, link, details) {
     window.removeMenu();
     window.once('ready-to-show', () => {
         loadWindowScripts(window, details.frameName);
-        addInputContext(window, set.spellchecking);
+        if (!details.options.noInputContext)
+            addInputContext(window, set.spellchecking);
         executeScript(`(function(){
             window.oldFocus = window.focus; 
             window.focus = () => { ipcRenderer.invoke("window", "focus"); };
@@ -2533,6 +2534,8 @@ function updateWindow(window, parent, options) {
             for (option in options) {
                 if (!Object.prototype.hasOwnProperty.call(options, option)) continue;
                 details.options[option] = options[option];
+                if (option in details.options.features)
+                    details.options.features[option] = options[option];
             }
             break;
         }
@@ -3449,7 +3452,7 @@ function createMenu(window) {
                     label: '&Advanced editor...',
                     id: 'editor',
                     click: (item, mWindow) => {
-                        executeScriptClient('showEditor()', window || mWindow, true);
+                        executeScriptClient('openWindow("editor")', window || mWindow, true);
                     },
                     accelerator: 'CmdOrCtrl+E'
                 },

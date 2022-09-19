@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const sqlite3 = require('better-sqlite3');
 const PF = require('./../../lib/pathfinding.js');
+declare let ipcRenderer;
 
 export enum RoomDetails {
     None = 0,

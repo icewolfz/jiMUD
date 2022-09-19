@@ -2204,3 +2204,7 @@ export function isEqual(a, b): boolean {
 export function createProgressDialog(title) {
     return window.open('progress.html', 'modal', 'title=' + title + ',width=200,height=70,backgroundColor=#fff,icon=' + path.join(__dirname, '../../assets/icons/png/progress.png'));
 }
+
+export function createColorDialog() {
+    return window.open('colorpicker.html', 'modal', 'title=Pick color,width=326,height=296,backgroundColor=#fff,icon=' + path.join(__dirname, '../../assets/icons/png/color.png'));
+}

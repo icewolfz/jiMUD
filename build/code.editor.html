@@ -166,10 +166,10 @@
                 editor.getOriginalEditor()._standaloneKeybindingService.addDynamicKeybinding(`-actions.findWithSelection`, undefined, () => { });
                 editor.getOriginalEditor()._standaloneKeybindingService.addDynamicKeybinding(`-actions.find`, undefined, () => { });
                 editor.getOriginalEditor()._standaloneKeybindingService.addDynamicKeybinding(`-editor.action.startFindReplaceAction`, undefined, () => { });
-                
+
                 editor.getModifiedEditor()._standaloneKeybindingService.addDynamicKeybinding(`-actions.findWithSelection`, undefined, () => { });
                 editor.getModifiedEditor()._standaloneKeybindingService.addDynamicKeybinding(`-actions.find`, undefined, () => { });
-                editor.getModifiedEditor()._standaloneKeybindingService.addDynamicKeybinding(`-editor.action.startFindReplaceAction`, undefined, () => { });                
+                editor.getModifiedEditor()._standaloneKeybindingService.addDynamicKeybinding(`-editor.action.startFindReplaceAction`, undefined, () => { });
             }
 
             if (options && options.editorOptions)
@@ -3698,7 +3698,7 @@
             manager.active.editor.resizeMap(w, h, d, sf);
         }
         document.getElementById('map-resize').close();
-        setTimeout( () => {if (manager.active && manager.active.editor) manager.active.editor.focus(); }, 10);
+        setTimeout(() => { if (manager.active && manager.active.editor) manager.active.editor.focus(); }, 10);
     }
 
     // eslint-disable-next-line no-unused-vars
@@ -4463,7 +4463,7 @@
     });
 
     ipcRenderer.on('open-editor', (event, file, remoteFile, remoteEdit) => {
-        openEditor(file, remoteFile, remoteEdit );
+        openEditor(file, remoteFile, remoteEdit);
     });
 
     function openEditor(file, remoteFile, remoteEdit) {
@@ -4479,6 +4479,10 @@
     ipcRenderer.on('send-editor', (event, text, window) => {
         if (!manager.active || !manager.active.editor || window != 'code-editor')
             return;
+        updateValue(text);
+    });
+
+    function updateValue(text) {
         if (($dialogs.monster && $dialogs.monster.open) || ($dialogs.room && $dialogs.room.open)) {
             if ((document.activeElement.tagName === 'INPUT' && document.activeElement.type === 'text') || document.activeElement.tagName === 'TEXTAREA')
                 document.activeElement.value = text;
@@ -4491,7 +4495,7 @@
         }
         else
             manager.active.editor.insert(text);
-    });
+    }
 
     ipcRenderer.on('GMCP-received', (event, data) => {
         if (options && options.debug)
@@ -6550,8 +6554,8 @@
 
                             if ($dialogs.monster.options && $dialogs.monster.options.groups) {
                                 var groups = Object.keys($dialogs.monster.options.groups);
-                                Array.prototype.forEach.call( e.page.querySelectorAll('optgroup[data-types=moncustom]'), function( node ) {
-                                    node.parentNode.removeChild( node );
+                                Array.prototype.forEach.call(e.page.querySelectorAll('optgroup[data-types=moncustom]'), function (node) {
+                                    node.parentNode.removeChild(node);
                                 });
                                 groups.forEach(g => {
                                     var el = document.createElement('optgroup');
@@ -8912,7 +8916,7 @@
                 doUpdate(2);
                 if (length === -1)
                     sbSize.textContent = '';
-                else if(lines === -1)
+                else if (lines === -1)
                     sbSize.textContent = `Length: ${length.toLocaleString()}`;
                 else
                     sbSize.textContent = `Length: ${length.toLocaleString()}, Lines: ${lines.toLocaleString()}`;

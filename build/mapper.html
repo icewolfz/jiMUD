@@ -267,7 +267,6 @@
             }
             $closeWindow = true;
             abortController.abort();
-            window.close();
         };
 
         $(document).ready(() => {
@@ -713,6 +712,26 @@
                 mapper.scrollTo(options.mapper.vscroll, options.mapper.hscroll);
                 window.opener.client.sendGMCP('Room.Info');
                 window.opener.client.on('received-GMCP', processGMCP, { signal: abortController.signal });
+                window.opener.client.on('options-loaded', () => {
+                    save(function () {
+                        try {
+                            var options = window.opener.client.options;
+                            mapper.memorySavePeriod = options.mapper.memorySavePeriod;
+                            mapper.memory = options.mapper.memory;
+                            mapper.mapFile = window.opener.getMapFile();
+                            mapper.commandDelay = options.commandDelay;
+                            mapper.commandDelayCount = options.commandDelayCount;
+                            importType = options.mapper.importType;
+                            _enableDebug = options.enableDebug;
+                        }
+                        catch (err) {
+                            if (typeof err === 'string')
+                                window.opener.client.error(err);
+                            else
+                                window.opener.client.error(err.stack || err.message);
+                        }
+                    });
+                }, { signal: abortController.signal });
                 window.opener._status.on('set-title', (title, lag) => {
                     if (title && title.length > 0)
                         document.title = 'Mapper - ' + title;
@@ -770,27 +789,6 @@
                 }, 100);
             else
                 mapper.processGMCP(mod, obj);
-        }
-
-        function reloadOptions() {
-            save(function () {
-                try {
-                    var options = window.opener.client.options;
-                    mapper.memorySavePeriod = options.mapper.memorySavePeriod;
-                    mapper.memory = options.mapper.memory;
-                    mapper.mapFile = window.opener.getMapFile();
-                    mapper.commandDelay = options.commandDelay;
-                    mapper.commandDelayCount = options.commandDelayCount;
-                    importType = options.mapper.importType;
-                    _enableDebug = options.enableDebug;
-                }
-                catch (err) {
-                    if (typeof err === 'string')
-                        window.opener.client.error(err);
-                    else
-                        window.opener.client.error(err.stack || err.message);
-                }
-            });
         }
 
         function initProgressDialog(data) {

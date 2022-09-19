@@ -27,15 +27,16 @@
         const { nativeImage, ipcRenderer, webFrame, clipboard } = require('electron');
         const remote = require('@electron/remote');
         const { Menu, MenuItem } = remote;
-        const { stripHTML, htmlEncode, invert, getColors } = require('./js/library');
+        const { stripHTML, htmlEncode, invert, getColors, createColorDialog } = require('./js/library');
         const { Settings } = require('./js/settings');
         const rgbcolor = require('rgbcolor');
         const fs = require('fs');
         const path = require('path');
 
         var editorOnly = ipcRenderer.sendSync('get-global', 'editorOnly');
-
+        var abortController = new AbortController();
         var _colors, _ColorTable, options, _colorCodes;
+        var _colorDialog;
         var colorNames = {
             'BLACK': 'Black',
             'RED': 'Maroon',
@@ -469,7 +470,7 @@
                 else
                     break;
             }
-            if(data[0] === 'DIV')
+            if (data[0] === 'DIV')
                 data.shift();
 
             for (d = 0, dl = data.length; d < dl; d++) {
@@ -596,8 +597,8 @@
 
         function cleanReset(buffer) {
             let b = buffer.length - 1;
-            for(;b >= 0; b--) {
-                if(buffer[b].startsWith('%^'))
+            for (; b >= 0; b--) {
+                if (buffer[b].startsWith('%^'))
                     buffer.pop();
                 else
                     return buffer;
@@ -831,7 +832,7 @@
                         label: 'More...',
                         icon: path.join(__dirname, '../assets/icons/png/color.png'),
                         click: function () {
-                            ipcRenderer.send('show-window', 'color', { type: 'forecolor', color: '', window: 'editor' });
+                            openColorDialog('forecolor');
                         }
                     });
                     bmi.push({ type: 'separator' });
@@ -839,7 +840,7 @@
                         label: 'More...',
                         icon: path.join(__dirname, '../assets/icons/png/color.png'),
                         click: function () {
-                            ipcRenderer.send('show-window', 'color', { type: 'hilitecolor', color: '', window: 'editor' });
+                            openColorDialog('hilitecolor');
                         }
                     });
                     cMenu.append(new MenuItem({ type: 'separator' }));
@@ -862,7 +863,7 @@
                         icon: 'sendraw',
                         tooltip: 'Send to code editor',
                         onAction: function () {
-                            ipcRenderer.send('send-editor', getFormatedText().replace(/(?:\r)/g, ''), 'code-editor', true);
+                            window.opener.updateValue(getFormatedText().replace(/(?:\r)/g, ''));
                         }
                     });
                 }
@@ -871,36 +872,45 @@
                         icon: 'sendraw',
                         tooltip: 'Send to mud',
                         onAction: function () {
-                            ipcRenderer.send('send-command', getFormatedText().replace(/(?:\r)/g, ''));
+                            window.opener.client.sendCommand(getFormatedText().replace(/(?:\r)/g, ''));
                         },
                         onItemAction: function (api, value) {
                             switch (value) {
                                 case 'formatted':
-                                    ipcRenderer.send('send-command', getFormatedText().replace(/(?:\r)/g, ''));
+                                    window.opener.client.sendCommand(getFormatedText().replace(/(?:\r)/g, ''));
                                     break;
                                 case 'text':
-                                    ipcRenderer.send('send-command', getText().replace(/(?:\r)/g, ''));
+                                    window.opener.client.sendCommand(getText().replace(/(?:\r)/g, ''));
                                     break;
                                 case 'formattednoecho':
-                                    ipcRenderer.send('send-background', getFormatedText().replace(/(?:\r)/g, ''), true);
+                                    window.opener.client.sendBackground(getFormatedText().replace(/(?:\r)/g, ''), true);
                                     break;
                                 case 'textnoecho':
-                                    ipcRenderer.send('send-background', getText().replace(/(?:\r)/g, ''), true);
+                                    window.opener.client.sendBackground(getText().replace(/(?:\r)/g, ''), true);
                                     break;
                                 case 'formattedverbatim':
-                                    ipcRenderer.send('send', getFormatedText().replace(/(?:\r)/g, ''));
+                                    window.opener.client.send(getFormatedText().replace(/(?:\r)/g, ''));
                                     break;
                                 case 'textverbatim':
-                                    ipcRenderer.send('send', getText().replace(/(?:\r)/g, ''));
+                                    window.opener.client.send(getText().replace(/(?:\r)/g, ''));
                                     break;
                                 case 'rawformatted':
-                                    ipcRenderer.send('send-raw', getFormatedText().replace(/(?:\r)/g, ''));
+                                    window.opener.client.sendRaw(getFormatedText().replace(/(?:\r)/g, ''));
                                     break;
                                 case 'rawtext':
-                                    ipcRenderer.send('send-raw', getText().replace(/(?:\r)/g, ''));
+                                    window.opener.client.sendRaw(getText().replace(/(?:\r)/g, ''));
                                     break;
                                 case 'codeeditor':
-                                    ipcRenderer.send('send-editor', getFormatedText().replace(/(?:\r)/g, ''), 'code-editor', true);
+                                    if (!window.opener._windows['code.editor']) {
+                                        window.opener.openWindow('code.editor').then(() => {
+                                            //not opened for what ever reason
+                                            if (!window.opener._windows['code.editor']) return;
+                                            window.opener._windows['code.editor'].updateValue(getFormatedText().replace(/(?:\r)/g, ''));
+                                        });
+                                        return;
+                                    }
+                                    else
+                                        window.opener._windows['code.editor'].updateValue(getFormatedText().replace(/(?:\r)/g, ''));
                                     break;
                             }
                         },
@@ -1093,7 +1103,7 @@
                     //contextmenu
                     'paste shadowmud insertdatetime smtextcolor nonbreaking'
                 ],
-                color_picker_callback: function (editor, color, format) { ipcRenderer.send('show-window', 'color', { type: format, color: color || '', window: 'editor' }); },
+                color_picker_callback: function (editor, color, format) { openColorDialog(format, color || ''); },
                 color_picker_caption: 'More&hellip;',
                 //contextmenu: "undo redo | cut copy paste | style",
                 //nonbreaking_force_tab: true,
@@ -1160,7 +1170,7 @@
             remote.getCurrentWindow().webContents.on('context-menu', (e, params) => {
                 //const { selectionText, isEditable } = params;
                 //if (isEditable) {
-                if((params.y) < 37) return;
+                if ((params.y) < 37) return;
                 var cMenu = tinymce.activeEditor.plugins['shadowmud'].buildMenu(params.editFlags);
                 if (ipcRenderer.sendSync('get-setting', 'spellchecking') && params.dictionarySuggestions.length) {
                     cMenu.insert(0, new MenuItem({ type: 'separator' }));
@@ -1175,16 +1185,13 @@
                         }));
                 }
                 cMenu.popup({ window: remote.getCurrentWindow() });
-                /*} else if (selectionText && selectionText.trim() !== '') {
-                    Menu.buildFromTemplate([
-                        { role: 'copy' },
-                        { type: 'separator' },
-                        { role: 'selectAll' },
-                    ]).popup({ window: remote.getCurrentWindow() });
-                }
-                */
             });
             loadOptions();
+            if (!editorOnly) {
+                window.opener.client.on('options-loaded', () => {
+                    loadOptions();
+                }, { signal: abortController.signal });
+            }
         });
 
         function loadColors() {
@@ -1314,7 +1321,11 @@
         }
 
         function loadOptions() {
-            options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
+            //if editor only different settings so fall back to global settngs
+            if (editorOnly)
+                options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
+            else
+                options = window.opener.client.options;
             $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-size', options.cmdfontSize);
             $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-family', options.cmdfont + ', monospace');
             if (tinymce.activeEditor.formatter)
@@ -1324,23 +1335,57 @@
             loadColors();
         }
 
-        ipcRenderer.on('reload-options', () => {
-            loadOptions();
-        });
+        function openColorDialog(type, color) {
+            if (!_colorDialog || _colorDialog.closed)
+                _colorDialog = createColorDialog();
+            _colorDialog.addEventListener('DOMContentLoaded', () => {
+                _colorDialog.setColor(color || '');
+                _colorDialog.setType(type || '');
+            }, { once: true, signal: abortController.signal });
+        }
 
-        ipcRenderer.on('set-color', (event, type, color, code, window) => {
-            if (window != 'editor') return;
+        var $closeWindow = false;
+        function closeable(all) {
+            if (!$closeWindow) {
+                if (_colorDialog && !_colorDialog.closed) {
+                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        type: 'error',
+                        title: 'Color picker open',
+                        message: 'You must close the color picker dialog before you can close editor.',
+                        defaultId: 1
+                    });
+                    $closeWindow = false;
+                }
+                else
+                    $closeWindow = true;
+            }
+            return $closeWindow;
+        }
+
+        window.onbeforeunload = function (evt) {
+            if (!closeable()) {
+                evt.returnValue = false;
+                return 'no';
+            }
+            $closeWindow = true;
+            abortController.abort();
+        };
+
+        function setColor(type, color, code) {
             if (color === 'transparent')
                 tinymce.activeEditor.plugins['shadowmud'].removeFormat(type);
             else
                 tinymce.activeEditor.plugins['shadowmud'].applyFormat(type, '#' + color);
             tinymce.activeEditor.plugins['smtextcolor'].setColor(type, '#' + color);
-        });
+        }
 
+        /*
+        //TODO remove this once code editor has been updated to remove this, for now left for refence
         ipcRenderer.on('send-editor', (event, text, window) => {
             if (window != 'editor') return;
             insertFormated(text);
         });
+        */
     </script>
 </head>
 

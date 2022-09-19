@@ -3050,12 +3050,6 @@
             });
             doUpdate(76);
             client.sendGMCP('Core.Hello { "client": "' + client.telnet.terminal + '", "version": "' + client.telnet.version + '" }');
-            //notify child windows that options where reloaded for any custom handling
-            for (window in _windows) {
-                if (!Object.prototype.hasOwnProperty.call(_windows, window))
-                    continue;
-                _windows[window].reloadOptions();
-            }
             initWindows();
         }
         /*
@@ -3248,8 +3242,8 @@
                     break;
                 case 'editor':
                     if (data && data.details)
-                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent', 'defaultWidth', 'defaultHeight']);
-                    _windows['editor.html'] = window.open('editor.html', 'Advanced Editor-' + getId(), `persistent=${client.options.editorPersistent},defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/edit.png')}${_options}`);
+                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent', 'defaultWidth', 'defaultHeight','showInTaskBar', 'noInputContext']);
+                    _windows['editor.html'] = window.open('editor.html', 'Advanced Editor-' + getId(), `noInputContext=true,alwaysOnTopClient=true,showInTaskBar=${client.options.showEditorInTaskBar},persistent=${client.options.editorPersistent},defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/edit.png')}${_options}`);
                     break;
                 case 'chat':
                     if (data && data.details)
@@ -3476,12 +3470,6 @@
             }
             else
                 ipcRenderer.send('show-window', 'log-viewer', { show: true, file: 'log.viewer.html', icon: 'log', alwaysOnTopClient: true });
-        }
-
-        // eslint-disable-next-line no-unused-vars
-        function showCodeEditor() {
-            //TODO make code editor window work
-            ipcRenderer.send('show-window', 'code-editor');
         }
 
         // eslint-disable-next-line no-unused-vars

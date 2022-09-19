@@ -1,477 +1,484 @@
 <!DOCTYPE html>
 <html lang="en-US">
 
-    <head>
-        <meta charset="UTF-8">
-        <title>Pick color</title>
-        <link rel="shortcut icon" href="../assets/icons/png/preferences.png" />
-        <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
-        <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
-        <link href="../lib/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
-        <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
-        <link href="css/form.css" rel="stylesheet" type="text/css" />
-        <link href="../lib/tinymce/skins/lightgray/skin.min.css" rel="stylesheet" type="text/css" />
+<head>
+    <meta charset="UTF-8">
+    <title>Pick color</title>
+    <link rel="shortcut icon" href="../assets/icons/png/preferences.png" />
+    <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/form.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/tinymce/skins/lightgray/skin.min.css" rel="stylesheet" type="text/css" />
 
-        <style>
-            body {
-                -webkit-user-select: none;
-                user-select: none;
-                padding: 0;
-                margin: 0;
-                overflow: hidden;
+    <style>
+        body {
+            -webkit-user-select: none;
+            user-select: none;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .mce-colorbtn-trans div {
+            line-height: 14px;
+            overflow: hidden;
+        }
+    </style>
+    <script type="text/javascript">
+        if (typeof module === 'object') { window.module = module; module = undefined; }
+    </script>
+    <script src="../lib/jquery.min.js"></script>
+    <script src="../lib/bootstrap.min.js"></script>
+    <script src="../lib/bootstrap-select.min.js"></script>
+    <script type="text/javascript">
+        if (window.module) module = window.module;
+        //spell-checker:ignore tinymce, rgbcolor, forecolor, colorbtn, colorbutton
+        const { ipcRenderer } = require('electron');
+        const { Settings } = require('./js/settings');
+        const { getColors } = require('./js/library');
+        const rgbcolor = require('rgbcolor');
+
+        var type = 'forecolor';
+        // eslint-disable-next-line no-unused-vars
+        var color = '';
+        var options;
+        var abortController = new AbortController();
+
+        var colorNames = {
+            'No color': 'Default',
+            'BLACK': 'Black',
+            'RED': 'Maroon',
+            'GREEN': 'Green',
+            'ORANGE': 'Olive',
+            'BLUE': 'Navy',
+            'MAGENTA': 'Purple',
+            'WHITE': 'Silver',
+            'CYAN': 'Teal',
+            'BOLD BLACK': 'Grey',
+            'BOLD RED': 'Red',
+            'BOLD GREEN': 'Lime',
+            'YELLOW': 'Yellow',
+            'BOLD BLUE': 'Blue',
+            'BOLD MAGENTA': 'Fuchsia',
+            'BOLD CYAN': 'Aqua',
+            'BOLD': 'White',
+            'BOLD WHITE': 'White',
+            'RGB000': 'Black',
+            'RGB001': 'Navy Blue',
+            'RGB002': 'Dark Blue',
+            'RGB003': 'Blue',
+            'RGB004': 'Blue',
+            'RGB005': 'Blue',
+            'RGB010': 'Dark Green',
+            'RGB011': 'Deep Sky Blue',
+            'RGB012': 'Deep Sky Blue',
+            'RGB013': 'Deep Sky Blue',
+            'RGB014': 'Cobalt/Dodger Blue',
+            'RGB015': 'Dodger Blue',
+            'RGB020': 'Green',
+            'RGB021': 'Spring Green',
+            'RGB022': 'Turquoise',
+            'RGB023': 'Deep Sky Blue',
+            'RGB024': 'Deep Sky Blue',
+            'RGB025': 'Dodger Blue',
+            'RGB030': 'Green',
+            'RGB031': 'Spring Green',
+            'RGB032': 'Dark Cyan',
+            'RGB033': 'Light Sea Green',
+            'RGB034': 'Deep Sky Blue',
+            'RGB035': 'Deep Sky Blue',
+            'RGB040': 'Green',
+            'RGB041': 'Spring Green',
+            'RGB042': 'Spring Green',
+            'RGB043': 'Cyan',
+            'RGB044': 'Dark Turquoise',
+            'RGB045': 'Turquoise',
+            'RGB050': 'Green',
+            'RGB051': 'Spring Green',
+            'RGB052': 'Spring Green',
+            'RGB053': 'Medium Spring Green',
+            'RGB054': 'Cyan',
+            'RGB055': 'Cyan',
+            'RGB100': 'Dark Red',
+            'RGB101': 'Deep Pink',
+            'RGB102': 'Purple',
+            'RGB103': 'Purple',
+            'RGB104': 'Purple',
+            'RGB105': 'Blue Violet',
+            'RGB110': 'Orange',
+            'RGB111': 'Dark Grey',
+            'RGB112': 'Medium Purple',
+            'RGB113': 'Slate Blue',
+            'RGB114': 'Slate Blue',
+            'RGB115': 'Royal Blue',
+            'RGB120': 'Chartreuse',
+            'RGB121': 'Dark Sea Green',
+            'RGB122': 'Pale Turquoise',
+            'RGB123': 'Steel Blue',
+            'RGB124': 'Steel Blue',
+            'RGB125': 'Cornflower Blue',
+            'RGB130': 'Chartreuse',
+            'RGB131': 'Dark Sea Green',
+            'RGB132': 'Cadet Blue',
+            'RGB133': 'Cadet Blue',
+            'RGB134': 'Sky Blue',
+            'RGB135': 'Steel Blue',
+            'RGB140': 'Chartreuse',
+            'RGB141': 'Pale Green',
+            'RGB142': 'Sea Green',
+            'RGB143': 'Aquamarine',
+            'RGB144': 'Medium Turquoise',
+            'RGB145': 'Steel Blue',
+            'RGB150': 'Chartreuse',
+            'RGB151': 'Sea Green',
+            'RGB152': 'Sea Green',
+            'RGB153': 'Sea Green',
+            'RGB154': 'Aquamarine',
+            'RGB155': 'Dark Slate Gray',
+            'RGB200': 'Dark Red',
+            'RGB201': 'Deep Pink',
+            'RGB202': 'Dark Magenta',
+            'RGB203': 'Dark Magenta',
+            'RGB204': 'Dark Violet',
+            'RGB205': 'Purple',
+            'RGB210': 'Orange',
+            'RGB211': 'Light Pink',
+            'RGB212': 'Plum',
+            'RGB213': 'Medium Purple',
+            'RGB214': 'Medium Purple',
+            'RGB215': 'Slate Blue',
+            'RGB220': 'Yellow',
+            'RGB221': 'Wheat',
+            'RGB222': 'Grey',
+            'RGB223': 'Light Slate Grey',
+            'RGB224': 'Medium Purple',
+            'RGB225': 'Light Slate Blue',
+            'RGB230': 'Yellow',
+            'RGB231': 'Dark Olive Green',
+            'RGB232': 'Dark Sea Green',
+            'RGB233': 'Light Sky Blue',
+            'RGB234': 'Light Sky Blue',
+            'RGB235': 'Sky Blue',
+            'RGB240': 'Chartreuse',
+            'RGB241': 'Dark Olive Green',
+            'RGB242': 'Pale Green',
+            'RGB243': 'Dark Sea Green',
+            'RGB244': 'Dark Slate Gray',
+            'RGB245': 'Sky Blue',
+            'RGB250': 'Chartreuse',
+            'RGB251': 'Light Green',
+            'RGB252': 'Light Green',
+            'RGB253': 'Pale Green',
+            'RGB254': 'Aquamarine',
+            'RGB255': 'Dark Slate Gray',
+            'RGB300': 'Red',
+            'RGB301': 'Deep Pink',
+            'RGB302': 'Medium Violet Red',
+            'RGB303': 'Magenta',
+            'RGB304': 'Dark Violet',
+            'RGB305': 'Purple',
+            'RGB310': 'Dark Orange',
+            'RGB311': 'Indian Red',
+            'RGB312': 'Hot Pink',
+            'RGB313': 'Medium Orchid',
+            'RGB314': 'Medium Orchid',
+            'RGB315': 'Medium Purple',
+            'RGB320': 'Dark Goldenrod',
+            'RGB321': 'Light Salmon',
+            'RGB322': 'Rosy Brown',
+            'RGB323': 'Grey',
+            'RGB324': 'Medium Purple',
+            'RGB325': 'Medium Purple',
+            'RGB330': 'Gold',
+            'RGB331': 'Dark Khaki',
+            'RGB332': 'Navajo White',
+            'RGB333': 'Grey',
+            'RGB334': 'Light Steel Blue',
+            'RGB335': 'Light Steel Blue',
+            'RGB340': 'Yellow',
+            'RGB341': 'Dark Olive Green',
+            'RGB342': 'Dark Sea Green',
+            'RGB343': 'Dark Sea Green',
+            'RGB344': 'Light Cyan',
+            'RGB345': 'Light Sky Blue',
+            'RGB350': 'Green Yellow',
+            'RGB351': 'Dark Olive Green',
+            'RGB352': 'Pale Green',
+            'RGB353': 'Dark Sea Green',
+            'RGB354': 'Dark Sea Green',
+            'RGB355': 'Pale Turquoise',
+            'RGB400': 'Crimson/Red',
+            'RGB401': 'Deep Pink',
+            'RGB402': 'Deep Pink',
+            'RGB403': 'Magenta',
+            'RGB404': 'Magenta',
+            'RGB405': 'Magenta',
+            'RGB410': 'Dark Orange',
+            'RGB411': 'Indian Red',
+            'RGB412': 'Hot Pink',
+            'RGB413': 'Hot Pink',
+            'RGB414': 'Orchid',
+            'RGB415': 'Medium Orchid',
+            'RGB420': 'Orange',
+            'RGB421': 'Light Salmon/Bronze',
+            'RGB422': 'Light Pink',
+            'RGB423': 'Pink',
+            'RGB424': 'Plum',
+            'RGB425': 'Violet',
+            'RGB430': 'Gold',
+            'RGB431': 'Light Goldenrod',
+            'RGB432': 'Tan',
+            'RGB433': 'Misty Rose',
+            'RGB434': 'Thistle',
+            'RGB435': 'Plum',
+            'RGB440': 'Yellow',
+            'RGB441': 'Khaki',
+            'RGB442': 'Light Goldenrod',
+            'RGB443': 'Light Yellow',
+            'RGB444': 'Grey',
+            'RGB445': 'Light Steel Blue',
+            'RGB450': 'Yellow',
+            'RGB451': 'Dark Olive Green',
+            'RGB452': 'Dark Olive Green',
+            'RGB453': 'Dark Sea Green',
+            'RGB454': 'Honeydew',
+            'RGB455': 'Light Cyan',
+            'RGB500': 'Red',
+            'RGB501': 'Deep Pink',
+            'RGB502': 'Deep Pink',
+            'RGB503': 'Deep Pink',
+            'RGB504': 'Magenta',
+            'RGB505': 'Magenta',
+            'RGB510': 'Orangered',
+            'RGB511': 'Indian Red',
+            'RGB512': 'Indian Red',
+            'RGB513': 'Hot Pink',
+            'RGB514': 'Hot Pink',
+            'RGB515': 'Medium Orchid',
+            'RGB520': 'Dark Orange',
+            'RGB521': 'Salmon',
+            'RGB522': 'Light Coral',
+            'RGB523': 'Pale Violet Red',
+            'RGB524': 'Orchid',
+            'RGB525': 'Orchid',
+            'RGB530': 'Orange',
+            'RGB531': 'Sandy Brown',
+            'RGB532': 'Light Salmon',
+            'RGB533': 'Light Pink',
+            'RGB534': 'Pink',
+            'RGB535': 'Plum',
+            'RGB540': 'Gold',
+            'RGB541': 'Light Goldenrod',
+            'RGB542': 'Light Goldenrod',
+            'RGB543': 'Navajo White',
+            'RGB544': 'Misty Rose',
+            'RGB545': 'Thistle',
+            'RGB550': 'Yellow',
+            'RGB551': 'Light Goldenrod',
+            'RGB552': 'Khaki',
+            'RGB553': 'Wheat',
+            'RGB554': 'Corn Silk',
+            'RGB555': 'White',
+            'mono00': 'Grey 3',
+            'mono01': 'Grey 7',
+            'mono02': 'Grey 11',
+            'mono03': 'Grey 15',
+            'mono04': 'Grey 19',
+            'mono05': 'Grey 23',
+            'mono06': 'Grey 27',
+            'mono07': 'Grey 30',
+            'mono08': 'Grey 35',
+            'mono09': 'Grey 39',
+            'mono10': 'Grey 32',
+            'mono11': 'Grey 46',
+            'mono12': 'Grey 50',
+            'mono13': 'Grey 54',
+            'mono14': 'Grey 58',
+            'mono15': 'Grey 62',
+            'mono16': 'Grey 66',
+            'mono17': 'Grey 70',
+            'mono18': 'Grey 74',
+            'mono19': 'Grey 78',
+            'mono20': 'Grey 82',
+            'mono21': 'Grey 85',
+            'mono22': 'Grey 89',
+            'mono23': 'Grey 93'
+        };
+
+        // eslint-disable-next-line no-unused-vars
+        function setType(t) { type = t; }
+        function getType() { return type; }
+        // eslint-disable-next-line no-unused-vars
+        function setColor(c) { color = c; }
+        function getColor() { return color; }
+
+        $(window).keydown((event) => {
+            if (event.which === 27)
+                window.close();
+        });
+
+        $(document).ready(() => {
+            if (!ipcRenderer.sendSync('get-global', 'editorOnly')) {
+                options = window.opener.opener.client.on('options-loaded', () => {
+                    loadColors();
+                }, { signal: abortController.signal });
             }
+            loadColors();
+        });
 
-            .mce-colorbtn-trans div {
-                line-height: 14px;
-                overflow: hidden;
-            }
-        </style>
-        <script type="text/javascript">
-            if (typeof module === 'object') { window.module = module; module = undefined; }
-        </script>
-        <script src="../lib/jquery.min.js"></script>
-        <script src="../lib/bootstrap.min.js"></script>
-        <script src="../lib/bootstrap-select.min.js"></script>
-        <script type="text/javascript">
-            if (window.module) module = window.module;
-            //spell-checker:ignore tinymce, rgbcolor, forecolor, colorbtn, colorbutton
-            const { ipcRenderer } = require('electron');
-            const { Settings } = require('./js/settings');
-            const { getColors } = require('./js/library');
-            const rgbcolor = require('rgbcolor');
+        function colorCell(color, idx) {
+            var cell = '<td class="mce-grid-cell' + (color === 'transparent' ? ' mce-colorbtn-trans' : '') + '">';
+            cell += '<div id="' + idx + '"';
+            cell += ' data-mce-color="' + color + '"';
+            cell += ' role="option"';
+            cell += ' tabIndex="-1"';
+            cell += ' style="background-color: ' + (color === 'transparent' ? color : '#' + color) + '"';
+            cell += ' title="' + idx + ', ' + colorNames[idx] + '">';
+            if (color === 'transparent') cell += '&#215;';
+            cell += '</div>';
+            cell += '</td>';
+            return cell;
+        }
 
-            var type = 'forecolor';
-            // eslint-disable-next-line no-unused-vars
-            var color = '';
-            var _window;
-            var options;
-
-            var colorNames = {
-                'No color': 'Default',
-                'BLACK': 'Black',
-                'RED': 'Maroon',
-                'GREEN': 'Green',
-                'ORANGE': 'Olive',
-                'BLUE': 'Navy',
-                'MAGENTA': 'Purple',
-                'WHITE': 'Silver',
-                'CYAN': 'Teal',
-                'BOLD BLACK': 'Grey',
-                'BOLD RED': 'Red',
-                'BOLD GREEN': 'Lime',
-                'YELLOW': 'Yellow',
-                'BOLD BLUE': 'Blue',
-                'BOLD MAGENTA': 'Fuchsia',
-                'BOLD CYAN': 'Aqua',
-                'BOLD': 'White',
-                'BOLD WHITE': 'White',
-                'RGB000': 'Black',
-                'RGB001': 'Navy Blue',
-                'RGB002': 'Dark Blue',
-                'RGB003': 'Blue',
-                'RGB004': 'Blue',
-                'RGB005': 'Blue',
-                'RGB010': 'Dark Green',
-                'RGB011': 'Deep Sky Blue',
-                'RGB012': 'Deep Sky Blue',
-                'RGB013': 'Deep Sky Blue',
-                'RGB014': 'Cobalt/Dodger Blue',
-                'RGB015': 'Dodger Blue',
-                'RGB020': 'Green',
-                'RGB021': 'Spring Green',
-                'RGB022': 'Turquoise',
-                'RGB023': 'Deep Sky Blue',
-                'RGB024': 'Deep Sky Blue',
-                'RGB025': 'Dodger Blue',
-                'RGB030': 'Green',
-                'RGB031': 'Spring Green',
-                'RGB032': 'Dark Cyan',
-                'RGB033': 'Light Sea Green',
-                'RGB034': 'Deep Sky Blue',
-                'RGB035': 'Deep Sky Blue',
-                'RGB040': 'Green',
-                'RGB041': 'Spring Green',
-                'RGB042': 'Spring Green',
-                'RGB043': 'Cyan',
-                'RGB044': 'Dark Turquoise',
-                'RGB045': 'Turquoise',
-                'RGB050': 'Green',
-                'RGB051': 'Spring Green',
-                'RGB052': 'Spring Green',
-                'RGB053': 'Medium Spring Green',
-                'RGB054': 'Cyan',
-                'RGB055': 'Cyan',
-                'RGB100': 'Dark Red',
-                'RGB101': 'Deep Pink',
-                'RGB102': 'Purple',
-                'RGB103': 'Purple',
-                'RGB104': 'Purple',
-                'RGB105': 'Blue Violet',
-                'RGB110': 'Orange',
-                'RGB111': 'Dark Grey',
-                'RGB112': 'Medium Purple',
-                'RGB113': 'Slate Blue',
-                'RGB114': 'Slate Blue',
-                'RGB115': 'Royal Blue',
-                'RGB120': 'Chartreuse',
-                'RGB121': 'Dark Sea Green',
-                'RGB122': 'Pale Turquoise',
-                'RGB123': 'Steel Blue',
-                'RGB124': 'Steel Blue',
-                'RGB125': 'Cornflower Blue',
-                'RGB130': 'Chartreuse',
-                'RGB131': 'Dark Sea Green',
-                'RGB132': 'Cadet Blue',
-                'RGB133': 'Cadet Blue',
-                'RGB134': 'Sky Blue',
-                'RGB135': 'Steel Blue',
-                'RGB140': 'Chartreuse',
-                'RGB141': 'Pale Green',
-                'RGB142': 'Sea Green',
-                'RGB143': 'Aquamarine',
-                'RGB144': 'Medium Turquoise',
-                'RGB145': 'Steel Blue',
-                'RGB150': 'Chartreuse',
-                'RGB151': 'Sea Green',
-                'RGB152': 'Sea Green',
-                'RGB153': 'Sea Green',
-                'RGB154': 'Aquamarine',
-                'RGB155': 'Dark Slate Gray',
-                'RGB200': 'Dark Red',
-                'RGB201': 'Deep Pink',
-                'RGB202': 'Dark Magenta',
-                'RGB203': 'Dark Magenta',
-                'RGB204': 'Dark Violet',
-                'RGB205': 'Purple',
-                'RGB210': 'Orange',
-                'RGB211': 'Light Pink',
-                'RGB212': 'Plum',
-                'RGB213': 'Medium Purple',
-                'RGB214': 'Medium Purple',
-                'RGB215': 'Slate Blue',
-                'RGB220': 'Yellow',
-                'RGB221': 'Wheat',
-                'RGB222': 'Grey',
-                'RGB223': 'Light Slate Grey',
-                'RGB224': 'Medium Purple',
-                'RGB225': 'Light Slate Blue',
-                'RGB230': 'Yellow',
-                'RGB231': 'Dark Olive Green',
-                'RGB232': 'Dark Sea Green',
-                'RGB233': 'Light Sky Blue',
-                'RGB234': 'Light Sky Blue',
-                'RGB235': 'Sky Blue',
-                'RGB240': 'Chartreuse',
-                'RGB241': 'Dark Olive Green',
-                'RGB242': 'Pale Green',
-                'RGB243': 'Dark Sea Green',
-                'RGB244': 'Dark Slate Gray',
-                'RGB245': 'Sky Blue',
-                'RGB250': 'Chartreuse',
-                'RGB251': 'Light Green',
-                'RGB252': 'Light Green',
-                'RGB253': 'Pale Green',
-                'RGB254': 'Aquamarine',
-                'RGB255': 'Dark Slate Gray',
-                'RGB300': 'Red',
-                'RGB301': 'Deep Pink',
-                'RGB302': 'Medium Violet Red',
-                'RGB303': 'Magenta',
-                'RGB304': 'Dark Violet',
-                'RGB305': 'Purple',
-                'RGB310': 'Dark Orange',
-                'RGB311': 'Indian Red',
-                'RGB312': 'Hot Pink',
-                'RGB313': 'Medium Orchid',
-                'RGB314': 'Medium Orchid',
-                'RGB315': 'Medium Purple',
-                'RGB320': 'Dark Goldenrod',
-                'RGB321': 'Light Salmon',
-                'RGB322': 'Rosy Brown',
-                'RGB323': 'Grey',
-                'RGB324': 'Medium Purple',
-                'RGB325': 'Medium Purple',
-                'RGB330': 'Gold',
-                'RGB331': 'Dark Khaki',
-                'RGB332': 'Navajo White',
-                'RGB333': 'Grey',
-                'RGB334': 'Light Steel Blue',
-                'RGB335': 'Light Steel Blue',
-                'RGB340': 'Yellow',
-                'RGB341': 'Dark Olive Green',
-                'RGB342': 'Dark Sea Green',
-                'RGB343': 'Dark Sea Green',
-                'RGB344': 'Light Cyan',
-                'RGB345': 'Light Sky Blue',
-                'RGB350': 'Green Yellow',
-                'RGB351': 'Dark Olive Green',
-                'RGB352': 'Pale Green',
-                'RGB353': 'Dark Sea Green',
-                'RGB354': 'Dark Sea Green',
-                'RGB355': 'Pale Turquoise',
-                'RGB400': 'Crimson/Red',
-                'RGB401': 'Deep Pink',
-                'RGB402': 'Deep Pink',
-                'RGB403': 'Magenta',
-                'RGB404': 'Magenta',
-                'RGB405': 'Magenta',
-                'RGB410': 'Dark Orange',
-                'RGB411': 'Indian Red',
-                'RGB412': 'Hot Pink',
-                'RGB413': 'Hot Pink',
-                'RGB414': 'Orchid',
-                'RGB415': 'Medium Orchid',
-                'RGB420': 'Orange',
-                'RGB421': 'Light Salmon/Bronze',
-                'RGB422': 'Light Pink',
-                'RGB423': 'Pink',
-                'RGB424': 'Plum',
-                'RGB425': 'Violet',
-                'RGB430': 'Gold',
-                'RGB431': 'Light Goldenrod',
-                'RGB432': 'Tan',
-                'RGB433': 'Misty Rose',
-                'RGB434': 'Thistle',
-                'RGB435': 'Plum',
-                'RGB440': 'Yellow',
-                'RGB441': 'Khaki',
-                'RGB442': 'Light Goldenrod',
-                'RGB443': 'Light Yellow',
-                'RGB444': 'Grey',
-                'RGB445': 'Light Steel Blue',
-                'RGB450': 'Yellow',
-                'RGB451': 'Dark Olive Green',
-                'RGB452': 'Dark Olive Green',
-                'RGB453': 'Dark Sea Green',
-                'RGB454': 'Honeydew',
-                'RGB455': 'Light Cyan',
-                'RGB500': 'Red',
-                'RGB501': 'Deep Pink',
-                'RGB502': 'Deep Pink',
-                'RGB503': 'Deep Pink',
-                'RGB504': 'Magenta',
-                'RGB505': 'Magenta',
-                'RGB510': 'Orangered',
-                'RGB511': 'Indian Red',
-                'RGB512': 'Indian Red',
-                'RGB513': 'Hot Pink',
-                'RGB514': 'Hot Pink',
-                'RGB515': 'Medium Orchid',
-                'RGB520': 'Dark Orange',
-                'RGB521': 'Salmon',
-                'RGB522': 'Light Coral',
-                'RGB523': 'Pale Violet Red',
-                'RGB524': 'Orchid',
-                'RGB525': 'Orchid',
-                'RGB530': 'Orange',
-                'RGB531': 'Sandy Brown',
-                'RGB532': 'Light Salmon',
-                'RGB533': 'Light Pink',
-                'RGB534': 'Pink',
-                'RGB535': 'Plum',
-                'RGB540': 'Gold',
-                'RGB541': 'Light Goldenrod',
-                'RGB542': 'Light Goldenrod',
-                'RGB543': 'Navajo White',
-                'RGB544': 'Misty Rose',
-                'RGB545': 'Thistle',
-                'RGB550': 'Yellow',
-                'RGB551': 'Light Goldenrod',
-                'RGB552': 'Khaki',
-                'RGB553': 'Wheat',
-                'RGB554': 'Corn Silk',
-                'RGB555': 'White',
-                'mono00': 'Grey 3',
-                'mono01': 'Grey 7',
-                'mono02': 'Grey 11',
-                'mono03': 'Grey 15',
-                'mono04': 'Grey 19',
-                'mono05': 'Grey 23',
-                'mono06': 'Grey 27',
-                'mono07': 'Grey 30',
-                'mono08': 'Grey 35',
-                'mono09': 'Grey 39',
-                'mono10': 'Grey 32',
-                'mono11': 'Grey 46',
-                'mono12': 'Grey 50',
-                'mono13': 'Grey 54',
-                'mono14': 'Grey 58',
-                'mono15': 'Grey 62',
-                'mono16': 'Grey 66',
-                'mono17': 'Grey 70',
-                'mono18': 'Grey 74',
-                'mono19': 'Grey 78',
-                'mono20': 'Grey 82',
-                'mono21': 'Grey 85',
-                'mono22': 'Grey 89',
-                'mono23': 'Grey 93'
-            };
-
-            // eslint-disable-next-line no-unused-vars
-            function setType(t) { type = t; }
-            // eslint-disable-next-line no-unused-vars
-            function setColor(c) { color = c; }
-            // eslint-disable-next-line no-unused-vars
-            function setWindow(w) { _window = w; }
-
-            $(window).keydown((event) => {
-                if (event.which === 27)
-                    window.close();
-            });
-
-            $(document).ready(() => {
+        function loadColors() {
+            if (ipcRenderer.sendSync('get-global', 'editorOnly'))
                 options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
-                loadColors();
-            });
-            ipcRenderer.on('reload-options', () => {
-                options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
-                loadColors();
-            });
+            else
+                options = window.opener.opener.client.options;
+            var _dColors = getColors();
+            var c, color, r, g, b, idx, cl;
+            $('body').empty();
+            var _ColorTable = [];
 
-            function colorCell(color, idx) {
-                var cell = '<td class="mce-grid-cell' + (color === 'transparent' ? ' mce-colorbtn-trans' : '') + '">';
-                cell += '<div id="' + idx + '"';
-                cell += ' data-mce-color="' + color + '"';
-                cell += ' role="option"';
-                cell += ' tabIndex="-1"';
-                cell += ' style="background-color: ' + (color === 'transparent' ? color : '#' + color) + '"';
-                cell += ' title="' + idx + ', ' + colorNames[idx] + '">';
-                if (color === 'transparent') cell += '&#215;';
-                cell += '</div>';
-                cell += '</td>';
-                return cell;
+            color = new rgbcolor(options.colors[0] || _dColors[0]).toHex().substr(1).toUpperCase();
+            _ColorTable.push(color, 'BLACK');
+            color = new rgbcolor(options.colors[1] || _dColors[1]).toHex().substr(1).toUpperCase();
+            _ColorTable.push(color, 'RED');
+            color = new rgbcolor(options.colors[2] || _dColors[2]).toHex().substr(1).toUpperCase();
+            _ColorTable.push(color, 'GREEN');
+            color = new rgbcolor(options.colors[3] || _dColors[3]).toHex().substr(1).toUpperCase();
+            _ColorTable.push(color, 'ORANGE');
+            color = new rgbcolor(options.colors[4] || _dColors[4]).toHex().substr(1).toUpperCase();
+            _ColorTable.push(color, 'BLUE');
+            color = new rgbcolor(options.colors[5] || _dColors[5]).toHex().substr(1).toUpperCase();
+            _ColorTable.push(color, 'MAGENTA');
+            color = new rgbcolor(options.colors[6] || _dColors[6]).toHex().substr(1).toUpperCase();
+            _ColorTable.push(color, 'CYAN');
+            color = new rgbcolor(options.colors[7] || _dColors[7]).toHex().substr(1).toUpperCase();
+            _ColorTable.push(color, 'WHITE');
+            color = new rgbcolor(options.colors[8] || _dColors[8]).toHex().substr(1).toUpperCase();
+            _ColorTable.push(color, 'BOLD BLACK');
+            color = new rgbcolor(options.colors[9] || _dColors[9]).toHex().substr(1).toUpperCase();
+            _ColorTable.push(color, 'BOLD RED');
+            color = new rgbcolor(options.colors[10] || _dColors[10]).toHex().substr(1).toUpperCase();
+            _ColorTable.push(color, 'BOLD GREEN');
+            color = new rgbcolor(options.colors[11] || _dColors[11]).toHex().substr(1).toUpperCase();
+            _ColorTable.push(color, 'YELLOW');
+            color = new rgbcolor(options.colors[12] || _dColors[12]).toHex().substr(1).toUpperCase();
+            _ColorTable.push(color, 'BOLD BLUE');
+            color = new rgbcolor(options.colors[13] || _dColors[13]).toHex().substr(1).toUpperCase();
+            _ColorTable.push(color, 'BOLD MAGENTA');
+            color = new rgbcolor(options.colors[14] || _dColors[14]).toHex().substr(1).toUpperCase();
+            _ColorTable.push(color, 'BOLD CYAN');
+            color = new rgbcolor(options.colors[15] || _dColors[15]).toHex().substr(1).toUpperCase();
+            _ColorTable.push(color, 'BOLD WHITE');
+
+            var html = '<table class="mce-grid mce-grid-border mce-colorbutton-grid" role="list" cellspacing="0"><tbody><tr>';
+
+            for (c = 0, cl = _ColorTable.length; c < cl; c += 2) {
+                html += colorCell(_ColorTable[c], _ColorTable[c + 1]);
+                if (c / 2 % 6 === 5)
+                    html += '<td class="mce-grid-cell"></td>';
             }
+            html += '<td class="mce-grid-cell"></td>';
+            html += colorCell('transparent', 'No color');
+            html += '</tr><tr><td></td></tr>';
+            var html2 = '';
+            for (r = 0; r < 6; r++) {
+                if (g < 3)
+                    html += '<tr>';
+                else
+                    html2 += '<tr>';
+                for (g = 0; g < 6; g++) {
+                    for (b = 0; b < 6; b++) {
+                        idx = `RGB${r}${g}${b}`;
+                        color = '';
+                        c = 0;
+                        c = r * 40 + 55;
+                        if (c < 16)
+                            color += '0';
+                        color += c.toString(16);
+                        c = 0;
+                        c = g * 40 + 55;
+                        if (c < 16)
+                            color += '0';
+                        color += c.toString(16);
+                        c = 0;
+                        c = b * 40 + 55;
+                        if (c < 16)
+                            color += '0';
+                        color += c.toString(16);
+                        color = color.toUpperCase();
 
-            function loadColors() {
-                var _dColors = getColors();
-                var c, color, r, g, b, idx, cl;
-                $('body').empty();
-                var _ColorTable = [];
+                        if (g < 3)
+                            html += colorCell(color, idx);
+                        else
+                            html2 += colorCell(color, idx);
 
-                color = new rgbcolor(options.colors[0] || _dColors[0]).toHex().substr(1).toUpperCase();
-                _ColorTable.push(color, 'BLACK');
-                color = new rgbcolor(options.colors[1] || _dColors[1]).toHex().substr(1).toUpperCase();
-                _ColorTable.push(color, 'RED');
-                color = new rgbcolor(options.colors[2] || _dColors[2]).toHex().substr(1).toUpperCase();
-                _ColorTable.push(color, 'GREEN');
-                color = new rgbcolor(options.colors[3] || _dColors[3]).toHex().substr(1).toUpperCase();
-                _ColorTable.push(color, 'ORANGE');
-                color = new rgbcolor(options.colors[4] || _dColors[4]).toHex().substr(1).toUpperCase();
-                _ColorTable.push(color, 'BLUE');
-                color = new rgbcolor(options.colors[5] || _dColors[5]).toHex().substr(1).toUpperCase();
-                _ColorTable.push(color, 'MAGENTA');
-                color = new rgbcolor(options.colors[6] || _dColors[6]).toHex().substr(1).toUpperCase();
-                _ColorTable.push(color, 'CYAN');
-                color = new rgbcolor(options.colors[7] || _dColors[7]).toHex().substr(1).toUpperCase();
-                _ColorTable.push(color, 'WHITE');
-                color = new rgbcolor(options.colors[8] || _dColors[8]).toHex().substr(1).toUpperCase();
-                _ColorTable.push(color, 'BOLD BLACK');
-                color = new rgbcolor(options.colors[9] || _dColors[9]).toHex().substr(1).toUpperCase();
-                _ColorTable.push(color, 'BOLD RED');
-                color = new rgbcolor(options.colors[10] || _dColors[10]).toHex().substr(1).toUpperCase();
-                _ColorTable.push(color, 'BOLD GREEN');
-                color = new rgbcolor(options.colors[11] || _dColors[11]).toHex().substr(1).toUpperCase();
-                _ColorTable.push(color, 'YELLOW');
-                color = new rgbcolor(options.colors[12] || _dColors[12]).toHex().substr(1).toUpperCase();
-                _ColorTable.push(color, 'BOLD BLUE');
-                color = new rgbcolor(options.colors[13] || _dColors[13]).toHex().substr(1).toUpperCase();
-                _ColorTable.push(color, 'BOLD MAGENTA');
-                color = new rgbcolor(options.colors[14] || _dColors[14]).toHex().substr(1).toUpperCase();
-                _ColorTable.push(color, 'BOLD CYAN');
-                color = new rgbcolor(options.colors[15] || _dColors[15]).toHex().substr(1).toUpperCase();
-                _ColorTable.push(color, 'BOLD WHITE');
-
-
-
-                var html = '<table class="mce-grid mce-grid-border mce-colorbutton-grid" role="list" cellspacing="0"><tbody><tr>';
-
-                for (c = 0, cl = _ColorTable.length; c < cl; c += 2) {
-                    html += colorCell(_ColorTable[c], _ColorTable[c + 1]);
-                    if (c / 2 % 6 === 5)
-                        html += '<td class="mce-grid-cell"></td>';
-                }
-                html += '<td class="mce-grid-cell"></td>';
-                html += colorCell('transparent', 'No color');
-                html += '</tr><tr><td></td></tr>';
-                var html2 = '';
-                for (r = 0; r < 6; r++) {
-                    if (g < 3)
-                        html += '<tr>';
-                    else
-                        html2 += '<tr>';
-                    for (g = 0; g < 6; g++) {
-                        for (b = 0; b < 6; b++) {
-                            idx = `RGB${r}${g}${b}`;
-                            color = '';
-                            c = 0;
-                            c = r * 40 + 55;
-                            if (c < 16)
-                                color += '0';
-                            color += c.toString(16);
-                            c = 0;
-                            c = g * 40 + 55;
-                            if (c < 16)
-                                color += '0';
-                            color += c.toString(16);
-                            c = 0;
-                            c = b * 40 + 55;
-                            if (c < 16)
-                                color += '0';
-                            color += c.toString(16);
-                            color = color.toUpperCase();
-
-                            if (g < 3)
-                                html += colorCell(color, idx);
-                            else
-                                html2 += colorCell(color, idx);
-
-                        }
-                        if (g === 2)
-                            html += '</tr>';
-                        else if (g < 3)
-                            html += '<td class="mce-grid-cell"></td>';
-                        else if (g < 5)
-                            html2 += '<td class="mce-grid-cell"></td>';
                     }
-                    if (g < 3)
+                    if (g === 2)
                         html += '</tr>';
-                    else
-                        html2 += '</tr>';
-                }
-                html += html2;
-                html += '<tr><td></td></tr><tr>';
-                for (r = 232; r <= 255; r++)//grayscale
-                {
-                    g = (r - 232) * 10 + 8;
-                    if (g < 16)
-                        g = '0' + g.toString(16).toUpperCase();
-                    else
-                        g = g.toString(16).toUpperCase();
-                    g = g + g + g;
-                    if (r < 242)
-                        color = 'mono0' + (r - 232);
-                    else
-                        color = 'mono' + (r - 232);
-                    html += colorCell(g, color);
-                    if (r === 237 || r === 249)
+                    else if (g < 3)
                         html += '<td class="mce-grid-cell"></td>';
-                    if (r === 243)
-                        html += '</tr><tr>';
+                    else if (g < 5)
+                        html2 += '<td class="mce-grid-cell"></td>';
                 }
-
-                html += '</tr></tbody></table>';
-                $('body').append(html);
-
-                $('div').on('click', function () {
-                    ipcRenderer.send('set-color', type, $(this).data('mce-color'), $(this).attr('id'), _window);
-                    window.close();
-                });
-
+                if (g < 3)
+                    html += '</tr>';
+                else
+                    html2 += '</tr>';
             }
-        </script>
-    </head>
+            html += html2;
+            html += '<tr><td></td></tr><tr>';
+            for (r = 232; r <= 255; r++)//grayscale
+            {
+                g = (r - 232) * 10 + 8;
+                if (g < 16)
+                    g = '0' + g.toString(16).toUpperCase();
+                else
+                    g = g.toString(16).toUpperCase();
+                g = g + g + g;
+                if (r < 242)
+                    color = 'mono0' + (r - 232);
+                else
+                    color = 'mono' + (r - 232);
+                html += colorCell(g, color);
+                if (r === 237 || r === 249)
+                    html += '<td class="mce-grid-cell"></td>';
+                if (r === 243)
+                    html += '</tr><tr>';
+            }
 
-    <body>
-    </body>
+            html += '</tr></tbody></table>';
+            $('body').append(html);
+
+            $('div').on('click', function () {
+                if (typeof window.opener.setColor === 'function')
+                    window.opener.setColor(type, $(this).data('mce-color'), $(this).attr('id'));
+                window.dispatchEvent(new CustomEvent('setColor', { detail: { type: type, color: $(this).data('mce-color'), code: $(this).attr('id') } }));
+                window.close();
+            });
+        }
+
+        window.onbeforeunload = function (evt) {
+            abortController.abort();
+        };        
+    </script>
+</head>
+
+<body>
+</body>
 
 </html>
