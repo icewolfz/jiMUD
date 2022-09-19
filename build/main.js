@@ -2351,15 +2351,15 @@ function buildOptions(details, window, settings) {
             enableRemoteModule: true,
             contextIsolation: false,
             backgroundThrottling: settings ? settings.enableBackgroundThrottling : true
-        },
-        width: 800,
-        height: 600
+        }
     };
     if (details.features.length) {
         features = details.features.split(',');
         for (var f = 0, fl = features.length; f < fl; f++) {
             feature = features[f].split('=');
             switch (feature[0]) {
+                case 'defaultWidth':
+                case 'defaultHeight':
                 case "width":
                 case "height":
                 case "x":
@@ -2401,10 +2401,11 @@ function buildOptions(details, window, settings) {
         });
     }
     //if no width or height see if a default was supplied
-    if (!('width' in options) && 'defaultWidth' in options)
-        options.width = options.defaultWidth;
-    if (!('height' in options) && 'defaultHeight' in options)
-        options.width = options.defaultHeight;
+    if (!('width' in options))
+        options.width = 'defaultWidth' in options ? options.defaultWidth : 800;
+    if (!('height' in options))
+        options.height = 'defaultHeight' in options ? options.defaultHeight : 600;
+
     if (details.frameName === 'modal' || details.frameName.startsWith('modal-')) {
         // open window as modal
         Object.assign(options, {

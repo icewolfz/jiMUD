@@ -1291,7 +1291,10 @@
                 doUpdate(76);
             });
 
-            client.on('command-history-changed', history => ipcRenderer.send('command-history', history));
+            client.on('command-history-changed', history => {
+                if (_windows['history.html'])
+                    _windows['history.html'].loadHistory();
+            });
             client.on('add-line', (data) => {
                 var res, c, cl;
                 //no more then 3 tries
@@ -2320,7 +2323,7 @@
                     lst = '<li><a href="#">No history</a></li><li role="separator" class="divider"></li>';
                 else
                     lst += '<li role="separator" class="divider"></li><li><a href="#" onclick="client.clearCommandHistory();">Clear</a></li>';
-                lst += '<li><a href="#" onclick="showCommandHistory()">Show history window...</a></li>';
+                lst += '<li><a href="#" onclick="openWindow(\'history\');">Show history window...</a></li>';
                 $('.command-history ul').html(lst);
             });
             initWindowEvents();
@@ -2786,22 +2789,6 @@
             if ($('#update-progress')[0].open)
                 $('#update-progress')[0].close();
         });
-
-        ipcRenderer.on('request-command-history', () => {
-            ipcRenderer.send('command-history', client.commandHistory);
-        });
-
-        ipcRenderer.on('change-command-history-index', (event, index) => {
-            client.setHistoryIndex(index);
-        });
-
-        ipcRenderer.on('clear-command-history', () => {
-            client.clearCommandHistory();
-        });
-
-        ipcRenderer.on('add-command-history', (event, cmd) => {
-            client.AddCommandToHistory(cmd);
-        });
         */
         function loadCharacter(ID) {
             var _prevID = _windowState.data.characterId;
@@ -3246,33 +3233,27 @@
                 return;
             }
             let _options = '';
+            if (data && data.state)
+                _options += ',' + buildWindowOptions(data.state, ['bounds']);
             switch (name) {
                 case 'characters':
                     if (data && data.details)
                         _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon']);
-                    if (data && data.state)
-                        _options += ',' + buildWindowOptions(data.state, ['bounds']);
                     _windows['characters.html'] = window.open('characters.html', 'Characters-' + getId(), 'alwaysOnTopClient=true,defaultHeight=555,defaultWidth=650,backgroundColor=#fff,icon=' + path.join(__dirname, '../assets/icons/png/user.png') + _options);
                     break;
                 case 'mapper':
                     if (data && data.details)
                         _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent', 'alwaysOnTop', 'showInTaskBar']);
-                    if (data && data.state)
-                        _options += ',' + buildWindowOptions(data.state, ['bounds']);
                     _windows['mapper.html'] = window.open('mapper.html', 'Mapper-' + getId(), `persistent=${client.options.mapper.persistent},alwaysOnTopClient=${client.options.mapper.alwaysOnTopClient},alwaysOnTop=${client.options.mapper.alwaysOnTop},showInTaskBar=${client.options.mapper.showInTaskBar},defaultHeight=600,defaultWidth=800,backgroundColor=#eae4d6,icon=${path.join(__dirname, '../assets/icons/png/map.png')}${_options}`);
                     break;
                 case 'editor':
                     if (data && data.details)
                         _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent']);
-                    if (data && data.state)
-                        _options += ',' + buildWindowOptions(data.state, ['bounds']);
                     _windows['editor.html'] = window.open('editor.html', 'Advanced Editor-' + getId(), `persistent=${client.options.editorPersistent},defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/edit.png')}${_options}`);
                     break;
                 case 'chat':
                     if (data && data.details)
                         _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent', 'alwaysOnTop', 'showInTaskBar']);
-                    if (data && data.state)
-                        _options += ',' + buildWindowOptions(data.state, ['bounds']);
                     _windows['chat.html'] = window.open('chat.html', 'Chat-' + getId(), `persistent=${client.options.chat.persistent},alwaysOnTopClient=${client.options.chat.alwaysOnTopClient},alwaysOnTop=${client.options.chat.alwaysOnTop},showInTaskBar=${client.options.chat.showInTaskBar},defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/chat.png')}${_options}`);
                     break;
                 case 'prefs':
@@ -3281,14 +3262,17 @@
                 case 'immortal':
                     if (data && data.details)
                         _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon']);
-                    if (data && data.state)
-                        _options += ',' + buildWindowOptions(data.state, ['bounds']);
                     if (client.options.windows.immortal && client.options.windows.immortal.options)
                         _options += `,persistent=${client.options.windows.immortal.options.persistent},alwaysOnTopClient=${client.options.windows.immortal.options.alwaysOnTopClient},alwaysOnTop=${client.options.windows.immortal.options.alwaysOnTop || false},showInTaskBar=${client.options.windows.immortal.options.showInTaskBar || false}`;
                     else
                         _options += `,alwaysOnTopClient=true`;
                     _windows['immortal.html'] = window.open('immortal.html', 'Immortal-' + getId(), `backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/ied.png')}${_options}`);
                     break
+                case 'history':
+                    if (data && data.details)
+                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon']);
+                    _windows['history.html'] = window.open('history.html', 'History-' + getId(), `defaultWidth=400,defaultHeight=275,alwaysOnTopClient=true,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/history.png')}${_options}`);
+                    break;
                 case 'code.editor':
                 case 'log.viewer':
                     break;
@@ -3433,17 +3417,6 @@
 
         function getMapFile() {
             return _windowState.data.map;
-        }
-
-        // eslint-disable-next-line no-unused-vars
-        function showCommandHistory() {
-            //TODO make command history work
-            if (client.options.windows['history'] && client.options.windows['history'].options) {
-                client.options.windows['history'].options.show = true;
-                ipcRenderer.send('show-window', 'history', client.options.windows['history'].options);
-            }
-            else
-                ipcRenderer.send('show-window', 'history', { show: true, width: 400, height: 275, file: 'history.html', icon: 'history', alwaysOnTopClient: true });
         }
 
         // eslint-disable-next-line no-unused-vars
