@@ -245,6 +245,7 @@ function createWindow(options) {
         };
     // Create the browser window.
     let window = new BrowserWindow({
+        parent: options.parent || null,
         title: options.title || 'jiMUD',
         x: getWindowX(bounds.x, bounds.width),
         y: getWindowY(bounds.y, bounds.height),
@@ -457,20 +458,28 @@ function createWindow(options) {
     });
 
     window.on('restore', () => {
-        getActiveClient(window).view.webContents.send('restore');
+        const active = getActiveClient(window);
+        if (active)
+            active.view.webContents.send('restore');
         states[options.file] = saveWindowState(window);
     });
     window.on('maximize', () => {
-        getActiveClient(window).view.webContents.send('maximize');
+        const active = getActiveClient(window);
+        if (active)
+            active.view.webContents.send('maximize');
         states[options.file] = saveWindowState(window);
     });
     window.on('unmaximize', () => {
-        getActiveClient(window).view.webContents.send('unmaximize');
+        const active = getActiveClient(window);
+        if (active)
+            active.view.webContents.send('unmaximize');
         states[options.file] = saveWindowState(window);
     });
 
     window.on('resized', () => {
-        getActiveClient(window).view.webContents.send('resized');
+        const active = getActiveClient(window);
+        if (active)
+            active.view.webContents.send('resized');
         states[options.file] = saveWindowState(window);
     });
     if (!options.id) {
@@ -1046,7 +1055,7 @@ ipcMain.on('get-character', (event, id, property) => {
     event.returnValue = character ? (property ? character[property] : character) : null;
 });
 
-ipcMain.on('update-character', (event, character, id) => {
+ipcMain.on('updatef-character', (event, character, id) => {
     _characters.updateCharacter(character);
     for (clientId in clients) {
         if (!Object.prototype.hasOwnProperty.call(clients, clientId) || clientId === id)
@@ -2449,6 +2458,8 @@ function buildOptions(details, window, settings) {
 //#region Window/client query functions
 function getActiveClient(window) {
     if (!window) return clients[focusedClient];
+    if (windows[getWindowId(window)].current === 0 || windows[getWindowId(window)].clients.length === 0)
+        return null;
     return clients[windows[getWindowId(window)].current];
 }
 
@@ -3802,8 +3813,9 @@ function createMenu(window) {
     profiles.submenu.push(
         {
             label: '&Manage...',
-            //click: showProfiles,
-            accelerator: 'CmdOrCtrl+P'
+            accelerator: 'CmdOrCtrl+P',
+            //click: (item, mWindow) => openProfileManager(window || mWindow)
+            click: (item, mWindow) => executeScriptClient('openWindow("profiles")', window || mWindow, true)
 
         });
     return new Menubar(menuTemp, window);
@@ -3840,6 +3852,10 @@ ipcMain.on('show-global-preferences', event => {
 
 ipcMain.on('show-about', event => {
     openAbout(BrowserWindow.fromWebContents(event.sender));
+});
+
+ipcMain.on('show-profile-manager', event => {
+    openProfileManager(BrowserWindow.fromWebContents(event.sender));
 });
 
 function resetProfilesMenu(window) {
@@ -3911,6 +3927,16 @@ function openAbout(parent) {
         window = createDialog({ show: true, parent: parent, url: path.join(__dirname, 'about.html'), title: 'About jiMUD', bounds: { width: 500, height: 560 } });
         window.on('closed', () => idMap.delete('about'));
         idMap.set('about', window);
+    }
+}
+
+function openProfileManager(parent) {
+    let window = getWindowId('profiles');
+    if (window && !window.isDestroyed())
+        window.focus();
+    else {
+        window = createWindow({ id: 'profiles', file: 'profiles.html', parent: parent, icon: '../assets/icons/png/profiles.png', title: 'Profile Manger' });
+        window.setSkipTaskbar(!set.profiles.showInTaskBar);
     }
 }
 //#endregion

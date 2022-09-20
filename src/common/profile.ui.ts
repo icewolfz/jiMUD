@@ -58,6 +58,7 @@ let _bComments = true;
 let _iCommentsStr = ['/', '/'];
 let _bCommentsStr = ['/', '*'];
 
+let options = getOptions();
 
 const _controllers = {};
 let _controllersCount = 0;
@@ -2760,8 +2761,21 @@ function getProfileData() {
     return data;
 }
 
+function getOptions() {
+    if (window.opener)
+        return window.opener.client.options;
+    return Settings.load(window.getGlobal('settingsFile'));
+}
+
+function saveOptions() {
+    if (window.opener)
+        window.opener.client.saveOptions();
+    else
+        options.save(ipcRenderer.sendSync('get-global', 'settingsFile'));
+}
+
 function loadOptions() {
-    const options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
+    options = getOptions();
     _never = options.profiles.askoncancel;
     _enabled = options.profiles.enabled;
     _ide = options.profiles.codeEditor;
@@ -2804,6 +2818,15 @@ function loadOptions() {
     setAdvancedPanel('context', options.profiles.contextsAdvanced);
 }
 
+function optionsLoaded() {
+    const so = _sort;
+    const sd = _sortDir;
+    loadOptions();
+    resetParseSyntax();
+    if (so !== _sort || sd !== _sortDir)
+        sortTree(true);
+}
+
 function setAdvancedPanel(id, state) {
     const cState = $('#' + id + '-editor .btn-adv').data('open') || false;
     if (cState !== state)
@@ -2811,6 +2834,7 @@ function setAdvancedPanel(id, state) {
 }
 
 export function init() {
+    loadOptions();
     const p = path.join(parseTemplate('{data}'), 'profiles');
     if (!isDirSync(p)) {
         profiles.add(Profile.Default);
@@ -3060,6 +3084,8 @@ export function init() {
     window.onbeforeunload = (evt) => {
         if (_close || !_never || (_undo.length === 0 && updateCurrent() === UpdateState.NoChange))
             return;
+        if (window.opener)
+            window.opener.client.off('options-loaded', optionsLoaded);
         evt.returnValue = false;
         setTimeout(() => {
             const choice = dialog.showMessageBoxSync({
@@ -3135,7 +3161,7 @@ export function init() {
         exportmenu.append(new MenuItem({ label: 'Import...', click: importProfiles }));
         exportmenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
     });
-    loadOptions();
+
     initEditor('trigger-value');
     initEditor('macro-value');
     initEditor('alias-value');
@@ -3473,6 +3499,7 @@ export function init() {
         let n = $('#profile-tree').treeview('findNodes', ['^' + event.target.id + '$', 'id']);
         $('#profile-tree').treeview('toggleNodeExpanded', [n, { levels: 1, silent: false }]);
     });
+    window.opener.client.on('options-loaded', optionsLoaded);
 }
 
 function startWatcher(p: string) {
@@ -3595,7 +3622,6 @@ export function doRefresh() {
                         profiles.add(Profile.Default);
                     startWatcher(p);
                 }
-                const options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
                 _enabled = options.profiles.enabled;
                 buildTreeview(getProfileData());
             }
@@ -3615,7 +3641,6 @@ export function doRefresh() {
                 profiles.add(Profile.Default);
             startWatcher(p);
         }
-        const options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
         _enabled = options.profiles.enabled;
         buildTreeview(getProfileData());
     }
@@ -3947,9 +3972,8 @@ export function saveProfiles(clearNow?: boolean) {
                 fs.mkdirSync(p);
             profiles.save(p);
             trashProfiles(p);
-            const options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
             options.profiles.enabled = _enabled;
-            options.save(ipcRenderer.sendSync('get-global', 'settingsFile'));
+            saveOptions();
             ipcRenderer.send('setting-changed', { type: 'profiles', name: 'enabled', value: options.profiles.enabled });
             ipcRenderer.send('reload-profiles');
             if (clearNow)
@@ -3964,10 +3988,8 @@ export function saveProfiles(clearNow?: boolean) {
             fs.mkdirSync(p);
         profiles.save(p);
         trashProfiles(p);
-
-        const options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
         options.profiles.enabled = _enabled;
-        options.save(ipcRenderer.sendSync('get-global', 'settingsFile'));
+        saveOptions();
         ipcRenderer.send('setting-changed', { type: 'profiles', name: 'enabled', value: options.profiles.enabled });
         ipcRenderer.send('reload-profiles');
         if (clearNow)
@@ -4217,7 +4239,7 @@ function setParseSyntax(editor) {
     });
 }
 
-function resetParseSyutax() {
+function resetParseSyntax() {
     if (!editors) return;
     if (editors['trigger-value'] && editors['trigger-value'].getSession().getMode() === "ace/mode/jimud")
         setParseSyntax('trigger-value');
@@ -4650,20 +4672,11 @@ ipcRenderer.on('profile-edit-item', (event, profile, type, index) => {
     $('#profile-tree').treeview('selectNode', [n, { silent: false }]);
 });
 
-ipcRenderer.on('reload-options', (event) => {
-    const so = _sort;
-    const sd = _sortDir;
-    loadOptions();
-    resetParseSyutax();
-    if (so !== _sort || sd !== _sortDir)
-        sortTree(true);
-});
-
 ipcRenderer.on('change-options', (event, file) => {
     const so = _sort;
     const sd = _sortDir;
     loadOptions();
-    resetParseSyutax();
+    resetParseSyntax();
     if (so !== _sort || sd !== _sortDir)
         sortTree(true);
     filesChanged = true;
