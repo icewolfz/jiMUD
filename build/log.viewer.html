@@ -108,6 +108,8 @@
         { name: 'All files (*.*)', extensions: ['*'] },
     ];
 
+    var prefs;
+
     menubar = new Menubar([
         {
             label: '&File',
@@ -127,7 +129,10 @@
                     label: '&Preferences...',
                     accelerator: 'CmdOrCtrl+Comma',
                     click: () => {
-                        ipcRenderer.send('show-window', 'prefs');
+                        if (window.getGlobal('settingsFile') === window.opener._windowState.data.settings)
+                            ipcRenderer.send('show-global-preferences');
+                        else
+                            prefs = window.open('prefs.html', 'modal-' + window.opener.getId(), 'width=800,height=460,backgroundColor=#fff,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
                     }
                 },
                 { type: 'separator' },
@@ -401,11 +406,8 @@
     }
 
     function loadOptions(data) {
-        var set = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
-        if (!data)
-            options = set.extensions['log-viewer'];
-        else
-            options = data;
+        var set = window.opener.client.options;
+        options = data || set.extensions['log-viewer'];
         if (!options) {
             options = {
                 'opened': [],
@@ -443,7 +445,8 @@
     }
 
     function saveOptions() {
-        ipcRenderer.send('setting-changed', { type: 'extensions', name: 'log-viewer', value: options });
+        window.opener.client.options.extensions['log-viewer'] = options;
+        window.opener.client.saveOptions();
     }
 
     function closeViewer(panel) {
@@ -704,6 +707,7 @@
                 manager.focusPane(p.dock);
             });
             loadContents(p);
+            doUpdate(1);
         };
         p.iframe.src = './log.viewer.tab.html';
         p.pane.appendChild(p.iframe);
@@ -1008,36 +1012,29 @@
 
     // eslint-disable-next-line no-unused-vars
     function closeHidden() {
-        var dialogs = document.body.getElementsByTagName('dialog');
-        var e = 0, el = dialogs.length;
-        for (; e < el; e++) {
-            if (dialogs[e].open) {
-                if (dialog.showMessageBoxSync({
-                    type: 'question',
-                    title: 'Open dialog',
-                    message: (dialogs[e].dataset.title || 'Dialog') + ' is open, exit?',
-                    buttons: ['Yes', 'No'],
-                    defaultId: 1
-                }) === 1)
-                    return;
-            }
-        }
-        if (!savedOpened())
-            return;
-        window.hide();
+        if (!closeable()) return false;
+        return true;
     }
 
     // eslint-disable-next-line no-unused-vars
-    function closeWindow() {
+    function closed() {
         ipcRenderer.invoke('window', 'clearCache')
     }
 
-    window.onbeforeunload = function (evt) {
+    function closeable(all) {
+        if (document.activeElement)
+            document.activeElement.blur();
         if (!$closeWindow) {
-            if (document.activeElement)
-                document.activeElement.blur();
-            evt.returnValue = false;
-            setTimeout(() => {
+            if (prefs && !prefs.closed) {
+                dialog.showMessageBox({
+                    type: 'error',
+                    title: 'Preferences dialog open',
+                    message: 'You must close the preferences dialog before you can close character manager.',
+                    defaultId: 1
+                });
+                $closeWindow = false;
+            }
+            else {
                 var dialogs = document.body.getElementsByTagName('dialog');
                 var e = 0, el = dialogs.length;
                 for (; e < el; e++) {
@@ -1048,25 +1045,32 @@
                             message: (dialogs[e].dataset.title || 'Dialog') + ' is open, exit?',
                             buttons: ['Yes', 'No'],
                             defaultId: 1
-                        }) === 1)
-                            return 'no';
+                        }) === 1) {
+                            $closeWindow = false;
+                            return $closeWindow;
+                        }
                     }
                 }
-                if (!savedOpened())
-                    return 'no';
-                //clean up
-                var keys = Object.keys(_viewers);
-                var p = keys.length;
-                while (p--)
-                    closeViewer(_viewers[keys[p]]);
+                if (!savedOpened()) {
+                    $closeWindow = false;
+                    return $closeWindow;
+                }
                 $closeWindow = true;
-                window.close();
-            });
+            }
+        }
+        return $closeWindow;
+    }
+
+    window.onbeforeunload = function (evt) {
+        if (!closeable()) {
+            e.returnValue = true;
             return 'no';
         }
-        $closeWindow = true;
-        window.close();
-        return;
+        var keys = Object.keys(_viewers);
+        var p = keys.length;
+        while (p--)
+            closeViewer(_viewers[keys[p]]);
+        window.opener.client.off('options-loaded', optionsLoaded);
     };
 
     $(document).ready(() => {
@@ -1089,11 +1093,12 @@
         doUpdate(4);
         ipcRenderer.invoke('window', 'setEnabled', true);
         //menubar.enabled = true;
+        window.opener.client.on('options-loaded', optionsLoaded);
     });
 
-    ipcRenderer.on('reload-options', () => {
+    function optionsLoaded() {
         loadOptions();
-    });
+    }
 
     $(window).keydown((event) => {
         if (document.getElementById('progress-dialog').open) {
@@ -1154,8 +1159,8 @@
     }
 
     function setProgressDialogValue(value) {
-        ipcRenderer.send('set-progress', { value: value });
-        ipcRenderer.send('set-progress-window', 'code-editor', { value: value });
+        window.opener.updateProgress(value);
+        window.setProgressBar(-1);
         document.getElementById('progress-dialog-progressbar').value = value * 100;
     }
 
@@ -1174,6 +1179,18 @@
         if (archive)
             archive.abort();
         closeProgressDialog();
+    }
+
+    function getSettings() {
+        return window.opener._windowState.data.settings;
+    }
+
+    function reloadOptions(file, global) {
+        window.opener.reloadOptions(file, global);
+    }
+
+    function updateProgress(value) {
+        window.opener.updateProgress(value);
     }
 </script>
 

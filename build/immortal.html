@@ -3034,7 +3034,8 @@
 
         // eslint-disable-next-line no-unused-vars
         function closeHidden() {
-            window.hide();
+            if(!closeable()) return false;
+            return true;
         }
 
         $closeWindow = false;

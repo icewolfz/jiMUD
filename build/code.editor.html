@@ -4377,17 +4377,12 @@
                     buttons: ['Yes', 'No'],
                     defaultId: 1
                 }) === 1)
-                    return;
+                    return false;
             }
         }
         if (!savedOpened())
-            return;
-        window.hide();
-    }
-
-    // eslint-disable-next-line no-unused-vars
-    function closeWindow() {
-        window.close();
+            return false;
+        return true;
     }
 
     window.onbeforeunload = function (evt) {

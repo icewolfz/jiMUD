@@ -267,11 +267,6 @@
             window.opener.client.saveOptions();
         }
 
-        // eslint-disable-next-line no-unused-vars
-        function closeHidden() {
-            window.hide();
-        }
-
         window.onbeforeunload = function (evt) {
             window.opener._status.off('set-title', events['set-title']);
             window.opener.removeEventListener('loadCharacter', updateCharacter);

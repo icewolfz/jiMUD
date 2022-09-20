@@ -1,7 +1,7 @@
 //spell-checker:words submenu, pasteandmatchstyle, statusvisible, taskbar, colorpicker, mailto, forecolor, tinymce, unmaximize
 //spell-checker:ignore prefs, partyhealth, combathealth, commandinput, limbsmenu, limbhealth, selectall, editoronly, limbarmor, maximizable, minimizable
 //spell-checker:ignore limbsarmor, lagmeter, buttonsvisible, connectbutton, charactersbutton, Editorbutton, zoomin, zoomout, unmaximize, resizable
-const { app, BrowserWindow, BrowserView, shell, screen, Tray, dialog, Menu, MenuItem, ipcMain, systemPreferences } = Fix abrequire('electron');
+const { app, BrowserWindow, BrowserView, shell, screen, Tray, dialog, Menu, MenuItem, ipcMain, systemPreferences } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const url = require('url');
@@ -382,8 +382,7 @@ function createWindow(options) {
             if (window && !window.isDestroyed()) {
                 if (index !== -1 && windows[id].windows[index].details.options.persistent) {
                     e.preventDefault();
-                    executeScript('if(typeof closeHidden === "function") closeHidden(true)', childWindow);
-                    windows[id].windows[index].window.hide();
+                    executeScript('if(typeof closeHidden !== "function" || closeHidden(true)) window.hide();', childWindow);
                 }
             }
         });
@@ -1655,8 +1654,7 @@ function createClient(options) {
             const index = getChildWindowIndex(clients[id].windows, childWindow);
             if (index !== -1 && clients[id].windows[index].details.options.persistent) {
                 e.preventDefault();
-                executeScript('if(typeof closeHidden === "function") closeHidden(true)', childWindow);
-                clients[id].windows[index].window.hide();
+                executeScript('if(typeof closeHidden !== "function" || closeHidden(true)) window.hide();', childWindow);
                 states[file] = saveWindowState(childWindow);
                 clients[getClientId(view)].states[file] = states[file];
                 return;
