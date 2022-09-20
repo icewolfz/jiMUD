@@ -41,7 +41,7 @@ else //not found use native
 
 argv = require('yargs-parser')(argv, {
     string: ['data-dir', 's', 'setting', 'm', 'map', 'c', 'character', 'pf', 'profiles', 'l', 'layout'],
-    boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout'],
+    boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'noCharacterImport'],
     alias: {
         'd': ['debug'],
         'eo': ['editorOnly', 'editoronly'],
@@ -54,7 +54,8 @@ argv = require('yargs-parser')(argv, {
         'pf': ['profiles'],
         'e': ['editor'],
         'l': ['layout'],
-        'il': ['ignore-layout']
+        'il': ['ignore-layout'],
+        'nci': ['noCharacterImport']
     },
     configuration: {
         'short-option-groups': false
@@ -83,6 +84,7 @@ if (!process.env.PORTABLE_EXECUTABLE_DIR) {
         console.log('-data-dir=[file]                    Set a custom directory to store saved data');
         console.log('-l=[file], --layout=[file]          Load window layout file');
         console.log('-il, --ignore-layout                Ignore layout and do not save window states');
+        console.log('-nci, --noCharacterImport           Do not import old character.json');
         app.quit();
         return;
     }
@@ -116,7 +118,7 @@ let _saved = false;
 let _loaded = false;
 const _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
 
-if (isFileSync(path.join(app.getPath('userData'), 'characters.json'))) {
+if (!argv.nci && isFileSync(path.join(app.getPath('userData'), 'characters.json'))) {
     let oldCharacters = fs.readFileSync(path.join(app.getPath('userData'), 'characters.json'), 'utf-8');
     try {
         //data try and convert and then import any found data
@@ -537,7 +539,7 @@ function createDialog(options) {
             contextIsolation: false,
             backgroundThrottling: set ? set.enableBackgroundThrottling : true,
             preload: path.join(__dirname, 'preload.js')
-        }        
+        }
     });
     require("@electron/remote/main").enable(window.webContents);
     window.webContents.on('render-process-gone', (event, details) => {
@@ -607,8 +609,9 @@ app.on('ready', () => {
             msg += '-eo, --eo, -eo=[file], --eo=[file] - Open only the code editor\n';
             msg += '-no-pd, -no-portable-dir - Do not use portable dir\n';
             msg += '-data-dir=[file] - Set a custom directory to store saved data\n';
-            msg += '-l=[file], --layout=[file] - Load window layout file';
-            msg += '-il, --ignore-layout - Ignore layout and do not save window states';
+            msg += '-l=[file], --layout=[file] - Load window layout file\n';
+            msg += '-il, --ignore-layout - Ignore layout and do not save window states\n';
+            msg += '-nci, --noCharacterImport - Do not import old character.json';
             dialog.showMessageBox({
                 type: 'info',
                 message: msg
@@ -626,6 +629,7 @@ app.on('ready', () => {
             console.log('-data-dir=[file]                    Set a custom directory to store saved data');
             console.log('-l=[file], --layout=[file]          Load window layout file');
             console.log('-il, --ignore-layout                Ignore layout and do not save window states');
+            console.log('-nci, --noCharacterImport           Do not import old character.json');
             app.quit();
             return;
         }
