@@ -2166,17 +2166,7 @@
                     _nextClear = Date.now() + 3600000;
                 }
             });
-            _status.on('skill updated', (skill, data) => {
-                //TODO skill window update, add once window system setup
-                //ipcRenderer.send('skill-updated', skill, data);
-                //if(windows['skills'])
-                //  windows['skills'].update(skill, data);
-            });
-            _status.on('skill init', (skill, data) => {
-                //TODO skill window reset, add once window system setup
-                //if(windows['skills'])
-                //  windows['skills'].reset();                
-            });
+
             _status.on('set-title', (title, lag) => {
                 //TODO Add setting to control empty/defaults
                 if (client.options.autoCreateCharacter)
@@ -3022,11 +3012,7 @@
             client.sendGMCP('Core.Hello { "client": "' + client.telnet.terminal + '", "version": "' + client.telnet.version + '" }');
             initWindows();
         }
-        /*
-                        ipcRenderer.on('get-skills', (event, window) => {
-                            ipcRenderer.send('skills', _status.skills, window);
-                        });
-                */
+
         ipcRenderer.on('context-menu', (event, params) => {
             var inputMenu, start, end, w, input;
             const { selectionText, isEditable } = params;
@@ -3268,6 +3254,11 @@
                         client.commandInput.focus();
                     }, 0);
                     break;
+                case 'skills':
+                if (data && data.details)
+                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultWidth', 'defaultHeight']);
+                    _windows['skills.html'] = window.open('skills.html', 'Skills-' + getId(), `defaultWidth=800,defaultHeight=600,alwaysOnTopClient=true,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/skills.png')}${_options}`);
+                    break;
                 case 'code.editor':
                 case 'log.viewer':
                     break;
@@ -3430,22 +3421,21 @@
                 ipcRenderer.send('show-window', 'log-viewer', { show: true, file: 'log.viewer.html', icon: 'log', alwaysOnTopClient: true });
         }
 
+        /*
         // eslint-disable-next-line no-unused-vars
         function showMail() {
             //TODO make work, but can be hidden as mail system was never completed
-            /*
             if (client.options.windows['mail'] && client.options.windows['mail'].options) {
                 client.options.windows['mail'].options.show = true;
                 ipcRenderer.send('show-window', 'mail', client.options.windows['mail'].options);
             }
             else
                 ipcRenderer.send('show-window', 'mail', { show: true, file: 'mail.html', icon: 'mail', alwaysOnTopClient: true });
-            */
         }
 
         // eslint-disable-next-line no-unused-vars
         function showComposer() {
-            //TODO make work, as gmcp mail system never completed create a work around hat use sthe mail command to send/update
+            //TODO make work, as gmcp mail system never completed create a work around hat use the mail command to send/update
             if (client.options.windows['composer'] && client.options.windows['composer'].options) {
                 client.options.windows['composer'].options.show = true;
                 client.options.windows['composer'].options.persistent = false;
@@ -3455,16 +3445,7 @@
             else
                 ipcRenderer.send('show-window', 'composer', { show: true, file: 'composer.html', icon: 'composer', alwaysOnTopClient: true, persistent: false, noInput: true });
         }
-
-        function showSkills() {
-            //make skill window work
-            if (client.options.windows['skills'] && client.options.windows['skills'].options) {
-                client.options.windows['skills'].options.show = true;
-                ipcRenderer.send('show-window', 'skills', client.options.windows['skills'].options);
-            }
-            else
-                ipcRenderer.send('show-window', 'skills', { show: true, file: 'skills.html', icon: 'skills', alwaysOnTopClient: true });
-        }
+        */
 
         // eslint-disable-next-line no-unused-vars
         function toggleLogging() {

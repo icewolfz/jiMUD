@@ -3498,7 +3498,7 @@ function createMenu(window) {
                     label: '&Skills...',
                     id: 'skills',
                     click: (item, mWindow) => {
-                        executeScriptClient('openWindow("skills)', window || mWindow, true);
+                        executeScriptClient('openWindow("skills")', window || mWindow, true);
                     },
                     accelerator: 'CmdOrCtrl+S'
                 },

@@ -17,21 +17,13 @@
     <script src="../lib/bootstrap-select.min.js"></script>
     <script type="text/javascript">
         if (window.module) module = window.module;
-        const { ipcRenderer } = require('electron');
         const { Settings } = require('./js/settings');
         const { capitalize } = require('./js/library');
-        var options;
         var _skills = {};
         var _cats = [];
 
-        function loadOptions() {
-            options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
-        }
-
         $(document).ready(function () {
-            loadOptions();
-            ipcRenderer.send('get-skills', 'skills');
-            resetSkills();
+            loadSkills()
             $('#filter-skills').change(() => {
                 if ($('#filter-skills').find(':selected').text() === 'All')
                     $('.category').css('display', '');
@@ -55,12 +47,14 @@
                     inputMenu = [
                         { role: 'selectAll' }
                     ];
-                    window.showContext(inputMenu);
+                window.showContext(inputMenu);
             });
+            window.opener._status.on('skill updated', updateSkill);
+            window.opener._status.on('skill init', resetSkills);            
         });
 
-        ipcRenderer.on('skills', (event, skills) => {
-            _skills = skills;
+        function loadSkills() {
+            _skills = window.opener._status.skills;
             var cats = {};
             var cnt = 0;
             var keys;
@@ -94,9 +88,9 @@
                 body = body += '<div class="category" id="default">No skills</div>';
             }
             document.getElementById('body').innerHTML = body;
-        });
+        };
 
-        ipcRenderer.on('skill-updated', (event, skill, data) => {
+        function updateSkill(skill, data) {
             _skills[skill] = data;
             _el = $('#' + sanitizeID(skill));
             if (_el.length === 0) {
@@ -148,7 +142,7 @@
                 else
                     $('#' + sanitizeID(skill) + 'Percent').text(data.percent + '%');
             }
-        });
+        };
 
         function updateFilter() {
             var val = $('#filter-skills').val();
@@ -159,10 +153,6 @@
                 $('#filter-skills').append($('<option></option>').val(capitalize(_cats[key])).html(capitalize(_cats[key])));
             $('#filter-skills').val(val);
         }
-
-        ipcRenderer.on('skills-reset', (event, skill, data) => {
-            resetSkills();
-        });
 
         function resetSkills() {
             document.getElementById('body').innerHTML = '';
@@ -195,6 +185,10 @@
             return id.replace(/[^a-zA-Z0-9_-]/gi, '');
         }
 
+        window.onbeforeunload = function (evt) {
+            window.opener._status.off('skill updated', updateSkill);
+            window.opener._status.off('skill init', resetSkills);      
+        };
     </script>
     <style>
         #body {
