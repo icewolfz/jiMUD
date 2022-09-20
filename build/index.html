@@ -1793,10 +1793,7 @@
                     case 'prefs':
                     case 'options':
                     case 'preferences':
-                        if (window.getGlobal('settingsFile') === _windowState.data.settings)
-                            ipcRenderer.send('show-global-preferences');
-                        else
-                            openWindow('prefs');
+                        openWindow('prefs');
                         break;
                     case 'help':
                         openWindow('help');
@@ -3207,7 +3204,10 @@
                     _windows['chat.html'] = window.open('chat.html', 'Chat-' + getId(), `persistent=${client.options.chat.persistent},alwaysOnTopClient=${client.options.chat.alwaysOnTopClient},alwaysOnTop=${client.options.chat.alwaysOnTop},showInTaskBar=${client.options.chat.showInTaskBar},defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/chat.png')}${_options}`);
                     break;
                 case 'prefs':
-                    _windows['prefs.html'] = window.open('prefs.html', 'modal-' + getId(), 'width=800,height=460,backgroundColor=#fff,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
+                    if (window.getGlobal('settingsFile') === _windowState.data.settings)
+                        ipcRenderer.send('show-global-preferences');
+                    else
+                        _windows['prefs.html'] = window.open('prefs.html', 'modal-' + getId(), 'width=800,height=460,backgroundColor=#fff,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
                     break;
                 case 'immortal':
                     if (data && data.details)
@@ -3255,7 +3255,7 @@
                     }, 0);
                     break;
                 case 'skills':
-                if (data && data.details)
+                    if (data && data.details)
                         _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultWidth', 'defaultHeight']);
                     _windows['skills.html'] = window.open('skills.html', 'Skills-' + getId(), `defaultWidth=800,defaultHeight=600,alwaysOnTopClient=true,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/skills.png')}${_options}`);
                     break;
