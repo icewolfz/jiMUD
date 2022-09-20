@@ -44,7 +44,6 @@
         // eslint-disable-next-line no-unused-vars
         var color = '';
         var options;
-        var abortController = new AbortController();
 
         var colorNames = {
             'No color': 'Default',
@@ -321,12 +320,14 @@
 
         $(document).ready(() => {
             if (!window.getGlobal('editorOnly')) {
-                window.opener.opener.client.on('options-loaded', () => {
-                    loadColors();
-                }, { signal: abortController.signal });
+                window.opener.opener.client.on('options-loaded', optionsLoaded);
             }
             loadColors();
         });
+
+        function optionsLoaded() {
+            loadColors();
+        }
 
         function colorCell(color, idx) {
             var cell = '<td class="mce-grid-cell' + (color === 'transparent' ? ' mce-colorbtn-trans' : '') + '">';
@@ -473,7 +474,9 @@
         }
 
         window.onbeforeunload = function (evt) {
-            abortController.abort();
+            if (!window.getGlobal('editorOnly')) {
+                window.opener.opener.client.off('options-loaded', optionsLoaded);
+            }
         };        
     </script>
 </head>

@@ -145,8 +145,6 @@
         var mapper;
         var MapperNavDown = false;
 
-        var abortController = new AbortController();
-
         function MapperNavClicked(x, y) {
             if (!MapperNavDown) return;
             mapper.scrollBy(x, y);
@@ -241,6 +239,15 @@
             return $closeWindow;
         }
 
+        function removeEvents() {
+            window.opener.client.off('received-GMCP', processGMCP);
+            window.opener.client.off('options-loaded', optionsLoaded);
+            window.opener._status.off('set-title', setTitle);
+            window.opener.removeEventListener('loadCharacter', updateCharacter);
+            window.opener.removeEventListener('updateCharacter', updateCharacter);
+            window.opener.removeEventListener('resetCharacter', updateCharacter);
+        }
+
         window.onbeforeunload = function (evt) {
             if (!closeable()) {
                 evt.returnValue = false;
@@ -249,7 +256,7 @@
             if (!mapper.ready) {
                 evt.returnValue = false;
                 setTimeout(() => {
-                    abortController.abort();
+                    removeEvents();
                     window.close();
                 }, 10);
                 return 'no';
@@ -259,14 +266,14 @@
                 setTimeout(() => {
                     if (mapper) save(() => {
                         $closeWindow = true;
-                        abortController.abort();
+                        removeEvents();
                         window.close();
                     });
                 });
                 return 'no';
             }
             $closeWindow = true;
-            abortController.abort();
+            removeEvents();
         };
 
         $(document).ready(() => {
@@ -711,36 +718,12 @@
                 zoomMap(options.mapper.scale);
                 mapper.scrollTo(options.mapper.vscroll, options.mapper.hscroll);
                 window.opener.client.sendGMCP('Room.Info');
-                window.opener.client.on('received-GMCP', processGMCP, { signal: abortController.signal });
-                window.opener.client.on('options-loaded', () => {
-                    save(function () {
-                        try {
-                            var options = window.opener.client.options;
-                            mapper.memorySavePeriod = options.mapper.memorySavePeriod;
-                            mapper.memory = options.mapper.memory;
-                            mapper.mapFile = window.opener.getMapFile();
-                            mapper.commandDelay = options.commandDelay;
-                            mapper.commandDelayCount = options.commandDelayCount;
-                            importType = options.mapper.importType;
-                            _enableDebug = options.enableDebug;
-                        }
-                        catch (err) {
-                            if (typeof err === 'string')
-                                window.opener.client.error(err);
-                            else
-                                window.opener.client.error(err.stack || err.message);
-                        }
-                    });
-                }, { signal: abortController.signal });
-                window.opener._status.on('set-title', (title, lag) => {
-                    if (title && title.length > 0)
-                        document.title = 'Mapper - ' + title;
-                    else
-                        document.title = 'Mapper';
-                }, { signal: abortController.signal });
-                window.opener.addEventListener('loadCharacter', updateCharacter, { signal: abortController.signal });
-                window.opener.addEventListener('updateCharacter', updateCharacter, { signal: abortController.signal });
-                window.opener.addEventListener('resetCharacter', updateCharacter, { signal: abortController.signal });
+                window.opener.client.on('received-GMCP', processGMCP);
+                window.opener.client.on('options-loaded', optionsLoaded);
+                window.opener._status.on('set-title', setTitle);
+                window.opener.addEventListener('loadCharacter', updateCharacter);
+                window.opener.addEventListener('updateCharacter', updateCharacter);
+                window.opener.addEventListener('resetCharacter', updateCharacter);
             }
             catch (err) {
                 if (typeof err === 'string')
@@ -749,6 +732,34 @@
                     window.opener.client.error(err.stack || err.message);
             }
         });
+
+        function setTitle(title, lag) {
+            if (title && title.length > 0)
+                document.title = 'Mapper - ' + title;
+            else
+                document.title = 'Mapper';
+        }
+
+        function optionsLoaded() {
+            save(function () {
+                try {
+                    var options = window.opener.client.options;
+                    mapper.memorySavePeriod = options.mapper.memorySavePeriod;
+                    mapper.memory = options.mapper.memory;
+                    mapper.mapFile = window.opener.getMapFile();
+                    mapper.commandDelay = options.commandDelay;
+                    mapper.commandDelayCount = options.commandDelayCount;
+                    importType = options.mapper.importType;
+                    _enableDebug = options.enableDebug;
+                }
+                catch (err) {
+                    if (typeof err === 'string')
+                        window.opener.client.error(err);
+                    else
+                        window.opener.client.error(err.stack || err.message);
+                }
+            });
+        }
 
         function updateCharacter(e) {
             const char = window.opener.getCharacterName();
@@ -787,7 +798,6 @@
 
         function initProgressDialog(data) {
             if (!_progress.dialog || _progress.dialog.closed) {
-                const controller = new AbortController();
                 _progress.dialog = createProgressDialog();
                 _progress.dialog.addEventListener('DOMContentLoaded', () => {
                     if (data)
@@ -808,11 +818,9 @@
                     _progress.dialog.addEventListener('beforeunload', () => {
                         if (_progress.action < 3)
                             mapper.cancelImport();
-                        controller.abort();
                         _progress.dialog = null;
-                    }, { once: true, signal: controller.signal });
-
-                }, { once: true, signal: controller.signal });
+                    }, { once: true });
+                }, { once: true });
             }
             else if (data)
                 _progress.dialog.setProgress(data);

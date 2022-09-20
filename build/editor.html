@@ -34,7 +34,6 @@
         const path = require('path');
 
         var editorOnly = window.getGlobal('editorOnly');
-        var abortController = new AbortController();
         var _colors, _ColorTable, options, _colorCodes;
         var _colorDialog;
         var colorNames = {
@@ -1185,11 +1184,13 @@
             });
             loadOptions();
             if (!editorOnly) {
-                window.opener.client.on('options-loaded', () => {
-                    loadOptions();
-                }, { signal: abortController.signal });
+                window.opener.client.on('options-loaded', optionsLoaded);
             }
         });
+
+        function optionsLoaded() {
+            loadOptions();
+        }
 
         function loadColors() {
             var _dColors = getColors();
@@ -1338,7 +1339,7 @@
             _colorDialog.addEventListener('DOMContentLoaded', () => {
                 _colorDialog.setColor(color || '');
                 _colorDialog.setType(type || '');
-            }, { once: true, signal: abortController.signal });
+            }, { once: true });
         }
 
         var $closeWindow = false;
@@ -1365,7 +1366,9 @@
                 return 'no';
             }
             $closeWindow = true;
-            abortController.abort();
+            if (!editorOnly) {
+                window.opener.client.off('options-loaded', optionsLoaded);
+            }
         };
 
         function setColor(type, color, code) {

@@ -217,28 +217,32 @@
             _logger.postMessage({ action: 'add-line', args: data });
         }
 
-        var abortController = new AbortController();
-        window.opener._status.on('set-title', (title, lag) => {
-            if (!options)
+        var events = {
+            'set-title': (title, lag) => {
+                if (!options)
+                    loadOptions();
+                _logger.postMessage({ action: 'name', args: title });
+            },
+            'options-loaded': () => {
                 loadOptions();
-            _logger.postMessage({ action: 'name', args: title });
-        }, { signal: abortController.signal });
+            },
+            'connecting': () => {
+                if (!options)
+                    loadOptions();
+                _logger.postMessage({ action: 'connected', args: client.connected });
+            }
+        }
 
         function updateCharacter(e) {
             _logger.postMessage({ action: 'name', args: window.opener.getCharacterName() || '' });
         }
 
-        window.opener.addEventListener('loadCharacter', updateCharacter, { signal: abortController.signal });
-        window.opener.addEventListener('updateCharacter', updateCharacter, { signal: abortController.signal });
-        window.opener.addEventListener('resetCharacter', updateCharacter, { signal: abortController.signal });
-        window.opener.client.on('options-loaded', () => {
-            loadOptions();
-        }, { signal: abortController.signal });
-        window.opener.client.on('connecting', () => {
-            if (!options)
-                loadOptions();
-            _logger.postMessage({ action: 'connected', args: client.connected });
-        }, { signal: abortController.signal });
+        window.opener._status.on('set-title', events['set-title']);
+        window.opener.addEventListener('loadCharacter', updateCharacter);
+        window.opener.addEventListener('updateCharacter', updateCharacter);
+        window.opener.addEventListener('resetCharacter', updateCharacter);
+        window.opener.client.on('options-loaded', events['options-loaded']);
+        window.opener.client.on('connecting', events['connecting']);
 
         // eslint-disable-next-line no-unused-vars
         function toggle() {
@@ -269,7 +273,12 @@
         }
 
         window.onbeforeunload = function (evt) {
-            abortController.abort();
+            window.opener._status.off('set-title', events['set-title']);
+            window.opener.removeEventListener('loadCharacter', updateCharacter);
+            window.opener.removeEventListener('updateCharacter', updateCharacter);
+            window.opener.removeEventListener('resetCharacter', updateCharacter);
+            window.opener.client.off('options-loaded', events['options-loaded']);
+            window.opener.client.off('connecting', events['connecting']);
         };        
     </script>
 </head>

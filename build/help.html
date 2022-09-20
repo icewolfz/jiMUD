@@ -44,7 +44,6 @@
             }
             return old_render(tokens, idx, options, env, self);
         };
-        var abortController = new AbortController();
         var container;
         var contents;
         var tree;
@@ -178,14 +177,14 @@
                     container.html(md.render(data));
                 }
                 else
-                dialog.showMessageBox({
+                    dialog.showMessageBox({
                         type: 'error',
                         title: 'Help error',
                         message: 'Help file not found'
                     });
             }
             else
-            dialog.showMessageBox({
+                dialog.showMessageBox({
                     type: 'error',
                     title: 'Help error',
                     message: 'Help file not found'
@@ -235,16 +234,9 @@
         }
 
         function loadOptions(data) {
-            if (!data) {
-
-                options = window.opener.client.options.extensions['help'];
-            }
-            else
-                options = data;
+            options = data || window.opener.client.options.extensions.help;
             if (!options) {
-                options = {
-                    'navSize': 202,
-                };
+                options = { 'navSize': 202 };
                 saveOptions();
             }
             if (options.navSize < 202)
@@ -257,9 +249,8 @@
             if (!window.opener.client.options.extensions.help)
                 window.opener.client.options.extensions.help = {};
             window.opener.client.options.extensions.help = options;
-            window.opener.client.options.saveOptions();
+            window.opener.client.saveOptions();
         }
-
 
         $(document).keydown((event) => {
             if (event.key === 'f' && !event.altKey && event.ctrlKey && !event.shiftKey && !event.metaKey) {
@@ -301,7 +292,7 @@
                 container.id = 'container-display';
                 oDoc.body.appendChild(container);
                 container = $(container);
-                loadUrl('README');
+                setTimeout(() => loadUrl('README'), 1);
                 container[0].addEventListener('contextmenu', e => {
                     e.preventDefault();
                     const sel = oDoc.getSelection();
@@ -458,12 +449,12 @@
                     dragging = false;
                 }
             });
-            if (!window.getGlobal('editorOnly')) {
-                window.opener.client.on('options-loaded', () => {
-                    loadOptions();
-                }, { signal: abortController.signal });
-            }
+            window.opener.client.on('options-loaded', optionsLoaded);
         });
+
+        function optionsLoaded() {
+            loadOptions();
+        }
 
         function executeContextItem(idx, id, label, role) {
             _current = idx;
@@ -473,7 +464,7 @@
         }
 
         window.onbeforeunload = function (evt) {
-            abortController.abort();
+            window.opener.client.removeListener('options-loaded', optionsLoaded);
         };       
     </script>
 </head>

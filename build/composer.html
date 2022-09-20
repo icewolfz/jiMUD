@@ -41,7 +41,6 @@
         var draft = true;
         var closeWindow = false;
         var id = '' + (Date.now() / 1000);
-        var abortController = new AbortController();
         var _colors, _ColorTable, options, _colorCodes;
         var _colorDialog;
         var colorNames = {
@@ -1156,10 +1155,12 @@
                 cMenu.popup({ window: remote.getCurrentWindow() });
             });
             loadOptions();
-            window.opener.client.on('options-loaded', () => {
-                loadOptions();
-            }, { signal: abortController.signal });
+            window.opener.client.on('options-loaded', optionsLoaded);
         });
+
+        function optionsLoaded() {
+            loadOptions();
+        }
 
         function loadColors() {
             var _dColors = getColors();
@@ -1369,6 +1370,7 @@
                         }, () => {
                             mail.close();
                             closeWindow = true;
+                            window.opener.client.off('options-loaded', optionsLoaded);
                             window.close();
                         });
                         return;
@@ -1379,6 +1381,7 @@
                         ipcRenderer.send('setting-changed', { type: 'extensions', name: 'mail', value: options.extensions['mail'] });
                     }
                     closeWindow = true;
+                    window.opener.client.off('options-loaded', optionsLoaded);
                     window.close();
                 });
                 return;
@@ -1398,6 +1401,7 @@
                 }, () => {
                     mail.close();
                     closeWindow = true;
+                    window.opener.client.off('options-loaded', optionsLoaded);
                     window.close();
                 });
                 return;
@@ -1405,6 +1409,7 @@
             else if (mail)
                 mail.close();
             closeWindow = true;
+            window.opener.client.off('options-loaded', optionsLoaded);
             window.close();
         };
 

@@ -37,7 +37,7 @@
         const moment = require('moment');
 
         var chokidar = require('chokidar');
-        var abortController = new AbortController();
+
         //#region Variables
         var _ied, options;
         var _local = {}, _remote = {}, _downloads = {};
@@ -1210,15 +1210,8 @@
                 ]
             });
             loadOptions();
-            window.opener.client.on('options-loaded', () => {
-                loadOptions();
-            }, { signal: abortController.signal });
-            window.opener.client.on('received-GMCP', (mod, obj) => {
-                if (options && options.debug)
-                    console.log({ mod: mod, obj: obj });
-                if (_ied)
-                    _ied.processGMCP(mod, obj);
-            }, { signal: abortController.signal });
+            window.opener.client.on('options-loaded', optionsLoaded);
+            window.opener.client.on('received-GMCP', processGMCP);
 
             _ied = new IED(options.local, options.remote);
             _ied.prefix = 'manager-';
@@ -2573,11 +2566,22 @@
                     evt.returnValue = false;
                     return 'no';
                 }
-                abortController.abort();
+                window.opener.client.off('options-loaded', optionsLoaded);
+                window.opener.client.off('received-GMCP', processGMCP);
                 clearWatcher();
             };
         });
 
+        function optionsLoaded() {
+            loadOptions();
+        }
+
+        function processGMCP(mod, obj) {
+            if (options && options.debug)
+                console.log({ mod: mod, obj: obj });
+            if (_ied)
+                _ied.processGMCP(mod, obj);
+        }
 
         function showLocalContextMenu() {
             var selected = localTable.rows({ selected: true }).data().pluck('size');

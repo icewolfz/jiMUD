@@ -2366,6 +2366,8 @@ function buildOptions(details, window, settings) {
             switch (feature[0]) {
                 case 'defaultWidth':
                 case 'defaultHeight':
+                case 'defaultX':
+                case 'defaultY':
                 case "width":
                 case "height":
                 case "x":
@@ -2418,7 +2420,10 @@ function buildOptions(details, window, settings) {
         options.width = 'defaultWidth' in options ? options.defaultWidth : 800;
     if (!('height' in options))
         options.height = 'defaultHeight' in options ? options.defaultHeight : 600;
-
+    if (!('x' in options))
+        options.x = 'defaultX' in options ? options.defaultX : 0;
+    if (!('y' in options))
+        options.y = 'defaultY' in options ? options.defaultY : 0;
     if (details.frameName === 'modal' || details.frameName.startsWith('modal-')) {
         // open window as modal
         Object.assign(options, {
@@ -3138,7 +3143,7 @@ function createMenu(window) {
                 {
                     label: '&Who is on?...',
                     click: (item, mWindow) => {
-                        executeScriptClient('showWho()', window || mWindow, true);
+                        executeScriptClient('openWindow("who")', window || mWindow, true);
                     }
                 },
                 {
@@ -3606,13 +3611,13 @@ function createMenu(window) {
                 {
                     label: '&ShadowMUD...',
                     click: (item, mWindow) => {
-                        executeScriptClient('showSMHelp()', window || mWindow, true);
+                        executeScriptClient('openWindow("smhelp")', window || mWindow, true);
                     }
                 },
                 {
                     label: '&jiMUD...',
                     click: (item, mWindow) => {
-                        executeScriptClient('showHelp()', window || mWindow, true);
+                        executeScriptClient('openWindow("help")', window || mWindow, true);
                     }
                 },
                 {

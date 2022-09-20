@@ -30,6 +30,10 @@
             else if (event.which == 13) {
                 if (doReturn && !doReturn())
                     return;
+                const ce = new Event('return');
+                window.dispatchEvent(ce);
+                if (ce.defaultPrevented)
+                    return;
                 const footer = document.getElementsByClassName('dialog-footer');
                 if (!footer.length) return;
                 const defaultButton = footer[0].getElementsByClassName('btn-primary');
@@ -51,7 +55,11 @@
 
         function executeOk() {
             if (doOk && !doOk())
-                return;                
+                return;
+            const e = new Event('ok');
+            window.dispatchEvent(e);
+            if (e.defaultPrevented)
+                return;
             closeWindow();
         }
     </script>
