@@ -459,17 +459,16 @@
 
     function openFile(file, dock) {
         if (!file || file.length === 0) {
-            ipcRenderer.invoke('show-dialog', 'showOpenDialog',
-                {
-                    filters: $fileFilters,
-                    properties: ['multiSelections', 'openFile'],
-                    defaultPath: (manager.active && manager.active.file) ? path.dirname(manager.active.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0]) : logPath)
-                }).then(result => {
-                    if (result.filePaths === undefined || result.filePaths.length === 0) {
-                        return;
-                    }
-                    openFiles(result.filePaths, true, dock);
-                });
+            dialog.showOpenDialog({
+                filters: $fileFilters,
+                properties: ['multiSelections', 'openFile'],
+                defaultPath: (manager.active && manager.active.file) ? path.dirname(manager.active.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0]) : logPath)
+            }).then(result => {
+                if (result.filePaths === undefined || result.filePaths.length === 0) {
+                    return;
+                }
+                openFiles(result.filePaths, true, dock);
+            });
         }
         else {
             _recent.unshift(file);
@@ -484,7 +483,7 @@
         for (var f = 0, fl = files.length; f < fl; f++) {
             if (!existsSync(files[f])) {
                 if (exists)
-                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    dialog.showMessageBox({
                         type: 'info',
                         title: 'Path does not exist',
                         message: 'The path \'' + files[f] + '\' does not seem to exist anymore on disk.'
@@ -537,7 +536,7 @@
                     idx: r,
                     click: (item) => {
                         if (!existsSync(options.recent[item.idx])) {
-                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                            dialog.showMessageBox({
                                 type: 'info',
                                 title: 'Path does not exist',
                                 message: 'The path \'' + options.recent[item.idx] + '\' does not seem to exist anymore on disk.'
@@ -1013,14 +1012,13 @@
         var e = 0, el = dialogs.length;
         for (; e < el; e++) {
             if (dialogs[e].open) {
-                if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                    {
-                        type: 'question',
-                        title: 'Open dialog',
-                        message: (dialogs[e].dataset.title || 'Dialog') + ' is open, exit?',
-                        buttons: ['Yes', 'No'],
-                        defaultId: 1
-                    }) === 1)
+                if (dialog.showMessageBoxSync({
+                    type: 'question',
+                    title: 'Open dialog',
+                    message: (dialogs[e].dataset.title || 'Dialog') + ' is open, exit?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1
+                }) === 1)
                     return;
             }
         }
@@ -1044,14 +1042,13 @@
                 var e = 0, el = dialogs.length;
                 for (; e < el; e++) {
                     if (dialogs[e].open) {
-                        if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                            {
-                                type: 'question',
-                                title: 'Open dialog',
-                                message: (dialogs[e].dataset.title || 'Dialog') + ' is open, exit?',
-                                buttons: ['Yes', 'No'],
-                                defaultId: 1
-                            }) === 1)
+                        if (dialog.showMessageBoxSync({
+                            type: 'question',
+                            title: 'Open dialog',
+                            message: (dialogs[e].dataset.title || 'Dialog') + ' is open, exit?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1
+                        }) === 1)
                             return 'no';
                     }
                 }
@@ -1107,7 +1104,7 @@
 
     // eslint-disable-next-line no-unused-vars
     function backup() {
-        var file = ipcRenderer.sendSync('show-dialog-sync', 'showSaveDialog', {
+        var file = dialog.showSaveDialogSync({
             title: 'Save as...',
             defaultPath: path.join(parseTemplate('{documents}'), 'jiMUD-logs.zip'),
             filters: [
@@ -1127,13 +1124,12 @@
         if (isDirSync(path.join(data, 'logs'))) {
             files = walkSync(path.join(data, 'logs'));
             if (files.length === 0) {
-                ipcRenderer.invoke('show-dialog', 'showMessageBox',
-                    {
-                        type: 'error',
-                        title: 'No logs found',
-                        message: 'No logs to backup',
-                        defaultId: 1
-                    });
+                dialog.showMessageBox({
+                    type: 'error',
+                    title: 'No logs found',
+                    message: 'No logs to backup',
+                    defaultId: 1
+                });
                 return;
             }
             files.files.forEach(file => {

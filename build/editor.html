@@ -24,7 +24,7 @@
         //spell-checker:ignore smtextcolor, rgbcolor, noflash, dblunderline, shadowfore, shadowback, textcolor, cmdfont, editorcontent
         //spell-checker:ignore hellip, selectall, strikethrough, nocolor, forecolor, hilitecolor, backcolor, splitbutton, nonbreaking, sendraw, onpostrender, insertdatetime
         /* global tinymce */
-        const { nativeImage, ipcRenderer, webFrame, clipboard } = require('electron');
+        const { nativeImage, webFrame, clipboard } = require('electron');
         const remote = require('@electron/remote');
         const { Menu, MenuItem } = remote;
         const { stripHTML, htmlEncode, invert, getColors, createColorDialog } = require('./js/library');
@@ -163,48 +163,47 @@
         }
 
         function appendFile() {
-            ipcRenderer.invoke('show-dialog', 'showOpenDialog',
-                {
-                    filters: [
-                        { name: 'Text files (*.txt)', extensions: ['txt'] },
-                        { name: 'LPC files (*.c, *.h, *.o)', extensions: ['c', 'h', 'o'] },
-                        { name: 'All files (*.*)', extensions: ['*'] },
-                    ]
-                }).then(result => {
-                    if (result.filePaths === undefined || result.filePaths.length === 0) {
-                        return;
-                    }
-                    for (var f = 0, fl = result.filePaths.length; f < fl; f++)
-                        fs.readFile(result.filePaths[f], 'utf8', (err, data) => {
-                            if (err) {
-                                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
-                                    type: 'error',
-                                    title: 'Error importing file',
-                                    message: err
-                                });
-                                return;
-                            }
-                            data = htmlEncode(data);
-                            data = data.replace(/ /g, '&nbsp;');
-                            data = data.replace(/\t/g, '&nbsp;&nbsp;&nbsp;');
-                            data = data.replace(/(?:\r\n|\r|\n)/g, '<br/>');
-                            var content = tinymce.activeEditor.getContent({ format: 'text' });
-                            if (content === '\n') {
-                                tinymce.activeEditor.undoManager.transact(function () {
-                                    tinymce.activeEditor.setContent(data);
-                                });
-                            }
-                            else {
-                                if (!content.endsWith('\n'))
-                                    data = '<br>' + data;
-                                tinymce.activeEditor.undoManager.transact(function () {
-                                    tinymce.activeEditor.dom.add(tinymce.activeEditor.getBody(), 'span', {}, data);
-                                });
-                            }
+            dialog.showOpenDialog({
+                filters: [
+                    { name: 'Text files (*.txt)', extensions: ['txt'] },
+                    { name: 'LPC files (*.c, *.h, *.o)', extensions: ['c', 'h', 'o'] },
+                    { name: 'All files (*.*)', extensions: ['*'] },
+                ]
+            }).then(result => {
+                if (result.filePaths === undefined || result.filePaths.length === 0) {
+                    return;
+                }
+                for (var f = 0, fl = result.filePaths.length; f < fl; f++)
+                    fs.readFile(result.filePaths[f], 'utf8', (err, data) => {
+                        if (err) {
+                            dialog.showMessageBox({
+                                type: 'error',
+                                title: 'Error importing file',
+                                message: err
+                            });
+                            return;
+                        }
+                        data = htmlEncode(data);
+                        data = data.replace(/ /g, '&nbsp;');
+                        data = data.replace(/\t/g, '&nbsp;&nbsp;&nbsp;');
+                        data = data.replace(/(?:\r\n|\r|\n)/g, '<br/>');
+                        var content = tinymce.activeEditor.getContent({ format: 'text' });
+                        if (content === '\n') {
+                            tinymce.activeEditor.undoManager.transact(function () {
+                                tinymce.activeEditor.setContent(data);
+                            });
+                        }
+                        else {
+                            if (!content.endsWith('\n'))
+                                data = '<br>' + data;
+                            tinymce.activeEditor.undoManager.transact(function () {
+                                tinymce.activeEditor.dom.add(tinymce.activeEditor.getBody(), 'span', {}, data);
+                            });
+                        }
 
-                            //tinymce.activeEditor.insertContent(data);
-                        });
-                });
+                        //tinymce.activeEditor.insertContent(data);
+                    });
+            });
         }
 
         function copyFormatted() {
@@ -1348,7 +1347,7 @@
         function closeable(all) {
             if (!$closeWindow) {
                 if (_colorDialog && !_colorDialog.closed) {
-                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    dialog.showMessageBox({
                         type: 'error',
                         title: 'Color picker open',
                         message: 'You must close the color picker dialog before you can close editor.',

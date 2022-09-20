@@ -558,14 +558,13 @@
 
         //#region MXP display hooks
         function doLink(url) {
-            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                {
-                    type: 'warning',
-                    title: 'Open?',
-                    message: 'Open \'' + url + '\'?',
-                    buttons: ['Yes', 'No'],
-                    defaultId: 1
-                }) === 0)
+            if (dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Open?',
+                message: 'Open \'' + url + '\'?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1
+            }) === 0)
                 shell.openExternal(encodeURI(url));
             setTimeout(() => {
                 if (client.options.CommandonClick)
@@ -577,14 +576,13 @@
         function doMXPLink(el, url) {
             if (url.startsWith('OoMUD://') || url.startsWith('jiMUD://') || url.startsWith('client://'))
                 doMXPSend(0, el, url.substring(8));
-            else if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                {
-                    type: 'warning',
-                    title: 'Open?',
-                    message: 'Open \'' + url + '\'?',
-                    buttons: ['Yes', 'No'],
-                    defaultId: 1
-                }) === 0)
+            else if (dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Open?',
+                message: 'Open \'' + url + '\'?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1
+            }) === 0)
                 shell.openExternal(encodeURI(url.replace('&text;', el.textContent)));
             setTimeout(() => {
                 if (client.options.CommandonClick)
@@ -969,7 +967,7 @@
                     document.getElementById('Progress').close();
                 updateProgress(-1);
                 client.error(err);
-                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                dialog.showMessageBox({
                     type: 'error',
                     title: 'Import error',
                     message: err || 'Error importing or exporting data.'
@@ -984,7 +982,7 @@
                 if (document.getElementById('Progress').open)
                     document.getElementById('Progress').close();
                 updateProgress(-1);
-                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                dialog.showMessageBox({
                     type: 'error',
                     title: 'Aborted',
                     message: err || 'Aborted importing or exporting data.'
@@ -1080,7 +1078,7 @@
                     if (e.srcElement.nodeName === 'IMG') {
                         c.append(new MenuItem({
                             label: 'Save image as...', click: () => {
-                                ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
+                                dialog.showSaveDialog({
                                     title: 'Save image as...',
                                     defaultPath: path.basename(e.srcElement.src),
                                     filters: [
@@ -1103,7 +1101,7 @@
                                         context.drawImage(base_image, 0, 0);
                                         require('fs').writeFile(results.filePath, nativeImage.createFromDataURL(canvas.toDataURL('image/png')).toPNG(), err => {
                                             if (err)
-                                                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                                                dialog.showMessageBox({
                                                     type: 'error',
                                                     title: 'Error generating',
                                                     message: 'Could not save image'
@@ -3711,14 +3709,13 @@
                         client.loadProfile(profile);
                         break;
                     case 2: //ask
-                        choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                            {
-                                type: 'question',
-                                title: `Profile '${profile}' changed`,
-                                message: `Profile '${profile}' changed, what do you want to do?`,
-                                buttons: ['Nothing', 'Reload'],
-                                defaultId: 1
-                            });
+                        choice = dialog.showMessageBoxSync({
+                            type: 'question',
+                            title: `Profile '${profile}' changed`,
+                            message: `Profile '${profile}' changed, what do you want to do?`,
+                            buttons: ['Nothing', 'Reload'],
+                            defaultId: 1
+                        });
                         if (choice === 1)
                             client.loadProfile(profile);
                         break;
@@ -3736,14 +3733,13 @@
                             client.loadProfile(profile);
                             break;
                         case 2: //ask
-                            choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                                {
-                                    type: 'question',
-                                    title: `Profile '${profile}' added`,
-                                    message: `Profile '${profile}' added, what do you want to do?`,
-                                    buttons: ['Nothing', 'Load'],
-                                    defaultId: 1
-                                });
+                            choice = dialog.showMessageBoxSync({
+                                type: 'question',
+                                title: `Profile '${profile}' added`,
+                                message: `Profile '${profile}' added, what do you want to do?`,
+                                buttons: ['Nothing', 'Load'],
+                                defaultId: 1
+                            });
                             if (choice === 1)
                                 client.loadProfile(profile);
                             break;
@@ -3761,14 +3757,13 @@
                             client.removeProfile(profile);
                             break;
                         case 2: //ask
-                            choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                                {
-                                    type: 'question',
-                                    title: `Profile '${profile}' deleted`,
-                                    message: `Profile '${profile}' deleted, what do you want to do?`,
-                                    buttons: ['Nothing', 'Remove'],
-                                    defaultId: 1
-                                });
+                            choice = dialog.showMessageBoxSync({
+                                type: 'question',
+                                title: `Profile '${profile}' deleted`,
+                                message: `Profile '${profile}' deleted, what do you want to do?`,
+                                buttons: ['Nothing', 'Remove'],
+                                defaultId: 1
+                            });
                             if (choice === 1)
                                 client.removeProfile(profile);
                             break;
@@ -3872,14 +3867,13 @@
                             closeWindow = false;
                             return closeWindow;
                         }
-                        choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                            {
-                                type: 'warning',
-                                title: 'Connected',
-                                message: 'Closing will disconnect you from the mud, close anyway?',
-                                buttons: ['Yes', 'No', 'Yes to all', 'No to all', 'Never ask again for all'],
-                                defaultId: 1
-                            });
+                        choice = dialog.showMessageBoxSync({
+                            type: 'warning',
+                            title: 'Connected',
+                            message: 'Closing will disconnect you from the mud, close anyway?',
+                            buttons: ['Yes', 'No', 'Yes to all', 'No to all', 'Never ask again for all'],
+                            defaultId: 1
+                        });
                         if (choice === 2) { //yes to all
                             closeWindow = true;
                             window.setGlobal('closeAll', true);
@@ -3903,14 +3897,13 @@
                             closeWindow = true;
                     }
                     else if ((!all || (_clients.clients === 1 && _clients.windows === 1)) && client.options.askonclose) {
-                        choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                            {
-                                type: 'warning',
-                                title: 'Connected',
-                                message: 'Closing will disconnect you from the mud, close anyway?',
-                                buttons: ['Yes', 'No', 'Never ask again'],
-                                defaultId: 1
-                            });
+                        choice = dialog.showMessageBoxSync({
+                            type: 'warning',
+                            title: 'Connected',
+                            message: 'Closing will disconnect you from the mud, close anyway?',
+                            buttons: ['Yes', 'No', 'Never ask again'],
+                            defaultId: 1
+                        });
                         if (choice === 2) {
                             client.options.askonclose = false;
                             client.saveOptions();
@@ -3935,8 +3928,7 @@
                     setTimeout(() => {
                         if (client.options.askonchildren) {
                             if (ipcRenderer.sendSync('window-info', 'child-open', 'Code Editor')) {
-                                choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                                    {
+                                choice = dialog.showMessageBoxSync({
                                         type: 'warning',
                                         title: 'Code editor open',
                                         message: 'Code editor open, will lose any unsaved work, close anyways?',
@@ -3953,8 +3945,7 @@
                                 }
                             }
                         }
-                        choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                            {
+                        choice = dialog.showMessageBoxSync({
                                 type: 'warning',
                                 title: 'Connected',
                                 message: 'Closing will disconnect you from the mud, close anyway?',
@@ -3989,8 +3980,7 @@
                     evt.returnValue = false;
                     setTimeout(() => {
                         if (ipcRenderer.sendSync('window-info', 'child-close', 'Code Editor')) {
-                            choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                                {
+                            choice = dialog.showMessageBoxSync({
                                     type: 'warning',
                                     title: 'Code editor open',
                                     message: 'Code editor open, will lose any unsaved work, close anyways?',

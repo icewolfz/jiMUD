@@ -20,7 +20,7 @@
         if (window.module) module = window.module;
         //spell-checker:ignore hellip vscroll hscroll ungroup crosshairs haspopup tablist tabpanel labelledby
         const { RoomDetails, Mapper, ImportType } = require('./js/mapper');
-        const { nativeImage, ipcRenderer } = require('electron');
+        const { nativeImage } = require('electron');
         const remote = require('@electron/remote');
         const { Menu, MenuItem } = remote;
         const { Settings } = require('./js/settings');
@@ -227,7 +227,7 @@
         function closeable(all) {
             if (!$closeWindow) {
                 if (_progress && _progress.dialog && !progress.dialog.closed) {
-                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    dialog.showMessageBox({
                         type: 'error',
                         title: 'Progress dialog open',
                         message: 'You must close the progress dialog before you can close mapper.',
@@ -927,7 +927,7 @@
 
         function exportImage() {
             clearButton('#export');
-            ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
+            dialog.showSaveDialog({
                 title: 'Export image',
                 defaultPath: 'jiMUD' + (!mapper.SplitArea ? '' : '.' + mapper.active.area) + '.png',
                 filters: [
@@ -953,7 +953,7 @@
                     if (_progress.dialog)
                         _progress.dialog.close();
                     window.setProgressBar(-1);
-                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    dialog.showMessageBox({
                         type: 'error',
                         title: 'Error generating',
                         message: 'Could not generate map'
@@ -996,7 +996,7 @@
                 if (canvas && canvas.getContext)
                     ctx = canvas.getContext('2d');
                 else {
-                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    dialog.showMessageBox({
                         type: 'error',
                         title: 'Error generating',
                         message: 'Could not generate map'
@@ -1039,7 +1039,7 @@
                 mapper.DrawLegend(ctx, rectWidth - 185, -10, 1);
                 fs.writeFile(file, nativeImage.createFromDataURL(canvas.toDataURL('image/png')).toPNG(), err => {
                     if (err)
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'Error generating',
                             message: 'Could not save map'
@@ -1053,7 +1053,7 @@
 
         function exportCurrentImage() {
             clearButton('#export');
-            ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
+            dialog.showSaveDialog({
                 title: 'Export clipped view',
                 defaultPath: 'jiMUD.clipped.png',
                 filters: [
@@ -1081,7 +1081,7 @@
             mapper.draw(newCanvas, context, true, () => {
                 fs.writeFile(file, nativeImage.createFromDataURL(newCanvas.toDataURL('image/png')).toPNG(), err => {
                     if (err)
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'Error generating',
                             message: 'Could not save map'
@@ -1095,7 +1095,7 @@
 
         function exportCurrentArea() {
             clearButton('#export');
-            ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
+            dialog.showSaveDialog({
                 title: 'Export current area',
                 defaultPath: 'jiMUD.' + mapper.active.area + '.txt',
                 filters: [
@@ -1116,7 +1116,7 @@
 
         function exportAll() {
             clearButton('#export');
-            ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
+            dialog.showSaveDialog({
                 title: 'Export all',
                 defaultPath: 'jiMUD.txt',
                 filters: [
@@ -1137,69 +1137,67 @@
 
         function importMerge() {
             clearButton('#export');
-            ipcRenderer.invoke('show-dialog', 'showOpenDialog',
-                {
-                    filters: [
-                        { name: 'Text files (*.txt)', extensions: ['txt'] },
-                        { name: 'All files (*.*)', extensions: ['*'] },
-                    ]
-                }).then(result => {
-                    if (result.filePaths === undefined || result.filePaths.length === 0) {
-                        return;
-                    }
-                    for (var f = 0, fl = result.filePaths.length; f < fl; f++)
-                        fs.readFile(result.filePaths[f], (err, data) => {
-                            if (err) throw err;
-                            data = JSON.parse(data);
-                            if (!data) {
-                                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
-                                    type: 'error',
-                                    title: 'Invalid map data',
-                                    message: 'Invalid map data unable to process.'
-                                });
-                                return;
-                            }
-                            window.setProgressBar(0);
-                            _progress = { action: 0, data: data, type: ImportType.Merge };
-                            initProgressDialog({ title: 'Importing map data&hellip;', percent: 0, noClose: true });
-                        });
-                });
+            dialog.showOpenDialog({
+                filters: [
+                    { name: 'Text files (*.txt)', extensions: ['txt'] },
+                    { name: 'All files (*.*)', extensions: ['*'] },
+                ]
+            }).then(result => {
+                if (result.filePaths === undefined || result.filePaths.length === 0) {
+                    return;
+                }
+                for (var f = 0, fl = result.filePaths.length; f < fl; f++)
+                    fs.readFile(result.filePaths[f], (err, data) => {
+                        if (err) throw err;
+                        data = JSON.parse(data);
+                        if (!data) {
+                            dialog.showMessageBox({
+                                type: 'error',
+                                title: 'Invalid map data',
+                                message: 'Invalid map data unable to process.'
+                            });
+                            return;
+                        }
+                        window.setProgressBar(0);
+                        _progress = { action: 0, data: data, type: ImportType.Merge };
+                        initProgressDialog({ title: 'Importing map data&hellip;', percent: 0, noClose: true });
+                    });
+            });
         }
 
         function importReplace() {
             clearButton('#export');
-            ipcRenderer.invoke('show-dialog', 'showOpenDialog',
-                {
-                    filters: [
-                        { name: 'Text files (*.txt)', extensions: ['txt'] },
-                        { name: 'All files (*.*)', extensions: ['*'] },
-                    ]
-                }).then(result => {
-                    if (result.filePaths === undefined || result.filePaths.length === 0) {
-                        return;
-                    }
-                    for (var f = 0, fl = result.filePaths.length; f < fl; f++)
-                        fs.readFile(result.filePaths[f], (err, data) => {
-                            if (err) throw err;
-                            data = JSON.parse(data);
-                            if (!data) {
-                                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
-                                    type: 'error',
-                                    title: 'Invalid map data',
-                                    message: 'Invalid map data unable to process.'
-                                });
-                                return;
-                            }
-                            window.setProgressBar(0);
-                            _progress = { action: 0, data: data, type: ImportType.Replace };
-                            initProgressDialog({ title: 'Importing map data&hellip;', percent: 0, noClose: true });
-                        });
-                });
+            dialog.showOpenDialog({
+                filters: [
+                    { name: 'Text files (*.txt)', extensions: ['txt'] },
+                    { name: 'All files (*.*)', extensions: ['*'] },
+                ]
+            }).then(result => {
+                if (result.filePaths === undefined || result.filePaths.length === 0) {
+                    return;
+                }
+                for (var f = 0, fl = result.filePaths.length; f < fl; f++)
+                    fs.readFile(result.filePaths[f], (err, data) => {
+                        if (err) throw err;
+                        data = JSON.parse(data);
+                        if (!data) {
+                            dialog.showMessageBox({
+                                type: 'error',
+                                title: 'Invalid map data',
+                                message: 'Invalid map data unable to process.'
+                            });
+                            return;
+                        }
+                        window.setProgressBar(0);
+                        _progress = { action: 0, data: data, type: ImportType.Replace };
+                        initProgressDialog({ title: 'Importing map data&hellip;', percent: 0, noClose: true });
+                    });
+            });
         }
 
         function removeSelectedRoom() {
             clearButton('#remove');
-            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+            dialog.showMessageBox({
                 type: 'question',
                 title: 'Remove selected room',
                 message: 'Are you sure you want to remove selected room?',
@@ -1213,7 +1211,7 @@
 
         function removeCurrentRoom() {
             clearButton('#remove');
-            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+            dialog.showMessageBox({
                 type: 'question',
                 title: 'Remove current room',
                 message: 'Are you sure you want to remove current room?',
@@ -1227,7 +1225,7 @@
 
         function removeCurrentArea() {
             clearButton('#remove');
-            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+            dialog.showMessageBox({
                 type: 'question',
                 title: 'Remove ' + mapper.active.area,
                 message: 'Are you sure you want to remove all rooms from ' + mapper.active.area + '?',
@@ -1241,7 +1239,7 @@
 
         function removeAll() {
             clearButton('#remove');
-            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+            dialog.showMessageBox({
                 type: 'question',
                 title: 'Remove all',
                 message: 'Are you sure you want to remove all rooms?',
@@ -1255,7 +1253,7 @@
 
         function resetMap() {
             clearButton('#remove');
-            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+            dialog.showMessageBox({
                 type: 'question',
                 title: 'Reset map',
                 message: 'This will delete your map data file and recreate a fresh new one, do you want do delete your file?',

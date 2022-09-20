@@ -403,7 +403,7 @@
                     case 'mapper-memory':
                         _settings.mapper.memory = this.checked;
                         if (this.checked) {
-                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                            dialog.showMessageBox({
                                 type: 'warning',
                                 title: 'Warning',
                                 message: 'If client or OS crash, all in memory data will be lost and not saved to disk'
@@ -638,7 +638,7 @@
                 updateScheme($(this).index());
             });
             $('#btn-logPath').on('click', () => {
-                ipcRenderer.invoke('show-dialog', 'showOpenDialog', {
+                dialog.showOpenDialog({
                     defaultPath: parseTemplate($('#logPath').val()),
                     properties: ['openDirectory', 'createDirectory']
                 }).then(result => {
@@ -893,9 +893,9 @@
         }
 
         function resetWindows() {
+            //TODO make reset windows work, will need a ipc to reset global states, and the per window states and update current window to new state
             /*
-            var choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                    {
+            var choice = dialog.showMessageBoxSync({
                         type: 'warning',
                         title: 'Reset windows',
                         message: 'Windows are stored separately, once reset positions can not be restored, reset?',
@@ -1259,7 +1259,7 @@
 
         // eslint-disable-next-line no-unused-vars
         function backup() {
-            var file = ipcRenderer.sendSync('show-dialog-sync', 'showSaveDialog', {
+            var file = dialog.showSaveDialogSync({
                 title: 'Save as...',
                 defaultPath: path.join(parseTemplate('{documents}'), 'jiMUD-data.zip'),
                 filters: [

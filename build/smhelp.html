@@ -17,7 +17,6 @@
     <script src="../lib/bootstrap-select.min.js"></script>
     <script type="text/javascript">
         if (window.module) module = window.module;
-        const { ipcRenderer } = require('electron');
         var _history = [];
         var _current = 0;
         $(document).ready(function () {
@@ -36,7 +35,7 @@
                     inputMenu = [
                         { role: 'selectAll' }
                     ];
-                ipcRenderer.invoke('show-context', inputMenu);
+                window.showContext(inputMenu);
             });
             window.addEventListener('hashchange', e => {
                 loadHelp(window.location.hash);

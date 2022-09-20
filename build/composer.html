@@ -168,48 +168,47 @@
         }
 
         function appendFile() {
-            ipcRenderer.invoke('show-dialog', 'showOpenDialog',
-                {
-                    filters: [
-                        { name: 'Text files (*.txt)', extensions: ['txt'] },
-                        { name: 'LPC files (*.c, *.h, *.o)', extensions: ['c', 'h', 'o'] },
-                        { name: 'All files (*.*)', extensions: ['*'] },
-                    ]
-                }).then(result => {
-                    if (result.filePaths === undefined || result.filePaths.length === 0) {
-                        return;
-                    }
-                    for (var f = 0, fl = result.filePaths.length; f < fl; f++)
-                        fs.readFile(result.filePaths[f], 'utf8', (err, data) => {
-                            if (err) {
-                                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
-                                    type: 'error',
-                                    title: 'Error importing file',
-                                    message: err
-                                });
-                                return;
-                            }
-                            data = htmlEncode(data);
-                            data = data.replace(/ /g, '&nbsp;');
-                            data = data.replace(/\t/g, '&nbsp;&nbsp;&nbsp;');
-                            data = data.replace(/(?:\r\n|\r|\n)/g, '<br/>');
-                            var content = tinymce.activeEditor.getContent({ format: 'text' });
-                            if (content === '\n') {
-                                tinymce.activeEditor.undoManager.transact(function () {
-                                    tinymce.activeEditor.setContent(data);
-                                });
-                            }
-                            else {
-                                if (!content.endsWith('\n'))
-                                    data = '<br>' + data;
-                                tinymce.activeEditor.undoManager.transact(function () {
-                                    tinymce.activeEditor.dom.add(tinymce.activeEditor.getBody(), 'span', {}, data);
-                                });
-                            }
+            dialog.showOpenDialog({
+                filters: [
+                    { name: 'Text files (*.txt)', extensions: ['txt'] },
+                    { name: 'LPC files (*.c, *.h, *.o)', extensions: ['c', 'h', 'o'] },
+                    { name: 'All files (*.*)', extensions: ['*'] },
+                ]
+            }).then(result => {
+                if (result.filePaths === undefined || result.filePaths.length === 0) {
+                    return;
+                }
+                for (var f = 0, fl = result.filePaths.length; f < fl; f++)
+                    fs.readFile(result.filePaths[f], 'utf8', (err, data) => {
+                        if (err) {
+                            dialog.showMessageBox({
+                                type: 'error',
+                                title: 'Error importing file',
+                                message: err
+                            });
+                            return;
+                        }
+                        data = htmlEncode(data);
+                        data = data.replace(/ /g, '&nbsp;');
+                        data = data.replace(/\t/g, '&nbsp;&nbsp;&nbsp;');
+                        data = data.replace(/(?:\r\n|\r|\n)/g, '<br/>');
+                        var content = tinymce.activeEditor.getContent({ format: 'text' });
+                        if (content === '\n') {
+                            tinymce.activeEditor.undoManager.transact(function () {
+                                tinymce.activeEditor.setContent(data);
+                            });
+                        }
+                        else {
+                            if (!content.endsWith('\n'))
+                                data = '<br>' + data;
+                            tinymce.activeEditor.undoManager.transact(function () {
+                                tinymce.activeEditor.dom.add(tinymce.activeEditor.getBody(), 'span', {}, data);
+                            });
+                        }
 
-                            //tinymce.activeEditor.insertContent(data);
-                        });
-                });
+                        //tinymce.activeEditor.insertContent(data);
+                    });
+            });
         }
 
         function buildHTMLStack(els) {
@@ -307,7 +306,7 @@
             var codes = [];
             var color, d, dl, rgb;
             if (options.enableDebug)
-                ipcRenderer.send('debug', 'Advanced Editor Get Raw HTML: ' + tinymce.activeEditor.getContent({ format: 'raw' }));
+                window.opener.client.debug('debug', 'Advanced Editor Get Raw HTML: ' + tinymce.activeEditor.getContent({ format: 'raw' }));
             for (d = data.length - 1; d >= 0; d--) {
                 if (!data[d].startsWith('"') && data[d] != 'BR')
                     data.pop();
@@ -494,7 +493,7 @@
             var codes = [];
             var color, d, dl, rgb;
             if (options.enableDebug)
-                ipcRenderer.send('debug', 'Advanced Editor Get Raw HTML: ' + tinymce.activeEditor.getContent({ format: 'raw' }));
+                window.opener.client.debug('Advanced Editor Get Raw HTML: ' + tinymce.activeEditor.getContent({ format: 'raw' }));
             for (d = data.length - 1; d >= 0; d--) {
                 if (!data[d].startsWith('"') && data[d] != 'BR')
                     data.pop();
@@ -915,7 +914,7 @@
             if (to.length === 0) {
                 p.addClass('has-error');
                 p.addClass('has-feedback');
-                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                dialog.showMessageBox({
                     type: 'error',
                     title: 'No recipient',
                     message: 'Must supply at least one recipient'
@@ -948,7 +947,7 @@
                 var p = $('#to-form');
                 p.addClass('has-error');
                 p.addClass('has-feedback');
-                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                dialog.showMessageBox({
                     type: 'error',
                     title: 'No recipient',
                     message: 'Must supply at least one recipient'
@@ -993,7 +992,7 @@
             });
             mail.on('letter-sent', (to) => {
                 if (!to || to.length === 0) {
-                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    dialog.showMessageBox({
                         type: 'error',
                         title: 'No recipients',
                         message: 'No recipients found.'
@@ -1009,14 +1008,14 @@
             mail.on('error', (err) => {
                 switch (err) {
                     case MailStatus.NO_RECIPIENTS:
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'No recipients',
                             message: 'No recipients found.'
                         });
                         break;
                     default:
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'Error sending',
                             message: 'Error sending mail.'
@@ -1351,14 +1350,13 @@
             if (!closeWindow && draft && !ask) {
                 evt.returnValue = false;
                 setTimeout(() => {
-                    var choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                        {
-                            type: 'warning',
-                            title: 'Unsaved',
-                            message: 'Save as draft?',
-                            buttons: ['Yes', 'No', 'Alway', 'Never ask again'],
-                            defaultId: 1
-                        });
+                    var choice = dialog.showMessageBoxSync({
+                        type: 'warning',
+                        title: 'Unsaved',
+                        message: 'Save as draft?',
+                        buttons: ['Yes', 'No', 'Alway', 'Never ask again'],
+                        defaultId: 1
+                    });
                     if (choice === 0 || choice === 2) {
                         if (choice === 2) {
                             createOptions();

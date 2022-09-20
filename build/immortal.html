@@ -1242,21 +1242,21 @@
                 if (error && error.code) {
                     switch (error.code) {
                         case IEDError.USER_DENIED:
-                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                            dialog.showMessageBox({
                                 type: 'error',
                                 title: 'Permission denied',
                                 message: 'Permission denied'
                             });
                             break;
                         case IEDError.RESET:
-                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                            dialog.showMessageBox({
                                 type: 'error',
                                 title: 'Reset',
                                 message: 'Server reset: ' + error.msg
                             });
                             break;
                         case IEDError.USERRESET:
-                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                            dialog.showMessageBox({
                                 type: 'error',
                                 title: 'Reset',
                                 message: error.msg
@@ -1265,13 +1265,13 @@
                         case IEDError.CMD_EXIST:
                             if (error && !error.tag.startsWith(_ied.prefix + 'mkdirIgnore') && !error.tag.startsWith(_ied.prefix + 'mkdirPIgnore')) {
                                 if (error.path && error.file)
-                                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                                    dialog.showMessageBox({
                                         type: 'error',
                                         title: 'Already exist',
                                         message: `File or directory already exist: '${error.path}/${error.file}`
                                     });
                                 else
-                                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                                    dialog.showMessageBox({
                                         type: 'error',
                                         title: 'Already exist',
                                         message: error.msg
@@ -1279,28 +1279,28 @@
                             }
                             break;
                         case IEDError.CMD_DIRECTORY:
-                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                            dialog.showMessageBox({
                                 type: 'error',
                                 title: 'Is a directory',
                                 message: `File is a directory: '${error.path}/${error.file}`
                             });
                             break;
                         case IEDError.CMD_NOEXIST:
-                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                            dialog.showMessageBox({
                                 type: 'error',
                                 title: 'Does not exist',
                                 message: `File or directory does not exist: '${error.path}/${error.file}`
                             });
                             break;
                         case IEDError.CMD_FILE:
-                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                            dialog.showMessageBox({
                                 type: 'error',
                                 title: 'Not a directory',
                                 message: `File not a directory: '${error.path}/${error.file}`
                             });
                             break;
                         case IEDError.DIR_CANTREAD:
-                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                            dialog.showMessageBox({
                                 type: 'error',
                                 title: 'Can not read',
                                 message: 'Can not read or permission denied'
@@ -1515,7 +1515,7 @@
                     }
                     else {
                         logMessage(`Failed to delete: ${obj.path}/${obj.file}`);
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'Could not delete',
                             message: 'Could not delete: ' + obj.path + '/' + obj.file,
@@ -1551,7 +1551,7 @@
                     }
                     else {
                         logMessage(`Failed to rename: ${obj.path}/${obj.file}`);
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'Could not rename',
                             message: 'Could not rename: ' + obj.file,
@@ -1590,7 +1590,7 @@
                     }
                     else {
                         logMessage(`Failed to create directory: ${obj.path}`);
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'Could not create directory',
                             message: 'Could not create: ' + path.basename(obj.path),
@@ -1617,7 +1617,7 @@
                     }
                     else {
                         logMessage(`Failed to remove directory: ${obj.path}`);
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'Could not remove directory',
                             message: 'Could not remove: ' + path.basename(obj.path),
@@ -3037,7 +3037,7 @@
         function closeable(all) {
             if (!$closeWindow) {
                 if (_prefs && !_prefs.closed) {
-                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    dialog.showMessageBox({
                         type: 'error',
                         title: 'Preferences dialog open',
                         message: 'You must close the Preferences dialog before you can close immortal tools.',
@@ -3223,7 +3223,7 @@
 
         function deleteRemote() {
             var data = remoteTable.rows({ selected: true }).data();
-            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+            dialog.showMessageBox({
                 type: 'warning',
                 title: 'Delete?',
                 message: data.length > 1 ? 'Delete remote?' : 'Delete remote: ' + data[0].name + '?',
@@ -3277,7 +3277,7 @@
         function newFolderOk() {
             var n = $('#newFolder-name').val();
             if (!n || n.length === 0) {
-                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                dialog.showMessageBox({
                     type: 'error',
                     title: 'Name required',
                     message: 'You must supply a valid name!'
@@ -3285,7 +3285,7 @@
                 return;
             }
             if (IED.invalidFile(n)) {
-                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                dialog.showMessageBox({
                     type: 'error',
                     title: 'Invalid folder name',
                     message: 'The name you supplied contains invalid characters!'
@@ -3295,7 +3295,7 @@
             if ($('#newFolder').data('type') === 'local') {
                 if (_local[n]) {
                     n = getNewName(n, _local);
-                    if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                    if (dialog.showMessageBoxSync({
                         type: 'warning',
                         title: 'File or folder exist?',
                         message: `Do you want to rename to "${n}"?`,
@@ -3312,7 +3312,7 @@
             else if ($('#newFolder').data('type') === 'remote') {
                 if (_remote[n]) {
                     n = getNewName(n, _remote);
-                    if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                    if (dialog.showMessageBoxSync({
                         type: 'warning',
                         title: 'File or folder exist?',
                         message: `Do you want to rename to "${n}"?`,
@@ -3357,7 +3357,7 @@
                 }
                 else if (editor.val() != editor.original) {
                     var n = getNewName(editor.val(), list);
-                    if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                    if (dialog.showMessageBoxSync({
                         type: 'warning',
                         title: 'Rename file?',
                         message: `Do you want to rename "${editor.original}" to "${n}"?`,
@@ -3425,7 +3425,7 @@
                     menu.push({ type: 'separator' });
                     menu.push({ label: 'Inspect', click: `ipcRenderer.send('inspect', ${e.pageX}, ${e.pageY})` });
                 }
-                ipcRenderer.invoke('show-context', menu);
+                window.showContext(menu);
             })
             list.on('contextmenu', 'tr', editor.context);
             el.append(editor);

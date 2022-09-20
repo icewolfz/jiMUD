@@ -933,7 +933,7 @@
             $('#bottom-loading').css('display', 'none');
             if (!_currentLetter) return;
             if (!letter) {
-                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                dialog.showMessageBox({
                     type: 'error',
                     title: 'Letter not found',
                     message: 'Letter could not be found.'

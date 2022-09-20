@@ -8,17 +8,22 @@ import { PropertyGrid } from '../propertygrid';
 import { EditorType } from '../value.editors';
 import { DataGrid } from '../datagrid';
 import { copy, formatString, isFileSync, capitalize, Cardinal, pinkfishToHTML, stripPinkfish, consolidate, parseTemplate, initEditDropdown, capitalizePinkfish, stripQuotes } from '../library';
-const { clipboard, ipcRenderer } = require('electron');
+const { clipboard } = require('electron');
 const path = require('path');
 const fs = require('fs-extra');
 import { Wizard, WizardPage, WizardDataGridPage } from '../wizard';
 import { MousePosition, RoomExits, shiftType, FileBrowseValueEditor, RoomExit, flipType } from './virtual.editor';
 
+//TODO need to redo the send-editor calls to use editor window hooks instead, need to check if editor window open and open/send the data
+
 declare global {
     interface Window {
         $roomImg: HTMLImageElement;
         $roomImgLoaded: boolean;
+        showContext: any;
     }
+    
+    let dialog: any;
 }
 
 interface AreaDesignerOptions extends EditorOptions {
@@ -1513,7 +1518,7 @@ export class AreaDesigner extends EditorBase {
                 inputMenu = [
                     { role: 'selectAll' }
                 ];
-            ipcRenderer.invoke('show-context', inputMenu);
+            window.showContext(inputMenu);
         });
         this.$roomPreview.short = document.createElement('div');
         this.$roomPreview.short.classList.add('room-short');
@@ -4813,14 +4818,13 @@ export class AreaDesigner extends EditorBase {
             this.changed = true;
         });
         this.$propertiesEditor.monsterGrid.on('delete', (e) => {
-            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                {
-                    type: 'warning',
-                    title: 'Delete',
-                    message: 'Delete selected base monster' + (this.$propertiesEditor.monsterGrid.selectedCount > 1 ? 's' : '') + '?',
-                    buttons: ['Yes', 'No'],
-                    defaultId: 1
-                })
+            if (dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Delete',
+                message: 'Delete selected base monster' + (this.$propertiesEditor.monsterGrid.selectedCount > 1 ? 's' : '') + '?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1
+            })
                 === 1)
                 e.preventDefault = true;
             else {
@@ -5347,14 +5351,13 @@ export class AreaDesigner extends EditorBase {
             this.changed = true;
         });
         this.$propertiesEditor.roomGrid.on('delete', (e) => {
-            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                {
-                    type: 'warning',
-                    title: 'Delete',
-                    message: 'Delete selected base room' + (this.$propertiesEditor.roomGrid.selectedCount > 1 ? 's' : '') + '?',
-                    buttons: ['Yes', 'No'],
-                    defaultId: 1
-                })
+            if (dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Delete',
+                message: 'Delete selected base room' + (this.$propertiesEditor.roomGrid.selectedCount > 1 ? 's' : '') + '?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1
+            })
                 === 1)
                 e.preventDefault = true;
             else {
@@ -5751,14 +5754,13 @@ export class AreaDesigner extends EditorBase {
             }
         ];
         this.$monsterGrid.on('delete', (e) => {
-            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                {
-                    type: 'warning',
-                    title: 'Delete',
-                    message: 'Delete monster' + (this.$monsterGrid.selectedCount > 1 ? 's' : '') + '?',
-                    buttons: ['Yes', 'No'],
-                    defaultId: 1
-                })
+            if (dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Delete',
+                message: 'Delete monster' + (this.$monsterGrid.selectedCount > 1 ? 's' : '') + '?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1
+            })
                 === 1)
                 e.preventDefault = true;
             else {
@@ -7867,14 +7869,13 @@ export class AreaDesigner extends EditorBase {
             }
         ];
         this.$objectGrid.on('delete', (e) => {
-            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                {
-                    type: 'warning',
-                    title: 'Delete',
-                    message: 'Delete object' + (this.$objectGrid.selectedCount > 1 ? 's' : '') + '?',
-                    buttons: ['Yes', 'No'],
-                    defaultId: 1
-                })
+            if (dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Delete',
+                message: 'Delete object' + (this.$objectGrid.selectedCount > 1 ? 's' : '') + '?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1
+            })
                 === 1)
                 e.preventDefault = true;
             else {
@@ -14114,13 +14115,13 @@ export class AreaDesigner extends EditorBase {
             }
         }
         if (!noUndo) {
-            this.startUndoGroup();            
+            this.startUndoGroup();
             this.pushUndo(undoAction.delete, undoType.room, dRooms);
         }
         let dl = dRooms.length;
-        while(dl--)
+        while (dl--)
             if (dRooms[dl].exits)
-                this.deleteRoom(dRooms[dl], noUndo);     
+                this.deleteRoom(dRooms[dl], noUndo);
         this.$area.rooms = rooms;
         this.UpdateEditor(this.$selectedRooms);
         this.UpdatePreview(this.selectedFocusedRoom);
@@ -14155,7 +14156,7 @@ export class AreaDesigner extends EditorBase {
         Timer.end('Resize time');
         this.doUpdate(UpdateType.drawMap);
         this.changed = true;
-        if (!noUndo) {           
+        if (!noUndo) {
             this.pushUndo(undoAction.edit, undoType.resize, { width: width, height: height, depth: depth, shift: shift });
             this.stopUndoGroup();
         }

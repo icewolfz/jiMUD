@@ -32,14 +32,13 @@
 
         function closeable(all) {
             if (!_close) {
-                var choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                    {
-                        type: 'warning',
-                        title: 'Unclosable',
-                        message: 'Window is unclosable, close anyways?',
-                        buttons: ['Yes', 'No'],
-                        defaultId: 1
-                    });
+                var choice = dialog.showMessageBoxSync({
+                    type: 'warning',
+                    title: 'Unclosable',
+                    message: 'Window is unclosable, close anyways?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1
+                });
                 if (choice === 0) {
                     _close = true;
                     return true;
@@ -104,7 +103,7 @@
                     x -= tab.offset.x;
                     y -= tab.offset.y;
                 }
-                ipcRenderer.send('dock-client', tab.client, { x: x, y: y, pid: ipcRenderer.sendSync('get-pid')  });
+                ipcRenderer.send('dock-client', tab.client, { x: x, y: y, pid: ipcRenderer.sendSync('get-pid') });
             }
         });
         window.addEventListener('blur', e => {
@@ -546,7 +545,7 @@
                     ]
                 }
             ];
-            ipcRenderer.invoke('show-context', menuTemp, { x: Math.ceil(rect.right) + window.scrollX, y: Math.ceil(rect.top) + window.scrollY });
+            window.showContext(menuTemp, { x: Math.ceil(rect.right) + window.scrollX, y: Math.ceil(rect.top) + window.scrollY });
         }
         /*
  *   This content is licensed according to the W3C Software License at
@@ -1219,25 +1218,25 @@
         var connectionSettings = {};
         ipcRenderer.on('connection-settings', (event, options) => {
             connectionSettings.dev = options.dev;
-            if(options.dev)
-                ipcRenderer.send('update-title', {icon: 'fa fa-code'});
+            if (options.dev)
+                ipcRenderer.send('update-title', { icon: 'fa fa-code' });
             else
-                ipcRenderer.send('update-title', {icon: 'disconnected-icon'});
+                ipcRenderer.send('update-title', { icon: 'disconnected-icon' });
         });
 
         ipcRenderer.on('change-connection-settings', (event, options) => {
             connectionSettings.dev = options.dev;
-            if(options.dev)
-                ipcRenderer.send('update-title', {icon: 'text-disconnected-icon fa fa-code'});
+            if (options.dev)
+                ipcRenderer.send('update-title', { icon: 'text-disconnected-icon fa fa-code' });
             else
-                ipcRenderer.send('update-title', {icon: 'disconnected-icon'});
-        });     
-        
-        ipcRenderer.on('window-reloaded', event=> {
-            if(connectionSettings.dev)
-                ipcRenderer.send('update-title', {icon: 'text-disconnected-icon fa fa-code'});
+                ipcRenderer.send('update-title', { icon: 'disconnected-icon' });
+        });
+
+        ipcRenderer.on('window-reloaded', event => {
+            if (connectionSettings.dev)
+                ipcRenderer.send('update-title', { icon: 'text-disconnected-icon fa fa-code' });
             else
-                ipcRenderer.send('update-title', {icon: 'disconnected-icon'});
+                ipcRenderer.send('update-title', { icon: 'disconnected-icon' });
         });
     </script>
     <style>
@@ -1621,7 +1620,7 @@
                 var bounds = drag.getBoundingClientRect();
                 x -= Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth));
                 y -= Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight));
-                ipcRenderer.send('dock-client', _id, { x: x, y: y, pid: ipcRenderer.sendSync('get-pid')  });
+                ipcRenderer.send('dock-client', _id, { x: x, y: y, pid: ipcRenderer.sendSync('get-pid') });
             }
         });
 

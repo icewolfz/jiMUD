@@ -1,7 +1,6 @@
 //spellchecker:ignore datagrid
 import EventEmitter = require('events');
 import { DataGrid } from './datagrid';
-const { ipcRenderer } = require('electron');
 
 export interface WizardOptions {
     id: string;
@@ -231,15 +230,13 @@ export class WizardDataGridPage extends WizardPage {
         this.dataGrid.on('delete', (e) => {
             const ep = { preventDefault: false };
             this.emit('delete-prompt', ep);
-            if (!ep.preventDefault && ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                {
-                    type: 'warning',
-                    title: 'Delete',
-                    message: 'Delete selected?',
-                    buttons: ['Yes', 'No'],
-                    defaultId: 1
-                })
-                === 1)
+            if (!ep.preventDefault && dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Delete',
+                message: 'Delete selected?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1
+            }) === 1)
                 e.preventDefault = true;
             this.emit('delete', e);
         });

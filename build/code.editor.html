@@ -2269,30 +2269,29 @@
                         {
                             label: '&Local...',
                             click: () => {
-                                ipcRenderer.invoke('show-dialog', 'showOpenDialog',
-                                    {
-                                        filters: $fileFilters,
-                                        properties: ['openFile'],
-                                        defaultPath: (manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')
-                                    }).then(result => {
-                                        if (result.filePaths === undefined || result.filePaths.length === 0) {
-                                            return;
-                                        }
-                                        var pane = manager.panes.indexOf(manager.activePane);
-                                        if (!manager.active.editor.diff)
-                                            manager.active.editor.deactivate(window.$editors[pane]);
-                                        if (manager.active.diffFile)
-                                            stopWatchFile(manager.active.diffFile);
-                                        manager.active.editor.diff = manager.active.editor.read(result.filePaths[0]);
-                                        manager.active.diffFile = result.filePaths[0];
-                                        watchFile(manager.active.diffFile);
-                                        window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
-                                        toggleDiffNav(true);
-                                        window.$editors[pane]._domElement.style.display = '';
-                                        manager.active.editor.activate(window.$dEditors[pane]);
-                                        window.$dEditors[pane].layout();
-                                        doUpdate(2);
-                                    });
+                                dialog.showOpenDialog({
+                                    filters: $fileFilters,
+                                    properties: ['openFile'],
+                                    defaultPath: (manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')
+                                }).then(result => {
+                                    if (result.filePaths === undefined || result.filePaths.length === 0) {
+                                        return;
+                                    }
+                                    var pane = manager.panes.indexOf(manager.activePane);
+                                    if (!manager.active.editor.diff)
+                                        manager.active.editor.deactivate(window.$editors[pane]);
+                                    if (manager.active.diffFile)
+                                        stopWatchFile(manager.active.diffFile);
+                                    manager.active.editor.diff = manager.active.editor.read(result.filePaths[0]);
+                                    manager.active.diffFile = result.filePaths[0];
+                                    watchFile(manager.active.diffFile);
+                                    window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
+                                    toggleDiffNav(true);
+                                    window.$editors[pane]._domElement.style.display = '';
+                                    manager.active.editor.activate(window.$dEditors[pane]);
+                                    window.$dEditors[pane].layout();
+                                    doUpdate(2);
+                                });
                             },
                             enabled: false
                         },
@@ -2924,14 +2923,13 @@
             _editors[p].editor.watch(event, file, args);
             if (_editors[p] && _editors[p].diffFile === file) {
                 if (event === 'unlink') {
-                    choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                        {
-                            type: 'question',
-                            title: 'File deleted',
-                            message: path.basename(file) + ' has been deleted, clear diff?',
-                            buttons: ['Yes', 'No'],
-                            defaultId: 1
-                        });
+                    choice = dialog.showMessageBoxSync({
+                        type: 'question',
+                        title: 'File deleted',
+                        message: path.basename(file) + ' has been deleted, clear diff?',
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1
+                    });
                     //no
                     if (choice === 1) {
                         var pane = manager.panes.indexOf(_editors[p].pane);
@@ -2953,14 +2951,13 @@
                     }
                 }
                 else if (event !== 'raw') {
-                    choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                        {
-                            type: 'question',
-                            title: 'File changed',
-                            message: path.basename((file || p.editor.file) + ' has been changed, reload diff?'),
-                            buttons: ['Yes', 'No'],
-                            defaultId: 1
-                        });
+                    choice = dialog.showMessageBoxSync({
+                        type: 'question',
+                        title: 'File changed',
+                        message: path.basename((file || p.editor.file) + ' has been changed, reload diff?'),
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1
+                    });
                     //yes
                     if (choice === 0)
                         _editors[p].editor.diff = manager.active.editor.read(file);
@@ -3434,13 +3431,12 @@
                     if (connected)
                         _ied.getDir(p + data.row.file, true, 'remoteBrowse');
                     else
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox',
-                            {
-                                type: 'error',
-                                title: 'Must be logged into the mud',
-                                message: 'Remote browsing can only be done when connected to the mud',
-                                defaultId: 1
-                            });
+                        dialog.showMessageBox({
+                            type: 'error',
+                            title: 'Must be logged into the mud',
+                            message: 'Remote browsing can only be done when connected to the mud',
+                            defaultId: 1
+                        });
                 }
                 else {
                     $dialog.el.close();
@@ -3573,13 +3569,12 @@
         if (connected)
             _ied.getDir(options.remote, false, 'remoteBrowse');
         else
-            ipcRenderer.invoke('show-dialog', 'showMessageBox',
-                {
-                    type: 'error',
-                    title: 'Must be logged into the mud',
-                    message: 'Remote browsing can only be done when connected to the mud',
-                    defaultId: 1
-                });
+            dialog.showMessageBox({
+                type: 'error',
+                title: 'Must be logged into the mud',
+                message: 'Remote browsing can only be done when connected to the mud',
+                defaultId: 1
+            });
     }
 
     function showProgressDialog(data) {
@@ -3745,7 +3740,7 @@
             if (error && error.code) {
                 switch (error.code) {
                     case IEDError.USER_DENIED:
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'Permission denied',
                             message: 'Permission denied'
@@ -3755,7 +3750,7 @@
                     case IEDError.DL_NOTSTART:
                     case IEDError.DL_TOOMANY:
                     case IEDError.DL_INPROGRESS:
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'Download error',
                             message: `Download error for '${error.path}/${error.file}': ${error.msg}`
@@ -3767,7 +3762,7 @@
                     case IEDError.DL_USERABORT:
                     case IEDError.DL_INVALIDFILE:
                     case IEDError.DL_INVALIDPATH:
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'Download aborted',
                             message: `Download aborted for '${error.path}/${error.file}': ${error.msg}`
@@ -3775,7 +3770,7 @@
                         closeProgressDialog(error.tag);
                         break;
                     case IEDError.RESET:
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'Reset',
                             message: 'Server reset: ' + error.msg
@@ -3783,7 +3778,7 @@
                         closeProgressDialog(error.tag);
                         break;
                     case IEDError.USERRESET:
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'Reset',
                             message: error.msg
@@ -3791,7 +3786,7 @@
                         break;
                     case IEDError.UL_TOOMANY:
                     case IEDError.UL_INPROGRESS:
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'Upload error',
                             message: `Upload error for '${error.path}/${error.file}': ${error.msg}`
@@ -3808,7 +3803,7 @@
                     case IEDError.UL_INVALIDPATH:
                     case IEDError.UL_DENIED:
                     case IEDError.UL_FILE:
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'Upload aborted',
                             message: `Upload aborted for '${error.path}/${error.file}': ${error.msg}`
@@ -3816,7 +3811,7 @@
                         closeProgressDialog(error.tag);
                         break;
                     case IEDError.CMD_EXIST:
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'Already exist',
                             message: `File or directory already exist: '${error.path}/${error.file}`
@@ -3824,7 +3819,7 @@
                         closeProgressDialog(error.tag);
                         break;
                     case IEDError.CMD_DIRECTORY:
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'Is a directory',
                             message: `File is a directory: '${error.path}/${error.file}`
@@ -3832,7 +3827,7 @@
                         closeProgressDialog(error.tag);
                         break;
                     case IEDError.CMD_NOEXIST:
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'Does not exist',
                             message: `File or directory does not exist: '${error.path}/${error.file}`
@@ -3840,7 +3835,7 @@
                         closeProgressDialog(error.tag);
                         break;
                     case IEDError.CMD_FILE:
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'Not a directory',
                             message: `File not a directory: '${error.path}/${error.file}`
@@ -3851,7 +3846,7 @@
                         if (error.tag && error.tag === 'editor-dir:remoteBrowse')
                             _ied.getDir('.', false, 'remoteBrowse');
                         else {
-                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                            dialog.showMessageBox({
                                 type: 'error',
                                 title: 'Can not read',
                                 message: 'Can not read or permission denied'
@@ -4375,14 +4370,13 @@
         var e = 0, el = dialogs.length;
         for (; e < el; e++) {
             if (dialogs[e].open) {
-                if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                    {
-                        type: 'question',
-                        title: 'Open dialog',
-                        message: (dialogs[e].dataset.title || 'Dialog') + ' is open, exit?',
-                        buttons: ['Yes', 'No'],
-                        defaultId: 1
-                    }) === 1)
+                if (dialog.showMessageBoxSync({
+                    type: 'question',
+                    title: 'Open dialog',
+                    message: (dialogs[e].dataset.title || 'Dialog') + ' is open, exit?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1
+                }) === 1)
                     return;
             }
         }
@@ -4406,14 +4400,13 @@
                 var e = 0, el = dialogs.length;
                 for (; e < el; e++) {
                     if (dialogs[e].open) {
-                        if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                            {
-                                type: 'question',
-                                title: 'Open dialog',
-                                message: (dialogs[e].dataset.title || 'Dialog') + ' is open, exit?',
-                                buttons: ['Yes', 'No'],
-                                defaultId: 1
-                            }) === 1)
+                        if (dialog.showMessageBoxSync({
+                            type: 'question',
+                            title: 'Open dialog',
+                            message: (dialogs[e].dataset.title || 'Dialog') + ' is open, exit?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1
+                        }) === 1)
                             return 'no';
                     }
                 }
@@ -4611,7 +4604,7 @@
                 remote: document.getElementById('new-area-remote-path')
             };
             $('#btn-new-area-path').on('click', () => {
-                ipcRenderer.invoke('show-dialog', 'showOpenDialog', {
+                dialog.showOpenDialog({
                     defaultPath: $dialogs.area.path.value,
                     properties: ['openDirectory', 'createDirectory']
                 }).then(result => {
@@ -4765,7 +4758,7 @@
                 dialog: document.getElementById('new-virtual-area')
             };
             $('#btn-new-virtual-area-path').on('click', () => {
-                ipcRenderer.invoke('show-dialog', 'showOpenDialog', {
+                dialog.showOpenDialog({
                     defaultPath: $('#new-virtual-area-path').val(),
                     properties: ['openDirectory', 'createDirectory']
                 }).then(result => {
@@ -7656,13 +7649,12 @@
             return;
         }
         if (!connected) {
-            ipcRenderer.invoke('show-dialog', 'showMessageBox',
-                {
-                    type: 'error',
-                    title: 'Must be logged into the mud',
-                    message: 'Must be connected to the mud to open a remote file',
-                    defaultId: 1
-                });
+            dialog.showMessageBox({
+                type: 'error',
+                title: 'Must be logged into the mud',
+                message: 'Must be connected to the mud to open a remote file',
+                defaultId: 1
+            });
             return;
         }
         if (remoteFile && remoteFile.length !== 0) {
@@ -7701,20 +7693,19 @@
             if (remoteEdit)
                 openRemote(remoteFile);
             else
-                ipcRenderer.invoke('show-dialog', 'showOpenDialog',
-                    {
-                        filters: $fileFilters,
-                        properties: ['multiSelections', 'openFile'],
-                        defaultPath: (manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')
-                    }).then(result => {
-                        if (result.filePaths === undefined || result.filePaths.length === 0) {
-                            return;
-                        }
-                        openFiles(result.filePaths.map((l) => { return { file: l }; }), true, dock);
-                    });
+                dialog.showOpenDialog({
+                    filters: $fileFilters,
+                    properties: ['multiSelections', 'openFile'],
+                    defaultPath: (manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')
+                }).then(result => {
+                    if (result.filePaths === undefined || result.filePaths.length === 0) {
+                        return;
+                    }
+                    openFiles(result.filePaths.map((l) => { return { file: l }; }), true, dock);
+                });
         }
         else if (isDirSync(file)) {
-            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+            dialog.showMessageBox({
                 type: 'info',
                 title: 'Can not open folders',
                 message: '\'' + file + '\' is a folder not a file.'
@@ -7742,7 +7733,7 @@
             if (typeof files[f].file !== 'string')
                 continue;
             if (!files[f].remoteEdit && isDirSync(files[f].file)) {
-                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                dialog.showMessageBox({
                     type: 'info',
                     title: 'Can not open folders',
                     message: '\'' + files[f].file + '\' is a folder not a file.'
@@ -7751,7 +7742,7 @@
             }
             if (!files[f].remoteEdit && !existsSync(files[f].file)) {
                 if (exists)
-                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    dialog.showMessageBox({
                         type: 'info',
                         title: 'Path does not exist',
                         message: 'The path \'' + files[f].file + '\' does not seem to exist anymore on disk.'
@@ -7870,7 +7861,7 @@
                     idx: r,
                     click: (item) => {
                         if (!existsSync(options.recent[item.idx].file)) {
-                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                            dialog.showMessageBox({
                                 type: 'info',
                                 title: 'Path does not exist',
                                 message: 'The path \'' + options.recent[item.idx].file + '\' does not seem to exist anymore on disk.'
@@ -7911,24 +7902,22 @@
             panel.editor.save();
         }
         catch (err) {
-            ipcRenderer.invoke('show-dialog', 'showMessageBox',
-                {
-                    type: 'error',
-                    title: 'Error saving',
-                    message: err.toString(),
-                    defaultId: 1
-                });
+            dialog.showMessageBox({
+                type: 'error',
+                title: 'Error saving',
+                message: err.toString(),
+                defaultId: 1
+            });
             return false;
         }
         if (panel.editor.source === 1) {
             if (!connected) {
-                ipcRenderer.invoke('show-dialog', 'showMessageBox',
-                    {
-                        type: 'error',
-                        title: 'Must be logged into the mud',
-                        message: 'Saving remote files requires being connected to the mud',
-                        defaultId: 1
-                    });
+                dialog.showMessageBox({
+                    type: 'error',
+                    title: 'Must be logged into the mud',
+                    message: 'Saving remote files requires being connected to the mud',
+                    defaultId: 1
+                });
                 return;
             }
             panel.editor.upload();
@@ -7960,19 +7949,18 @@
         }
         if (panel.editor.source === 1) {
             if (!connected) {
-                ipcRenderer.invoke('show-dialog', 'showMessageBox',
-                    {
-                        type: 'error',
-                        title: 'Must be logged into the mud',
-                        message: 'Saving remote files requires being connected to the mud',
-                        defaultId: 1
-                    });
+                dialog.showMessageBox({
+                    type: 'error',
+                    title: 'Must be logged into the mud',
+                    message: 'Saving remote files requires being connected to the mud',
+                    defaultId: 1
+                });
                 return;
             }
             uploadFileAs(panel, true);
             return;
         }
-        var file = ipcRenderer.sendSync('show-dialog-sync', 'showSaveDialog', {
+        var file = dialog.showSaveDialogSync({
             title: 'Save as...',
             defaultPath: panel.editor.file,
             filters: $fileFilters
@@ -7992,13 +7980,12 @@
             panel.editor.save();
         }
         catch (err) {
-            ipcRenderer.invoke('show-dialog', 'showMessageBox',
-                {
-                    type: 'error',
-                    title: 'Error saving',
-                    message: err.toString(),
-                    defaultId: 1
-                });
+            dialog.showMessageBox({
+                type: 'error',
+                title: 'Error saving',
+                message: err.toString(),
+                defaultId: 1
+            });
             return false;
         }
         addToRecent(file);
@@ -8014,13 +8001,12 @@
 
     function uploadFile(panel) {
         if (!connected) {
-            ipcRenderer.invoke('show-dialog', 'showMessageBox',
-                {
-                    type: 'error',
-                    title: 'Must be logged into the mud',
-                    message: 'Uploading requires being connected to the mud',
-                    defaultId: 1
-                });
+            dialog.showMessageBox({
+                type: 'error',
+                title: 'Must be logged into the mud',
+                message: 'Uploading requires being connected to the mud',
+                defaultId: 1
+            });
             return;
         }
         if (!panel) {
@@ -8049,13 +8035,12 @@
 
     function uploadFileAs(panel, remoteEdit) {
         if (!connected) {
-            ipcRenderer.invoke('show-dialog', 'showMessageBox',
-                {
-                    type: 'error',
-                    title: 'Must be logged into the mud',
-                    message: 'Uploading requires being connected to the mud',
-                    defaultId: 1
-                });
+            dialog.showMessageBox({
+                type: 'error',
+                title: 'Must be logged into the mud',
+                message: 'Uploading requires being connected to the mud',
+                defaultId: 1
+            });
             return;
         }
         if (!panel) {
@@ -8115,26 +8100,24 @@
         }
         var choice;
         if (panel.editor.changed && panel.editor.new) {
-            choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                {
-                    type: 'question',
-                    title: 'Revert new file?',
-                    message: 'Revert ' + panel.editor.filename + ' to start and lose changes?',
-                    buttons: ['Yes', 'No'],
-                    defaultId: 1
-                });
+            choice = dialog.showMessageBoxSync({
+                type: 'question',
+                title: 'Revert new file?',
+                message: 'Revert ' + panel.editor.filename + ' to start and lose changes?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1
+            });
             if (choice === 0)
                 panel.editor.revert();
         }
         else if (panel.editor.changed && !panel.editor.new) {
-            choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                {
-                    type: 'question',
-                    title: 'Revert file?',
-                    message: 'Revert ' + panel.editor.filename + ' and lose changes?',
-                    buttons: ['Yes', 'No'],
-                    defaultId: 1
-                });
+            choice = dialog.showMessageBoxSync({
+                type: 'question',
+                title: 'Revert file?',
+                message: 'Revert ' + panel.editor.filename + ' and lose changes?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1
+            });
             if (choice === 0)
                 panel.editor.revert();
         }
@@ -8182,14 +8165,13 @@
                 return false;
             panel = manager.active;
         }
-        var choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-            {
-                type: 'question',
-                title: panel.editor.new ? 'Save file?' : 'Save changes?',
-                message: panel.editor.new ? ('Save ' + panel.editor.filename + '?') : ('Save changes to ' + panel.editor.filename + '?'),
-                buttons: ['Yes', 'No', 'Cancel'],
-                defaultId: 1
-            });
+        var choice = dialog.showMessageBoxSync({
+            type: 'question',
+            title: panel.editor.new ? 'Save file?' : 'Save changes?',
+            message: panel.editor.new ? ('Save ' + panel.editor.filename + '?') : ('Save changes to ' + panel.editor.filename + '?'),
+            buttons: ['Yes', 'No', 'Cancel'],
+            defaultId: 1
+        });
         //canceled
         if (choice === 2)
             return false;
@@ -8310,7 +8292,7 @@
                     p.editor = new AreaDesigner(data);
                 }
                 catch (err) {
-                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    dialog.showMessageBox({
                         type: 'info',
                         title: 'Error opening file',
                         message: 'Could not open \'' + data.file + '\'.'
@@ -8414,7 +8396,7 @@
                     p.editor = new VirtualEditor(data);
                 }
                 catch (err) {
-                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    dialog.showMessageBox({
                         type: 'info',
                         title: 'Error opening file',
                         message: 'Could not open \'' + data.file + '\'.'
@@ -8437,14 +8419,13 @@
                     f = path.join(path.dirname(p.editor.file), f);
                     if (existsSync(f))
                         openFile(f);
-                    else if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                        {
-                            type: 'question',
-                            title: 'Create room?',
-                            message: 'Create new external room?',
-                            buttons: ['Yes', 'No'],
-                            defaultId: 1
-                        }) === 0) {
+                    else if (dialog.showMessageBoxSync({
+                        type: 'question',
+                        title: 'Create room?',
+                        message: 'Create new external room?',
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1
+                    }) === 0) {
                         if (p.editor.remote)
                             newFromValue(p.editor.externalCode(room), f, path.dirname(p.editor.remote) + '/' + path.basename(f));
                         else
@@ -8785,7 +8766,7 @@
                     p.editor = new MonacoCodeEditor(data);
                 }
                 catch (err) {
-                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    dialog.showMessageBox({
                         type: 'info',
                         title: 'Error opening file',
                         message: 'Could not open \'' + data.file + '\'.'
@@ -8812,13 +8793,12 @@
             */
             p.editor.on('debug', file => {
                 if (!connected) {
-                    ipcRenderer.invoke('show-dialog', 'showMessageBox',
-                        {
-                            type: 'error',
-                            title: 'Must be logged into the mud',
-                            message: 'Testing can only be done when connected to the mud',
-                            defaultId: 1
-                        });
+                    dialog.showMessageBox({
+                        type: 'error',
+                        title: 'Must be logged into the mud',
+                        message: 'Testing can only be done when connected to the mud',
+                        defaultId: 1
+                    });
                     return;
                 }
                 if (!p.editor.remote)
@@ -8876,14 +8856,13 @@
             p.editor.on('reload', (type, file) => {
                 var choice;
                 if (type === 'unlink') {
-                    choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                        {
-                            type: 'question',
-                            title: 'File deleted',
-                            message: path.basename(file || p.editor.file) + ' has been deleted, keep open?',
-                            buttons: ['Yes', 'No'],
-                            defaultId: 1
-                        });
+                    choice = dialog.showMessageBoxSync({
+                        type: 'question',
+                        title: 'File deleted',
+                        message: path.basename(file || p.editor.file) + ' has been deleted, keep open?',
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1
+                    });
                     //no
                     if ((!file || p.editor.file === file) && choice === 1)
                         closeFile(p);
@@ -8891,14 +8870,13 @@
                         p.editor.deleted(choice === 0, file);
                 }
                 else {
-                    choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                        {
-                            type: 'question',
-                            title: 'File changed',
-                            message: path.basename((file || p.editor.file) + ' has been changed, reload?'),
-                            buttons: ['Yes', 'No'],
-                            defaultId: 1
-                        });
+                    choice = dialog.showMessageBoxSync({
+                        type: 'question',
+                        title: 'File changed',
+                        message: path.basename((file || p.editor.file) + ' has been changed, reload?'),
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1
+                    });
                     //yes
                     if (choice === 0)
                         p.editor.revert(file);

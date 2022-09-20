@@ -36,7 +36,7 @@
 
         var current = 0;
         var changed = 0;
-        var askonloadCharacter = ipcRenderer.sendSync("get-setting", 'askonloadCharacter');
+        var askonloadCharacter = window.getSetting('askonloadCharacter');
 
         $(window).keydown((event) => {
             if (document.getElementById('progress-dialog').open) {
@@ -73,7 +73,7 @@
                     c.push({ type: 'separator' });
                     c.push({ label: 'Load', click: `load(${item})` });
                 }
-                ipcRenderer.invoke('show-context', c);
+                window.showContext(c);
             });
             loadCharacters();
 
@@ -88,7 +88,7 @@
                 {
                     label: 'Add empty', click: "clearButton('#btn-add-dropdown');addEmpty();"
                 }];
-                ipcRenderer.invoke('show-context', addMenu, { x: x, y: y });
+                window.showContext(addMenu, { x: x, y: y });
             });
 
             $('#get-name-ok').click(function () {
@@ -222,7 +222,7 @@
                 const newNotes = parseTemplate(v);
                 fs.writeFileSync(old, $('#notes').val());
                 if (isFileSync(newNotes)) {
-                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                    response = dialog.showMessageBoxSync({
                         type: 'warning',
                         title: 'File exists',
                         message: 'Notes file `' + newNotes + '` exist, replace?',
@@ -384,7 +384,7 @@
 
         // eslint-disable-next-line no-unused-vars
         function openFile(field, ext, callback) {
-            ipcRenderer.invoke('show-dialog', 'showOpenDialog', {
+            dialog.showOpenDialog({
                 defaultPath: path.dirname(parseTemplate($(field).val())),
                 filters: [
                     { name: ext[0].substr(0, 1).toUpperCase() + ext[0].substr(1) + ' (*.' + ext.join(', *.') + ')', extensions: ext },
@@ -412,7 +412,7 @@
                 var sf = parseTemplate(character.Preferences);
                 var response, d;
                 if (isFileSync(sf)) {
-                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                    response = dialog.showMessageBoxSync({
                         type: 'warning',
                         title: 'File exists',
                         message: 'Setting file  `' + sf + '` exist, replace?',
@@ -430,7 +430,7 @@
                 }
                 sf = parseTemplate(character.Map);
                 if (isFileSync(sf)) {
-                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                    response = dialog.showMessageBoxSync({
                         type: 'warning',
                         title: 'File exists',
                         message: 'Map file `' + sf + '` exist, replace?',
@@ -467,7 +467,7 @@
                 var sf = parseTemplate(character.Preferences);
                 var response, d;
                 if (isFileSync(sf)) {
-                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                    response = dialog.showMessageBoxSync({
                         type: 'warning',
                         title: 'File exists',
                         message: 'Setting file `' + sf + '` exist, replace?',
@@ -485,7 +485,7 @@
                 }
                 sf = parseTemplate(character.Map);
                 if (isFileSync(sf)) {
-                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                    response = dialog.showMessageBoxSync({
                         type: 'warning',
                         title: 'File exists',
                         message: 'Map file `' + sf + '` exist, replace?',
@@ -521,7 +521,7 @@
                     changes.Preferences = path.join('{characters}', name + '.json');
                     var response;
                     if (isFileSync(sf)) {
-                        response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                        response = dialog.showMessageBoxSync({
                             type: 'warning',
                             title: 'File exists',
                             message: 'Setting file for ' + name + ' exist, replace?',
@@ -539,7 +539,7 @@
                     sf = path.join(parseTemplate('{characters}'), name + '.notes');
                     changes.Notes = path.join('{characters}', name + '.notes');
                     if (isFileSync(sf)) {
-                        response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                        response = dialog.showMessageBoxSync({
                             type: 'warning',
                             title: 'File exists',
                             message: 'Notes file for ' + name + ' exist, replace?',
@@ -558,7 +558,7 @@
                     sf = path.join(parseTemplate('{characters}'), name + '.map');
                     changes.Map = path.join('{characters}', name + '.map');
                     if (isFileSync(sf)) {
-                        response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                        response = dialog.showMessageBoxSync({
                             type: 'warning',
                             title: 'File exists',
                             message: 'Map file for ' + name + ' exist, replace?',
@@ -615,7 +615,7 @@
                 var sf = parseTemplate(newCharacter.Preferences);
                 var response;
                 if (isFileSync(sf)) {
-                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                    response = dialog.showMessageBoxSync({
                         type: 'warning',
                         title: 'File exists',
                         message: 'Setting file `' + sf + '` exist, replace?',
@@ -631,7 +631,7 @@
                 f = path.join(parseTemplate(character.Notes));
                 sf = path.join(parseTemplate(newCharacter.Notes));
                 if (isFileSync(sf)) {
-                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                    response = dialog.showMessageBoxSync({
                         type: 'warning',
                         title: 'File exists',
                         message: 'Notes file `' + sf + '` exist, replace?',
@@ -648,7 +648,7 @@
                 f = parseTemplate(character.Map);
                 sf = parseTemplate(newCharacter.Map);
                 if (isFileSync(sf)) {
-                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                    response = dialog.showMessageBoxSync({
                         type: 'warning',
                         title: 'File exists',
                         message: 'Map file `' + sf + '` exist, replace?',
@@ -678,7 +678,7 @@
                 character = current;
             else
                 character = ipcRenderer.sendSync('get-character', ID);
-            var response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+            var response = dialog.showMessageBoxSync({
                 type: 'warning',
                 title: 'Remove character',
                 message: 'Remove ' + character.Title + '?',
@@ -717,7 +717,7 @@
                 window.opener.loadCharacter(ID);
                 return;
             }
-            var response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+            var response = dialog.showMessageBoxSync({
                 type: 'warning',
                 title: 'Load character',
                 message: 'Load ' + character.Title + '?',
@@ -745,7 +745,7 @@
                 window.opener.resetCharacter();
                 return;
             }
-            var response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+            var response = dialog.showMessageBoxSync({
                 type: 'warning',
                 title: 'Load global',
                 message: 'Load global?',
@@ -804,7 +804,7 @@
 
         // eslint-disable-next-line no-unused-vars
         function backup() {
-            var file = ipcRenderer.sendSync('show-dialog-sync', 'showSaveDialog', {
+            var file = dialog.showSaveDialogSync({
                 title: 'Save as...',
                 defaultPath: path.join(parseTemplate('{documents}'), 'jiMUD-characters-data.zip'),
                 filters: [
@@ -908,7 +908,7 @@
             }
             else if (current && character.ID === current.ID) {
                 if (changed > 0) {
-                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    dialog.showMessageBox({
                         type: 'warning',
                         title: 'Character updated',
                         message: 'Reload? Any current changes will be lost.',
@@ -976,7 +976,7 @@
         function closeable(all) {
             if (!closeWindow) {
                 if (prefs && !prefs.closed) {
-                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    dialog.showMessageBox({
                         type: 'error',
                         title: 'Preferences dialog open',
                         message: 'You must close the preferences dialog before you can close character manager.',

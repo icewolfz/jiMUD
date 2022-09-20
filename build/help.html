@@ -22,7 +22,6 @@
     <script type="text/javascript">
         if (window.module) module = window.module;
         //spellchecker:ignore codeeditor
-        const { ipcRenderer } = require('electron');
         const { Search } = require('./js/search');
         const { isFileSync } = require('./js/library.js');
         const { Settings } = require('./js/settings');
@@ -179,14 +178,14 @@
                     container.html(md.render(data));
                 }
                 else
-                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                dialog.showMessageBox({
                         type: 'error',
                         title: 'Help error',
                         message: 'Help file not found'
                     });
             }
             else
-                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+            dialog.showMessageBox({
                     type: 'error',
                     title: 'Help error',
                     message: 'Help file not found'
@@ -318,7 +317,7 @@
                         inputMenu = [
                             { role: 'selectAll' }
                         ];
-                    ipcRenderer.invoke('show-context', inputMenu);
+                    window.showContext(inputMenu);
                 });
             };
             contents = $('#contents');
@@ -326,7 +325,7 @@
             contents.on('change', (e) => {
                 if (!contents.val()) {
                     lastSel.prop("selected", true);
-                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    dialog.showMessageBox({
                         type: 'error',
                         title: 'Help error',
                         message: 'Help file not found'
@@ -396,7 +395,7 @@
                         checked: i === _current,
                     });
                 });
-                ipcRenderer.invoke('show-context', addMenu, { x: x, y: y });
+                window.showContext(addMenu, { x: x, y: y });
             });
 
             $('#help-drag-bar').mousedown((e) => {

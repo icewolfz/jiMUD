@@ -84,7 +84,7 @@
 
         const { ipcRenderer, shell } = require('electron');
         const path = require('path');
-        const fs = require('fs-extra');        
+        const fs = require('fs-extra');
         const fontList = require('font-list');
 
         var _settings;
@@ -247,7 +247,7 @@
                 addMenu.push({ type: 'separator' });
                 addMenu.push({ label: 'Remote', click: "clearButton('#btn-clear-dropdown');clearCache(1);" });
                 addMenu.push({ label: 'State', click: "clearButton('#btn-clear-dropdown');clearCache(2);" });
-                ipcRenderer.invoke('show-context', addMenu, { x: x, y: y });
+                window.showContext(addMenu, { x: x, y: y });
             });
 
         });
@@ -382,14 +382,13 @@
             var files;
             var i;
             if (type === 1) {
-                choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                    {
-                        type: 'warning',
-                        title: 'Delete',
-                        message: 'Delete all remote cached data?',
-                        buttons: ['Yes', 'No', 'Permanently'],
-                        defaultId: 1
-                    });
+                choice = dialog.showMessageBoxSync({
+                    type: 'warning',
+                    title: 'Delete',
+                    message: 'Delete all remote cached data?',
+                    buttons: ['Yes', 'No', 'Permanently'],
+                    defaultId: 1
+                });
                 if (choice === 1) return;
                 let p = path.join(parseTemplate('{data}'), 'editor');
                 if (isDirSync(p)) {
@@ -405,14 +404,13 @@
                 }
             }
             else if (type === 2) {
-                choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                    {
-                        type: 'warning',
-                        title: 'Delete',
-                        message: 'Delete all state cached data?',
-                        buttons: ['Yes', 'No', 'Permanently'],
-                        defaultId: 1
-                    });
+                choice = dialog.showMessageBoxSync({
+                    type: 'warning',
+                    title: 'Delete',
+                    message: 'Delete all state cached data?',
+                    buttons: ['Yes', 'No', 'Permanently'],
+                    defaultId: 1
+                });
                 if (choice === 1) return;
                 let p = path.join(parseTemplate('{data}'), 'editor');
                 if (isDirSync(p)) {
@@ -428,14 +426,13 @@
                 }
             }
             else {
-                choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                    {
-                        type: 'warning',
-                        title: 'Delete',
-                        message: 'Delete all cached data?',
-                        buttons: ['Yes', 'No', 'Permanently'],
-                        defaultId: 1
-                    });
+                choice = dialog.showMessageBoxSync({
+                    type: 'warning',
+                    title: 'Delete',
+                    message: 'Delete all cached data?',
+                    buttons: ['Yes', 'No', 'Permanently'],
+                    defaultId: 1
+                });
                 if (choice === 1) return;
                 let p = path.join(parseTemplate('{data}'), 'editor');
                 if (isDirSync(p)) {
@@ -553,7 +550,7 @@
                     <label class="control-label">
                         <input type="checkbox" id="modelOptions-bracketColorization" /> Enable bracket colorization
                     </label>
-                </div>                
+                </div>
                 <div class="col-sm-6 form-group">
                     <label class="control-label">
                         <input type="checkbox" id="editorOptions-selectOnLineNumbers" /> Select line when line number clicked
@@ -605,7 +602,7 @@
                             <option value="1">Dark</option>
                         </select>
                     </label>
-                </div>                
+                </div>
             </div>
             <div role="tabpanel" class="container tab-pane fade" id="editorFont">
                 <div class="col-sm-6 form-group">

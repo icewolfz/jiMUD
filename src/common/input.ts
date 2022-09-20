@@ -12,7 +12,6 @@ import { Tests } from './test';
 import { NewLineType, ProfileSaveType } from './types';
 import { SettingList } from './settings';
 import { getAnsiColorCode, getColorCode, isMXPColor, getAnsiCode } from './ansi';
-declare let ipcRenderer;
 
 declare let getCharacterNotes;
 /**

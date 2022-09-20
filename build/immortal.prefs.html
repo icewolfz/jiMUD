@@ -79,7 +79,6 @@
         //spell-checker:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
         const { TempType } = require('./js/types');
         const { cloneObject } = require('./js/library');
-        const { ipcRenderer } = require('electron');
         const path = require('path');
 
         var _settings;
@@ -145,7 +144,7 @@
                     _settings.extension[$(this).attr('id')] = $(this).val();
             });
             $('#btn-editor').on('click', () => {
-                ipcRenderer.invoke('show-dialog', 'showOpenDialog', {
+                dialog.showOpenDialog({
                     defaultPath: path.dirname($('#editor').val()),
                     filters: process.platform === 'win32' ? [
                         { name: 'Programs (*.exe, *.com)', extensions: ['exe', 'com', 'com'] },

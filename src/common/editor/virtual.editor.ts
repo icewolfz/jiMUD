@@ -6,7 +6,7 @@ import { PropertyGrid } from '../propertygrid';
 import { EditorType, ValueEditor } from '../value.editors';
 import { DataGrid } from '../datagrid';
 import { copy, formatString, isFileSync, capitalize, leadingZeros, Cardinal, resetCursor, enumToString, pinkfishToHTML } from '../library';
-const { clipboard, ipcRenderer } = require('electron');
+const { clipboard } = require('electron');
 const remote = require('@electron/remote');
 const { Menu, MenuItem } = remote;
 const path = require('path');
@@ -802,14 +802,13 @@ export class VirtualEditor extends EditorBase {
             }
         ];
         this.$descriptionGrid.on('delete', (e) => {
-            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                {
-                    type: 'warning',
-                    title: 'Delete',
-                    message: 'Delete terrain' + (this.$descriptionGrid.selectedCount > 1 ? 's' : '') + '?',
-                    buttons: ['Yes', 'No'],
-                    defaultId: 1
-                })
+            if (dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Delete',
+                message: 'Delete terrain' + (this.$descriptionGrid.selectedCount > 1 ? 's' : '') + '?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1
+            })
                 === 1)
                 e.preventDefault = true;
             else {
@@ -958,14 +957,13 @@ export class VirtualEditor extends EditorBase {
                 e.data[d].data.idx = idx;
                 e.data[d].items.idx = idx;
                 if (!all && idx < this.$items.length) {
-                    choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                        {
-                            type: 'warning',
-                            title: 'Replace items',
-                            message: 'Replace old items with new?',
-                            buttons: ['Yes', 'No', 'All'],
-                            defaultId: 1
-                        });
+                    choice = dialog.showMessageBoxSync({
+                        type: 'warning',
+                        title: 'Replace items',
+                        message: 'Replace old items with new?',
+                        buttons: ['Yes', 'No', 'All'],
+                        defaultId: 1
+                    });
                     if (choice === 2)
                         all = true;
                     if (choice !== 1) {
@@ -1130,14 +1128,13 @@ export class VirtualEditor extends EditorBase {
             }
         ];
         this.$itemGrid.on('delete', (e) => {
-            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                {
-                    type: 'warning',
-                    title: 'Delete',
-                    message: 'Delete item' + (this.$itemGrid.selectedCount > 1 ? 's' : '') + '?',
-                    buttons: ['Yes', 'No'],
-                    defaultId: 1
-                })
+            if (dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Delete',
+                message: 'Delete item' + (this.$itemGrid.selectedCount > 1 ? 's' : '') + '?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1
+            })
                 === 1)
                 e.preventDefault = true;
             else {
@@ -1564,14 +1561,13 @@ export class VirtualEditor extends EditorBase {
             }
         });
         this.$exitGrid.on('delete', (e) => {
-            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                {
-                    type: 'warning',
-                    title: 'Delete',
-                    message: 'Delete selected exit' + (this.$exitGrid.selectedCount > 1 ? 's' : '') + '?',
-                    buttons: ['Yes', 'No'],
-                    defaultId: 1
-                })
+            if (dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Delete',
+                message: 'Delete selected exit' + (this.$exitGrid.selectedCount > 1 ? 's' : '') + '?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1
+            })
                 === 1)
                 e.preventDefault = true;
             else {
@@ -4404,14 +4400,13 @@ export class VirtualEditor extends EditorBase {
         if (!this.$files[file] || !isFileSync(path.join(path.dirname(this.file), file)))
             return 0;
         //ask and return answer
-        return ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-            {
-                type: 'warning',
-                title: 'Confirm Save As',
-                message: file + 'already exists.\nDo you want to replace it?',
-                buttons: ['Yes', 'No'],
-                defaultId: 1
-            });
+        return dialog.showMessageBoxSync({
+            type: 'warning',
+            title: 'Confirm Save As',
+            message: file + 'already exists.\nDo you want to replace it?',
+            buttons: ['Yes', 'No'],
+            defaultId: 1
+        });
     }
 
     public revert(file?) {
@@ -9560,9 +9555,9 @@ export class VirtualEditor extends EditorBase {
         if (!noUndo)
             this.pushUndo(undoAction.delete, undoType.room, dRooms);
         let dl = dRooms.length;
-        while(dl--)
+        while (dl--)
             if (dRooms[dl].exits)
-                this.deleteRoom(dRooms[dl], noUndo);     
+                this.deleteRoom(dRooms[dl], noUndo);
         this.$rooms = rooms;
         this.UpdateEditor(this.$selectedRooms);
         this.UpdatePreview(this.selectedFocusedRoom);
@@ -10197,14 +10192,13 @@ export class ExternalExitValueEditor extends ValueEditor {
                 }
             });
             dg.on('delete', (e2) => {
-                if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                    {
-                        type: 'warning',
-                        title: 'Delete',
-                        message: 'Delete selected exit' + (dg.selectedCount > 1 ? 's' : '') + '?',
-                        buttons: ['Yes', 'No'],
-                        defaultId: 1
-                    })
+                if (dialog.showMessageBoxSync({
+                    type: 'warning',
+                    title: 'Delete',
+                    message: 'Delete selected exit' + (dg.selectedCount > 1 ? 's' : '') + '?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1
+                })
                     === 1)
                     e2.preventDefault = true;
             });
@@ -10537,14 +10531,13 @@ export class ItemsValueEditor extends ValueEditor {
                 }
             });
             dg.on('delete', (e2) => {
-                if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                    {
-                        type: 'warning',
-                        title: 'Delete',
-                        message: 'Delete selected item' + (dg.selectedCount > 1 ? 's' : '') + '?',
-                        buttons: ['Yes', 'No'],
-                        defaultId: 1
-                    })
+                if (dialog.showMessageBoxSync({
+                    type: 'warning',
+                    title: 'Delete',
+                    message: 'Delete selected item' + (dg.selectedCount > 1 ? 's' : '') + '?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1
+                })
                     === 1)
                     e2.preventDefault = true;
             });

@@ -2,7 +2,7 @@
 import EventEmitter = require('events');
 import { capitalize, resetCursor, stringToEnum, enumToString } from './library';
 import { DataGrid } from './datagrid';
-const { ipcRenderer } = require('electron');
+//TODO need to redo the send-editor calls to use editor window hooks instead, need to check if editor window open and open/send the data
 
 export enum EditorType {
     default,
@@ -1345,14 +1345,13 @@ export class CollectionValueEditor extends ValueEditor {
                 }
             });
             dg.on('delete', (e2) => {
-                if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                    {
-                        type: 'warning',
-                        title: 'Delete',
-                        message: 'Delete selected ' + (this.options ? this.options.type + (dg.selectedCount > 1 ? 's' : '') : '') + '?',
-                        buttons: ['Yes', 'No'],
-                        defaultId: 1
-                    })
+                if (dialog.showMessageBoxSync({
+                    type: 'warning',
+                    title: 'Delete',
+                    message: 'Delete selected ' + (this.options ? this.options.type + (dg.selectedCount > 1 ? 's' : '') : '') + '?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1
+                })
                     === 1)
                     e2.preventDefault = true;
             });

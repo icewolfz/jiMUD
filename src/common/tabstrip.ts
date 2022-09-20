@@ -1,6 +1,7 @@
 //spellchecker:ignore dropdown dropdownmenu tabpane
 import EventEmitter = require('events');
-import { ipcRenderer, nativeImage } from 'electron';
+import { nativeImage } from 'electron';
+declare let window;
 
 export enum UpdateType {
     none = 0,
@@ -293,7 +294,7 @@ export class TabStrip extends EventEmitter {
                 });
             }
             const rect = this.$scrollDropDown.getBoundingClientRect();
-            ipcRenderer.invoke('show-context', c, { x: rect.left + window.scrollX, y: rect.bottom + window.scrollY });
+            window.showContext(c, { x: rect.left + window.scrollX, y: rect.bottom + window.scrollY });
             return;
         }
         const menu = $(this.$scrollMenu);

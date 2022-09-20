@@ -33,8 +33,6 @@
 <script src="../lib/bootstrap.min.js"></script>
 <script type="text/javascript">
     if (window.module) module = window.module;
-    const { ipcRenderer } = require('electron');
-
     var list = document.getElementById('history');
     function loadHistory() {
         const history = window.opener.client.commandHistory;
@@ -84,7 +82,7 @@
             label: '&Clear history',
             click: 'executeContext("clearHistory")'
         });
-        ipcRenderer.invoke('show-context', c);
+        window.showContext(c);
     });
 
     function executeContext(action) {

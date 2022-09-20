@@ -12,7 +12,7 @@ const path = require('path');
 const fs = require('fs');
 //const trash = require('trash');
 
-declare let ace;
+declare let ace, dialog;
 declare global {
     interface Window {
         getGlobal: any;
@@ -483,7 +483,7 @@ export function RunTester() {
                 let i;
                 for (i = 0; i < res.length; i++) {
                     r += _parameter + (i + m) + ' : ' + res[i] + '\n';
-                    if(!res[i])
+                    if (!res[i])
                         r += `${_parameter}x${i + m} : 0 0\n`;
                     else
                         r += `${_parameter}x${i + m} : ${res.indices[i][0]} ${res.indices[i][1]}\n`;
@@ -590,7 +590,7 @@ export function SelectTriggerState(state, noUpdate?) {
 
 export function DeleteTriggerState() {
     const state = getState();
-    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+    dialog.showMessageBox({
         type: 'question',
         title: 'Delete current trigger state?',
         message: 'Are you sure you want to delete this trigger state?',
@@ -787,7 +787,7 @@ export function UpdateContextSample() {
 
 export function openImage(field?, callback?) {
     if (!field) field = '#button-icon';
-    ipcRenderer.invoke('show-dialog', 'showOpenDialog', {
+    dialog.showOpenDialog({
         defaultPath: path.dirname($(field).val()),
         filters: [
             { name: 'Images (*.jpg, *.png, *.gif)', extensions: ['jpg', 'png', 'gif'] },
@@ -1531,7 +1531,7 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
         data.name = val;
         changed++;
         if (profiles.contains(val)) {
-            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+            dialog.showMessageBox({
                 type: 'error',
                 title: 'Profile name already used',
                 message: 'The name is already in use, pick a different one'
@@ -3062,19 +3062,18 @@ export function init() {
             return;
         evt.returnValue = false;
         setTimeout(() => {
-            const choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                {
-                    type: 'warning',
-                    title: 'Profiles changed',
-                    message: 'All unsaved changes will be lost, close?',
-                    buttons: ['Yes', 'No', 'Never ask again'],
-                    defaultId: 1
-                });
+            const choice = dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Profiles changed',
+                message: 'All unsaved changes will be lost, close?',
+                buttons: ['Yes', 'No', 'Never ask again'],
+                defaultId: 1
+            });
             if (choice === 2)
                 ipcRenderer.send('setting-changed', { type: 'profiles', name: 'askoncancel', value: false });
             if (choice === 0 || choice === 2) {
                 _close = true;
-                ipcRenderer.invoke('window', 'close');
+                window.close();
                 return;
             }
         });
@@ -3574,7 +3573,7 @@ export function setIcon(icon, field?, callback?) {
 
 export function doRefresh() {
     if (_undo.length > 0)
-        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+        dialog.showMessageBox({
             type: 'warning',
             title: 'Refresh profiles',
             message: 'All unsaved or applied changes will be lost, refresh?',
@@ -3636,7 +3635,7 @@ function profileCopyName(name) {
 }
 
 function importProfiles() {
-    ipcRenderer.invoke('show-dialog', 'showOpenDialog', {
+    dialog.showOpenDialog({
         title: 'Import profiles',
         filters: [
             { name: 'Supported files (*.txt, *.zip)', extensions: ['txt', 'zip'] },
@@ -3703,7 +3702,7 @@ function importProfiles() {
                                         $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
                                     }
                                     else if (all !== 4) {
-                                        const response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                                        const response = dialog.showMessageBoxSync({
                                             type: 'question',
                                             title: 'Profiles already exists',
                                             message: 'Profile named \'' + p.name + '\' exist, replace?',
@@ -3758,7 +3757,7 @@ function importProfiles() {
 
                     data = JSON.parse(data);
                     if (!data || data.version !== 2) {
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'Invalid Profile',
                             message: 'Invalid profile unable to process.'
@@ -3870,7 +3869,7 @@ function importProfiles() {
                                     $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
                                 }
                                 else if (all !== 4) {
-                                    const response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                                    const response = dialog.showMessageBoxSync({
                                         type: 'question',
                                         title: 'Profiles already exists',
                                         message: 'Profile named \'' + p.name + '\' exist, replace?',
@@ -3935,7 +3934,7 @@ export function saveProfiles(clearNow?: boolean) {
     if (updateCurrent() !== UpdateState.NoChange)
         return false;
     if (filesChanged) {
-        let response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+        let response = dialog.showMessageBoxSync({
             type: 'question',
             title: 'Profiles updated',
             message: 'Profiles have been updated outside of manager, save anyways?',
@@ -4254,7 +4253,7 @@ function updateUndoState() {
 }
 
 function DeleteProfileConfirm(profile) {
-    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+    dialog.showMessageBox({
         type: 'question',
         title: 'Delete profile?',
         message: 'Delete ' + profile.name + '?',
@@ -4289,7 +4288,7 @@ function DeleteProfile(profile, customUndo?: boolean) {
 }
 
 function DeleteItems(type, key, profile) {
-    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+    dialog.showMessageBox({
         type: 'question',
         title: 'Delete ' + type + '?',
         message: 'Are you sure you want to delete all ' + key + '?',
@@ -4310,7 +4309,7 @@ function DeleteItems(type, key, profile) {
 }
 
 function DeleteItemConfirm(type, key, idx, profile) {
-    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+    dialog.showMessageBox({
         type: 'question',
         title: 'Delete ' + type + '?',
         message: 'Are you sure you want to delete this ' + type + '?',
@@ -4368,7 +4367,7 @@ export function doClose() {
         window.close();
     }
     else {
-        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+        dialog.showMessageBox({
             type: 'warning',
             title: 'Profiles changed',
             message: 'All unsaved changes will be lost, close?',
@@ -4409,7 +4408,7 @@ export function doReset(node) {
         if (!node) return;
     }
     const profile = profiles.items[node.dataAttr.profile];
-    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+    dialog.showMessageBox({
         type: 'warning',
         title: 'Reset ' + profile.name,
         message: 'Resetting will loose all profile data, reset?',
@@ -4710,7 +4709,7 @@ ipcRenderer.on('profile-toggled', (event, profile, enabled) => {
 
 function exportAll() {
     clearButton('#export');
-    ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
+    dialog.showSaveDialog({
         title: 'Export all profiles',
         defaultPath: 'jiMUD.profiles.txt',
         filters: [
@@ -4739,7 +4738,7 @@ $(window).keydown((event) => {
 
 // eslint-disable-next-line no-unused-vars
 function exportAllZip() {
-    const file = ipcRenderer.sendSync('show-dialog-sync', 'showSaveDialog', {
+    const file = dialog.showSaveDialogSync({
         title: 'Save as...',
         defaultPath: path.join(parseTemplate('{documents}'), 'jiMUD-profiles.zip'),
         filters: [
@@ -4759,13 +4758,12 @@ function exportAllZip() {
     if (isDirSync(path.join(data, 'profiles'))) {
         files = walkSync(path.join(data, 'profiles'));
         if (files.length === 0) {
-            ipcRenderer.invoke('show-dialog', 'showMessageBox',
-                {
-                    type: 'error',
-                    title: 'No logs found',
-                    message: 'No logs to backup',
-                    defaultId: 1
-                });
+            dialog.showMessageBox({
+                type: 'error',
+                title: 'No logs found',
+                message: 'No logs to backup',
+                defaultId: 1
+            });
             return;
         }
         files.files.forEach(f => {
@@ -4810,7 +4808,7 @@ function cancelProgress() {
 
 function exportCurrent() {
     clearButton('#export');
-    ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
+    dialog.showSaveDialog({
         title: 'Export profile',
         defaultPath: 'jiMUD.' + profileID(currentProfile.name) + '.txt',
         filters: [
