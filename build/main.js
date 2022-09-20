@@ -1,7 +1,7 @@
 //spell-checker:words submenu, pasteandmatchstyle, statusvisible, taskbar, colorpicker, mailto, forecolor, tinymce, unmaximize
 //spell-checker:ignore prefs, partyhealth, combathealth, commandinput, limbsmenu, limbhealth, selectall, editoronly, limbarmor, maximizable, minimizable
 //spell-checker:ignore limbsarmor, lagmeter, buttonsvisible, connectbutton, charactersbutton, Editorbutton, zoomin, zoomout, unmaximize, resizable
-const { app, BrowserWindow, BrowserView, shell, screen, Tray, dialog, Menu, MenuItem, ipcMain, systemPreferences } = require('electron');
+const { app, BrowserWindow, BrowserView, shell, screen, Tray, dialog, Menu, MenuItem, ipcMain, systemPreferences } = Fix abrequire('electron');
 const path = require('path');
 const fs = require('fs');
 const url = require('url');
@@ -3636,7 +3636,7 @@ function createMenu(window) {
                 { type: 'separator' },
                 {
                     label: '&About...',
-                    click: (item, mWindow) => createDialog({ show: true, parent: window || mWindow, url: path.join(__dirname, 'about.html'), title: 'About jiMUD', bounds: { width: 500, height: 560 } })
+                    click: (item, mWindow) => openAbout(window || mWindow)
                 }
             ]
         }
@@ -3825,6 +3825,10 @@ ipcMain.on('show-global-preferences', event => {
     openPreferences(BrowserWindow.fromWebContents(event.sender));
 })
 
+ipcMain.on('show-about', event => {
+    openAbout(BrowserWindow.fromWebContents(event.sender));
+});
+
 function resetProfilesMenu(window) {
     if (!window || !windows[getWindowId(window)].menubar) return;
     const profiles = windows[getWindowId(window)].menubar.getItem('profiles');
@@ -3881,7 +3885,19 @@ function openPreferences(parent) {
             icon: path.join(__dirname, '../assets/icons/png/preferences.png'),
             modal: true
         });
-        idMap.set("prefs", window);
+        window.on('closed', ()=> idMap.delete('prefs'));
+        idMap.set('prefs', window);
+    }
+}
+
+function openAbout(parent) {
+    let window = getWindowId('about');
+    if (window && !window.isDestroyed())
+        window.focus();
+    else {
+        window = createDialog({ show: true, parent: parent, url: path.join(__dirname, 'about.html'), title: 'About jiMUD', bounds: { width: 500, height: 560 } });
+        window.on('closed', ()=> idMap.delete('about'));
+        idMap.set('about', window);
     }
 }
 //#endregion

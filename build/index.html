@@ -1777,18 +1777,18 @@
                     case 'chat':
                         openWindow(window);
                         break;
-                    case 'profiles':
                     case 'about':
-                        ipcRenderer.send('show-window', window);
+                        ipcRenderer.send('show-about');
                         break;
                     case 'code-editor':
                     case 'code.editor':
                         openWindow('code.editor');
                         break;
+                    case 'profiles':
                     case 'profiles-manager':
                     case 'profile-manager':
                     case 'manager':
-                        ipcRenderer.send('show-window', 'profiles');
+                        openWindow('profiles');
                         break;
                     case 'prefs':
                     case 'options':
@@ -3259,8 +3259,13 @@
                         _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultWidth', 'defaultHeight']);
                     _windows['skills.html'] = window.open('skills.html', 'Skills-' + getId(), `defaultWidth=800,defaultHeight=600,alwaysOnTopClient=true,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/skills.png')}${_options}`);
                     break;
-                case 'code.editor':
                 case 'log.viewer':
+                    if (data && data.details)
+                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultWidth', 'defaultHeight']);
+                    _windows['log.viewer.html'] = window.open('log.viewer.html', 'Log Viewer-' + getId(), `defaultWidth=800,defaultHeight=600,alwaysOnTopClient=true,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/log.png')}${_options}`);
+                    break;
+                case 'code.editor':
+                case 'profiles':
                     break;
             }
             if (data && data.data && typeof _windows[name + '.html'].restoreWindow !== 'undefined')
@@ -3408,17 +3413,6 @@
 
         function getMapFile() {
             return _windowState.data.map;
-        }
-
-        // eslint-disable-next-line no-unused-vars
-        function showLogViewer() {
-            //TODO make log viewer window work
-            if (client.options.windows['log-viewer'] && client.options.windows['log-viewer'].options) {
-                client.options.windows['log-viewer'].options.show = true;
-                ipcRenderer.send('show-window', 'log-viewer', client.options.windows['log-viewer'].options);
-            }
-            else
-                ipcRenderer.send('show-window', 'log-viewer', { show: true, file: 'log.viewer.html', icon: 'log', alwaysOnTopClient: true });
         }
 
         /*
