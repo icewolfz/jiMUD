@@ -2733,7 +2733,8 @@ async function saveWindowLayout(file) {
             current: windows[id].current,
             //get any custom data from window
             data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].window),
-            state: saveWindowState(windows[id].window)
+            state: saveWindowState(windows[id].window),
+            menubar: windows[id].menubar ? true : false
         }
         data.windows.push(wData);
     }
@@ -2798,16 +2799,22 @@ function loadWindowLayout(file) {
         logError(e);
         return false;
     }
+    states = data.states || {};
+    //no windows so for what ever reason so just start a clean client
+    if (data.windows.length === 0) {
+        newClientWindow();
+        return true;
+    }
     //_windowID = data.windowID;
     //_clientID = data.clientID;
     focusedClient = data.focusedClient;
     focusedWindow = data.focusedWindow;
-    states = data.states || {};
     //create windows
     let i, il = data.windows.length;
     for (i = 0; i < il; i++) {
         createWindow({ id: data.windows[i].id, data: { data: data.windows[i].data, state: data.windows[i].state, states: data.states }, remote: false });
-        windows[data.windows[i].id].menubar = createMenu(windows[data.windows[i].id].window);
+        if (data.windows[i].menubar)
+            windows[data.windows[i].id].menubar = createMenu(windows[data.windows[i].id].window);
         //windows[data.windows[i].id].menubar.enabled = false;
         windows[data.windows[i].id].current = data.windows[i].current;
         windows[data.windows[i].id].clients = data.windows[i].clients;
@@ -2823,6 +2830,14 @@ function loadWindowLayout(file) {
     il = data.windows.length;
     for (i = 0; i < il; i++) {
         const window = windows[data.windows[i].id];
+        //no clients so move on probably different type of window
+        if (window.clients.length === 0) {
+            if (data.focusedWindow === getWindowId(window))
+                window.window.webContents.once('ready-to-show', () => {
+                    focusWindow(window, true);
+                });
+            continue;
+        }
         let current = data.windows[i].current;
         //current is wrong for what ever reason so fall back to first client
         if (!clients[current])
@@ -3883,7 +3898,7 @@ function openPreferences(parent) {
             icon: path.join(__dirname, '../assets/icons/png/preferences.png'),
             modal: true
         });
-        window.on('closed', ()=> idMap.delete('prefs'));
+        window.on('closed', () => idMap.delete('prefs'));
         idMap.set('prefs', window);
     }
 }
@@ -3894,7 +3909,7 @@ function openAbout(parent) {
         window.focus();
     else {
         window = createDialog({ show: true, parent: parent, url: path.join(__dirname, 'about.html'), title: 'About jiMUD', bounds: { width: 500, height: 560 } });
-        window.on('closed', ()=> idMap.delete('about'));
+        window.on('closed', () => idMap.delete('about'));
         idMap.set('about', window);
     }
 }
