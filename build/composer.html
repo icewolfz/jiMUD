@@ -28,7 +28,7 @@
         const { ipcRenderer, webFrame, nativeImage } = require('electron');
         const remote = require('@electron/remote');
         const { Menu, MenuItem } = remote;
-        const { stripHTML, htmlEncode, parseTemplate, getColors } = require('./js/library');
+        const { stripHTML, htmlEncode, invert, parseTemplate, getColors, createColorDialog } = require('./js/library');
         const { Settings } = require('./js/settings');
         const { Mail } = require('./js/mail');
         const { MailStatus, MailReadFormat } = require('./js/types');
@@ -41,8 +41,9 @@
         var draft = true;
         var closeWindow = false;
         var id = '' + (Date.now() / 1000);
-
-        var _colors, _ColorTable, options;
+        var abortController = new AbortController();
+        var _colors, _ColorTable, options, _colorCodes;
+        var _colorDialog;
         var colorNames = {
             'BLACK': 'Black',
             'RED': 'Maroon',
@@ -59,6 +60,8 @@
             'BOLD MAGENTA': 'Magenta',
             'BOLD CYAN': 'Cyan',
             'BOLD WHITE': 'White',
+            'CYAN': 'Cyan',
+            'BOLD RED': 'Red'
         };
 
         function clearReverse(els, c) {
@@ -118,7 +121,6 @@
                 }
             );
         }
-
 
         function toggleContextFormat(item) {
             var format = item.format || item.label;
@@ -211,6 +213,111 @@
             });
         }
 
+        function copyFormatted() {
+            var text = getFormatedSelection().replace(/(?:\r)/g, '');
+            clipboard.writeText(text || '');
+            clipboard.writeText(text || '', 'selection');
+        }
+
+        function insertFormated(text) {
+            text = text || '';
+            text = text.split('%^');
+            var stack = [];
+            var codes = [];
+            var t = 0;
+            var tl = text.length;
+            var bold = false;
+            var classes = [];
+            for (; t < tl; t++) {
+                switch (text[t]) {
+                    case 'ITALIC':
+                        this.stack.push('<em>');
+                        this.codes.push('</em>');
+                        break;
+                    case 'UNDERLINE':
+                        classes.push('underline');
+                        break;
+                    case 'STRIKEOUT':
+                        classes.push('strikeout');
+                        break;
+                    case 'DBLUNDERLINE':
+                        classes.push('dblunderline');
+                        break;
+                    case 'OVERLINE':
+                        classes.push('overline');
+                        break;
+                    case 'FLASH':
+                        if (options.flashing)
+                            classes.push('flash');
+                        else
+                            classes.push('noflash');
+                        break;
+                    case 'REVERSE':
+                        classes.push('reverse');
+                        break;
+                    case 'RESET':
+                    case 'DEFAULT':
+                        for (var c = 0, cl = codes.length; c < cl; c++)
+                            stack.push(codes[c]);
+                        codes = [];
+                        classes = [];
+                        break;
+                    case 'BOLD':
+                        bold = true;
+                        break;
+                    case '':
+                        break;
+                    default:
+                        if (text[t].startsWith('B_')) {
+                            text[t] = text[t].substr(2);
+                            if (bold) {
+                                stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^WHITE'] + '">');
+                                codes.push('</span>');
+                            }
+                            stack.push('<span style=border: inherit;text-decoration:inherit;"background-color: #' + _colorCodes[text[t]] + '">');
+                            codes.push('</span>');
+                            bold = false;
+                            continue;
+                        }
+                        else if (_colorCodes[text[t]]) {
+                            if (bold && !_colorCodes['BOLD%^%^' + text[t]]) {
+                                stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^WHITE'] + '">');
+                                codes.push('</span>');
+                            }
+                            else if (bold) {
+                                stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^' + text[t]] + '">');
+                                codes.push('</span>');
+                                continue;
+                            }
+                            stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes[text[t]] + '">');
+                            codes.push('</span>');
+                            continue;
+                        }
+                        else if (bold) {
+                            stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^WHITE'] + '">');
+                            codes.push('</span>');
+                        }
+                        if (classes.length) {
+                            stack.push('<span class="' + classes.join(' ') + '">');
+                            codes.push('</span>');
+                            classes = [];
+                        }
+                        stack.push(text[t]);
+                        bold = false;
+                        break;
+                }
+            }
+            if (classes.length) {
+                stack.push('<span class="' + classes.join(' ') + '">');
+                codes.push('</span>');
+            }
+            for (t = 0, tl = codes.length; t < tl; t++)
+                stack.push(codes[t]);
+            //format text
+            tinymce.activeEditor.execCommand('insertHTML', false, stack.join(''));
+
+        }
+
         function buildHTMLStack(els) {
             var tag, $el, t, tl;
             var stack = [];
@@ -291,6 +398,8 @@
                     stack = stack.concat(buildHTMLStack($el.contents()));
                     stack.push('/' + tag);
                 }
+                else if (tag == 'BR' && $el.data('mce-bogus'))
+                    stack.push('RESET');
                 else {
                     stack.push(tag);
                     stack = stack.concat(buildHTMLStack($el.contents()));
@@ -300,19 +409,75 @@
             return stack;
         }
 
+        function getFormatedSelection() {
+            //build all previous nodes to ensure all formatting is captures
+            var nodes = tinymce.activeEditor.dom.getParents(tinymce.activeEditor.selection.getNode());
+            var n = 0, nl = nodes.length;
+            var start = '<html>';
+            var end = '</html>';
+            for (; n < nl; n++) {
+                var tag = nodes[n].tagName;
+                if (tag === 'EM' || tag === 'I' || tag === 'STRONG' || tag === 'B') {
+                    start += '<' + tag + '>';
+                    end = '</' + tag + '>' + end;
+                }
+                else if (tag === 'SPAN') {
+                    start += '<' + tag;
+                    if (nodes[n].className != '')
+                        start += ' class="' + nodes[n].className + '"';
+                    var style = '';
+                    if (nodes[n].style.textDecoration != '')
+                        style += 'text-decoration:' + nodes[n].style.textDecoration + ';';
+                    if (nodes[n].style.color != '')
+                        style += 'color:' + nodes[n].style.color + ';';
+                    if (nodes[n].style.background != '')
+                        style += 'background:' + nodes[n].style.background + ';';
+                    if (nodes[n].style.backgroundColor != '')
+                        style += 'background-color:' + nodes[n].style.backgroundColor + ';';
+                    if (style.length > 0)
+                        start += ' style="' + style + '"';
+                    if (nodes[n].dataset && nodes[n].dataset.mceStyle)
+                        start += ' data-mce-style="' + nodes[n].dataset.mceStyle + '"';
+                    start += ' >';
+                    end = '</' + tag + '>' + end;
+                }
+                else if (tag === 'BODY') {
+                    start += '<' + tag + '>';
+                    end = '</' + tag + '>' + end;
+                    break;
+                }
+            }
+            return formatHtml($(start + tinymce.activeEditor.selection.getContent({ format: 'raw' }).replace(/<\/div><div>/g, '<br>') + end));
+        }
+
         function getFormatedText() {
-            var data = buildHTMLStack($('<html>' + tinymce.activeEditor.getContent({ format: 'raw' }).replace(/<\/div><div>/g, '<br>') + '</html>'));
+            return formatHtml($('<html>' + tinymce.activeEditor.getContent({ format: 'raw' }).replace(/<\/div><div>/g, '<br>') + '</html>'));
+        }
+
+        function getText() {
+            return tinymce.activeEditor.getContent({ format: 'text' });
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function getHTML() {
+            return tinymce.activeEditor.getContent({ format: 'html' });
+        }
+
+        function formatHtml(text) {
+            var data = buildHTMLStack(text);
             var buffer = [];
             var codes = [];
             var color, d, dl, rgb;
             if (options.enableDebug)
-                window.opener.client.debug('debug', 'Advanced Editor Get Raw HTML: ' + tinymce.activeEditor.getContent({ format: 'raw' }));
+                window.opener.client.debug('Composer Editor Get Raw HTML: ' + tinymce.activeEditor.getContent({ format: 'raw' }));
             for (d = data.length - 1; d >= 0; d--) {
-                if (!data[d].startsWith('"') && data[d] != 'BR')
+                if (!data[d].startsWith('"') && data[d] != 'BR' && data[d] != 'RESET')
                     data.pop();
                 else
                     break;
             }
+            if (data[0] === 'DIV')
+                data.shift();
 
             for (d = 0, dl = data.length; d < dl; d++) {
                 switch (data[d]) {
@@ -336,6 +501,7 @@
                     case '/ITALIC':
                     case '/STRIKEOUT':
                         codes.pop();
+                        cleanReset(buffer);
                         buffer.push('%^RESET%^');
                         if (codes.length > 0)
                             buffer.push(codes.join(''));
@@ -347,9 +513,19 @@
                         break;
                     case 'DIV':
                     case 'BR':
-                        if (codes.length > 0 && buffer.length > 0 && !buffer[buffer.length - 1].endsWith('%^RESET%^'))
+                        if (codes.length > 0 && buffer.length > 0 && !buffer[buffer.length - 1].endsWith('%^RESET%^')) {
+                            cleanReset(buffer);
                             buffer.push('%^RESET%^');
+                        }
                         buffer.push('\n');
+                        if (codes.length > 0)
+                            buffer.push(codes.join(''));
+                        break;
+                    case 'RESET':
+                        if (codes.length > 0 && buffer.length > 0 && !buffer[buffer.length - 1].endsWith('%^RESET%^')) {
+                            cleanReset(buffer);
+                            buffer.push('%^RESET%^');
+                        }
                         if (codes.length > 0)
                             buffer.push(codes.join(''));
                         break;
@@ -379,6 +555,7 @@
                         }
                         else if (data[d].startsWith('/COLOR: ')) {
                             codes.pop();
+                            cleanReset(buffer);
                             buffer.push('%^RESET%^');
                             if (codes.length > 0)
                                 buffer.push(codes.join(''));
@@ -406,11 +583,12 @@
                             else
                                 color = _colors[color];
                             color = '%^B_' + color + '%^';
-                            codes.push('%^' + color + '%^');
-                            buffer.push('%^' + color + '%^');
+                            codes.push(color);
+                            buffer.push(color);
                         }
                         else if (data[d].startsWith('/BACKGROUND-COLOR: ')) {
                             codes.pop();
+                            cleanReset(buffer);
                             buffer.push('%^RESET%^');
                             if (codes.length > 0)
                                 buffer.push(codes.join(''));
@@ -423,194 +601,15 @@
             return buffer.join('');
         }
 
-        //RGB are 0-5 each
-        function XTERM_COLOUR_NUM(r, g, b) { return (16 + (r) * 36 + (g) * 6 + (b)); }
-        //0-24
-        function XTERM_GREY_NUM(i) { return (232 + i); }
-
-        function getAnsiCode(color) {
-            switch (color) {
-                case 'DEFAULT': return '0;37;40';
-                case 'RESET': return '0;37;40';
-                case 'BOLD': return '1';
-                case 'FLASH': return '5';
-                case 'BLACK': return '30';
-                case 'WHITE': return '37';
-                case 'BLUE': return '34';
-                case 'CYAN': return '36';
-                case 'GREEN': return '32';
-                case 'MAGENTA': return '35';
-                case 'ORANGE': return '33';
-                case 'RED': return '31';
-                case 'YELLOW': return '1;33';
-                case 'BOLD%^%^BLACK': return '1;30';
-                case 'BOLD%^%^WHITE': return '1;37';
-                case 'BOLD%^%^BLUE': return '1;34';
-                case 'BOLD%^%^CYAN': return '1;36';
-                case 'BOLD%^%^GREEN': return '1;32';
-                case 'BOLD%^%^MAGENTA': return '1;35';
-                case 'BOLD%^%^ORANGE': return '1;33';
-                case 'BOLD%^%^RED': return '1;31';
-                case 'BOLD%^%^YELLOW': return '1;33';
-                case 'B_BLUE': return '44';
-                case 'B_CYAN': return '46';
-                case 'B_GREEN': return '42';
-                case 'B_MAGENTA': return '45';
-                case 'B_ORANGE': return '43';
-                case 'B_RED': return '41';
-                case 'B_YELLOW': return '1;43';
-                case 'B_BLACK': return '40';
-                case 'B_WHITE': return '47';
-                case 'UNDERLINE': return '4';
-                case 'DBLUNDERLINE': return '4;21';
-                case 'REVERSE': return '7';
-                case 'ITALIC': return '3';
-                case 'STRIKEOUT': return '9';
-                case 'OVERLINE': return '53';
-                case 'BOLDOFF': return '22';
-                case 'ITALICOFF': return '23';
-                case 'UNDERLINEOFF': return '24';
-                case 'FLASHOFF': return '25';
-                case 'INVERSEOFF': return '27';
-                case 'STRIKEOUTOFF': return '29';
-                case 'OVERLINEOFF': return '55';
-            }
-            if (color.startsWith('B_RGB'))
-                return '48;5;' + XTERM_COLOUR_NUM(parseInt(color.substr(5, 1)), parseInt(color.substr(6, 1)), parseInt(color.substr(7, 1)));
-            if (color.startsWith('RGB'))
-                return '38;5;' + XTERM_COLOUR_NUM(parseInt(color.substr(3, 1)), parseInt(color.substr(4, 1)), parseInt(color.substr(5, 1)));
-
-            if (color.startsWith('B_mono'))
-                return '48;5;' + XTERM_GREY_NUM(parseInt(color.substr(6)));
-            if (color.startsWith('mono'))
-                return '38;5;' + XTERM_GREY_NUM(parseInt(color.substr(4)));
-            return '';
-        }
-
-        function getAnsiText() {
-            var data = buildHTMLStack($('<html>' + tinymce.activeEditor.getContent({ format: 'raw' }).replace(/<\/div><div>/g, '<br>') + '</html>'));
-            var buffer = [];
-            var codes = [];
-            var color, d, dl, rgb;
-            if (options.enableDebug)
-                window.opener.client.debug('Advanced Editor Get Raw HTML: ' + tinymce.activeEditor.getContent({ format: 'raw' }));
-            for (d = data.length - 1; d >= 0; d--) {
-                if (!data[d].startsWith('"') && data[d] != 'BR')
-                    data.pop();
+        function cleanReset(buffer) {
+            let b = buffer.length - 1;
+            for (; b >= 0; b--) {
+                if (buffer[b].startsWith('%^'))
+                    buffer.pop();
                 else
-                    break;
+                    return buffer;
             }
-
-            for (d = 0, dl = data.length; d < dl; d++) {
-                switch (data[d]) {
-                    case 'BOLD':
-                    case 'ITALIC':
-                    case 'UNDERLINE':
-                    case 'STRIKEOUT':
-                    case 'DBLUNDERLINE':
-                    case 'OVERLINE':
-                    case 'FLASH':
-                    case 'REVERSE':
-                        codes.push(getAnsiCode(data[d]));
-                        buffer.push('\x1b[' + getAnsiCode(data[d]) + 'm');
-                        break;
-                    case '/DBLUNDERLINE':
-                    case '/OVERLINE':
-                    case '/FLASH':
-                    case '/REVERSE':
-                    case '/UNDERLINE':
-                    case '/BOLD':
-                    case '/ITALIC':
-                    case '/STRIKEOUT':
-                        codes.pop();
-                        buffer.push('\x1b[0;37;40m');
-                        if (codes.length > 0)
-                            buffer.push('\x1b[' + codes.join(';') + 'm');
-                        break;
-                    case 'SPAN':
-                    case '/SPAN':
-                    case '/BR':
-                    case '/DIV':
-                        break;
-                    case 'DIV':
-                    case 'BR':
-                        if (codes.length > 0 && buffer.length > 0 && !buffer[buffer.length - 1].endsWith('\x1b[0;37;40m'))
-                            buffer.push('\x1b[0;37;40m');
-                        buffer.push('\n');
-                        if (codes.length > 0)
-                            buffer.push('\x1b[' + codes.join(';') + 'm');
-                        break;
-                    default:
-                        if (data[d].startsWith('COLOR: #')) {
-                            color = data[d].substr(8);
-                            if (!_colors[color]) {
-                                rgb = new rgbcolor(color);
-                                color = nearestHex(rgb.toHex()).substr(1);
-                            }
-                            color = _colors[color];
-                            codes.push(getAnsiCode(color));
-                            buffer.push('\x1b[' + getAnsiCode(color) + 'm');
-                        }
-                        else if (data[d].startsWith('COLOR: ')) {
-                            color = new rgbcolor(data[d].substr(7)).toHex().substr(1);
-                            if (!_colors[color])
-                                color = nearestHex('#' + color).substr(1);
-                            color = _colors[color];
-                            codes.push(getAnsiCode(color));
-                            buffer.push('\x1b[' + getAnsiCode(color) + 'm');
-                        }
-                        else if (data[d].startsWith('/COLOR: ')) {
-                            codes.pop();
-                            buffer.push('\x1b[0;37;40m');
-                            if (codes.length > 0)
-                                buffer.push('\x1b[' + codes.join(';') + 'm');
-                        }
-                        else if (data[d].startsWith('BACKGROUND-COLOR: #')) {
-                            color = data[d].substr(19);
-                            if (!_colors[color]) {
-                                rgb = new rgbcolor(color);
-                                color = nearestHex(rgb.toHex()).substr(1);
-                            }
-                            if (_colors['B' + color])
-                                color = _colors['B' + color];
-                            else
-                                color = _colors[color];
-                            color = 'B_' + color + '';
-                            codes.push(getAnsiCode(color));
-                            buffer.push('\x1b[' + getAnsiCode(color) + 'm');
-                        }
-                        else if (data[d].startsWith('BACKGROUND-COLOR: ')) {
-                            color = new rgbcolor(data[d].substr(18)).toHex().substr(1);
-                            if (!_colors[color])
-                                color = nearestHex('#' + color).substr(1);
-                            if (_colors['B' + color])
-                                color = _colors['B' + color];
-                            else
-                                color = _colors[color];
-                            color = 'B_' + color + '';
-                            codes.push(getAnsiCode(color));
-                            buffer.push('\x1b[' + getAnsiCode(color) + 'm');
-                        }
-                        else if (data[d].startsWith('/BACKGROUND-COLOR: ')) {
-                            codes.pop();
-                            buffer.push('\x1b[0;37;40m');
-                            if (codes.length > 0)
-                                buffer.push('\x1b[' + codes.join(';') + 'm');
-                        }
-                        else if (data[d].startsWith('"'))
-                            buffer.push(data[d].substring(1, data[d].length - 1));
-                        break;
-                }
-            }
-            return buffer.join('');
-        }
-
-        function getText() {
-            return tinymce.activeEditor.getContent({ format: 'text' });
-        }
-
-        function getHTML() {
-            return tinymce.activeEditor.getContent({ format: 'html' });
+            return buffer;
         }
 
         //{ color: 'red', hex: '#EA4235', rgb: { r: 234, g: 66, b: 53 } },
@@ -689,16 +688,15 @@
 
                 function buttonColorClick(evt) {
                     if (evt.color === 'transparent')
-                        this.removeFormat(evt.format);
+                        tinymce.activeEditor.plugins['shadowmud'].removeFormat(evt.format);
                     else
-                        this.applyFormat(evt.format, evt.color);
+                        tinymce.activeEditor.plugins['shadowmud'].applyFormat(evt.format, evt.color);
                 }
 
-                function buttonPostRender() {
-                    var btn = this;
+                function buttonPostRender(buttonApi, format) {
                     editor.on('init', function () {
-                        editor.formatter.formatChanged(btn.settings.format, function (state) {
-                            btn.active(state);
+                        editor.formatter.formatChanged(format, function (state) {
+                            buttonApi.setActive(state);
                         });
                     });
                 }
@@ -714,62 +712,85 @@
                     });
                 }
 
-                this.buildMenu = function () {
+                this.buildMenu = function (editFlags) {
                     var cMenu = new Menu();
-                    cMenu.append(new MenuItem({ role: 'undo', icon: path.join(__dirname, '../assets/icons/png/undo.png') }));
-
-                    cMenu.append(new MenuItem({ role: 'redo', icon: path.join(__dirname, '../assets/icons/png/redo.png') }));
-                    cMenu.append(new MenuItem({ type: 'separator' }));
-                    cMenu.append(new MenuItem({ role: 'cut', icon: path.join(__dirname, '../assets/icons/png/cut.png') }));
-                    cMenu.append(new MenuItem({ role: 'copy', icon: path.join(__dirname, '../assets/icons/png/copy.png') }));
-                    cMenu.append(new MenuItem({ role: 'paste', icon: path.join(__dirname, '../assets/icons/png/paste.png') }));
-                    cMenu.append(new MenuItem({ role: 'delete', icon: path.join(__dirname, '../assets/icons/png/delete.png') }));
-                    cMenu.append(new MenuItem({ type: 'separator' }));
-                    cMenu.append(new MenuItem({ role: 'selectAll' }));
-                    cMenu.append(new MenuItem({ type: 'separator' }));
-
+                    if (tinymce.activeEditor.undoManager.hasUndo())
+                        cMenu.append(new MenuItem({ label: 'Undo', icon: path.join(__dirname, '../assets/icons/png/undo.png'), click: () => tinymce.activeEditor.undoManager.undo() }));
+                    if (tinymce.activeEditor.undoManager.hasRedo())
+                        cMenu.append(new MenuItem({ label: 'Redo', icon: path.join(__dirname, '../assets/icons/png/redo.png'), click: () => tinymce.activeEditor.undoManager.redo() }));
+                    if (tinymce.activeEditor.undoManager.hasUndo() || tinymce.activeEditor.undoManager.hasRedo())
+                        cMenu.append(new MenuItem({ type: 'separator' }));
+                    if (editFlags && editFlags.canCut)
+                        cMenu.append(new MenuItem({ role: 'cut', icon: path.join(__dirname, '../assets/icons/png/cut.png') }));
+                    if (editFlags && editFlags.canCopy) {
+                        cMenu.append(new MenuItem({ role: 'copy', icon: path.join(__dirname, '../assets/icons/png/copy.png') }));
+                        cMenu.append(new MenuItem({
+                            label: 'Copy formatted',
+                            icon: path.join(__dirname, '../assets/icons/png/copy.png'),
+                            click: copyFormatted
+                        }));
+                    }
+                    if (editFlags && editFlags.canPaste) {
+                        cMenu.append(new MenuItem({ role: 'paste', icon: path.join(__dirname, '../assets/icons/png/paste.png') }));
+                        cMenu.append(new MenuItem({
+                            label: 'Paste formatted',
+                            icon: path.join(__dirname, '../assets/icons/png/paste.png'),
+                            click: () => {
+                                insertFormated(clipboard.readText('selection') || '');
+                            }
+                        }));
+                    }
+                    if (editFlags && editFlags.canDelete)
+                        cMenu.append(new MenuItem({ role: 'delete', icon: path.join(__dirname, '../assets/icons/png/delete.png') }));
+                    if (editFlags && editFlags.canSelectAll) {
+                        if (cMenu.items.length && cMenu.items[cMenu.items.length - 1].role != 'separator')
+                            cMenu.append(new MenuItem({ type: 'separator' }));
+                        cMenu.append(new MenuItem({ role: 'selectAll' }));
+                    }
+                    if (cMenu.items.length && cMenu.items[cMenu.items.length - 1].role != 'separator')
+                        cMenu.append(new MenuItem({ type: 'separator' }));
                     cMenu.append(new MenuItem({
                         label: 'Style',
                         submenu: [
                             {
                                 label: 'Bold',
-                                icon: path.join(__dirname, '../assets/icons/png/bold.png'),
-                                click: toggleContextFormat
+                                icon: editor.formatter.match('bold') ? path.join(__dirname, '../assets/icons/png/bold.selected.png') : path.join(__dirname, '../assets/icons/png/bold.png'),
+                                click: toggleContextFormat,
                             },
                             {
                                 label: 'Italic',
-                                icon: path.join(__dirname, '../assets/icons/png/italic.png'),
+                                icon: editor.formatter.match('italic') ? path.join(__dirname, '../assets/icons/png/italic.selected.png') : path.join(__dirname, '../assets/icons/png/italic.png'),
                                 click: toggleContextFormat
                             },
                             {
                                 label: 'Underline',
-                                icon: path.join(__dirname, '../assets/icons/png/underline.png'),
+                                icon: editor.formatter.match('underline') ? path.join(__dirname, '../assets/icons/png/underline.selected.png') : path.join(__dirname, '../assets/icons/png/underline.png'),
                                 click: toggleContextFormat
                             },
                             {
                                 label: 'Strikethrough',
-                                icon: path.join(__dirname, '../assets/icons/png/strikethrough.png'),
+                                icon: editor.formatter.match('strikethrough') ? path.join(__dirname, '../assets/icons/png/strikethrough.selected.png') : path.join(__dirname, '../assets/icons/png/strikethrough.png'),
                                 click: toggleContextFormat
                             },
                             {
                                 label: 'Overline',
-                                icon: path.join(__dirname, '../assets/icons/png/overline.png'),
+                                icon: editor.formatter.match('overline') ? path.join(__dirname, '../assets/icons/png/overline.selected.png') : path.join(__dirname, '../assets/icons/png/overline.png'),
                                 click: toggleContextFormat
                             },
                             {
                                 label: 'Double Underline',
                                 format: 'dblunderline',
-                                icon: path.join(__dirname, '../assets/icons/png/dblunderline.png'),
+                                icon: editor.formatter.match('dblunderline') ? path.join(__dirname, '../assets/icons/png/dblunderline.selected.png') : path.join(__dirname, '../assets/icons/png/dblunderline.png'),
                                 click: toggleContextFormat
                             },
                             {
                                 label: 'Flash',
-                                icon: path.join(__dirname, '../assets/icons/png/flash.png'),
+                                icon: editor.formatter.match('flash') ? path.join(__dirname, '../assets/icons/png/flash.selected.png') : path.join(__dirname, '../assets/icons/png/flash.png'),
                                 click: toggleContextFormat
                             },
                             {
                                 label: 'Reverse',
-                                icon: path.join(__dirname, '../assets/icons/png/reverse.png'),
+                                icon: editor.formatter.match('reverse') ? path.join(__dirname, '../assets/icons/png/reverse.selected.png') : path.join(__dirname, '../assets/icons/png/reverse.png'),
                                 click: toggleContextFormat
                             }
                         ]
@@ -817,7 +838,7 @@
                         label: 'More...',
                         icon: path.join(__dirname, '../assets/icons/png/color.png'),
                         click: function () {
-                            ipcRenderer.send('show-window', 'color', { type: 'forecolor', color: '', window: 'composer' });
+                            openColorDialog('forecolor');
                         }
                     });
                     bmi.push({ type: 'separator' });
@@ -825,7 +846,7 @@
                         label: 'More...',
                         icon: path.join(__dirname, '../assets/icons/png/color.png'),
                         click: function () {
-                            ipcRenderer.send('show-window', 'color', { type: 'hilitecolor', color: '', window: 'composer' });
+                            openColorDialog('hilitecolor');
                         }
                     });
                     cMenu.append(new MenuItem({ type: 'separator' }));
@@ -833,6 +854,13 @@
                     cMenu.append(new MenuItem({ label: 'Background color', icon: path.join(__dirname, '../assets/icons/png/backcolor.png'), submenu: bmi }));
                     return cMenu;
                 };
+
+                editor.ui.registry.addIcon('sendraw', ' <i class="mce-i-fa-sendraw"></i>');
+                editor.ui.registry.addIcon('open', ' <i class="mce-i-fa-open"></i>');
+                editor.ui.registry.addIcon('overline', '<img src="../assets/icons/png/overline.png" />');
+                editor.ui.registry.addIcon('dblunderline', '<img src="../assets/icons/png/dblunderline.png" />');
+                editor.ui.registry.addIcon('flash', '<img src="../assets/icons/png/flash.png" />');
+                editor.ui.registry.addIcon('reverse', '<img src="../assets/icons/png/reverse.png" />');
 
                 editor.addButton('send', {
                     type: 'splitbutton',
@@ -1028,6 +1056,7 @@
                     $('#sendProgress')[0].close();
             });
             tinymce.init({
+                custom_colors: false,
                 selector: 'textarea',
                 height: 500,
                 menubar: false,
@@ -1038,21 +1067,21 @@
                 nowrap: true,
                 force_br_newlines: true,
                 force_p_newlines: false,
-                forced_root_block: '<span>',
+                forced_root_block: 'div',
                 plugins: [
                     //contextmenu
                     'paste shadowmud insertdatetime smtextcolor nonbreaking'
                 ],
-                color_picker_callback: function (editor, color, format) { ipcRenderer.send('show-window', 'color', { type: format, color: color || '', window: 'composer' }); },
+                color_picker_callback: function (editor, color, format) { openColorDialog(format, color || ''); },
                 color_picker_caption: 'More&hellip;',
                 //contextmenu: "shadowfore shadowback | bold italic underline strikethrough overline dblunderline flash reverse",
-                nonbreaking_force_tab: true,
+                //nonbreaking_force_tab: true,
                 //textcolor_map: _ColorTable,
                 //textcolor_rows: "17",
                 //textcolor_cols: "16",
                 textcolor_rows: '3',
                 textcolor_cols: '8',
-                toolbar: 'send | append | undo redo | forecolor backcolor | bold italic underline strikethrough overline dblunderline flash reverse | insertdatetime',
+                toolbar: 'send | append | undo redo | smforecolor smbackcolor | bold italic underline strikethrough overline dblunderline flash reverse | insertdatetime',
                 content_css: 'css/editorcontent.css',
                 formats: {
                     bold: { inline: 'strong', exact: true, links: true, remove_similar: true },
@@ -1070,9 +1099,13 @@
 
                 },
                 init_instance_callback: function (editor) {
+                    editor.shortcuts.add('ctrl+shift+c', 'Copy formatted', copyFormatted);
+                    editor.shortcuts.add('ctrl+shift+p', 'Paste formatted', () => {
+                        insertFormated(clipboard.readText('selection') || '');
+                    });
                     editor.on('PastePreProcess', function (e) {
                         if (options.enableDebug)
-                            ipcRenderer.send('debug', 'Advanced Before Editor PastePreProcess: ' + e.content);
+                            window.opener.client.debug('Compose Before Editor PastePreProcess: ' + e.content);
                         clearReverse($('.reverse', $(editor.getDoc()).contents()));
                         e.content = e.content.replace(/<\/p>/g, '<br>');
                         e.content = e.content.replace(/<\/h[1-6]>/g, '<br>');
@@ -1086,7 +1119,7 @@
                             e.content = e.content.substring(0, m.index) + e.content.substring(m.index, regex.lastIndex).replace(/\n/g, '<br>') + e.content.substring(regex.lastIndex);
                         }
                         if (options.enableDebug)
-                            ipcRenderer.send('debug', 'Advanced After Editor PastePreProcess: ' + e.content);
+                            window.opener.client.debug('Compose After Editor PastePreProcess: ' + e.content);
                     });
                     editor.on('PastePreProcess', function () {
                         addReverse($('.reverse', $(editor.getDoc()).contents()));
@@ -1099,74 +1132,33 @@
                 valid_elements: 'strong/b,em/i,u,span[style],strike/s,br',
                 valid_styles: {
                     '*': 'color,background,background-color,text-decoration,font-weight'
-                }
+                },
+                color_map: _ColorTable,
             });
+
             remote.getCurrentWindow().webContents.on('context-menu', (e, params) => {
-                const { selectionText, isEditable } = params;
-                if (isEditable) {
-                    var cMenu;
-                    if (params.inputFieldType !== 'none') {
-                        cMenu = Menu.buildFromTemplate([
-                            { role: 'undo' },
-                            { role: 'redo' },
-                            { type: 'separator' },
-                            { role: 'cut' },
-                            { role: 'copy' },
-                            { role: 'paste' },
-                            { type: 'separator' },
-                            { role: 'selectAll' },
-                        ]);
-                        if (window.getSetting('spellchecking') && params.dictionarySuggestions.length) {
-                            cMenu.insert(0, new MenuItem({ type: 'separator' }));
-                            for (w = params.dictionarySuggestions.length - 1; w >= 0; w--) {
-                                cMenu.insert(0, new MenuItem({
-                                    label: params.dictionarySuggestions[w],
-                                    x: params.x,
-                                    y: params.y,
-                                    sel: params.selectionText.length - params.misspelledWord.length,
-                                    idx: params.selectionText.indexOf(params.misspelledWord),
-                                    word: params.misspelledWord,
-                                    click: function (item) {
-                                        var el = $(document.elementFromPoint(item.x, item.y));
-                                        var value = el.val();
-                                        var start = el[0].selectionStart;
-                                        const wStart = start + item.idx;
-                                        value = value.substring(0, wStart) + item.label + value.substring(wStart + item.word.length);
-                                        el.val(value);
-                                        el[0].selectionStart = start;
-                                        el[0].selectionEnd = start + item.label.length + item.sel;
-                                        el.blur();
-                                        el.focus();
-                                    }
-                                }));
+                //const { selectionText, isEditable } = params;
+                //if (isEditable) {
+                if ((params.y) < 37) return;
+                var cMenu = tinymce.activeEditor.plugins['shadowmud'].buildMenu(params.editFlags);
+                if (window.getSetting('spellchecking') && params.dictionarySuggestions.length) {
+                    cMenu.insert(0, new MenuItem({ type: 'separator' }));
+                    for (var w = params.dictionarySuggestions.length - 1; w >= 0; w--)
+                        cMenu.insert(0, new MenuItem({
+                            label: params.dictionarySuggestions[w],
+                            click: function (item) {
+                                tinymce.activeEditor.undoManager.transact(function () {
+                                    tinymce.activeEditor.selection.setContent(item.label);
+                                });
                             }
-                        }
-                    }
-                    else {
-                        cMenu = tinymce.activeEditor.plugins['shadowmud'].buildMenu();
-                        if (window.getSetting('spellchecking') && params.dictionarySuggestions.length) {
-                            cMenu.insert(0, new MenuItem({ type: 'separator' }));
-                            for (var w = params.dictionarySuggestions.length - 1; w >= 0; w--)
-                                cMenu.insert(0, new MenuItem({
-                                    label: params.dictionarySuggestions[w],
-                                    click: function (item) {
-                                        tinymce.activeEditor.undoManager.transact(function () {
-                                            tinymce.activeEditor.selection.setContent(item.label);
-                                        });
-                                    }
-                                }));
-                        }
-                    }
-                    cMenu.popup({ window: remote.getCurrentWindow() });
-                } else if (selectionText && selectionText.trim() !== '') {
-                    Menu.buildFromTemplate([
-                        { role: 'copy' },
-                        { type: 'separator' },
-                        { role: 'selectAll' },
-                    ]).popup({ window: remote.getCurrentWindow() });
+                        }));
                 }
+                cMenu.popup({ window: remote.getCurrentWindow() });
             });
             loadOptions();
+            window.opener.client.on('options-loaded', () => {
+                loadOptions();
+            }, { signal: abortController.signal });
         });
 
         function loadColors() {

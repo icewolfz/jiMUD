@@ -1588,7 +1588,6 @@
                     { menu: ['file', 'disconnect'], options: { enabled: false } }
                 ]);
                 ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
-                ipcRenderer.send('closed');
                 _logger.postMessage({ action: 'connected', args: client.connected });
                 _logger.postMessage({ action: 'stop' });
                 if (_skipDisconnect) return;
