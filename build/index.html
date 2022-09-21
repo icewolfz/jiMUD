@@ -2751,21 +2751,6 @@
             }
         }
 
-        /*
-        ipcRenderer.on('update-progress', (event, progressObj) => {
-            if (!$('#update-progress')[0].open) {
-                $('#update-progress-title').html('Downloading update&hellip;');
-                $('#update-progress')[0].show();
-                client.commandInput.focus();
-            }
-            $('#update-progressbar').val(progressObj.percent);
-        });
-
-        ipcRenderer.on('update-downloaded', () => {
-            if ($('#update-progress')[0].open)
-                $('#update-progress')[0].close();
-        });
-        */
         function loadCharacter(ID) {
             var _prevID = _windowState.data.characterId;
             _windowState.data.characterId = ID;

@@ -103,6 +103,7 @@ let set = settings.Settings.load(global.settingsFile);
 global.debug = false;
 global.editorOnly = false;
 global.updating = false;
+let _checkingUpdates = false;
 
 let _layout = parseTemplate(path.join('{data}', 'window.layout'));;
 
@@ -419,7 +420,6 @@ function createWindow(options) {
         if (options.data && options.data.data)
             executeScript('if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify(options.data.data) + ');', window);
         updateJumpList();
-        checkForUpdates();
         if (options.data && options.data.state)
             restoreWindowState(window, options.data.state);
         else if (states[options.file])
@@ -538,6 +538,7 @@ function createDialog(options) {
         resizable: options.modal ? false : (options.resize || false),
         title: options.title || 'jiMUD',
         icon: options.icon || path.join(__dirname, '../assets/icons/png/64x64.png'),
+        backgroundColor: options.backgroundColor || '#000',
         webPreferences: {
             nodeIntegration: true,
             webviewTag: false,
@@ -724,6 +725,7 @@ app.on('ready', () => {
                 }
             }
         }
+        checkForUpdates();
     }
 });
 
@@ -2166,28 +2168,25 @@ function updateJumpList() {
 }
 
 //#region Auto updates
-function createUpdater() {
+function createUpdater(window) {
     const autoUpdater = require('electron-updater').autoUpdater;
     autoUpdater.on('download-progress', progressObj => {
-        if (win) {
-            win.setProgressBar(progressObj.percent / 100);
-            win.webContents.send('update-progress', progressObj);
-        }
-        else if (global.editorOnly && winCode) {
-            winCode.setProgressBar(progressObj.percent / 100);
-            winCode.webContents.send('update-progress', progressObj);
-        }
+        window.setProgressBar(progressObj.percent / 100);
+        const progress = getWindowId('progress');
+        if (progress)
+            progress.webContents.send('progress', progressObj);
     });
     return autoUpdater;
 }
 
 function checkForUpdates() {
-    if (!set)
-        set = settings.Settings.load(global.settingsFile);
+    if (_checkingUpdates) return;
+    _checkingUpdates = true;
+    const window = getActiveWindow();
     if (set.checkForUpdates) {
         //resources/app-update.yml
         if (!isFileSync(path.join(app.getAppPath(), '..', 'app-update.yml'))) {
-            if (dialog.showMessageBoxSync(getParentWindow(), {
+            if (dialog.showMessageBoxSync({
                 type: 'warning',
                 title: 'Not supported',
                 message: 'Auto update is not supported with this version of jiMUD, try anyways?',
@@ -2196,31 +2195,33 @@ function checkForUpdates() {
             }) !== 0)
                 return;
         }
-        const autoUpdater = createUpdater();
+        const autoUpdater = createUpdater(window);
         autoUpdater.on('update-downloaded', () => {
-            if (win) {
-                win.setProgressBar(-1);
-                win.webContents.send('update-downloaded');
-            }
-            else if (global.editorOnly && winCode) {
-                winCode.setProgressBar(-1);
-                winCode.webContents.send('update-downloaded');
-            }
+            window.setProgressBar(-1);
+            const progress = getWindowId('progress');
+            if (progress)
+                progress.close();
             //store current line arguments to use on next load
             fs.writeFileSync(path.join(app.getPath('userData'), 'argv.json'), JSON.stringify(process.argv));
+            _checkingUpdates = false;
         });
         autoUpdater.on('error', (error) => {
             dialog.showErrorBox('Error: ', error == null ? 'unknown' : (error.stack || error).toString());
-            if (global.editorOnly) {
-                winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: true });
-                winCode.setProgressBar(-1);
-                winCode.webContents.send('update-downloaded');
-            }
-            else {
-                updateMenuItem({ menu: ['help', 'updater'], enabled: true });
-                win.setProgressBar(-1);
-                win.webContents.send('update-downloaded');
-            }
+            window.setProgressBar(-1);
+            const progress = getWindowId('progress');
+            if (progress)
+                progress.close();
+            _checkingUpdates = false;
+        });
+        autoUpdater.on('update-available', () => {
+            openProgress(window, 'Downloading update&hellip;');
+        });
+        autoUpdater.on('update-not-available', () => {
+            window.setProgressBar(-1);
+            const progress = getWindowId('progress');
+            if (progress)
+                progress.close();
+            _checkingUpdates = false;
         });
         autoUpdater.checkForUpdatesAndNotify();
     }
@@ -2237,20 +2238,18 @@ function checkForUpdatesManual() {
         }) !== 0)
             return;
     }
-    const autoUpdater = createUpdater();
+    if (_checkingUpdates) return;
+    _checkingUpdates = true;
+    const window = getActiveWindow();
+    const autoUpdater = createUpdater(window);
     autoUpdater.autoDownload = false;
     autoUpdater.on('error', (error) => {
         dialog.showErrorBox('Error: ', error == null ? 'unknown' : (error.stack || error).toString());
-        if (global.editorOnly) {
-            winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: true });
-            winCode.setProgressBar(-1);
-            winCode.webContents.send('update-downloaded');
-        }
-        else {
-            updateMenuItem({ menu: ['help', 'updater'], enabled: true });
-            win.setProgressBar(-1);
-            win.webContents.send('update-downloaded');
-        }
+        window.setProgressBar(-1);
+        const progress = getWindowId('progress');
+        if (progress)
+            progress.close();
+        _checkingUpdates = false;
     });
 
     autoUpdater.on('update-available', () => {
@@ -2260,15 +2259,14 @@ function checkForUpdatesManual() {
             message: 'Found updates, do you want update now?',
             buttons: ['Yes', 'No', 'Open website']
         }).then(buttonIndex => {
-            if (buttonIndex.response === 0)
+            if (buttonIndex.response === 0) {
+                openProgress(window, 'Downloading update&hellip;');
                 autoUpdater.downloadUpdate();
+            }
             else {
                 if (buttonIndex.response === 2)
                     shell.openExternal('https://github.com/icewolfz/jiMUD/releases/latest', '_blank');
-                if (global.editorOnly)
-                    winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: true });
-                else
-                    updateMenuItem({ menu: ['help', 'updater'], enabled: true });
+                _checkingUpdates = false;
             }
         });
     });
@@ -2281,27 +2279,19 @@ function checkForUpdatesManual() {
         }).then(buttonIndex => {
             if (buttonIndex.response === 1)
                 shell.openExternal('https://github.com/icewolfz/jiMUD/releases/latest', '_blank');
-            if (global.editorOnly)
-                winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: true });
-            else
-                updateMenuItem({ menu: ['help', 'updater'], enabled: true });
+            _checkingUpdates = false;
         });
     });
 
     autoUpdater.on('update-downloaded', () => {
-        if (global.editorOnly) {
-            winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: false });
-            winCode.setProgressBar(-1);
-            winCode.webContents.send('update-downloaded');
-        }
-        else {
-            updateMenuItem({ menu: ['help', 'updater'], enabled: false });
-            win.setProgressBar(-1);
-            win.webContents.send('update-downloaded');
-        }
+        window.setProgressBar(-1);
+        const progress = getWindowId('progress');
+        if (progress)
+            progress.close();
+        _checkingUpdates = false;
         dialog.showMessageBox({
             title: 'Install Updates',
-            message: 'Updates downloaded, application will be quit for update or when you next restart the application...',
+            message: 'Updates downloaded, Quit for update now or when you next restart the application...',
             buttons: ['Now', 'Later']
         }).then(result => {
             if (result.response === 0) {
@@ -2312,10 +2302,6 @@ function checkForUpdatesManual() {
             }
         });
     });
-    if (global.editorOnly)
-        winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: false });
-    else
-        updateMenuItem({ menu: ['help', 'updater'], enabled: false });
     autoUpdater.checkForUpdates();
 }
 
@@ -3928,6 +3914,19 @@ function openAbout(parent) {
         window.on('closed', () => idMap.delete('about'));
         idMap.set('about', window);
     }
+}
+
+function openProgress(parent, title) {
+    let window = getWindowId('progress');
+    if (window && !window.isDestroyed())
+        window.focus();
+    else {
+        window = createDialog({ show: true, parent: parent, url: path.join(__dirname, 'progress.html'), title: title, bounds: { width: 200, height: 70 }, backgroundColor: '#fff', icon: path.join(__dirname, '../../assets/icons/png/progress.png') });
+        window.on('closed', () => idMap.delete('progress'));
+        window.webContents.send(title);
+        idMap.set('progress', window);
+    }
+    return window;
 }
 
 function openProfileManager(parent) {
