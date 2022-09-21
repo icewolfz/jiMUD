@@ -2180,10 +2180,9 @@ function createUpdater(window) {
 }
 
 function checkForUpdates() {
-    if (_checkingUpdates) return;
-    _checkingUpdates = true;
-    const window = getActiveWindow();
-    if (set.checkForUpdates) {
+    const window = getActiveWindow().window;
+    if (set.checkForUpdates && !_checkingUpdates) {
+        _checkingUpdates = true;
         //resources/app-update.yml
         if (!isFileSync(path.join(app.getAppPath(), '..', 'app-update.yml'))) {
             if (dialog.showMessageBoxSync({
@@ -2223,13 +2222,17 @@ function checkForUpdates() {
                 progress.close();
             _checkingUpdates = false;
         });
-        autoUpdater.checkForUpdatesAndNotify();
+        autoUpdater.checkForUpdatesAndNotify().then((results) => {
+            if (!results)
+                _checkingUpdates = false;
+        });
     }
 }
 
 function checkForUpdatesManual() {
+    const window = getActiveWindow().window;
     if (!isFileSync(path.join(app.getAppPath(), '..', 'app-update.yml'))) {
-        if (dialog.showMessageBoxSync(getParentWindow(), {
+        if (dialog.showMessageBoxSync(window, {
             type: 'warning',
             title: 'Not supported',
             message: 'Auto update is not supported with this version of jiMUD, try anyways?',
@@ -2240,7 +2243,7 @@ function checkForUpdatesManual() {
     }
     if (_checkingUpdates) return;
     _checkingUpdates = true;
-    const window = getActiveWindow();
+
     const autoUpdater = createUpdater(window);
     autoUpdater.autoDownload = false;
     autoUpdater.on('error', (error) => {
@@ -2253,7 +2256,7 @@ function checkForUpdatesManual() {
     });
 
     autoUpdater.on('update-available', () => {
-        dialog.showMessageBox(getParentWindow(), {
+        dialog.showMessageBox(window, {
             type: 'info',
             title: 'Found Updates',
             message: 'Found updates, do you want update now?',
@@ -2272,7 +2275,7 @@ function checkForUpdatesManual() {
     });
 
     autoUpdater.on('update-not-available', () => {
-        dialog.showMessageBox(getParentWindow(), {
+        dialog.showMessageBox(window, {
             title: 'No Updates',
             message: 'Current version is up-to-date.',
             buttons: ['Ok', 'Open website']
@@ -2302,7 +2305,10 @@ function checkForUpdatesManual() {
             }
         });
     });
-    autoUpdater.checkForUpdates();
+    autoUpdater.checkForUpdates().then((results) => {
+        if (!results)
+            _checkingUpdates = false;
+    });
 }
 
 ipcMain.on('check-for-updates', checkForUpdatesManual);
