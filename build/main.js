@@ -105,7 +105,7 @@ global.editorOnly = false;
 global.updating = false;
 let _checkingUpdates = false;
 
-let _layout = parseTemplate(path.join('{data}', 'window.layout'));;
+let _layout = parseTemplate(path.join('{data}', global.editorOnly ? 'editor.layout' : 'window.layout'));
 
 let clients = {}
 let windows = {};
@@ -689,8 +689,10 @@ app.on('ready', () => {
         _layout = parseTemplate(argv.l[0]);
     else if (argv.l)
         _layout = argv.l;
-
+    else if (global.editorOnly)
+        _layout = parseTemplate(path.join('{data}', 'editor.layout'));
     if (global.editorOnly) {
+
         //showCodeEditor();
     }
     else {
@@ -1849,6 +1851,8 @@ function initializeChildWindow(window, link, details) {
     require("@electron/remote/main").enable(window.webContents);
     window.removeMenu();
     window.once('ready-to-show', () => {
+        if (details.options.overlayIcon)
+            window.setOverlayIcon(details.options.overlayIcon, details.options.overlayTip || details.options.title || '');
         loadWindowScripts(window, details.frameName);
         if (!details.options.noInputContext)
             addInputContext(window, set.spellchecking);
@@ -2783,7 +2787,7 @@ async function saveWindowLayout(file) {
 
 function loadWindowLayout(file) {
     if (!file)
-        file = parseTemplate(path.join('{data}', 'window.layout'));
+        file = parseTemplate(path.join('{data}', global.editorOnly ? 'editor.layout' : 'window.layout'));
     //cant find so cant load
     if (!isFileSync(file))
         return false;

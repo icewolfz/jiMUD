@@ -3190,6 +3190,9 @@
                     _windows['profiles.html'] = window.open('profiles.html', 'Profiles-' + getId(), `alwaysOnTopClient=true,showInTaskBar=${client.options.profiles.showInTaskBar},defaultHeight=600,defaultWidth=800,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/profiles.png')}${_options}`);
                     break;
                 case 'code.editor':
+                    if (data && data.details)
+                        _options = ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent', 'alwaysOnTop', 'showInTaskBar','overlayIcon','title']);
+                    _windows['code.editor.html'] = window.open('code.editor.html', 'Code editor-' + getId(), `persistent=${client.options.codeEditor.persistent},alwaysOnTopClient=${client.options.codeEditor.alwaysOnTopClient},alwaysOnTop=${client.options.codeEditor.alwaysOnTop},showInTaskBar=${client.options.codeEditor.showInTaskBar},defaultHeight=600,defaultWidth=800,backgroundColor=grey,icon=${path.join(__dirname, '../assets/icons/png/code.png')},overlayIcon=${path.join(__dirname, '../assets/icons/png/code.png')},title=Code editor${_options}`);
                     break;
             }
             if (data && data.data && typeof _windows[name + '.html'].restoreWindow !== 'undefined')
@@ -3251,8 +3254,8 @@
             }
             else
                 updateWindow(_windows['code.editor.html'], {
-                    alwaysOnTopClient: client.options.mapper.alwaysOnTopClient,
-                    alwaysOnTop: client.options.mapper.alwaysOnTop,
+                    alwaysOnTopClient: client.options.codeEditor.alwaysOnTopClient,
+                    alwaysOnTop: client.options.codeEditor.alwaysOnTop,
                     showInTaskBar: client.options.codeEditor.showInTaskBar,
                     enableBackgroundThrottling: enableBackgroundThrottling,
                     persistent: client.options.codeEditor.persistent
