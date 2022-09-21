@@ -1856,7 +1856,9 @@ function initializeChildWindow(window, link, details) {
         loadWindowScripts(window, details.frameName);
         if (!details.options.noInputContext)
             addInputContext(window, set.spellchecking);
-        if (!details.options.hide)
+        if ('visible' in details.options && !details.options.visible)
+            window.hide();
+        else
             window.show();
         if (global.debug)
             openDevtools(window.webContents, { activate: false });
@@ -2347,7 +2349,7 @@ function buildOptions(details, window, settings) {
         file = file.substring(__dirname.length + 9);
     options = {
         backgroundColor: '#000',
-        show: false,
+        show: true,
         icon: path.join(__dirname, '../assets/icons/png/64x64.png'),
         webPreferences: {
             nodeIntegration: true,
@@ -2367,6 +2369,8 @@ function buildOptions(details, window, settings) {
         for (var f = 0, fl = features.length; f < fl; f++) {
             feature = features[f].split('=');
             switch (feature[0]) {
+                case '':
+                    continue;
                 case 'defaultWidth':
                 case 'defaultHeight':
                 case 'defaultX':
@@ -2418,6 +2422,8 @@ function buildOptions(details, window, settings) {
                 options[key] = states[file][key];
         });
     }
+    if('visible' in options)
+        options.show = options.visible;    
     //if no width or height see if a default was supplied
     if (!('width' in options))
         options.width = 'defaultWidth' in options ? options.defaultWidth : 800;
@@ -2773,11 +2779,7 @@ async function saveWindowLayout(file) {
                 //get any custom data from window
                 data: await executeScript('if(typeof saveWindow === "function") saveWindow()', window)
             }
-            if (wData.details.parent)
-                wData.details.parent = true;
-            if (wData.details.options && wData.details.options.parent) {
-                wData.details.options.parent = true;
-            }
+            delete wData.details.options.visible;
             cData.windows.push(wData);
         }
         data.clients.push(cData);
@@ -2897,7 +2899,8 @@ function restoreWindowState(window, state) {
         window.minimize();
     if (!state.visible)
         window.hide();
-    window.show();
+    else
+        window.show();
     if (state.fullscreen)
         window.setFullScreen(state.fullscreen);
     if (global.debug)
