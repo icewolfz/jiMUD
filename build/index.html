@@ -1268,8 +1268,8 @@
             client.on('profile-toggled', (profile, enabled) => {
                 ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], options: { checked: enabled } });
                 doUpdate(24);
-                //TODO figure out how to notify profile window, will require ipc if profiles is a global window
-                //ipcRenderer.send('profile-toggled', profile, enabled);
+                if(_windows['profiles'])
+                    _windows['profiles'].profileToggled(profile, enabled);
             });
 
             client.on('profiles-updated', (noChanges) => {
@@ -2891,12 +2891,7 @@
                 _windows['characters.html'].characterAdded(character);
         });
         /*              
-                ipcRenderer.on('change-options', () => {
-                    _skipDisconnect = 0;
-                    client.settingsFile = _windowState.data.settings;
-                    autoConnect();
-                });
-        
+       
                 ipcRenderer.on('setting-changed', (event, data) => {
                     if (data.type === 'mapper') {
                         client.options.mapper[data.name] = data.value;

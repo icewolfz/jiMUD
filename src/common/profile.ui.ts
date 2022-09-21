@@ -2769,9 +2769,9 @@ function getOptions() {
 
 function saveOptions() {
     if (window.opener)
-        window.opener.client.saveOptions();
+        window.opener.client.doUpdate(32);
     else
-        options.save(ipcRenderer.sendSync('get-global', 'settingsFile'));
+        options.save(window.getGlobal('settingsFile'));
 }
 
 function loadOptions() {
@@ -2875,7 +2875,8 @@ export function init() {
         if ($('#content').outerWidth() < 300 && $('#sidebar').outerWidth() > 202) {
             $('#sidebar').css('width', document.body.clientWidth - 300);
             $('#content').css('left', document.body.clientWidth - 300);
-            ipcRenderer.send('setting-changed', { type: 'profiles', name: 'split', value: document.body.clientWidth - 300 });
+            options.profiles.split = document.body.clientWidth - 300;
+            saveOptions();
         }
         $('#trigger-states-dropdown').css('width', $('#trigger-pattern').outerWidth() + 17 + 'px');
         $('#trigger-states-dropdown').css('left', (-$('#trigger-pattern').outerWidth()) + 'px');
@@ -2886,17 +2887,20 @@ export function init() {
             if (e.pageX < 200) {
                 $('#sidebar').css('width', 202);
                 $('#content').css('left', 202);
-                ipcRenderer.send('setting-changed', { type: 'profiles', name: 'split', value: 202 });
+                options.profiles.split = 202;
+                saveOptions();
             }
             else if (e.pageX > document.body.clientWidth - 200) {
                 $('#sidebar').css('width', document.body.clientWidth - 300);
                 $('#content').css('left', document.body.clientWidth - 300);
-                ipcRenderer.send('setting-changed', { type: 'profiles', name: 'split', value: document.body.clientWidth - 300 });
+                options.profiles.split = document.body.clientWidth - 300;
+                saveOptions();
             }
             else {
                 $('#sidebar').css('width', e.pageX + 2);
                 $('#content').css('left', e.pageX + 2);
-                ipcRenderer.send('setting-changed', { type: 'profiles', name: 'split', value: e.pageX + 2 });
+                options.profiles.split = e.pageX + 2;
+                saveOptions();
             }
 
             $('#ghost-bar').remove();
@@ -3052,7 +3056,7 @@ export function init() {
             icon.removeClass('fa-chevron-up');
             $(this).parent().css('padding-bottom', '15px');
             $(this).closest('table').css('min-height', '342px');
-            ipcRenderer.send('setting-changed', { type: 'profiles', name: getKey(editor.substr(0, editor.length - 7)) + 'Advanced', value: true });
+            options.profiles[getKey(editor.substr(0, editor.length - 7)) + 'Advanced'] = true;
         }
         else {
             panels.css('display', '');
@@ -3060,8 +3064,9 @@ export function init() {
             icon.removeClass('fa-chevron-down');
             $(this).parent().css('padding-bottom', '');
             $(this).closest('table').css('min-height', '');
-            ipcRenderer.send('setting-changed', { type: 'profiles', name: getKey(editor.substr(0, editor.length - 7)) + 'Advanced', value: false });
+            options.profiles[getKey(editor.substr(0, editor.length - 7)) + 'Advanced'] = false;
         }
+        saveOptions();
         if (_ide && editors[editor.substr(0, editor.length - 7) + '-value'])
             editors[editor.substr(0, editor.length - 7) + '-value'].resize(true);
     });
@@ -3095,8 +3100,10 @@ export function init() {
                 buttons: ['Yes', 'No', 'Never ask again'],
                 defaultId: 1
             });
-            if (choice === 2)
-                ipcRenderer.send('setting-changed', { type: 'profiles', name: 'askoncancel', value: false });
+            if (choice === 2) {
+                options.profiles.askoncancel = false;
+                saveOptions();
+            }
             if (choice === 0 || choice === 2) {
                 _close = true;
                 window.close();
@@ -3789,7 +3796,7 @@ function importProfiles() {
                         });
                         return;
                     }
-                    ipcRenderer.send('set-progress', { value: 0.5, options: { mode: 'indeterminate' } });
+                    updateProgress({ value: 0.5, mode: 'indeterminate' });
                     if (data.profiles) {
                         const keys = Object.keys(data.profiles);
                         let k = 0;
@@ -3934,7 +3941,7 @@ function importProfiles() {
                             }
                         }
                     }
-                    ipcRenderer.send('set-progress', { value: -1, options: { mode: 'normal' } });
+                    updateProgress({ value: -1, mode: 'normal' });
                 });
         }
         if (names.length > 0) {
@@ -3974,7 +3981,6 @@ export function saveProfiles(clearNow?: boolean) {
             trashProfiles(p);
             options.profiles.enabled = _enabled;
             saveOptions();
-            ipcRenderer.send('setting-changed', { type: 'profiles', name: 'enabled', value: options.profiles.enabled });
             ipcRenderer.send('reload-profiles');
             if (clearNow)
                 clearChanges();
@@ -3990,7 +3996,6 @@ export function saveProfiles(clearNow?: boolean) {
         trashProfiles(p);
         options.profiles.enabled = _enabled;
         saveOptions();
-        ipcRenderer.send('setting-changed', { type: 'profiles', name: 'enabled', value: options.profiles.enabled });
         ipcRenderer.send('reload-profiles');
         if (clearNow)
             clearChanges();
@@ -4120,6 +4125,13 @@ function initEditor(id) {
 }
 
 let dragging = false;
+
+function updateProgress(progress) {
+    if (window.opener)
+        window.opener.updateProgress(progress);
+    else
+        ipcRenderer.send('parent-window', 'setProgressBar', progress.value, progress.mode ? { mode: progress.mode } : null);
+}
 
 function setParseSyntax(editor) {
     editors[editor].getSession().setMode('ace/mode/jimud', () => {
@@ -4402,7 +4414,7 @@ export function doClose() {
                 _never = false;
                 _close = true;
                 window.close();
-                ipcRenderer.send('setting-changed', { type: 'profiles', name: 'askoncancel', value: false });
+                options.profiles.askoncancel = false;
             }
         });
     }
@@ -4703,7 +4715,7 @@ ipcRenderer.on('profile-updated', (event, profile, noChanges, type) => {
     //$('#btn-refresh').addClass('btn-warning');
 });
 
-ipcRenderer.on('profile-toggled', (event, profile, enabled) => {
+function profileToggled(profile, enabled) {
     const parent = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile) + '$', 'id']);
     if (!parent) return;
     _enabled.filter((a) => { return a !== profile.toLowerCase(); });
@@ -4718,7 +4730,7 @@ ipcRenderer.on('profile-toggled', (event, profile, enabled) => {
     const t = currentNode.dataAttr.type;
     if (currentProfile.name === profile && t === 'profile' || t === 'aliases' || t === 'triggers' || t === 'buttons' || t === 'macros' || t === 'contexts')
         $('#editor-enabled').prop('checked', enabled);
-});
+};
 
 function exportAll() {
     clearButton('#export');
@@ -4797,8 +4809,7 @@ function showProgressDialog() {
 }
 
 function setProgressDialogValue(value) {
-    ipcRenderer.send('set-progress', { value: value });
-    ipcRenderer.send('set-progress-window', 'code-editor', { value: value });
+    updateProgress({ value: value });
     (<any>document.getElementById('progress-dialog-progressbar')).value = value * 100;
 }
 
