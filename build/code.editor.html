@@ -4117,7 +4117,8 @@
                 document.getElementById('progress-dialog-progressbar').removeAttribute('value');
                 document.getElementById('progress-dialog-title').innerHTML = 'Getting debug data&hellip;';
                 logOutput('Requesting debug information for ' + panel.editor.file);
-                ipcRenderer.send('send-gmcp', 'IED.cmd ' + JSON.stringify({ cmd: 'debug', path: path.dirname(item.remote), file: path.basename(item.remote), tag: 'editor-debug:' + id }));
+                if (window.opener)
+                    window.opener.client.sendGMCP('IED.cmd ' + JSON.stringify({ cmd: 'debug', path: path.dirname(item.remote), file: path.basename(item.remote), tag: 'editor-debug:' + id }));
             }
         });
         $('#btm-drag-bar').mousedown(function (e) {
