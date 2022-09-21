@@ -3101,8 +3101,9 @@
             }
             let _options = '';
             if (data && data.state) {
-                _options += ',visible=' + data.state.visible;
-                //_options += ',' + buildWindowOptions(data.state, ['bounds']);
+                //_options += ',visible=' + data.state.visible;
+                _options += ',' + buildWindowOptions(data.state, ['bounds', 'alwaysOnTop']);
+                _options += ',' + buildWindowOptions(data.state.bounds);
             }
             switch (name) {
                 case 'characters':

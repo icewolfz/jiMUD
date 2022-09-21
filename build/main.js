@@ -2422,8 +2422,8 @@ function buildOptions(details, window, settings) {
                 options[key] = states[file][key];
         });
     }
-    if('visible' in options)
-        options.show = options.visible;    
+    if ('visible' in options)
+        options.show = options.visible;
     //if no width or height see if a default was supplied
     if (!('width' in options))
         options.width = 'defaultWidth' in options ? options.defaultWidth : 800;
@@ -2779,7 +2779,16 @@ async function saveWindowLayout(file) {
                 //get any custom data from window
                 data: await executeScript('if(typeof saveWindow === "function") saveWindow()', window)
             }
-            delete wData.details.options.visible;
+            for (key in wData.state) {
+                if (!Object.prototype.hasOwnProperty.call(wData.state, key) || key === 'alwaysOnTop')
+                    continue;
+                if (key in wData.details.options)
+                    delete wData.details.options[key];
+            }
+            delete wData.details.options.x;
+            delete wData.details.options.y;
+            delete wData.details.options.width;
+            delete wData.details.options.height;
             cData.windows.push(wData);
         }
         data.clients.push(cData);
