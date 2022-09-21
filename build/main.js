@@ -131,6 +131,7 @@ if (!argv.nci && isFileSync(path.join(app.getPath('userData'), 'characters.json'
                 const character = oldCharacters.characters[title];
                 _characters.addCharacter({
                     Title: title,
+                    Host: 'www.shadowmud.com',
                     Port: character.dev ? 1035 : 1030,
                     AutoLoad: oldCharacters.load === title,
                     Disconnect: character.disconnect,
