@@ -2772,7 +2772,7 @@ function saveOptions() {
     _saving = true;
     if (window.opener)
         window.opener.client.saveOptions();
-        //window.opener.client.doUpdate(32);
+    //window.opener.client.doUpdate(32);
     else
         options.save(window.getGlobal('settingsFile'));
     _saving = false;
@@ -3091,8 +3091,10 @@ export function init() {
     loadActions(parseTemplate(path.join('{assets}', 'actions')), '');
 
     window.onbeforeunload = (evt) => {
-        if (_close || !_never || (_undo.length === 0 && updateCurrent() === UpdateState.NoChange))
-            return;
+        if (!closeable()) {
+            evt.returnValue = true;
+            return 'no';
+        }
         if (window.opener) {
             window.opener.client.off('options-loaded', optionsLoaded);
             window.opener.client.off('item-updated', profileUpdateItem);
@@ -3102,26 +3104,6 @@ export function init() {
             window.opener.client.off('profile-toggled', profileToggled);
             window.opener.client.off('options-saved', optionsChanged);
         }
-        evt.returnValue = false;
-        setTimeout(() => {
-            const choice = dialog.showMessageBoxSync({
-                type: 'warning',
-                title: 'Profiles changed',
-                message: 'All unsaved changes will be lost, close?',
-                buttons: ['Yes', 'No', 'Never ask again'],
-                defaultId: 1
-            });
-            if (choice === 2) {
-                options.profiles.askoncancel = false;
-                saveOptions();
-            }
-            if (choice === 0 || choice === 2) {
-                _close = true;
-                window.close();
-                return;
-            }
-        });
-        return 'no';
     };
 
     document.onkeydown = undoKeydown;
@@ -3526,6 +3508,28 @@ export function init() {
         window.opener.client.on('profile-toggled', profileToggled);
         window.opener.client.on('options-saved', optionsChanged);
     }
+}
+
+export function closeable(all?: boolean) {
+    if (_close || !_never || (_undo.length === 0 && updateCurrent() === UpdateState.NoChange)) {
+        return true;
+    }
+    const choice = dialog.showMessageBoxSync({
+        type: 'warning',
+        title: 'Profiles changed',
+        message: 'All unsaved changes will be lost, close?',
+        buttons: ['Yes', 'No', 'Never ask again'],
+        defaultId: 1
+    });
+    if (choice === 2) {
+        options.profiles.askoncancel = false;
+        saveOptions();
+    }
+    if (choice === 0 || choice === 2)
+        _close = true;
+    else
+        _close = false;
+    return _close;
 }
 
 function startWatcher(p: string) {
@@ -4705,7 +4709,7 @@ export function editItem(profile, type, index) {
 
 function optionsChanged() {
     // if save was local ignore
-    if(_saving) return;
+    if (_saving) return;
     optionsLoaded();
     filesChanged = true;
     $('#btn-refresh').addClass('btn-warning');
