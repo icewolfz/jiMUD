@@ -58,6 +58,7 @@ let _bComments = true;
 let _iCommentsStr = ['/', '/'];
 let _bCommentsStr = ['/', '*'];
 
+let _saving = false;
 let options = getOptions();
 
 const _controllers = {};
@@ -2768,10 +2769,13 @@ function getOptions() {
 }
 
 function saveOptions() {
+    _saving = true;
     if (window.opener)
-        window.opener.client.doUpdate(32);
+        window.opener.client.saveOptions();
+        //window.opener.client.doUpdate(32);
     else
         options.save(window.getGlobal('settingsFile'));
+    _saving = false;
 }
 
 function loadOptions() {
@@ -3089,8 +3093,15 @@ export function init() {
     window.onbeforeunload = (evt) => {
         if (_close || !_never || (_undo.length === 0 && updateCurrent() === UpdateState.NoChange))
             return;
-        if (window.opener)
+        if (window.opener) {
             window.opener.client.off('options-loaded', optionsLoaded);
+            window.opener.client.off('item-updated', profileUpdateItem);
+            window.opener.client.off('item-added', profileAddItem);
+            window.opener.client.off('item-removed', profileRemoveItem);
+            window.opener.client.off('profile-updated', profileUpdated);
+            window.opener.client.off('profile-toggled', profileToggled);
+            window.opener.client.off('options-saved', optionsChanged);
+        }
         evt.returnValue = false;
         setTimeout(() => {
             const choice = dialog.showMessageBoxSync({
@@ -3506,7 +3517,15 @@ export function init() {
         let n = $('#profile-tree').treeview('findNodes', ['^' + event.target.id + '$', 'id']);
         $('#profile-tree').treeview('toggleNodeExpanded', [n, { levels: 1, silent: false }]);
     });
-    window.opener.client.on('options-loaded', optionsLoaded);
+    if (window.opener) {
+        window.opener.client.on('options-loaded', optionsLoaded);
+        window.opener.client.on('item-updated', profileUpdateItem);
+        window.opener.client.on('item-added', profileAddItem);
+        window.opener.client.on('item-removed', profileRemoveItem);
+        window.opener.client.on('profile-updated', profileUpdated);
+        window.opener.client.on('profile-toggled', profileToggled);
+        window.opener.client.on('options-saved', optionsChanged);
+    }
 }
 
 function startWatcher(p: string) {
@@ -4676,44 +4695,42 @@ function insertItem(type: string, key: string, item, idx: number, profile?: Prof
     _loading--;
 }
 
-ipcRenderer.on('profile-edit-item', (event, profile, type, index) => {
+export function editItem(profile, type, index) {
     if (!profile || !profiles.items[profile.toLowerCase()]) return;
     let n = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile) + type + '$', 'id']);
     $('#profile-tree').treeview('expandNode', [n, { levels: 1, silent: false }]);
     n = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile) + type + index + '$', 'id']);
     $('#profile-tree').treeview('selectNode', [n, { silent: false }]);
-});
+};
 
-ipcRenderer.on('change-options', (event, file) => {
-    const so = _sort;
-    const sd = _sortDir;
-    loadOptions();
-    resetParseSyntax();
-    if (so !== _sort || sd !== _sortDir)
-        sortTree(true);
+function optionsChanged() {
+    // if save was local ignore
+    if(_saving) return;
+    optionsLoaded();
     filesChanged = true;
     $('#btn-refresh').addClass('btn-warning');
-});
+}
 
-ipcRenderer.on('profile-item-added', (event, type, profile, item) => {
+
+function profileAddItem(type, profile, item) {
     filesChanged = true;
     $('#btn-refresh').addClass('btn-warning');
-});
+};
 
-ipcRenderer.on('profile-item-updated', (event, type, profile, idx, item) => {
+function profileUpdateItem(type, profile, idx, item) {
     filesChanged = true;
     $('#btn-refresh').addClass('btn-warning');
-});
+};
 
-ipcRenderer.on('profile-item-removed', (event, type, profile, idx) => {
+function profileRemoveItem(type, profile, idx) {
     filesChanged = true;
     $('#btn-refresh').addClass('btn-warning');
-});
+};
 
-ipcRenderer.on('profile-updated', (event, profile, noChanges, type) => {
+function profileUpdated(profile, noChanges, type) {
     //filesChanged = true;
     //$('#btn-refresh').addClass('btn-warning');
-});
+};
 
 function profileToggled(profile, enabled) {
     const parent = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile) + '$', 'id']);

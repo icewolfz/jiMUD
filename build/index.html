@@ -1262,14 +1262,11 @@
                     if (!type || (type & ProfileSaveType.Context) === ProfileSaveType.Context || (type & ProfileSaveType.Variable) === ProfileSaveType.Variable)
                         doUpdate(16);
                 }
-                ipcRenderer.send('profile-updated', profile, noChanges, type);
             });
 
             client.on('profile-toggled', (profile, enabled) => {
                 ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], options: { checked: enabled } });
                 doUpdate(24);
-                if(_windows['profiles'])
-                    _windows['profiles'].profileToggled(profile, enabled);
             });
 
             client.on('profiles-updated', (noChanges) => {
@@ -1742,19 +1739,16 @@
             client.on('item-added', (type, profile, item) => {
                 if (type === 'button')
                     doUpdate(8);
-                ipcRenderer.send('profile-item-added', type, profile, item);
             });
 
             client.on('item-updated', (type, profile, idx, item) => {
                 if (type === 'button')
                     doUpdate(8);
-                ipcRenderer.send('profile-item-updated', type, profile, idx, item);
             });
 
             client.on('item-removed', (type, profile, idx) => {
                 if (type === 'button')
                     doUpdate(8);
-                ipcRenderer.send('profile-item-removed', type, profile, idx);
             });
 
             client.on('options-saved', () => {
@@ -1766,7 +1760,6 @@
                     document.getElementById('btnTriggers').classList.add('on');
                 else
                     document.getElementById('btnTriggers').classList.remove('on');
-                ipcRenderer.send('options-changed');
             });
 
             client.on('window', (window, args) => {
@@ -2080,7 +2073,12 @@
                         profile: b.dataset.profile,
                         bIndex: b.dataset.index,
                         click: (item) => {
-                            ipcRenderer.send('profile-edit-item', item.profile, 'buttons', +item.bIndex);
+                            if (_windows['profiles'])
+                                _windows['profiles'].manager.editItem(item.profile, 'buttons', +item.bIndex);
+                            else
+                                openWindow('profiles').then(() => {
+                                    _windows['profiles'].manager.editItem(item.profile, 'buttons', +item.bIndex);
+                                });
                         }
                     }));
                 }
