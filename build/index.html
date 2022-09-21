@@ -3133,14 +3133,12 @@
                         _windows['prefs.html'] = window.open('prefs.html', 'modal-' + getId(), 'width=800,height=460,backgroundColor=#fff,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
                     break;
                 case 'immortal':
-                    console.log(_options);
                     if (data && data.details)
                         _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent', ...Object.keys(data.state || {})]);
                     if (client.options.windows.immortal && client.options.windows.immortal.options)
                         _options += `,persistent=${client.options.windows.immortal.options.persistent},alwaysOnTopClient=${client.options.windows.immortal.options.alwaysOnTopClient},alwaysOnTop=${client.options.windows.immortal.options.alwaysOnTop || false},showInTaskBar=${client.options.windows.immortal.options.showInTaskBar || false}`;
                     else
                         _options += `,alwaysOnTopClient=true`;
-                    console.log(_options);
                     _windows['immortal.html'] = window.open('immortal.html', 'Immortal-' + getId(), `backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/ied.png')}${_options}`);
                     break
                 case 'history':

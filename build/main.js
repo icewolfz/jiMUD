@@ -414,7 +414,7 @@ function createWindow(options) {
     });
 
     window.once('ready-to-show', () => {
-        loadWindowScripts(window, options.script || path.baseName(options.file, '.html'));
+        loadWindowScripts(window, options.script || path.basename(options.file, '.html'));
         executeScript(`if(typeof setId === "function") setId(${getWindowId(window)});`, window);
         executeScript('if(typeof loadTheme === "function") loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');', window);
         if (options.data && options.data.data)
@@ -1855,7 +1855,7 @@ function initializeChildWindow(window, link, details) {
             window.setOverlayIcon(details.options.overlayIcon, details.options.overlayTip || details.options.title || '');
         //exclude the -ID when loading scripts
         if (/\-[0-9]+$/.test(details.frameName))
-            loadWindowScripts(window, details.frameName, substring(0, details.frameName.lastIndexOf('-')));
+            loadWindowScripts(window, details.frameName.substring(0, details.frameName.lastIndexOf('-')));
         else
             loadWindowScripts(window, details.frameName);
         if (!details.options.noInputContext)
