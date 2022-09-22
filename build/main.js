@@ -666,6 +666,8 @@ app.on('ready', () => {
         else if (typeof argv.eo === 'string') {
             openEditor(argv.eo);
         }
+        else
+            openEditor();
         global.editorOnly = true;
     }
 
@@ -711,21 +713,17 @@ app.on('ready', () => {
             //use default unless ignoring layouts
             _loaded = _ignore;
             newClientWindow();
-            //only load after as it requires a client window
-            if (argv.e) {
-                //showCodeEditor();
-                if (Array.isArray(argv.e)) {
-                    al = argv.eo.length;
-                    a = 0;
-                    for (; a < al; a++) {
-                        if (typeof argv.eo[a] === 'string')
-                            openEditor(argv.eo[a]);
-                    }
-                }
-                else if (typeof argv.e === 'string') {
-                    openEditor(argv.e);
-                }
-            }
+        }
+        //only load after as it requires a client window
+        const window = getActiveWindow();
+        if (argv.e && window) {
+            //showCodeEditor();
+            if (Array.isArray(argv.e))
+                executeScriptClient(`openFiles("${argv.e.join('", "')}")`, window.window, true);
+            else if (typeof argv.e === 'string')
+                executeScriptClient(`openFiles("${argv.e}")`, window.window, true);
+            else
+                executeScriptClient('openWindow("code.editor")', window.window, true);
         }
         checkForUpdates();
     }
@@ -1529,9 +1527,15 @@ ipcMain.on('update-title', (event, options) => {
     }
 });
 
-ipcMain.on('get-options', event => {
-    const view = browserViewFromContents(event.sender);
-    event.returnValue = clients[getClientId(view)].options;
+ipcMain.on('get-options', (event, isWindow) => {
+    if (isWindow) {
+        const window = BrowserWindow.fromWebContents(event.sender);
+        event.returnValue = { windows: windows[getWindowId(window)].windows.map(w => w.details) }
+    }
+    else {
+        const view = browserViewFromContents(event.sender);
+        event.returnValue = clients[getClientId(view)].options;
+    }
 });
 
 ipcMain.on('get-preference', (event, preference) => {
@@ -2688,6 +2692,7 @@ function newClientWindow(caller, connection, data) {
         window.webContents.send('new-client', { id: id });
         focusWindow(window, true);
     });
+    return window;
 }
 //#region Execute scripts in window/view
 // eslint-disable-next-line no-unused-vars
@@ -2755,7 +2760,16 @@ async function saveWindowLayout(file) {
             //get any custom data from window
             data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].window),
             state: saveWindowState(windows[id].window),
-            menubar: windows[id].menubar ? true : false
+            menubar: windows[id].menubar ? true : false,
+            windows: []
+        }
+        const wl = windows[id].windows.length;
+        for (var idx = 0; idx < wl; idx++) {
+            wData.push({
+                options: windows[id].windows[idx].details.options.features,
+                state: saveWindowState(windows[id].windows[idx].window),
+                data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].windows[idx].window),
+            });
         }
         data.windows.push(wData);
     }

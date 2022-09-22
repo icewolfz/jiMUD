@@ -2903,11 +2903,11 @@
                         window.opener._windows['code.editor'].focus();
                     });
                 });
-                return;
             }
-            else
-                window.opener._windows['code.editor'].openEditor(file, remoteEdit); window.opener._windows['code.editor'].openEditor(data, remote, remoteEdit);
-            window.opener._windows['code.editor'].focus();
+            else {
+                window.opener._windows['code.editor'].openEditor(data, remote, remoteEdit);
+                window.opener._windows['code.editor'].focus();
+            }
         }
 
         function download() {

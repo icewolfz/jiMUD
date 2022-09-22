@@ -3530,6 +3530,29 @@
             */
         }
 
+        function openFiles(...files) {
+            const fl = files.length;
+            let f = 0;
+            if (!_windows['code.editor']) {
+                openWindow('code.editor').then(() => {
+                    //not opened for what ever reason
+                    if (!_windows['code.editor']) return;
+                    windows['code.editor'].addEventListener('load', () => {
+                        for (; f < fl; f++) {
+                            _windows['code.editor'].openEditor(files[f]);
+                        }
+                        _windows['code.editor'].focus();
+                    });
+                });
+            }
+            else {
+                for (; f < fl; f++) {
+                    _windows['code.editor'].openEditor(files[f]);
+                }
+                _windows['code.editor'].focus();
+            }
+        }
+
         document.addEventListener('load', () => doUpdate(1));
 
         var $updating = 0;

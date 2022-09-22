@@ -1932,6 +1932,8 @@
     const tmp = require('tmp');
     tmp.setGracefulCleanup();
 
+    var _windowState = getWindowOptions();
+
     ipcRenderer.invoke('window', 'setEnabled', false);
 
     var krypto = null;
@@ -2220,9 +2222,7 @@
                 {
                     label: '&Preferences...',
                     accelerator: 'CmdOrCtrl+Comma',
-                    click: () => {
-                        _preferences = window.open('code.editor.prefs.html', 'modal', 'backgroundColor=#fff,height=465,width=800,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
-                    }
+                    click: () => { openWindow('prefs'); }
                 },
                 { type: 'separator' },
                 {
@@ -2374,21 +2374,7 @@
                 {
                     label: '&jiMUD...',
                     click: () => {
-                        var set = require('./js/settings').Settings.load(window.getGlobal('settingsFile'));
-                        if (set.windows['help'] && set.windows['help'].options) {
-                            set.windows['help'].options.show = true;
-                            ipcRenderer.send('show-window', 'help', set.windows['help'].options);
-                        }
-                        else
-                            ipcRenderer.send('show-window', 'help', { show: true, file: 'help.html', icon: 'help', alwaysOnTopClient: true });
-                        var h = () => {
-                            var w = remote.BrowserWindow.getAllWindows().filter(w => w.getTitle() === 'jiMUD Help');
-                            if (w.length === 0)
-                                setTimeout(h, 100);
-                            else
-                                w[0].webContents.executeJavaScript('loadUrl(\'codeeditor\');');
-                        };
-                        h();
+                        openWindow('help');
                     }
                 },
                 {
@@ -2725,7 +2711,7 @@
         }
         if (e.panel.editor.supports('menu|tab-context')) {
             temp.push({ type: 'separator' });
-            temp = temp.concat(e.panel.editor.menu('tab-context'));
+            temp = temp.concat(e.panel.editor.menu('tab-context', connected));
         }
         if (temp.length)
             temp.push({ type: 'separator' });
@@ -2762,13 +2748,13 @@
     }
     //#endregion
 
-    let _preferences;
-    let advEditor;
+    const _windows = {};
+
     function openAdvancedEditor(text) {
-        if (advEditor && !advEditor.closed) {
-            advEditor.show();
-            advEditor.focus();
-            advEditor.insertFormatted(text);
+        if (_windows['editor.html'] && !_windows['editor.html'].closed) {
+            _windows['editor.html'].show();
+            _windows['editor.html'].focus();
+            _windows['editor.html'].insertFormatted(text);
         }
         /*
         else if (window.opener && window.opener.client) {
@@ -2787,11 +2773,11 @@
         }
         */
         else {
-            advEditor = window.open('editor.html', 'Code Advanced Editor-' + getId(), `noInputContext=true,alwaysOnTopClient=true,showInTaskBar=false,persistent=false,defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/edit.png')}`);
-            advEditor.addEventListener('editor-init', () => {
-                advEditor.show();
-                advEditor.focus();
-                advEditor.insertFormatted(text);
+            openWindow('editor');
+            _windows['editor.html'].addEventListener('editor-init', () => {
+                _windows['editor.html'].show();
+                _windows['editor.html'].focus();
+                _windows['editor.html'].insertFormatted(text);
             }, { once: true });
         }
     }
@@ -2848,6 +2834,9 @@
         if (enabled && manager.active.editor.updateUI) manager.active.editor.updateUI();
         var tbh = toolbar.outerHeight();
         dock.css('top', tbh + 'px');
+        if (window.opener)
+            $('.connected').prop('disabled', !(connected && enabled));
+        manager.active.editor.updateMenu(menubar, connected);
         doUpdate(2);
     }
 
@@ -3793,6 +3782,10 @@
             $('btn-grp-remote').css('display', 'none');
         }
         else {
+            window.opener.client.on('received-GMCP', processGMCP);
+            window.opener.client.on('connected', clientConnected);
+            window.opener.client.on('closed', clientClosed);
+
             _ied = new IED();
             _ied.prefix = 'editor-';
             _ied.compressUpload = true;
@@ -4322,6 +4315,18 @@
                 menubar.updateItem('file|open remote...', { enabled: false });
             }
         }
+        else {
+            if (_windowState && _windowState.windows.length) {
+                const _dir = 'file:///' + __dirname.replace(/\\/g, '/');
+                const wl = _windowState.windows.length;
+                for (let w = 0; w < wl; w++) {
+                    let file = _windowState.windows[w].details.url;
+                    if (file.startsWith(file))
+                        file = path.basename(file.substring(__dirname.length + 9), '.html');
+                    openWindow(file, _windowState.windows[w]);
+                }
+            }
+        }
         createWatcher();
         postEditorLoad();
     });
@@ -4455,7 +4460,7 @@
 
     function closeable(all) {
         if (!$closeWindow) {
-            if (advEditor && !advEditor.closed) {
+            if (_windows['editor.html'] && !_windows['editor.html'].closed) {
                 dialog.showMessageBox({
                     type: 'error',
                     title: 'Editor dialog open',
@@ -4466,14 +4471,14 @@
                 $closeWindow = false;
                 return false;
             }
-            if (_preferences && !_preferences.closed) {
+            if (_windows['prefs.html'] && !_windows['prefs.html'].closed) {
                 dialog.showMessageBox({
                     type: 'error',
                     title: 'Preferences dialog open',
                     message: 'You must close the preferences dialog before you can close code editor.',
                     defaultId: 1
                 });
-                _preferences.focus();
+                _windows['prefs.html'].focus();
                 $closeWindow = false;
                 return false;
             }
@@ -4509,6 +4514,11 @@
             return 'no';
         }
         //clean up
+        if (window.opener) {
+            window.opener.client.off('received-GMCP', processGMCP);
+            window.opener.client.off('connected', clientConnected);
+            window.opener.client.off('closed', clientClosed);
+        }
         var keys = Object.keys(_editors);
         var p = keys.length;
         while (p--)
@@ -4564,14 +4574,14 @@
             manager.active.editor.insert(text);
     }
 
-    ipcRenderer.on('GMCP-received', (event, data) => {
+    function processGMCP(mod, obj) {
         if (options && options.debug)
-            console.log(data);
+            console.log({ mod: mode, obj, obj });
         if (_ied)
-            _ied.processGMCP(data.mod, data.obj);
-    });
+            _ied.processGMCP(mod, obj);
+    };
 
-    ipcRenderer.on('connected', () => {
+    function clientConnected() {
         connected = true;
         menubar.updateItem('file|diff|remote...', { enabled: manager.active && manager.active.editor && manager.active.editor.supports('diff') });
         menubar.updateItem('file|upload', { enabled: manager.active && manager.active.editor && manager.active.editor.supports('upload') });
@@ -4580,8 +4590,11 @@
         $('#btn-upload-as').prop('disabled', !(connected && manager.active && manager.active.editor && manager.active.editor.supports('upload-as')));
         document.getElementById('btn-open-remote').removeAttribute('disabled');
         menubar.updateItem('file|open remote...', { enabled: connected });
-    });
-    ipcRenderer.on('closed', () => {
+        $('.connected').prop('disabled', !(connected && manager.active && manager.active.editor));
+        if(manager.active && manager.active.editor)
+            manager.active.editor.updateMenu(menubar, connected);
+    };
+    function clientClosed() {
         connected = false;
         menubar.updateItem('file|diff|remote...', { enabled: false });
         menubar.updateItem('file|upload', { enabled: false });
@@ -4590,7 +4603,10 @@
         $('#btn-upload-as').prop('disabled', true);
         document.getElementById('btn-open-remote').setAttribute('disabled', 'true');
         menubar.updateItem('file|open remote...', { enabled: false });
-    });
+        $('.connected').prop('disabled', true);
+        if(manager.active && manager.active.editor)
+            manager.active.editor.updateMenu(menubar, connected);
+    };
 
     function reloadOptions() {
         loadOptions();
@@ -4613,11 +4629,6 @@
 
         }
     };
-
-    ipcRenderer.on('menu-update', (menu, options) => {
-        if (menubar)
-            menubar.updateItem(menu, options);
-    });
 
     function newFile(file, remoteFile) {
         createEditor({ file: file || 'new_' + newCounter + '.c', new: true, remote: remoteFile }, true);
@@ -9025,8 +9036,11 @@
                 while (buttons.firstChild) {
                     buttons.removeChild(buttons.firstChild);
                 }
-                if (p.editor.supports('buttons'))
+                if (p.editor.supports('buttons')) {
                     buttons.append(...p.editor.buttons);
+                    if (window.opener)
+                        $('.connected').prop('disabled', !(connected && enabled));
+                }
             });
             p.editor.on('contextmenu-diff', () => {
                 var temp = [];
@@ -9081,7 +9095,7 @@
 
                 if (p.editor.supports('menu|context')) {
                     temp.push({ type: 'separator' });
-                    temp = temp.concat(p.editor.menu('context'));
+                    temp = temp.concat(p.editor.menu('context', connected));
                 }
                 let inputMenu = Menu.buildFromTemplate(temp);
                 inputMenu.popup({ window: remote.getCurrentWindow() });
@@ -9179,7 +9193,7 @@
 
                 if (p.editor.supports('menu|context')) {
                     temp.push({ type: 'separator' });
-                    temp = temp.concat(p.editor.menu('context'));
+                    temp = temp.concat(p.editor.menu('context', connected));
                 }
                 temp[0].id = '1';
                 let inputMenu = Menu.buildFromTemplate(temp);
@@ -9334,6 +9348,89 @@
             doUpdate(_updating);
         });
     }
+
+    async function openWindow(name, data) {
+        if (name === 'preferences' || name === 'options')
+            name = 'prefs';
+        if (_windows[name + '.html']) {
+            _windows[name + '.html'].show();
+            _windows[name + '.html'].focus();
+            return;
+        }
+        let _options = '';
+        if (data && data.state) {
+            _options += ',' + buildWindowOptions(data.state, ['bounds', 'alwaysOnTop']);
+            _options += ',' + buildWindowOptions(data.state.bounds);
+        }
+        switch (name) {
+            case 'editor':
+                if (data && data.details)
+                    _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent', 'defaultWidth', 'defaultHeight', 'showInTaskBar', 'noInputContext', ...Object.keys(data.state || {})]);
+                //advEditor = window.open('editor.html', 'Code Advanced Editor-' + getId(), `noInputContext=true,alwaysOnTopClient=true,showInTaskBar=false,persistent=false,defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/edit.png')}`);
+                _windows['editor.html'] = window.open('editor.html', 'Code Advanced Editor-' + getId(), `noInputContext=true,alwaysOnTopClient=true,showInTaskBar=false,persistent=false,defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/edit.png')}${_options}`);
+                break;
+            case 'prefs':
+                _windows['prefs.html'] = window.open('code.editor.prefs.html', 'modal-' + getId(), 'backgroundColor=#fff,height=465,width=800,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
+                break;
+            case 'help':
+                if (window.opener) {
+                    if (window.opener._windows['help.html'])
+                        window.opener._windows['help.html'].loadUrl('codeeditor');
+                    else
+                        window.opener.openWindow('help').then(() => {
+                            _windows['help.html'].addEventListener('load', () => {
+                                _windows['help.html'].loadUrl('codeeditor');
+                            }, { once: true });
+                        });
+                }
+                else {
+                    if (data && data.details)
+                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultWidth', 'defaultHeight', ...Object.keys(data.state || {})]);
+                    _windows['help.html'] = window.open('help.html', 'Help-' + getId(), `defaultWidth=800,defaultHeight=600,alwaysOnTopClient=true,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/help.png')}${_options}`);
+                    _windows['help.html'].addEventListener('load', () => {
+                        _windows['help.html'].loadUrl('codeeditor');
+                    }, { once: true });
+                }
+                break;
+        }
+        if (data && data.data && typeof _windows[name + '.html'].restoreWindow !== 'undefined')
+            _windows[name + '.html'].restoreWindow(data.data);
+    }
+
+    function buildWindowOptions(options, filters) {
+        if (!options) return '';
+        if (!filters) filters = [];
+        return Object.keys(options).filter(key => filters.indexOf(key) === -1).map(key => `${key}=${options[key]}`).join(',');
+    }
+
+    function saveWindow() {
+        if (!window.opener)
+            return _windowState.data;
+        return null;
+    }
+
+    function getWindowOptions() {
+        if (window.opender) return;
+        let data = ipcRenderer.sendSync('get-options', true);
+        if (data) {
+            //safety checks to make sure some basic objects
+            if (!('windows' in data) || !data.windows)
+                data.windows = [];
+            if (!('states' in data) || !data.windows)
+                data.states = {};
+            //make sure we have a settings file, default to global file
+            if (!('data' in data) || !data.data)
+                data.data = {};
+        }
+        else
+            data = {
+                data: {},
+                windows: [],
+                states: {}
+            };
+        return data;
+    }
+
 </script>
 
 </html>

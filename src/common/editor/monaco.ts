@@ -1029,7 +1029,7 @@ export class MonacoCodeEditor extends EditorBase {
         return 1;
     }
 
-    public menu(menu) {
+    public menu(menu, connected) {
         let m;
         if (menu === 'edit') {
             const selected = this.$oEditor && this.$oEditor.hasTextFocus() ? false : this.selected.length > 0;
@@ -1114,7 +1114,9 @@ export class MonacoCodeEditor extends EditorBase {
                             label: '&Test',
                             click: () => {
                                 this.emit('debug', this.file);
-                            }
+                            },
+                            enabled: connected || false,
+                            visible: window.opener ? true : false
                         },
                         {
                             label: 'T&est Clear',
@@ -1123,7 +1125,9 @@ export class MonacoCodeEditor extends EditorBase {
                                 this.$model.deltaDecorations(this.decorations || [], []);
                                 this.decorations = null;
                                 this.rawDecorations = null;
-                            }
+                            },
+                            enabled: connected || false,
+                            visible: window.opener ? true : false
                         }
                     ]);
                 }
@@ -1342,6 +1346,11 @@ export class MonacoCodeEditor extends EditorBase {
             ];
     }
 
+    public updateMenu(menubar, connected) {
+        menubar.updateItem('edit|test', { enabled: connected });
+        menubar.updateItem('edit|test clear', { enabled: connected });
+    }
+
     public get buttons() {
         if (!window.opener || path.extname(this.source === 1 ? this.remote : this.file) !== '.c')
             return [];
@@ -1352,7 +1361,7 @@ export class MonacoCodeEditor extends EditorBase {
         let el = document.createElement('button');
         el.id = 'btn-debug';
         el.type = 'button';
-        el.classList.add('btn', 'btn-default', 'btn-xs');
+        el.classList.add('btn', 'btn-default', 'btn-xs', 'connected');
         el.title = 'Test';
         el.addEventListener('click', () => {
             this.emit('debug', this.file);
@@ -1362,7 +1371,7 @@ export class MonacoCodeEditor extends EditorBase {
         el = document.createElement('button');
         el.id = 'btn-debug';
         el.type = 'button';
-        el.classList.add('btn', 'btn-default', 'btn-xs');
+        el.classList.add('btn', 'btn-default', 'btn-xs', 'connected');
         el.title = 'Test clear';
         el.addEventListener('click', () => {
             monaco.editor.setModelMarkers(this.$model, '', []);
