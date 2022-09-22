@@ -877,7 +877,6 @@
             <button type="button" disabled="disabled" class="btn btn-primary" data-dismiss="modal" style="float: right;" id="remoteBrowseOk">Open</button>
         </div>
     </dialog>
-
     <dialog id="progress-dialog" style="z-index:1000;text-align:center">
         <div id="progress-dialog-title">Retrieving&hellip;</div>
         <div>
@@ -887,12 +886,6 @@
             <button id="progress-dialog-cancel">
                 Cancel
             </button>
-        </div>
-    </dialog>
-    <dialog id="update-progress" style="z-index:1000;text-align:center">
-        <div id="update-progress-title"></div>
-        <div>
-            <progress max="100" id="update-progressbar"></progress>
         </div>
     </dialog>
     <div style="display: none" id="wizard-pages">
@@ -4507,19 +4500,6 @@
         if (manager.active && manager.active.editor && manager.active.editor.cancel)
             manager.active.editor.cancel();
 
-    });
-
-    ipcRenderer.on('update-progress', (event, progressObj) => {
-        if (!$('#update-progress')[0].open) {
-            $('#update-progress-title').html('Downloading update&hellip;');
-            $('#update-progress')[0].show();
-        }
-        $('#update-progressbar').val(progressObj.percent);
-    });
-
-    ipcRenderer.on('update-downloaded', () => {
-        if ($('#update-progress')[0].open)
-            $('#update-progress')[0].close();
     });
 
     ipcRenderer.on('open-editor', (event, file, remoteFile, remoteEdit) => {
