@@ -2898,8 +2898,10 @@
                 window.opener.openWindow('code.editor').then(() => {
                     //not opened for what ever reason
                     if (!window.opener._windows['code.editor']) return;
-                    window.opener._windows['code.editor'].openEditor(file, remote, remoteEdit);
-                    window.opener._windows['code.editor'].focus();
+                    windows['code.editor'].addEventListener('load', () => {
+                        window.opener._windows['code.editor'].openEditor(file, remote, remoteEdit);
+                        window.opener._windows['code.editor'].focus();
+                    });
                 });
                 return;
             }
@@ -3034,7 +3036,7 @@
 
         // eslint-disable-next-line no-unused-vars
         function closeHidden() {
-            if(!closeable()) return false;
+            if (!closeable()) return false;
             return true;
         }
 

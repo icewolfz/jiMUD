@@ -798,13 +798,13 @@ ipcMain.on('log-error', (event, err, skipClient) => {
 ipcMain.on('debug', (event, msg) => {
     let client = getActiveClient();
     if (client)
-        client.webContents.send('debug', msg);
+        client.view.webContents.send('debug', msg);
 });
 
 ipcMain.on('error', (event, err) => {
     let client = getActiveClient();
     if (client)
-        client.webContents.send('error', err);
+        client.view.webContents.send('error', err);
 });
 
 ipcMain.on('ondragstart', (event, files, icon) => {
@@ -1563,7 +1563,11 @@ ipcMain.on('reload-options', (events, preferences, clientId) => {
 
 ipcMain.on('get-client-id', event => {
     event.returnValue = getClientId(browserViewFromContents(event.sender));
-})
+});
+
+ipcMain.on('get-window-id', event => {
+    event.returnValue = getWindowId(event.sender);
+});
 //bounds, id, data, file
 function createClient(options) {
     options = options || {};
@@ -2092,8 +2096,8 @@ function logError(err, skipClient) {
 
     let client = getActiveClient();
 
-    if (!global.editorOnly && client && client.webContents && !skipClient)
-        client.webContents.send('error', msg);
+    if (!global.editorOnly && client && client.view.webContents && !skipClient)
+        client.view.webContents.send('error', msg);
     else if (set.logErrors) {
         if (err.stack && !set.showErrorsExtended)
             msg = err.stack;

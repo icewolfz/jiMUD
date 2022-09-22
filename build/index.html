@@ -1010,7 +1010,9 @@
 
             _backup.on('import-map', (data) => {
                 if (!windows['mapper'])
-                    openWindow('mapper').then(() => windows['mapper'].importData(data));
+                    openWindow('mapper').then(() => {
+                        windows['mapper'].addEventListener('load', () => windows['mapper'].importData(data), { once: true });
+                    });
                 else
                     windows['mapper'].importData(data);
             });
@@ -2077,7 +2079,7 @@
                                 _windows['profiles'].manager.editItem(item.profile, 'buttons', +item.bIndex);
                             else
                                 openWindow('profiles').then(() => {
-                                    _windows['profiles'].manager.editItem(item.profile, 'buttons', +item.bIndex);
+                                    windows['profiles'].addEventListener('load', () => _windows['profiles'].manager.editItem(item.profile, 'buttons', +item.bIndex), { once: true });
                                 });
                         }
                     }));

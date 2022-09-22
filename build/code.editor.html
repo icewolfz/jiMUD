@@ -1270,7 +1270,7 @@
         <div id="mon-wizard-description-long">
             <div class="col-sm-12 form-group">
                 <label class="control-label" style="width: 100%">Long
-                    <a href="#" onclick="ipcRenderer.send('send-editor', document.getElementById('mon-wiz-long').value, 'editor', true);document.getElementById('mon-wizard-description-long').focus();">
+                    <a href="#" onclick="openAdvancedEditor(document.getElementById('mon-wiz-long').value);document.getElementById('mon-wizard-description-long').focus();">
                         <i class="fa fa-edit"></i>
                     </a>
                     <textarea class="input-sm form-control" id="mon-wiz-long" style="width: 100%;height: 273px;"></textarea>
@@ -1756,7 +1756,7 @@
         <div id="room-wizard-description">
             <div class="col-sm-12 form-group">
                 <label class="control-label" style="width: 100%">Long
-                    <a href="#" onclick="ipcRenderer.send('send-editor', document.getElementById('room-wiz-long').value, 'editor', true);document.getElementById('room-wiz-long').focus();">
+                    <a href="#" onclick="openAdvancedEditor(document.getElementById('room-wiz-long').value);document.getElementById('room-wiz-long').focus();">
                         <i class="fa fa-edit"></i>
                     </a>
                     <textarea class="input-sm form-control" id="room-wiz-long" style="width: 100%;height: 216px;"></textarea>
@@ -1959,7 +1959,7 @@
     var sbName = document.getElementById('statusbar-file');
     var sbLocation = document.getElementById('statusbar-location');
     var sbMessage = document.getElementById('statusbar-message');
-    var connected = ipcRenderer.sendSync('get-global', 'connected') === true;
+    var connected = window.opener ? window.opener.client.connected : false;
     var _ied;
     var $dialog;
     var $dialogs = {};
@@ -2748,6 +2748,54 @@
         tabMenu.popup({ window: remote.getCurrentWindow() });
     });
 
+    //#region Id functions
+    function setId(id) {
+        _id = id;
+    }
+
+    function getId() {
+        if (window.opener)
+            return window.opener.getId();
+        if (!_id)
+            _id = ipcRenderer.sendSync('get-window-id') || 0;
+        return _id;
+    }
+    //#endregion
+
+
+    let editor;
+    function openAdvancedEditor(text) {
+        if (editor && !editor.closed) {
+            editor.show();
+            editor.focus();
+            editor.insertFormatted(text);
+        }
+        /*
+        else if (window.opener && window.opener.client) {
+            if (!window.opener._windows['editor.html']) {
+                window.opener.openWindow('editor').then(() => {
+                    window.opener._windows['editor.html'].show();
+                    window.opener._windows['editor.html'].focus();
+                    window.opener._windows['editor.html'].insertFormatted(text);
+                });
+            }
+            else {
+                window.opener._windows['editor.html'].show();
+                window.opener._windows['editor.html'].focus();
+                window.opener._windows['editor.html'].insertFormatted(text);
+            }
+        }
+        */
+        else {
+            editor = window.open('editor.html', 'Code Advanced Editor-' + getId(), `noInputContext=true,alwaysOnTopClient=true,showInTaskBar=false,persistent=false,defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/edit.png')}`);
+            editor.addEventListener('editor-init', () => {
+                editor.show();
+                editor.focus();
+                editor.insertFormatted(text);
+            }, { once: true });
+        }
+    }
+
     function updatePanel(panel) {
         panel.tab.classList.remove('new');
         panel.tab.classList.remove('changed');
@@ -3109,7 +3157,7 @@
     function doEditor() {
         if (!manager.active || !manager.active.editor || !manager.active.editor.supports('copy'))
             return;
-        ipcRenderer.send('send-editor', manager.active.editor.selected, 'editor', true);
+        openAdvancedEditor(manager.active.editor.selected);
         if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
 
@@ -4386,45 +4434,57 @@
         return true;
     }
 
-    window.onbeforeunload = function (evt) {
+    function closeable(all) {
         if (!$closeWindow) {
+            if (editor && !editor.closed) {
+                dialog.showMessageBox({
+                    type: 'error',
+                    title: 'Editor dialog open',
+                    message: 'You must close the Editor dialog before you can close code editor.',
+                    defaultId: 1
+                });
+                $closeWindow = false;
+                return false;
+            }
             if (document.activeElement)
                 document.activeElement.blur();
-            evt.returnValue = false;
-            setTimeout(() => {
-                var dialogs = document.body.getElementsByTagName('dialog');
-                var e = 0, el = dialogs.length;
-                for (; e < el; e++) {
-                    if (dialogs[e].open) {
-                        if (dialog.showMessageBoxSync({
-                            type: 'question',
-                            title: 'Open dialog',
-                            message: (dialogs[e].dataset.title || 'Dialog') + ' is open, exit?',
-                            buttons: ['Yes', 'No'],
-                            defaultId: 1
-                        }) === 1)
-                            return 'no';
+            var dialogs = document.body.getElementsByTagName('dialog');
+            var e = 0, el = dialogs.length;
+            for (; e < el; e++) {
+                if (dialogs[e].open) {
+                    if (dialog.showMessageBoxSync({
+                        type: 'question',
+                        title: 'Open dialog',
+                        message: (dialogs[e].dataset.title || 'Dialog') + ' is open, exit?',
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1
+                    }) === 1) {
+                        $closeWindow = false;
+                        return false;
                     }
                 }
-                if (!savedOpened())
-                    return 'no';
-                //clean up
-                var keys = Object.keys(_editors);
-                var p = keys.length;
-                while (p--)
-                    closeEditor(_editors[keys[p]]);
-                if (watcher)
-                    watcher.close();
+            }
+            if (!savedOpened())
+                $closeWindow = false;
+            else
                 $closeWindow = true;
-                window.close();
-            });
+        }
+        return $closeWindow;
+    }
+
+    window.onbeforeunload = function (evt) {
+        if (!closeable()) {
+            evt.returnValue = false;
             return 'no';
         }
+        //clean up
+        var keys = Object.keys(_editors);
+        var p = keys.length;
+        while (p--)
+            closeEditor(_editors[keys[p]]);
         if (watcher)
             watcher.close();
         $closeWindow = true;
-        window.close();
-        return;
     };
 
     ipcRenderer.on('progress-canceled', () => {

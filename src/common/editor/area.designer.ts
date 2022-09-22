@@ -14,8 +14,6 @@ const fs = require('fs-extra');
 import { Wizard, WizardPage, WizardDataGridPage } from '../wizard';
 import { MousePosition, RoomExits, shiftType, FileBrowseValueEditor, RoomExit, flipType } from './virtual.editor';
 
-//TODO need to redo the send-editor calls to use editor window hooks instead, need to check if editor window open and open/send the data
-
 declare global {
     interface Window {
         $roomImg: HTMLImageElement;
@@ -24,6 +22,7 @@ declare global {
     }
     
     let dialog: any;
+    let openAdvancedEditor;
 }
 
 interface AreaDesignerOptions extends EditorOptions {
@@ -6464,7 +6463,7 @@ export class AreaDesigner extends EditorBase {
                                         title: 'Long description',
                                         body: `<div class="col-sm-12 form-group">
                                         <label class="control-label" style="width: 100%">Long
-                                            <a href="#" onclick="ipcRenderer.send('send-editor', document.getElementById('obj-long').value, 'editor', true);document.getElementById('obj-long').focus();">
+                                            <a href="#" onclick="openAdvancedEditor(document.getElementById('obj-long').value);document.getElementById('obj-long').focus();">
                                                 <i class="fa fa-edit"></i>
                                             </a>
                                             <textarea class="input-sm form-control" id="obj-long" style="width: 100%;height: 266px;"></textarea>

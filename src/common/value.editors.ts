@@ -2,7 +2,6 @@
 import EventEmitter = require('events');
 import { capitalize, resetCursor, stringToEnum, enumToString } from './library';
 import { DataGrid } from './datagrid';
-//TODO need to redo the send-editor calls to use editor window hooks instead, need to check if editor window open and open/send the data
 
 export enum EditorType {
     default,
@@ -290,7 +289,7 @@ export class TextValueEditor extends ValueEditor {
                 notes.innerHTML = `
                 <div class="dialog-header" style="font-weight: bold">
                     <button title="close" type="button" class="close" data-dismiss="modal" onclick="document.getElementById('${notes.id}').close();">&times;</button>
-                    <button title="Open advanced editor..." type="button" class="close" style="font-size: 16px;padding-top: 3px;padding-right: 4px;" onclick="ipcRenderer.send('send-editor', document.getElementById('${notes.id}-value').value, 'editor', true);document.getElementById('${notes.id}-value').focus();"><i class="fa fa-edit"></i></button>
+                    <button title="Open advanced editor..." type="button" class="close" style="font-size: 16px;padding-top: 3px;padding-right: 4px;" onclick="openAdvancedEditor(document.getElementById('${notes.id}-value').value);document.getElementById('${notes.id}-value').focus();"><i class="fa fa-edit"></i></button>
                     <div style="padding-top: 2px;">${this.options ? this.options.title || 'Edit&hellip;' : 'Edit&hellip;'}</div>
                 </div>
                 <div class="dialog-body" style="padding-top:33px">

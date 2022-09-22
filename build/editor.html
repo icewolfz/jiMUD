@@ -206,12 +206,12 @@
         }
 
         function copyFormatted() {
-            var text = getFormatedSelection().replace(/(?:\r)/g, '');
+            var text = getFormattedSelection().replace(/(?:\r)/g, '');
             clipboard.writeText(text || '');
             clipboard.writeText(text || '', 'selection');
         }
 
-        function insertFormated(text) {
+        function insertFormatted(text) {
             text = text || '';
             text = text.split('%^');
             var stack = [];
@@ -401,7 +401,7 @@
             return stack;
         }
 
-        function getFormatedSelection() {
+        function getFormattedSelection() {
             //build all previous nodes to ensure all formatting is captures
             var nodes = tinymce.activeEditor.dom.getParents(tinymce.activeEditor.selection.getNode());
             var n = 0, nl = nodes.length;
@@ -442,7 +442,7 @@
             return formatHtml($(start + tinymce.activeEditor.selection.getContent({ format: 'raw' }).replace(/<\/div><div>/g, '<br>') + end));
         }
 
-        function getFormatedText() {
+        function getFormattedText() {
             return formatHtml($('<html>' + tinymce.activeEditor.getContent({ format: 'raw' }).replace(/<\/div><div>/g, '<br>') + '</html>'));
         }
 
@@ -728,7 +728,7 @@
                             label: 'Paste formatted',
                             icon: path.join(__dirname, '../assets/icons/png/paste.png'),
                             click: () => {
-                                insertFormated(clipboard.readText('selection') || '');
+                                insertFormatted(clipboard.readText('selection') || '');
                             }
                         }));
                     }
@@ -854,12 +854,12 @@
                 editor.ui.registry.addIcon('flash', '<img src="../assets/icons/png/flash.png" />');
                 editor.ui.registry.addIcon('reverse', '<img src="../assets/icons/png/reverse.png" />');
 
-                if (editorOnly) {
+                if (editorOnly || typeof window.opener.updateValue === 'function') {
                     editor.ui.registry.addButton('send', {
                         icon: 'sendraw',
                         tooltip: 'Send to code editor',
                         onAction: function () {
-                            window.opener.updateValue(getFormatedText().replace(/(?:\r)/g, ''));
+                            window.opener.updateValue(getFormattedText().replace(/(?:\r)/g, ''));
                         }
                     });
                 }
@@ -868,30 +868,30 @@
                         icon: 'sendraw',
                         tooltip: 'Send to mud',
                         onAction: function () {
-                            window.opener.client.sendCommand(getFormatedText().replace(/(?:\r)/g, ''));
+                            window.opener.client.sendCommand(getFormattedText().replace(/(?:\r)/g, ''));
                         },
                         onItemAction: function (api, value) {
                             switch (value) {
                                 case 'formatted':
-                                    window.opener.client.sendCommand(getFormatedText().replace(/(?:\r)/g, ''));
+                                    window.opener.client.sendCommand(getFormattedText().replace(/(?:\r)/g, ''));
                                     break;
                                 case 'text':
                                     window.opener.client.sendCommand(getText().replace(/(?:\r)/g, ''));
                                     break;
                                 case 'formattednoecho':
-                                    window.opener.client.sendBackground(getFormatedText().replace(/(?:\r)/g, ''), true);
+                                    window.opener.client.sendBackground(getFormattedText().replace(/(?:\r)/g, ''), true);
                                     break;
                                 case 'textnoecho':
                                     window.opener.client.sendBackground(getText().replace(/(?:\r)/g, ''), true);
                                     break;
                                 case 'formattedverbatim':
-                                    window.opener.client.send(getFormatedText().replace(/(?:\r)/g, ''));
+                                    window.opener.client.send(getFormattedText().replace(/(?:\r)/g, ''));
                                     break;
                                 case 'textverbatim':
                                     window.opener.client.send(getText().replace(/(?:\r)/g, ''));
                                     break;
                                 case 'rawformatted':
-                                    window.opener.client.sendRaw(getFormatedText().replace(/(?:\r)/g, ''));
+                                    window.opener.client.sendRaw(getFormattedText().replace(/(?:\r)/g, ''));
                                     break;
                                 case 'rawtext':
                                     window.opener.client.sendRaw(getText().replace(/(?:\r)/g, ''));
@@ -901,12 +901,14 @@
                                         window.opener.openWindow('code.editor').then(() => {
                                             //not opened for what ever reason
                                             if (!window.opener._windows['code.editor']) return;
-                                            window.opener._windows['code.editor'].updateValue(getFormatedText().replace(/(?:\r)/g, ''));
+                                            windows['code.editor'].addEventListener('load', () => {
+                                                window.opener._windows['code.editor'].updateValue(getFormattedText().replace(/(?:\r)/g, ''));
+                                            }, { once: true });
                                         });
                                         return;
                                     }
                                     else
-                                        window.opener._windows['code.editor'].updateValue(getFormatedText().replace(/(?:\r)/g, ''));
+                                        window.opener._windows['code.editor'].updateValue(getFormattedText().replace(/(?:\r)/g, ''));
                                     break;
                             }
                         },
@@ -1128,7 +1130,7 @@
                 init_instance_callback: function (editor) {
                     editor.shortcuts.add('ctrl+shift+c', 'Copy formatted', copyFormatted);
                     editor.shortcuts.add('ctrl+shift+p', 'Paste formatted', () => {
-                        insertFormated(clipboard.readText('selection') || '');
+                        insertFormatted(clipboard.readText('selection') || '');
                     });
                     editor.on('PastePreProcess', function (e) {
                         if (options.enableDebug)
@@ -1151,6 +1153,7 @@
                     editor.on('PastePreProcess', function () {
                         addReverse($('.reverse', $(editor.getDoc()).contents()));
                     });
+                    window.dispatchEvent(new Event('editor-init'));
                 },
                 paste_data_images: false,
                 paste_word_valid_elements: 'b,strong,i,em,u,s,span,strike',
@@ -1183,7 +1186,7 @@
                 cMenu.popup({ window: remote.getCurrentWindow() });
             });
             loadOptions();
-            if (!editorOnly) {
+            if (!editorOnly && window.opener.client) {
                 window.opener.client.on('options-loaded', optionsLoaded);
             }
         });
@@ -1320,9 +1323,9 @@
 
         function loadOptions() {
             //if editor only different settings so fall back to global settngs
-            if (editorOnly)
+            if (editorOnly || !window.opener.client)
                 options = Settings.load(window.getGlobal('settingsFile'));
-            else
+            else if (window.opener.client)
                 options = window.opener.client.options;
             $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-size', options.cmdfontSize);
             $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-family', options.cmdfont + ', monospace');
@@ -1366,7 +1369,7 @@
                 return 'no';
             }
             $closeWindow = true;
-            if (!editorOnly) {
+            if (!editorOnly && window.opener.client) {
                 window.opener.client.off('options-loaded', optionsLoaded);
             }
         };
@@ -1378,14 +1381,6 @@
                 tinymce.activeEditor.plugins['shadowmud'].applyFormat(type, '#' + color);
             tinymce.activeEditor.plugins['smtextcolor'].setColor(type, '#' + color);
         }
-
-        /*
-        //TODO remove this once code editor has been updated to remove this, for now left for refence
-        ipcRenderer.on('send-editor', (event, text, window) => {
-            if (window != 'editor') return;
-            insertFormated(text);
-        });
-        */
     </script>
 </head>
 

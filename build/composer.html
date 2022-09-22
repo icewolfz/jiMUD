@@ -213,12 +213,12 @@
         }
 
         function copyFormatted() {
-            var text = getFormatedSelection().replace(/(?:\r)/g, '');
+            var text = getFormattedSelection().replace(/(?:\r)/g, '');
             clipboard.writeText(text || '');
             clipboard.writeText(text || '', 'selection');
         }
 
-        function insertFormated(text) {
+        function insertFormatted(text) {
             text = text || '';
             text = text.split('%^');
             var stack = [];
@@ -408,7 +408,7 @@
             return stack;
         }
 
-        function getFormatedSelection() {
+        function getFormattedSelection() {
             //build all previous nodes to ensure all formatting is captures
             var nodes = tinymce.activeEditor.dom.getParents(tinymce.activeEditor.selection.getNode());
             var n = 0, nl = nodes.length;
@@ -449,7 +449,7 @@
             return formatHtml($(start + tinymce.activeEditor.selection.getContent({ format: 'raw' }).replace(/<\/div><div>/g, '<br>') + end));
         }
 
-        function getFormatedText() {
+        function getFormattedText() {
             return formatHtml($('<html>' + tinymce.activeEditor.getContent({ format: 'raw' }).replace(/<\/div><div>/g, '<br>') + '</html>'));
         }
 
@@ -735,7 +735,7 @@
                             label: 'Paste formatted',
                             icon: path.join(__dirname, '../assets/icons/png/paste.png'),
                             click: () => {
-                                insertFormated(clipboard.readText('selection') || '');
+                                insertFormatted(clipboard.readText('selection') || '');
                             }
                         }));
                     }
@@ -865,11 +865,11 @@
                     type: 'splitbutton',
                     icon: 'fa-sendraw',
                     tooltip: 'Send mail',
-                    onclick: sendFormated,
+                    onclick: sendFormatted,
                     menu: [
                         {
                             text: 'Send formatted ',
-                            onclick: sendFormated
+                            onclick: sendFormatted
                         },
                         {
                             text: 'Send text',
@@ -932,7 +932,7 @@
             });
         }
 
-        function sendFormated() {
+        function sendFormatted() {
             var to = $('#to').val().split(/ |,/).filter((a) => { return a.length > 0; });
             var cc = ($('#CC').val().split(/ |,/) || []).filter((a) => { return a.length > 0; });
             var p = $('#to-form');
@@ -962,7 +962,7 @@
                 to: to,
                 cc: cc,
                 from: ipcRenderer.sendSync('get-global', 'character') || '',
-                raw: getFormatedText().replace(/(?:\r)/g, ''),
+                raw: getFormattedText().replace(/(?:\r)/g, ''),
                 ansi: getAnsiText().replace(/(?:\r)/g, '')
             }, options.extensions['mail'] ? options.extensions['mail'].saveSent : true);
         }
@@ -1100,7 +1100,7 @@
                 init_instance_callback: function (editor) {
                     editor.shortcuts.add('ctrl+shift+c', 'Copy formatted', copyFormatted);
                     editor.shortcuts.add('ctrl+shift+p', 'Paste formatted', () => {
-                        insertFormated(clipboard.readText('selection') || '');
+                        insertFormatted(clipboard.readText('selection') || '');
                     });
                     editor.on('PastePreProcess', function (e) {
                         if (options.enableDebug)
@@ -1364,7 +1364,7 @@
                             to: $('#to').val().split(/ |,/),
                             cc: $('#CC').val().split(/ |,/),
                             from: ipcRenderer.sendSync('get-global', 'character') || '',
-                            raw: getFormatedText().replace(/(?:\r)/g, ''),
+                            raw: getFormattedText().replace(/(?:\r)/g, ''),
                             ansi: getAnsiText().replace(/(?:\r)/g, ''),
                             html: getHTML()
                         }, () => {
@@ -1395,7 +1395,7 @@
                     to: $('#to').val().split(/ |,/),
                     cc: $('#CC').val().split(/ |,/),
                     from: ipcRenderer.sendSync('get-global', 'character') || '',
-                    raw: getFormatedText().replace(/(?:\r)/g, ''),
+                    raw: getFormattedText().replace(/(?:\r)/g, ''),
                     ansi: getAnsiText().replace(/(?:\r)/g, ''),
                     html: getHTML()
                 }, () => {
