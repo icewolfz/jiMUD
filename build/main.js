@@ -99,12 +99,11 @@ Menu.setApplicationMenu(null);
 
 global.settingsFile = parseTemplate(path.join('{data}', 'settings.json'));
 global.mapFile = parseTemplate(path.join('{data}', 'map.sqlite'));
-let set = settings.Settings.load(global.settingsFile);
 global.debug = false;
 global.editorOnly = false;
 global.updating = false;
+let _settings = settings.Settings.load(global.settingsFile);
 let _checkingUpdates = false;
-
 let _layout = parseTemplate(path.join('{data}', global.editorOnly ? 'editor.layout' : 'window.layout'));
 
 let clients = {}
@@ -179,7 +178,7 @@ function addInputContext(window, spellcheck) {
                 { type: 'separator' },
                 { role: 'selectAll' },
             ]);
-            if (global.debug || set.enableDebug) {
+            if (global.debug || _settings.enableDebug) {
                 inputMenu.append(new MenuItem({ type: 'separator' }));
                 inputMenu.append(new MenuItem({
                     label: 'Inspect',
@@ -256,16 +255,16 @@ function createWindow(options) {
         backgroundColor: options.backgroundColor || '#000',
         show: false,
         icon: path.join(__dirname, options.icon || '../assets/icons/png/64x64.png'),
-        skipTaskbar: !set.showInTaskBar,
+        skipTaskbar: !_settings.showInTaskBar,
         webPreferences: {
             nodeIntegration: true,
             nodeIntegrationInWorker: true,
             webviewTag: false,
             sandbox: false,
-            spellcheck: set ? set.spellchecking : false,
+            spellcheck: _settings ? _settings.spellchecking : false,
             enableRemoteModule: 'remote' in options ? options.remote : true,
             contextIsolation: false,
-            backgroundThrottling: set ? set.enableBackgroundThrottling : true,
+            backgroundThrottling: _settings ? _settings.enableBackgroundThrottling : true,
             preload: path.join(__dirname, 'preload.js')
         },
         //titleBarStyle: 'hidden',
@@ -313,7 +312,7 @@ function createWindow(options) {
     });
 
     window.on('minimize', () => {
-        if (set.hideOnMinimize)
+        if (_settings.hideOnMinimize)
             window.hide();
     });
 
@@ -341,7 +340,7 @@ function createWindow(options) {
         }
         return {
             action: 'allow',
-            overrideBrowserWindowOptions: buildOptions(details, window, set)
+            overrideBrowserWindowOptions: buildOptions(details, window, _settings)
         }
     });
 
@@ -417,7 +416,7 @@ function createWindow(options) {
     window.once('ready-to-show', () => {
         loadWindowScripts(window, options.script || path.basename(options.file, '.html'));
         executeScript(`if(typeof setId === "function") setId(${getWindowId(window)});`, window);
-        executeScript('if(typeof loadTheme === "function") loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');', window);
+        executeScript('if(typeof loadTheme === "function") loadTheme(\'' + _settings.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');', window);
         if (options.data && options.data.data)
             executeScript('if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify(options.data.data) + ');', window);
         updateJumpList();
@@ -544,10 +543,10 @@ function createDialog(options) {
             nodeIntegration: true,
             webviewTag: false,
             sandbox: false,
-            spellcheck: set ? set.spellchecking : false,
+            spellcheck: _settings ? _settings.spellchecking : false,
             enableRemoteModule: true,
             contextIsolation: false,
-            backgroundThrottling: set ? set.enableBackgroundThrottling : true,
+            backgroundThrottling: _settings ? _settings.enableBackgroundThrottling : true,
             preload: path.join(__dirname, 'preload.js')
         }
     });
@@ -590,7 +589,7 @@ function createDialog(options) {
         if (global.debug)
             openDevtools(window.webContents, { activate: false });
     });
-    addInputContext(window, set.spellchecking);
+    addInputContext(window, _settings.spellchecking);
     return window;
 }
 
@@ -672,11 +671,11 @@ app.on('ready', () => {
 
     if (Array.isArray(argv.s)) {
         global.settingsFile = parseTemplate(argv.s[0]);
-        set = settings.Settings.load(global.settingsFile);
+        _settings = settings.Settings.load(global.settingsFile);
     }
     else if (argv.s) {
         global.settingsFile = parseTemplate(argv.s);
-        set = settings.Settings.load(global.settingsFile);
+        _settings = settings.Settings.load(global.settingsFile);
     }
 
     if (Array.isArray(argv.m))
@@ -853,10 +852,10 @@ ipcMain.on('get-global', (event, key) => {
             event.returnValue = _layout;
             break;
         case 'theme':
-            event.returnValue = set ? set.theme : '';
+            event.returnValue = _settings ? _settings.theme : '';
             break;
         case 'askonloadCharacter':
-            event.returnValue = set ? set.askonloadCharacter : true;
+            event.returnValue = _settings ? _settings.askonloadCharacter : true;
             break;
         default:
             event.returnValue = null;
@@ -892,31 +891,31 @@ ipcMain.on('set-global', (event, key, value) => {
 
 
 ipcMain.on('get-setting', (event, key) => {
-    if (!set) {
+    if (!_settings) {
         event.returnValue = null;
         return;
     }
     switch (key) {
         case 'theme':
-            event.returnValue = set.theme;
+            event.returnValue = _settings.theme;
             break;
         case 'askonloadCharacter':
-            event.returnValue = set.askonloadCharacter;
+            event.returnValue = _settings.askonloadCharacter;
             break;
         case 'spellchecking':
-            event.returnValue = set.spellchecking;
+            event.returnValue = _settings.spellchecking;
             break;
         case 'alwaysShowTabs':
-            event.returnValue = set.alwaysShowTabs;
+            event.returnValue = _settings.alwaysShowTabs;
             break;
         case 'enableBackgroundThrottling':
-            event.returnValue = set.enableBackgroundThrottling;
+            event.returnValue = _settings.enableBackgroundThrottling;
             return;
         case 'showTabsAddNewButton':
-            event.returnValue = set.showTabsAddNewButton;
+            event.returnValue = _settings.showTabsAddNewButton;
             return;
         case 'askOnCloseAll':
-            event.returnValue = set.askOnCloseAll;
+            event.returnValue = _settings.askOnCloseAll;
             return;
         default:
             event.returnValue = null;
@@ -925,36 +924,36 @@ ipcMain.on('get-setting', (event, key) => {
 });
 
 ipcMain.on('set-setting', (event, key, value) => {
-    if (!set)
+    if (!_settings)
         return;
     switch (key) {
         case 'theme':
-            set.theme = value;
-            set.save(global.settingsFile);
+            _settings.theme = value;
+            _settings.save(global.settingsFile);
             break;
         case 'askonloadCharacter':
-            set.askonloadCharacter = value;
-            set.save(global.settingsFile);
+            _settings.askonloadCharacter = value;
+            _settings.save(global.settingsFile);
             break;
         case 'spellchecking':
-            set.spellchecking = value;
-            set.save(global.settingsFile);
+            _settings.spellchecking = value;
+            _settings.save(global.settingsFile);
             break;
         case 'alwaysShowTabs':
-            set.alwaysShowTabs = value;
-            set.save(global.settingsFile);
+            _settings.alwaysShowTabs = value;
+            _settings.save(global.settingsFile);
             break;
         case 'enableBackgroundThrottling':
-            set.enableBackgroundThrottling = value;
-            set.save(global.settingsFile);
+            _settings.enableBackgroundThrottling = value;
+            _settings.save(global.settingsFile);
             break;
         case 'showTabsAddNewButton':
-            set.showTabsAddNewButton = value;
-            set.save(global.settingsFile);
+            _settings.showTabsAddNewButton = value;
+            _settings.save(global.settingsFile);
             break
         case 'askOnCloseAll':
-            set.askOnCloseAll = value;
-            set.save(global.settingsFile);
+            _settings.askOnCloseAll = value;
+            _settings.save(global.settingsFile);
             break
     }
 });
@@ -1536,16 +1535,16 @@ ipcMain.on('get-options', event => {
 });
 
 ipcMain.on('get-preference', (event, preference) => {
-    event.returnValue = set[preference];
+    event.returnValue = _settings[preference];
 });
 
 ipcMain.on('set-preference', (event, preference, value) => {
-    set[preference] = value;
+    _settings[preference] = value;
 });
 
 ipcMain.on('reload-options', (events, preferences, clientId) => {
     if (preferences === global.settingsFile) {
-        set = settings.Settings.load(global.settingsFile);
+        _settings = settings.Settings.load(global.settingsFile);
         for (window in windows) {
             if (!Object.prototype.hasOwnProperty.call(windows, window))
                 continue;
@@ -1557,7 +1556,7 @@ ipcMain.on('reload-options', (events, preferences, clientId) => {
         if (!Object.prototype.hasOwnProperty.call(clients, id) || getClientId(clients[id].view) === clientId)
             continue;
         clients[id].view.webContents.send('reload-options', preferences, preferences === global.settingsFile);
-        updateWebContents(clients[id].view.webContents, set);
+        updateWebContents(clients[id].view.webContents, _settings);
     }
 });
 
@@ -1579,10 +1578,10 @@ function createClient(options) {
             nodeIntegrationInWorker: true,
             webviewTag: false,
             sandbox: false,
-            spellcheck: set ? set.spellchecking : false,
+            spellcheck: _settings ? _settings.spellchecking : false,
             enableRemoteModule: true,
             contextIsolation: false,
-            backgroundThrottling: set ? set.enableBackgroundThrottling : true,
+            backgroundThrottling: _settings ? _settings.enableBackgroundThrottling : true,
             preload: path.join(__dirname, 'preload.js')
         }
     });
@@ -1598,7 +1597,7 @@ function createClient(options) {
     view.webContents.on('devtools-reload-page', () => {
         view.webContents.once('dom-ready', () => {
             executeScript(`if(typeof setId === "function") setId(${getClientId(view)});`, clients[getClientId(view)].view);
-            executeScript('if(typeof loadTheme === "function") loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');', clients[options.id].view);
+            executeScript('if(typeof loadTheme === "function") loadTheme(\'' + _settings.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');', clients[options.id].view);
             /*
             if (options.data)
                 executeScript('if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify({ data: options.data.data, windows: options.data.windows, states: options.data.states }) + ');', clients[options.id].view);
@@ -1616,7 +1615,7 @@ function createClient(options) {
         }
         return {
             action: 'allow',
-            overrideBrowserWindowOptions: buildOptions(details, BrowserWindow.fromBrowserView(view), set)
+            overrideBrowserWindowOptions: buildOptions(details, BrowserWindow.fromBrowserView(view), _settings)
         }
     });
 
@@ -1720,7 +1719,7 @@ function createClient(options) {
     clients[options.id] = { view: view, windows: [], parent: null, file: options.file !== 'build/index.html' ? options.file : 0, states: {} };
     idMap.set(view, options.id);
     loadWindowScripts(view, options.script || 'user');
-    script = `if(typeof setId === "function") setId(${options.id});if(typeof loadTheme === "function") loadTheme('${set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'')}');`;
+    script = `if(typeof setId === "function") setId(${options.id});if(typeof loadTheme === "function") loadTheme('${_settings.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'')}');`;
     if (options.data)
         clients[options.id].options = { data: options.data.data, windows: options.data.windows || [], states: options.data.states || {} };
     else
@@ -1864,7 +1863,7 @@ function initializeChildWindow(window, link, details) {
         else
             loadWindowScripts(window, details.frameName);
         if (!details.options.noInputContext)
-            addInputContext(window, set.spellchecking);
+            addInputContext(window, _settings.spellchecking);
         if ('visible' in details.options && !details.options.visible)
             window.hide();
         else
@@ -1903,7 +1902,7 @@ function initializeChildWindow(window, link, details) {
         }
         return {
             action: 'allow',
-            overrideBrowserWindowOptions: buildOptions(childDetails, window, set)
+            overrideBrowserWindowOptions: buildOptions(childDetails, window, _settings)
         }
     });
 
@@ -2079,11 +2078,11 @@ function isFileSync(aPath) {
 
 function logError(err, skipClient) {
     var msg = '';
-    if (global.debug || set.enableDebug)
+    if (global.debug || _settings.enableDebug)
         console.error(err);
-    if (!set)
-        set = settings.Settings.load(global.settingsFile);
-    if (err.stack && set.showErrorsExtended)
+    if (!_settings)
+        _settings = settings.Settings.load(global.settingsFile);
+    if (err.stack && _settings.showErrorsExtended)
         msg = err.stack;
     else if (err instanceof TypeError)
         msg = err.name + ': ' + err.message;
@@ -2098,8 +2097,8 @@ function logError(err, skipClient) {
 
     if (!global.editorOnly && client && client.view.webContents && !skipClient)
         client.view.webContents.send('error', msg);
-    else if (set.logErrors) {
-        if (err.stack && !set.showErrorsExtended)
+    else if (_settings.logErrors) {
+        if (err.stack && !_settings.showErrorsExtended)
             msg = err.stack;
         fs.writeFileSync(path.join(app.getPath('userData'), 'jimud.error.log'), new Date().toLocaleString() + '\n', { flag: 'a' });
         fs.writeFileSync(path.join(app.getPath('userData'), 'jimud.error.log'), msg + '\n', { flag: 'a' });
@@ -2196,7 +2195,7 @@ function createUpdater(window) {
 
 function checkForUpdates() {
     const window = getActiveWindow().window;
-    if (set.checkForUpdates && !_checkingUpdates) {
+    if (_settings.checkForUpdates && !_checkingUpdates) {
         _checkingUpdates = true;
         //resources/app-update.yml
         if (!isFileSync(path.join(app.getAppPath(), '..', 'app-update.yml'))) {
@@ -2331,7 +2330,7 @@ ipcMain.on('check-for-updates', checkForUpdatesManual);
 
 //#region Window build/position functions
 function getWindowX(x, w) {
-    if (set.fixHiddenWindows) {
+    if (_settings.fixHiddenWindows) {
         const { width } = screen.getPrimaryDisplay().workAreaSize;
         if (x + w >= width)
             return width - w;
@@ -2342,7 +2341,7 @@ function getWindowX(x, w) {
 }
 
 function getWindowY(y, h) {
-    if (set.fixHiddenWindows) {
+    if (_settings.fixHiddenWindows) {
         const { height } = screen.getPrimaryDisplay().workAreaSize;
         if (y + h >= height)
             return height - h;
@@ -3966,7 +3965,7 @@ function openProfileManager(parent) {
         window.focus();
     else {
         window = createWindow({ id: 'profiles', file: 'profiles.html', parent: parent, icon: '../assets/icons/png/profiles.png', title: 'Profile Manger' });
-        window.setSkipTaskbar(!set.profiles.showInTaskBar);
+        window.setSkipTaskbar(!_settings.profiles.showInTaskBar);
     }
 }
 //#endregion

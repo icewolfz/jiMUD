@@ -30,6 +30,11 @@
         var _current = 0;
         var _loading = 0;
 
+        window.addEventListener('error', (e) => {
+            ipcRenderer.send('error', e);
+            return true;
+        });
+
         function loadTheme(theme, force) {
             theme = parseTemplate(theme) + '.css';
             if (!isFileSync(theme))

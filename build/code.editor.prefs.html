@@ -95,6 +95,11 @@
         });
 
         $(document).ready(() => {
+            if (window.opener.opener)
+                $('.childWindow').css('display', '');
+            else
+                $('.childWindow').css('display', 'none');
+
             if (process.platform === 'win32')
                 $('.win32').css('display', 'block');
             else
@@ -260,7 +265,9 @@
             if (typeof value == 'string' && parseFloat(value).toString() == value)
                 value = parseFloat(value);
             option = option.split('-');
-            if (option.length === 3)
+            if (option[0] === 'window' && window.opener.opener)
+                window.opener.opener.client.options.codeEditor[option[0]] = value;
+            else if (option.length === 3)
                 _settings[option[0]][option[1]][option[2]] = value;
             else if (option.length === 2)
                 _settings[option[0]][option[1]] = value;
@@ -373,7 +380,17 @@
         // eslint-disable-next-line no-unused-vars
         function saveSettings() {
             _settings.save(parseTemplate(path.join('{data}', 'editor.json')));
-            ipcRenderer.send('editor-setting-changed', _settings.window);
+            //settings only apply if child window
+            if (window.opener.opener) {
+                window.opener.update({
+                    alwaysOnTopClient: window.opener.opener.client.options.codeEditor.alwaysOnTopClient,
+                    alwaysOnTop: window.opener.opener.client.options.codeEditor.alwaysOnTop,
+                    showInTaskBar: window.opener.opener.client.options.codeEditor.showInTaskBar,
+                    enableBackgroundThrottling: window.getSetting('enableBackgroundThrottling'),
+                    persistent: window.opener.opener.client.options.codeEditor.persistent
+                });
+            }
+            window.opener.reloadOptions();
             window.close();
         }
 
@@ -465,7 +482,7 @@
             <li role="presentation">
                 <a href="#virtualEditor" aria-controls="virtualEditor" role="tab" data-toggle="tab">Virtual Area Editor</a>
             </li>
-            <li role="presentation">
+            <li role="presentation" class="childWindow">
                 <a href="#window" aria-controls="window" role="tab" data-toggle="tab">Window</a>
             </li>
             <li role="presentation">
@@ -858,7 +875,7 @@
                     </label>
                 </div>
             </div>
-            <div role="tabpanel" class="container tab-pane fade" id="window">
+            <div role="tabpanel" class="container tab-pane fade childWindow" id="window">
                 <div class="col-xs-12">
                     <div class="col-xs-6 form-group">
                         <label class="control-label">

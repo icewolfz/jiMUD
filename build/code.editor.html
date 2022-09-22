@@ -2222,7 +2222,7 @@
                     label: '&Preferences...',
                     accelerator: 'CmdOrCtrl+Comma',
                     click: () => {
-                        window.open('code.editor.prefs.html', 'modal', 'backgroundColor=#fff,height=465,width=800,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
+                        _preferences = window.open('code.editor.prefs.html', 'modal', 'backgroundColor=#fff,height=465,width=800,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
                     }
                 },
                 { type: 'separator' },
@@ -2762,13 +2762,13 @@
     }
     //#endregion
 
-
-    let editor;
+    let _preferences;
+    let advEditor;
     function openAdvancedEditor(text) {
-        if (editor && !editor.closed) {
-            editor.show();
-            editor.focus();
-            editor.insertFormatted(text);
+        if (advEditor && !advEditor.closed) {
+            advEditor.show();
+            advEditor.focus();
+            advEditor.insertFormatted(text);
         }
         /*
         else if (window.opener && window.opener.client) {
@@ -2787,11 +2787,11 @@
         }
         */
         else {
-            editor = window.open('editor.html', 'Code Advanced Editor-' + getId(), `noInputContext=true,alwaysOnTopClient=true,showInTaskBar=false,persistent=false,defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/edit.png')}`);
-            editor.addEventListener('editor-init', () => {
-                editor.show();
-                editor.focus();
-                editor.insertFormatted(text);
+            advEditor = window.open('editor.html', 'Code Advanced Editor-' + getId(), `noInputContext=true,alwaysOnTopClient=true,showInTaskBar=false,persistent=false,defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/edit.png')}`);
+            advEditor.addEventListener('editor-init', () => {
+                advEditor.show();
+                advEditor.focus();
+                advEditor.insertFormatted(text);
             }, { once: true });
         }
     }
@@ -3049,7 +3049,6 @@
 
     function saveOptions() {
         options.save(parseTemplate(path.join('{data}', 'editor.json')));
-        ipcRenderer.send('editor-settings-reload');
     }
 
     function getFileIcon(file) {
@@ -4436,13 +4435,25 @@
 
     function closeable(all) {
         if (!$closeWindow) {
-            if (editor && !editor.closed) {
+            if (advEditor && !advEditor.closed) {
                 dialog.showMessageBox({
                     type: 'error',
                     title: 'Editor dialog open',
-                    message: 'You must close the Editor dialog before you can close code editor.',
+                    message: 'You must close the advanced editor dialog before you can close code editor.',
                     defaultId: 1
                 });
+                advEditor.focus();
+                $closeWindow = false;
+                return false;
+            }
+            if (_preferences && !_preferences.closed) {
+                dialog.showMessageBox({
+                    type: 'error',
+                    title: 'Preferences dialog open',
+                    message: 'You must close the preferences dialog before you can close code editor.',
+                    defaultId: 1
+                });
+                _preferences.focus();
                 $closeWindow = false;
                 return false;
             }
@@ -4574,7 +4585,7 @@
         menubar.updateItem('file|open remote...', { enabled: false });
     });
 
-    ipcRenderer.on('editor-setting-changed', () => {
+    function reloadOptions() {
         loadOptions();
         var keys = Object.keys(_editors);
         var k = keys.length;
@@ -4594,7 +4605,7 @@
                 _editors[p].editor.options = options.virtualOptions;
 
         }
-    });
+    };
 
     ipcRenderer.on('menu-update', (menu, options) => {
         if (menubar)
