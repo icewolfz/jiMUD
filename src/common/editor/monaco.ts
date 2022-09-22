@@ -1343,7 +1343,7 @@ export class MonacoCodeEditor extends EditorBase {
     }
 
     public get buttons() {
-        if (path.extname(this.source === 1 ? this.remote : this.file) !== '.c')
+        if (!window.opener || path.extname(this.source === 1 ? this.remote : this.file) !== '.c')
             return [];
         const group = document.createElement('div');
         group.classList.add('btn-group');

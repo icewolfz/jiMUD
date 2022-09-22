@@ -443,7 +443,7 @@
                 </span>
             </button>
         </div>
-        <div class="btn-group" role="group">
+        <div class="btn-group" role="group" id="btn-grp-remote">
             <button id="btn-open-remote" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Open Remote..." onclick="openRemote()">
                 <i class="fa fa-cloud-download"></i>
             </button>
@@ -2172,7 +2172,8 @@
                     label: 'Op&en Remote...',
                     accelerator: 'CmdOrCtrl+Shift+O',
                     click: () => { openRemote(); },
-                    enabled: false
+                    enabled: false,
+                    visible: window.opener ? true : false
                 },
                 {
                     label: 'Open &Recent',
@@ -2203,14 +2204,19 @@
                     accelerator: 'CmdOrCtrl+U',
                     click: () => { uploadFile(); },
                     enabled: false,
+                    visible: window.opener ? true : false
                 },
                 {
                     label: 'Up&load As...',
                     accelerator: 'CmdOrCtrl+Alt+U',
                     click: () => { uploadFileAs(); },
                     enabled: false,
+                    visible: window.opener ? true : false
                 },
-                { type: 'separator' },
+                {
+                    type: 'separator',
+                    visible: window.opener ? true : false
+                },
                 {
                     label: '&Preferences...',
                     accelerator: 'CmdOrCtrl+Comma',
@@ -2260,7 +2266,7 @@
                             enabled: false
                         },
                         {
-                            label: '&Local...',
+                            label: window.opener ? '&Local...' : '&File...',
                             click: () => {
                                 dialog.showOpenDialog({
                                     filters: $fileFilters,
@@ -2307,7 +2313,8 @@
                                     });
                                 });
                             },
-                            enabled: false
+                            enabled: false,
+                            visible: window.opener ? true : false
                         },
 
                     ]
@@ -2809,12 +2816,17 @@
         menubar.updateItem('File|Close', { enabled: enabled });
         menubar.updateItem('File|Close all', { enabled: enabled });
         menubar.updateItem('File|save as...', { enabled: enabled });
-        menubar.updateItem('file|diff|local...', { enabled: enabled && manager.active.editor.supports('diff') });
-        menubar.updateItem('file|diff|remote...', { enabled: connected && enabled && manager.active.editor.supports('diff') });
-        menubar.updateItem('file|upload', { enabled: connected && enabled && manager.active.editor.supports('upload') });
-        menubar.updateItem('file|upload as...', { enabled: connected && enabled && manager.active.editor.supports('upload-as') });
-        $('#btn-upload').prop('disabled', !(connected && enabled && manager.active.editor.supports('upload')));
-        $('#btn-upload-as').prop('disabled', !(connected && enabled && manager.active.editor.supports('upload-as')));
+        if (window.opener) {
+            menubar.updateItem('file|diff|local...', { enabled: enabled && manager.active.editor.supports('diff') });
+            menubar.updateItem('file|diff|remote...', { enabled: connected && enabled && manager.active.editor.supports('diff') });
+            menubar.updateItem('file|upload', { enabled: connected && enabled && manager.active.editor.supports('upload') });
+            menubar.updateItem('file|upload as...', { enabled: connected && enabled && manager.active.editor.supports('upload-as') });
+            $('#btn-upload').prop('disabled', !(connected && enabled && manager.active.editor.supports('upload')));
+            $('#btn-upload-as').prop('disabled', !(connected && enabled && manager.active.editor.supports('upload-as')));
+        }
+        else {
+            menubar.updateItem('file|diff|file...', { enabled: enabled && manager.active.editor.supports('diff') });
+        }
         var buttons = document.getElementById('editor-buttons');
         while (buttons.firstChild) {
             buttons.removeChild(buttons.firstChild);
@@ -3251,6 +3263,15 @@
 
     //https://github.com/electron/electron/blob/master/docs/api/dialog.md
     function showBrowseDialog(ops, callback) {
+        if (!window.opener) {
+            dialog.showMessageBox({
+                type: 'error',
+                title: 'Not supported',
+                message: 'Not supported in editor only mode, remote browsing can only be done when connected to the mud',
+                defaultId: 1
+            });
+            return;
+        }
         if (typeof ops === 'function') {
             callback = ops;
             ops = {};
@@ -3767,6 +3788,9 @@
     }
 
     $(document).ready(() => {
+        if (!window.opener) {
+            $('btn-grp-remote').css('display', 'none');
+        }
         loadOptions();
         _ied = new IED();
         _ied.prefix = 'editor-';
@@ -4286,14 +4310,15 @@
         });
 
         Array.from(document.querySelectorAll('.edit-dropdown')).forEach(d => initEditDropdown(d));
-
-        if (connected) {
-            document.getElementById('btn-open-remote').removeAttribute('disabled');
-            menubar.updateItem('file|open remote...', { enabled: connected });
-        }
-        else {
-            document.getElementById('btn-open-remote').setAttribute('disabled', 'true');
-            menubar.updateItem('file|open remote...', { enabled: false });
+        if (window.opener) {
+            if (connected) {
+                document.getElementById('btn-open-remote').removeAttribute('disabled');
+                menubar.updateItem('file|open remote...', { enabled: connected });
+            }
+            else {
+                document.getElementById('btn-open-remote').setAttribute('disabled', 'true');
+                menubar.updateItem('file|open remote...', { enabled: false });
+            }
         }
         createWatcher();
         postEditorLoad();
