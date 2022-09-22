@@ -5,7 +5,7 @@ import { Splitter, Orientation } from '../splitter';
 import { PropertyGrid } from '../propertygrid';
 import { EditorType, ValueEditor } from '../value.editors';
 import { DataGrid } from '../datagrid';
-import { copy, formatString, isFileSync, capitalize, leadingZeros, Cardinal, resetCursor, enumToString, pinkfishToHTML } from '../library';
+import { copy, formatString, isFileSync, capitalize, leadingZeros, Cardinal, resetCursor, enumToString, pinkfishToHTML, offset } from '../library';
 const { clipboard } = require('electron');
 const remote = require('@electron/remote');
 const { Menu, MenuItem } = remote;
@@ -5864,16 +5864,16 @@ export class VirtualEditor extends EditorBase {
         el.title = 'Show raw';
         el.innerHTML = '<span class="caret"></span>';
         el.onclick = (e) => {
-            const button = $(e.currentTarget);
-            button.addClass('open');
-            const pos = button.offset();
+            const button: HTMLInputElement = e.currentTarget;
+            button.classList.add('open');
+            const pos = offset(button);
             const x = Math.floor(pos.left);
-            const y = Math.floor(pos.top + button.outerHeight() + 2);
+            const y = Math.floor(pos.top + button.offsetHeight + 2);
             const addMenu = new Menu();
             addMenu.append(new MenuItem({
                 label: 'Map raw',
                 click: () => {
-                    button.removeClass('open');
+                    button.classList.remove('open');
                     button.blur();
                     this.switchView(View.mapRaw);
                 },
@@ -5884,7 +5884,7 @@ export class VirtualEditor extends EditorBase {
                 addMenu.append(new MenuItem({
                     label: 'Terrain raw',
                     click: () => {
-                        button.removeClass('open');
+                        button.classList.remove('open');
                         button.blur();
                         this.switchView(View.terrainsRaw);
                     },
@@ -5894,7 +5894,7 @@ export class VirtualEditor extends EditorBase {
             addMenu.append(new MenuItem({
                 label: 'Description raw',
                 click: () => {
-                    button.removeClass('open');
+                    button.classList.remove('open');
                     button.blur();
                     this.switchView(View.descriptionsRaw);
                 },
@@ -5904,7 +5904,7 @@ export class VirtualEditor extends EditorBase {
             addMenu.append(new MenuItem({
                 label: 'Items raw',
                 click: () => {
-                    button.removeClass('open');
+                    button.classList.remove('open');
                     button.blur();
                     this.switchView(View.itemsRaw);
                 },
@@ -5915,7 +5915,7 @@ export class VirtualEditor extends EditorBase {
                 addMenu.append(new MenuItem({
                     label: 'State raw',
                     click: () => {
-                        button.removeClass('open');
+                        button.classList.remove('open');
                         button.blur();
                         this.switchView(View.stateRaw);
                     },
@@ -5926,7 +5926,7 @@ export class VirtualEditor extends EditorBase {
             addMenu.append(new MenuItem({
                 label: 'External exits raw',
                 click: () => {
-                    button.removeClass('open');
+                    button.classList.remove('open');
                     button.blur();
                     this.switchView(View.exitsRaw);
                 },
