@@ -3788,403 +3788,405 @@
     }
 
     $(document).ready(() => {
+        loadOptions();
         if (!window.opener) {
             $('btn-grp-remote').css('display', 'none');
         }
-        loadOptions();
-        _ied = new IED();
-        _ied.prefix = 'editor-';
-        _ied.compressUpload = true;
-        _ied.compressDownload = true;
-        _ied.compressDir = true;
-        _ied.on('init', () => {
+        else {
+            _ied = new IED();
+            _ied.prefix = 'editor-';
+            _ied.compressUpload = true;
+            _ied.compressDownload = true;
+            _ied.compressDir = true;
+            _ied.on('init', () => {
 
-        });
-        _ied.on('error', (error) => {
-            if (error && error.code) {
-                switch (error.code) {
-                    case IEDError.USER_DENIED:
-                        dialog.showMessageBox({
-                            type: 'error',
-                            title: 'Permission denied',
-                            message: 'Permission denied'
-                        });
-                        closeProgressDialog(error.tag);
-                        break;
-                    case IEDError.DL_NOTSTART:
-                    case IEDError.DL_TOOMANY:
-                    case IEDError.DL_INPROGRESS:
-                        dialog.showMessageBox({
-                            type: 'error',
-                            title: 'Download error',
-                            message: `Download error for '${error.path}/${error.file}': ${error.msg}`
-                        });
-                        closeProgressDialog(error.tag);
-                        break;
-                    case IEDError.DL_INVALIDFMT:
-                    case IEDError.DL_UNKNOWN:
-                    case IEDError.DL_USERABORT:
-                    case IEDError.DL_INVALIDFILE:
-                    case IEDError.DL_INVALIDPATH:
-                        dialog.showMessageBox({
-                            type: 'error',
-                            title: 'Download aborted',
-                            message: `Download aborted for '${error.path}/${error.file}': ${error.msg}`
-                        });
-                        closeProgressDialog(error.tag);
-                        break;
-                    case IEDError.RESET:
-                        dialog.showMessageBox({
-                            type: 'error',
-                            title: 'Reset',
-                            message: 'Server reset: ' + error.msg
-                        });
-                        closeProgressDialog(error.tag);
-                        break;
-                    case IEDError.USERRESET:
-                        dialog.showMessageBox({
-                            type: 'error',
-                            title: 'Reset',
-                            message: error.msg
-                        });
-                        break;
-                    case IEDError.UL_TOOMANY:
-                    case IEDError.UL_INPROGRESS:
-                        dialog.showMessageBox({
-                            type: 'error',
-                            title: 'Upload error',
-                            message: `Upload error for '${error.path}/${error.file}': ${error.msg}`
-                        });
-                        closeProgressDialog(error.tag);
-                        break;
-                    case IEDError.UL_INVALIDFMT:
-                    case IEDError.UL_USERABORT:
-                    case IEDError.UL_BADENCODE:
-                    case IEDError.UL_TOOLARGE:
-                    case IEDError.UL_FAILWRITE:
-                    case IEDError.UL_UNKNOWN:
-                    case IEDError.UL_INVALIDFILE:
-                    case IEDError.UL_INVALIDPATH:
-                    case IEDError.UL_DENIED:
-                    case IEDError.UL_FILE:
-                        dialog.showMessageBox({
-                            type: 'error',
-                            title: 'Upload aborted',
-                            message: `Upload aborted for '${error.path}/${error.file}': ${error.msg}`
-                        });
-                        closeProgressDialog(error.tag);
-                        break;
-                    case IEDError.CMD_EXIST:
-                        dialog.showMessageBox({
-                            type: 'error',
-                            title: 'Already exist',
-                            message: `File or directory already exist: '${error.path}/${error.file}`
-                        });
-                        closeProgressDialog(error.tag);
-                        break;
-                    case IEDError.CMD_DIRECTORY:
-                        dialog.showMessageBox({
-                            type: 'error',
-                            title: 'Is a directory',
-                            message: `File is a directory: '${error.path}/${error.file}`
-                        });
-                        closeProgressDialog(error.tag);
-                        break;
-                    case IEDError.CMD_NOEXIST:
-                        dialog.showMessageBox({
-                            type: 'error',
-                            title: 'Does not exist',
-                            message: `File or directory does not exist: '${error.path}/${error.file}`
-                        });
-                        closeProgressDialog(error.tag);
-                        break;
-                    case IEDError.CMD_FILE:
-                        dialog.showMessageBox({
-                            type: 'error',
-                            title: 'Not a directory',
-                            message: `File not a directory: '${error.path}/${error.file}`
-                        });
-                        closeProgressDialog(error.tag);
-                        break;
-                    case IEDError.DIR_CANTREAD:
-                        if (error.tag && error.tag === 'editor-dir:remoteBrowse')
-                            _ied.getDir('.', false, 'remoteBrowse');
-                        else {
+            });
+            _ied.on('error', (error) => {
+                if (error && error.code) {
+                    switch (error.code) {
+                        case IEDError.USER_DENIED:
                             dialog.showMessageBox({
                                 type: 'error',
-                                title: 'Can not read',
-                                message: 'Can not read or permission denied'
+                                title: 'Permission denied',
+                                message: 'Permission denied'
                             });
                             closeProgressDialog(error.tag);
-                        }
-                        break;
+                            break;
+                        case IEDError.DL_NOTSTART:
+                        case IEDError.DL_TOOMANY:
+                        case IEDError.DL_INPROGRESS:
+                            dialog.showMessageBox({
+                                type: 'error',
+                                title: 'Download error',
+                                message: `Download error for '${error.path}/${error.file}': ${error.msg}`
+                            });
+                            closeProgressDialog(error.tag);
+                            break;
+                        case IEDError.DL_INVALIDFMT:
+                        case IEDError.DL_UNKNOWN:
+                        case IEDError.DL_USERABORT:
+                        case IEDError.DL_INVALIDFILE:
+                        case IEDError.DL_INVALIDPATH:
+                            dialog.showMessageBox({
+                                type: 'error',
+                                title: 'Download aborted',
+                                message: `Download aborted for '${error.path}/${error.file}': ${error.msg}`
+                            });
+                            closeProgressDialog(error.tag);
+                            break;
+                        case IEDError.RESET:
+                            dialog.showMessageBox({
+                                type: 'error',
+                                title: 'Reset',
+                                message: 'Server reset: ' + error.msg
+                            });
+                            closeProgressDialog(error.tag);
+                            break;
+                        case IEDError.USERRESET:
+                            dialog.showMessageBox({
+                                type: 'error',
+                                title: 'Reset',
+                                message: error.msg
+                            });
+                            break;
+                        case IEDError.UL_TOOMANY:
+                        case IEDError.UL_INPROGRESS:
+                            dialog.showMessageBox({
+                                type: 'error',
+                                title: 'Upload error',
+                                message: `Upload error for '${error.path}/${error.file}': ${error.msg}`
+                            });
+                            closeProgressDialog(error.tag);
+                            break;
+                        case IEDError.UL_INVALIDFMT:
+                        case IEDError.UL_USERABORT:
+                        case IEDError.UL_BADENCODE:
+                        case IEDError.UL_TOOLARGE:
+                        case IEDError.UL_FAILWRITE:
+                        case IEDError.UL_UNKNOWN:
+                        case IEDError.UL_INVALIDFILE:
+                        case IEDError.UL_INVALIDPATH:
+                        case IEDError.UL_DENIED:
+                        case IEDError.UL_FILE:
+                            dialog.showMessageBox({
+                                type: 'error',
+                                title: 'Upload aborted',
+                                message: `Upload aborted for '${error.path}/${error.file}': ${error.msg}`
+                            });
+                            closeProgressDialog(error.tag);
+                            break;
+                        case IEDError.CMD_EXIST:
+                            dialog.showMessageBox({
+                                type: 'error',
+                                title: 'Already exist',
+                                message: `File or directory already exist: '${error.path}/${error.file}`
+                            });
+                            closeProgressDialog(error.tag);
+                            break;
+                        case IEDError.CMD_DIRECTORY:
+                            dialog.showMessageBox({
+                                type: 'error',
+                                title: 'Is a directory',
+                                message: `File is a directory: '${error.path}/${error.file}`
+                            });
+                            closeProgressDialog(error.tag);
+                            break;
+                        case IEDError.CMD_NOEXIST:
+                            dialog.showMessageBox({
+                                type: 'error',
+                                title: 'Does not exist',
+                                message: `File or directory does not exist: '${error.path}/${error.file}`
+                            });
+                            closeProgressDialog(error.tag);
+                            break;
+                        case IEDError.CMD_FILE:
+                            dialog.showMessageBox({
+                                type: 'error',
+                                title: 'Not a directory',
+                                message: `File not a directory: '${error.path}/${error.file}`
+                            });
+                            closeProgressDialog(error.tag);
+                            break;
+                        case IEDError.DIR_CANTREAD:
+                            if (error.tag && error.tag === 'editor-dir:remoteBrowse')
+                                _ied.getDir('.', false, 'remoteBrowse');
+                            else {
+                                dialog.showMessageBox({
+                                    type: 'error',
+                                    title: 'Can not read',
+                                    message: 'Can not read or permission denied'
+                                });
+                                closeProgressDialog(error.tag);
+                            }
+                            break;
+                    }
                 }
-            }
-            var msg;
-            if (error.stack)
-                msg = error.stack;
-            else if (error instanceof TypeError)
-                msg = error.name + ': ' + error.message;
-            else if (error instanceof Error)
-                msg = error.name + ': ' + error.message;
-            else if (error.message)
-                msg = error.message;
-            else if (error.msg)
-                msg = error.msg;
-            else
-                msg = error;
-            logOutput(msg);
-        });
-        _ied.on('reset', () => { });
-        _ied.on('dir', (dir, files, tag) => {
-            if (tag.startsWith('editor-dir:remoteBrowse')) {
-                $dialog.files = files;
-                $dialog.path.value = dir;
-                $dialog.current = dir;
-                if ($dialog.options.properties.indexOf('showHiddenFiles') === -1)
-                    $dialog.files = files.filter(f => f.file[0] !== '.');
-                $dialog.files = files.map(f => {
-                    if (f.size === -2)
-                        f.type = 'Directory';
-                    else
-                        f.type = path.extname(f.file);
-                    return f;
-                });
-                filterBrowseDialog();
-                if ($dialog.first) {
-                    $dialog.first = false;
-                    if ($dialog.options.defaultFile) {
-                        let idx = $dialog.datagrid.rows.indexOf(path.basename($dialog.options.defaultFile));
-                        $dialog.datagrid.selectByDataIndex(idx, true);
+                var msg;
+                if (error.stack)
+                    msg = error.stack;
+                else if (error instanceof TypeError)
+                    msg = error.name + ': ' + error.message;
+                else if (error instanceof Error)
+                    msg = error.name + ': ' + error.message;
+                else if (error.message)
+                    msg = error.message;
+                else if (error.msg)
+                    msg = error.msg;
+                else
+                    msg = error;
+                logOutput(msg);
+            });
+            _ied.on('reset', () => { });
+            _ied.on('dir', (dir, files, tag) => {
+                if (tag.startsWith('editor-dir:remoteBrowse')) {
+                    $dialog.files = files;
+                    $dialog.path.value = dir;
+                    $dialog.current = dir;
+                    if ($dialog.options.properties.indexOf('showHiddenFiles') === -1)
+                        $dialog.files = files.filter(f => f.file[0] !== '.');
+                    $dialog.files = files.map(f => {
+                        if (f.size === -2)
+                            f.type = 'Directory';
+                        else
+                            f.type = path.extname(f.file);
+                        return f;
+                    });
+                    filterBrowseDialog();
+                    if ($dialog.first) {
+                        $dialog.first = false;
+                        if ($dialog.options.defaultFile) {
+                            let idx = $dialog.datagrid.rows.indexOf(path.basename($dialog.options.defaultFile));
+                            $dialog.datagrid.selectByDataIndex(idx, true);
+                        }
+                        else
+                            $dialog.datagrid.scrollToTop();
                     }
                     else
                         $dialog.datagrid.scrollToTop();
-                }
-                else
-                    $dialog.datagrid.scrollToTop();
-                if (dir !== '/')
-                    $dialog.up.removeAttribute('disabled');
-                else
-                    $dialog.up.setAttribute('disabled', 'true');
-                while ($dialog.nav.firstChild)
-                    $dialog.nav.removeChild($dialog.nav.firstChild);
-                setTimeout(() => {
-                    var el;
-                    var paths = [];
-                    var parts = dir.split('/');
-                    if (dir.endsWith('/'))
-                        parts.pop();
+                    if (dir !== '/')
+                        $dialog.up.removeAttribute('disabled');
                     else
-                        dir += '/';
-                    var c = [];
-                    var dirs = files.filter(f => f.size === -2);
-
-                    for (var pt = 0, pl = parts.length; pt < pl; pt++) {
-                        c.push(parts[pt]);
-                        if (pt === 0)
-                            paths.push({ path: '/', name: '/', count: pt, open: pt === pl - 1 });
+                        $dialog.up.setAttribute('disabled', 'true');
+                    while ($dialog.nav.firstChild)
+                        $dialog.nav.removeChild($dialog.nav.firstChild);
+                    setTimeout(() => {
+                        var el;
+                        var paths = [];
+                        var parts = dir.split('/');
+                        if (dir.endsWith('/'))
+                            parts.pop();
                         else
-                            paths.push({ path: c.join('/'), name: parts[pt], count: pt, open: pt === pl - 1 });
-                    }
-                    for (var d = 0, dl = dirs.length; d < dl; d++) {
-                        paths.push({ path: dir + dirs[d].file, name: dirs[d].file, count: pt });
-                    }
+                            dir += '/';
+                        var c = [];
+                        var dirs = files.filter(f => f.size === -2);
 
-                    paths.sort(function compare(a, b) {
-                        if (a.path.toUpperCase() < b.path.toUpperCase())
-                            return -1;
-                        if (a.path.toUpperCase() > b.path.toUpperCase())
-                            return 1;
-                        return 0;
+                        for (var pt = 0, pl = parts.length; pt < pl; pt++) {
+                            c.push(parts[pt]);
+                            if (pt === 0)
+                                paths.push({ path: '/', name: '/', count: pt, open: pt === pl - 1 });
+                            else
+                                paths.push({ path: c.join('/'), name: parts[pt], count: pt, open: pt === pl - 1 });
+                        }
+                        for (var d = 0, dl = dirs.length; d < dl; d++) {
+                            paths.push({ path: dir + dirs[d].file, name: dirs[d].file, count: pt });
+                        }
+
+                        paths.sort(function compare(a, b) {
+                            if (a.path.toUpperCase() < b.path.toUpperCase())
+                                return -1;
+                            if (a.path.toUpperCase() > b.path.toUpperCase())
+                                return 1;
+                            return 0;
+                        });
+
+                        var frag = document.createDocumentFragment();
+                        for (let c = 0, cl = paths.length; c < cl; c++) {
+                            el = document.createElement('li');
+                            if (paths[c].drive && paths[c].open)
+                                el.innerHTML = `<a href="#" class="active" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-server"></i> ${paths[c].name}</a>`;
+                            else if (paths[c].drive)
+                                el.innerHTML = `<a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-server"></i> ${paths[c].name}</a>`;
+                            else if (paths[c].open)
+                                el.innerHTML = `<a href="#" class="active" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-open-o"></i> ${paths[c].name}</a>`;
+                            else
+                                el.innerHTML = `<a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-o"></i> ${paths[c].name}</a>`;
+                            frag.appendChild(el);
+                        }
+                        $dialog.nav.appendChild(frag);
                     });
-
-                    var frag = document.createDocumentFragment();
-                    for (let c = 0, cl = paths.length; c < cl; c++) {
-                        el = document.createElement('li');
-                        if (paths[c].drive && paths[c].open)
-                            el.innerHTML = `<a href="#" class="active" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-server"></i> ${paths[c].name}</a>`;
-                        else if (paths[c].drive)
-                            el.innerHTML = `<a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-server"></i> ${paths[c].name}</a>`;
-                        else if (paths[c].open)
-                            el.innerHTML = `<a href="#" class="active" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-open-o"></i> ${paths[c].name}</a>`;
-                        else
-                            el.innerHTML = `<a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-o"></i> ${paths[c].name}</a>`;
-                        frag.appendChild(el);
+                    if (!$dialog.el.open) {
+                        menubar.enabled = false;
+                        $dialog.el.showModal();
                     }
-                    $dialog.nav.appendChild(frag);
-                });
-                if (!$dialog.el.open) {
-                    menubar.enabled = false;
-                    $dialog.el.showModal();
                 }
-            }
-        });
-        _ied.on('message', (msg) => {
-            logOutput(msg);
-        });
-        _ied.on('add', () => {
-        });
-        _ied.on('remove', (item) => {
-            if (!item) return;
-            if (item.ID.startsWith('editor-download:remote-open:'))
-                closeProgressDialog(item.ID, true);
-            else
-                closeProgressDialog(item.ID);
-        });
-        _ied.on('update', (item) => {
-            if (!item) return;
-            setProgressDialogValue(Math.ceil(item.percent * 100));
-        });
-        _ied.on('cmd', (obj) => {
-            if (!obj) return;
-            var id, panel, dock;
-            if (obj.cmd === 'debug' && obj.tag.startsWith('editor-debug:')) {
-                id = parseInt(obj.tag.substr(13));
-                panel = manager.findPanel(id);
-                dock = manager.panes.indexOf(panel.dock);
-                logOutput('Debug data for ' + panel.editor.filename);
-                var errors = obj.data.trim().split('\n');
-                var el = errors.length;
-                var markers = [];
-                var delta = [];
-                var editor;
-                if (panel.editor.diff)
-                    editor = window.$dEditors[dock].getModifiedEditor();
+            });
+            _ied.on('message', (msg) => {
+                logOutput(msg);
+            });
+            _ied.on('add', () => {
+            });
+            _ied.on('remove', (item) => {
+                if (!item) return;
+                if (item.ID.startsWith('editor-download:remote-open:'))
+                    closeProgressDialog(item.ID, true);
                 else
-                    editor = window.$editors[dock];
-                var model = editor.getModel();
-                for (var e = 0; e < el; e++) {
-                    let m;
-                    let line;
-                    if (m = /^line (\d+): Warning: (.*)/.exec(errors[e])) {
-                        line = parseInt(m[1], 10) || 1;
-                        markers.push({
-                            startColumn: 1,
-                            startLineNumber: line,
-                            endColumn: model.getLineContent(line).length,
-                            endLineNumber: line,
-                            message: 'Warning: ' + m[2],
-                            severity: 4 //waring
-                        });
-                        if (delta.filter(f => f.range.startLineNumber === line && f.options.marginClassName === 'line-error-margin').length === 0)
-                            delta.push({
-                                range: new monaco.Range(line, 1, line, model.getLineContent(line).length),
-                                options: {
-                                    stickiness: 1,
-                                    isWholeLine: true,
-                                    //className: 'line-warning-content',
-                                    //glyphMarginHoverMessage: { value: 'Warning: ' + m[2] },
-                                    //glyphMarginClassName: 'line-warning-glyph',
-                                    marginClassName: 'line-warning-margin',
-                                    zIndex: 0
-                                }
+                    closeProgressDialog(item.ID);
+            });
+            _ied.on('update', (item) => {
+                if (!item) return;
+                setProgressDialogValue(Math.ceil(item.percent * 100));
+            });
+            _ied.on('cmd', (obj) => {
+                if (!obj) return;
+                var id, panel, dock;
+                if (obj.cmd === 'debug' && obj.tag.startsWith('editor-debug:')) {
+                    id = parseInt(obj.tag.substr(13));
+                    panel = manager.findPanel(id);
+                    dock = manager.panes.indexOf(panel.dock);
+                    logOutput('Debug data for ' + panel.editor.filename);
+                    var errors = obj.data.trim().split('\n');
+                    var el = errors.length;
+                    var markers = [];
+                    var delta = [];
+                    var editor;
+                    if (panel.editor.diff)
+                        editor = window.$dEditors[dock].getModifiedEditor();
+                    else
+                        editor = window.$editors[dock];
+                    var model = editor.getModel();
+                    for (var e = 0; e < el; e++) {
+                        let m;
+                        let line;
+                        if (m = /^line (\d+): Warning: (.*)/.exec(errors[e])) {
+                            line = parseInt(m[1], 10) || 1;
+                            markers.push({
+                                startColumn: 1,
+                                startLineNumber: line,
+                                endColumn: model.getLineContent(line).length,
+                                endLineNumber: line,
+                                message: 'Warning: ' + m[2],
+                                severity: 4 //waring
                             });
-                        else
+                            if (delta.filter(f => f.range.startLineNumber === line && f.options.marginClassName === 'line-error-margin').length === 0)
+                                delta.push({
+                                    range: new monaco.Range(line, 1, line, model.getLineContent(line).length),
+                                    options: {
+                                        stickiness: 1,
+                                        isWholeLine: true,
+                                        //className: 'line-warning-content',
+                                        //glyphMarginHoverMessage: { value: 'Warning: ' + m[2] },
+                                        //glyphMarginClassName: 'line-warning-glyph',
+                                        marginClassName: 'line-warning-margin',
+                                        zIndex: 0
+                                    }
+                                });
+                            else
+                                delta.push({
+                                    range: new monaco.Range(line, 1, line, model.getLineContent(line).length),
+                                    options: {
+                                        stickiness: 1,
+                                        isWholeLine: true,
+                                        //className: 'line-warning-content',
+                                        //glyphMarginHoverMessage: { value: 'Warning: ' + m[2] },
+                                        //glyphMarginClassName: 'line-warning-glyph',
+                                        marginClassName: 'line-error-margin',
+                                        zIndex: 0
+                                    }
+                                });
+                            logOutput(`<a class="warning" href="#" onclick="gotoLine(${id}, ${line})">${panel.editor.file}: ${errors[e]}</a>`);
+                        }
+                        else if (m = /^line (\d+): (.*)/.exec(errors[e])) {
+                            line = parseInt(m[1], 10) || 1;
+                            markers.push({
+                                startColumn: 1,
+                                startLineNumber: line,
+                                endColumn: model.getLineContent(line).length,
+                                endLineNumber: line,
+                                message: m[2],
+                                severity: 8, //error
+                            });
+                            delta.forEach(f => {
+                                if (f.range.startLineNumber === line && f.options.marginClassName === 'line-warning-margin')
+                                    f.options.marginClassName = 'line-error-margin';
+                            });
                             delta.push({
                                 range: new monaco.Range(line, 1, line, model.getLineContent(line).length),
                                 options: {
                                     stickiness: 1,
                                     isWholeLine: true,
-                                    //className: 'line-warning-content',
-                                    //glyphMarginHoverMessage: { value: 'Warning: ' + m[2] },
-                                    //glyphMarginClassName: 'line-warning-glyph',
+                                    //className: 'line-error-content',
+                                    //glyphMarginHoverMessage: { value: m[2] },
+                                    //glyphMarginClassName: 'line-error-glyph',
                                     marginClassName: 'line-error-margin',
-                                    zIndex: 0
+                                    zIndex: 1
                                 }
                             });
-                        logOutput(`<a class="warning" href="#" onclick="gotoLine(${id}, ${line})">${panel.editor.file}: ${errors[e]}</a>`);
+                            logOutput(`<a class="error href="#" onclick="gotoLine(${id}, ${line})">${panel.editor.file}: ${errors[e]}</a>`);
+                        }
+                        else
+                            logOutput(errors[e]);
                     }
-                    else if (m = /^line (\d+): (.*)/.exec(errors[e])) {
-                        line = parseInt(m[1], 10) || 1;
-                        markers.push({
-                            startColumn: 1,
-                            startLineNumber: line,
-                            endColumn: model.getLineContent(line).length,
-                            endLineNumber: line,
-                            message: m[2],
-                            severity: 8, //error
-                        });
-                        delta.forEach(f => {
-                            if (f.range.startLineNumber === line && f.options.marginClassName === 'line-warning-margin')
-                                f.options.marginClassName = 'line-error-margin';
-                        });
-                        delta.push({
-                            range: new monaco.Range(line, 1, line, model.getLineContent(line).length),
-                            options: {
-                                stickiness: 1,
-                                isWholeLine: true,
-                                //className: 'line-error-content',
-                                //glyphMarginHoverMessage: { value: m[2] },
-                                //glyphMarginClassName: 'line-error-glyph',
-                                marginClassName: 'line-error-margin',
-                                zIndex: 1
-                            }
-                        });
-                        logOutput(`<a class="error href="#" onclick="gotoLine(${id}, ${line})">${panel.editor.file}: ${errors[e]}</a>`);
+                    monaco.editor.setModelMarkers(model, '', markers);
+                    panel.editor.decorations = model.deltaDecorations(panel.editor.decorations || [], delta);
+                    panel.editor.rawDecorations = delta;
+                    //if (panel.editor.decorations && panel.editor.decorations.length)
+                    //editor.updateOptions({ glyphMargin: true });
+                    _ied.deleteFile(obj.path + '/' + obj.file);
+                    closeProgressDialog(obj.tag);
+                }
+            });
+            _ied.on('download-finished', (item) => {
+                if (!item) return;
+                var id;
+                var panel;
+                var dock;
+                if (item.ID.startsWith('editor-download:diffRemote:')) {
+                    id = parseInt(item.ID.substr(27));
+                    panel = manager.findPanel(id);
+                    dock = manager.panes.indexOf(panel.dock);
+                    if (!manager.active.editor.diff)
+                        manager.active.editor.deactivate(window.$editors[dock]);
+                    if (manager.active.diffFile)
+                        stopWatchFile(manager.active.diffFile);
+                    manager.active.editor.diff = manager.active.editor.read(item.local);
+                    window.$dEditors[dock]._modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
+                    toggleDiffNav(true);
+                    window.$editors[dock]._domElement.style.display = '';
+                    manager.active.editor.activate(window.$dEditors[dock]);
+                    window.$dEditors[dock].layout();
+                    closeProgressDialog(item.ID);
+                    doUpdate(2);
+                }
+                else if (item.ID.startsWith('editor-download:remote-open:')) {
+                    var ids = item.ID.substr(28).split(':');
+                    id = parseInt(ids[0]);
+                    if (id !== 0) {
+                        panel = manager.findPanel(id);
+                        openFile($queue[0].tmp, item.remote, panel ? panel.dock : null, true, $queue[0].tmp);
                     }
                     else
-                        logOutput(errors[e]);
+                        openFile($queue[0].tmp, item.remote, null, true, $queue[0].tmp);
+                    doUpdate(2);
                 }
-                monaco.editor.setModelMarkers(model, '', markers);
-                panel.editor.decorations = model.deltaDecorations(panel.editor.decorations || [], delta);
-                panel.editor.rawDecorations = delta;
-                //if (panel.editor.decorations && panel.editor.decorations.length)
-                //editor.updateOptions({ glyphMargin: true });
-                _ied.deleteFile(obj.path + '/' + obj.file);
-                closeProgressDialog(obj.tag);
-            }
-        });
-        _ied.on('download-finished', (item) => {
-            if (!item) return;
-            var id;
-            var panel;
-            var dock;
-            if (item.ID.startsWith('editor-download:diffRemote:')) {
-                id = parseInt(item.ID.substr(27));
-                panel = manager.findPanel(id);
-                dock = manager.panes.indexOf(panel.dock);
-                if (!manager.active.editor.diff)
-                    manager.active.editor.deactivate(window.$editors[dock]);
-                if (manager.active.diffFile)
-                    stopWatchFile(manager.active.diffFile);
-                manager.active.editor.diff = manager.active.editor.read(item.local);
-                window.$dEditors[dock]._modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
-                toggleDiffNav(true);
-                window.$editors[dock]._domElement.style.display = '';
-                manager.active.editor.activate(window.$dEditors[dock]);
-                window.$dEditors[dock].layout();
-                closeProgressDialog(item.ID);
-                doUpdate(2);
-            }
-            else if (item.ID.startsWith('editor-download:remote-open:')) {
-                var ids = item.ID.substr(28).split(':');
-                id = parseInt(ids[0]);
-                if (id !== 0) {
+            });
+            _ied.on('upload-finished', item => {
+                if (!item) return;
+                var id;
+                var panel;
+                //var dock;
+                if (item.ID.startsWith('editor-upload:debug:')) {
+                    id = parseInt(item.ID.substr(20));
                     panel = manager.findPanel(id);
-                    openFile($queue[0].tmp, item.remote, panel ? panel.dock : null, true, $queue[0].tmp);
+                    //dock = manager.panes.indexOf(panel.dock);
+                    setProgressDialogValue(-1);
+                    document.getElementById('progress-dialog-progressbar').removeAttribute('value');
+                    document.getElementById('progress-dialog-title').innerHTML = 'Getting debug data&hellip;';
+                    logOutput('Requesting debug information for ' + panel.editor.file);
+                    if (window.opener)
+                        window.opener.client.sendGMCP('IED.cmd ' + JSON.stringify({ cmd: 'debug', path: path.dirname(item.remote), file: path.basename(item.remote), tag: 'editor-debug:' + id }));
                 }
-                else
-                    openFile($queue[0].tmp, item.remote, null, true, $queue[0].tmp);
-                doUpdate(2);
-            }
-        });
-        _ied.on('upload-finished', item => {
-            if (!item) return;
-            var id;
-            var panel;
-            //var dock;
-            if (item.ID.startsWith('editor-upload:debug:')) {
-                id = parseInt(item.ID.substr(20));
-                panel = manager.findPanel(id);
-                //dock = manager.panes.indexOf(panel.dock);
-                setProgressDialogValue(-1);
-                document.getElementById('progress-dialog-progressbar').removeAttribute('value');
-                document.getElementById('progress-dialog-title').innerHTML = 'Getting debug data&hellip;';
-                logOutput('Requesting debug information for ' + panel.editor.file);
-                if (window.opener)
-                    window.opener.client.sendGMCP('IED.cmd ' + JSON.stringify({ cmd: 'debug', path: path.dirname(item.remote), file: path.basename(item.remote), tag: 'editor-debug:' + id }));
-            }
-        });
+            });
+        }
         $('#btm-drag-bar').mousedown(function (e) {
             e.preventDefault();
             outputDragging = true;
