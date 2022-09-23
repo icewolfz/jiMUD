@@ -1107,7 +1107,7 @@ export class MonacoCodeEditor extends EditorBase {
                         this.$editor.getAction('editor.action.formatDocument').run();
                     }
                 }]);
-                if (path.extname(this.file) === '.c') {
+                if (path.extname(this.file) === '.c' && window.opener) {
                     m.push(...[
                         { type: 'separator' },
                         {
@@ -1115,8 +1115,7 @@ export class MonacoCodeEditor extends EditorBase {
                             click: () => {
                                 this.emit('debug', this.file);
                             },
-                            enabled: connected || false,
-                            visible: window.opener ? true : false
+                            enabled: connected || false
                         },
                         {
                             label: 'T&est Clear',
@@ -1126,8 +1125,7 @@ export class MonacoCodeEditor extends EditorBase {
                                 this.decorations = null;
                                 this.rawDecorations = null;
                             },
-                            enabled: connected || false,
-                            visible: window.opener ? true : false
+                            enabled: connected || false
                         }
                     ]);
                 }
@@ -1264,7 +1262,8 @@ export class MonacoCodeEditor extends EditorBase {
                         this.$editor.getAction('editor.action.formatDocument').run();
                     }
                 }]);
-                if (path.extname(this.file) === '.c') {
+                //only show if connected and linked to a client window
+                if (path.extname(this.file) === '.c' && window.opener && connected) {
                     m.push(...[
                         { type: 'separator' },
                         {
@@ -1347,6 +1346,7 @@ export class MonacoCodeEditor extends EditorBase {
     }
 
     public updateMenu(menubar, connected) {
+        if (!window.opener) return;
         menubar.updateItem('edit|test', { enabled: connected });
         menubar.updateItem('edit|test clear', { enabled: connected });
     }

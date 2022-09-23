@@ -104,7 +104,7 @@ global.editorOnly = false;
 global.updating = false;
 let _settings = settings.Settings.load(global.settingsFile);
 let _checkingUpdates = false;
-let _layout = parseTemplate(path.join('{data}', global.editorOnly ? 'editor.layout' : 'window.layout'));
+let _layout = parseTemplate(path.join('{data}', 'window.layout'));
 
 let clients = {}
 let windows = {};
@@ -270,7 +270,7 @@ function createWindow(options) {
         //titleBarStyle: 'hidden',
         //titleBarOverlay: true
     });
-    if (!('remote' in options) || options.true)
+    if (!('remote' in options) || options.remote)
         require("@electron/remote/main").enable(window.webContents);
 
     // and load the file of the app.
@@ -489,7 +489,7 @@ function createWindow(options) {
             _windowID++;
         options.id = _windowID;
     }
-    windows[options.id] = { window: window, clients: [], current: 0, menubar: options.menubar, windows: [] };
+    windows[options.id] = { options: { file: options.file !== 'manager.html' ? options.file : null, remote: options.remote }, window: window, clients: [], current: 0, menubar: options.menubar, windows: [] };
     if (options.menubar) {
         options.menubar.window = window;
         options.menubar.enabled = false;
@@ -654,23 +654,6 @@ app.on('ready', () => {
     }
 
     global.debug = argv.debug;
-    if (argv.eo) {
-        if (Array.isArray(argv.eo)) {
-            al = argv.eo.length;
-            a = 0;
-            for (; a < al; a++) {
-                if (typeof argv.eo[a] === 'string')
-                    openEditor(argv.eo[a]);
-            }
-        }
-        else if (typeof argv.eo === 'string') {
-            openEditor(argv.eo);
-        }
-        else
-            openEditor();
-        global.editorOnly = true;
-    }
-
     if (Array.isArray(argv.s)) {
         global.settingsFile = parseTemplate(argv.s[0]);
         _settings = settings.Settings.load(global.settingsFile);
@@ -691,42 +674,43 @@ app.on('ready', () => {
         _layout = parseTemplate(argv.l[0]);
     else if (argv.l)
         _layout = argv.l;
-    else if (global.editorOnly)
+    else if (argv.eo)
         _layout = parseTemplate(path.join('{data}', 'editor.layout'));
-    if (global.editorOnly) {
 
-        //showCodeEditor();
+    if (argv.eo)
+        global.editorOnly = true;
+    //use default
+    let _ignore = false;
+    //attempt to load layout, 
+    if (isFileSync(_layout)) {
+        if (!argv.il)
+            _loaded = loadWindowLayout(_layout);
     }
-    else {
-        //use default
-        let _ignore = false;
-        //attempt to load layout, 
-        if (isFileSync(_layout)) {
-            if (!argv.il)
-                _loaded = loadWindowLayout(_layout);
-        }
-        else if (!argv.il)
-            _ignore = true;
+    else if (!argv.il)
+        _ignore = true;
 
-        //if it fails load default window
-        if (!_loaded) {
-            //use default unless ignoring layouts
-            _loaded = _ignore;
+    //if it fails load default window
+    if (!_loaded) {
+        //use default unless ignoring layouts
+        _loaded = _ignore;
+        if (global.editorOnly)
+            newEditorWindow(null, argv.eo);
+        else
             newClientWindow();
-        }
-        //only load after as it requires a client window
-        const window = getActiveWindow();
-        if (argv.e && window) {
-            //showCodeEditor();
-            if (Array.isArray(argv.e))
-                executeScriptClient(`openFiles("${argv.e.join('", "')}")`, window.window, true);
-            else if (typeof argv.e === 'string')
-                executeScriptClient(`openFiles("${argv.e}")`, window.window, true);
-            else
-                executeScriptClient('openWindow("code.editor")', window.window, true);
-        }
-        checkForUpdates();
     }
+    //only load after as it requires a client window
+    const window = getActiveWindow();
+    if (argv.e && window) {
+        //showCodeEditor();
+        if (Array.isArray(argv.e))
+            executeScriptClient(`openFiles("${argv.e.join('", "')}")`, window.window, true);
+        else if (typeof argv.e === 'string')
+            executeScriptClient(`openFiles("${argv.e}")`, window.window, true);
+        else
+            executeScriptClient('openWindow("code.editor")', window.window, true);
+    }
+    checkForUpdates();
+
 });
 
 // Quit when all windows are closed.
@@ -2694,6 +2678,35 @@ function newClientWindow(caller, connection, data) {
     });
     return window;
 }
+
+function newEditorWindow(caller, files) {
+    if (caller) {
+        //save the current states so it has the latest for new window
+        states['code.editor.html'] = saveWindowState(caller);
+        //offset the state so it is not an exact overlap
+        states['code.editor.html'].bounds.x += 20;
+        states['code.editor.html'].bounds.y += 20;
+        const { height, width } = screen.getPrimaryDisplay().workAreaSize;
+        //make sure the window appears on the screen
+        if (states['code.editor.html'].bounds.x > (width - 10))
+            states['code.editor.html'].bounds.x = width - states['code.editor.html'].bounds.width;
+        if (states['code.editor.html'].bounds.x < 10)
+            states['code.editor.html'].bounds.x = 10;
+        if (states['code.editor.html'].bounds.y > (height - 10))
+            states['code.editor.html'].bounds.y = height - states['code.editor.html'].bounds.height;
+        if (states['code.editor.html'].bounds.y < 10)
+            states['code.editor.html'].bounds.y = 10;
+    }
+    let windowId = createWindow({ file: 'code.editor.html' });
+    let window = windows[windowId].window;
+    focusedWindow = windowId;
+    window.webContents.once('dom-ready', () => {
+        if (Array.isArray(files) || typeof files === 'string')
+            window.webContents.send('open-editor', files);
+        focusWindow(window, true);
+    });
+    return window;
+}
 //#region Execute scripts in window/view
 // eslint-disable-next-line no-unused-vars
 async function executeScript(script, window, focus) {
@@ -2737,7 +2750,7 @@ async function executeScriptClient(script, window, focus) {
 //#region window layout systems
 async function saveWindowLayout(file) {
     if (!file)
-        file = parseTemplate(path.join('{data}', 'window.layout'));
+        file = parseTemplate(path.join('{data}', global.editorOnly ? 'editor.layout' : 'window.layout'));
     let id;
     const data = {
         windowID: _windowID, //save last id to prevent reused ids
@@ -2761,6 +2774,7 @@ async function saveWindowLayout(file) {
             data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].window),
             state: saveWindowState(windows[id].window),
             menubar: windows[id].menubar ? true : false,
+            options: windows[id].options,
             windows: []
         }
         const wl = windows[id].windows.length;
@@ -2842,7 +2856,10 @@ function loadWindowLayout(file) {
     states = data.states || {};
     //no windows so for what ever reason so just start a clean client
     if (data.windows.length === 0) {
-        newClientWindow();
+        if (global.editorOnly)
+            newEditorWindow();
+        else
+            newClientWindow();
         return true;
     }
     //_windowID = data.windowID;
@@ -2852,7 +2869,14 @@ function loadWindowLayout(file) {
     //create windows
     let i, il = data.windows.length;
     for (i = 0; i < il; i++) {
-        createWindow({ id: data.windows[i].id, data: { data: data.windows[i].data, state: data.windows[i].state, states: data.states }, remote: false });
+        const options = {
+            id: data.windows[i].id,
+            data: { data: data.windows[i].data, state: data.windows[i].state, states: data.states },
+            file: data.windows[i].options.file
+        };
+        if ('remote' in data.windows[i].options)
+            options.remote = data.windows[i].options;
+        createWindow(options);
         if (data.windows[i].menubar)
             windows[data.windows[i].id].menubar = createMenu(windows[data.windows[i].id].window);
         //windows[data.windows[i].id].menubar.enabled = false;

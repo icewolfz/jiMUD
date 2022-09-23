@@ -2110,8 +2110,8 @@
                 enabled: true
             },
         ]
-    };
-    menubar = new Menubar([
+    };    
+    var menuItems = [
         {
             label: '&File',
             id: 'file',
@@ -2416,7 +2416,10 @@
                 }
             ]
         }
-    ]);
+    ];
+    if(!window.opener)
+        menuItems[0].submenu.splice(menuItems[0].submenu.findIndex(item => item.label === 'Up&load As...') + 1, 1);
+    menubar = new Menubar(menuItems);
     menubar.enabled = false;
     manager = new DockManager();
     var dock = $('.dock-manager');
@@ -3779,7 +3782,7 @@
     $(document).ready(() => {
         loadOptions();
         if (!window.opener) {
-            $('btn-grp-remote').css('display', 'none');
+            $('#btn-grp-remote').css('display', 'none');
         }
         else {
             window.opener.client.on('received-GMCP', processGMCP);
