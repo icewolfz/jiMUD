@@ -468,7 +468,7 @@ function createWindow(options) {
             _windowID++;
         options.id = _windowID;
     }
-    windows[options.id] = { options: { file: options.file !== 'manager.html' ? options.file : undefined, remote: options.remote }, window: window, clients: [], current: 0, menubar: options.menubar, windows: [] };
+    windows[options.id] = { options: { file: options.file !== 'manager.html' ? options.file : undefined, remote: options.remote, backgroundColor: options.backgroundColor, icon: options.icon, title: options.title }, window: window, clients: [], current: 0, menubar: options.menubar, windows: [] };
     if (options.menubar) {
         options.menubar.window = window;
         options.menubar.enabled = false;
@@ -1621,7 +1621,7 @@ function createClient(options) {
         childWindow.on('resized', () => {
             clients[getClientId(view)].states[file] = states[file];
         });
-        
+
         childWindow.on('closed', () => {
             if (view && view.webContents && !view.webContents.isDestroyed()) {
                 executeScript(`if(typeof childClosed === "function") childClosed('${file}', '${url}', '${frameName}');`, view, true);
@@ -1638,10 +1638,10 @@ function createClient(options) {
 
         let _close = false;
         childWindow.on('close', async e => {
-            if(_close) return;
+            if (_close) return;
             e.preventDefault();
-            _close = await executeScript(`if(typeof closeable === "function") closeable()`, childWindow); 
-            if(!_close) return;
+            _close = await executeScript(`if(typeof closeable === "function") closeable()`, childWindow);
+            if (!_close) return;
             const id = getClientId(view);
             const index = getChildWindowIndex(clients[id].windows, childWindow);
             if (index !== -1 && clients[id].windows[index].details.options.persistent) {
@@ -2718,7 +2718,7 @@ function newEditorWindow(caller, files) {
         if (states['code.editor.html'].bounds.y < 10)
             states['code.editor.html'].bounds.y = 10;
     }
-    let windowId = createWindow({ file: 'code.editor.html' });
+    let windowId = createWindow({ file: 'code.editor.html', backgroundColor: 'gray', icon: '../assets/icons/win/code.ico', title: 'Code editor' });
     let window = windows[windowId].window;
     focusedWindow = windowId;
     window.webContents.once('dom-ready', () => {
@@ -2890,14 +2890,13 @@ function loadWindowLayout(file) {
     //create windows
     let i, il = data.windows.length;
     for (i = 0; i < il; i++) {
-        const options = {
-            id: data.windows[i].id,
-            data: { data: data.windows[i].data, state: data.windows[i].state, states: data.states },
-            file: data.windows[i].options.file
-        };
-        if ('remote' in data.windows[i].options)
-            options.remote = data.windows[i].options.remote;
-        createWindow(options);
+        createWindow({
+            ...data.windows[i].options,
+            ...{
+                id: data.windows[i].id,
+                data: { data: data.windows[i].data, state: data.windows[i].state, states: data.states }
+            }
+        });
         if (data.windows[i].menubar)
             windows[data.windows[i].id].menubar = createMenu(windows[data.windows[i].id].window);
         //windows[data.windows[i].id].menubar.enabled = false;
