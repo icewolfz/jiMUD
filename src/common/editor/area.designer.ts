@@ -20,7 +20,7 @@ declare global {
         $roomImgLoaded: boolean;
         showContext: any;
     }
-    
+
     let dialog: any;
     let openAdvancedEditor;
 }
@@ -4822,7 +4822,8 @@ export class AreaDesigner extends EditorBase {
                 title: 'Delete',
                 message: 'Delete selected base monster' + (this.$propertiesEditor.monsterGrid.selectedCount > 1 ? 's' : '') + '?',
                 buttons: ['Yes', 'No'],
-                defaultId: 1
+                defaultId: 1,
+                noLink: true
             })
                 === 1)
                 e.preventDefault = true;
@@ -5355,7 +5356,8 @@ export class AreaDesigner extends EditorBase {
                 title: 'Delete',
                 message: 'Delete selected base room' + (this.$propertiesEditor.roomGrid.selectedCount > 1 ? 's' : '') + '?',
                 buttons: ['Yes', 'No'],
-                defaultId: 1
+                defaultId: 1,
+                noLink: true
             })
                 === 1)
                 e.preventDefault = true;
@@ -5758,7 +5760,8 @@ export class AreaDesigner extends EditorBase {
                 title: 'Delete',
                 message: 'Delete monster' + (this.$monsterGrid.selectedCount > 1 ? 's' : '') + '?',
                 buttons: ['Yes', 'No'],
-                defaultId: 1
+                defaultId: 1,
+                noLink: true
             })
                 === 1)
                 e.preventDefault = true;
@@ -7873,7 +7876,8 @@ export class AreaDesigner extends EditorBase {
                 title: 'Delete',
                 message: 'Delete object' + (this.$objectGrid.selectedCount > 1 ? 's' : '') + '?',
                 buttons: ['Yes', 'No'],
-                defaultId: 1
+                defaultId: 1,
+                noLink: true
             })
                 === 1)
                 e.preventDefault = true;

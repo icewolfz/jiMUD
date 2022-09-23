@@ -1353,7 +1353,8 @@
                         type: 'error',
                         title: 'Color picker open',
                         message: 'You must close the color picker dialog before you can close editor.',
-                        defaultId: 1
+                        defaultId: 1,
+                        noLink: true
                     });
                     $closeWindow = false;
                 }
@@ -1363,16 +1364,11 @@
             return $closeWindow;
         }
 
-        window.onbeforeunload = function (evt) {
-            if (!closeable()) {
-                evt.returnValue = false;
-                return 'no';
-            }
-            $closeWindow = true;
+        function closed() {
             if (!editorOnly && window.opener.client) {
                 window.opener.client.off('options-loaded', optionsLoaded);
             }
-        };
+        }
 
         function setColor(type, color, code) {
             if (color === 'transparent')

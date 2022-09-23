@@ -597,7 +597,8 @@ export function DeleteTriggerState() {
         title: 'Delete current trigger state?',
         message: 'Are you sure you want to delete this trigger state?',
         buttons: ['Yes', 'No'],
-        defaultId: 1
+        defaultId: 1,
+        noLink: true
     }).then(result => {
         if (result.response === 0) {
             removeTriggerState(state, currentProfile, currentNode.dataAttr.index, true);
@@ -3090,22 +3091,6 @@ export function init() {
 
     loadActions(parseTemplate(path.join('{assets}', 'actions')), '');
 
-    window.onbeforeunload = (evt) => {
-        if (!closeable()) {
-            evt.returnValue = true;
-            return 'no';
-        }
-        if (window.opener) {
-            window.opener.client.off('options-loaded', optionsLoaded);
-            window.opener.client.off('item-updated', profileUpdateItem);
-            window.opener.client.off('item-added', profileAddItem);
-            window.opener.client.off('item-removed', profileRemoveItem);
-            window.opener.client.off('profile-updated', profileUpdated);
-            window.opener.client.off('profile-toggled', profileToggled);
-            window.opener.client.off('options-saved', optionsChanged);
-        }
-    };
-
     document.onkeydown = undoKeydown;
     $('input,textarea').on('keydown', undoKeydown);
 
@@ -3519,7 +3504,8 @@ export function closeable(all?: boolean) {
         title: 'Profiles changed',
         message: 'All unsaved changes will be lost, close?',
         buttons: ['Yes', 'No', 'Never ask again'],
-        defaultId: 1
+        defaultId: 1,
+        noLink: true
     });
     if (choice === 2) {
         options.profiles.askoncancel = false;
@@ -3531,6 +3517,18 @@ export function closeable(all?: boolean) {
         _close = false;
     return _close;
 }
+
+export function closed() {
+    if (window.opener) {
+        window.opener.client.off('options-loaded', optionsLoaded);
+        window.opener.client.off('item-updated', profileUpdateItem);
+        window.opener.client.off('item-added', profileAddItem);
+        window.opener.client.off('item-removed', profileRemoveItem);
+        window.opener.client.off('profile-updated', profileUpdated);
+        window.opener.client.off('profile-toggled', profileToggled);
+        window.opener.client.off('options-saved', optionsChanged);
+    }
+};
 
 function startWatcher(p: string) {
     if (watcher) {
@@ -3635,7 +3633,8 @@ export function doRefresh() {
             title: 'Refresh profiles',
             message: 'All unsaved or applied changes will be lost, refresh?',
             buttons: ['Yes', 'No'],
-            defaultId: 1
+            defaultId: 1,
+            noLink: true
         }).then(result => {
             if (result.response === 0) {
                 filesChanged = false;
@@ -3762,7 +3761,8 @@ function importProfiles() {
                                             title: 'Profiles already exists',
                                             message: 'Profile named \'' + p.name + '\' exist, replace?',
                                             buttons: ['Yes', 'No', 'Copy', 'Replace All', 'No All', 'Copy All'],
-                                            defaultId: 1
+                                            defaultId: 1,
+                                            noLink: true
                                         });
                                         if (response === 0) {
                                             _replace.push(profiles.items[p.name.toLowerCase()].clone());
@@ -3929,7 +3929,8 @@ function importProfiles() {
                                         title: 'Profiles already exists',
                                         message: 'Profile named \'' + p.name + '\' exist, replace?',
                                         buttons: ['Yes', 'No', 'Copy', 'Replace All', 'No All', 'Copy All'],
-                                        defaultId: 1
+                                        defaultId: 1,
+                                        noLink: true
                                     });
                                     if (response === 0) {
                                         _replace.push(profiles.items[p.name.toLowerCase()].clone());
@@ -3994,7 +3995,8 @@ export function saveProfiles(clearNow?: boolean) {
             title: 'Profiles updated',
             message: 'Profiles have been updated outside of manager, save anyways?',
             buttons: ['Yes', 'No'],
-            defaultId: 1
+            defaultId: 1,
+            noLink: true
         });
         if (response === 0) {
             const p = path.join(parseTemplate('{data}'), 'profiles');
@@ -4315,7 +4317,8 @@ function DeleteProfileConfirm(profile) {
         title: 'Delete profile?',
         message: 'Delete ' + profile.name + '?',
         buttons: ['Yes', 'No'],
-        defaultId: 1
+        defaultId: 1,
+        noLink: true
     }).then(result => {
         if (result.response === 0) DeleteProfile(profile);
     });
@@ -4350,7 +4353,8 @@ function DeleteItems(type, key, profile) {
         title: 'Delete ' + type + '?',
         message: 'Are you sure you want to delete all ' + key + '?',
         buttons: ['Yes', 'No'],
-        defaultId: 1
+        defaultId: 1,
+        noLink: true
     }).then(result => {
         if (result.response === 0) {
             const _u = { action: 'group', add: [], delete: [] };
@@ -4371,7 +4375,8 @@ function DeleteItemConfirm(type, key, idx, profile) {
         title: 'Delete ' + type + '?',
         message: 'Are you sure you want to delete this ' + type + '?',
         buttons: ['Yes', 'No'],
-        defaultId: 1
+        defaultId: 1,
+        noLink: true
     }).then(result => {
         if (result.response === 0) {
             DeleteItem(type.toLowerCase(), key, idx, profile);
@@ -4429,7 +4434,8 @@ export function doClose() {
             title: 'Profiles changed',
             message: 'All unsaved changes will be lost, close?',
             buttons: ['Yes', 'No', 'Never ask again'],
-            defaultId: 1
+            defaultId: 1,
+            noLink: true
         }).then(result => {
             if (result.response === 0)
                 window.close();
@@ -4470,7 +4476,8 @@ export function doReset(node) {
         title: 'Reset ' + profile.name,
         message: 'Resetting will loose all profile data, reset?',
         buttons: ['Yes', 'No'],
-        defaultId: 1
+        defaultId: 1,
+        noLink: true
     }).then(result => {
         if (result.response === 0) {
             pushUndo({ action: 'reset', type: 'profile', profile: profile.clone() });
@@ -4808,7 +4815,8 @@ function exportAllZip() {
                 type: 'error',
                 title: 'No logs found',
                 message: 'No logs to backup',
-                defaultId: 1
+                defaultId: 1,
+                noLink: true
             });
             return;
         }

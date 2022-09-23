@@ -1920,7 +1920,7 @@
     const { Wizard, WizardPage, WizardDataGridPage } = require('./js/wizard');
 
     // eslint-disable-next-line no-unused-vars
-    const { formatString, inverse, parseTemplate, capitalize, existsSync, isDirSync, walkSync, formatSize, updateEditDropdown, initEditDropdown, stripPinkfish } = require('./js/library');
+    const { formatString, inverse, parseTemplate, capitalize, existsSync, isDirSync, walkSync, formatSize, updateEditDropdown, initEditDropdown, stripPinkfish, createProgressDialog } = require('./js/library');
     const { IEDError } = require('./js/types');
 
     const { IED } = require('./js/ied');
@@ -2973,7 +2973,8 @@
                         title: 'File deleted',
                         message: path.basename(file) + ' has been deleted, clear diff?',
                         buttons: ['Yes', 'No'],
-                        defaultId: 1
+                        defaultId: 1,
+                        noLink: true
                     });
                     //no
                     if (choice === 1) {
@@ -3001,7 +3002,8 @@
                         title: 'File changed',
                         message: path.basename((file || p.editor.file) + ' has been changed, reload diff?'),
                         buttons: ['Yes', 'No'],
-                        defaultId: 1
+                        defaultId: 1,
+                        noLink: true
                     });
                     //yes
                     if (choice === 0)
@@ -3121,10 +3123,6 @@
                 return 'fa fa-file-image-o icon-design';
         }
         return 'fa fa-file-o';
-    }
-
-    // eslint-disable-next-line no-unused-vars
-    function childClosed(file, url, name) {
     }
 
     function clearButton(id) {
@@ -3260,7 +3258,8 @@
                 type: 'error',
                 title: 'Not supported',
                 message: 'Not supported in editor only mode, remote browsing can only be done when connected to the mud',
-                defaultId: 1
+                defaultId: 1,
+                noLink: true
             });
             return;
         }
@@ -3488,7 +3487,8 @@
                             type: 'error',
                             title: 'Must be logged into the mud',
                             message: 'Remote browsing can only be done when connected to the mud',
-                            defaultId: 1
+                            defaultId: 1,
+                            noLink: true
                         });
                 }
                 else {
@@ -3626,7 +3626,8 @@
                 type: 'error',
                 title: 'Must be logged into the mud',
                 message: 'Remote browsing can only be done when connected to the mud',
-                defaultId: 1
+                defaultId: 1,
+                noLink: true
             });
     }
 
@@ -4441,7 +4442,9 @@
     }
 
     // eslint-disable-next-line no-unused-vars
-    function closeHidden() {
+    function closeHidden(hidden) {
+        if (!hidden) return true;
+        /*
         var dialogs = document.body.getElementsByTagName('dialog');
         var e = 0, el = dialogs.length;
         for (; e < el; e++) {
@@ -4451,37 +4454,47 @@
                     title: 'Open dialog',
                     message: (dialogs[e].dataset.title || 'Dialog') + ' is open, exit?',
                     buttons: ['Yes', 'No'],
-                    defaultId: 1
+                    defaultId: 1,
+                        noLink: true
                 }) === 1)
                     return false;
             }
         }
         if (!savedOpened())
             return false;
+            */
         return true;
+    }
+
+    function closed() {
+        //clean up
+        if (window.opener) {
+            window.opener.client.off('received-GMCP', processGMCP);
+            window.opener.client.off('connected', clientConnected);
+            window.opener.client.off('closed', clientClosed);
+        }
+        var keys = Object.keys(_editors);
+        var p = keys.length;
+        while (p--)
+            closeEditor(_editors[keys[p]]);
+        if (watcher)
+            watcher.close();
     }
 
     function closeable(all) {
         if (!$closeWindow) {
-            if (_windows['editor.html'] && !_windows['editor.html'].closed) {
+            for (key in _windows) {
+                //if not a property, not defined, or closed skip
+                if (!Object.prototype.hasOwnProperty.call(_windows, key) || !_windows[key] || _windows[key].closed)
+                    continue;
                 dialog.showMessageBox({
                     type: 'error',
-                    title: 'Editor dialog open',
-                    message: 'You must close the advanced editor dialog before you can close code editor.',
-                    defaultId: 1
+                    title: _windows[key].document.title + ' dialog open',
+                    message: `You must close the ${_windows[key].document.title} dialog before you can close code editor.`,
+                    defaultId: 1,
+                    noLink: true
                 });
-                advEditor.focus();
-                $closeWindow = false;
-                return false;
-            }
-            if (_windows['prefs.html'] && !_windows['prefs.html'].closed) {
-                dialog.showMessageBox({
-                    type: 'error',
-                    title: 'Preferences dialog open',
-                    message: 'You must close the preferences dialog before you can close code editor.',
-                    defaultId: 1
-                });
-                _windows['prefs.html'].focus();
+                _windows[key].focus();
                 $closeWindow = false;
                 return false;
             }
@@ -4496,7 +4509,8 @@
                         title: 'Open dialog',
                         message: (dialogs[e].dataset.title || 'Dialog') + ' is open, exit?',
                         buttons: ['Yes', 'No'],
-                        defaultId: 1
+                        defaultId: 1,
+                        noLink: true
                     }) === 1) {
                         $closeWindow = false;
                         return false;
@@ -4511,25 +4525,20 @@
         return $closeWindow;
     }
 
-    window.onbeforeunload = function (evt) {
-        if (!closeable()) {
-            evt.returnValue = false;
+    if (!window.opener) {
+        let _close = false;
+        window.onbeforeunload = (e) => {
+            if (_close) return;
+            setTimeout(() => {
+                if (!closeable()) return;
+                closed();
+                _close = true;
+                window.close();
+            });
+            e.returnValue = false;
             return 'no';
-        }
-        //clean up
-        if (window.opener) {
-            window.opener.client.off('received-GMCP', processGMCP);
-            window.opener.client.off('connected', clientConnected);
-            window.opener.client.off('closed', clientClosed);
-        }
-        var keys = Object.keys(_editors);
-        var p = keys.length;
-        while (p--)
-            closeEditor(_editors[keys[p]]);
-        if (watcher)
-            watcher.close();
-        $closeWindow = true;
-    };
+        };
+    }
 
     ipcRenderer.on('progress-canceled', () => {
         if (manager.active && manager.active.editor && manager.active.editor.cancel)
@@ -7767,7 +7776,8 @@
                 type: 'error',
                 title: 'Must be logged into the mud',
                 message: 'Must be connected to the mud to open a remote file',
-                defaultId: 1
+                defaultId: 1,
+                noLink: true
             });
             return;
         }
@@ -8020,7 +8030,8 @@
                 type: 'error',
                 title: 'Error saving',
                 message: err.toString(),
-                defaultId: 1
+                defaultId: 1,
+                noLink: true
             });
             return false;
         }
@@ -8030,7 +8041,8 @@
                     type: 'error',
                     title: 'Must be logged into the mud',
                     message: 'Saving remote files requires being connected to the mud',
-                    defaultId: 1
+                    defaultId: 1,
+                    noLink: true
                 });
                 return;
             }
@@ -8067,7 +8079,8 @@
                     type: 'error',
                     title: 'Must be logged into the mud',
                     message: 'Saving remote files requires being connected to the mud',
-                    defaultId: 1
+                    defaultId: 1,
+                    noLink: true
                 });
                 return;
             }
@@ -8098,7 +8111,8 @@
                 type: 'error',
                 title: 'Error saving',
                 message: err.toString(),
-                defaultId: 1
+                defaultId: 1,
+                noLink: true
             });
             return false;
         }
@@ -8119,7 +8133,8 @@
                 type: 'error',
                 title: 'Must be logged into the mud',
                 message: 'Uploading requires being connected to the mud',
-                defaultId: 1
+                defaultId: 1,
+                noLink: true
             });
             return;
         }
@@ -8153,7 +8168,8 @@
                 type: 'error',
                 title: 'Must be logged into the mud',
                 message: 'Uploading requires being connected to the mud',
-                defaultId: 1
+                defaultId: 1,
+                noLink: true
             });
             return;
         }
@@ -8219,7 +8235,8 @@
                 title: 'Revert new file?',
                 message: 'Revert ' + panel.editor.filename + ' to start and lose changes?',
                 buttons: ['Yes', 'No'],
-                defaultId: 1
+                defaultId: 1,
+                noLink: true
             });
             if (choice === 0)
                 panel.editor.revert();
@@ -8230,7 +8247,8 @@
                 title: 'Revert file?',
                 message: 'Revert ' + panel.editor.filename + ' and lose changes?',
                 buttons: ['Yes', 'No'],
-                defaultId: 1
+                defaultId: 1,
+                noLink: true
             });
             if (choice === 0)
                 panel.editor.revert();
@@ -8284,7 +8302,8 @@
             title: panel.editor.new ? 'Save file?' : 'Save changes?',
             message: panel.editor.new ? ('Save ' + panel.editor.filename + '?') : ('Save changes to ' + panel.editor.filename + '?'),
             buttons: ['Yes', 'No', 'Cancel'],
-            defaultId: 1
+            defaultId: 1,
+            noLink: true
         });
         //canceled
         if (choice === 2)
@@ -8538,7 +8557,8 @@
                         title: 'Create room?',
                         message: 'Create new external room?',
                         buttons: ['Yes', 'No'],
-                        defaultId: 1
+                        defaultId: 1,
+                        noLink: true
                     }) === 0) {
                         if (p.editor.remote)
                             newFromValue(p.editor.externalCode(room), f, path.dirname(p.editor.remote) + '/' + path.basename(f));
@@ -8911,7 +8931,8 @@
                         type: 'error',
                         title: 'Must be logged into the mud',
                         message: 'Testing can only be done when connected to the mud',
-                        defaultId: 1
+                        defaultId: 1,
+                        noLink: true
                     });
                     return;
                 }
@@ -8975,7 +8996,8 @@
                         title: 'File deleted',
                         message: path.basename(file || p.editor.file) + ' has been deleted, keep open?',
                         buttons: ['Yes', 'No'],
-                        defaultId: 1
+                        defaultId: 1,
+                        noLink: true
                     });
                     //no
                     if ((!file || p.editor.file === file) && choice === 1)
@@ -8989,7 +9011,8 @@
                         title: 'File changed',
                         message: path.basename((file || p.editor.file) + ' has been changed, reload?'),
                         buttons: ['Yes', 'No'],
-                        defaultId: 1
+                        defaultId: 1,
+                        noLink: true
                     });
                     //yes
                     if (choice === 0)
@@ -9381,7 +9404,7 @@
     async function openWindow(name, data) {
         if (name === 'preferences' || name === 'options')
             name = 'prefs';
-        if (_windows[name + '.html']) {
+        if (_windows[name + '.html'] && !_windows[name + '.html'].closed) {
             _windows[name + '.html'].show();
             _windows[name + '.html'].focus();
             return;
@@ -9426,6 +9449,11 @@
             _windows[name + '.html'].restoreWindow(data.data);
     }
 
+    // eslint-disable-next-line no-unused-vars
+    function childClosed(file, url, name) {
+        delete _windows[file];
+    }
+
     function buildWindowOptions(options, filters) {
         if (!options) return '';
         if (!filters) filters = [];
@@ -9439,7 +9467,7 @@
     }
 
     function getWindowOptions() {
-        if (window.opender) return;
+        if (window.opener) return;
         let data = ipcRenderer.sendSync('get-options', true);
         if (data) {
             //safety checks to make sure some basic objects

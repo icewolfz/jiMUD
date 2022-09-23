@@ -2560,16 +2560,6 @@
             };
 
             $(window).trigger('resize');
-
-            window.onbeforeunload = function () {
-                if (!closeable()) {
-                    evt.returnValue = false;
-                    return 'no';
-                }
-                window.opener.client.off('options-loaded', optionsLoaded);
-                window.opener.client.off('received-GMCP', processGMCP);
-                clearWatcher();
-            };
         });
 
         function optionsLoaded() {
@@ -3036,7 +3026,7 @@
 
         // eslint-disable-next-line no-unused-vars
         function closeHidden() {
-            if (!closeable()) return false;
+            //if (!closeable()) return false;
             return true;
         }
 
@@ -3048,7 +3038,8 @@
                         type: 'error',
                         title: 'Preferences dialog open',
                         message: 'You must close the Preferences dialog before you can close immortal tools.',
-                        defaultId: 1
+                        defaultId: 1,
+                        noLink: true
                     });
                     $closeWindow = false;
                 }
@@ -3057,6 +3048,12 @@
             }
             return $closeWindow;
         }
+
+        function closed() {
+            window.opener.client.off('options-loaded', optionsLoaded);
+            window.opener.client.off('received-GMCP', processGMCP);
+            clearWatcher();
+        };
 
         function clearWatcher() {
             if (watcher)
@@ -3236,6 +3233,7 @@
                 message: data.length > 1 ? 'Delete remote?' : 'Delete remote: ' + data[0].name + '?',
                 buttons: ['Yes', 'No'],
                 defaultId: 1,
+                noLink: true
             }).then((result) => {
                 if (result.response === 0) {
 
@@ -3308,6 +3306,7 @@
                         message: `Do you want to rename to "${n}"?`,
                         buttons: ['Yes', 'No'],
                         defaultId: 1,
+                        noLink: true,
                         detail: 'There is already a file or folder with the same name in this location.',
                     }) != 0) {
                         return;
@@ -3325,6 +3324,7 @@
                         message: `Do you want to rename to "${n}"?`,
                         buttons: ['Yes', 'No'],
                         defaultId: 1,
+                        noLink: true,
                         detail: 'There is already a file or folder with the same name in this location.',
                     }) != 0) {
                         return;
@@ -3370,6 +3370,7 @@
                         message: `Do you want to rename "${editor.original}" to "${n}"?`,
                         buttons: ['Yes', 'No'],
                         defaultId: 1,
+                        noLink: true,
                         detail: 'There is already a file with the same name in this location.',
                     }) === 0 && callback) {
                         callback(editor.path, n);
@@ -3535,10 +3536,6 @@
             var sHeight = body.clientHeight;
             if (top < sTop || top + 31 >= sTop + sHeight)
                 body.scrollTop = top;
-        }
-
-        // eslint-disable-next-line no-unused-vars
-        function childClosed(file, url, name) {
         }
 
         function newLocalFile() {

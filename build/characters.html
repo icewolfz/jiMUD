@@ -228,6 +228,7 @@
                         message: 'Notes file `' + newNotes + '` exist, replace?',
                         buttons: ['Yes', 'No'],
                         defaultId: 1,
+                        noLink: true
                     });
                     if (response === 0) {
                         fs.renameSync(old, newNotes);
@@ -418,6 +419,7 @@
                         message: 'Setting file  `' + sf + '` exist, replace?',
                         buttons: ['Yes', 'No'],
                         defaultId: 1,
+                        noLink: true
                     });
                     if (response === 0) {
                         d = Settings.load(window.getGlobal('settingsFile'));
@@ -436,6 +438,7 @@
                         message: 'Map file `' + sf + '` exist, replace?',
                         buttons: ['Yes', 'No'],
                         defaultId: 1,
+                        noLink: true
                     });
                     if (response === 0) {
                         if (isFileSync(parseTemplate(path.join('{data}', 'map.sqlite'))))
@@ -473,6 +476,7 @@
                         message: 'Setting file `' + sf + '` exist, replace?',
                         buttons: ['Yes', 'No'],
                         defaultId: 1,
+                        noLink: true
                     });
                     if (response === 0) {
                         d = new Settings();
@@ -491,6 +495,7 @@
                         message: 'Map file `' + sf + '` exist, replace?',
                         buttons: ['Yes', 'No'],
                         defaultId: 1,
+                        noLink: true
                     });
                     if (response === 0) {
                         fs.closeSync(fs.openSync(sf, 'w'));
@@ -527,6 +532,7 @@
                             message: 'Setting file for ' + name + ' exist, replace?',
                             buttons: ['Yes', 'No'],
                             defaultId: 1,
+                            noLink: true
                         });
                         if (response === 0)
                             fs.renameSync(f, sf);
@@ -545,6 +551,7 @@
                             message: 'Notes file for ' + name + ' exist, replace?',
                             buttons: ['Yes', 'No'],
                             defaultId: 1,
+                            noLink: true
                         });
                         if (response === 0) {
                             fs.renameSync(f, sf);
@@ -564,6 +571,7 @@
                             message: 'Map file for ' + name + ' exist, replace?',
                             buttons: ['Yes', 'No'],
                             defaultId: 1,
+                            noLink: true
                         });
                         if (response === 0) {
                             fs.renameSync(f, sf);
@@ -621,6 +629,7 @@
                         message: 'Setting file `' + sf + '` exist, replace?',
                         buttons: ['Yes', 'No'],
                         defaultId: 1,
+                        noLink: true
                     });
                     if (response === 0)
                         copyFile(f, sf);
@@ -637,6 +646,7 @@
                         message: 'Notes file `' + sf + '` exist, replace?',
                         buttons: ['Yes', 'No'],
                         defaultId: 1,
+                        noLink: true
                     });
                     if (response === 0) {
                         copyFile(f, sf);
@@ -654,6 +664,7 @@
                         message: 'Map file `' + sf + '` exist, replace?',
                         buttons: ['Yes', 'No'],
                         defaultId: 1,
+                        noLink: true
                     });
                     if (response === 0) {
                         if (isFileSync(f))
@@ -684,6 +695,7 @@
                 message: 'Remove ' + character.Title + '?',
                 buttons: ['Yes', 'No'],
                 defaultId: 1,
+                noLink: true
             });
 
             if (response === 0) {
@@ -723,6 +735,7 @@
                 message: 'Load ' + character.Title + '?',
                 buttons: ['Yes', 'No', 'Never ask again'],
                 defaultId: 1,
+                noLink: true
             });
             if (response === 2) {
                 saveCharacters();
@@ -751,6 +764,7 @@
                 message: 'Load global?',
                 buttons: ['Yes', 'No', 'Never ask again'],
                 defaultId: 1,
+                noLink: true
             });
             if (response === 2) {
                 saveCharacters();
@@ -914,6 +928,7 @@
                         message: 'Reload? Any current changes will be lost.',
                         buttons: ['Yes', 'No'],
                         defaultId: 1,
+                        noLink: true
                     }).then((result) => {
                         if (result.response === 0) {
                             current = 0;
@@ -965,13 +980,6 @@
             });
         }
 
-        window.addEventListener('beforeunload', e => {
-            if (!closeable()) {
-                e.returnValue = true;
-                return 'no';
-            }
-        })
-
         let closeWindow = false;
         function closeable(all) {
             if (!closeWindow) {
@@ -980,7 +988,8 @@
                         type: 'error',
                         title: 'Preferences dialog open',
                         message: 'You must close the preferences dialog before you can close character manager.',
-                        defaultId: 1
+                        defaultId: 1,
+                        noLink: true
                     });
                     closeWindow = false;
                 }

@@ -1349,7 +1349,8 @@ export class CollectionValueEditor extends ValueEditor {
                     title: 'Delete',
                     message: 'Delete selected ' + (this.options ? this.options.type + (dg.selectedCount > 1 ? 's' : '') : '') + '?',
                     buttons: ['Yes', 'No'],
-                    defaultId: 1
+                    defaultId: 1,
+                    noLink: true
                 })
                     === 1)
                     e2.preventDefault = true;

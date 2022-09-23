@@ -230,7 +230,8 @@
                         type: 'error',
                         title: 'Progress dialog open',
                         message: 'You must close the progress dialog before you can close mapper.',
-                        defaultId: 1
+                        defaultId: 1,
+                        noLink: true
                     });
                     $closeWindow = false;
                 }
@@ -249,31 +250,7 @@
             window.opener.removeEventListener('resetCharacter', updateCharacter);
         }
 
-        window.onbeforeunload = function (evt) {
-            if (!closeable()) {
-                evt.returnValue = false;
-                return 'no';
-            }
-            if (!mapper.ready) {
-                evt.returnValue = false;
-                setTimeout(() => {
-                    removeEvents();
-                    window.close();
-                }, 10);
-                return 'no';
-            }
-            if (!$closeWindow) {
-                evt.returnValue = false;
-                setTimeout(() => {
-                    if (mapper) save(() => {
-                        $closeWindow = true;
-                        removeEvents();
-                        window.close();
-                    });
-                });
-                return 'no';
-            }
-            $closeWindow = true;
+        function closed() {
             removeEvents();
         };
 
@@ -1212,6 +1189,7 @@
                 message: 'Are you sure you want to remove selected room?',
                 buttons: ['Yes', 'No'],
                 defaultId: 1,
+                noLink: true
             }).then(result => {
                 if (result.response === 0)
                     mapper.clearSelectedRoom();
@@ -1226,6 +1204,7 @@
                 message: 'Are you sure you want to remove current room?',
                 buttons: ['Yes', 'No'],
                 defaultId: 1,
+                noLink: true
             }).then(result => {
                 if (result.response === 0)
                     mapper.clearRoom();
@@ -1240,6 +1219,7 @@
                 message: 'Are you sure you want to remove all rooms from ' + mapper.active.area + '?',
                 buttons: ['Yes', 'No'],
                 defaultId: 1,
+                noLink: true
             }).then(result => {
                 if (result.response === 0)
                     mapper.clearArea();
@@ -1254,6 +1234,7 @@
                 message: 'Are you sure you want to remove all rooms?',
                 buttons: ['Yes', 'No'],
                 defaultId: 1,
+                noLink: true
             }).then(result => {
                 if (result.response === 0)
                     mapper.clearAll();
@@ -1268,6 +1249,7 @@
                 message: 'This will delete your map data file and recreate a fresh new one, do you want do delete your file?',
                 buttons: ['Yes', 'No'],
                 defaultId: 1,
+                noLink: true
             }).then(result => {
                 if (result.response === 0)
                     mapper.resetMap();

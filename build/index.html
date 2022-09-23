@@ -563,7 +563,8 @@
                 title: 'Open?',
                 message: 'Open \'' + url + '\'?',
                 buttons: ['Yes', 'No'],
-                defaultId: 1
+                defaultId: 1,
+                noLink: true
             }) === 0)
                 shell.openExternal(encodeURI(url));
             setTimeout(() => {
@@ -581,7 +582,8 @@
                 title: 'Open?',
                 message: 'Open \'' + url + '\'?',
                 buttons: ['Yes', 'No'],
-                defaultId: 1
+                defaultId: 1,
+                noLink: true
             }) === 0)
                 shell.openExternal(encodeURI(url.replace('&text;', el.textContent)));
             setTimeout(() => {
@@ -3637,7 +3639,8 @@
                             title: `Profile '${profile}' changed`,
                             message: `Profile '${profile}' changed, what do you want to do?`,
                             buttons: ['Nothing', 'Reload'],
-                            defaultId: 1
+                            defaultId: 1,
+                            noLink: true
                         });
                         if (choice === 1)
                             client.loadProfile(profile);
@@ -3661,7 +3664,8 @@
                                 title: `Profile '${profile}' added`,
                                 message: `Profile '${profile}' added, what do you want to do?`,
                                 buttons: ['Nothing', 'Load'],
-                                defaultId: 1
+                                defaultId: 1,
+                                noLink: true
                             });
                             if (choice === 1)
                                 client.loadProfile(profile);
@@ -3685,7 +3689,8 @@
                                 title: `Profile '${profile}' deleted`,
                                 message: `Profile '${profile}' deleted, what do you want to do?`,
                                 buttons: ['Nothing', 'Remove'],
-                                defaultId: 1
+                                defaultId: 1,
+                                noLink: true
                             });
                             if (choice === 1)
                                 client.removeProfile(profile);
@@ -3795,7 +3800,8 @@
                             title: 'Connected',
                             message: 'Closing will disconnect you from the mud, close anyway?',
                             buttons: ['Yes', 'No', 'Yes to all', 'No to all', 'Never ask again for all'],
-                            defaultId: 1
+                            defaultId: 1,
+                            noLink: true
                         });
                         if (choice === 2) { //yes to all
                             closeWindow = true;
@@ -3825,7 +3831,8 @@
                             title: 'Connected',
                             message: 'Closing will disconnect you from the mud, close anyway?',
                             buttons: ['Yes', 'No', 'Never ask again'],
-                            defaultId: 1
+                            defaultId: 1,
+                            noLink: true
                         });
                         if (choice === 2) {
                             client.options.askonclose = false;
@@ -3856,7 +3863,8 @@
                                         title: 'Code editor open',
                                         message: 'Code editor open, will lose any unsaved work, close anyways?',
                                         buttons: ['Yes', 'No', 'Never ask again'],
-                                        defaultId: 1
+                                        defaultId: 1,
+                        noLink: true
                                     });
                                 if (choice === 2) {
                                     client.options.askonchildren = false;
@@ -3873,7 +3881,8 @@
                                 title: 'Connected',
                                 message: 'Closing will disconnect you from the mud, close anyway?',
                                 buttons: ['Yes', 'No', 'Never ask again'],
-                                defaultId: 1
+                                defaultId: 1,
+                        noLink: true
                             });
                         if (choice === 2) {
                             client.raise('closed');
@@ -3908,7 +3917,8 @@
                                     title: 'Code editor open',
                                     message: 'Code editor open, will lose any unsaved work, close anyways?',
                                     buttons: ['Yes', 'No', 'Never ask again'],
-                                    defaultId: 1
+                                    defaultId: 1,
+                        noLink: true
                                 });
                             if (choice === 2) {
                                 client.options.askonchildren = false;

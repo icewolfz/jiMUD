@@ -352,33 +352,12 @@ function createWindow(options) {
             file = url.substring(__dirname.length + 9);
         initializeChildWindow(childWindow, url, details);
 
-        childWindow.on('resize', () => {
-            states[file] = saveWindowState(childWindow);
-        });
-
-        childWindow.on('move', () => {
-            states[file] = saveWindowState(childWindow);
-        });
-
-        childWindow.on('maximize', () => {
-            states[file] = saveWindowState(childWindow);
-        });
-
-        childWindow.on('unmaximize', () => {
-            states[file] = saveWindowState(childWindow);
-        });
-
-        childWindow.on('resized', () => {
-            states[file] = saveWindowState(childWindow);
-        });
-
         childWindow.on('closed', e => {
             if (window && !window.isDestroyed())
                 executeScriptClient(`if(typeof childClosed === "function") childClosed('${file}', '${url}', '${frameName}');`, window, true);
             idMap.delete(childWindow);
         });
         childWindow.on('close', e => {
-            states[file] = saveWindowState(childWindow);
             const id = getWindowId(window);
             const index = getChildWindowIndex(windows[id].windows, childWindow);
             if (window && !window.isDestroyed()) {
@@ -489,7 +468,7 @@ function createWindow(options) {
             _windowID++;
         options.id = _windowID;
     }
-    windows[options.id] = { options: { file: options.file !== 'manager.html' ? options.file : null, remote: options.remote }, window: window, clients: [], current: 0, menubar: options.menubar, windows: [] };
+    windows[options.id] = { options: { file: options.file !== 'manager.html' ? options.file : undefined, remote: options.remote }, window: window, clients: [], current: 0, menubar: options.menubar, windows: [] };
     if (options.menubar) {
         options.menubar.window = window;
         options.menubar.enabled = false;
@@ -1624,30 +1603,25 @@ function createClient(options) {
         initializeChildWindow(childWindow, url, details);
 
         childWindow.on('resize', () => {
-            states[file] = saveWindowState(childWindow);
             clients[getClientId(view)].states[file] = states[file];
         });
 
         childWindow.on('move', () => {
-            states[file] = saveWindowState(childWindow);
             clients[getClientId(view)].states[file] = states[file];
         });
 
         childWindow.on('maximize', () => {
-            states[file] = saveWindowState(childWindow);
             clients[getClientId(view)].states[file] = states[file];
         });
 
         childWindow.on('unmaximize', () => {
-            states[file] = saveWindowState(childWindow);
             clients[getClientId(view)].states[file] = states[file];
         });
 
         childWindow.on('resized', () => {
-            states[file] = saveWindowState(childWindow);
             clients[getClientId(view)].states[file] = states[file];
         });
-
+        
         childWindow.on('closed', () => {
             if (view && view.webContents && !view.webContents.isDestroyed()) {
                 executeScript(`if(typeof childClosed === "function") childClosed('${file}', '${url}', '${frameName}');`, view, true);
@@ -1662,21 +1636,24 @@ function createClient(options) {
             idMap.delete(childWindow);
         });
 
-        childWindow.on('close', e => {
+        let _close = false;
+        childWindow.on('close', async e => {
+            if(_close) return;
+            e.preventDefault();
+            _close = await executeScript(`if(typeof closeable === "function") closeable()`, childWindow); 
+            if(!_close) return;
             const id = getClientId(view);
             const index = getChildWindowIndex(clients[id].windows, childWindow);
             if (index !== -1 && clients[id].windows[index].details.options.persistent) {
                 e.preventDefault();
                 executeScript('if(typeof closeHidden !== "function" || closeHidden(true)) window.hide();', childWindow);
-                states[file] = saveWindowState(childWindow);
                 clients[getClientId(view)].states[file] = states[file];
                 return;
             }
-            states[file] = saveWindowState(childWindow);
             clients[id].states[file] = states[file];
             executeCloseHooks(childWindow);
+            childWindow.close();
         });
-
         clients[getClientId(view)].windows.push({ window: childWindow, details: details });
         idMap.set(childWindow, getClientId(view));
     });
@@ -1848,6 +1825,9 @@ async function canCloseAllWindows(warn) {
 }
 
 function initializeChildWindow(window, link, details) {
+    let file = link;
+    if (link.startsWith('file:///' + __dirname.replace(/\\/g, '/')))
+        file = link.substring(__dirname.length + 9);
     require("@electron/remote/main").enable(window.webContents);
     window.removeMenu();
     window.once('ready-to-show', () => {
@@ -1904,6 +1884,37 @@ function initializeChildWindow(window, link, details) {
 
     window.webContents.on('did-create-window', (childWindow, childDetails) => {
         initializeChildWindow(childWindow, childDetails.url, childDetails);
+    });
+
+    window.on('resize', () => {
+        states[file] = saveWindowState(window);
+    });
+
+    window.on('move', () => {
+        states[file] = saveWindowState(window);
+    });
+
+    window.on('maximize', () => {
+        states[file] = saveWindowState(window);
+    });
+
+    window.on('unmaximize', () => {
+        states[file] = saveWindowState(window);
+    });
+
+    window.on('resized', () => {
+        states[file] = saveWindowState(window);
+    });
+
+    window.on('closed', () => {
+        if (!details || !details.options) return;
+        const parent = details.options.parent;
+        if (parent && parent.webContents && !parent.webContents.isDestroyed())
+            executeScript(`if(typeof childClosed === "function") childClosed('${file}', '${link}', '${details.frameName}');`, parent, true);
+    });
+
+    window.on('close', e => {
+        states[file] = saveWindowState(window);
     });
 }
 
@@ -2201,6 +2212,7 @@ function checkForUpdates() {
                 message: 'Auto update is not supported with this version of jiMUD, try anyways?',
                 buttons: ['Yes', 'No'],
                 defaultId: 1,
+                noLink: true
             }) !== 0)
                 return;
         }
@@ -2248,6 +2260,7 @@ function checkForUpdatesManual() {
             message: 'Auto update is not supported with this version of jiMUD, try anyways?',
             buttons: ['Yes', 'No'],
             defaultId: 1,
+            noLink: true
         }) !== 0)
             return;
     }
@@ -2883,7 +2896,7 @@ function loadWindowLayout(file) {
             file: data.windows[i].options.file
         };
         if ('remote' in data.windows[i].options)
-            options.remote = data.windows[i].options;
+            options.remote = data.windows[i].options.remote;
         createWindow(options);
         if (data.windows[i].menubar)
             windows[data.windows[i].id].menubar = createMenu(windows[data.windows[i].id].window);
@@ -3908,12 +3921,12 @@ ipcMain.on('reset-profiles-menu', (event) => {
     resetProfilesMenu(BrowserWindow.fromWebContents(event.sender));
 });
 
-ipcMain.on('show-window', (event, window)=> {
-    if(window === 'profile-manager')
+ipcMain.on('show-window', (event, window) => {
+    if (window === 'profile-manager')
         openProfileManager(BrowserWindow.fromWebContents(event.sender));
-    else if(window === 'about')
+    else if (window === 'about')
         openAbout(BrowserWindow.fromWebContents(event.sender));
-    else if(window === 'global-preferences')
+    else if (window === 'global-preferences')
         openPreferences(BrowserWindow.fromWebContents(event.sender));
 });
 

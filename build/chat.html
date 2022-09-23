@@ -267,7 +267,7 @@
             window.opener.client.saveOptions();
         }
 
-        window.onbeforeunload = function (evt) {
+        function closed() {
             window.opener._status.off('set-title', events['set-title']);
             window.opener.removeEventListener('loadCharacter', updateCharacter);
             window.opener.removeEventListener('updateCharacter', updateCharacter);

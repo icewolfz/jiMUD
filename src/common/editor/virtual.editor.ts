@@ -807,7 +807,8 @@ export class VirtualEditor extends EditorBase {
                 title: 'Delete',
                 message: 'Delete terrain' + (this.$descriptionGrid.selectedCount > 1 ? 's' : '') + '?',
                 buttons: ['Yes', 'No'],
-                defaultId: 1
+                defaultId: 1,
+                noLink: true
             })
                 === 1)
                 e.preventDefault = true;
@@ -962,7 +963,8 @@ export class VirtualEditor extends EditorBase {
                         title: 'Replace items',
                         message: 'Replace old items with new?',
                         buttons: ['Yes', 'No', 'All'],
-                        defaultId: 1
+                        defaultId: 1,
+                        noLink: true
                     });
                     if (choice === 2)
                         all = true;
@@ -1133,7 +1135,8 @@ export class VirtualEditor extends EditorBase {
                 title: 'Delete',
                 message: 'Delete item' + (this.$itemGrid.selectedCount > 1 ? 's' : '') + '?',
                 buttons: ['Yes', 'No'],
-                defaultId: 1
+                defaultId: 1,
+                noLink: true
             })
                 === 1)
                 e.preventDefault = true;
@@ -1566,7 +1569,8 @@ export class VirtualEditor extends EditorBase {
                 title: 'Delete',
                 message: 'Delete selected exit' + (this.$exitGrid.selectedCount > 1 ? 's' : '') + '?',
                 buttons: ['Yes', 'No'],
-                defaultId: 1
+                defaultId: 1,
+                noLink: true
             })
                 === 1)
                 e.preventDefault = true;
@@ -4405,7 +4409,8 @@ export class VirtualEditor extends EditorBase {
             title: 'Confirm Save As',
             message: file + 'already exists.\nDo you want to replace it?',
             buttons: ['Yes', 'No'],
-            defaultId: 1
+            defaultId: 1,
+            noLink: true
         });
     }
 
@@ -10197,7 +10202,8 @@ export class ExternalExitValueEditor extends ValueEditor {
                     title: 'Delete',
                     message: 'Delete selected exit' + (dg.selectedCount > 1 ? 's' : '') + '?',
                     buttons: ['Yes', 'No'],
-                    defaultId: 1
+                    defaultId: 1,
+                    noLink: true
                 })
                     === 1)
                     e2.preventDefault = true;
@@ -10536,7 +10542,8 @@ export class ItemsValueEditor extends ValueEditor {
                     title: 'Delete',
                     message: 'Delete selected item' + (dg.selectedCount > 1 ? 's' : '') + '?',
                     buttons: ['Yes', 'No'],
-                    defaultId: 1
+                    defaultId: 1,
+                    noLink: true
                 })
                     === 1)
                     e2.preventDefault = true;

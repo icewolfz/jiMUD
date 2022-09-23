@@ -185,7 +185,7 @@
             return id.replace(/[^a-zA-Z0-9_-]/gi, '');
         }
 
-        window.onbeforeunload = function (evt) {
+        function closed() {
             window.opener._status.off('skill updated', updateSkill);
             window.opener._status.off('skill init', resetSkills);      
         };

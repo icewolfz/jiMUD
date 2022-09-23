@@ -198,7 +198,7 @@
                                         </button>
                                         <script>
                                             document.getElementById('trigger-editor-dropdown').addEventListener('blur', (e) => {
-                                                if(e.relatedTarget === document.getElementById('trigger-editor-adv')) return;
+                                                if (e.relatedTarget === document.getElementById('trigger-editor-adv')) return;
                                                 document.getElementById('trigger-pattern').value = document.getElementById('trigger-editor-dropdown').value;
                                                 document.getElementById('trigger-editor-dropdown').style.display = 'none';
                                                 document.getElementById('trigger-pattern').focus();
@@ -670,6 +670,10 @@
 
         function closeable(all) {
             return manager.closeable(all);
+        }
+
+        function closed() {
+            manager.closed();
         }
     </script>
 

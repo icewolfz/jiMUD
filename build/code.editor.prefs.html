@@ -404,7 +404,8 @@
                     title: 'Delete',
                     message: 'Delete all remote cached data?',
                     buttons: ['Yes', 'No', 'Permanently'],
-                    defaultId: 1
+                    defaultId: 1,
+                    noLink: true
                 });
                 if (choice === 1) return;
                 let p = path.join(parseTemplate('{data}'), 'editor');
@@ -426,7 +427,8 @@
                     title: 'Delete',
                     message: 'Delete all state cached data?',
                     buttons: ['Yes', 'No', 'Permanently'],
-                    defaultId: 1
+                    defaultId: 1,
+                    noLink: true
                 });
                 if (choice === 1) return;
                 let p = path.join(parseTemplate('{data}'), 'editor');
@@ -448,7 +450,8 @@
                     title: 'Delete',
                     message: 'Delete all cached data?',
                     buttons: ['Yes', 'No', 'Permanently'],
-                    defaultId: 1
+                    defaultId: 1,
+                    noLink: true
                 });
                 if (choice === 1) return;
                 let p = path.join(parseTemplate('{data}'), 'editor');

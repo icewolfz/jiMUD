@@ -235,7 +235,8 @@ export class WizardDataGridPage extends WizardPage {
                 title: 'Delete',
                 message: 'Delete selected?',
                 buttons: ['Yes', 'No'],
-                defaultId: 1
+                defaultId: 1,
+                noLink: true
             }) === 1)
                 e.preventDefault = true;
             this.emit('delete', e);
