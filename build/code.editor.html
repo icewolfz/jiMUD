@@ -4699,7 +4699,9 @@
     }
 
     function baseParseData() {
-        var character = capitalize(ipcRenderer.sendSync('get-global', 'characterLogin') || ipcRenderer.sendSync('get-global', 'character')) || 'Unknown';
+        var character = 'Unknown';
+        if (window.opener)
+            character = capitalize(window.opener.getCharacterName() || character);
         return {
             'your name': character,
             'character': character,

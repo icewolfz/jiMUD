@@ -1773,7 +1773,7 @@
                         openWindow(window);
                         break;
                     case 'about':
-                        ipcRenderer.send('show-about');
+                        ipcRenderer.send('show-window', 'about');
                         break;
                     case 'code-editor':
                     case 'code.editor':
@@ -3142,7 +3142,7 @@
                     break;
                 case 'prefs':
                     if (window.getGlobal('settingsFile') === _windowState.data.settings)
-                        ipcRenderer.send('show-global-preferences');
+                        ipcRenderer.send('show-window', 'global-preferences');
                     else
                         _windows['prefs.html'] = window.open('prefs.html', 'modal-' + getId(), 'width=800,height=460,backgroundColor=#fff,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
                     break;

@@ -130,7 +130,7 @@
                     accelerator: 'CmdOrCtrl+Comma',
                     click: () => {
                         if (window.getGlobal('settingsFile') === window.opener._windowState.data.settings)
-                            ipcRenderer.send('show-global-preferences');
+                            ipcRenderer.send('show-window', 'global-preferences');
                         else
                             prefs = window.open('prefs.html', 'modal-' + window.opener.getId(), 'width=800,height=460,backgroundColor=#fff,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
                     }

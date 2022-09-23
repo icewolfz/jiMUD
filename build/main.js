@@ -3908,16 +3908,13 @@ ipcMain.on('reset-profiles-menu', (event) => {
     resetProfilesMenu(BrowserWindow.fromWebContents(event.sender));
 });
 
-ipcMain.on('show-global-preferences', event => {
-    openPreferences(BrowserWindow.fromWebContents(event.sender));
-})
-
-ipcMain.on('show-about', event => {
-    openAbout(BrowserWindow.fromWebContents(event.sender));
-});
-
-ipcMain.on('show-profile-manager', event => {
-    openProfileManager(BrowserWindow.fromWebContents(event.sender));
+ipcMain.on('show-window', (event, window)=> {
+    if(window === 'profile-manager')
+        openProfileManager(BrowserWindow.fromWebContents(event.sender));
+    else if(window === 'about')
+        openAbout(BrowserWindow.fromWebContents(event.sender));
+    else if(window === 'global-preferences')
+        openPreferences(BrowserWindow.fromWebContents(event.sender));
 });
 
 function resetProfilesMenu(window) {
