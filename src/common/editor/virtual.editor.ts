@@ -5833,6 +5833,10 @@ export class VirtualEditor extends EditorBase {
         }
         return false;
     }
+
+    public update(what, ...args) {
+    }
+
     public get buttons() {
         const frag = document.createDocumentFragment();
         let group;

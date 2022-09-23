@@ -1345,10 +1345,12 @@ export class MonacoCodeEditor extends EditorBase {
             ];
     }
 
-    public updateMenu(menubar, connected) {
+    public update(what, ...args) {
         if (!window.opener) return;
-        menubar.updateItem('edit|test', { enabled: connected });
-        menubar.updateItem('edit|test clear', { enabled: connected });
+        if (what === 'menu') {
+            args[0].updateItem('edit|test', { enabled: args[1] });
+            args[0].updateItem('edit|test clear', { enabled: args[1] });
+        }
     }
 
     public get buttons() {

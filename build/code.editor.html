@@ -2839,7 +2839,7 @@
         dock.css('top', tbh + 'px');
         if (window.opener)
             $('.connected').prop('disabled', !(connected && enabled));
-        manager.active.editor.updateMenu(menubar, connected);
+        manager.active.editor.update('menu', menubar, connected);
         doUpdate(2);
     }
 
@@ -3652,8 +3652,9 @@
     }
 
     function setProgressDialogValue(value, title) {
-        ipcRenderer.send('set-progress', { value: value / 100 });
-        ipcRenderer.send('set-progress-window', 'code-editor', { value: value / 100 });
+        if (window.opener)
+            window.opener.updateProgress({ value: value / 100 });
+        window.setProgressBar(value / 100);
         document.getElementById('progress-dialog-progressbar').value = value;
         if (title && title.length > 0)
             document.getElementById('progress-dialog-title').innerHTML = title;
@@ -4540,17 +4541,6 @@
         };
     }
 
-    ipcRenderer.on('progress-canceled', () => {
-        if (manager.active && manager.active.editor && manager.active.editor.cancel)
-            manager.active.editor.cancel();
-    });
-
-    ipcRenderer.on('progress-closed', () => {
-        if (manager.active && manager.active.editor && manager.active.editor.cancel)
-            manager.active.editor.cancel();
-
-    });
-
     ipcRenderer.on('open-editor', (event, file, remoteFile, remoteEdit) => {
         openEditor(file, remoteFile, remoteEdit);
     });
@@ -4588,12 +4578,6 @@
         else
             openFile(file, remoteFile, null, remoteEdit);
     }
-
-    ipcRenderer.on('send-editor', (event, text, window) => {
-        if (!manager.active || !manager.active.editor || window != 'code-editor')
-            return;
-        updateValue(text);
-    });
 
     function updateValue(text) {
         if (($dialogs.monster && $dialogs.monster.open) || ($dialogs.room && $dialogs.room.open)) {
@@ -9254,36 +9238,64 @@
             p.editor.on('error', () => {
                 //logOutput(manager.active.editor.filename+': Indenting complete');
             });
-            p.editor.on('progress-start', (type) => {
+            p.editor.on('progress-start', async (type) => {
                 if (type === 'indent')
                     logOutput(manager.active.editor.filename + ': Indenting started');
                 else if (type === 'format')
                     logOutput(manager.active.editor.filename + ': Formatting started');
-                else if (type === 'designer')
-                    ipcRenderer.send('progress-show', { title: 'Generating area&hellip;', percent: 0 });
+                else if (type === 'designer') {
+                    openWindow('progress', { title: 'Generating area&hellip;' }).then(() => {
+                        _windows['progress.html'].addEventListener('DOMContentLoaded', () => {
+                            _windows['progress.html'].setProgress({
+                                title: 'Generating area&hellip;',
+                                percent: 0
+                            });
+                        }, { once: true });
+                        _windows['progress.html'].addEventListener('beforeunload', () => {
+                            if (manager.active && manager.active.editor && manager.active.editor.cancel)
+                                manager.active.editor.cancel();
+                        }, { once: true });
+                    });
+                }
             });
             p.editor.on('progress-canceled', (type) => {
-                if (type === 'designer')
-                    ipcRenderer.send('progress-canceled');
+                if (type === 'designer') {
+                    if (_windows['progress.html'])
+                        _windows['progress.html'].close();
+                    if (manager.active && manager.active.editor && manager.active.editor.cancel)
+                        manager.active.editor.cancel();
+                        window.setProgressBar(-1);
+                }
             });
             p.editor.on('progress-error', (type, err) => {
-                if (type === 'designer')
-                    ipcRenderer.send('progress-canceled');
+                if (type === 'designer') {
+                    if (_windows['progress.html']) _windows['progress.html'].close();
+                    if (manager.active && manager.active.editor && manager.active.editor.cancel)
+                        manager.active.editor.cancel();
+                        window.setProgressBar(-1);
+                }
                 if (options && options.debug)
                     console.log(err);
             });
-            p.editor.on('progress', (pObject) => {
+            p.editor.on('progress', async (pObject) => {
                 if (!pObject) return;
-                if (pObject.type === 'designer')
-                    ipcRenderer.send('progress', pObject);
+                if (pObject.type === 'designer') {
+                    window.setProgressBar(pObject.percent);
+                    setTimeout(() => {
+                        if (_windows['progress.html'] && typeof _windows['progress.html'].setProgress === 'function')
+                            _windows['progress.html'].setProgress(pObject);
+                    });
+                }
             });
             p.editor.on('progress-complete', (type) => {
                 if (type === 'indent')
                     logOutput(manager.active.editor.filename + ': Indenting finished');
                 else if (type === 'format')
                     logOutput(manager.active.editor.filename + ': Formatting finished');
-                else if (type === 'designer')
-                    ipcRenderer.send('progress-close');
+                else if (type === 'designer' && _windows['progress.html']) {
+                    _windows['progress.html'].close();
+                    window.setProgressBar(-1);
+                }
             });
             p.editor.on('output', (msg) => {
                 logOutput(msg, true);
@@ -9415,6 +9427,9 @@
             _options += ',' + buildWindowOptions(data.state.bounds);
         }
         switch (name) {
+            case 'progress':
+                _windows['progress.html'] = createProgressDialog(data ? data.title || '' : '');
+                break;
             case 'editor':
                 if (data && data.details)
                     _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent', 'defaultWidth', 'defaultHeight', 'showInTaskBar', 'noInputContext', ...Object.keys(data.state || {})]);
