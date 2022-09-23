@@ -2208,3 +2208,15 @@ export function createProgressDialog(title) {
 export function createColorDialog() {
     return window.open('colorpicker.html', 'modal', 'title=Pick color,width=326,height=296,backgroundColor=#fff,icon=' + path.join(__dirname, '../../assets/icons/png/color.png'));
 }
+
+export function boldUnicodeText(text) {
+    const b = function (char) {
+        let diff;
+        if (/[A-Z]/.test(char)) 
+            diff = "𝗔".codePointAt(0) - "A".codePointAt(0);
+        else
+            diff = "𝗮".codePointAt(0) - "a".codePointAt(0);
+        return String.fromCodePoint(char.codePointAt(0) + diff);
+    };
+    return text.replace(/[A-Za-z]/g, b);
+}

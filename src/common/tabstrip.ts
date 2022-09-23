@@ -271,6 +271,7 @@ export class TabStrip extends EventEmitter {
     private buildScrollMenu() {
         const tl = this.tabs.length;
         if (this._useNativeMenus) {
+            const { boldUnicodeText } = require('./library.js');
             var c = [];
             for (let t = 0; t < tl; t++) {
                 let icon = null;
@@ -288,7 +289,7 @@ export class TabStrip extends EventEmitter {
                         icon = nativeImage.createFromPath(style.backgroundImage.slice(13, -2)).resize({ height: 16, quality: 'good' });
                 }
                 c.push({
-                    label: this.tabs[t].title.innerHTML,
+                    label: this.tabs[t] === this.active ? boldUnicodeText(this.tabs[t].title.textContent) : this.tabs[t].title.textContent,
                     click: `switchTab(${t})`,
                     icon: icon
                 });

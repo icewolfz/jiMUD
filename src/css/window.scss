@@ -303,6 +303,18 @@ body {
     background-image: url(#{$images}/icons/png/disconnected.png);
 }
 
+.connected-code-icon {
+    background-image: url(#{$images}/icons/png/code.connected.png);
+}
+
+.connectednonactive-code-icon {
+    background-image: url(#{$images}/icons/png/code.connectednonactive.png);
+}
+
+.disconnected-code-icon {
+    background-image: url(#{$images}/icons/png/code.disconnected.png);
+}
+
 .text-connected-icon {
     color: blue;
 }
