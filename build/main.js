@@ -2193,9 +2193,9 @@ function createUpdater(window) {
     const autoUpdater = require('electron-updater').autoUpdater;
     autoUpdater.on('download-progress', progressObj => {
         window.setProgressBar(progressObj.percent / 100);
-        const progress = getWindowId('progress');
+        const progress = progressMap.get(window);
         if (progress)
-            progress.webContents.send('progress', progressObj);
+            progress.webContents.send('progress', 'update', progressObj);
     });
     return autoUpdater;
 }
@@ -2219,7 +2219,7 @@ function checkForUpdates() {
         const autoUpdater = createUpdater(window);
         autoUpdater.on('update-downloaded', () => {
             window.setProgressBar(-1);
-            const progress = getWindowId('progress');
+            const progress = progressMap.get(window);
             if (progress)
                 progress.close();
             //store current line arguments to use on next load
@@ -2229,7 +2229,7 @@ function checkForUpdates() {
         autoUpdater.on('error', (error) => {
             dialog.showErrorBox('Error: ', error == null ? 'unknown' : (error.stack || error).toString());
             window.setProgressBar(-1);
-            const progress = getWindowId('progress');
+            const progress = progressMap.get(window);
             if (progress)
                 progress.close();
             _checkingUpdates = false;
@@ -2239,7 +2239,7 @@ function checkForUpdates() {
         });
         autoUpdater.on('update-not-available', () => {
             window.setProgressBar(-1);
-            const progress = getWindowId('progress');
+            const progress = progressMap.get(window);
             if (progress)
                 progress.close();
             _checkingUpdates = false;
@@ -2272,7 +2272,7 @@ function checkForUpdatesManual() {
     autoUpdater.on('error', (error) => {
         dialog.showErrorBox('Error: ', error == null ? 'unknown' : (error.stack || error).toString());
         window.setProgressBar(-1);
-        const progress = getWindowId('progress');
+        const progress = progressMap.get(window);
         if (progress)
             progress.close();
         _checkingUpdates = false;
@@ -2311,7 +2311,7 @@ function checkForUpdatesManual() {
 
     autoUpdater.on('update-downloaded', () => {
         window.setProgressBar(-1);
-        const progress = getWindowId('progress');
+        const progress = progressMap.get(window);
         if (progress)
             progress.close();
         _checkingUpdates = false;
@@ -3920,13 +3920,28 @@ ipcMain.on('reset-profiles-menu', (event) => {
     resetProfilesMenu(BrowserWindow.fromWebContents(event.sender));
 });
 
-ipcMain.on('show-window', (event, window) => {
+ipcMain.on('show-window', (event, window, ...args) => {
     if (window === 'profile-manager')
         openProfileManager(BrowserWindow.fromWebContents(event.sender));
     else if (window === 'about')
         openAbout(BrowserWindow.fromWebContents(event.sender));
     else if (window === 'global-preferences')
         openPreferences(BrowserWindow.fromWebContents(event.sender));
+    else if (window === 'progress')
+        openProgress(BrowserWindow.fromWebContents(event.sender), ...args)
+});
+
+const progressMap = new Map();
+ipcMain.on('progress', (event, ...args) => {
+    window = BrowserWindow.fromWebContents(event.sender);
+    const parent = window.getParentWindow();
+    //no parent means the main window wants to send to progress
+    if (!parent) {
+        const progress = progressMap.get(window);
+        progress.send('progress', ...args);
+    }
+    else //else progress wants to send to main
+        parent.send('progress', ...args);
 });
 
 function resetProfilesMenu(window) {
@@ -4002,14 +4017,14 @@ function openAbout(parent) {
 }
 
 function openProgress(parent, title) {
-    let window = getWindowId('progress');
+    let window = progressMap.get(parent);
     if (window && !window.isDestroyed())
         window.focus();
     else {
         window = createDialog({ show: true, parent: parent, url: path.join(__dirname, 'progress.html'), title: title, bounds: { width: 200, height: 70 }, backgroundColor: '#fff', icon: path.join(__dirname, '../../assets/icons/png/progress.png') });
-        window.on('closed', () => idMap.delete('progress'));
+        window.on('closed', () => progressMap.delete(parent));
         window.webContents.send(title);
-        idMap.set('progress', window);
+        progressMap.set(parent, window);
     }
     return window;
 }

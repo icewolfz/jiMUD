@@ -47,8 +47,12 @@
 <script src="../lib/bootstrap.min.js" type="text/javascript"></script>
 <script type="text/javascript">
     if (window.module) module = window.module;
+    const { ipcRenderer } = require('electron');
+    let noCancel = false;
+    let noClose = false;
+
     function doCancel() {
-        ipcRenderer.send('progress-canceled');
+        ipcRenderer.send('progress', 'canceled');
         if (window.opener && typeof window.opener.progressCanceled === 'function')
             window.opener.progressCanceled();
         if (!noClose)
@@ -59,10 +63,6 @@
         if (!noCancel && event.which === 27)
             doCancel();
     });
-
-    const { ipcRenderer } = require('electron');
-    let noCancel = false;
-    let noClose = false;
 
     function setProgress(progressObj) {
         if (progressObj.title) {
@@ -80,33 +80,35 @@
             else {
                 document.getElementById('cancel').style.display = '';
                 document.body.style.paddingTop = '';
-
             }
         }
         if (progressObj.percent == -1)
             document.getElementById('progressbar').removeAttribute('value');
         else if (Object.prototype.hasOwnProperty.call(progressObj, 'percent'))
             document.getElementById('progressbar').value = progressObj.percent;
+        else if (Object.prototype.hasOwnProperty.call(progressObj, 'value'))
+            document.getElementById('progressbar').value = progressObj.value;
     }
 
-    ipcRenderer.on('progress', (event, progressObj) => {
-        setProgress(progressObj);
+    ipcRenderer.on('progress', (event, ...args) => {
+        if (args[0] === 'update' || args[1] === 'set')
+            setProgress(args[1]);
+        else if (args[0] === 'title')
+            progressTitle(args[1]);
+        else if (args[0] === 'close') {
+            window.close();
+            ipcRenderer.send('progress', 'closed');
+        }
+        else if (args[0] === 'cancelable')
+            progressCancelable(args[1]);
+        else if (args[0] === 'focus')
+            window.focus();
     });
 
     function progressTitle(title) {
-        //console.log(title);
         document.getElementById('title').innerHTML = title;
         document.title = document.getElementById('title').textContent;
     }
-
-    ipcRenderer.on('progress-title', (event, title) => {
-        progressTitle(tile);
-    });
-
-    ipcRenderer.on('progress-close', () => {
-        window.close();
-        ipcRenderer.send('progress-closed');
-    });
 
     function progressCancelable(hide) {
         noCancel = !hide;
@@ -120,10 +122,6 @@
         }
     }
 
-    ipcRenderer.on('progress-cancelable', (event, hide) => {
-        progressCancelable(hide);
-    });
-
-    ipcRenderer.send('progress-loaded');
+    ipcRenderer.send('progress', 'loaded');
     window.dispatchEvent(new Event('loaded'));
 </script>

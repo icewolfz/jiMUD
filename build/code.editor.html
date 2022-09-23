@@ -1920,7 +1920,7 @@
     const { Wizard, WizardPage, WizardDataGridPage } = require('./js/wizard');
 
     // eslint-disable-next-line no-unused-vars
-    const { formatString, inverse, parseTemplate, capitalize, existsSync, isDirSync, walkSync, formatSize, updateEditDropdown, initEditDropdown, stripPinkfish, createProgressDialog } = require('./js/library');
+    const { formatString, inverse, parseTemplate, capitalize, existsSync, isDirSync, walkSync, formatSize, updateEditDropdown, initEditDropdown, stripPinkfish } = require('./js/library');
     const { IEDError } = require('./js/types');
 
     const { IED } = require('./js/ied');
@@ -4540,6 +4540,14 @@
             return 'no';
         };
     }
+
+    ipcRenderer.on('progress', (event, ...args) => {
+        if (args[0] === 'canceled' || args[0] === 'closed') {
+            delete _windows['progress.html']
+            if (manager.active && manager.active.editor && manager.active.editor.cancel)
+                manager.active.editor.cancel();
+        }
+    });
 
     ipcRenderer.on('open-editor', (event, file, remoteFile, remoteEdit) => {
         openEditor(file, remoteFile, remoteEdit);
@@ -9243,36 +9251,19 @@
                     logOutput(manager.active.editor.filename + ': Indenting started');
                 else if (type === 'format')
                     logOutput(manager.active.editor.filename + ': Formatting started');
-                else if (type === 'designer') {
-                    openWindow('progress', { title: 'Generating area&hellip;' }).then(() => {
-                        _windows['progress.html'].addEventListener('DOMContentLoaded', () => {
-                            _windows['progress.html'].setProgress({
-                                title: 'Generating area&hellip;',
-                                percent: 0
-                            });
-                        }, { once: true });
-                        _windows['progress.html'].addEventListener('beforeunload', () => {
-                            if (manager.active && manager.active.editor && manager.active.editor.cancel)
-                                manager.active.editor.cancel();
-                        }, { once: true });
-                    });
-                }
+                else if (type === 'designer')
+                    ipcRenderer.send('show-window', 'progress', 'Generating area...');
             });
             p.editor.on('progress-canceled', (type) => {
                 if (type === 'designer') {
-                    if (_windows['progress.html'])
-                        _windows['progress.html'].close();
-                    if (manager.active && manager.active.editor && manager.active.editor.cancel)
-                        manager.active.editor.cancel();
-                        window.setProgressBar(-1);
+                    ipcRenderer.send('progress', 'close');
+                    window.setProgressBar(-1);
                 }
             });
             p.editor.on('progress-error', (type, err) => {
                 if (type === 'designer') {
-                    if (_windows['progress.html']) _windows['progress.html'].close();
-                    if (manager.active && manager.active.editor && manager.active.editor.cancel)
-                        manager.active.editor.cancel();
-                        window.setProgressBar(-1);
+                    ipcRenderer.send('progress', 'close');
+                    window.setProgressBar(-1);
                 }
                 if (options && options.debug)
                     console.log(err);
@@ -9281,10 +9272,7 @@
                 if (!pObject) return;
                 if (pObject.type === 'designer') {
                     window.setProgressBar(pObject.percent);
-                    setTimeout(() => {
-                        if (_windows['progress.html'] && typeof _windows['progress.html'].setProgress === 'function')
-                            _windows['progress.html'].setProgress(pObject);
-                    });
+                    ipcRenderer.send('progress', 'update', pObject);
                 }
             });
             p.editor.on('progress-complete', (type) => {
@@ -9292,8 +9280,8 @@
                     logOutput(manager.active.editor.filename + ': Indenting finished');
                 else if (type === 'format')
                     logOutput(manager.active.editor.filename + ': Formatting finished');
-                else if (type === 'designer' && _windows['progress.html']) {
-                    _windows['progress.html'].close();
+                else if (type === 'designer') {
+                    ipcRenderer.send('progress', 'close');
                     window.setProgressBar(-1);
                 }
             });
@@ -9428,7 +9416,9 @@
         }
         switch (name) {
             case 'progress':
-                _windows['progress.html'] = createProgressDialog(data ? data.title || '' : '');
+                //fake a window for easy close detection
+                _windows['progress.html'] = { document: { title: 'progress', focus: function () { ipcRender.send('progess', 'focus'); } } };
+                ipcRenderer.send('show-window', 'progress', data ? data.title || '' : '');
                 break;
             case 'editor':
                 if (data && data.details)

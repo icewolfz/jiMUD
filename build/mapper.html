@@ -20,12 +20,11 @@
         if (window.module) module = window.module;
         //spell-checker:ignore hellip vscroll hscroll ungroup crosshairs haspopup tablist tabpanel labelledby
         const { RoomDetails, Mapper, ImportType } = require('./js/mapper');
-        const { nativeImage } = require('electron');
+        const { nativeImage, ipcRenderer } = require('electron');
         const remote = require('@electron/remote');
         const { Menu, MenuItem } = remote;
         const { Settings } = require('./js/settings');
         const { Menubar } = require('./js/menubar');
-        const { createProgressDialog } = require('./js/library');
         const fs = require('fs');
 
         var roomEditor = false;
@@ -225,7 +224,7 @@
 
         function closeable(all) {
             if (!$closeWindow) {
-                if (_progress && _progress.dialog && !progress.dialog.closed) {
+                if (_progress && _progress.dialog) {
                     dialog.showMessageBox({
                         type: 'error',
                         title: 'Progress dialog open',
@@ -233,6 +232,7 @@
                         defaultId: 1,
                         noLink: true
                     });
+                    ipcRenderer.send('progress', 'focus');
                     $closeWindow = false;
                 }
                 else
@@ -461,7 +461,7 @@
                         if (_progress.action === 1 || _progress.action === 2)
                             $('#mapProgressbar progress').val(value);
                         else if (_progress.dialog)
-                            _progress.dialog.setProgress({ percent: value })
+                            ipcRenderer.send('progress', 'update', { percent: value });
                         window.setProgressBar(value / 100.0);
                     }
                 });
@@ -471,7 +471,7 @@
                     if (_progress.action === 1 || _progress.action === 2)
                         closeProgress();
                     else if (_progress.dialog)
-                        _progress.dialog.close();
+                        ipcRenderer.send('progress', 'close');
                     window.setProgressBar(-1);
                     window.opener.client.sendGMCP('Room.Info');
                 });
@@ -760,7 +760,7 @@
             if (_progress.action < 3) {
                 mapper.cancelImport();
                 if (_progress.dialog)
-                    _progress.dialog.close();
+                    ipcRenderer.send('progress', 'close');
                 window.setProgressBar(-1);
             }
         }
@@ -775,33 +775,12 @@
         }
 
         function initProgressDialog(data) {
-            if (!_progress.dialog || _progress.dialog.closed) {
-                _progress.dialog = createProgressDialog();
-                _progress.dialog.addEventListener('DOMContentLoaded', () => {
-                    if (data)
-                        _progress.dialog.setProgress(data);
-                    if (_progress.action === 0) {
-                        mapper.import(_progress.data, _progress.type);
-                        if (_progress.room)
-                            window.opener.client.sendGMCP('Room.Info');
-                    }
-                    else if (_progress.action === 1)
-                        mapper.exportArea(_progress.file);
-                    else if (_progress.action === 2)
-                        mapper.exportAll(_progress.file);
-                    else if (_progress.action === 3)
-                        _exportImage(_progress.file);
-                    else if (_progress.action === 4)
-                        _exportCurrentImage(_progress.file);
-                    _progress.dialog.addEventListener('beforeunload', () => {
-                        if (_progress.action < 3)
-                            mapper.cancelImport();
-                        _progress.dialog = null;
-                    }, { once: true });
-                }, { once: true });
+            if (!_progress.dialog) {
+                ipcRenderer.send('show-window', 'progress', data.title);
+                _progress.dialog = data || true;
             }
             else if (data)
-                _progress.dialog.setProgress(data);
+                ipcRenderer.send('progress', 'update', data);
         }
 
         function importData(data) {
@@ -937,7 +916,7 @@
             mapper.getRooms(mapper.active.area, mapper.active.z, mapper.active.zone, (rooms) => {
                 if (!rooms || rooms.length === 0) {
                     if (_progress.dialog)
-                        _progress.dialog.close();
+                        ipcRenderer.send('progress', 'close');
                     window.setProgressBar(-1);
                     dialog.showMessageBox({
                         type: 'error',
@@ -1031,7 +1010,7 @@
                             message: 'Could not save map'
                         });
                     if (_progress.dialog)
-                        _progress.dialog.close();
+                        ipcRenderer.send('progress', 'close');
                     window.setProgressBar(-1);
                 });
             });
@@ -1073,7 +1052,7 @@
                             message: 'Could not save map'
                         });
                     if (_progress.dialog)
-                        _progress.dialog.close();
+                        ipcRenderer.send('progress', 'close');
                     window.setProgressBar(-1);
                 });
             });
@@ -1287,6 +1266,31 @@
                 $('#MapZoom').val(amt);
             $('#MapZoomDisplay').text(amt + '%');
         }
+
+        ipcRenderer.on('progress', (event, ...args) => {
+            if (args[0] === 'canceled' || args[0] === 'closed') {
+                if (_progress.action < 3)
+                    mapper.cancelImport();
+                delete _progress.dialog;
+            }
+            else if (args[0] === 'loaded') {
+                ipcRenderer.send('progress', 'update', _progress.dialog);
+                _progress.dialog = true;
+                if (_progress.action === 0) {
+                    mapper.import(_progress.data, _progress.type);
+                    if (_progress.room)
+                        window.opener.client.sendGMCP('Room.Info');
+                }
+                else if (_progress.action === 1)
+                    mapper.exportArea(_progress.file);
+                else if (_progress.action === 2)
+                    mapper.exportAll(_progress.file);
+                else if (_progress.action === 3)
+                    _exportImage(_progress.file);
+                else if (_progress.action === 4)
+                    _exportCurrentImage(_progress.file);
+            }
+        });
     </script>
 </head>
 
