@@ -3209,7 +3209,7 @@
                 case 'code.editor':
                     if (data && data.details)
                         _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent', 'alwaysOnTop', 'showInTaskBar', 'overlayIcon', 'title', ...Object.keys(data.state || {})]);
-                    _windows['code.editor.html'] = window.open('code.editor.html', 'Code editor-' + getId(), `persistent=${client.options.codeEditor.persistent},alwaysOnTopClient=${client.options.codeEditor.alwaysOnTopClient},alwaysOnTop=${client.options.codeEditor.alwaysOnTop},showInTaskBar=${client.options.codeEditor.showInTaskBar},defaultHeight=600,defaultWidth=800,backgroundColor=grey,icon=${path.join(__dirname, '../assets/icons/png/code.png')},overlayIcon=${path.join(__dirname, '../assets/icons/png/code.png')},title=Code editor${_options}`);
+                    _windows['code.editor.html'] = window.open('code.editor.html', 'Code editor-' + getId(), `persistent=${client.options.codeEditor.persistent},alwaysOnTopClient=${client.options.codeEditor.alwaysOnTopClient},alwaysOnTop=${client.options.codeEditor.alwaysOnTop},showInTaskBar=${client.options.codeEditor.showInTaskBar},defaultHeight=600,defaultWidth=800,backgroundColor=gray,icon=${path.join(__dirname, '../assets/icons/png/code.png')},overlayIcon=${path.join(__dirname, '../assets/icons/png/code.png')},title=Code editor${_options}`);
                     break;
             }
             if (data && data.data && typeof _windows[name + '.html'].restoreWindow !== 'undefined')

@@ -4547,8 +4547,28 @@
         if (_loading) {
             if (!_open)
                 _open = [];
-            _open.push([file, remoteFile, remoteEdit]);
+            if (Array.isArray(file))
+                _open = _open.concat(file.map(m => {
+                    if (Array.isArray(m))
+                        return m;
+                    return [m.file || m.path, m.remote, m.remoteEdit];
+                }));
+            else
+                _open.push([file, remoteFile, remoteEdit]);
         }
+        else if (Array.isArray(file))
+            openFiles(file.map(m => {
+                if (Array.isArray(m)) {
+                    if (m.length === 3)
+                        return { file: m[0], remote: m[1], remoteEdit: m[2] };
+                    if (m.length === 2)
+                        return { file: m[0], remote: m[1] };
+                    return { file: m[0] };
+                }
+                return m;
+            }));
+        else if (typeof file !== 'string')
+            openFile(file.file || file.path, file.remote, null, file.remoteEdit);
         else
             openFile(file, remoteFile, null, remoteEdit);
     }
@@ -4591,7 +4611,7 @@
         document.getElementById('btn-open-remote').removeAttribute('disabled');
         menubar.updateItem('file|open remote...', { enabled: connected });
         $('.connected').prop('disabled', !(connected && manager.active && manager.active.editor));
-        if(manager.active && manager.active.editor)
+        if (manager.active && manager.active.editor)
             manager.active.editor.updateMenu(menubar, connected);
     };
     function clientClosed() {
@@ -4604,7 +4624,7 @@
         document.getElementById('btn-open-remote').setAttribute('disabled', 'true');
         menubar.updateItem('file|open remote...', { enabled: false });
         $('.connected').prop('disabled', true);
-        if(manager.active && manager.active.editor)
+        if (manager.active && manager.active.editor)
             manager.active.editor.updateMenu(menubar, connected);
     };
 
