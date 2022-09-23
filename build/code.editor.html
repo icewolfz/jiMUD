@@ -2110,7 +2110,7 @@
                 enabled: true
             },
         ]
-    };    
+    };
     var menuItems = [
         {
             label: '&File',
@@ -2417,7 +2417,7 @@
             ]
         }
     ];
-    if(!window.opener)
+    if (!window.opener)
         menuItems[0].submenu.splice(menuItems[0].submenu.findIndex(item => item.label === 'Up&load As...') + 1, 1);
     menubar = new Menubar(menuItems);
     menubar.enabled = false;
@@ -4554,6 +4554,8 @@
                 _open = _open.concat(file.map(m => {
                     if (Array.isArray(m))
                         return m;
+                    if (typeof m === 'string')
+                        return [m];
                     return [m.file || m.path, m.remote, m.remoteEdit];
                 }));
             else
@@ -4568,6 +4570,8 @@
                         return { file: m[0], remote: m[1] };
                     return { file: m[0] };
                 }
+                if (typeof m === 'string')
+                    return { file: m };
                 return m;
             }));
         else if (typeof file !== 'string')

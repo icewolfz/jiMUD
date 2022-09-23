@@ -600,6 +600,7 @@ if (argv['disable-gpu'])
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
+    let window;
     if (!existsSync(path.join(app.getPath('userData'), 'characters')))
         fs.mkdirSync(path.join(app.getPath('userData'), 'characters'));
 
@@ -668,17 +669,16 @@ app.on('ready', () => {
     else if (argv.m)
         global.mapFile = parseTemplate(argv.m);
 
-
+    if (argv.eo)
+        global.editorOnly = true;
 
     if (Array.isArray(argv.l))
         _layout = parseTemplate(argv.l[0]);
     else if (argv.l)
         _layout = argv.l;
-    else if (argv.eo)
+    else if (global.editorOnly)
         _layout = parseTemplate(path.join('{data}', 'editor.layout'));
 
-    if (argv.eo)
-        global.editorOnly = true;
     //use default
     let _ignore = false;
     //attempt to load layout, 
@@ -698,8 +698,16 @@ app.on('ready', () => {
         else
             newClientWindow();
     }
+    else if (Array.isArray(argv.eo) || typeof argv.eo === 'string') {
+        window = getActiveWindow();
+        if (window)
+            window.window.webContents.once('dom-ready', () => {
+                window.window.webContents.send('open-editor', argv.eo);
+                focusWindow(window, true);
+            });
+    }
     //only load after as it requires a client window
-    const window = getActiveWindow();
+    window = getActiveWindow();
     if (argv.e && window) {
         //showCodeEditor();
         if (Array.isArray(argv.e))
