@@ -117,6 +117,7 @@ const idMap = new Map();
 let _saved = false;
 let _loaded = false;
 const _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
+let tray = null;
 
 if (!argv.nci && isFileSync(path.join(app.getPath('userData'), 'characters.json'))) {
     let oldCharacters = fs.readFileSync(path.join(app.getPath('userData'), 'characters.json'), 'utf-8');
@@ -697,7 +698,8 @@ app.on('ready', () => {
             executeScriptClient('openWindow("code.editor")', window.window, true);
     }
     checkForUpdates();
-
+    if (!global.editorOnly)
+        createTray();
 });
 
 // Quit when all windows are closed.
@@ -705,6 +707,8 @@ app.on('window-all-closed', () => {
     // On macOS it is common for applications and their menu bar
     // to stay active until the user quits explicitly with Cmd + Q
     if (process.platform !== 'darwin') {
+        if (tray)
+            tray.destroy();
         app.quit();
     }
 });
@@ -1525,7 +1529,12 @@ ipcMain.on('reload-options', (events, preferences, clientId) => {
                 continue;
             windows[window].window.webContents.send('reload-options');
         }
-        //TODO add tray support back
+        if (_settings.showTrayIcon && !tray)
+            createTray();
+        else if (!_settings.showTrayIcon && tray) {
+            tray.destroy();
+            tray = null;
+        }
     }
     for (id in clients) {
         if (!Object.prototype.hasOwnProperty.call(clients, id) || getClientId(clients[id].view) === clientId)
@@ -1702,7 +1711,7 @@ function createClient(options) {
     //win.setTopBrowserView(view)    
     //addBrowserView
     //setBrowserView  
-    //addInputContext(view, set.spellchecking);
+    //addInputContext(view, _settings.spellchecking);
     return options.id;
 }
 
@@ -2014,7 +2023,7 @@ function updateOverlay() {
                 window.setOverlayIcon(path.join(__dirname, '../assets/icons/png/disconnected.png'), 'Disconnected');
             break;
     }
-    //TODO updateTray when added
+    updateTray();
 }
 
 ipcMain.on('parseTemplate', (event, str, data) => {
@@ -4044,6 +4053,248 @@ async function openDevtools(window, options) {
     window.openDevTools(options);
 }
 
+//#region Tray functions
+function createTray() {  
+    //TODO fix tray click/double click events to support multi window system, maybe default to active window or all open windows, maybe add new options for all windows/active window
+    if (!_settings.showTrayIcon)
+        return;
+    tray = new Tray(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
+    updateTray();
+    updateTrayContext();
+    tray.on('click', () => {
+        switch (_settings.trayClick) {
+            case TrayClick.show:
+                //showSelectedWindow();
+                break;
+            case TrayClick.toggle:
+                /*
+                if (win.isVisible()) {
+                    if (_settings.hideOnMinimize)
+                        win.hide();
+                    else
+                        win.minimize();
+                }
+                else
+                    restoreWindowState(win, getWindowState('main') || getWindowState('main', win), true, true);
+                */
+                break;
+            case TrayClick.hide:
+                /*
+                if (_settings.hideOnMinimize)
+                    win.hide();
+                else
+                    win.minimize();
+                */
+                break;
+            case TrayClick.menu:
+                tray.popUpContextMenu();
+                break;
+        }
+    });
+
+    tray.on('double-click', () => {
+        switch (_settings.trayClick) {
+            case TrayClick.show:
+                //showSelectedWindow();
+                break;
+            case TrayClick.toggle:
+                /*
+                if (win.isVisible()) {
+                    if (_settings.hideOnMinimize)
+                        win.hide();
+                    else
+                        win.minimize();
+                }
+                else
+                    restoreWindowState(win, getWindowState('main') || getWindowState('main', win), true, true);
+                */
+                break;
+            case TrayClick.hide:
+                /*
+                if (_settings.hideOnMinimize)
+                    win.hide();
+                else
+                    win.minimize();
+                */
+                break;
+            case TrayClick.menu:
+                tray.popUpContextMenu();
+                break;
+        }
+    });
+}
+
+function updateTrayContext() {
+    //TODO redo tray context menu with a window list of all open windows
+    //TODO call this when new windows/clients are created to update menu
+    if (!tray) return;
+    const contextMenu = Menu.buildFromTemplate([
+        /*
+        {
+            label: '&Show window...', click: () => {
+                showSelectedWindow();
+            }
+        },
+        {
+            label: 'H&ide window...', click: () => {
+                if (_settings.hideOnMinimize)
+                    win.hide();
+                else
+                    win.minimize();
+            }
+        },
+        { type: 'separator' },
+        {
+            label: 'Ch&aracters...',
+            id: 'characters',
+            click: () => {
+                restoreWindowState(win, getWindowState('main') || getWindowState('main', win), true, true);
+                executeScript('showCharacters()', win, true);
+            }
+        },
+        {
+            label: '&Manage profiles...',
+            click: showProfiles,
+        },
+        {
+            label: '&Code editor...',
+            click: showCodeEditor,
+        },
+        { type: 'separator' },
+        {
+            label: '&Preferences...',
+            click: showPrefs
+        },
+        { type: 'separator' },
+        {
+            label: '&Who is on?...',
+            click: () => {
+                executeScript('showWho()', win, true);
+            }
+        },
+        { type: 'separator' },
+        {
+            label: '&Help',
+            role: 'help',
+            submenu: [
+                {
+                    label: '&ShadowMUD...',
+                    click: () => {
+                        executeScript('showSMHelp()', win, true);
+                    }
+                },
+                {
+                    label: '&jiMUD...',
+                    click: () => {
+                        executeScript('showHelp()', win, true);
+                    }
+                },
+                {
+                    label: '&jiMUD website...',
+                    click: () => {
+                        shell.openExternal('https://github.com/icewolfz/jiMUD/tree/master/docs', '_blank');
+                    }
+                },
+                { type: 'separator' },
+                {
+                    label: '&About...',
+                    click: () => {
+                        showAbout();
+                    }
+                }
+            ]
+        },
+        { type: 'separator' },
+        */
+        { label: 'E&xit', role: 'quit' }
+    ]);
+    tray.setContextMenu(contextMenu);
+}
+
+function updateTray() {
+    //TODO figure out better tool tip/title
+    if (!tray) return;
+    let overlay = 0;
+    let windowId;
+    //use the last active window as the target to update info
+    for (windowId in windows) {
+        if (!Object.prototype.hasOwnProperty.call(windows, windowId))
+            continue;
+        const cl = windows[windowId].clients.length;
+        for (let idx = 0; idx < cl; idx++) {
+            switch (clients[windows[windowId].clients[idx]].overlay) {
+                case 4:
+                case 1:
+                    if (overlay < 1)
+                        overlay = 1;
+                    break;
+                case 5:
+                case 2:
+                    if (overlay < 2)
+                        overlay = 2;
+                    break;
+            }
+        }
+    }
+    let title = '';
+    switch (overlay) {
+        case 4:
+        case 1:
+            tray.setImage(path.join(__dirname, '../assets/icons/png/connected2.png'));
+            title = 'A client is connected';
+            break;
+        case 5:
+        case 2:
+            tray.setImage(path.join(__dirname, '../assets/icons/png/connectednonactive2.png'));
+            title = 'A client received data';
+            break;
+        default:
+            tray.setImage(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
+            title = 'Disconnected';
+            break;
+    }
+    tray.setTitle(title);
+    tray.setToolTip(title);
+
+    /*
+    let t = '';
+    let d = '';
+    let title = global.title;
+    if (!title || title.length === 0)
+        title = global.character;
+    if ((_settings && _settings.dev) || global.dev)
+        d = ' to Development';
+    switch (overlay) {
+        case 1:
+            tray.setImage(path.join(__dirname, '../assets/icons/png/connected2.png'));
+            if (title && title.length > 0)
+                t = `Connected${d} as ${title} - jiMUD`;
+            else
+                t = `Connected${d} - jiMUD`;
+            break;
+        case 2:
+            if (title && title.length > 0)
+                t = `Connected${d} as ${title} - jiMUD`;
+            else
+                t = `Connected${d} - jiMUD`;
+            tray.setImage(path.join(__dirname, '../assets/icons/png/connectednonactive2.png'));
+            break;
+        default:
+            if (title && title.length > 0)
+                t = `Disconnected${d} as ${title} - jiMUD`;
+            else
+                t = `Disconnected${d} - jiMUD`;
+            tray.setImage(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
+            break;
+    }
+
+    tray.setTitle(t);
+    tray.setToolTip(t);
+    */
+}
+//#endregion
+
+//#region Debug timers
 function StartDebugTimer() {
     timers.push(Date.now());
 }
@@ -4061,3 +4312,4 @@ ipcMain.on('StartDebugTimer', event => {
 ipcMain.on('EndDebugTimer', (event, label) => {
     EndDebugTimer(label);
 });
+//#endregion
