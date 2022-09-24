@@ -1713,7 +1713,6 @@ function createClient(options) {
         if (global.debug)
             openDevtools(view.webContents, { activate: false });
     }
-    //TODO change to index.html once basic window system is working
     view.webContents.loadFile(options.file);
     require("@electron/remote/main").enable(view.webContents);
     if (!options.id) {
@@ -4382,8 +4381,8 @@ function getTrayOverlayIcon(overlay) {
 //debounce the context updater to improve performance
 let _trayContextTimer;
 function updateTrayContext() {
-    if(_trayContextTimer) return;
-    _trayContextTimer = setTimeout(_updateTrayContext, 100);
+    if (_trayContextTimer) return;
+    _trayContextTimer = setTimeout(_updateTrayContext, 250);
 }
 
 async function _updateTrayContext() {
