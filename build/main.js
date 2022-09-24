@@ -1,7 +1,7 @@
 //spell-checker:words submenu, pasteandmatchstyle, statusvisible, taskbar, colorpicker, mailto, forecolor, tinymce, unmaximize
 //spell-checker:ignore prefs, partyhealth, combathealth, commandinput, limbsmenu, limbhealth, selectall, editoronly, limbarmor, maximizable, minimizable
 //spell-checker:ignore limbsarmor, lagmeter, buttonsvisible, connectbutton, charactersbutton, Editorbutton, zoomin, zoomout, unmaximize, resizable
-const { app, BrowserWindow, BrowserView, shell, screen, Tray, dialog, Menu, MenuItem, ipcMain, systemPreferences } = require('electron');
+const { app, BrowserWindow, BrowserView, shell, screen, Tray, dialog, Menu, MenuItem, ipcMain, systemPreferences, contentTracing } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const url = require('url');
@@ -1499,6 +1499,8 @@ ipcMain.on('update-title', (event, options) => {
             client.overlay = options.icon;
             updateIcon(client.parent);
         }
+        else if (tray) //something changed the title even if icon did not change update the menu to be safe
+            updateTrayContext();
     }
 });
 
@@ -1776,6 +1778,7 @@ function clientsChanged() {
             continue;
         clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, windows[getWindowId(clients[clientId].parent)].clients.length);
     }
+    updateTrayContext();    
 }
 
 async function canCloseClient(id, warn, all, allWindows) {
@@ -4054,7 +4057,7 @@ async function openDevtools(window, options) {
 }
 
 //#region Tray functions
-function createTray() {  
+function createTray() {
     //TODO fix tray click/double click events to support multi window system, maybe default to active window or all open windows, maybe add new options for all windows/active window
     if (!_settings.showTrayIcon)
         return;
@@ -4128,87 +4131,125 @@ function updateTrayContext() {
     //TODO redo tray context menu with a window list of all open windows
     //TODO call this when new windows/clients are created to update menu
     if (!tray) return;
-    const contextMenu = Menu.buildFromTemplate([
-        /*
-        {
-            label: '&Show window...', click: () => {
-                showSelectedWindow();
-            }
-        },
-        {
-            label: 'H&ide window...', click: () => {
-                if (_settings.hideOnMinimize)
-                    win.hide();
-                else
-                    win.minimize();
-            }
-        },
-        { type: 'separator' },
-        {
-            label: 'Ch&aracters...',
-            id: 'characters',
-            click: () => {
-                restoreWindowState(win, getWindowState('main') || getWindowState('main', win), true, true);
-                executeScript('showCharacters()', win, true);
-            }
-        },
-        {
-            label: '&Manage profiles...',
-            click: showProfiles,
-        },
-        {
-            label: '&Code editor...',
-            click: showCodeEditor,
-        },
-        { type: 'separator' },
-        {
-            label: '&Preferences...',
-            click: showPrefs
-        },
-        { type: 'separator' },
-        {
-            label: '&Who is on?...',
-            click: () => {
-                executeScript('showWho()', win, true);
-            }
-        },
-        { type: 'separator' },
-        {
-            label: '&Help',
-            role: 'help',
-            submenu: [
-                {
-                    label: '&ShadowMUD...',
-                    click: () => {
-                        executeScript('showSMHelp()', win, true);
-                    }
-                },
-                {
-                    label: '&jiMUD...',
-                    click: () => {
-                        executeScript('showHelp()', win, true);
-                    }
-                },
-                {
-                    label: '&jiMUD website...',
-                    click: () => {
-                        shell.openExternal('https://github.com/icewolfz/jiMUD/tree/master/docs', '_blank');
-                    }
-                },
-                { type: 'separator' },
-                {
-                    label: '&About...',
-                    click: () => {
-                        showAbout();
-                    }
+    let contextMenu = [];
+    //1 window so standard hide/show
+    if (Object.keys(windows).length === 1) {
+        contextMenu.push(...[
+            {
+                label: '&Show window...', click: () => {
+                    const window = getActiveWindow();
+                    if (!window) return;
+                    window.window.show();
                 }
-            ]
-        },
-        { type: 'separator' },
-        */
-        { label: 'E&xit', role: 'quit' }
-    ]);
-    tray.setContextMenu(contextMenu);
+            },
+            {
+                label: 'H&ide window...', click: () => {
+                    const window = getActiveWindow();
+                    if (!window) return;
+                    if (_settings.hideOnMinimize)
+                        window.window.hide();
+                    else
+                        window.window.minimize();
+                }
+            },
+            { type: 'separator' },
+            {
+                label: 'Ch&aracters...',
+                id: 'characters',
+                click: () => {
+                    const window = getActiveWindow();
+                    if (!window) return;
+                    window.window.show();
+                    executeScriptClient('openWindow("characters")', window.window, true);
+                }
+            },
+            {
+                label: '&Manage profiles...',
+                click: (item, mWindow) => {
+                    const window = getActiveWindow();
+                    if (!window) return;
+                    window.window.show();
+                    executeScriptClient('openWindow("profiles")', window.window, true);
+                }
+            },
+            {
+                label: '&Code editor...',
+                click: () => {
+                    const window = getActiveWindow();
+                    if (!window) return;
+                    window.window.show();
+                    executeScriptClient('openWindow("code.editor")', window.window, true);
+                },
+            },
+            { type: 'separator' },
+            {
+                label: '&Preferences...',
+                click: (item, mWindow) => {
+                    const window = getActiveWindow();
+                    if (!window) return;
+                    window.window.show();
+                    executeScriptClient('openWindow("prefs");', window.window, true);
+                }
+            },
+            { type: 'separator' },
+            {
+                label: '&Who is on?...',
+                click: () => {
+                    const window = getActiveWindow();
+                    if (!window) return;
+                    window.window.show();
+                    executeScriptClient('openWindow("who")', window.window, true);
+                }
+            },
+            { type: 'separator' },
+            {
+                label: '&Help',
+                role: 'help',
+                submenu: [
+                    {
+                        label: '&ShadowMUD...',
+                        click: () => {
+                            const window = getActiveWindow();
+                            if (!window) return;
+                            window.window.show();
+                            executeScriptClient('openWindow("smhelp")', window.window, true);
+                        }
+                    },
+                    {
+                        label: '&jiMUD...',
+                        click: () => {
+                            const window = getActiveWindow();
+                            if (!window) return;
+                            window.window.show();
+                            executeScriptClient('openWindow("help")', window.window, true);
+                        }
+                    },
+                    {
+                        label: '&jiMUD website...',
+                        click: () => {
+                            shell.openExternal('https://github.com/icewolfz/jiMUD/tree/master/docs', '_blank');
+                        }
+                    },
+                    { type: 'separator' },
+                    {
+                        label: '&About...',
+                        click: () => {
+                            const window = getActiveWindow();
+                            if (!window) return;
+                            window.window.show();
+                            openAbout(window.window)
+                        }
+                    }
+                ]
+            },
+        ]);
+    }
+    //TODO add multi window support and maybe something with multi client per window
+    //clients[windows[windowId].clients[idx]].view.webContents.getTitle();
+    if (contextMenu.lenth > 1)
+        contextMenu.push({ type: 'separator' });
+    contextMenu.push({ label: 'E&xit', role: 'quit' });
+    tray.setContextMenu(Menu.buildFromTemplate(contextMenu));
 }
 
 function updateTray() {

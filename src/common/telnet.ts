@@ -1769,9 +1769,10 @@ export class Telnet extends EventEmitter {
                     this.close();
             });
             _socket.on('connect', () => {
+                //set first ot ensure event has correct value
+                this._connected = true;
                 _socket.setKeepAlive(this._keepAlive, this._keepAliveDelay * 1000);
                 this.emit('connect');
-                this._connected = true;
             });
             _socket.on('data', data => {
                 if (this.enableDebug) this.emit('debug', 'Data received: ' + data, 1);
