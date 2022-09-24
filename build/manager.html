@@ -213,7 +213,7 @@
         function switchToClient(id) {
             const tabs = tabstrip.tabs;
             for (var t = 0, tl = tabs.length; t < tl; t++) {
-                if (tabs.client === id) {
+                if (tabs[t].client === id) {
                     tabstrip.switchToTabByIndex(t);
                     break;
                 }

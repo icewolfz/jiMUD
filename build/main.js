@@ -1,7 +1,7 @@
 //spell-checker:words submenu, pasteandmatchstyle, statusvisible, taskbar, colorpicker, mailto, forecolor, tinymce, unmaximize
 //spell-checker:ignore prefs, partyhealth, combathealth, commandinput, limbsmenu, limbhealth, selectall, editoronly, limbarmor, maximizable, minimizable
 //spell-checker:ignore limbsarmor, lagmeter, buttonsvisible, connectbutton, charactersbutton, Editorbutton, zoomin, zoomout, unmaximize, resizable
-const { app, BrowserWindow, BrowserView, shell, screen, Tray, dialog, Menu, MenuItem, ipcMain, systemPreferences, contentTracing } = require('electron');
+const { app, BrowserWindow, BrowserView, shell, screen, Tray, dialog, Menu, MenuItem, ipcMain, systemPreferences, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const url = require('url');
@@ -390,6 +390,12 @@ function createWindow(options) {
         }
         windows[windowId].window = null;
         delete windows[windowId];
+        if (windowId === focusedWindow) {
+            if (global.editorOnly) //editor only just to be safe
+                focusedWindow = parseInt(Object.keys(windows)[0], 10);
+            else
+                focusedWindow = parseInt(Object.keys(windows).filter(key => windows[key].clients.length)[0], 10);
+        }
         clientsChanged();
     });
 
@@ -1778,7 +1784,7 @@ function clientsChanged() {
             continue;
         clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, windows[getWindowId(clients[clientId].parent)].clients.length);
     }
-    updateTrayContext();    
+    updateTrayContext();
 }
 
 async function canCloseClient(id, warn, all, allWindows) {
@@ -1982,28 +1988,43 @@ function updateOverlay() {
     if (window) {
         windowId = getWindowId(window);
         overlay = clients[windows[windowId].current].overlay;
+        if (overlay === 5)
+            windows[windowId].overlay = 2;
+        else if (overlay === 4)
+            windows[windowId].overlay = 1;
+        else if (overlay === 3)
+            windows[windowId].overlay = 0;
+        else
+            windows[windowId].overlay = overlay;
     }
     else {
         //use the last active window as the target to update info
-        window = getActiveWindow().window
+        window = getActiveWindow().window;
         for (windowId in windows) {
             if (!Object.prototype.hasOwnProperty.call(windows, windowId))
                 continue;
             const cl = windows[windowId].clients.length;
+            windows[windowId].overlay = 0;
             for (let idx = 0; idx < cl; idx++) {
                 switch (clients[windows[windowId].clients[idx]].overlay) {
                     case 4:
                     case 1:
-                        if (overlay < 1)
+                        if (overlay < 1) {
                             overlay = 1;
+                            windows[windowId].overlay = 1;
+                        }
                         break;
                     case 5:
                     case 2:
-                        if (overlay < 2)
+                        if (overlay < 2) {
                             overlay = 2;
+                            windows[windowId].overlay = 2;
+                        }
                         break;
                 }
             }
+            if (windows[windowId].overlay === 3)
+                windows[windowId].overlay = 0;
         }
     }
     switch (overlay) {
@@ -2495,6 +2516,7 @@ function getActiveClient(window) {
 }
 
 function getActiveWindow() {
+    //if not found default to the first window with clients
     return windows[focusedWindow];
 }
 
@@ -4063,7 +4085,6 @@ function createTray() {
         return;
     tray = new Tray(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
     updateTray();
-    updateTrayContext();
     tray.on('click', () => {
         switch (_settings.trayClick) {
             case TrayClick.show:
@@ -4127,128 +4148,325 @@ function createTray() {
     });
 }
 
+function getClientConnectionState(clientId) {
+    //STATE as NAME from/on DEV
+    let title = clients[clientId].view.webContents.getTitle();
+    //find if on dev
+    let dev = title.split(/ on| from/);
+    //if length 2 means on dev
+    if (dev.length === 2) {
+        title = dev[0].trim();
+        dev = true;
+    }
+    else
+        dev = false;
+    let name = title.split(' as ');
+    if (name.length === 2) {
+        tile = name[0];
+        name = name[1];
+    }
+    else
+        name = '';
+    return { state: title, dev: dev, name: name };
+}
+
+function getTrayClientContext(window) {
+    return [{
+        label: 'Ch&aracters...',
+        id: 'characters',
+        click: () => {
+            if (!window) return;
+            window.show();
+            executeScriptClient('openWindow("characters")', window, true);
+        }
+    },
+    {
+        label: '&Manage profiles...',
+        click: (item, mWindow) => {
+            if (!window) return;
+            window.show();
+            executeScriptClient('openWindow("profiles")', window, true);
+        }
+    },
+    {
+        label: '&Code editor...',
+        click: () => {
+            if (!window) return;
+            window.show();
+            executeScriptClient('openWindow("code.editor")', window, true);
+        },
+    },
+    { type: 'separator' },
+    {
+        label: '&Preferences...',
+        click: (item, mWindow) => {
+            if (!window) return;
+            window.show();
+            executeScriptClient('openWindow("prefs");', window, true);
+        }
+    },
+    { type: 'separator' },
+    {
+        label: '&Who is on?...',
+        click: () => {
+            if (!window) return;
+            window.show();
+            executeScriptClient('openWindow("who")', window, true);
+        }
+    },
+    { type: 'separator' },
+    {
+        label: '&Help',
+        role: 'help',
+        submenu: [
+            {
+                label: '&ShadowMUD...',
+                click: () => {
+                    if (!window) return;
+                    window.show();
+                    executeScriptClient('openWindow("smhelp")', window, true);
+                }
+            },
+            {
+                label: '&jiMUD...',
+                click: () => {
+                    if (!window) return;
+                    window.show();
+                    executeScriptClient('openWindow("help")', window, true);
+                }
+            },
+            {
+                label: '&jiMUD website...',
+                click: () => {
+                    shell.openExternal('https://github.com/icewolfz/jiMUD/tree/master/docs', '_blank');
+                }
+            },
+            { type: 'separator' },
+            {
+                label: '&About...',
+                click: () => {
+                    if (!window) return;
+                    window.show();
+                    openAbout(window)
+                }
+            }
+        ]
+    }];
+}
+
+function getTrayWindowContext(window, windowId, noNew) {
+    const contextMenu = [];
+    if (!noNew)
+        contextMenu.push(...[
+            {
+                label: 'New &Connection',
+                id: 'newConnect',
+                click: (item, mWindow, keyboard) => {
+                    if (!window) return;
+                    //allow for some hidden ways to force open main/dev if needed with out the complex menus
+                    if (!keyboard.triggeredByAccelerator) {
+                        if (keyboard.ctrlKey)
+                            newConnection(window, { dev: true });
+                        else if (keyboard.shiftKey)
+                            newConnection(window, { dev: false });
+                        else
+                            newConnection(window);
+                    }
+                    else
+                        newConnection(window);
+                }
+            }, { type: 'separator' }]);
+    contextMenu.push(...[
+        {
+            label: '&Show window...', click: () => {
+                if (!window) return;
+                window.show();
+            }
+        },
+        {
+            label: 'H&ide window...', click: () => {
+                if (!window) return;
+                if (_settings.hideOnMinimize)
+                    window.hide();
+                else
+                    window.minimize();
+            }
+        },
+        { type: 'separator' }
+    ]);
+    const cl = windows[windowId].clients.length;
+    if (cl === 1) {
+        contextMenu.push(...getTrayClientContext(windows[windowId].window));
+    }
+    else {
+        contextMenu.push({
+            label: 'Clients',
+            submenu: []
+        });
+        const clientMenu = contextMenu[contextMenu.length - 1];
+        for (let c = 0; c < cl; c++) {
+            const clientId = windows[windowId].clients[c];
+            const state = getClientConnectionState(clientId);
+            const item = {
+                label: state.name || state.state,
+                id: clientId,
+                icon: nativeImage.createFromPath(getTrayOverlayIcon(clients[windows[windowId].clients[c]].overlay)).resize({ height: 16, quality: 'good' }),
+                click: (item) => {
+                    if (!window) return;
+                    window.show();
+                    window.webContents.send('switch-client', parseInt(item.id, 10));
+                }
+            };
+            clientMenu.submenu.push(item);
+        }
+    }
+    return contextMenu;
+}
+
+function getTrayOverlayIcon(overlay) {
+    switch (overlay) {
+        case 1:
+            return path.join(__dirname, '../assets/icons/png/connected.png');
+        case 2:
+            return path.join(__dirname, '../assets/icons/png/connectednonactive.png');
+        case 3:
+            return path.join(__dirname, '../assets/icons/png/code.disconnected.png');
+        case 4:
+            return path.join(__dirname, '../assets/icons/png/code.connected.png');
+        case 5:
+            return path.join(__dirname, '../assets/icons/png/code.connectednonactive.png');
+        case 6:
+            return path.join(__dirname, '../assets/icons/png/disconnected2.png');
+        case 7:
+            return path.join(__dirname, '../assets/icons/png/connected2.png');
+        case 8:
+            return path.join(__dirname, '../assets/icons/png/connectednonactive2.png');
+    }
+    return path.join(__dirname, '../assets/icons/png/disconnected.png');
+}
+
 function updateTrayContext() {
     //TODO redo tray context menu with a window list of all open windows
     //TODO call this when new windows/clients are created to update menu
     if (!tray) return;
+    const active = getActiveWindow();
+    const activeID = active ? getWindowId(active.window) : 0;
     let contextMenu = [];
+
     //1 window so standard hide/show
-    if (Object.keys(windows).length === 1) {
+    if (activeID && Object.keys(windows).length === 1) {
         contextMenu.push(...[
             {
-                label: '&Show window...', click: () => {
-                    const window = getActiveWindow();
-                    if (!window) return;
-                    window.window.show();
-                }
-            },
-            {
-                label: 'H&ide window...', click: () => {
-                    const window = getActiveWindow();
-                    if (!window) return;
-                    if (_settings.hideOnMinimize)
-                        window.window.hide();
-                    else
-                        window.window.minimize();
-                }
-            },
-            { type: 'separator' },
-            {
-                label: 'Ch&aracters...',
-                id: 'characters',
-                click: () => {
-                    const window = getActiveWindow();
-                    if (!window) return;
-                    window.window.show();
-                    executeScriptClient('openWindow("characters")', window.window, true);
-                }
-            },
-            {
-                label: '&Manage profiles...',
-                click: (item, mWindow) => {
-                    const window = getActiveWindow();
-                    if (!window) return;
-                    window.window.show();
-                    executeScriptClient('openWindow("profiles")', window.window, true);
-                }
-            },
-            {
-                label: '&Code editor...',
-                click: () => {
-                    const window = getActiveWindow();
-                    if (!window) return;
-                    window.window.show();
-                    executeScriptClient('openWindow("code.editor")', window.window, true);
-                },
-            },
-            { type: 'separator' },
-            {
-                label: '&Preferences...',
-                click: (item, mWindow) => {
-                    const window = getActiveWindow();
-                    if (!window) return;
-                    window.window.show();
-                    executeScriptClient('openWindow("prefs");', window.window, true);
-                }
-            },
-            { type: 'separator' },
-            {
-                label: '&Who is on?...',
-                click: () => {
-                    const window = getActiveWindow();
-                    if (!window) return;
-                    window.window.show();
-                    executeScriptClient('openWindow("who")', window.window, true);
-                }
-            },
-            { type: 'separator' },
-            {
-                label: '&Help',
-                role: 'help',
-                submenu: [
-                    {
-                        label: '&ShadowMUD...',
-                        click: () => {
-                            const window = getActiveWindow();
-                            if (!window) return;
-                            window.window.show();
-                            executeScriptClient('openWindow("smhelp")', window.window, true);
-                        }
-                    },
-                    {
-                        label: '&jiMUD...',
-                        click: () => {
-                            const window = getActiveWindow();
-                            if (!window) return;
-                            window.window.show();
-                            executeScriptClient('openWindow("help")', window.window, true);
-                        }
-                    },
-                    {
-                        label: '&jiMUD website...',
-                        click: () => {
-                            shell.openExternal('https://github.com/icewolfz/jiMUD/tree/master/docs', '_blank');
-                        }
-                    },
-                    { type: 'separator' },
-                    {
-                        label: '&About...',
-                        click: () => {
-                            const window = getActiveWindow();
-                            if (!window) return;
-                            window.window.show();
-                            openAbout(window.window)
-                        }
+                label: 'New &Connection',
+                id: 'newConnect',
+                click: (item, mWindow, keyboard) => {
+                    if (!active) return;
+                    //allow for some hidden ways to force open main/dev if needed with out the complex menus
+                    if (!keyboard.triggeredByAccelerator) {
+                        if (keyboard.ctrlKey)
+                            newConnection(active.window, { dev: true });
+                        else if (keyboard.shiftKey)
+                            newConnection(active.window, { dev: false });
+                        else
+                            newConnection(active.window);
                     }
-                ]
+                    else
+                        newConnection(active.window);
+                }
             },
+            {
+                label: 'New &Window',
+                id: '',
+                click: (item, mWindow, keyboard) => {
+                    //allow for some hidden ways to force open main/dev if needed with out the complex menus
+                    if (!active) return;
+                    if (!keyboard.triggeredByAccelerator) {
+                        if (keyboard.ctrlKey)
+                            newClientWindow(active.window, { dev: true });
+                        else if (keyboard.shiftKey)
+                            newClientWindow(active.window, { dev: false });
+                        else
+                            newClientWindow(active.window);
+                    }
+                    else
+                        newClientWindow(active.window);
+                }
+            },
+            {
+                type: 'separator'
+            }
         ]);
+        if (windows[activeID].clients.length === 1) {
+            contextMenu.push(...[
+                {
+                    label: '&Show window...', click: () => {
+                        if (!active) return;
+                        active.window.show();
+                    }
+                },
+                {
+                    label: 'H&ide window...', click: () => {
+                        if (!active) return;
+                        if (_settings.hideOnMinimize)
+                            active.window.hide();
+                        else
+                            active.window.minimize();
+                    }
+                },
+                { type: 'separator' },
+            ]);
+            contextMenu.push(...getTrayClientContext(active.window));
+        }
+        else {
+            contextMenu.push(...getTrayWindowContext(active.window, activeID, true));
+            contextMenu.push({ type: 'separator' });
+        }
     }
-    //TODO add multi window support and maybe something with multi client per window
-    //clients[windows[windowId].clients[idx]].view.webContents.getTitle();
-    if (contextMenu.lenth > 1)
+    else {
+        contextMenu.push(...[
+            {
+                label: 'New &Window',
+                id: '',
+                click: (item, mWindow, keyboard) => {
+                    //allow for some hidden ways to force open main/dev if needed with out the complex menus
+                    if (!active) return;
+                    if (!keyboard.triggeredByAccelerator) {
+                        if (keyboard.ctrlKey)
+                            newClientWindow(active.window, { dev: true });
+                        else if (keyboard.shiftKey)
+                            newClientWindow(active.window, { dev: false });
+                        else
+                            newClientWindow(active.window);
+                    }
+                    else
+                        newClientWindow(active.window);
+                }
+            },
+            {
+                type: 'separator'
+            }
+        ]);
+        const item = {
+            label: 'Windows',
+            submenu: []
+        };
+        for (window in windows) {
+            if (!Object.prototype.hasOwnProperty.call(windows, window))
+                continue;
+            item.submenu.push({
+                label: windows[window].window.getTitle(),
+                icon: nativeImage.createFromPath(getTrayOverlayIcon(windows[window].clients.length > 1 ? (windows[window].overlay + 6) : clients[windows[window].clients[0]].overlay)).resize({ height: 16, quality: 'good' }),
+                submenu: getTrayWindowContext(windows[window].window, getWindowId(windows[window].window))
+            });
+        }
+        contextMenu.push(item);
         contextMenu.push({ type: 'separator' });
-    contextMenu.push({ label: 'E&xit', role: 'quit' });
+    }
+    contextMenu.push({
+        label: 'E&xit',
+        //role: 'quit'
+        click: quitApp
+    });
     tray.setContextMenu(Menu.buildFromTemplate(contextMenu));
 }
 
@@ -4296,6 +4514,7 @@ function updateTray() {
     }
     tray.setTitle(title);
     tray.setToolTip(title);
+    updateTrayContext();
 
     /*
     let t = '';
