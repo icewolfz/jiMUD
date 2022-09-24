@@ -96,7 +96,7 @@
     <script type="text/javascript">
         //spell-checker:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
         const { parseTemplate, templatePath, existsSync, getColors, isFileSync, isDirSync, walkSync } = require('./js/library');
-        const { TrayClick } = require('./js/types');
+        const { TrayClick, TrayMenu } = require('./js/types');
         const Settings = require('./js/settings').Settings;
         const { ipcRenderer } = require('electron');
         const RGBColor = require('rgbcolor');
@@ -544,6 +544,18 @@
                         if (this.checked)
                             _settings.onProfileDeleted = 4;
                         break;
+                    case 'trayMenu-simple':
+                        if (this.checked)
+                            _settings.trayMenu = TrayMenu.simple;
+                        break;
+                    case 'trayMenu-full':
+                        if (this.checked)
+                            _settings.trayMenu = TrayMenu.full;
+                        break;
+                    case 'trayMenu-compact':
+                        if (this.checked)
+                            _settings.trayMenu = TrayMenu.compact;
+                        break;
                     case 'trayClick-none':
                         if (this.checked)
                             _settings.trayClick = TrayClick.none;
@@ -815,6 +827,10 @@
             $('#onProfileDeleted-1').prop('checked', _settings.onProfileDeleted === 1);
             $('#onProfileDeleted-2').prop('checked', _settings.onProfileDeleted === 2);
             $('#onProfileDeleted-4').prop('checked', _settings.onProfileDeleted === 4);
+
+            $('#trayMenu-simple').prop('checked', _settings.trayMenu === TrayMenu.simple);
+            $('#trayMenu-full').prop('checked', _settings.trayMenu === TrayMenu.full);
+            $('#trayMenu-compact').prop('checked', _settings.trayMenu === TrayMenu.compact);
 
             $('#trayClick-none').prop('checked', _settings.trayClick === TrayClick.none);
             $('#trayClick-show').prop('checked', _settings.trayClick === TrayClick.show);
@@ -2539,6 +2555,21 @@
                         <label class="control-label">
                             <input type="checkbox" id="showTrayIcon" /> Show tray icon
                         </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">Tray context menu style</label>
+                        <div class="btn-group" data-toggle="buttons">
+                            <label class="btn btn-default btn-xs">
+                                <input type="radio" name="trayMenu" id="trayMenu-simple"> Simple
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="radio" name="trayMenu" id="trayMenu-full"> Full
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="radio" name="trayMenu" id="trayMenu-compact"> Compact
+                            </label>
+                        </div>
+                        <span class="linux help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">When app indicator is used on Linux, the click event is ignored</span>
                     </div>
                     <div class="col-sm-12 form-group" style="margin:0;padding:0">
                         <div class="col-sm-6 form-group">

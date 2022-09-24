@@ -280,6 +280,10 @@ Controls what is captured into the chat window
 ## Advanced > Tray <span style="font-size: 0.5em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preferences*</span>
 
 - `Show tray icon` display an icon in the system tray/notification area
+- `Tray context menu style` determine how complex a menu to display
+  - `Simple` a simple menu that allows new connection/window, show/hide active window and quit
+  - `Full` a full menu with all window and client sub menus as needed, **note** this may cause a slow down as when enabled all incoming text from mud causes a menu rebuild to reflect current active state
+  - `Compact` similar to full but with out the client submenus, **note** see Full note
 - `Tray icon single click` set what happens when the tray icon is clicked  **note** see known issues with linux
   - `None` - do nothing when clicked
   - `Show` - show or focus on client window

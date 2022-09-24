@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const url = require('url');
 const settings = require('./js/settings');
-const { TrayClick } = require('./js/types');
+const { TrayClick, TrayMenu } = require('./js/types');
 const { Menubar } = require('./js/menubar');
 const { Characters } = require('./js/characters');
 
@@ -1550,6 +1550,8 @@ ipcMain.on('reload-options', (events, preferences, clientId) => {
             tray.destroy();
             tray = null;
         }
+        else if (tray)
+            _updateTrayContext();
     }
     for (id in clients) {
         if (!Object.prototype.hasOwnProperty.call(clients, id) || getClientId(clients[id].view) === clientId)
@@ -4103,6 +4105,8 @@ async function createTray() {
         return;
     tray = new Tray(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
     updateTray();
+    if (_settings.trayMenu === TrayMenu.simple)
+        _updateTrayContext();
     //TODO fix tray click/double click events to support multi window system, maybe add new options for all windows/active window
     tray.on('click', () => {
         const active = getActiveWindow();
@@ -4317,6 +4321,8 @@ function getTrayWindowContext(window, windowId, noNew) {
         },
         { type: 'separator' }
     ]);
+    if (_settings.trayMenu === TrayMenu.compact)
+        return contextMenu;
     const cl = windows[windowId].clients.length;
     if (cl === 1) {
         contextMenu.push(...getTrayClientContext(windows[windowId].window));
@@ -4371,7 +4377,7 @@ function getOverlayIcon(overlay) {
 //debounce the context updater to improve performance
 let _trayContextTimer;
 function updateTrayContext() {
-    if (_trayContextTimer) return;
+    if (_trayContextTimer || _settings.trayMenu === TrayMenu.simple) return;
     _trayContextTimer = setTimeout(_updateTrayContext, 250);
 }
 
@@ -4380,6 +4386,74 @@ async function _updateTrayContext() {
     const active = getActiveWindow();
     const activeID = active ? getWindowId(active.window) : 0;
     let contextMenu = [];
+
+    if (_settings.trayMenu === TrayMenu.simple) {
+        contextMenu.push(...[
+            {
+                label: 'New &Connection',
+                id: 'newConnect',
+                click: (item, mWindow, keyboard) => {
+                    if (!active) return;
+                    //allow for some hidden ways to force open main/dev if needed with out the complex menus
+                    if (!keyboard.triggeredByAccelerator) {
+                        if (keyboard.ctrlKey)
+                            newConnection(active.window, { dev: true });
+                        else if (keyboard.shiftKey)
+                            newConnection(active.window, { dev: false });
+                        else
+                            newConnection(active.window);
+                    }
+                    else
+                        newConnection(active.window);
+                }
+            },
+            {
+                label: 'New &Window',
+                id: '',
+                click: (item, mWindow, keyboard) => {
+                    //allow for some hidden ways to force open main/dev if needed with out the complex menus
+                    if (!active) return;
+                    if (!keyboard.triggeredByAccelerator) {
+                        if (keyboard.ctrlKey)
+                            newClientWindow(active.window, { dev: true });
+                        else if (keyboard.shiftKey)
+                            newClientWindow(active.window, { dev: false });
+                        else
+                            newClientWindow(active.window);
+                    }
+                    else
+                        newClientWindow(active.window);
+                }
+            },
+            {
+                type: 'separator'
+            },
+            {
+                label: '&Show window...', click: () => {
+                    if (!active) return;
+                    active.window.show();
+                }
+            },
+            {
+                label: 'H&ide window...', click: () => {
+                    if (!active) return;
+                    if (_settings.hideOnMinimize)
+                        active.window.hide();
+                    else
+                        active.window.minimize();
+                }
+            },
+            { type: 'separator' },
+            {
+                label: 'E&xit',
+                //role: 'quit'
+                click: quitApp
+            }
+        ]);
+        tray.setContextMenu(Menu.buildFromTemplate(contextMenu));
+        _trayContextTimer = 0;
+        return;
+    }
 
     //1 window so standard hide/show
     if (activeID && Object.keys(windows).length === 1) {

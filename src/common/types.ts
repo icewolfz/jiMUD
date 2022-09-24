@@ -253,6 +253,12 @@ export enum TrayClick {
   menu = 4
 }
 
+export enum TrayMenu {
+  simple = 0,
+  full = 1,
+  compact = 2
+}
+
 export enum MailStatus {
   SUCCESS = 0,
   ERROR = 1,

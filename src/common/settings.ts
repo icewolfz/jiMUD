@@ -1,6 +1,6 @@
 //spell-checker:words vscroll, hscroll, askoncancel, askonclose,commandon, cmdfont
 //spell-checker:ignore emoteto, emotetos askonchildren YYYYMMDD Hmmss
-import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect, ProfileSortOrder, OnProfileChange, OnProfileDeleted } from './types';
+import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect, ProfileSortOrder, OnProfileChange, OnProfileDeleted, TrayMenu } from './types';
 const path = require('path');
 const fs = require('fs');
 
@@ -571,6 +571,7 @@ export class Settings {
 
     public trayClick: TrayClick = TrayClick.show;
     public trayDblClick: TrayClick = TrayClick.none;
+    public trayMenu: TrayMenu = TrayMenu.simple;
 
     public pasteSpecialPrefix: string = '';
     public pasteSpecialPostfix: string = '';
