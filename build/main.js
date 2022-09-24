@@ -116,7 +116,7 @@ let _windowID = 0;
 const idMap = new Map();
 let _saved = false;
 let _loaded = false;
-const _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
+let _characters;
 let tray = null;
 
 if (!argv.nci && isFileSync(path.join(app.getPath('userData'), 'characters.json'))) {
@@ -124,6 +124,7 @@ if (!argv.nci && isFileSync(path.join(app.getPath('userData'), 'characters.json'
     try {
         //data try and convert and then import any found data
         if (oldCharacters && oldCharacters.length > 0) {
+            _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
             oldCharacters = JSON.parse(oldCharacters);
             for (title in oldCharacters.characters) {
                 if (!Object.prototype.hasOwnProperty.call(oldCharacters.characters, title))
@@ -1034,15 +1035,21 @@ ipcMain.on('reload-profile', (event, profile) => {
 });
 
 ipcMain.on('get-characters', (event, options) => {
+    if (!_characters)
+        _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
     event.returnValue = _characters.getCharacters(options);
 });
 
 ipcMain.on('get-character', (event, id, property) => {
+    if (!_characters)
+        _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
     let character = _characters.getCharacter(id);
     event.returnValue = character ? (property ? character[property] : character) : null;
 });
 
-ipcMain.on('updatef-character', (event, character, id) => {
+ipcMain.on('update-character', (event, character, id) => {
+    if (!_characters)
+        _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
     _characters.updateCharacter(character);
     for (clientId in clients) {
         if (!Object.prototype.hasOwnProperty.call(clients, clientId) || clientId === id)
@@ -1052,6 +1059,8 @@ ipcMain.on('updatef-character', (event, character, id) => {
 });
 
 ipcMain.on('add-character', (event, character) => {
+    if (!_characters)
+        _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
     event.returnValue = _characters.addCharacter(character);
     for (clientId in clients) {
         if (!Object.prototype.hasOwnProperty.call(clients, clientId))
@@ -1061,10 +1070,14 @@ ipcMain.on('add-character', (event, character) => {
 });
 
 ipcMain.on('get-character-next-id', (event) => {
+    if (!_characters)
+        _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
     event.returnValue = _characters.getNextId();
 });
 
 ipcMain.on('remove-character', (event, id) => {
+    if (!_characters)
+        _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
     _characters.removeCharacter(id);
 });
 
@@ -1989,7 +2002,7 @@ function updateOverlay() {
     let overlay = 0;
     let window = BrowserWindow.getFocusedWindow();
     let windowId;
-    if(global.editorOnly)
+    if (global.editorOnly)
         overlay = 'code';
     else if (window) {
         windowId = getWindowId(window);
