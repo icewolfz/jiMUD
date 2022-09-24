@@ -4379,7 +4379,14 @@ function getTrayOverlayIcon(overlay) {
     return path.join(__dirname, '../assets/icons/png/disconnected.png');
 }
 
-async function updateTrayContext() {
+//debounce the context updater to improve performance
+let _trayContextTimer;
+function updateTrayContext() {
+    if(_trayContextTimer) return;
+    _trayContextTimer = setTimeout(_updateTrayContext, 100);
+}
+
+async function _updateTrayContext() {
     if (!tray) return;
     const active = getActiveWindow();
     const activeID = active ? getWindowId(active.window) : 0;
@@ -4500,6 +4507,7 @@ async function updateTrayContext() {
         click: quitApp
     });
     tray.setContextMenu(Menu.buildFromTemplate(contextMenu));
+    _trayContextTimer = 0;
 }
 
 async function updateTray() {
