@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.19.0-alpha
+## 1.0.0-alpha
 
 - **New:**
   - New Multiple Document Interface:
