@@ -752,16 +752,6 @@ app.on('before-quit', async (e) => {
         e.preventDefault();
         return;
     }
-    /*
-    if (winProfiles) {
-        e.preventDefault();
-        dialog.showMessageBox(winProfiles, {
-            type: 'warning',
-            title: 'Close profile manager',
-            message: 'You must close the profile manager before you can exit.'
-        });
-    }
-    */
     //wait until save is done before continue just to be safe
     //only saved if not already been saved somewhere else and was loaded with no errors
     if (_loaded && !_saved) {
@@ -1981,17 +1971,17 @@ function updateIcon(window) {
     switch (clients[windows[windowId].current].overlay) {
         case 4:
         case 1:
-            window.setIcon(path.join(__dirname, '../assets/icons/png/connected2.png'));
+            window.setIcon(getOverlayIcon(7));
             break;
         case 5:
         case 2:
-            window.setIcon(path.join(__dirname, '../assets/icons/png/connectednonactive2.png'));
+            window.setIcon(getOverlayIcon(8));
             break;
         case 'code':
             window.setIcon(path.join(__dirname, '../assets/icons/png/code.png'));
             break;
         default:
-            window.setIcon(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
+            window.setIcon(getOverlayIcon(6));
             break;
     }
     updateOverlay();
@@ -2049,12 +2039,12 @@ function updateOverlay() {
         case 4:
         case 1:
             if (process.platform !== 'linux')
-                window.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connected.png'), 'Connected');
+                window.setOverlayIcon(getOverlayIcon(1), 'Connected');
             break;
         case 5:
         case 2:
             if (process.platform !== 'linux')
-                window.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connectednonactive.png'), 'Received data');
+                window.setOverlayIcon(getOverlayIcon(21), 'Received data');
             break;
         case 'code':
             if (process.platform !== 'linux')
@@ -2062,7 +2052,7 @@ function updateOverlay() {
             break;
         default:
             if (process.platform !== 'linux')
-                window.setOverlayIcon(path.join(__dirname, '../assets/icons/png/disconnected.png'), 'Disconnected');
+                window.setOverlayIcon(getOverlayIcon(0), 'Disconnected');
             break;
     }
     updateTray();
@@ -4343,7 +4333,7 @@ function getTrayWindowContext(window, windowId, noNew) {
             const item = {
                 label: state.name || state.state,
                 id: clientId,
-                icon: nativeImage.createFromPath(getTrayOverlayIcon(clients[windows[windowId].clients[c]].overlay)).resize({ height: 16, quality: 'good' }),
+                icon: nativeImage.createFromPath(getOverlayIcon(clients[windows[windowId].clients[c]].overlay)).resize({ height: 16, quality: 'good' }),
                 click: (item) => {
                     if (!window) return;
                     window.show();
@@ -4356,7 +4346,7 @@ function getTrayWindowContext(window, windowId, noNew) {
     return contextMenu;
 }
 
-function getTrayOverlayIcon(overlay) {
+function getOverlayIcon(overlay) {
     switch (overlay) {
         case 1:
             return path.join(__dirname, '../assets/icons/png/connected.png');
@@ -4493,7 +4483,7 @@ async function _updateTrayContext() {
                 continue;
             item.submenu.push({
                 label: windows[window].window.getTitle(),
-                icon: nativeImage.createFromPath(getTrayOverlayIcon(windows[window].clients.length > 1 ? (windows[window].overlay + 6) : clients[windows[window].clients[0]].overlay)).resize({ height: 16, quality: 'good' }),
+                icon: nativeImage.createFromPath(getOverlayIcon(windows[window].clients.length > 1 ? (windows[window].overlay + 6) : clients[windows[window].clients[0]].overlay)).resize({ height: 16, quality: 'good' }),
                 submenu: getTrayWindowContext(windows[window].window, getWindowId(windows[window].window))
             });
         }
@@ -4538,16 +4528,16 @@ async function updateTray() {
     switch (overlay) {
         case 4:
         case 1:
-            tray.setImage(path.join(__dirname, '../assets/icons/png/connected2.png'));
+            tray.setImage(getOverlayIcon(7));
             title = 'A client is connected';
             break;
         case 5:
         case 2:
-            tray.setImage(path.join(__dirname, '../assets/icons/png/connectednonactive2.png'));
+            tray.setImage(getOverlayIcon(8));
             title = 'A client received data';
             break;
         default:
-            tray.setImage(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
+            tray.setImage(getOverlayIcon(6));
             title = 'Disconnected';
             break;
     }
