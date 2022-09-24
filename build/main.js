@@ -313,7 +313,7 @@ function createWindow(options) {
     });
 
     window.on('minimize', () => {
-        if (_settings.hideOnMinimize)
+        if (_settings.hideOnMinimize && !global.editorOnly)
             window.hide();
     });
 
@@ -441,6 +441,10 @@ function createWindow(options) {
 
     window.on('move', () => {
         states[options.file] = saveWindowState(window);
+    });
+
+    window.on('show', () => {
+        updateOverlay();
     });
 
     window.on('restore', () => {
@@ -1985,7 +1989,9 @@ function updateOverlay() {
     let overlay = 0;
     let window = BrowserWindow.getFocusedWindow();
     let windowId;
-    if (window) {
+    if(global.editorOnly)
+        overlay = 'code';
+    else if (window) {
         windowId = getWindowId(window);
         overlay = clients[windows[windowId].current].overlay;
         if (overlay === 5)
@@ -2040,7 +2046,7 @@ function updateOverlay() {
             break;
         case 'code':
             if (process.platform !== 'linux')
-                window.setOverlayIcon(path.join(__dirname, '../assets/icons/png/codeol.png'), 'Received data');
+                window.setOverlayIcon(path.join(__dirname, '../assets/icons/png/codeol.png'), 'Code editor');
             break;
         default:
             if (process.platform !== 'linux')
@@ -2759,6 +2765,10 @@ function newEditorWindow(caller, files) {
         if (Array.isArray(files) || typeof files === 'string')
             window.webContents.send('open-editor', files);
         focusWindow(window, true);
+        if (process.platform === 'linux')
+            window.setIcon(path.join(__dirname, '../assets/icons/png/code.png'));
+        else
+            window.setOverlayIcon(path.join(__dirname, '../assets/icons/png/codeol.png'), 'Code editor');
     });
     return window;
 }
@@ -2950,10 +2960,17 @@ function loadWindowLayout(file) {
         const window = windows[data.windows[i].id];
         //no clients so move on probably different type of window
         if (window.clients.length === 0) {
-            if (data.focusedWindow === getWindowId(window))
-                window.window.webContents.once('ready-to-show', () => {
+
+            window.window.webContents.once('ready-to-show', () => {
+                if (data.focusedWindow === getWindowId(window))
                     focusWindow(window, true);
-                });
+                if (window.options.file === 'code.editor.html') {
+                    if (process.platform === 'linux')
+                        window.window.setIcon(path.join(__dirname, '../assets/icons/png/code.png'));
+                    else
+                        window.window.setOverlayIcon(path.join(__dirname, '../assets/icons/png/codeol.png'), 'Code editor');
+                }
+            });
             continue;
         }
         let current = data.windows[i].current;
@@ -4079,36 +4096,38 @@ async function openDevtools(window, options) {
 }
 
 //#region Tray functions
-function createTray() {
-    //TODO fix tray click/double click events to support multi window system, maybe default to active window or all open windows, maybe add new options for all windows/active window
+async function createTray() {
     if (!_settings.showTrayIcon)
         return;
     tray = new Tray(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
     updateTray();
+    //TODO fix tray click/double click events to support multi window system, maybe add new options for all windows/active window
     tray.on('click', () => {
+        const active = getActiveWindow();
         switch (_settings.trayClick) {
             case TrayClick.show:
-                //showSelectedWindow();
+                if (active)
+                    active.window.show();
                 break;
             case TrayClick.toggle:
-                /*
-                if (win.isVisible()) {
-                    if (_settings.hideOnMinimize)
-                        win.hide();
+                if (active) {
+                    if (active.window.isVisible()) {
+                        if (_settings.hideOnMinimize)
+                            active.window.hide();
+                        else
+                            active.window.minimize();
+                    }
                     else
-                        win.minimize();
+                        active.window.show();
                 }
-                else
-                    restoreWindowState(win, getWindowState('main') || getWindowState('main', win), true, true);
-                */
                 break;
             case TrayClick.hide:
-                /*
-                if (_settings.hideOnMinimize)
-                    win.hide();
-                else
-                    win.minimize();
-                */
+                if (active) {
+                    if (_settings.hideOnMinimize)
+                        active.window.hide();
+                    else
+                        active.window.minimize();
+                }
                 break;
             case TrayClick.menu:
                 tray.popUpContextMenu();
@@ -4117,29 +4136,31 @@ function createTray() {
     });
 
     tray.on('double-click', () => {
+        const active = getActiveWindow();
         switch (_settings.trayClick) {
             case TrayClick.show:
-                //showSelectedWindow();
+                if (active)
+                    active.window.show();
                 break;
             case TrayClick.toggle:
-                /*
-                if (win.isVisible()) {
-                    if (_settings.hideOnMinimize)
-                        win.hide();
+                if (active) {
+                    if (active.window.isVisible()) {
+                        if (_settings.hideOnMinimize)
+                            active.window.hide();
+                        else
+                            active.window.minimize();
+                    }
                     else
-                        win.minimize();
+                        active.window.show();
                 }
-                else
-                    restoreWindowState(win, getWindowState('main') || getWindowState('main', win), true, true);
-                */
                 break;
             case TrayClick.hide:
-                /*
-                if (_settings.hideOnMinimize)
-                    win.hide();
-                else
-                    win.minimize();
-                */
+                if (active) {
+                    if (_settings.hideOnMinimize)
+                        active.window.hide();
+                    else
+                        active.window.minimize();
+                }
                 break;
             case TrayClick.menu:
                 tray.popUpContextMenu();
@@ -4345,9 +4366,7 @@ function getTrayOverlayIcon(overlay) {
     return path.join(__dirname, '../assets/icons/png/disconnected.png');
 }
 
-function updateTrayContext() {
-    //TODO redo tray context menu with a window list of all open windows
-    //TODO call this when new windows/clients are created to update menu
+async function updateTrayContext() {
     if (!tray) return;
     const active = getActiveWindow();
     const activeID = active ? getWindowId(active.window) : 0;
@@ -4451,7 +4470,7 @@ function updateTrayContext() {
             submenu: []
         };
         for (window in windows) {
-            if (!Object.prototype.hasOwnProperty.call(windows, window))
+            if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window] || windows[window].window.isDestroyed() || windows[window].clients.length === 0)
                 continue;
             item.submenu.push({
                 label: windows[window].window.getTitle(),
@@ -4470,7 +4489,7 @@ function updateTrayContext() {
     tray.setContextMenu(Menu.buildFromTemplate(contextMenu));
 }
 
-function updateTray() {
+async function updateTray() {
     //TODO figure out better tool tip/title
     if (!tray) return;
     let overlay = 0;
