@@ -4016,12 +4016,12 @@ function openAbout(parent) {
     }
 }
 
-function openProgress(parent, title) {
+function openProgress(parent, title, modal) {
     let window = progressMap.get(parent);
     if (window && !window.isDestroyed())
         window.focus();
     else {
-        window = createDialog({ show: true, parent: parent, url: path.join(__dirname, 'progress.html'), title: title, bounds: { width: 200, height: 70 }, backgroundColor: '#fff', icon: path.join(__dirname, '../../assets/icons/png/progress.png') });
+        window = createDialog({ modal: modal, show: true, parent: parent, url: path.join(__dirname, 'progress.html'), title: title, bounds: { width: 200, height: 70 }, backgroundColor: '#fff', icon: path.join(__dirname, '../../assets/icons/png/progress.png') });
         window.on('closed', () => progressMap.delete(parent));
         window.webContents.send(title);
         progressMap.set(parent, window);

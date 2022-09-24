@@ -4543,7 +4543,7 @@
 
     ipcRenderer.on('progress', (event, ...args) => {
         if (args[0] === 'canceled' || args[0] === 'closed') {
-            delete _windows['progress.html']
+            delete _windows['progress.html'];
             if (manager.active && manager.active.editor && manager.active.editor.cancel)
                 manager.active.editor.cancel();
         }
@@ -9252,7 +9252,7 @@
                 else if (type === 'format')
                     logOutput(manager.active.editor.filename + ': Formatting started');
                 else if (type === 'designer')
-                    ipcRenderer.send('show-window', 'progress', 'Generating area...');
+                    openWindow('progress', { title: 'Generating area...' });
             });
             p.editor.on('progress-canceled', (type) => {
                 if (type === 'designer') {
@@ -9418,7 +9418,7 @@
             case 'progress':
                 //fake a window for easy close detection
                 _windows['progress.html'] = { document: { title: 'progress', focus: function () { ipcRender.send('progess', 'focus'); } } };
-                ipcRenderer.send('show-window', 'progress', data ? data.title || '' : '');
+                ipcRenderer.send('show-window', 'progress', data ? data.title || '' : '', true);
                 break;
             case 'editor':
                 if (data && data.details)

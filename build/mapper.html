@@ -776,7 +776,7 @@
 
         function initProgressDialog(data) {
             if (!_progress.dialog) {
-                ipcRenderer.send('show-window', 'progress', data.title);
+                ipcRenderer.send('show-window', 'progress', data.title, true);
                 _progress.dialog = data || true;
             }
             else if (data)
