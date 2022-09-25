@@ -616,6 +616,7 @@ if (argv['disable-gpu'])
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
     let window;
+    let charID;
     if (!existsSync(path.join(app.getPath('userData'), 'characters')))
         fs.mkdirSync(path.join(app.getPath('userData'), 'characters'));
 
@@ -670,13 +671,35 @@ app.on('ready', () => {
     let _ignore = false;
     //attempt to load layout, 
     if (isFileSync(_layout)) {
-        if (!argv.il)
-            _loaded = loadWindowLayout(_layout);
+        if (!argv.il) {
+            if (!global.editorOnly && argv.c) {
+                if (Array.isArray(argv.c))
+                    charID = argv.c.map(c => {
+                        char = getCharacterFromId(c);
+                        return {
+                            characterId: char.ID,
+                            settings: parseTemplate(char.Preferences),
+                            map: parseTemplate(char.Map),
+                            dev: char.Port === 1035
+                        }
+                    });
+                else {
+                    getCharacterFromId(argv.c);
+                    charID = [{
+                        characterId: charID.ID,
+                        settings: parseTemplate(charID.Preferences),
+                        map: parseTemplate(charID.Map),
+                        dev: charID.Port === 1035
+                    }];
+                }
+                _loaded = loadWindowLayout(_layout, charID);
+            }
+            else
+                _loaded = loadWindowLayout(_layout);
+        }
     }
     else if (!argv.il)
         _ignore = true;
-
-    //TODO make --character work
 
     //if it fails load default window
     if (!_loaded) {
@@ -684,6 +707,28 @@ app.on('ready', () => {
         _loaded = _ignore;
         if (global.editorOnly)
             newEditorWindow(null, argv.eo);
+        else if (argv.c) {
+            if (Array.isArray(argv.c))
+                charID = argv.c.map(c => {
+                    char = getCharacterFromId(c);
+                    return {
+                        characterId: char.ID,
+                        settings: parseTemplate(char.Preferences),
+                        map: parseTemplate(char.Map),
+                        dev: char.Port === 1035
+                    }
+                });
+            else {
+                getCharacterFromId(argv.c);
+                charID = [{
+                    characterId: charID.ID,
+                    settings: parseTemplate(charID.Preferences),
+                    map: parseTemplate(charID.Map),
+                    dev: charID.Port === 1035
+                }];
+            }
+            newClientWindow(null, null, charID);
+        }
         else
             newClientWindow();
     }
@@ -695,20 +740,23 @@ app.on('ready', () => {
                 focusWindow(window, true);
             });
     }
-    //only load after as it requires a client window
-    window = getActiveWindow();
-    if (argv.e && window) {
-        //showCodeEditor();
-        if (Array.isArray(argv.e))
-            executeScriptClient(`openFiles("${argv.e.join('", "')}")`, window.window, true);
-        else if (typeof argv.e === 'string')
-            executeScriptClient(`openFiles("${argv.e}")`, window.window, true);
-        else
-            executeScriptClient('openWindow("code.editor")', window.window, true);
+
+    if (!global.editorOnly) {
+        //current active window
+        window = getActiveWindow();
+        //only load after as it requires a client window
+        if (argv.e && window) {
+            //showCodeEditor();
+            if (Array.isArray(argv.e))
+                executeScriptClient(`openFiles("${argv.e.join('", "')}")`, window.window, true);
+            else if (typeof argv.e === 'string')
+                executeScriptClient(`openFiles("${argv.e}")`, window.window, true);
+            else
+                executeScriptClient('openWindow("code.editor")', window.window, true);
+        }
+        createTray();
     }
     checkForUpdates();
-    if (!global.editorOnly)
-        createTray();
 });
 
 // Quit when all windows are closed.
@@ -1078,6 +1126,43 @@ ipcMain.on('remove-character', (event, id) => {
     _characters.removeCharacter(id);
 });
 
+function getCharacterId(id) {
+    if (!_characters)
+        _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
+    if (id.startsWith('id:')) {
+        id = id.substring(3);
+        if (id.length === 0)
+            return 0;
+        id = parseInt(id, 10);
+        if (_characters.getCharacter(id))
+            return id;
+    }
+    const chars = _characters.getCharactersByTitle(id);
+    if (chars.length !== 0)
+        return chars[0].ID;
+    id = parseInt(id, 10);
+    if (_characters.getCharacter(id))
+        return id;
+    return 0;
+}
+
+function getCharacterFromId(id) {
+    if (!_characters)
+        _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
+    if (id.startsWith('id:')) {
+        id = id.substring(3);
+        if (id.length === 0)
+            return 0;
+        id = parseInt(id, 10);
+        return _characters.getCharacter(id);
+    }
+    const chars = _characters.getCharactersByTitle(id);
+    if (chars.length !== 0)
+        return chars[0].ID;
+    id = parseInt(id, 10);
+    return _characters.getCharacter(id)
+}
+
 //#region IPC dialogs
 ipcMain.on('show-dialog-sync', (event, type, ...args) => {
     var sWindow = BrowserWindow.fromWebContents(event.sender);
@@ -1332,6 +1417,9 @@ ipcMain.on('switch-client', (event, id, offset) => {
         });
         if (windowId === focusedWindow)
             focusedClient = id;
+        //already active
+        //if (windows[windowId].current === id)
+            //return;
         if (windows[windowId].current && clients[windows[windowId].current])
             clients[windows[windowId].current].view.webContents.send('deactivated');
         windows[windowId].current = id;
@@ -1459,7 +1547,6 @@ ipcMain.on('position-client', (event, id, options) => {
 
 ipcMain.on('focus-client', (event, id) => {
     if (!clients[id]) return;
-    let window = BrowserWindow.fromWebContents(event.sender);
     focusClient(id);
 });
 
@@ -1660,10 +1747,12 @@ function createClient(options) {
                 executeScript(`if(typeof childClosed === "function") childClosed('${file}', '${url}', '${frameName}');`, view, true);
                 //remove remove from list
                 const id = getClientId(view);
-                const index = getChildWindowIndex(clients[id].windows, childWindow);
-                if (index !== -1) {
-                    clients[id].windows[index] = null;
-                    clients[id].windows.splice(index, 1);
+                if (clients[id]) {
+                    const index = getChildWindowIndex(clients[id].windows, childWindow);
+                    if (index !== -1) {
+                        clients[id].windows[index] = null;
+                        clients[id].windows.splice(index, 1);
+                    }
                 }
             }
             idMap.delete(childWindow);
@@ -2039,7 +2128,7 @@ function updateOverlay() {
     let windowId;
     if (global.editorOnly)
         overlay = 'code';
-    else if (window) {
+    else if (window && getWindowId(window)) {
         windowId = getWindowId(window);
         if (!clients[windows[windowId].current])
             overlay = 0;
@@ -2537,9 +2626,9 @@ function buildOptions(details, window, settings) {
     if (!('height' in options))
         options.height = 'defaultHeight' in options ? options.defaultHeight : 600;
     if (!('x' in options))
-        options.x = 'defaultX' in options ? options.defaultX : 0;
+        options.x = 'defaultX' in options && options.defaultX > 0 ? options.defaultX : 0;
     if (!('y' in options))
-        options.y = 'defaultY' in options ? options.defaultY : 0;
+        options.y = 'defaultY' in options && options.defaultY > 0 ? options.defaultY : 0;
     if (details.frameName === 'modal' || details.frameName.startsWith('modal-')) {
         // open window as modal
         Object.assign(options, {
@@ -2634,6 +2723,7 @@ function focusWindow(window, focusWindow) {
 function focusClient(clientId, focusWindow) {
     if (!clients[clientId]) return;
     client = clients[clientId];
+    //client.parent.webContents.send('switch-client', clientId);
     if (focusWindow) {
         client.parent.focus();
         client.parent.webContents.focus();
@@ -2721,6 +2811,20 @@ function getChildParentWindow(child) {
     return null;
 }
 
+function newConnectionFromCharacterId(id, window) {
+    const charID = getCharacterFromId(id);
+    if (charID) {
+        //window.webContents.once('did-finish-load', () => {
+        newConnection(window, null, {
+            characterId: charID.ID,
+            settings: parseTemplate(charID.Preferences),
+            map: parseTemplate(charID.Map),
+            dev: charID.Port === 1035
+        });
+        //});
+    }
+}
+
 function newConnection(window, connection, data) {
     let windowId = getWindowId(window);
     let id;
@@ -2767,28 +2871,60 @@ function newClientWindow(caller, connection, data) {
     let windowId = createWindow({ remote: false });
     windows[windowId].menubar = createMenu(windows[windowId].window);
     //windows[windowId].menubar.enabled = false;    
-    let window = windows[windowId].window;
-    if (data)
-        id = createClient({ bounds: window.getContentBounds(), data: { data: data } });
-    else
-        id = createClient({ bounds: window.getContentBounds() });
-    focusedWindow = windowId;
-    focusedClient = id;
-    windows[windowId].clients.push(id);
-    windows[windowId].current = id;
-    clients[id].parent = window;
-    window.addBrowserView(clients[id].view);
-    window.setTopBrowserView(clients[id].view);
-    clients[id].view.webContents.once('dom-ready', () => {
-        clientsChanged();
-        if (connection)
-            clients[id].view.webContents.send('connection-settings', connection);
-    });
-    window.webContents.once('dom-ready', () => {
-        window.webContents.send('new-client', { id: id });
-        focusWindow(window, true);
-    });
-    return window;
+    let window = windows[windowId];
+    if (Array.isArray(data)) {
+        for (let d = 0, dl = data.length; d < dl; d++) {
+            id = createClient({ bounds: window.window.getContentBounds(), data: { data: data[d] } });
+            focusedWindow = windowId;
+            focusedClient = id;
+            window.clients.push(id);
+            window.current = id;
+            clients[id].parent = window.window;
+        }
+        window.window.webContents.once('ready-to-show', () => {
+            for (var c = 0, cl = window.clients.length; c < cl; c++) {
+                const clientId = window.clients[c];
+                window.window.addBrowserView(clients[clientId].view);
+                clients[clientId].view.webContents.once('dom-ready', () => {
+                    if (connection)
+                        clients[id].view.webContents.send('connection-settings', connection);
+                    clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, windows[getWindowId(clients[clientId].parent)].clients.length);
+                });
+            }
+            window.window.webContents.send('set-clients', window.clients.map(x => {
+                return {
+                    id: x,
+                    current: x === window.current,
+                    noUpdate: true
+                };
+            }), window.current);
+            window.window.setTopBrowserView(clients[window.current].view);
+            focusWindow(window.window, true);
+        });
+    }
+    else {
+        if (data)
+            id = createClient({ bounds: window.getContentBounds(), data: { data: data } });
+        else
+            id = createClient({ bounds: window.getContentBounds() });
+        focusedWindow = windowId;
+        focusedClient = id;
+        window.clients.push(id);
+        window.current = id;
+        clients[id].parent = window.window;
+        window.window.addBrowserView(clients[id].view);
+        window.window.setTopBrowserView(clients[id].view);
+        clients[id].view.webContents.once('dom-ready', () => {
+            clientsChanged();
+            if (connection)
+                clients[id].view.webContents.send('connection-settings', connection);
+        });
+        window.window.webContents.once('dom-ready', () => {
+            window.window.webContents.send('new-client', { id: id });
+            focusWindow(window.window, true);
+        });
+    }
+    return window.window;
 }
 
 function newEditorWindow(caller, files) {
@@ -2948,7 +3084,7 @@ async function saveWindowLayout(file) {
     fs.writeFileSync(file, JSON.stringify(data));
 }
 
-function loadWindowLayout(file) {
+function loadWindowLayout(file, charData) {
     if (!file)
         file = parseTemplate(path.join('{data}', global.editorOnly ? 'editor.layout' : 'window.layout'));
     //cant find so cant load
@@ -2974,6 +3110,8 @@ function loadWindowLayout(file) {
     if (data.windows.length === 0) {
         if (global.editorOnly)
             newEditorWindow();
+        else if (charData)
+            newClientWindow(null, null, charData);
         else
             newClientWindow();
         return true;
@@ -2998,12 +3136,29 @@ function loadWindowLayout(file) {
         windows[data.windows[i].id].current = data.windows[i].current;
         windows[data.windows[i].id].clients = data.windows[i].clients;
     }
+
     //create clients and link to windows
     il = data.clients.length;
     for (i = 0; i < il; i++) {
         const client = data.clients[i];
+        if (client.id === windows[focusedWindow].current && charData) {
+            client.data = charData[0];
+            charData.shift();
+        }
         createClient({ bounds: client.state.bounds, id: client.id, data: client, file: client.file });
         clients[client.id].parent = windows[client.parent].window;
+    }
+    //append any remaining new characters
+    if (charData && charData.length) {
+        il = charData.length;
+        for (i = 0; i < il; i++) {
+            id = createClient({ bounds: windows[focusedWindow].window.getContentBounds(), data: { data: charData[i] } });
+            windows[focusedWindow].clients.push(id);
+            windows[focusedWindow].current = id;
+            focusedClient = id;
+            clients[id].parent = windows[focusedWindow].window;
+            data.windows[i].current = id;
+        }
     }
     //set current clients for each window after everything is created
     il = data.windows.length;
@@ -3011,7 +3166,6 @@ function loadWindowLayout(file) {
         const window = windows[data.windows[i].id];
         //no clients so move on probably different type of window
         if (window.clients.length === 0) {
-
             window.window.webContents.once('ready-to-show', () => {
                 if (data.focusedWindow === getWindowId(window))
                     focusWindow(window, true);

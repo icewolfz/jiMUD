@@ -113,6 +113,10 @@
         });
 
         ipcRenderer.on('update-title', (event, id, options) => {
+            updateTitle(id, options, 0);
+        });
+
+        function updateTitle(id, options, retries) {
             if (!options) return;
             const tabs = tabstrip.tabs;
             for (var t = 0, tl = tabs.length; t < tl; t++) {
@@ -159,10 +163,17 @@
                         tabstrip.setTabIconClass(options.icon, t, true);
                     if (options.tooltip)
                         tabstrip.setTabTooltip(options.tooltip, t);
-                    break;
+                    return;
                 }
             }
-        });
+            //not found try again
+            if(retries < 3)
+            {
+                setTimeout(()=> {
+                    updateTitle(id, options, retries++);
+                }, 10);
+            }            
+        }
 
         ipcRenderer.on('reload-options', () => {
             tabstrip.hideTabstrip = !window.getSetting('alwaysShowTabs');
@@ -276,9 +287,11 @@
                 _current = e.tab.client;
             });
             tabstrip.on('remove', e => {
-                ipcRenderer.send('remove-client', e.tab.client);
                 //cancel the remove as we want to make sure it is called after browser view is cleaned up as it may cancel based on user input
                 e.cancel = true;
+                if (tabstrip.tabs.length === 1)
+                    return;
+                ipcRenderer.send('remove-client', e.tab.client);
             });
             tabstrip.on('removed', panel => {
                 if (tabstrip.hideTabstrip && tabstrip.tabs.length === 1) {

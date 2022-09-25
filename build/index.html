@@ -1013,12 +1013,12 @@
             });
 
             _backup.on('import-map', (data) => {
-                if (!windows['mapper'])
+                if (!_windows['mapper'])
                     openWindow('mapper').then(() => {
-                        windows['mapper'].addEventListener('load', () => windows['mapper'].importData(data), { once: true });
+                        _windows['mapper'].addEventListener('load', () => _windows['mapper'].importData(data), { once: true });
                     });
                 else
-                    windows['mapper'].importData(data);
+                    _windows['mapper'].importData(data);
             });
 
             _backup.on('imported-profiles', () => {
@@ -1837,7 +1837,7 @@
             //xterm set title support
             client.on('set-title', title => {
                 updateTitle(title);
-                ipcRenderer.send('update-title', { title: title });
+                ipcRenderer.send('update-title', { title: title || getCharacterName() || '' });
             });
 
             client.display.on('word', () => {
@@ -2099,7 +2099,7 @@
                                 _windows['profiles'].manager.editItem(item.profile, 'buttons', +item.bIndex);
                             else
                                 openWindow('profiles').then(() => {
-                                    windows['profiles'].addEventListener('load', () => _windows['profiles'].manager.editItem(item.profile, 'buttons', +item.bIndex), { once: true });
+                                    _windows['profiles'].addEventListener('load', () => _windows['profiles'].manager.editItem(item.profile, 'buttons', +item.bIndex), { once: true });
                                 });
                         }
                     }));
@@ -2189,11 +2189,13 @@
                 if (client.options.autoCreateCharacter)
                     ipcRenderer.send('change-char', title, true);
                 _logger.postMessage({ action: 'name', args: title });
+                _windowState.data.character = title;
+                if (!title)
+                    title = getCharacterName();
                 if (title && title.length && lag && lag.length)
                     title = `${title} - ${lag}`;
                 else if (lag && lag.length)
                     title = `${lag}`;
-                _windowState.data.character = title;
                 updateTitle(title);
                 ipcRenderer.send('update-title', { title: title });
             });
@@ -2421,11 +2423,12 @@
             //_status = new Status(client);
             _status = new (require('./js/status.js').Status)(client, { ac: client.options.showArmor, splitterDistance: client.options.statusWidth });
             initStatusEvents();
-            if (_windowState.data.character && _windowState.data.character.length > 0) {
-                _logger.postMessage({ action: 'name', args: _windowState.data.character });
-                $('#character-name').text(_windowState.data.character);
-                ipcRenderer.send('update-title', { title: _windowState.data.character });
-                document.title = _windowState.data.character;
+            let name = getCharacterName();
+            if (name && name.length > 0) {
+                _logger.postMessage({ action: 'name', args: name });
+                $('#character-name').text(name);
+                ipcRenderer.send('update-title', { title: name });
+                document.title = name;
             }
             updateInterface();
             _logger.postMessage({
@@ -2773,12 +2776,19 @@
             }
         }
 
+        ipcRenderer.on('load-character', (event, id) => {
+            loadCharacter(id);
+        });
+
         function loadCharacter(ID) {
             var _prevID = _windowState.data.characterId;
+            //already loaded
+            if(_prevID === ID) return;
             _windowState.data.characterId = ID;
             delete _windowState.data.character;
             delete _windowState.data.dev;
             var character = ipcRenderer.sendSync('get-character', _windowState.data.characterId);
+            var _reload = _windowState.data.settings !== parseTemplate(character.Preferences);
             _windowState.data.settings = parseTemplate(character.Preferences);
             _windowState.data.map = parseTemplate(character.Map);
             if (character.Port === 1035)
@@ -2786,13 +2796,18 @@
             _skipDisconnect = 0;
             client.settingsFile = _windowState.data.settings;
             _backup.mapFile = _windowState.data.map;
-            if (_windows['mapper.html'])
-                _windows['mapper.html'].setMap(_windowState.data.map);
             client.host = (_windowState && 'host' in _windowState.data) ? (_windowState.data.host || character.Host || 'www.shadowmud.com') : (character.Host || 'www.shadowmud.com');
             client.port = ((_windowState && 'dev' in _windowState.data) ? (_windowState.data.dev || false) : client.options.dev) ? 1035 : 1030;
             updateTitle();
             ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
+            if (_reload) {
+                closeWindows();
+                if (client.options.showCharacterManager)
+                    openWindow('characters');
+                initWindows();
+            }
             if (!client.connected) {
+                ipcRenderer.send('update-title', { title: character.Name || '' });
                 _logger.postMessage({ action: 'name', args: character.Name || '' });
                 $('#character-name').text(character.Name || '');
             }
@@ -2811,10 +2826,12 @@
             delete _windowState.data.dev;
             delete _windowState.data.host;
             var same = true;
+            var _reload = false;
             if (_windowState.data.settings !== window.getGlobal('settingsFile')) {
                 _windowState.data.settings = window.getGlobal('settingsFile');
                 client.settingsFile = _windowState.data.settings;
                 same = false;
+                _reload = true;
             }
             if (_windowState.data.map !== window.getGlobal('mapFile')) {
                 _windowState.data.map = window.getGlobal('mapFile')
@@ -2832,9 +2849,15 @@
                 ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
                 same = false;
             }
-            if (!client.connected) {
-                _logger.postMessage({ action: 'name', args: '' });
-                $('#character-name').text('&nbsp;');
+            if (_reload) {
+                closeWindows();
+                if (client.options.showCharacterManager)
+                    openWindow('characters');
+                initWindows();
+                if (!client.connected) {
+                    _logger.postMessage({ action: 'name', args: '' });
+                    $('#character-name').text('&nbsp;');
+                }
             }
             /*
             else if (client.connected && character.Disconnect) {
@@ -2851,16 +2874,16 @@
             if (_windowState.data.characterId !== ID) return;
             var character = ipcRenderer.sendSync('get-character', ID);
             var same = true;
+            var _reload = false;
             if (_windowState.data.settings !== character.Preferences) {
                 _windowState.data.settings = parseTemplate(character.Preferences);
                 client.settingsFile = _windowState.data.settings;
                 same = false;
+                _reload = true;
             }
             if (_windowState.data.map !== character.Map) {
                 _windowState.data.map = parseTemplate(character.Map);
                 _backup.mapFile = _windowState.data.map;
-                if (_windows['mapper.html'])
-                    _windows['mapper.html'].setMap(_windowState.data.map);
                 same = false;
             }
             if (character.name && _windowState.data.character != character.name)
@@ -2879,6 +2902,12 @@
                 updateTitle();
                 ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
                 same = false;
+            }
+            if (_reload) {
+                closeWindows();
+                if (client.options.showCharacterManager)
+                    openWindow('characters');
+                initWindows();
             }
             if (!client.connected) {
                 _logger.postMessage({ action: 'name', args: character.Name || '' });
@@ -2956,6 +2985,8 @@
             });
             doUpdate(76);
             client.sendGMCP('Core.Hello { "client": "' + client.telnet.terminal + '", "version": "' + client.telnet.version + '" }');
+            //TODO close wold windows maybe?
+            //closeWindows();
             initWindows();
         }
 
@@ -3082,6 +3113,8 @@
                 windowState.data.host = options.host;
                 client.host = (_windowState && 'host' in _windowState.data) ? (_windowState.data.host || 'www.shadowmud.com') : 'www.shadowmud.com';
             }
+            if ('characterId' in options)
+                loadCharacter(options.characterId);
         }
 
         ipcRenderer.on('change-connection-settings', (event, options) => {
@@ -3142,7 +3175,6 @@
             }
             let _options = '';
             if (data && data.state) {
-                //_options += ',visible=' + data.state.visible;
                 _options += ',' + buildWindowOptions(data.state, ['bounds', 'alwaysOnTop']);
                 _options += ',' + buildWindowOptions(data.state.bounds);
             }
@@ -3249,13 +3281,21 @@
             return Object.keys(options).filter(key => filters.indexOf(key) === -1).map(key => `${key}=${options[key]}`).join(',');
         }
 
+        function closeWindows() {
+            for (_window in _windows) {
+                if (!Object.prototype.hasOwnProperty.call(_windows, _window))
+                    continue;
+                _windows[_window].close();
+            }
+        }
+
         async function initWindows() {
             var enableBackgroundThrottling = window.getSetting('enableBackgroundThrottling');
             if (!_windows['mapper.html']) {
                 if (client.options.showMapper)
                     openWindow('mapper');
                 else if (client.options.mapper.enabled || client.options.mapper.persistent)
-                    openWindow('mapper', { details: { visible: false } });
+                    openWindow('mapper', { state: { visible: false } });
             }
             else
                 updateWindow(_windows['mapper.html'], {
@@ -3269,7 +3309,7 @@
                 if (client.options.showEditor)
                     openWindow('editor');
                 else if (client.options.editorPersistent)
-                    openWindow('editor', { details: { visible: false } });
+                    openWindow('editor', { state: { visible: false } });
             }
             else
                 updateWindow(_windows['editor.html'], {
@@ -3280,7 +3320,7 @@
                 if (client.options.showChat)
                     openWindow('chat');
                 else if (client.options.chat.persistent || client.options.chat.captureTells || client.options.chat.captureTalk || client.options.chat.captureLines)
-                    openWindow('chat', { details: { visible: false } });
+                    openWindow('chat', { state: { visible: false } });
             }
             else
                 updateWindow(_windows['chat.html'], {
@@ -3294,7 +3334,7 @@
                 if (client.options.showCodeEditor)
                     openWindow('code.editor');
                 else if (client.options.codeEditor.persistent)
-                    openWindow('code.editor', { details: { visible: false } });
+                    openWindow('code.editor', { state: { visible: false } });
             }
             else
                 updateWindow(_windows['code.editor.html'], {
@@ -3304,8 +3344,6 @@
                     enableBackgroundThrottling: enableBackgroundThrottling,
                     persistent: client.options.codeEditor.persistent
                 });
-            //TODO add code editor support for when code editor is a child window
-            //TODO maybe separate the global editor settings from the child window settings
             if (client.options.windows)
                 for (name in client.options.windows) {
                     //only worry about windows that have options as anything else is outdated state data no longer required
@@ -3313,13 +3351,10 @@
                         continue;
                     if (!_windows[name + '.html']) {
                         if (client.options.windows[name].options.show) {
-                            if ('hide' in client.options.windows[name].options)
-                                delete client.options.windows[name].options.hide;
                             openWindow(name, { details: client.options.windows[name].options });
                         }
                         else if (client.options.windows[name].options.persistent) {
-                            client.options.windows[name].options.hide = true;
-                            openWindow(name, { details: client.options.windows[name].options });
+                            openWindow(name, { details: client.options.windows[name].options, state: { visible: false } });
                         }
                     }
                     else {
@@ -3541,8 +3576,8 @@
 
         function updateChat(data) {
             //TODO refine when new chat window finished
-            if (windows['chat.html'])
-                windows['chat.html'].updateChat(data);
+            if (_windows['chat.html'])
+                _windows['chat.html'].updateChat(data);
             /*
             if (typeof data === 'string') {
                 display.append(data);
@@ -3564,7 +3599,7 @@
                 openWindow('code.editor').then(() => {
                     //not opened for what ever reason
                     if (!_windows['code.editor']) return;
-                    windows['code.editor'].addEventListener('load', () => {
+                    _windows['code.editor'].addEventListener('load', () => {
                         for (; f < fl; f++) {
                             _windows['code.editor'].openEditor(files[f]);
                         }

@@ -517,7 +517,7 @@
             else
                 character = ipcRenderer.sendSync('get-character', ID);
             showGetName(character.Title, 0, 1, function (event, name, oldName) {
-                changes = { ID: ID, Title, name };
+                changes = { ID: ID, Title: name };
                 const nameId = parseInt(oldName, 10) === character.ID;
                 //only replace if it matches the name.json format
                 if (!nameId && character.Preferences === path.join(parseTemplate('{characters}'), oldName + '.json')) {
