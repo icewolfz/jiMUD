@@ -1850,6 +1850,37 @@ async function canCloseAllWindows(warn) {
         if (!close)
             return false;
     }
+    if (getWindowId('profiles') && !getWindowId('profiles').isDestroyed()) {
+        dialog.showMessageBox(getWindowId('profiles'), {
+            type: 'info',
+            message: `Profile manager must be closed before you can exit.`
+        });
+        getWindowId('profiles').focus();
+        return false;
+    } 
+    if (getWindowId('about') && !getWindowId('about').isDestroyed()) {
+        dialog.showMessageBox(getWindowId('about'), {
+            type: 'info',
+            message: `About dialog must be closed before you can exit.`
+        });
+        getWindowId('about').focus();
+        return false;
+    }       
+    if (getWindowId('prefs') && !getWindowId('prefs').isDestroyed()) {
+        dialog.showMessageBox(getWindowId('prefs'), {
+            type: 'info',
+            message: `Preference dialog must be closed before you can exit.`
+        });
+        getWindowId('prefs').focus();
+        return false;
+    }
+    if (progressMap.size) {
+        dialog.showMessageBox({
+            type: 'info',
+            message: `All progress dialogs must be closed before you can exit.`
+        });
+        return false;
+    }
     return true;
 }
 
