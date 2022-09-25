@@ -225,7 +225,6 @@ function commandLineArgumentHelp() {
     msg += '-m=[file], --map=[file] - Override default map file\n';
     msg += '-c=[name or id], --character=[name or id] - Allows you to load/create a character from character database\n';
     msg += '-c=[id:#], --character=[id:#] - Allows you to load/create a character from character database by id only\n';
-    msg += '-pf=[list], --profiles[] - Set which profiles will be enabled, if not found will default\n';
     msg += '-v, --version - Print current version\n';
     msg += '-e, --e, -e=[file], --e=[file] - Open code editor with current/new client\n';
     msg += '-eo, --eo, -eo=[file], --eo=[file] - Open only the code editor\n';
@@ -244,7 +243,6 @@ function displayConsoleHelp() {
     console.log('-m=[file], --map=[file]                   Override default map file');
     console.log('-c=[name or id], --character=[name or id] Allows you to load/create a character from character database');
     console.log('-c=[id:#], --character=[id:#]             Allows you to load/create a character from character database by id only  ');
-    console.log('-pf=[list], --profiles[]                  Set which profiles will be enabled, if not found will default');
     console.log('-v, --version                             Print current version');
     console.log('-e, --e, -e=[file], --e=[file]            Open code editor with current/new client');
     console.log('-eo, --eo, -eo=[file], --eo=[file]        Open only the code editor');

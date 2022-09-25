@@ -60,7 +60,6 @@ Basic questions answered about jiMUD
 - `-m=[file], --map=[file]`                   Override default map file
 - `-c=[name or id], --character=[name or id]` Allows you to load/create a character from character database
 - `-c=[id:#], --character=[id:#]`             Allows you to load/create a character from character database by id only
-- `-pf=[list], --profiles[]`                  Set which profiles will be enabled, if not found will default
 - `-v, --version`                             Print current version
 - `-e, --editor, -e=[file], --editor=[file]`  Open code editor with current/new client
 - `-eo, --eo, -eo=[file], --eo=[file]`        Open only the code editor

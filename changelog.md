@@ -22,10 +22,12 @@
       - All new characters will use a unique generated id number instead of title or name for data files to prevent sharing files by default
   - Command line arguments:
     - Added -l/--layout to allow loading of a saved layout
-    - Added il/--ignore-layout to ignore loading last used layout or --layout
+    - Added -il/--ignore-layout to ignore loading last used layout or --layout
     - Changed -s/--setting to set the global preference file to use
     - Changed -m/--map to set working global map file for generic new connections
+    - Changed -c/--character to support # ids
     - Removed -mf argument to keep argument name scheme flowing
+    - Removed -pf/--profiles as no longer supported, use character manager with per user settings
 - **Changed:**
   - Preferences that are now global:
     - `Spellchecking` can only now be set as a global preference and requires a restart to effect any already opening clients or windows as it can only be set on window creation
