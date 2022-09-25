@@ -1741,6 +1741,12 @@ async function removeClient(id) {
     const windowId = getWindowId(window);
     const idx = windows[windowId].clients.indexOf(id);
     windows[windowId].clients.splice(idx, 1);
+    if (windows[windowId].current === id) {
+        if (idx >= windows[windowId].clients.length)
+            windows[windowId].current = windows[windowId].clients[windows[windowId].clients.length - 1];
+        else
+            windows[windowId].current = windows[windowId].clients[idx];
+    }
     client.parent = null;
     delete client.parent;
     idMap.delete(client.view);
@@ -1994,7 +2000,10 @@ function updateOverlay() {
         overlay = 'code';
     else if (window) {
         windowId = getWindowId(window);
-        overlay = clients[windows[windowId].current].overlay;
+        if (!clients[windows[windowId].current])
+            overlay = 0;
+        else
+            overlay = clients[windows[windowId].current].overlay;
         if (overlay === 5)
             windows[windowId].overlay = 2;
         else if (overlay === 4)
