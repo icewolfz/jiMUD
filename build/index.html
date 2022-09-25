@@ -810,7 +810,7 @@
             buildButtons();
             setTimeout(() => {
                 //only update if not loading
-                if(document.getElementById('loader').style.display !== 'none')
+                if (document.getElementById('loader').style.display !== 'none')
                     _status.resize();
                 _status.updateInterface();
                 client.display.update();
@@ -3149,23 +3149,23 @@
             switch (name) {
                 case 'characters':
                     if (data && data.details)
-                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultWidth', 'defaultHeight', ...Object.keys(data.state || {})]);
-                    _windows['characters.html'] = window.open('characters.html', 'Characters-' + getId(), 'alwaysOnTopClient=true,defaultHeight=555,defaultWidth=650,backgroundColor=#fff,icon=' + path.join(__dirname, '../assets/icons/png/user.png') + _options);
+                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultX', 'defaultY', 'defaultWidth', 'defaultHeight', ...Object.keys(data.state || {})]);
+                    _windows['characters.html'] = window.open('characters.html', 'Characters-' + getId(), `defaultY=${window.screenY + window.outerHeight / 2 - 277},defaultX=${window.screenX + window.outerWidth / 2 - 325},alwaysOnTopClient=true,defaultHeight=555,defaultWidth=650,backgroundColor=#fff,icon=` + path.join(__dirname, '../assets/icons/png/user.png') + _options);
                     break;
                 case 'mapper':
                     if (data && data.details)
-                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent', 'alwaysOnTop', 'showInTaskBar', ...Object.keys(data.state || {})]);
-                    _windows['mapper.html'] = window.open('mapper.html', 'Mapper-' + getId(), `persistent=${client.options.mapper.persistent},alwaysOnTopClient=${client.options.mapper.alwaysOnTopClient},alwaysOnTop=${client.options.mapper.alwaysOnTop},showInTaskBar=${client.options.mapper.showInTaskBar},defaultHeight=600,defaultWidth=800,backgroundColor=#eae4d6,icon=${path.join(__dirname, '../assets/icons/png/map.png')}${_options}`);
+                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent', 'defaultX', 'defaultY', 'alwaysOnTop', 'showInTaskBar', ...Object.keys(data.state || {})]);
+                    _windows['mapper.html'] = window.open('mapper.html', 'Mapper-' + getId(), `defaultY=${window.screenY + window.outerHeight / 2 - 300},defaultX=${window.screenX + window.outerWidth / 2 - 400},persistent=${client.options.mapper.persistent},alwaysOnTopClient=${client.options.mapper.alwaysOnTopClient},alwaysOnTop=${client.options.mapper.alwaysOnTop},showInTaskBar=${client.options.mapper.showInTaskBar},defaultHeight=600,defaultWidth=800,backgroundColor=#eae4d6,icon=${path.join(__dirname, '../assets/icons/png/map.png')}${_options}`);
                     break;
                 case 'editor':
                     if (data && data.details)
-                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent', 'defaultWidth', 'defaultHeight', 'showInTaskBar', 'noInputContext', ...Object.keys(data.state || {})]);
-                    _windows['editor.html'] = window.open('editor.html', 'Advanced Editor-' + getId(), `noInputContext=true,alwaysOnTopClient=true,showInTaskBar=${client.options.showEditorInTaskBar},persistent=${client.options.editorPersistent},defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/edit.png')}${_options}`);
+                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent', 'defaultX', 'defaultY', 'defaultWidth', 'defaultHeight', 'showInTaskBar', 'noInputContext', ...Object.keys(data.state || {})]);
+                    _windows['editor.html'] = window.open('editor.html', 'Advanced Editor-' + getId(), `defaultY=${window.screenY + window.outerHeight / 2 - 112},defaultX=${window.screenX + window.outerWidth / 2 - 150},noInputContext=true,alwaysOnTopClient=true,showInTaskBar=${client.options.showEditorInTaskBar},persistent=${client.options.editorPersistent},defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/edit.png')}${_options}`);
                     break;
                 case 'chat':
                     if (data && data.details)
-                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent', 'alwaysOnTop', 'showInTaskBar', ...Object.keys(data.state || {})]);
-                    _windows['chat.html'] = window.open('chat.html', 'Chat-' + getId(), `persistent=${client.options.chat.persistent},alwaysOnTopClient=${client.options.chat.alwaysOnTopClient},alwaysOnTop=${client.options.chat.alwaysOnTop},showInTaskBar=${client.options.chat.showInTaskBar},defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/chat.png')}${_options}`);
+                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultX', 'defaultY', 'persistent', 'alwaysOnTop', 'showInTaskBar', ...Object.keys(data.state || {})]);
+                    _windows['chat.html'] = window.open('chat.html', 'Chat-' + getId(), `defaultY=${window.screenY + window.outerHeight / 2 - 112},defaultX=${window.screenX + window.outerWidth / 2 - 150},persistent=${client.options.chat.persistent},alwaysOnTopClient=${client.options.chat.alwaysOnTopClient},alwaysOnTop=${client.options.chat.alwaysOnTop},showInTaskBar=${client.options.chat.showInTaskBar},defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/chat.png')}${_options}`);
                     break;
                 case 'prefs':
                     if (window.getGlobal('settingsFile') === _windowState.data.settings)
@@ -3175,30 +3175,30 @@
                     break;
                 case 'immortal':
                     if (data && data.details)
-                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent', ...Object.keys(data.state || {})]);
+                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultX', 'defaultY', 'persistent', ...Object.keys(data.state || {})]);
                     if (client.options.windows.immortal && client.options.windows.immortal.options)
                         _options += `,persistent=${client.options.windows.immortal.options.persistent},alwaysOnTopClient=${client.options.windows.immortal.options.alwaysOnTopClient},alwaysOnTop=${client.options.windows.immortal.options.alwaysOnTop || false},showInTaskBar=${client.options.windows.immortal.options.showInTaskBar || false}`;
                     else
                         _options += `,alwaysOnTopClient=true`;
-                    _windows['immortal.html'] = window.open('immortal.html', 'Immortal-' + getId(), `backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/ied.png')}${_options}`);
+                    _windows['immortal.html'] = window.open('immortal.html', 'Immortal-' + getId(), `defaultY=${window.screenY + window.outerHeight / 2 - 300},defaultX=${window.screenX + window.outerWidth / 2 - 400},backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/ied.png')}${_options}`);
                     break
                 case 'history':
                     if (data && data.details)
-                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultWidth', 'defaultHeight', ...Object.keys(data.state || {})]);
-                    _windows['history.html'] = window.open('history.html', 'History-' + getId(), `defaultWidth=400,defaultHeight=275,alwaysOnTopClient=true,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/history.png')}${_options}`);
+                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultX', 'defaultY', 'defaultWidth', 'defaultHeight', ...Object.keys(data.state || {})]);
+                    _windows['history.html'] = window.open('history.html', 'History-' + getId(), `defaultY=${window.screenY + window.outerHeight / 2 - 137},defaultX=${window.screenX + window.outerWidth / 2 - 200},defaultWidth=400,defaultHeight=275,alwaysOnTopClient=true,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/history.png')}${_options}`);
                     break;
                 case 'help':
                     if (data && data.details)
-                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultWidth', 'defaultHeight', ...Object.keys(data.state || {})]);
-                    _windows['help.html'] = window.open('help.html', 'Help-' + getId(), `defaultWidth=800,defaultHeight=600,alwaysOnTopClient=true,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/help.png')}${_options}`);
+                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultX', 'defaultY', 'defaultWidth', 'defaultHeight', ...Object.keys(data.state || {})]);
+                    _windows['help.html'] = window.open('help.html', 'Help-' + getId(), `defaultY=${window.screenY + window.outerHeight / 2 - 300},defaultX=${window.screenX + window.outerWidth / 2 - 400},defaultWidth=800,defaultHeight=600,alwaysOnTopClient=true,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/help.png')}${_options}`);
                     break;
                 case 'smhelp':
                     if (client.options.externalHelp)
                         shell.openExternal('http://www.shadowmud.com/help.php', '_blank');
                     else {
                         if (data && data.details)
-                            _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultWidth', 'defaultHeight', 'defaultX', 'defaultY', ...Object.keys(data.state || {})]);
-                        _windows['smhelp.html'] = window.open('smhelp.html', 'SMHelp-' + getId(), `defaultX=${window.screenTop + 100},defaultY=${window.screenLeft + 100},defaultWidth=800,defaultHeight=600,alwaysOnTopClient=true,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/help.png')}${_options}`);
+                            _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultX', 'defaultY', 'defaultWidth', 'defaultHeight', 'defaultX', 'defaultY', ...Object.keys(data.state || {})]);
+                        _windows['smhelp.html'] = window.open('smhelp.html', 'SMHelp-' + getId(), `defaultY=${window.screenY + window.outerHeight / 2 - 300},defaultX=${window.screenX + window.outerWidth / 2 - 400},defaultWidth=800,defaultHeight=600,alwaysOnTopClient=true,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/help.png')}${_options}`);
                     }
                     setTimeout(() => {
                         client.commandInput.blur();
@@ -3210,8 +3210,8 @@
                         shell.openExternal('http://www.shadowmud.com/who.php', '_blank');
                     else {
                         if (data && data.details)
-                            _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultWidth', 'defaultHeight', 'defaultX', 'defaultY', ...Object.keys(data.state || {})]);
-                        _windows['who.html'] = window.open('who.html', 'Who-' + getId(), `defaultX=${window.screenTop + 100},defaultY=${window.screenLeft + 100},defaultWidth=800,defaultHeight=600,alwaysOnTopClient=true,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/user.png')}${_options}`);
+                            _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultX', 'defaultY', 'defaultWidth', 'defaultHeight', 'defaultX', 'defaultY', ...Object.keys(data.state || {})]);
+                        _windows['who.html'] = window.open('who.html', 'Who-' + getId(), `defaultY=${window.screenY + window.outerHeight / 2 - 300},defaultX=${window.screenX + window.outerWidth / 2 - 400},defaultWidth=800,defaultHeight=600,alwaysOnTopClient=true,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/user.png')}${_options}`);
                     }
                     setTimeout(() => {
                         client.commandInput.blur();
@@ -3220,23 +3220,23 @@
                     break;
                 case 'skills':
                     if (data && data.details)
-                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultWidth', 'defaultHeight', ...Object.keys(data.state || {})]);
-                    _windows['skills.html'] = window.open('skills.html', 'Skills-' + getId(), `defaultWidth=800,defaultHeight=600,alwaysOnTopClient=true,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/skills.png')}${_options}`);
+                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultX', 'defaultY', 'defaultWidth', 'defaultHeight', ...Object.keys(data.state || {})]);
+                    _windows['skills.html'] = window.open('skills.html', 'Skills-' + getId(), `defaultY=${window.screenY + window.outerHeight / 2 - 300},defaultX=${window.screenX + window.outerWidth / 2 - 400},defaultWidth=800,defaultHeight=600,alwaysOnTopClient=true,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/skills.png')}${_options}`);
                     break;
                 case 'log.viewer':
                     if (data && data.details)
-                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultWidth', 'defaultHeight', ...Object.keys(data.state || {})]);
-                    _windows['log.viewer.html'] = window.open('log.viewer.html', 'Log Viewer-' + getId(), `defaultWidth=800,defaultHeight=600,alwaysOnTopClient=true,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/log.png')}${_options}`);
+                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultX', 'defaultY', 'defaultWidth', 'defaultHeight', ...Object.keys(data.state || {})]);
+                    _windows['log.viewer.html'] = window.open('log.viewer.html', 'Log Viewer-' + getId(), `defaultY=${window.screenY + window.outerHeight / 2 - 300},defaultX=${window.screenX + window.outerWidth / 2 - 400},defaultWidth=800,defaultHeight=600,alwaysOnTopClient=true,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/log.png')}${_options}`);
                     break;
                 case 'profiles':
                     if (data && data.details)
-                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'showInTaskBar', ...Object.keys(data.state || {})]);
-                    _windows['profiles.html'] = window.open('profiles.html', 'Profiles-' + getId(), `alwaysOnTopClient=true,showInTaskBar=${client.options.profiles.showInTaskBar},defaultHeight=600,defaultWidth=800,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/profiles.png')}${_options}`);
+                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultX', 'defaultY', 'showInTaskBar', ...Object.keys(data.state || {})]);
+                    _windows['profiles.html'] = window.open('profiles.html', 'Profiles-' + getId(), `defaultY=${window.screenY + window.outerHeight / 2 - 300},defaultX=${window.screenX + window.outerWidth / 2 - 400},alwaysOnTopClient=true,showInTaskBar=${client.options.profiles.showInTaskBar},defaultHeight=600,defaultWidth=800,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/profiles.png')}${_options}`);
                     break;
                 case 'code.editor':
                     if (data && data.details)
-                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent', 'alwaysOnTop', 'showInTaskBar', 'overlayIcon', 'title', ...Object.keys(data.state || {})]);
-                    _windows['code.editor.html'] = window.open('code.editor.html', 'Code editor-' + getId(), `persistent=${client.options.codeEditor.persistent},alwaysOnTopClient=${client.options.codeEditor.alwaysOnTopClient},alwaysOnTop=${client.options.codeEditor.alwaysOnTop},showInTaskBar=${client.options.codeEditor.showInTaskBar},defaultHeight=600,defaultWidth=800,backgroundColor=gray,icon=${path.join(__dirname, '../assets/icons/png/code.png')},overlayIcon=${path.join(__dirname, '../assets/icons/png/code.png')},title=Code editor${_options}`);
+                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultX', 'defaultY', 'persistent', 'alwaysOnTop', 'showInTaskBar', 'overlayIcon', 'title', ...Object.keys(data.state || {})]);
+                    _windows['code.editor.html'] = window.open('code.editor.html', 'Code editor-' + getId(), `defaultY=${window.screenY + window.outerHeight / 2 - 300},defaultX=${window.screenX + window.outerWidth / 2 - 400},persistent=${client.options.codeEditor.persistent},alwaysOnTopClient=${client.options.codeEditor.alwaysOnTopClient},alwaysOnTop=${client.options.codeEditor.alwaysOnTop},showInTaskBar=${client.options.codeEditor.showInTaskBar},defaultHeight=600,defaultWidth=800,backgroundColor=gray,icon=${path.join(__dirname, '../assets/icons/png/code.png')},overlayIcon=${path.join(__dirname, '../assets/icons/png/code.png')},title=Code editor${_options}`);
                     break;
             }
             if (data && data.data && typeof _windows[name + '.html'].restoreWindow !== 'undefined')
