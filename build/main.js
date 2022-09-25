@@ -223,8 +223,8 @@ function commandLineArgumentHelp() {
     msg += '-d, --debug - Enable dev tools for all windows\n';
     msg += '-s=[file], --setting=[file] - Override default setting file\n';
     msg += '-m=[file], --map=[file] - Override default map file\n';
-    msg += '-c=[name or id], --character=[name or id] - Allows you to load a character from character database, may be used multiple times to supply multiple characters to load\n';
-    msg += '-c=[id:#], --character=[id:#] - Allows you to load a character from character database by id only, may be used multiple times to supply multiple characters to load\n';
+    msg += '-c=[name or id], --character=[name or id] - Load a character from character database, may be used multiple times to supply multiple characters to load\n';
+    msg += '-c=[id:#], --character=[id:#] - Load a character from character database by id only, may be used multiple times to supply multiple characters to load\n';
     msg += '-e, --e, -e=[file], --e=[file] - Open code editor with current/new client\n';
     msg += '-eo, --eo, -eo=[file], --eo=[file] - Open only the code editor\n';
     msg += '-no-pd, -no-portable-dir - Do not use portable dir\n';
@@ -243,8 +243,8 @@ function displayConsoleHelp() {
     console.log('-d, --debug                               Enable dev tools for all windows');
     console.log('-s=[file], --setting=[file]               Override default setting file');
     console.log('-m=[file], --map=[file]                   Override default map file');
-    console.log('-c=[name or id], --character=[name or id] Allows you to load a character from character database, may be used multiple times to supply multiple characters to load');
-    console.log('-c=[id:#], --character=[id:#]             Allows you to load a character from character database by id only, may be used multiple times to supply multiple characters to load');
+    console.log('-c=[name or id], --character=[name or id] Load a character from character database, may be used multiple times to supply multiple characters to load');
+    console.log('-c=[id:#], --character=[id:#]             Load a character from character database by id only, may be used multiple times to supply multiple characters to load');
     console.log('-e, --e, -e=[file], --e=[file]            Open code editor with current/new client');
     console.log('-eo, --eo, -eo=[file], --eo=[file]        Open only the code editor');
     console.log('-no-pd, -no-portable-dir                  Do not use portable dir');
