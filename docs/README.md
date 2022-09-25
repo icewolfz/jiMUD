@@ -54,20 +54,22 @@ Basic questions answered about jiMUD
 
 ## Command line arguments
 
-- `-h, --help`                                Print console help
-- `-d, --debug`                               Enable dev tools for all windows
-- `-s=[file], --settings=[file]`              Override default setting file
-- `-m=[file], --map=[file]`                   Override default map file
-- `-c=[name or id], --character=[name or id]` Allows you to load/create a character from character database
-- `-c=[id:#], --character=[id:#]`             Allows you to load/create a character from character database by id only
-- `-v, --version`                             Print current version
-- `-e, --editor, -e=[file], --editor=[file]`  Open code editor with current/new client
-- `-eo, --eo, -eo=[file], --eo=[file]`        Open only the code editor
-- `-no-pd, -no-portable-dir`                  When using portable exe use default local data directory
-- `-data-dir=[file]`                          Set a custom directory to store saved data
-- `-l=[file], -layout=[file]`                 Load window layout file
-- `-il, --ignore-layout`                      Ignore layout and do not save window states
-- `-nci, --no-character-import`               Do not import old character.json
+Usage: `jiMUD [arguments...]`
+
+- `-h, --help` Print console help
+- `-v, --version` Print current version
+- `-d, --debug` Enable dev tools for all windows
+- `-s=[file], --settings=[file]` Override default setting file
+- `-m=[file], --map=[file]` Override default map file
+- `-c=[name or id], --character=[name or id]` Allows you to load/create a character from character database, may be used multiple times to supply multiple characters to load
+- `-c=[id:#], --character=[id:#]` Allows you to load/create a character from character database by id only, may be used multiple times to supply multiple characters to load
+- `-e, --editor, -e=[file], --editor=[file]` Open code editor with current/new client, may be used multiple times to supply multiple files to load
+- `-eo, --eo, -eo=[file], --eo=[file]`  Open only the code editor, may be used multiple times to supply multiple files to load
+- `-no-pd, -no-portable-dir` When using portable exe use default local data directory
+- `-data-dir=[file]` Set a custom directory to store saved data
+- `-l=[file], -layout=[file]` Load window layout file
+- `-il, --ignore-layout` Ignore layout and do not save window states
+- `-nci, --no-character-import` Do not import old character.json
 
 ## References
 

@@ -40,7 +40,7 @@ else //not found use native
     argv = process.argv;
 
 argv = require('yargs-parser')(argv, {
-    string: ['data-dir', 's', 'setting', 'm', 'map', 'c', 'character', 'pf', 'profiles', 'l', 'layout'],
+    string: ['data-dir', 's', 'setting', 'm', 'map', 'c', 'character', 'l', 'layout'],
     boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import'],
     alias: {
         'd': ['debug'],
@@ -51,7 +51,6 @@ argv = require('yargs-parser')(argv, {
         's': ['settings'],
         'm': ['map'],
         'c': ['character', 'char'],
-        'pf': ['profiles'],
         'e': ['editor'],
         'l': ['layout'],
         'il': ['ignore-layout'],
@@ -218,14 +217,14 @@ function addInputContext(window, spellcheck) {
 }
 
 function commandLineArgumentHelp() {
-    let msg = '';
+    let msg = 'Usage: jiMUD [arguments...]\n\n';
     msg += '-h, --help - Print console help\n';
+    msg += '-v, --version - Print current version\n';
     msg += '-d, --debug - Enable dev tools for all windows\n';
     msg += '-s=[file], --setting=[file] - Override default setting file\n';
     msg += '-m=[file], --map=[file] - Override default map file\n';
-    msg += '-c=[name or id], --character=[name or id] - Allows you to load/create a character from character database\n';
-    msg += '-c=[id:#], --character=[id:#] - Allows you to load/create a character from character database by id only\n';
-    msg += '-v, --version - Print current version\n';
+    msg += '-c=[name or id], --character=[name or id] - Allows you to load a character from character database, may be used multiple times to supply multiple characters to load\n';
+    msg += '-c=[id:#], --character=[id:#] - Allows you to load a character from character database by id only, may be used multiple times to supply multiple characters to load\n';
     msg += '-e, --e, -e=[file], --e=[file] - Open code editor with current/new client\n';
     msg += '-eo, --eo, -eo=[file], --eo=[file] - Open only the code editor\n';
     msg += '-no-pd, -no-portable-dir - Do not use portable dir\n';
@@ -237,13 +236,15 @@ function commandLineArgumentHelp() {
 }
 
 function displayConsoleHelp() {
+    console.log('Usage: jiMUD [arguments...]');
+    console.log('');
     console.log('-h, --help                                Print console help');
+    console.log('-v, --version                             Print current version');
     console.log('-d, --debug                               Enable dev tools for all windows');
     console.log('-s=[file], --setting=[file]               Override default setting file');
     console.log('-m=[file], --map=[file]                   Override default map file');
-    console.log('-c=[name or id], --character=[name or id] Allows you to load/create a character from character database');
-    console.log('-c=[id:#], --character=[id:#]             Allows you to load/create a character from character database by id only  ');
-    console.log('-v, --version                             Print current version');
+    console.log('-c=[name or id], --character=[name or id] Allows you to load a character from character database, may be used multiple times to supply multiple characters to load');
+    console.log('-c=[id:#], --character=[id:#]             Allows you to load a character from character database by id only, may be used multiple times to supply multiple characters to load');
     console.log('-e, --e, -e=[file], --e=[file]            Open code editor with current/new client');
     console.log('-eo, --eo, -eo=[file], --eo=[file]        Open only the code editor');
     console.log('-no-pd, -no-portable-dir                  Do not use portable dir');
@@ -1419,7 +1420,7 @@ ipcMain.on('switch-client', (event, id, offset) => {
             focusedClient = id;
         //already active
         //if (windows[windowId].current === id)
-            //return;
+        //return;
         if (windows[windowId].current && clients[windows[windowId].current])
             clients[windows[windowId].current].view.webContents.send('deactivated');
         windows[windowId].current = id;
