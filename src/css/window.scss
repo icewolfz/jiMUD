@@ -182,6 +182,10 @@ body {
     pointer-events: none;
 }
 
+.cm-tabstrip li:only-child .close {
+    display: none;
+}
+
 #cm-scroll-left .fa,
 #cm-scroll-right .fa {
     margin-top: 7px;
