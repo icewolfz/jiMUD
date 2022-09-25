@@ -67,7 +67,7 @@ Basic questions answered about jiMUD
 - `-data-dir=[file]`                          Set a custom directory to store saved data
 - `-l=[file], -layout=[file]`                 Load window layout file
 - `-il, --ignore-layout`                      Ignore layout and do not save window states
-- `-nci, --noCharacterImport`                 Do not import old character.json
+- `-nci, --no-character-import`               Do not import old character.json
 
 ## References
 
