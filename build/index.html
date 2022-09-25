@@ -809,7 +809,9 @@
                 document.getElementById('btnTriggers').classList.remove('on');
             buildButtons();
             setTimeout(() => {
-                _status.resize();
+                //only update if not loading
+                if(document.getElementById('loader').style.display !== 'none')
+                    _status.resize();
                 _status.updateInterface();
                 client.display.update();
                 client.display.updateScrollbars();
@@ -1513,7 +1515,7 @@
             client.on('options-loaded', () => {
                 _backup.loadSelection = client.options.backupLoad;
                 _backup.saveSelection = client.options.backupSave;
-                _status.spitterDistance = client.options.statusWidth;
+                _status.splitterDistance = client.options.statusWidth;
                 doUpdate(3);
                 client.port = ((_windowState && 'dev' in _windowState.data) ? (_windowState.data.dev || false) : client.options.dev) ? 1035 : 1030;
                 updateTitle();
@@ -2417,9 +2419,7 @@
             initBackup();
 
             //_status = new Status(client);
-            _status = new (require('./js/status.js').Status)(client);
-            _status.spitterDistance = client.options.statusWidth;
-            _status.ac = client.options.showArmor;
+            _status = new (require('./js/status.js').Status)(client, { ac: client.options.showArmor, splitterDistance: client.options.statusWidth });
             initStatusEvents();
             if (_windowState.data.character && _windowState.data.character.length > 0) {
                 _logger.postMessage({ action: 'name', args: _windowState.data.character });

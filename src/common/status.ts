@@ -22,13 +22,19 @@ export class Status extends EventEmitter {
     private _updating: UpdateType;
     private _rTimeout = 0;
     private dragging = false;
-    private _spitterDistance;
+    private _splitterDistance;
 
     public client: Client;
 
-    constructor(client: Client) {
+    constructor(client: Client, options?) {
         super();
         this.client = client;
+        if (options) {
+            if ('splitterDistance' in options)
+                this.splitterDistance = options.splitterDistance;
+            if ('ac' in options)
+                this.ac = options.ac;
+        }
         this.lagMeter = document.getElementById('lagMeter');
         this.client.telnet.on('latency-changed', (lag, avg) => {
             this.updateLagMeter(lag);
@@ -223,11 +229,11 @@ export class Status extends EventEmitter {
                 $('#status-border').css('width', w1);
                 $('#status').css('width', w2);
                 if (e.pageX < maxWidth)
-                    this.spitterDistance = maxWidth - parseInt($('#status-drag-bar').css('left'), 10);
+                    this.splitterDistance = maxWidth - parseInt($('#status-drag-bar').css('left'), 10);
                 else if (e.pageX > l)
-                    this.spitterDistance = minWidth;
+                    this.splitterDistance = minWidth;
                 else
-                    this.spitterDistance = document.body.clientWidth - e.pageX + Math.abs(parseInt($('#status-drag-bar').css('left'), 10));
+                    this.splitterDistance = document.body.clientWidth - e.pageX + Math.abs(parseInt($('#status-drag-bar').css('left'), 10));
                 $('#status-ghost-bar').remove();
                 $(document).unbind('mousemove');
                 this.dragging = false;
@@ -239,31 +245,32 @@ export class Status extends EventEmitter {
         this.init();
     }
 
-    get spitterDistance(): number { return this._spitterDistance; }
-    set spitterDistance(value: number) {
-        if (value === this._spitterDistance) return;
-        this._spitterDistance = value;
+    get splitterDistance(): number { return this._splitterDistance; }
+    set splitterDistance(value: number) {
+        if (value === this._splitterDistance) return;
+        this._splitterDistance = value;
         this.updateSplitter();
     }
 
     private updateSplitter() {
         const p = parseInt($('#status').css('right'), 10) * 2;
-        if (!this._spitterDistance || this._spitterDistance < 1) {
+        if (!this._splitterDistance || this._splitterDistance < 1) {
             const b = Math.abs(parseInt($('#status-drag-bar').css('left'), 10)) + $('#status-drag-bar').outerWidth();
-            this._spitterDistance = parseInt($('#status-border').css('width'), 10) || parseInt($('#status').css('width'), 10) - b;
+            this._splitterDistance = parseInt($('#status-border').css('width'), 10) || parseInt($('#status').css('width'), 10) - b;
         }
         if (!this.client.options.showStatus)
             this.updateInterface();
         else {
-            $('#display').css('right', this._spitterDistance);
-            $('#status').css('width', this._spitterDistance - p);
-            $('#status-border').css('width', this._spitterDistance);
-            $('#command').css('right', this._spitterDistance);
+            $('#display').css('right', this._splitterDistance);
+            $('#status').css('width', this._splitterDistance - p);
+            $('#status-border').css('width', this._splitterDistance);
+            $('#command').css('right', this._splitterDistance);
         }
-        this.emit('split-moved', this._spitterDistance);
+        this.emit('split-moved', this._splitterDistance);
     }
 
     public resize() {
+        if(!this.client.options.showStatus) return;
         const w1 = $('#status-border').css('width');
         $('#status-border').css('width', '');
         const w2 = $('#status').css('width');
@@ -275,10 +282,10 @@ export class Status extends EventEmitter {
         $('#status-border').css('width', w1);
         $('#status').css('width', w2);
         if ($('#status').outerWidth() < minWidth) {
-            this.spitterDistance = minWidth2;
+            this.splitterDistance = minWidth2;
         }
         else if ($('#status').outerWidth() > maxWidth) {
-            this.spitterDistance = maxWidth - parseInt($('#status-drag-bar').css('left'), 10);
+            this.splitterDistance = maxWidth - parseInt($('#status-drag-bar').css('left'), 10);
         }
     }
 
