@@ -41,7 +41,7 @@ else //not found use native
 
 argv = require('yargs-parser')(argv, {
     string: ['data-dir', 's', 'setting', 'm', 'map', 'c', 'character', 'pf', 'profiles', 'l', 'layout'],
-    boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'noCharacterImport'],
+    boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import'],
     alias: {
         'd': ['debug'],
         'eo': ['editorOnly', 'editoronly'],
@@ -55,7 +55,7 @@ argv = require('yargs-parser')(argv, {
         'e': ['editor'],
         'l': ['layout'],
         'il': ['ignore-layout'],
-        'nci': ['noCharacterImport']
+        'nci': ['no-character-import']
     },
     configuration: {
         'short-option-groups': false
@@ -71,20 +71,7 @@ app.setAppUserModelId('jiMUD');
 
 if (!process.env.PORTABLE_EXECUTABLE_DIR) {
     if (argv._.indexOf('/?') !== -1 || argv.h) {
-        console.log('-h, --help                          Print console help');
-        console.log('-d, --debug                         Enable dev tools for all windows');
-        console.log('-s=[file], --setting=[file]         Override default setting file');
-        console.log('-m=[file], --map=[file]             Override default map file');
-        console.log('-c=[name], --character=[name]       Allows you to load/create a character from character database');
-        console.log('-pf=[list], --profiles[]            Set which profiles will be enabled, if not found will default');
-        console.log('-v, --version                       Print current version');
-        console.log('-e, --e, -e=[file], --e=[file]      Open code editor with current/new client');
-        console.log('-eo, --eo, -eo=[file], --eo=[file]  Open only the code editor');
-        console.log('-no-pd, -no-portable-dir            Do not use portable dir');
-        console.log('-data-dir=[file]                    Set a custom directory to store saved data');
-        console.log('-l=[file], --layout=[file]          Load window layout file');
-        console.log('-il, --ignore-layout                Ignore layout and do not save window states');
-        console.log('-nci, --noCharacterImport           Do not import old character.json');
+        displayConsoleHelp();
         app.quit();
         return;
     }
@@ -227,6 +214,42 @@ function addInputContext(window, spellcheck) {
             ]).popup({ window: window });
         }
     });
+}
+
+function commandLineArgumentHelp() {
+    let msg = '';
+    msg += '-h, --help - Print console help\n';
+    msg += '-d, --debug - Enable dev tools for all windows\n';
+    msg += '-s=[file], --setting=[file] - Override default setting file\n';
+    msg += '-m=[file], --map=[file] - Override default map file\n';
+    msg += '-c=[name], --character=[name] - Allows you to load/create a character from character database\n';
+    msg += '-pf=[list], --profiles[] - Set which profiles will be enabled, if not found will default\n';
+    msg += '-v, --version - Print current version\n';
+    msg += '-e, --e, -e=[file], --e=[file] - Open code editor with current/new client\n';
+    msg += '-eo, --eo, -eo=[file], --eo=[file] - Open only the code editor\n';
+    msg += '-no-pd, -no-portable-dir - Do not use portable dir\n';
+    msg += '-data-dir=[file] - Set a custom directory to store saved data\n';
+    msg += '-l=[file], --layout=[file] - Load window layout file\n';
+    msg += '-il, --ignore-layout - Ignore layout and do not save window states\n';
+    msg += '-nci, --no-character-import - Do not import old characters.json';
+    return msg;
+}
+
+function displayConsoleHelp() {
+    console.log('-h, --help                          Print console help');
+    console.log('-d, --debug                         Enable dev tools for all windows');
+    console.log('-s=[file], --setting=[file]         Override default setting file');
+    console.log('-m=[file], --map=[file]             Override default map file');
+    console.log('-c=[name], --character=[name]       Allows you to load/create a character from character database');
+    console.log('-pf=[list], --profiles[]            Set which profiles will be enabled, if not found will default');
+    console.log('-v, --version                       Print current version');
+    console.log('-e, --e, -e=[file], --e=[file]      Open code editor with current/new client');
+    console.log('-eo, --eo, -eo=[file], --eo=[file]  Open only the code editor');
+    console.log('-no-pd, -no-portable-dir            Do not use portable dir');
+    console.log('-data-dir=[file]                    Set a custom directory to store saved data');
+    console.log('-l=[file], --layout=[file]          Load window layout file');
+    console.log('-il, --ignore-layout                Ignore layout and do not save window states');
+    console.log('-nci, --no-character-import         Do not import old characters.json');
 }
 
 //id, data, file, title, icon
@@ -598,39 +621,11 @@ app.on('ready', () => {
     var a, al;
     if (process.env.PORTABLE_EXECUTABLE_DIR) {
         if (argv._.indexOf('/?') !== -1 || argv.h) {
-            var msg = '';
-            msg += '-h, --help - Print console help\n';
-            msg += '-d, --debug - Enable dev tools for all windows\n';
-            msg += '-s=[file], --setting=[file] - Override default setting file\n';
-            msg += '-m=[file], --map=[file] - Override default map file\n';
-            msg += '-c=[name], --character=[name] - Allows you to load/create a character from character database\n';
-            msg += '-pf=[list], --profiles[] - Set which profiles will be enabled, if not found will default\n';
-            msg += '-v, --version - Print current version\n';
-            msg += '-e, --e, -e=[file], --e=[file] - Open code editor with current/new client\n';
-            msg += '-eo, --eo, -eo=[file], --eo=[file] - Open only the code editor\n';
-            msg += '-no-pd, -no-portable-dir - Do not use portable dir\n';
-            msg += '-data-dir=[file] - Set a custom directory to store saved data\n';
-            msg += '-l=[file], --layout=[file] - Load window layout file\n';
-            msg += '-il, --ignore-layout - Ignore layout and do not save window states\n';
-            msg += '-nci, --noCharacterImport - Do not import old character.json';
             dialog.showMessageBox({
                 type: 'info',
-                message: msg
+                message: commandLineArgumentHelp()
             });
-            console.log('-h, --help                          Print console help');
-            console.log('-d, --debug                         Enable dev tools for all windows');
-            console.log('-s=[file], --setting=[file]         Override default setting file');
-            console.log('-m=[file], --map=[file]             Override default map file');
-            console.log('-c=[name], --character=[name]       Allows you to load/create a character from character database');
-            console.log('-pf=[list], --profiles[]            Set which profiles will be enabled, if not found will default');
-            console.log('-v, --version                       Print current version');
-            console.log('-e, --e, -e=[file], --e=[file]      Open code editor with current/new client');
-            console.log('-eo, --eo, -eo=[file], --eo=[file]  Open only the code editor');
-            console.log('-no-pd, -no-portable-dir            Do not use portable dir');
-            console.log('-data-dir=[file]                    Set a custom directory to store saved data');
-            console.log('-l=[file], --layout=[file]          Load window layout file');
-            console.log('-il, --ignore-layout                Ignore layout and do not save window states');
-            console.log('-nci, --noCharacterImport           Do not import old character.json');
+            displayConsoleHelp();
             app.quit();
             return;
         }
@@ -679,6 +674,8 @@ app.on('ready', () => {
     }
     else if (!argv.il)
         _ignore = true;
+
+    //TODO make --character work
 
     //if it fails load default window
     if (!_loaded) {
