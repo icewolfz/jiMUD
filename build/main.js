@@ -1663,7 +1663,7 @@ function createClient(options) {
         childWindow.on('close', async e => {
             if (_close) return;
             e.preventDefault();
-            _close = await executeScript(`if(typeof closeable === "function") closeable()`, childWindow);
+            _close = await executeScript(`if(typeof closeable === "function") closeable(); else (function() { return true; })();`, childWindow);
             if (!_close) return;
             const id = getClientId(view);
             const index = getChildWindowIndex(clients[id].windows, childWindow);
@@ -1731,7 +1731,7 @@ function createClient(options) {
 async function removeClient(id) {
     const client = clients[id];
     const cancel = await canCloseClient(id, true);
-    //const cancel = await executeScript('if(typeof closeable === "function") closeable()', client.view);
+    //const cancel = await executeScript('if(typeof closeable === "function") closeable(); else (function() { return true; })();', client.view);
     //dont close
     if (cancel !== true)
         return;
@@ -1794,14 +1794,14 @@ function clientsChanged() {
 
 async function canCloseClient(id, warn, all, allWindows) {
     const client = clients[id];
-    let close = await executeScript(`if(typeof closeable === "function") closeable(${all}, ${allWindows})`, client.view);
+    let close = await executeScript(`if(typeof closeable === "function") closeable(${all}, ${allWindows}); else (function() { return true; })();`, client.view);
     //main client can not close so no need to check children
     if (close === false)
         return false;
     const wl = client.windows.length;
     for (let w = 0; w < wl; w++) {
         //check each child window just to be saft
-        close = await executeScript(`if(typeof closeable === "function") closeable(${all}, ${allWindows})`, client.windows[w].window);
+        close = await executeScript(`if(typeof closeable === "function") closeable(${all}, ${allWindows}); else (function() { return true; })();`, client.windows[w].window);
         if (client.windows[w].window.isModal()) {
             if (warn) {
                 dialog.showMessageBox(mWindow, {
