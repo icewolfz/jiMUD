@@ -179,7 +179,7 @@
                 changes.AutoLoad = $('#auto-load').prop('checked');
             }
 
-            if ($('#dev').prop('checked') != current.Port == 1035) {
+            if ($('#dev').prop('checked') !== current.Port == 1035) {
                 changed++;
                 changes.Port = $('#dev').prop('checked') ? 1035 : 1030;
             }
@@ -950,7 +950,7 @@
             else
                 character = ipcRenderer.sendSync('get-character', ID);
             saveCharacters();
-            window.opener.send('new-client', null, { characterId: character.ID, settings: parseTemplate(character.Preferences), dev: character.Port == 1035 });
+            window.opener.send('new-client', null, { characterId: character.ID, settings: parseTemplate(character.Preferences), port: character.Port });
         }
 
         function newWindow(index) {
@@ -959,7 +959,7 @@
             else
                 character = ipcRenderer.sendSync('get-character', ID);
             saveCharacters();
-            window.opener.send('new-window', null, { characterId: character.ID, settings: parseTemplate(character.Preferences), dev: character.Port == 1035 });
+            window.opener.send('new-window', null, { characterId: character.ID, settings: parseTemplate(character.Preferences), port: character.Port });
         }
 
         function doClose() {
