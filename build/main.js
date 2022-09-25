@@ -106,7 +106,8 @@ let _loaded = false;
 let _characters;
 let tray = null;
 
-if (!argv.nci && isFileSync(path.join(app.getPath('userData'), 'characters.json'))) {
+//do not import if editor only mode
+if (!argv.eo && !argv.nci && isFileSync(path.join(app.getPath('userData'), 'characters.json'))) {
     let oldCharacters = fs.readFileSync(path.join(app.getPath('userData'), 'characters.json'), 'utf-8');
     try {
         //data try and convert and then import any found data
@@ -804,8 +805,8 @@ ipcMain.on('get-global', (event, key) => {
         case 'settingsFile':
             event.returnValue = global.settingsFile;
             break;
-        case 'mapfile':
-            event.returnValue = global.mapfile;
+        case 'mapFile':
+            event.returnValue = global.mapFile;
             break;
         case 'debug':
             event.returnValue = global.debug;
@@ -842,8 +843,8 @@ ipcMain.on('set-global', (event, key, value) => {
         case 'settingsFile':
             global.settingsFile = value;
             break;
-        case 'mapfile':
-            global.mapfile = value;
+        case 'mapFile':
+            global.mapFile = value;
             break;
         case 'debug':
             global.debug = value;
@@ -889,7 +890,10 @@ ipcMain.on('get-setting', (event, key) => {
             event.returnValue = _settings.askOnCloseAll;
             return;
         default:
-            event.returnValue = null;
+            if (key in _settings)
+                event.returnValue = _settings[key];
+            else
+                event.returnValue = null;
             break;
     }
 });
@@ -926,6 +930,12 @@ ipcMain.on('set-setting', (event, key, value) => {
             _settings.askOnCloseAll = value;
             _settings.save(global.settingsFile);
             break
+        default:
+            if (key in _settings && typeof value === typeof _settings[key]) {
+                _settings[key] = value;
+                _settings.save(global.settingsFile);
+            }
+            break;
     }
 });
 
@@ -1857,7 +1867,7 @@ async function canCloseAllWindows(warn) {
         });
         getWindowId('profiles').focus();
         return false;
-    } 
+    }
     if (getWindowId('about') && !getWindowId('about').isDestroyed()) {
         dialog.showMessageBox(getWindowId('about'), {
             type: 'info',
@@ -1865,7 +1875,7 @@ async function canCloseAllWindows(warn) {
         });
         getWindowId('about').focus();
         return false;
-    }       
+    }
     if (getWindowId('prefs') && !getWindowId('prefs').isDestroyed()) {
         dialog.showMessageBox(getWindowId('prefs'), {
             type: 'info',
