@@ -223,7 +223,8 @@ function commandLineArgumentHelp() {
     msg += '-d, --debug - Enable dev tools for all windows\n';
     msg += '-s=[file], --setting=[file] - Override default setting file\n';
     msg += '-m=[file], --map=[file] - Override default map file\n';
-    msg += '-c=[name], --character=[name] - Allows you to load/create a character from character database\n';
+    msg += '-c=[name or id], --character=[name or id] - Allows you to load/create a character from character database\n';
+    msg += '-c=[id:#], --character=[id:#] - Allows you to load/create a character from character database by id only\n';
     msg += '-pf=[list], --profiles[] - Set which profiles will be enabled, if not found will default\n';
     msg += '-v, --version - Print current version\n';
     msg += '-e, --e, -e=[file], --e=[file] - Open code editor with current/new client\n';
@@ -237,20 +238,21 @@ function commandLineArgumentHelp() {
 }
 
 function displayConsoleHelp() {
-    console.log('-h, --help                          Print console help');
-    console.log('-d, --debug                         Enable dev tools for all windows');
-    console.log('-s=[file], --setting=[file]         Override default setting file');
-    console.log('-m=[file], --map=[file]             Override default map file');
-    console.log('-c=[name], --character=[name]       Allows you to load/create a character from character database');
-    console.log('-pf=[list], --profiles[]            Set which profiles will be enabled, if not found will default');
-    console.log('-v, --version                       Print current version');
-    console.log('-e, --e, -e=[file], --e=[file]      Open code editor with current/new client');
-    console.log('-eo, --eo, -eo=[file], --eo=[file]  Open only the code editor');
-    console.log('-no-pd, -no-portable-dir            Do not use portable dir');
-    console.log('-data-dir=[file]                    Set a custom directory to store saved data');
-    console.log('-l=[file], --layout=[file]          Load window layout file');
-    console.log('-il, --ignore-layout                Ignore layout and do not save window states');
-    console.log('-nci, --no-character-import         Do not import old characters.json');
+    console.log('-h, --help                                Print console help');
+    console.log('-d, --debug                               Enable dev tools for all windows');
+    console.log('-s=[file], --setting=[file]               Override default setting file');
+    console.log('-m=[file], --map=[file]                   Override default map file');
+    console.log('-c=[name or id], --character=[name or id] Allows you to load/create a character from character database');
+    console.log('-c=[id:#], --character=[id:#]             Allows you to load/create a character from character database by id only  ');
+    console.log('-pf=[list], --profiles[]                  Set which profiles will be enabled, if not found will default');
+    console.log('-v, --version                             Print current version');
+    console.log('-e, --e, -e=[file], --e=[file]            Open code editor with current/new client');
+    console.log('-eo, --eo, -eo=[file], --eo=[file]        Open only the code editor');
+    console.log('-no-pd, -no-portable-dir                  Do not use portable dir');
+    console.log('-data-dir=[file]                          Set a custom directory to store saved data');
+    console.log('-l=[file], --layout=[file]                Load window layout file');
+    console.log('-il, --ignore-layout                      Ignore layout and do not save window states');
+    console.log('-nci, --no-character-import               Do not import old characters.json');
 }
 
 //id, data, file, title, icon

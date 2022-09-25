@@ -58,7 +58,8 @@ Basic questions answered about jiMUD
 - `-d, --debug`                               Enable dev tools for all windows
 - `-s=[file], --settings=[file]`              Override default setting file
 - `-m=[file], --map=[file]`                   Override default map file
-- `-c=[name], --character=[name]`             Allows you to load/create a character from character database
+- `-c=[name or id], --character=[name or id]` Allows you to load/create a character from character database
+- `-c=[id:#], --character=[id:#]`             Allows you to load/create a character from character database by id only
 - `-pf=[list], --profiles[]`                  Set which profiles will be enabled, if not found will default
 - `-v, --version`                             Print current version
 - `-e, --editor, -e=[file], --editor=[file]`  Open code editor with current/new client
