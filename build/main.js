@@ -681,7 +681,7 @@ app.on('ready', () => {
                             characterId: char.ID,
                             settings: parseTemplate(char.Preferences),
                             map: parseTemplate(char.Map),
-                            dev: char.Port === 1035
+                            port: char.Port
                         }
                     });
                 else {
@@ -690,7 +690,7 @@ app.on('ready', () => {
                         characterId: charID.ID,
                         settings: parseTemplate(charID.Preferences),
                         map: parseTemplate(charID.Map),
-                        dev: charID.Port === 1035
+                        port: charID.Port
                     }];
                 }
                 _loaded = loadWindowLayout(_layout, charID);
@@ -716,7 +716,7 @@ app.on('ready', () => {
                         characterId: char.ID,
                         settings: parseTemplate(char.Preferences),
                         map: parseTemplate(char.Map),
-                        dev: char.Port === 1035
+                        port: char.Port 
                     }
                 });
             else {
@@ -725,7 +725,7 @@ app.on('ready', () => {
                     characterId: charID.ID,
                     settings: parseTemplate(charID.Preferences),
                     map: parseTemplate(charID.Map),
-                    dev: charID.Port === 1035
+                    port: charID.Port
                 }];
             }
             newClientWindow(null, null, charID);
@@ -2820,7 +2820,7 @@ function newConnectionFromCharacterId(id, window) {
             characterId: charID.ID,
             settings: parseTemplate(charID.Preferences),
             map: parseTemplate(charID.Map),
-            dev: charID.Port === 1035
+            port: charID.Port
         });
         //});
     }
@@ -3261,9 +3261,9 @@ function createMenu(window) {
                         //allow for some hidden ways to force open main/dev if needed with out the complex menus
                         if (!keyboard.triggeredByAccelerator) {
                             if (keyboard.ctrlKey)
-                                newConnection(window || mWindow, { dev: true });
+                                newConnection(window || mWindow, { port: 1035 });
                             else if (keyboard.shiftKey)
-                                newConnection(window || mWindow, { dev: false });
+                                newConnection(window || mWindow, { port: 1030 });
                             else
                                 newConnection(window || mWindow);
                         }
@@ -3279,9 +3279,9 @@ function createMenu(window) {
                         //allow for some hidden ways to force open main/dev if needed with out the complex menus
                         if (!keyboard.triggeredByAccelerator) {
                             if (keyboard.ctrlKey)
-                                newClientWindow(window || mWindow, { dev: true });
+                                newClientWindow(window || mWindow, { port: 1035 });
                             else if (keyboard.shiftKey)
-                                newClientWindow(window || mWindow, { dev: false });
+                                newClientWindow(window || mWindow, { port: 1030 });
                             else
                                 newClientWindow(window || mWindow);
                         }
@@ -4495,9 +4495,9 @@ function getTrayWindowContext(window, windowId, noNew) {
                     //allow for some hidden ways to force open main/dev if needed with out the complex menus
                     if (!keyboard.triggeredByAccelerator) {
                         if (keyboard.ctrlKey)
-                            newConnection(window, { dev: true });
+                            newConnection(window, { port: 1035 });
                         else if (keyboard.shiftKey)
-                            newConnection(window, { dev: false });
+                            newConnection(window, { port: 1030 });
                         else
                             newConnection(window);
                     }
@@ -4599,9 +4599,9 @@ async function _updateTrayContext() {
                     //allow for some hidden ways to force open main/dev if needed with out the complex menus
                     if (!keyboard.triggeredByAccelerator) {
                         if (keyboard.ctrlKey)
-                            newConnection(active.window, { dev: true });
+                            newConnection(active.window, { port: 1035 });
                         else if (keyboard.shiftKey)
-                            newConnection(active.window, { dev: false });
+                            newConnection(active.window, { port: 1030 });
                         else
                             newConnection(active.window);
                     }
@@ -4617,9 +4617,9 @@ async function _updateTrayContext() {
                     if (!active) return;
                     if (!keyboard.triggeredByAccelerator) {
                         if (keyboard.ctrlKey)
-                            newClientWindow(active.window, { dev: true });
+                            newClientWindow(active.window, { port: 1035 });
                         else if (keyboard.shiftKey)
-                            newClientWindow(active.window, { dev: false });
+                            newClientWindow(active.window, { port: 1030 });
                         else
                             newClientWindow(active.window);
                     }
@@ -4668,9 +4668,9 @@ async function _updateTrayContext() {
                     //allow for some hidden ways to force open main/dev if needed with out the complex menus
                     if (!keyboard.triggeredByAccelerator) {
                         if (keyboard.ctrlKey)
-                            newConnection(active.window, { dev: true });
+                            newConnection(active.window, { port: 1035 });
                         else if (keyboard.shiftKey)
-                            newConnection(active.window, { dev: false });
+                            newConnection(active.window, { port: 1030 });
                         else
                             newConnection(active.window);
                     }
@@ -4686,9 +4686,9 @@ async function _updateTrayContext() {
                     if (!active) return;
                     if (!keyboard.triggeredByAccelerator) {
                         if (keyboard.ctrlKey)
-                            newClientWindow(active.window, { dev: true });
+                            newClientWindow(active.window, { port: 1035 });
                         else if (keyboard.shiftKey)
-                            newClientWindow(active.window, { dev: false });
+                            newClientWindow(active.window, { port: 1030 });
                         else
                             newClientWindow(active.window);
                     }
@@ -4736,9 +4736,9 @@ async function _updateTrayContext() {
                     if (!active) return;
                     if (!keyboard.triggeredByAccelerator) {
                         if (keyboard.ctrlKey)
-                            newClientWindow(active.window, { dev: true });
+                            newClientWindow(active.window, { port: 1035 });
                         else if (keyboard.shiftKey)
-                            newClientWindow(active.window, { dev: false });
+                            newClientWindow(active.window, { port: 1030 });
                         else
                             newClientWindow(active.window);
                     }

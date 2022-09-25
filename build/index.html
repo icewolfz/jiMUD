@@ -1517,7 +1517,7 @@
                 _backup.saveSelection = client.options.backupSave;
                 _status.splitterDistance = client.options.statusWidth;
                 doUpdate(3);
-                client.port = ((_windowState && 'dev' in _windowState.data) ? (_windowState.data.dev || false) : client.options.dev) ? 1035 : 1030;
+                client.port = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.options.dev ? 1035 : 1030);
                 updateTitle();
                 ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
                 createWatcher();
@@ -2411,7 +2411,7 @@
 
             client.version = version;
             client.host = ('host' in _windowState.data) ? (_windowState.data.host || 'www.shadowmud.com') : 'www.shadowmud.com';
-            client.port = ('dev' in _windowState.data ? (_windowState.data.dev || false) : client.options.dev) ? 1035 : 1030;
+            client.port = ('port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.options.dev ? 1035 : 1030);
             client.telnet.GMCPSupports.push('Room 1');
             client.telnet.GMCPSupports.push('IED 1');
             client.telnet.GMCPSupports.push('Client.Media 1');
@@ -2783,21 +2783,20 @@
         function loadCharacter(ID) {
             var _prevID = _windowState.data.characterId;
             //already loaded
-            if(_prevID === ID) return;
+            if (_prevID === ID) return;
             _windowState.data.characterId = ID;
             delete _windowState.data.character;
-            delete _windowState.data.dev;
+            delete _windowState.data.port;
             var character = ipcRenderer.sendSync('get-character', _windowState.data.characterId);
             var _reload = _windowState.data.settings !== parseTemplate(character.Preferences);
             _windowState.data.settings = parseTemplate(character.Preferences);
             _windowState.data.map = parseTemplate(character.Map);
-            if (character.Port === 1035)
-                _windowState.data.dev = true;
+            _windowState.data.port = character.Port;
             _skipDisconnect = 0;
             client.settingsFile = _windowState.data.settings;
             _backup.mapFile = _windowState.data.map;
             client.host = (_windowState && 'host' in _windowState.data) ? (_windowState.data.host || character.Host || 'www.shadowmud.com') : (character.Host || 'www.shadowmud.com');
-            client.port = ((_windowState && 'dev' in _windowState.data) ? (_windowState.data.dev || false) : client.options.dev) ? 1035 : 1030;
+            client.port = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.options.dev ? 1035 : 1030);
             updateTitle();
             ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
             if (_reload) {
@@ -2823,7 +2822,7 @@
             var _prevID = _windowState.data.characterId;
             delete _windowState.data.characterId;
             delete _windowState.data.character;
-            delete _windowState.data.dev;
+            delete _windowState.data.port;
             delete _windowState.data.host;
             var same = true;
             var _reload = false;
@@ -2842,7 +2841,7 @@
             }
             _skipDisconnect = 0;
             client.host = (_windowState && 'host' in _windowState.data) ? (_windowState.data.host || 'www.shadowmud.com') : 'www.shadowmud.com';
-            var newPort = ((_windowState && 'dev' in _windowState.data) ? (_windowState.data.dev || false) : client.options.dev) ? 1035 : 1030;
+            var newPort = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.options.dev ? 1035 : 1030);
             if (newPort !== client.port) {
                 client.port = newPort;
                 updateTitle();
@@ -2889,14 +2888,10 @@
             if (character.name && _windowState.data.character != character.name)
                 delete _windowState.data.character;
             _skipDisconnect = 0;
-            if (character.Port === 1035 !== _windowState.data.dev) {
-                if (character.Port === 1035)
-                    _windowState.data.dev = true;
-                else
-                    delete _windowState.data.dev;
-            }
+            if (character.Port !== _windowState.data.port)
+                _windowState.data.port = character.Port;
             client.host = (_windowState && 'host' in _windowState.data) ? (_windowState.data.host || character.Host || 'www.shadowmud.com') : (character.Host || 'www.shadowmud.com');
-            var newPort = ((_windowState && 'dev' in _windowState.data) ? (_windowState.data.dev || false) : client.options.dev) ? 1035 : 1030;
+            var newPort = (_windowState && 'Port' in _windowState.data) ? (_windowState.data.Port || 1030) : (client.options.dev ? 1035 : 1030);
             if (newPort !== client.port) {
                 client.port = newPort;
                 updateTitle();
@@ -3098,14 +3093,14 @@
 
         function connectionSettings(options) {
             if ('defaultConnect' in options) {
-                delete _windowState.data.dev;
+                delete _windowState.data.port;
                 client.port = client.options.dev ? 1035 : 1030;
                 updateTitle();
                 ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
             }
-            else if ('dev' in options) {
-                _windowState.data.dev = options.dev;
-                client.port = ((_windowState && 'dev' in _windowState.data) ? (_windowState.data.dev || false) : client.options.dev) ? 1035 : 1030;
+            else if ('port' in options) {
+                _windowState.data.port = options.port;
+                client.port = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.options.dev ? 1035 : 1030);
                 updateTitle();
                 ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
             }
@@ -3120,14 +3115,14 @@
         ipcRenderer.on('change-connection-settings', (event, options) => {
             if (!options) return;
             if ('defaultConnect' in options) {
-                delete _windowState.data.dev;
-                client.port = client.options.dev ? 1035 : 1030;
+                delete _windowState.data.port;
+                client.port = client.options.port ? 1035 : 1030;
                 updateTitle();
                 ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
             }
-            else if ('dev' in options) {
-                _windowState.data.dev = options.dev;
-                client.port = ((_windowState && 'dev' in _windowState.data) ? (_windowState.data.dev || false) : client.options.dev) ? 1035 : 1030;
+            else if ('port' in options) {
+                _windowState.data.port = options.port;
+                client.port = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.options.dev ? 1035 : 1030);
                 updateTitle();
                 ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
             }
