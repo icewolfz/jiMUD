@@ -2163,6 +2163,7 @@ function initializeChildWindow(window, link, details) {
     window.on('close', e => {
         states[file] = saveWindowState(window, stateMap.get(window) || states[file]);
     });
+    stateMap.set(window, saveWindowState(window) || states[file]);
 }
 
 function getChildWindowIndex(windows, childWindow) {
@@ -3328,9 +3329,9 @@ function restoreWindowState(window, state, showType) {
         window.show();
     if (state.fullscreen)
         window.setFullScreen(state.fullscreen);
-    if (global.debug)
+    if (global.debug && showType !== 2)
         openDevtools(window.webContents, { activate: false });
-    else if (state.devTools)
+    else if (state.devTools && showType !== 2)
         openDevtools(window.webContents);
     if (!state.enabled)
         window.setEnabled(false);
