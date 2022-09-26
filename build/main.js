@@ -1794,11 +1794,11 @@ function createClient(options) {
             clients[getClientId(view)].states[file] = states[file];
         });
 
-        window.on('enter-full-screen', () => {
+        childWindow.on('enter-full-screen', () => {
             clients[getClientId(view)].states[file] = states[file];
         });
 
-        window.on('leave-full-screen', () => {
+        childWindow.on('leave-full-screen', () => {
             clients[getClientId(view)].states[file] = states[file];
         });
 
