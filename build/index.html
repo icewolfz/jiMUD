@@ -3173,6 +3173,8 @@
                 _options += ',' + buildWindowOptions(data.state, ['bounds', 'alwaysOnTop']);
                 _options += ',' + buildWindowOptions(data.state.bounds);
             }
+            else
+                _options += ',visible=true';
             switch (name) {
                 case 'characters':
                     if (data && data.details)
