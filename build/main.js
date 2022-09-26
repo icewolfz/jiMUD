@@ -1777,14 +1777,16 @@ function createClient(options) {
             _close = await executeScript(`if(typeof closeable === "function") closeable(); else (function() { return true; })();`, childWindow);
             if (!_close) return;
             const id = getClientId(view);
-            const index = getChildWindowIndex(clients[id].windows, childWindow);
-            if (index !== -1 && clients[id].windows[index].details.options.persistent) {
-                e.preventDefault();
-                executeScript('if(typeof closeHidden !== "function" || closeHidden(true)) window.hide();', childWindow);
-                clients[getClientId(view)].states[file] = states[file];
-                return;
+            if (clients[id]) {
+                const index = getChildWindowIndex(clients[id].windows, childWindow);
+                if (index !== -1 && clients[id].windows[index].details.options.persistent) {
+                    e.preventDefault();
+                    executeScript('if(typeof closeHidden !== "function" || closeHidden(true)) window.hide();', childWindow);
+                    clients[getClientId(view)].states[file] = states[file];
+                    return;
+                }
+                clients[id].states[file] = states[file];
             }
-            clients[id].states[file] = states[file];
             executeCloseHooks(childWindow);
             childWindow.close();
         });
@@ -2854,7 +2856,7 @@ function newConnection(window, connection, data) {
     window.addBrowserView(clients[id].view);
     window.setTopBrowserView(clients[id].view);
     clients[id].view.webContents.once('dom-ready', () => {
-        window.webContents.send('new-client', { id: id });
+        window.webContents.send('new-client', { id: id, current: windows[windowId].current === id });
         if (connection)
             clients[id].view.webContents.send('connection-settings', connection);
         focusWindow(window, true);

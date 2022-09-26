@@ -31,7 +31,14 @@
         var _loading = 0;
 
         window.addEventListener('error', (e) => {
-            ipcRenderer.send('error', e);
+            const { message, filename, lineno, colno, error } = e;
+            ipcRenderer.send('log-error', {
+                error: error,
+                filename: filename,
+                lineno: lineno,
+                colno: colno,
+                message: message,
+            });
             return true;
         });
 
@@ -80,11 +87,11 @@
 
         ipcRenderer.on('set-clients', (event, clients, current) => {
             _loading++;
-            _clients.push(...clients.map(x => x.id));
+            //_clients.push(......clients.map(x => x.id));
             if (typeof tabstrip !== 'undefined')
                 setClients(clients);
             else
-                _load = clients;
+                _load = clients.map(x => x.id);
             _current = current;
             _loading--;
         });
@@ -106,6 +113,12 @@
                     tabstrip.removeTab(t, true);
                     if (tabstrip.hideTabstrip && tabstrip.tabs.length === 1) {
                         ipcRenderer.send('update-client', tabstrip.tabs[0].client, 0);
+                    }
+                    if (id === _current) {
+                        if (t >= tabs.length - 1)
+                            _current = tabs[t - 1].client;
+                        else
+                            _current = tabs[t].client;
                     }
                     break;
                 }
@@ -462,12 +475,6 @@
                     });
                 }
                 window.showContext(menu);
-
-                //-
-                //characters...
-                //-
-                //close - if not last one
-                //close all but this - if more then one             
             });
             window.addEventListener('dragstart', (e) => {
                 if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
