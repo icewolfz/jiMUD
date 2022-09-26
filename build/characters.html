@@ -179,7 +179,7 @@
                 changes.AutoLoad = $('#auto-load').prop('checked');
             }
 
-            if ($('#dev').prop('checked') !== current.Port == 1035) {
+            if ($('#dev').prop('checked') !== (current.Port === 1035)) {
                 changed++;
                 changes.Port = $('#dev').prop('checked') ? 1035 : 1030;
             }
