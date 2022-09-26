@@ -716,7 +716,7 @@ app.on('ready', () => {
                         characterId: char.ID,
                         settings: parseTemplate(char.Preferences),
                         map: parseTemplate(char.Map),
-                        port: char.Port 
+                        port: char.Port
                     }
                 });
             else {
@@ -1210,10 +1210,10 @@ function showContext(event, template, options, show, close) {
     template.map((item, idx) => {
         if (typeof item.click === 'string') {
             var click = item.click;
-            item.click = () => event.sender.executeJavaScript(click);
+            item.click = (item, window, keyboard) => event.sender.executeJavaScript(`(function() { event = ${JSON.stringify(keyboard)}; ${click} })();`);
         }
         else
-            item.click = () => event.sender.executeJavaScript(`executeContextItem(${idx}, "${item.id}", "${item.label}", "${item.role}");`);
+            item.click = (item, window, keyboard) => event.sender.executeJavaScript(`executeContextItem(${idx}, "${item.id}", "${item.label}", "${item.role}", ${JSON.stringify(keyboard)});`);
     });
     var cMenu = Menu.buildFromTemplate(template);
     if (show)
@@ -1438,6 +1438,17 @@ ipcMain.on('remove-client', (event, id) => {
         removeClient(id, true);
 });
 
+ipcMain.on('remove-but-client', (event, id) => {
+    if (clients[id]) {
+        const windowId = getWindowId(clients[id].parent);
+        const window = windows[windowId];
+        for (c = window.clients - 1; c >= 0; c--) {
+            if (window.clients[c] === id) continue;
+            removeClient(window.clients[c], true);
+        }
+    }
+});
+
 ipcMain.on('reorder-client', (event, id, index, oldIndex) => {
     let window = BrowserWindow.fromWebContents(event.sender);
     let windowId = getWindowId(window);
@@ -1553,7 +1564,7 @@ ipcMain.on('focus-client', (event, id) => {
 
 ipcMain.on('execute-client', (event, id, code) => {
     if (clients[id])
-        executeScript(code, clients[id]);
+        executeScript(code, clients[id].view);
 });
 
 ipcMain.on('update-client', (event, id, offset) => {

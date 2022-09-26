@@ -368,7 +368,7 @@ export class TabStrip extends EventEmitter {
         this.$tabstrip.id = 'cm-tabstrip';
         this.$tabstrip.className = 'cm-tabstrip';
         this.$tabstrip.addEventListener('contextmenu', (e) => {
-            this.emit('contextmenu');
+            this.emit('contextmenu', e);
             e.preventDefault();
             e.stopPropagation();
         });

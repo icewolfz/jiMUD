@@ -167,12 +167,11 @@
                 }
             }
             //not found try again
-            if(retries < 3)
-            {
-                setTimeout(()=> {
+            if (retries < 3) {
+                setTimeout(() => {
                     updateTitle(id, options, retries++);
                 }, 10);
-            }            
+            }
         }
 
         ipcRenderer.on('reload-options', () => {
@@ -335,7 +334,141 @@
                     ipcRenderer.send('dock-client', tab.client, { index: tabstrip.getTabIndex(e.tab), pid: ipcRenderer.sendSync('get-pid') });
                 }
             });
+            tabstrip.on('contextmenu', (e) => {
+                menu = [
+                    {
+                        label: 'New Connection',
+                        click: `if (!event.triggeredByAccelerator) {
+                            if (event.ctrlKey)
+                                ipcRenderer.send('new-client', { port: 1035 });
+                            else if (event.shiftKey)
+                                ipcRenderer.send('new-client', { port: 1030 });
+                            else
+                                ipcRenderer.send('new-client');
+                        }
+                        else
+                            ipcRenderer.send('new-client');`
+                    },
+                    {
+                        label: 'New Window',
+                        click: `if (!event.triggeredByAccelerator) {
+                            if (event.ctrlKey)
+                                ipcRenderer.send('new-window', { port: 1035 });
+                            else if (event.shiftKey)
+                                ipcRenderer.send('new-window', { port: 1030 });
+                            else
+                                ipcRenderer.send('new-window');
+                        }
+                        else
+                            ipcRenderer.send('new-window');`
+                    },
+                    /*
+                    //TODO dialog of all clients/child windows for current window
+                    { type: 'separator' },
+                    ,
+                    {
+                        label: 'Windows...'
+                    }
+                    */
+                ];
+                if (window.getGlobal('debug')) {
+                    menu.push({ type: 'separator' });
+                    menu.push({
+                        label: 'Inspect',
+                        click: `ipcRenderer.send("inspect", ${e.pageX}, ${e.pageY});`
+                    });
+                }
+                window.showContext(menu);
+            });
+            tabstrip.on('tab-contextmenu', (e) => {
+                console.log('tab-contextmenu!');
+                menu = [];
+                console.log(e.tab);
+                if (e.tab.iconCls === 'disconnected-code-icon')
+                    menu.push({
+                        label: 'Connect',
+                        click: `ipcRenderer.send('execute-client', ${e.tab.client}, 'client.connect()');`
+                    });
+                else
+                    menu.push({
+                        label: 'Disconnect',
+                        click: `ipcRenderer.send('execute-client', ${e.tab.client}, 'client.close()');`
+                    });
+                menu.push(...[
+                    { type: 'separator' },
+                    {
+                        label: 'New Connection',
+                        click: `if (!event.triggeredByAccelerator) {
+                            if (event.ctrlKey)
+                                ipcRenderer.send('new-client', { port: 1035 });
+                            else if (event.shiftKey)
+                                ipcRenderer.send('new-client', { port: 1030 });
+                            else
+                                ipcRenderer.send('new-client');
+                        }
+                        else
+                            ipcRenderer.send('new-client');`
+                    },
+                    {
+                        label: 'New Window',
+                        click: `if (!event.triggeredByAccelerator) {
+                            if (event.ctrlKey)
+                                ipcRenderer.send('new-window', { port: 1035 });
+                            else if (event.shiftKey)
+                                ipcRenderer.send('new-window', { port: 1030 });
+                            else
+                                ipcRenderer.send('new-window');
+                        }
+                        else
+                            ipcRenderer.send('new-window');`
+                    },
+                    /*
+                    //TODO dialog of all clients/child windows for current window
+                    { type: 'separator' },
+                    ,
+                    {
+                        label: 'Windows...'
+                    }
+                    */
+                ]);
+                menu.push(
+                    { type: 'separator' },
+                    {
+                        label: 'Characters...',
+                        click: `ipcRenderer.send('execute-client', ${e.tab.client}, 'openWindow("characters")');`
+                    }
+                );
+                if (tabstrip.tabs.length > 1) {
+                    menu.push(...[
+                        { type: 'separator' },
+                        {
+                            label: 'Close',
+                            click: `ipcRenderer.send('remove-client', ${e.tab.client});`
+                        },
+                        {
+                            label: 'Close all but this',
+                            click: `for(c = _clients.length - 1; c >= 0; c--) {
+                                if(_clients[c] === ${e.tab.client}) continue;
+                                ipcRenderer.send('remove-client', _clients[c]);
+                            }`
+                        }
+                    ]);
+                }
+                if (window.getGlobal('debug')) {
+                    menu.push({ type: 'separator' });
+                    menu.push({
+                        label: 'Inspect',
+                        click: `ipcRenderer.send("inspect", ${e.pageX}, ${e.pageY});`
+                    });
+                }
+                window.showContext(menu);
 
+                //-
+                //characters...
+                //-
+                //close - if not last one
+                //close all but this - if more then one             
+            });
             window.addEventListener('dragstart', (e) => {
                 if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
                     e.dataTransfer.dropEffect = 'move';
