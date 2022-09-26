@@ -2706,7 +2706,8 @@
                 { menu: ['file', 'disconnect'], options: { enabled: client.connected } },
                 { menu: ['file', 'enableParsing'], options: { checked: client.enableParsing } },
                 { menu: ['file', 'enableTriggers'], options: { checked: client.enableTriggers } },
-                { menu: ['file', 'close'], options: { visible: _clients.clients !== 1, enabled: _clients.clients !== 1 } }
+                { menu: ['file', 'close'], options: { visible: _clients.clients !== 1, enabled: _clients.clients !== 1 } },
+                { menu: ['window', 'close others'], options: { visible: _clients.clients !== 1, enabled: _clients.clients !== 1 } }
             ];
             if (window.getGlobal('settingsFile') === _windowState.data.settings) {
                 menu.push({ menu: ['file', 'preferences'], options: { visible: false } })

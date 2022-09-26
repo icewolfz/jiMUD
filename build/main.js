@@ -1481,11 +1481,11 @@ ipcMain.on('remove-client', (event, id) => {
         removeClient(id, true);
 });
 
-ipcMain.on('remove-but-client', (event, id) => {
+ipcMain.on('remove-other-clients', (event, id) => {
     if (clients[id]) {
         const windowId = getWindowId(clients[id].parent);
         const window = windows[windowId];
-        for (c = window.clients - 1; c >= 0; c--) {
+        for (c = window.clients.length - 1; c >= 0; c--) {
             if (window.clients[c] === id) continue;
             removeClient(window.clients[c], true);
         }
@@ -2156,7 +2156,7 @@ function initializeChildWindow(window, link, details) {
         stateMap.delete(window);
         if (!details || !details.options) return;
         const parent = details.options.parent;
-        if (parent && parent.webContents && !parent.webContents.isDestroyed())
+        if (parent && !parent.isDestroyed() && parent.webContents && !parent.webContents.isDestroyed())
             executeScript(`if(typeof childClosed === "function") childClosed('${file}', '${link}', '${details.frameName}');`, parent, true);
     });
 
@@ -3055,7 +3055,7 @@ function newEditorWindow(caller, files) {
 // eslint-disable-next-line no-unused-vars
 async function executeScript(script, window, focus) {
     return new Promise((resolve, reject) => {
-        if (!window || !window.webContents) {
+        if (!window || (typeof window.isDestroyed === 'function' && window.isDestroyed()) || !window.webContents || window.webContents.isDestroyed()) {
             reject();
             return;
         }
@@ -3302,7 +3302,7 @@ function loadWindowLayout(file, charData) {
 
 function saveWindowState(window, previous) {
     return {
-        bounds: window.getNormalBounds(),
+        bounds: previous && previous.fullscreen ? previous.bounds : window.getNormalBounds(),
         fullscreen: previous ? previous.fullscreen : window.isFullScreen(),
         maximized: previous ? previous.maximized : window.isMaximized(),
         minimized: previous ? previous.minimized : window.isMinimized(),
@@ -3317,7 +3317,7 @@ function saveWindowState(window, previous) {
 function restoreWindowState(window, state, showType) {
     if (!window || !state) return;
     //hack to improve visual loading
-    if(showType !== 2)
+    if (showType !== 2)
         window.hide();
     if (state.maximized)
         window.maximize();
@@ -4159,6 +4159,19 @@ function createMenu(window) {
                 }
             },
             {
+                label: 'Close &others',
+                accelerator: 'CmdOrCtrl+Shift+W',
+                click: (item, mWindow) => {
+                    mWindow = window || mWindow;
+                    const _windows = windows[getWindowId(mWindow)];
+                    const current = _windows.current;
+                    for (c = _windows.clients.length - 1; c >= 0; c--) {
+                        if (_windows.clients[c] === current) continue;
+                        removeClient(_windows.clients[c], true);
+                    }
+                }
+            },
+            {
                 label: 'Minimize',
                 accelerator: 'CmdOrCtrl+M',
                 role: 'minimize'
@@ -4190,6 +4203,19 @@ function createMenu(window) {
                         mWindow.close();
                     else
                         removeClient(windows[getWindowId(mWindow)].current, true);
+                }
+            },
+            {
+                label: 'Close &others',
+                accelerator: 'CmdOrCtrl+Shift+W',
+                click: (item, mWindow) => {
+                    mWindow = window || mWindow;
+                    const _windows = windows[getWindowId(mWindow)];
+                    const current = _windows.current;
+                    for (c = _windows.clients.length - 1; c >= 0; c--) {
+                        if (_windows.clients[c] === current) continue;
+                        removeClient(_windows.clients[c], true);
+                    }
                 }
             }
         )
