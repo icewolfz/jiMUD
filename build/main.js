@@ -518,6 +518,7 @@ function createWindow(options) {
         states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
         states[options.file].fullscreen = true;
         stateMap.set(window, states[options.file]);
+        window.webContents.send('enter-full-screen');
     });
 
     window.on('leave-full-screen', () => {
@@ -527,6 +528,7 @@ function createWindow(options) {
         states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
         states[options.file].fullscreen = false;
         stateMap.set(window, states[options.file]);
+        window.webContents.send('leave-full-screen');
     });
 
     window.on('resized', () => {

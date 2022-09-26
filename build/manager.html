@@ -263,6 +263,22 @@
             tabstrip.focused = false;
         })
 
+        ipcRenderer.on('enter-full-screen', e => {
+            if (tabstrip.hideTabstrip && tabstrip.tabs.length === 1) {
+                ipcRenderer.send('update-client', _current, 0);
+            }
+            else
+                ipcRenderer.send('update-client', _current, tabstrip.height);
+        });
+
+        ipcRenderer.on('leave-full-screen', e => {
+            if (tabstrip.hideTabstrip && tabstrip.tabs.length === 1) {
+                ipcRenderer.send('update-client', _current, 0);
+            }
+            else
+                ipcRenderer.send('update-client', _current, tabstrip.height);
+        });
+
         document.addEventListener('visibilitychange', () => {
             //fake minimize due ot bug in linux not supporting minimize event
             if (document.visibilityState === 'hidden' && process.platform === 'linux' && window.isMinimized() && window.getSetting('hideOnMinimize'))
