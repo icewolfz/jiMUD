@@ -281,7 +281,7 @@ function createWindow(options) {
         width: bounds.width,
         height: bounds.height,
         backgroundColor: options.backgroundColor || '#000',
-        show: false,
+        show: true,
         icon: path.join(__dirname, options.icon || '../assets/icons/png/64x64.png'),
         skipTaskbar: !_settings.showInTaskBar,
         webPreferences: {

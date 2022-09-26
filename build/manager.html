@@ -29,6 +29,7 @@
         var tabStrip;
         var _current = 0;
         var _loading = 0;
+        loadTheme(window.getSetting('theme'));
 
         window.addEventListener('error', (e) => {
             const { message, filename, lineno, colno, error } = e;
