@@ -2918,9 +2918,9 @@ function newClientWindow(caller, connection, data) {
     }
     else {
         if (data)
-            id = createClient({ bounds: window.getContentBounds(), data: { data: data } });
+            id = createClient({ bounds: window.window.getContentBounds(), data: { data: data } });
         else
-            id = createClient({ bounds: window.getContentBounds() });
+            id = createClient({ bounds: window.window.getContentBounds() });
         focusedWindow = windowId;
         focusedClient = id;
         window.clients.push(id);
