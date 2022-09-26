@@ -104,6 +104,7 @@ let _saved = false;
 let _loaded = false;
 let _characters;
 let tray = null;
+const stateMap = new Map();
 
 //do not import if editor only mode
 if (!argv.eo && !argv.nci && isFileSync(path.join(app.getPath('userData'), 'characters.json'))) {
@@ -383,6 +384,7 @@ function createWindow(options) {
             if (window && !window.isDestroyed())
                 executeScriptClient(`if(typeof childClosed === "function") childClosed('${file}', '${url}', '${frameName}');`, window, true);
             idMap.delete(childWindow);
+            stateMap.delete(childWindow);
         });
         childWindow.on('close', e => {
             const id = getWindowId(window);
@@ -402,6 +404,7 @@ function createWindow(options) {
     window.on('closed', () => {
         const windowId = getWindowId(window);
         idMap.delete(window);
+        stateMap.delete(window);
         const cl = windows[windowId].clients.length;
         for (var idx = 0; idx < cl; idx++) {
             const id = windows[windowId].clients[idx];
@@ -439,7 +442,7 @@ function createWindow(options) {
         if (options.data && options.data.state) {
             //restoreWindowState(window, options.data.state);
         }
-        else if (states[options.file]){
+        else if (states[options.file]) {
             //restoreWindowState(window, states[options.file]);
         }
         else
@@ -457,7 +460,8 @@ function createWindow(options) {
         //for what ever reason electron does not seem to work well with await, it sill continues to execute async instead of waiting when using ipcrender
         _close = await canCloseAllClients(getWindowId(window));
         if (_close) {
-            states[options.file] = saveWindowState(window);
+            states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
+            stateMap.set(window, states[options.file]);
             //if _loaded and not saved and the last window open save as its the final state
             if (_loaded && !_saved && Object.keys(windows).length === 1) {
                 await saveWindowLayout();
@@ -468,11 +472,15 @@ function createWindow(options) {
     });
 
     window.on('resize', () => {
-        states[options.file] = saveWindowState(window);
+        if (window.isMaximized() || window.isFullScreen()) return;
+        states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
+        stateMap.set(window, states[options.file]);
     });
 
     window.on('move', () => {
-        states[options.file] = saveWindowState(window);
+        if (window.isMaximized() || window.isFullScreen()) return;
+        states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
+        stateMap.set(window, states[options.file]);
     });
 
     window.on('show', () => {
@@ -480,29 +488,56 @@ function createWindow(options) {
     });
 
     window.on('restore', () => {
-        const active = getActiveClient(window);
-        if (active)
-            active.view.webContents.send('restore');
-        states[options.file] = saveWindowState(window);
+        //const active = getActiveClient(window);
+        //if (active)
+        //active.view.webContents.send('restore');
+        //states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
+        //stateMap.set(window, states[options.file]);
     });
     window.on('maximize', () => {
         const active = getActiveClient(window);
         if (active)
             active.view.webContents.send('maximize');
-        states[options.file] = saveWindowState(window);
+        states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
+        states[options.file].maximized = true;
+        stateMap.set(window, states[options.file]);
     });
     window.on('unmaximize', () => {
         const active = getActiveClient(window);
         if (active)
             active.view.webContents.send('unmaximize');
-        states[options.file] = saveWindowState(window);
+        states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
+        states[options.file].maximized = false;
+        stateMap.set(window, states[options.file]);
+    });
+
+    window.on('enter-full-screen', () => {
+        const active = getActiveClient(window);
+        if (active)
+            active.view.webContents.send('maximize');
+        states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
+        states[options.file].fullscreen = true;
+        stateMap.set(window, states[options.file]);
+    });
+
+    window.on('leave-full-screen', () => {
+        const active = getActiveClient(window);
+        if (active)
+            active.view.webContents.send('maximize');
+        states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
+        states[options.file].fullscreen = false;
+        stateMap.set(window, states[options.file]);
     });
 
     window.on('resized', () => {
+        /*
+        if (window.isMaximized() || window.isFullScreen())  return;
         const active = getActiveClient(window);
         if (active)
             active.view.webContents.send('resized');
-        states[options.file] = saveWindowState(window);
+        states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
+        stateMap.set(window, states[options.file]);
+        */
     });
     if (!options.id) {
         _windowID++;
@@ -1262,7 +1297,7 @@ ipcMain.handle('window', (event, action, ...args) => {
     else if (action === 'openDevTools')
         current.openDevTools();
     else if (action === 'show')
-        current.show();
+        restoreWindowState(current, stateMap.get(current), 2);
     else if (action === 'toggle') {
         if (current.isVisible()) {
             if (args[0])
@@ -1271,7 +1306,7 @@ ipcMain.handle('window', (event, action, ...args) => {
                 current.minimize();
         }
         else
-            current.show();
+            restoreWindowState(current, stateMap.get(current), 2);
     }
     else if (action === 'setEnabled')
         current.setEnabled(...args);
@@ -1311,7 +1346,7 @@ ipcMain.handle('parent-window', (event, action, ...args) => {
     else if (action === 'openDevTools')
         current.openDevTools();
     else if (action === 'show')
-        current.show();
+        restoreWindowState(current, stateMap.get(current), 2);
     else if (action === 'toggle') {
         if (current.isVisible()) {
             if (args[0])
@@ -1320,7 +1355,7 @@ ipcMain.handle('parent-window', (event, action, ...args) => {
                 current.minimize();
         }
         else
-            current.show();
+            restoreWindowState(current, stateMap.get(current), 2);
     }
     else if (action === 'setEnabled')
         current.setEnabled(...args);
@@ -1487,7 +1522,7 @@ ipcMain.on('dock-client', (event, id, options) => {
         const oldIdx = windows[oldWindowId].clients.indexOf(id);
         windows[oldWindowId].clients.splice(oldIdx, 1);
         oldWindow.webContents.send('removed-client', id);
-        states['manager.html'] = saveWindowState(oldWindow);
+        states['manager.html'] = saveWindowState(oldWindow, stateMap.get(oldWindow) || states['manager.html']);
         //all views removed so close the window
         if (windows[oldWindowId].clients.length === 0)
             oldWindow.close();
@@ -1550,7 +1585,8 @@ ipcMain.on('dock-client', (event, id, options) => {
         window.webContents.send('new-client', { id: id });
     focusWindow(window, true);
     clientsChanged();
-    states['manager.html'] = saveWindowState(window);
+    states['manager.html'] = saveWindowState(window, stateMap.get(window) || states['manager.html']);
+    stateMap.set(window, states['manager.html']);
 });
 
 ipcMain.on('position-client', (event, id, options) => {
@@ -1756,6 +1792,14 @@ function createClient(options) {
             clients[getClientId(view)].states[file] = states[file];
         });
 
+        window.on('enter-full-screen', () => {
+            clients[getClientId(view)].states[file] = states[file];
+        });
+
+        window.on('leave-full-screen', () => {
+            clients[getClientId(view)].states[file] = states[file];
+        });
+
         childWindow.on('resized', () => {
             clients[getClientId(view)].states[file] = states[file];
         });
@@ -1774,6 +1818,7 @@ function createClient(options) {
                 }
             }
             idMap.delete(childWindow);
+            stateMap.delete(childWindow);
         });
 
         let _close = false;
@@ -2067,26 +2112,46 @@ function initializeChildWindow(window, link, details) {
     });
 
     window.on('resize', () => {
-        states[file] = saveWindowState(window);
+        states[file] = saveWindowState(window, stateMap.get(window) || states[file]);
+        stateMap.set(window, states[file]);
     });
 
     window.on('move', () => {
-        states[file] = saveWindowState(window);
+        states[file] = saveWindowState(window, stateMap.get(window) || states[file]);
+        stateMap.set(window, states[file]);
     });
 
     window.on('maximize', () => {
-        states[file] = saveWindowState(window);
+        states[file] = saveWindowState(window, stateMap.get(window) || states[file]);
+        states[file].maximized = true;
+        stateMap.set(window, states[file]);
     });
 
     window.on('unmaximize', () => {
-        states[file] = saveWindowState(window);
+        states[file] = saveWindowState(window, stateMap.get(window) || states[file]);
+        states[file].maximized = false;
+        stateMap.set(window, states[file]);
+    });
+
+    window.on('enter-full-screen', () => {
+        states[file] = saveWindowState(window, stateMap.get(window) || states[file]);
+        states[file].fullscreen = true;
+        stateMap.set(window, states[file]);
+    });
+
+    window.on('leave-full-screen', () => {
+        states[file] = saveWindowState(window, stateMap.get(window) || states[file]);
+        states[file].fullscreen = true;
+        stateMap.set(window, states[file]);
     });
 
     window.on('resized', () => {
-        states[file] = saveWindowState(window);
+        states[file] = saveWindowState(window, stateMap.get(window) || states[file]);
+        stateMap.set(window, states[file]);
     });
 
     window.on('closed', () => {
+        stateMap.delete(window);
         if (!details || !details.options) return;
         const parent = details.options.parent;
         if (parent && parent.webContents && !parent.webContents.isDestroyed())
@@ -2094,7 +2159,7 @@ function initializeChildWindow(window, link, details) {
     });
 
     window.on('close', e => {
-        states[file] = saveWindowState(window);
+        states[file] = saveWindowState(window, stateMap.get(window) || states[file]);
     });
 }
 
@@ -2565,6 +2630,7 @@ function buildOptions(details, window, settings) {
     if (file.startsWith('file:///' + __dirname.replace(/\\/g, '/')))
         file = file.substring(__dirname.length + 9);
     options = {
+        file: file,
         backgroundColor: '#000',
         show: true,
         icon: path.join(__dirname, '../assets/icons/png/64x64.png'),
@@ -2874,7 +2940,8 @@ function newConnection(window, connection, data) {
 function newClientWindow(caller, connection, data) {
     if (caller) {
         //save the current states so it has the latest for new window
-        states['manager.html'] = saveWindowState(caller);
+        states['manager.html'] = saveWindowState(caller, stateMap.get(caller) || states['manager.html']);
+        stateMap.set(caller, states['manager.html']);
         //offset the state so it is not an exact overlap
         states['manager.html'].bounds.x += 20;
         states['manager.html'].bounds.y += 20;
@@ -2951,7 +3018,8 @@ function newClientWindow(caller, connection, data) {
 function newEditorWindow(caller, files) {
     if (caller) {
         //save the current states so it has the latest for new window
-        states['code.editor.html'] = saveWindowState(caller);
+        states['code.editor.html'] = saveWindowState(caller, stateMap.get(caller) || states['code.editor.html']);
+        stateMap.set(caller, states['code.editor.html']);
         //offset the state so it is not an exact overlap
         states['code.editor.html'].bounds.x += 20;
         states['code.editor.html'].bounds.y += 20;
@@ -3045,7 +3113,7 @@ async function saveWindowLayout(file) {
             current: windows[id].current,
             //get any custom data from window
             data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].window),
-            state: saveWindowState(windows[id].window),
+            state: states[windows[id].file || 'manager.html'],
             menubar: windows[id].menubar ? true : false,
             options: windows[id].options,
             windows: []
@@ -3054,7 +3122,7 @@ async function saveWindowLayout(file) {
         for (var idx = 0; idx < wl; idx++) {
             wData.push({
                 options: windows[id].windows[idx].details.options.features,
-                state: saveWindowState(windows[id].windows[idx].window),
+                state: stateMap.get(windows[id].windows[idx].window) || saveWindowState(windows[id].windows[idx].window, state[windows[id].windows[idx].details.options.file]),
                 data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].windows[idx].window),
             });
         }
@@ -3083,7 +3151,7 @@ async function saveWindowLayout(file) {
             const window = clients[id].windows[idx].window;
             const wData = {
                 client: getClientId(clients[id].view), //use function to ensure proper id data type
-                state: saveWindowState(window),
+                state: stateMap.get(window) || saveWindowState(window),
                 details: { url: clients[id].windows[idx].details.url, options: clients[id].windows[idx].details.options.features },
                 //get any custom data from window
                 data: await executeScript('if(typeof saveWindow === "function") saveWindow()', window)
@@ -3229,12 +3297,12 @@ function loadWindowLayout(file, charData) {
     return true;
 }
 
-function saveWindowState(window) {
+function saveWindowState(window, previous) {
     return {
         bounds: window.getNormalBounds(),
-        fullscreen: window.isFullScreen(),
-        maximized: window.isMaximized(),
-        minimized: window.isMinimized(),
+        fullscreen: previous ? previous.fullscreen : window.isFullScreen(),
+        maximized: previous ? previous.maximized : window.isMaximized(),
+        minimized: previous ? previous.minimized : window.isMinimized(),
         devTools: global.debug ? false : window.webContents.isDevToolsOpened(),
         visible: window.isVisible(),
         normal: window.isNormal(),
@@ -3243,17 +3311,18 @@ function saveWindowState(window) {
     };
 }
 
-function restoreWindowState(window, state, noShow) {
+function restoreWindowState(window, state, showType) {
     if (!window || !state) return;
     //hack to improve visual loading
-    window.hide();
+    if(showType !== 2)
+        window.hide();
     if (state.maximized)
         window.maximize();
     else if (state.minimized)
         window.minimize();
-    if (!state.visible)
+    if (!state.visible && showType !== 2)
         window.hide();
-    else if(!noShow)
+    else if (!showType !== 1)
         window.show();
     if (state.fullscreen)
         window.setFullScreen(state.fullscreen);
@@ -4279,7 +4348,10 @@ function openPreferences(parent) {
             icon: path.join(__dirname, '../assets/icons/png/preferences.png'),
             modal: true
         });
-        window.on('closed', () => idMap.delete('prefs'));
+        window.on('closed', () => {
+            idMap.delete('prefs');
+            stateMap.delete(window);
+        });
         idMap.set('prefs', window);
     }
 }
@@ -4290,7 +4362,10 @@ function openAbout(parent) {
         window.focus();
     else {
         window = createDialog({ show: true, parent: parent, url: path.join(__dirname, 'about.html'), title: 'About jiMUD', bounds: { width: 500, height: 560 } });
-        window.on('closed', () => idMap.delete('about'));
+        window.on('closed', () => {
+            idMap.delete('about');
+            stateMap.delete(window);
+        });
         idMap.set('about', window);
     }
 }
@@ -4301,7 +4376,10 @@ function openProgress(parent, title, modal) {
         window.focus();
     else {
         window = createDialog({ modal: modal, show: true, parent: parent, url: path.join(__dirname, 'progress.html'), title: title, bounds: { width: 200, height: 70 }, backgroundColor: '#fff', icon: path.join(__dirname, '../../assets/icons/png/progress.png') });
-        window.on('closed', () => progressMap.delete(parent));
+        window.on('closed', () => {
+            stateMap.delete(window);
+            progressMap.delete(parent);
+        });
         window.webContents.send(title);
         progressMap.set(parent, window);
     }
@@ -4337,7 +4415,7 @@ async function createTray() {
         switch (_settings.trayClick) {
             case TrayClick.show:
                 if (active)
-                    active.window.show();
+                    restoreWindowState(active.window, states[active.file || 'manager.html'], 2);
                 break;
             case TrayClick.toggle:
                 if (active) {
@@ -4348,7 +4426,7 @@ async function createTray() {
                             active.window.minimize();
                     }
                     else
-                        active.window.show();
+                        restoreWindowState(active.window, states[active.file || 'manager.html'], 2);
                 }
                 break;
             case TrayClick.hide:
@@ -4370,7 +4448,7 @@ async function createTray() {
         switch (_settings.trayClick) {
             case TrayClick.show:
                 if (active)
-                    active.window.show();
+                    restoreWindowState(active.window, states[active.file || 'manager.html'], 2);
                 break;
             case TrayClick.toggle:
                 if (active) {
@@ -4381,7 +4459,7 @@ async function createTray() {
                             active.window.minimize();
                     }
                     else
-                        active.window.show();
+                        restoreWindowState(active.window, states[active.file || 'manager.html'], 2);
                 }
                 break;
             case TrayClick.hide:
@@ -4427,7 +4505,7 @@ function getTrayClientContext(window) {
         id: 'characters',
         click: () => {
             if (!window) return;
-            window.show();
+            restoreWindowState(window, stateMap.get(window), 2);
             executeScriptClient('openWindow("characters")', window, true);
         }
     },
@@ -4435,7 +4513,7 @@ function getTrayClientContext(window) {
         label: '&Manage profiles...',
         click: (item, mWindow) => {
             if (!window) return;
-            window.show();
+            restoreWindowState(window, stateMap.get(window), 2);
             executeScriptClient('openWindow("profiles")', window, true);
         }
     },
@@ -4443,7 +4521,7 @@ function getTrayClientContext(window) {
         label: '&Code editor...',
         click: () => {
             if (!window) return;
-            window.show();
+            restoreWindowState(window, stateMap.get(window), 2);
             executeScriptClient('openWindow("code.editor")', window, true);
         },
     },
@@ -4452,7 +4530,7 @@ function getTrayClientContext(window) {
         label: '&Preferences...',
         click: (item, mWindow) => {
             if (!window) return;
-            window.show();
+            restoreWindowState(window, stateMap.get(window), 2);
             executeScriptClient('openWindow("prefs");', window, true);
         }
     },
@@ -4461,7 +4539,7 @@ function getTrayClientContext(window) {
         label: '&Who is on?...',
         click: () => {
             if (!window) return;
-            window.show();
+            restoreWindowState(window, stateMap.get(window), 2);
             executeScriptClient('openWindow("who")', window, true);
         }
     },
@@ -4474,7 +4552,7 @@ function getTrayClientContext(window) {
                 label: '&ShadowMUD...',
                 click: () => {
                     if (!window) return;
-                    window.show();
+                    restoreWindowState(window, stateMap.get(window), 2);
                     executeScriptClient('openWindow("smhelp")', window, true);
                 }
             },
@@ -4482,7 +4560,7 @@ function getTrayClientContext(window) {
                 label: '&jiMUD...',
                 click: () => {
                     if (!window) return;
-                    window.show();
+                    restoreWindowState(window, stateMap.get(window), 2);
                     executeScriptClient('openWindow("help")', window, true);
                 }
             },
@@ -4497,7 +4575,7 @@ function getTrayClientContext(window) {
                 label: '&About...',
                 click: () => {
                     if (!window) return;
-                    window.show();
+                    restoreWindowState(window, stateMap.get(window), 2);
                     openAbout(window)
                 }
             }
@@ -4531,7 +4609,7 @@ function getTrayWindowContext(window, windowId, noNew) {
         {
             label: '&Show window...', click: () => {
                 if (!window) return;
-                window.show();
+                restoreWindowState(window, stateMap.get(window), 2);
             }
         },
         {
@@ -4566,7 +4644,7 @@ function getTrayWindowContext(window, windowId, noNew) {
                 icon: nativeImage.createFromPath(getOverlayIcon(clients[windows[windowId].clients[c]].overlay)).resize({ height: 16, quality: 'good' }),
                 click: (item) => {
                     if (!window) return;
-                    window.show();
+                    restoreWindowState(window, stateMap.get(window), 2);
                     window.webContents.send('switch-client', parseInt(item.id, 10));
                 }
             };
@@ -4655,7 +4733,7 @@ async function _updateTrayContext() {
             {
                 label: '&Show window...', click: () => {
                     if (!active) return;
-                    active.window.show();
+                    restoreWindowState(active.window, stateMap.get(active.window), 2);
                 }
             },
             {
@@ -4727,7 +4805,7 @@ async function _updateTrayContext() {
                 {
                     label: '&Show window...', click: () => {
                         if (!active) return;
-                        active.window.show();
+                        restoreWindowState(active.window, stateMap.get(active.window), 2);
                     }
                 },
                 {
