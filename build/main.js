@@ -424,7 +424,11 @@ function createWindow(options) {
         }
         clientsChanged();
     });
-
+    //restore state sooner to try and prevent visual gitches
+    if (options.data && options.data.state)
+        restoreWindowState(window, options.data.state);
+    else if (states[options.file])
+        restoreWindowState(window, states[options.file]);
     window.once('ready-to-show', () => {
         loadWindowScripts(window, options.script || path.basename(options.file, '.html'));
         executeScript(`if(typeof setId === "function") setId(${getWindowId(window)});`, window);
@@ -432,10 +436,12 @@ function createWindow(options) {
         if (options.data && options.data.data)
             executeScript('if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify(options.data.data) + ');', window);
         updateJumpList();
-        if (options.data && options.data.state)
-            restoreWindowState(window, options.data.state);
-        else if (states[options.file])
-            restoreWindowState(window, states[options.file]);
+        if (options.data && options.data.state) {
+            //restoreWindowState(window, options.data.state);
+        }
+        else if (states[options.file]){
+            //restoreWindowState(window, states[options.file]);
+        }
         else
             window.show();
         if (options.menubar)
@@ -1789,6 +1795,7 @@ function createClient(options) {
             }
             executeCloseHooks(childWindow);
             childWindow.close();
+            clients[getClientId(view)].parent.focus();
         });
         clients[getClientId(view)].windows.push({ window: childWindow, details: details });
         idMap.set(childWindow, getClientId(view));
@@ -3236,15 +3243,17 @@ function saveWindowState(window) {
     };
 }
 
-function restoreWindowState(window, state) {
+function restoreWindowState(window, state, noShow) {
     if (!window || !state) return;
+    //hack to improve visual loading
+    window.hide();
     if (state.maximized)
         window.maximize();
     else if (state.minimized)
         window.minimize();
     if (!state.visible)
         window.hide();
-    else
+    else if(!noShow)
         window.show();
     if (state.fullscreen)
         window.setFullScreen(state.fullscreen);
