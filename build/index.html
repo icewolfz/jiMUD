@@ -2783,7 +2783,7 @@
         function loadCharacter(ID) {
             var _prevID = _windowState.data.characterId;
             //already loaded
-            if (_prevID === ID) return;
+            //if (_prevID === ID) return;
             _windowState.data.characterId = ID;
             delete _windowState.data.character;
             delete _windowState.data.port;
@@ -2816,6 +2816,7 @@
             }
             autoConnect();
             window.dispatchEvent(new CustomEvent('loadCharacter', { detail: { ID: ID } }));
+            window.focus();
         }
 
         function resetCharacter() {
@@ -2874,13 +2875,13 @@
             var character = ipcRenderer.sendSync('get-character', ID);
             var same = true;
             var _reload = false;
-            if (_windowState.data.settings !== character.Preferences) {
+            if (_windowState.data.settings !== parseTemplate(character.Preferences)) {
                 _windowState.data.settings = parseTemplate(character.Preferences);
                 client.settingsFile = _windowState.data.settings;
                 same = false;
                 _reload = true;
             }
-            if (_windowState.data.map !== character.Map) {
+            if (_windowState.data.map !== parseTemplate(character.Map) ) {
                 _windowState.data.map = parseTemplate(character.Map);
                 _backup.mapFile = _windowState.data.map;
                 same = false;
@@ -3280,7 +3281,7 @@
 
         function closeWindows() {
             for (_window in _windows) {
-                if (!Object.prototype.hasOwnProperty.call(_windows, _window))
+                if (!Object.prototype.hasOwnProperty.call(_windows, _window) || _window === 'characters.html')
                     continue;
                 _windows[_window].close();
             }

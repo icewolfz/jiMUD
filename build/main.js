@@ -1098,7 +1098,7 @@ ipcMain.on('update-character', (event, character, id) => {
         _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
     _characters.updateCharacter(character);
     for (clientId in clients) {
-        if (!Object.prototype.hasOwnProperty.call(clients, clientId) || clientId === id)
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId) || parseInt(clientId, 10) === id)
             continue;
         clients[clientId].view.webContents.send('character-updated', character);
     }
@@ -2142,7 +2142,7 @@ function updateOverlay() {
     let windowId;
     if (global.editorOnly)
         overlay = 'code';
-    else if (window && getWindowId(window)) {
+    else if (window && getWindowId(window) && windows[getWindowId(window)] && clients[windows[getWindowId(window)].current]) {
         windowId = getWindowId(window);
         if (!clients[windows[windowId].current])
             overlay = 0;

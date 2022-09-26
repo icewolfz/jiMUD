@@ -913,7 +913,7 @@
         }
 
         function characterUpdated(character) {
-            if (!character) returnl
+            if (!character) return;
             if (typeof character === 'number')
                 character = ipcRenderer.sendSync('get-character', character);
             //already created so bail
