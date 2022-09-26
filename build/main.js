@@ -1492,6 +1492,35 @@ ipcMain.on('remove-other-clients', (event, id) => {
     }
 });
 
+ipcMain.on('goto-client', (event, id, action) => {
+    const window = BrowserWindow.fromWebContents(event.sender);
+    const windowId = getWindowId(window);
+    let idx;
+    //if only 1 client or no clients ignore
+    if (windows[windowId].clients.length < 2) return;
+    //goto next client
+    if (action === 1) {
+        idx = windows[windowId].clients.indexOf(id);
+        if (idx === -1) return;
+        idx++;
+        if (idx >= windows[windowId].clients.length)
+            idx = 0;
+        window.webContents.send('switch-client', windows[windowId].clients[idx]);
+    }
+    //goto previous client
+    else if (action === 2) {
+        idx = windows[windowId].clients.indexOf(id);
+        if (idx === -1) return;
+        idx--;
+        if (idx < 0)
+            idx = windows[windowId].clients.length - 1;
+        window.webContents.send('switch-client', windows[windowId].clients[idx]);
+    }
+    //goto client
+    else
+        window.webContents.send('switch-client', id);
+})
+
 ipcMain.on('reorder-client', (event, id, index, oldIndex) => {
     let window = BrowserWindow.fromWebContents(event.sender);
     let windowId = getWindowId(window);

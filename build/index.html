@@ -522,7 +522,12 @@
                 client.display.pageUp();
             else if (event.which === 34) //page up
                 client.display.pageDown();
-
+            else if (event.ctrlKey && !event.metaKey && !event.altKey && event.key === 'Tab') {
+                if (event.shiftKey)
+                    ipcRenderer.send('goto-client', getId(), 2);
+                else
+                    ipcRenderer.send('goto-client', getId(), 1);
+            }
         });
 
         window.addEventListener('error', (e) => {
@@ -2882,7 +2887,7 @@
                 same = false;
                 _reload = true;
             }
-            if (_windowState.data.map !== parseTemplate(character.Map) ) {
+            if (_windowState.data.map !== parseTemplate(character.Map)) {
                 _windowState.data.map = parseTemplate(character.Map);
                 _backup.mapFile = _windowState.data.map;
                 same = false;

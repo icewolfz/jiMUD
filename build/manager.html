@@ -286,6 +286,15 @@
                 window.hide();
         });
 
+        window.addEventListener('keydown', (event) => {
+            if (event.ctrlKey && !event.metaKey && !event.altKey && event.key === 'Tab') {
+                if (event.shiftKey)
+                    ipcRenderer.send('goto-client', getId(), 2);
+                else
+                    ipcRenderer.send('goto-client', getId(), 1);
+            }
+        });
+
         function init() {
             tabstrip = new TabStrip();
             tabstrip.useNativeMenus = true;
