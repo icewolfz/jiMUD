@@ -264,6 +264,7 @@
             const cl = characters.length;
             for (let c = 0; c < cl; c++)
                 createItem(characters[c], list);
+            sortList();
         }
 
         function createItem(character, list) {
@@ -516,7 +517,7 @@
                 character = current;
             else
                 character = ipcRenderer.sendSync('get-character', ID);
-            showGetName(character.Title, 0, 1, function (event, name, oldName) {
+            showGetName(character.Title, character.Title, 1, function (event, name, oldName) {
                 changes = { ID: ID, Title: name };
                 const nameId = parseInt(oldName, 10) === character.ID;
                 //only replace if it matches the name.json format
@@ -580,7 +581,7 @@
                     else
                         fs.renameSync(f, sf);
                 }
-                $('#character-' + character).text(character.Title);
+                $('#character-' + character.ID).text(changes.Title || character.Title);
                 saveCharacters();
                 sortList();
                 ipcRenderer.send('update-character', changes, window.opener.getId());
