@@ -174,11 +174,6 @@
                 changed++;
             }
 
-            if ($('#auto-load').prop('checked') != current.AutoLoad) {
-                changed++;
-                changes.AutoLoad = $('#auto-load').prop('checked');
-            }
-
             if ($('#dev').prop('checked') !== (current.Port === 1035)) {
                 changed++;
                 changes.Port = $('#dev').prop('checked') ? 1035 : 1030;
@@ -299,7 +294,6 @@
                 $('#notes-path').val(current.Notes);
                 $('#map').val(current.Map);
                 $('#name').val(current.Name);
-                $('#auto-load').prop('checked', current.AutoLoad);
                 $('#dev').prop('checked', current.Port == 1035);
                 $('#disconnect').prop('checked', current.Disconnect);
 
@@ -1135,10 +1129,6 @@
                                     </button>
                                 </span>
                             </div>
-                        </label>
-                        <label class="control-label col-sm-6" style="padding-left: 0;">
-                            <input disabled="disabled" type="checkbox" id="auto-load" data-field="AutoLoad" /> Auto load
-                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Only one character can auto load, enabling this will disable previous auto loaded character</span>
                         </label>
                         <label class="control-label col-sm-6" style="padding-left: 0;">
                             <input disabled="disabled" type="checkbox" id="dev" data-field="Port" /> Development
