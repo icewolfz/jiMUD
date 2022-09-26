@@ -2892,7 +2892,7 @@
             if (character.Port !== _windowState.data.port)
                 _windowState.data.port = character.Port;
             client.host = (_windowState && 'host' in _windowState.data) ? (_windowState.data.host || character.Host || 'www.shadowmud.com') : (character.Host || 'www.shadowmud.com');
-            var newPort = (_windowState && 'Port' in _windowState.data) ? (_windowState.data.Port || 1030) : (client.options.dev ? 1035 : 1030);
+            var newPort = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.options.dev ? 1035 : 1030);
             if (newPort !== client.port) {
                 client.port = newPort;
                 updateTitle();
