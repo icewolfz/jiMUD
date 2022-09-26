@@ -3459,7 +3459,7 @@ function createMenu(window) {
                     label: 'Paste special',
                     accelerator: 'CmdOrCtrl+Shift+V',
                     click: (item, mWindow) => {
-                        executeScriptClient('client.commandInput.dataset.selStart client.commandInput.selectionStart;client.commandInput.dataset.selEnd = client.commandInput.selectionEnd;pasteSpecial()', window || mWindow, true);
+                        executeScriptClient('client.commandInput.dataset.selStart = client.commandInput.selectionStart;client.commandInput.dataset.selEnd = client.commandInput.selectionEnd;pasteSpecial()', window || mWindow, true);
                     }
                 },
                 /*
