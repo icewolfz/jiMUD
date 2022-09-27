@@ -1867,7 +1867,7 @@ function createClient(options) {
                     clients[getClientId(view)].states[file] = states[file];
                     return;
                 }
-                clients[id].states[file] = states[file];
+                //clients[id].states[file] = states[file];
             }
             executeCloseHooks(childWindow);
             childWindow.close();
@@ -3145,7 +3145,7 @@ async function saveWindowLayout(file) {
             current: windows[id].current,
             //get any custom data from window
             data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].window),
-            state: states[windows[id].file || 'manager.html'],
+            state: saveWindowState(windows[id].window, stateMap.get(windows[id].window)),
             menubar: windows[id].menubar ? true : false,
             options: windows[id].options,
             windows: []
@@ -3154,7 +3154,7 @@ async function saveWindowLayout(file) {
         for (var idx = 0; idx < wl; idx++) {
             wData.push({
                 options: windows[id].windows[idx].details.options.features,
-                state: stateMap.get(windows[id].windows[idx].window) || saveWindowState(windows[id].windows[idx].window, state[windows[id].windows[idx].details.options.file]),
+                state: saveWindowState(windows[id].windows[idx].window, stateMap.get(windows[id].windows[idx].window)),
                 data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].windows[idx].window),
             });
         }
@@ -3183,7 +3183,7 @@ async function saveWindowLayout(file) {
             const window = clients[id].windows[idx].window;
             const wData = {
                 client: getClientId(clients[id].view), //use function to ensure proper id data type
-                state: stateMap.get(window) || saveWindowState(window),
+                state: saveWindowState(window, stateMap.get(window)),
                 details: { url: clients[id].windows[idx].details.url, options: clients[id].windows[idx].details.options.features },
                 //get any custom data from window
                 data: await executeScript('if(typeof saveWindow === "function") saveWindow()', window)
