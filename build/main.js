@@ -440,10 +440,16 @@ function createWindow(options) {
         clientsChanged();
     });
     //restore state sooner to try and prevent visual gitches
-    if (options.data && options.data.state)
+    if (options.data && options.data.state) {
         restoreWindowState(window, options.data.state);
-    else if (states[options.file])
+        stateMap.set(window, options.data.state);
+    }
+    else if (states[options.file]) {
         restoreWindowState(window, states[options.file]);
+        stateMap.set(window, states[options.file]);
+    }
+    else
+        stateMap.set(window, saveWindowState(window));
     window.once('ready-to-show', () => {
         loadWindowScripts(window, options.script || path.basename(options.file, '.html'));
         executeScript(`if(typeof setId === "function") setId(${getWindowId(window)});`, window);
