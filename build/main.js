@@ -4,7 +4,7 @@
 const { app, BrowserWindow, BrowserView, shell, screen, Tray, dialog, Menu, MenuItem, ipcMain, systemPreferences, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const url = require('url');
+const URL = require('url');
 const settings = require('./js/settings');
 const { TrayClick, TrayMenu } = require('./js/types');
 const { Menubar } = require('./js/menubar');
@@ -314,7 +314,7 @@ function createWindow(options) {
         require("@electron/remote/main").enable(window.webContents);
 
     // and load the file of the app.
-    window.loadURL(url.format({
+    window.loadURL(URL.format({
         pathname: path.join(__dirname, options.file),
         protocol: 'file:',
         slashes: true
@@ -373,7 +373,7 @@ function createWindow(options) {
     });
 
     window.webContents.setWindowOpenHandler((details) => {
-        var u = new url.URL(details.url);
+        var u = new URL.URL(details.url);
         if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'mailto:') {
             shell.openExternal(details.url);
             return { action: 'deny' };
@@ -653,7 +653,7 @@ function createDialog(options) {
 
     window.removeMenu();
     // and load the index.html of the app.
-    window.loadURL(url.format({
+    window.loadURL(URL.format({
         pathname: options.url || path.join(__dirname, 'blank.html'),
         protocol: 'file:',
         slashes: true
@@ -1822,7 +1822,7 @@ function createClient(options) {
     });
 
     view.webContents.setWindowOpenHandler((details) => {
-        var u = new url.URL(details.url);
+        var u = new URL.URL(details.url);
         if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'mailto:') {
             shell.openExternal(details.url);
             return { action: 'deny' };
@@ -2161,7 +2161,7 @@ function initializeChildWindow(window, link, details) {
     });
 
     window.webContents.setWindowOpenHandler((childDetails) => {
-        var u = new url.URL(childDetails.url);
+        var u = new URL.URL(childDetails.url);
         if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'mailto:') {
             shell.openExternal(childDetails.url);
             return { action: 'deny' };
