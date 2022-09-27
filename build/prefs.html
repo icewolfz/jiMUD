@@ -136,7 +136,6 @@
             _settings = Settings.load(_settingsFile);
             data = [
                 { text: 'General' },
-                { text: 'Interface' },
                 {
                     text: 'Display',
                     nodes: [
@@ -185,6 +184,7 @@
             ]
             if (_settingsFile === _globalFile) {
                 data[data.length - 1].nodes.push({ text: 'Tray' });
+                data.splice(1, 0, { text: 'Interface' });
             }
             $('#pref-tree').treeview({
                 showBorder: false,
@@ -1486,7 +1486,7 @@
                             <input type="checkbox" id="lockLayout" /> Lock layout
                         </label>
                     </div>      
-                    <div class="col-sm-12 form-group">
+                    <div class="col-sm-12 form-group global">
                         <label class="control-label" style="width:100%">
                             Load layout on open
                             <div class="input-group">
