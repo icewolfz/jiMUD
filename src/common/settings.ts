@@ -580,6 +580,9 @@ export class Settings {
     public pasteSpecialPostfixEnabled: boolean = true;
     public pasteSpecialReplaceEnabled: boolean = true;
 
+    public lockLayout: boolean = false;
+    public loadLayout: string = '';
+
     public static load(file) {
         try {
             if (!fs.statSync(file).isFile())

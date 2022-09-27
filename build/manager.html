@@ -4,14 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <title>jiMUD</title>
+    <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
     <link href="css/main.css" rel="stylesheet" type="text/css" />
     <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
     <link href="css/theme.css" rel="stylesheet" type="text/css" />
     <link href="css/window.css" rel="stylesheet" type="text/css" />
-    <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
-    <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
     <link id="theme" rel="stylesheet" href="themes/default.css" type="text/css" />
     <script type="text/javascript">
+        window.loadTheme();
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js"></script>
@@ -29,8 +30,7 @@
         var tabStrip;
         var _current = 0;
         var _loading = 0;
-        loadTheme(window.getSetting('theme'));
-
+        
         window.addEventListener('error', (e) => {
             const { message, filename, lineno, colno, error } = e;
             ipcRenderer.send('log-error', {
@@ -42,15 +42,6 @@
             });
             return true;
         });
-
-        function loadTheme(theme, force) {
-            theme = parseTemplate(theme) + '.css';
-            if (!isFileSync(theme))
-                theme = parseTemplate(path.join('{themes}', 'default')) + '.css';
-            var el = document.getElementById('theme');
-            if (el.getAttribute('href') !== theme || force)
-                el.setAttribute('href', theme);
-        }
 
         function getActiveClient() {
             return _current;

@@ -23,6 +23,10 @@
   - Command line arguments:
     - Added -l/--layout to allow loading of a saved layout
     - Added -il/--ignore-layout to ignore loading last used layout or --layout
+  - Preferences:
+    - `Show add new button next to tabs` add a button to allow creation of new connections from tab strip, *Global preference* 
+    - `Lock layout` saving only the last known global window states and preserve the previous saved windows and clients opened, *Global preference*
+    - `Load layout on open` set a layout file to use when loading client, *Global preference*
 - **Changed:**
   - Preferences that are now global:
     - `Spellchecking` can only now be set as a global preference and requires a restart to effect any already opening clients or windows as it can only be set on window creation

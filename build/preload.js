@@ -1,4 +1,5 @@
 const { ipcRenderer } = require('electron')
+const { parseTemplate, isFileSync } = require('./js/library.js');
 
 window.oldFocus = window.focus;
 window.focus = () => { ipcRenderer.invoke("window", "focus"); };
@@ -28,3 +29,13 @@ dialog = {
     showMessageBoxSync: (options) => ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', options),
     showErrorBox: (title, contents) => ipcRenderer.send('show-error-box', title, contents),
 };
+
+window.loadTheme = (theme, force) => {
+    if(!theme) theme = window.getSetting('theme');
+    theme = parseTemplate(theme) + '.css';
+    if (!isFileSync(theme))
+        theme = parseTemplate(path.join('{themes}', 'default')) + '.css';
+    var el = document.getElementById('theme');
+    if (el && el.getAttribute('href') !== theme || force)
+        el.setAttribute('href', theme);
+}

@@ -272,6 +272,18 @@ function createWindow(options) {
             width: 800,
             height: 600,
         };
+    let backgroundColor = '#000';
+    switch (path.basename(_settings.theme, path.extname(_settings.theme))) {
+        case 'zen':
+            backgroundColor = '#dad2ba';
+            break;
+        case 'lightgray':
+            backgroundColor = 'rgb(240, 240, 240)';
+            break;
+        case 'dark':
+            backgroundColor = 'rgb(30, 30, 30)';
+            break;
+    }
     // Create the browser window.
     let window = new BrowserWindow({
         parent: options.parent || null,
@@ -280,7 +292,7 @@ function createWindow(options) {
         y: getWindowY(bounds.y, bounds.height),
         width: bounds.width,
         height: bounds.height,
-        backgroundColor: options.backgroundColor || '#000',
+        backgroundColor: options.backgroundColor || backgroundColor,
         show: false,
         icon: path.join(__dirname, options.icon || '../assets/icons/png/64x64.png'),
         skipTaskbar: !_settings.showInTaskBar,
@@ -435,7 +447,7 @@ function createWindow(options) {
     window.once('ready-to-show', () => {
         loadWindowScripts(window, options.script || path.basename(options.file, '.html'));
         executeScript(`if(typeof setId === "function") setId(${getWindowId(window)});`, window);
-        executeScript('if(typeof loadTheme === "function") loadTheme(\'' + _settings.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');', window);
+        executeScript('window.loadTheme();', window);
         if (options.data && options.data.data)
             executeScript('if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify(options.data.data) + ');', window);
         updateJumpList();
@@ -710,6 +722,8 @@ app.on('ready', () => {
         _layout = argv.l;
     else if (global.editorOnly)
         _layout = parseTemplate(path.join('{data}', 'editor.layout'));
+    else if (_settings.loadLayout)
+        _layout = parseTemplate(_settings.loadLayout);
 
     //use default
     let _ignore = false;
@@ -1765,6 +1779,20 @@ function createClient(options) {
             preload: path.join(__dirname, 'preload.js')
         }
     });
+    switch (path.basename(_settings.theme, path.extname(_settings.theme))) {
+        case 'zen':
+            view.setBackgroundColor(options.backgroundColor || '#dad2ba');
+            break;
+        case 'lightgray':
+            view.setBackgroundColor(options.backgroundColor || 'rgb(240, 240, 240)');
+            break;
+        case 'dark':
+            view.setBackgroundColor(options.backgroundColor || 'rgb(30, 30, 30)');
+            break;
+        default:
+            view.setBackgroundColor(options.backgroundColor || 'black');
+            break;
+    }
 
     view.webContents.on('context-menu', (e, params) => {
         view.webContents.send('context-menu', params);
@@ -1777,7 +1805,7 @@ function createClient(options) {
     view.webContents.on('devtools-reload-page', () => {
         view.webContents.once('dom-ready', () => {
             executeScript(`if(typeof setId === "function") setId(${getClientId(view)});`, clients[getClientId(view)].view);
-            executeScript('if(typeof loadTheme === "function") loadTheme(\'' + _settings.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');', clients[options.id].view);
+            executeScript('window.loadTheme();', clients[options.id].view);
             /*
             if (options.data)
                 executeScript('if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify({ data: options.data.data, windows: options.data.windows, states: options.data.states }) + ');', clients[options.id].view);
@@ -1910,7 +1938,7 @@ function createClient(options) {
     clients[options.id] = { view: view, windows: [], parent: null, file: options.file !== 'build/index.html' ? options.file : 0, states: {} };
     idMap.set(view, options.id);
     loadWindowScripts(view, options.script || 'user');
-    script = `if(typeof setId === "function") setId(${options.id});if(typeof loadTheme === "function") loadTheme('${_settings.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'')}');`;
+    script = `if(typeof setId === "function") setId(${options.id});window.loadTheme();`;
     if (options.data)
         clients[options.id].options = { data: options.data.data, windows: options.data.windows || [], states: options.data.states || {} };
     else
@@ -3125,82 +3153,103 @@ async function saveWindowLayout(file) {
     if (!file)
         file = parseTemplate(path.join('{data}', global.editorOnly ? 'editor.layout' : 'window.layout'));
     let id;
-    const data = {
-        windowID: _windowID, //save last id to prevent reused ids
-        clientID: _clientID,
-        focusedClient: focusedClient,
-        focusedWindow: focusedWindow,
-        windows: [],
-        clients: [],
-        states: states
-    }
-    //save windows
-    //{ window: window, clients: [], current: 0 }
-    for (id in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, id))
-            continue;
-        const wData = {
-            id: getWindowId(windows[id].window), //use function to ensure proper id data type
-            clients: windows[id].clients,
-            current: windows[id].current,
-            //get any custom data from window
-            data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].window),
-            state: saveWindowState(windows[id].window, stateMap.get(windows[id].window)),
-            menubar: windows[id].menubar ? true : false,
-            options: windows[id].options,
-            windows: []
+    let data;
+    //lock layout loads old layout data and only updates global states and leaves windows/clients alone
+    if (_settings.lockLayout) {
+        try {
+            data = fs.readFileSync(file, 'utf-8');
         }
-        const wl = windows[id].windows.length;
-        for (var idx = 0; idx < wl; idx++) {
-            wData.push({
-                options: windows[id].windows[idx].details.options.features,
-                state: saveWindowState(windows[id].windows[idx].window, stateMap.get(windows[id].windows[idx].window)),
-                data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].windows[idx].window),
-            });
+        catch (e) {
+            logError(e);
+            return;
         }
-        data.windows.push(wData);
+        try {
+            data = JSON.parse(data);
+        }
+        catch (e) {
+            logError(e);
+            return;
+        }
+        data.states = states;
     }
-    //save clients
-    //{parent: window, view: view, menu: menu, windows: childWindows}
-    for (id in clients) {
-        if (!Object.prototype.hasOwnProperty.call(clients, id))
-            continue;
-        const cData = {
-            id: getClientId(clients[id].view), //use function to ensure proper id data type
-            parent: clients[id].parent ? getWindowId(clients[id].parent) : -1,
-            file: clients[id].file,
+    else {
+        data = {
+            windowID: _windowID, //save last id to prevent reused ids
+            clientID: _clientID,
+            focusedClient: focusedClient,
+            focusedWindow: focusedWindow,
             windows: [],
-            state: {
-                bounds: clients[id].view.getBounds(),
-                devTools: clients[id].view.webContents.isDevToolsOpened()
-            },
-            //get any custom data from window
-            data: await executeScript('if(typeof saveWindow === "function") saveWindow()', clients[id].view),
-            states: clients[id].states
+            clients: [],
+            states: states
         }
-        const wl = clients[id].windows.length;
-        for (var idx = 0; idx < wl; idx++) {
-            const window = clients[id].windows[idx].window;
+        //save windows
+        //{ window: window, clients: [], current: 0 }
+        for (id in windows) {
+            if (!Object.prototype.hasOwnProperty.call(windows, id))
+                continue;
             const wData = {
-                client: getClientId(clients[id].view), //use function to ensure proper id data type
-                state: saveWindowState(window, stateMap.get(window)),
-                details: { url: clients[id].windows[idx].details.url, options: clients[id].windows[idx].details.options.features },
+                id: getWindowId(windows[id].window), //use function to ensure proper id data type
+                clients: windows[id].clients,
+                current: windows[id].current,
                 //get any custom data from window
-                data: await executeScript('if(typeof saveWindow === "function") saveWindow()', window)
+                data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].window),
+                state: saveWindowState(windows[id].window, stateMap.get(windows[id].window)),
+                menubar: windows[id].menubar ? true : false,
+                options: windows[id].options,
+                windows: []
             }
-            for (key in wData.state) {
-                if (!Object.prototype.hasOwnProperty.call(wData.state, key) || key === 'alwaysOnTop')
-                    continue;
-                if (key in wData.details.options)
-                    delete wData.details.options[key];
+            const wl = windows[id].windows.length;
+            for (var idx = 0; idx < wl; idx++) {
+                wData.push({
+                    options: windows[id].windows[idx].details.options.features,
+                    state: saveWindowState(windows[id].windows[idx].window, stateMap.get(windows[id].windows[idx].window)),
+                    data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].windows[idx].window),
+                });
             }
-            delete wData.details.options.x;
-            delete wData.details.options.y;
-            delete wData.details.options.width;
-            delete wData.details.options.height;
-            cData.windows.push(wData);
+            data.windows.push(wData);
         }
-        data.clients.push(cData);
+        //save clients
+        //{parent: window, view: view, menu: menu, windows: childWindows}
+        for (id in clients) {
+            if (!Object.prototype.hasOwnProperty.call(clients, id))
+                continue;
+            const cData = {
+                id: getClientId(clients[id].view), //use function to ensure proper id data type
+                parent: clients[id].parent ? getWindowId(clients[id].parent) : -1,
+                file: clients[id].file,
+                windows: [],
+                state: {
+                    bounds: clients[id].view.getBounds(),
+                    devTools: clients[id].view.webContents.isDevToolsOpened()
+                },
+                //get any custom data from window
+                data: await executeScript('if(typeof saveWindow === "function") saveWindow()', clients[id].view),
+                states: clients[id].states
+            }
+            const wl = clients[id].windows.length;
+            for (var idx = 0; idx < wl; idx++) {
+                const window = clients[id].windows[idx].window;
+                const wData = {
+                    client: getClientId(clients[id].view), //use function to ensure proper id data type
+                    state: saveWindowState(window, stateMap.get(window)),
+                    details: { url: clients[id].windows[idx].details.url, options: clients[id].windows[idx].details.options.features },
+                    //get any custom data from window
+                    data: await executeScript('if(typeof saveWindow === "function") saveWindow()', window)
+                }
+                for (key in wData.state) {
+                    if (!Object.prototype.hasOwnProperty.call(wData.state, key) || key === 'alwaysOnTop')
+                        continue;
+                    if (key in wData.details.options)
+                        delete wData.details.options[key];
+                }
+                delete wData.details.options.x;
+                delete wData.details.options.y;
+                delete wData.details.options.width;
+                delete wData.details.options.height;
+                cData.windows.push(wData);
+            }
+            data.clients.push(cData);
+        }
     }
     fs.writeFileSync(file, JSON.stringify(data));
 }
@@ -4006,6 +4055,7 @@ function createMenu(window) {
                         saveWindowLayout(file);
                     }
                 },
+                /*
                 {
                     label: 'L&oad Layout',
                     id: 'loadLayout',
@@ -4031,12 +4081,12 @@ function createMenu(window) {
                     }
                 },
                 {
-                    label: 'Load default Layout',
-                    id: 'defaultLayout',
+                    label: 'Reset Layout',
+                    id: 'resetLayout',
                     click: (item, mWindow) => {
                         dialog.showMessageBox({
                             type: 'info',
-                            message: 'Load default layout?',
+                            message: 'Reset layout to defaults?',
                             buttons: ['Yes', 'No']
                         }).then(result => {
                             if (result.response === 0) {
@@ -4059,6 +4109,7 @@ function createMenu(window) {
                         });
                     }
                 },
+                */
                 /*
                 {
                   label: '&Mail...',

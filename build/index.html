@@ -4,14 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <title></title>
+    <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
     <link href="css/main.css" rel="stylesheet" type="text/css" />
     <link href="css/ansi.css" rel="stylesheet" type="text/css" />
     <link href="css/monsters.css" rel="stylesheet" type="text/css" />
     <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
     <link href="css/theme.css" rel="stylesheet" type="text/css" />
-    <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
-    <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
     <link id="theme" rel="stylesheet" href="themes/default.css" type="text/css" />
+    <script type="text/javascript">window.loadTheme();</script>
 </head>
 
 <body id="client">
@@ -464,8 +465,6 @@
         var _windows = {};
         let closeWindow = false;
         //#endregion
-        loadTheme(window.getSetting('theme'));
-
         //#region window events
         window.addEventListener('keydown', (event) => {
             if (document.getElementById('disconnectDialog').open) {
@@ -742,20 +741,8 @@
             }
         }
 
-        function loadTheme(theme, force) {
-            theme = parseTemplate(theme) + '.css';
-            if (!isFileSync(theme))
-                theme = parseTemplate(path.join('{themes}', 'default')) + '.css';
-            var el = document.getElementById('theme');
-            if (el.getAttribute('href') !== theme || force)
-                el.setAttribute('href', theme);
-            if (client && client.display)
-                client.display.updateLayout();
-        }
-
         async function updateInterface() {
             if (!client || !client.options) return;
-            //loadTheme(client.options.theme);
             const display = document.getElementById('display');
             display.style.left = '';
             document.getElementById('command').style.left = '';
@@ -2968,7 +2955,7 @@
         });
 
         function reloadOptions(settings, global) {
-            if (global) loadTheme(window.getSetting('theme'));
+            if (global) window.loadTheme();
             if (settings !== _windowState.data.settings) return;
             client.loadOptions();
             _logger.postMessage({

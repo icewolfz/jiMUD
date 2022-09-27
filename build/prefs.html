@@ -136,6 +136,7 @@
             _settings = Settings.load(_settingsFile);
             data = [
                 { text: 'General' },
+                { text: 'Interface' },
                 {
                     text: 'Display',
                     nodes: [
@@ -661,6 +662,18 @@
                     $('#logPath').val(_settings.logPath);
                 });
             });
+            $('#btn-loadLayout').on('click', () => {
+                dialog.showOpenDialog({
+                    defaultPath: parseTemplate($('#loadLayout').val()),
+                    properties: ['openDirectory', 'createDirectory']
+                }).then(result => {
+                    if (result.filePaths === undefined || result.filePaths.length === 0) {
+                        return;
+                    }
+                    _settings.loadLayout = templatePath(result.filePaths[0]);
+                    $('#loadLayout').val(_settings.loadLayout);
+                });
+            });            
         });
 
         function sortFiles(a, b) {
@@ -1403,11 +1416,6 @@
                             <input type="checkbox" id="editorPersistent" /> Persistent advanced editor
                         </label>
                     </div>
-                    <div class="col-sm-6 form-group" global>
-                        <label class="control-label">Theme
-                            <select id="theme" data-container="body" class="form-control selectpicker" data-width="150px"></select>
-                        </label>
-                    </div>
                     <div class="col-sm-12 form-group">
                         <label class="control-label">On disconnect do</label>
                         <div class="btn-group" data-toggle="buttons">
@@ -1456,6 +1464,13 @@
                             <input type="checkbox" id="enableSound" /> Enable sound
                         </label>
                     </div>
+                </div>
+                <div role="tabpanel" class="pref-pane global" id="interface">
+                    <div class="col-sm-6 form-group global">
+                        <label class="control-label">Theme
+                            <select id="theme" data-container="body" class="form-control selectpicker" data-width="150px"></select>
+                        </label>
+                    </div>
                     <div class="col-sm-6 form-group global">
                         <label class="control-label">
                             <input type="checkbox" id="alwaysShowTabs" /> Always show window tabs
@@ -1465,8 +1480,25 @@
                         <label class="control-label">
                             <input type="checkbox" id="showTabsAddNewButton" /> Show add new button next to tabs
                         </label>
-                    </div>
-
+                    </div>   
+                    <div class="col-sm-6 form-group global">
+                        <label class="control-label">
+                            <input type="checkbox" id="lockLayout" /> Lock layout
+                        </label>
+                    </div>      
+                    <div class="col-sm-12 form-group">
+                        <label class="control-label" style="width:100%">
+                            Load layout on open
+                            <div class="input-group">
+                                <input type="text" id="loadLayout" style="width:100%" class="input-sm form-control" />
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default btn-sm" type="button" id="btn-loadLayout">
+                                        &hellip;
+                                    </button>
+                                </span>
+                            </div>
+                        </label>
+                    </div>                                                    
                 </div>
                 <div role="tabpanel" class="pref-pane" id="display">
                     <div class="col-sm-6 form-group">
