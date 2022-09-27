@@ -456,7 +456,6 @@ function createWindow(options) {
         executeScript('window.loadTheme();', window);
         if (options.data && options.data.data)
             executeScript('if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify(options.data.data) + ');', window);
-        updateJumpList();
         if (options.data && options.data.state) {
             //restoreWindowState(window, options.data.state);
         }
@@ -820,6 +819,7 @@ app.on('ready', () => {
         }
         createTray();
     }
+    updateJumpList();
     checkForUpdates();
 });
 
