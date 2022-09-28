@@ -3838,7 +3838,18 @@ function createMenu(window) {
                             label: 'Code &editor',
                             id: 'codeEditorbutton',
                             type: 'checkbox',
-                            //click: showCodeEditor
+                            click: (item, mWindow) => {
+                                executeScriptClient('toggleView("button.codeEditor")', window || mWindow, true);
+                            }
+                        },
+                        {
+                            label: '&Immortal tools',
+                            id: 'immortalbutton',
+                            visible: false,
+                            checked: true,
+                            click: (item, mWindow) => {
+                                executeScriptClient('toggleView("button.immortal")', window || mWindow, true);
+                            }
                         },
                         {
                             label: '&Preferences',
