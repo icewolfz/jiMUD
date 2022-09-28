@@ -1040,6 +1040,16 @@ export class DataGrid extends EventEmitter {
         this.doUpdate(UpdateType.buildRows | UpdateType.sort);
     }
 
+    public updateRow(row, newRow) {
+        if (typeof row !== 'number')
+            row = this.$rows.indexOf(row);
+        if (row === -1 || row >= this.$rows.length)
+            return;
+        this.$rows[row] = newRow;
+        this.emit('row-updated');
+        this.doUpdate(UpdateType.buildRows | UpdateType.sort);
+    }
+
     get rows() { return this.$rows.slice(0); }
     set rows(value) {
         value = value || [];
@@ -1544,7 +1554,10 @@ export class DataGrid extends EventEmitter {
                 this.$editor.editors.forEach(ed => ed.editorClick = null);
         });
         row.addEventListener('contextmenu', (e) => {
-            this.emit('row-contextmenu', e);
+            const sIdx = +(<HTMLElement>e.currentTarget).dataset.row;
+            const eR = +(<HTMLElement>e.currentTarget).dataset.dataIndex;
+            const el = <HTMLElement>e.currentTarget;
+            this.emit('row-contextmenu', e, { row: this.$rows[eR], rowIndex: sIdx, parent: +el.dataset.parent, child: +el.dataset.child, dataIndex: eR });
         });
         for (c = 0; c < cl; c++) {
             if (!cols[c].visible) continue;

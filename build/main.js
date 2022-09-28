@@ -1170,7 +1170,9 @@ ipcMain.on('update-character', (event, character, id) => {
 ipcMain.on('add-character', (event, character) => {
     if (!_characters)
         _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
-    event.returnValue = _characters.addCharacter(character);
+    const id = _characters.addCharacter(character);
+    event.returnValue = id;
+    character.ID = id;
     for (clientId in clients) {
         if (!Object.prototype.hasOwnProperty.call(clients, clientId))
             continue;

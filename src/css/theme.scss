@@ -256,7 +256,8 @@ button.active.focus {
     bottom: 0px;
     right: 0px;
     z-index: 10000;
-    background-color: white;
+    color: wheat;
+    background-color: black;
 }
 
 #loader .text {
@@ -269,9 +270,9 @@ button.active.focus {
 }
 
 .loader {
-    border: 16px solid #f3f3f3;
+    border: 16px solid #790000;
     /* Light grey */
-    border-top: 16px solid #3498db;
+    border-top: 16px solid #d70000;
     /* Blue */
     border-radius: 50%;
     width: 120px;

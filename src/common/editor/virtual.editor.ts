@@ -6282,7 +6282,7 @@ export class VirtualEditor extends EditorBase {
         if (this.$exitGrid) {
             this.$exitGrid.enterMoveFirst = value.enterMoveFirst;
             this.$exitGrid.enterMoveNext = value.enterMoveNext;
-            this.$descriptionGrid.enterMoveNew = value.enterMoveNew;
+            this.$exitGrid.enterMoveNew = value.enterMoveNew;
         }
 
         if (this.$roomEditor) {
