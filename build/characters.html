@@ -991,15 +991,16 @@
         }
 
         function getSettings() {
-            if (!current) return window.getGlobal('settingsFile');
-            return parseTemplate(current.Preferences);
+            if(_charactersDataGrid.selectedCount === 0)
+                return window.getGlobal('settingsFile');
+            return parseTemplate(_charactersDataGrid.selected[0].data.Preferences);
         }
 
         var prefs;
         function openPreferences() {
             prefs = window.open('prefs.html', 'modal', 'width=800,height=460,backgroundColor=#fff,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
             prefs.addEventListener('load', () => {
-                prefs.document.title = 'Preferences for ' + current.Title;
+                prefs.document.title = 'Preferences for ' + _charactersDataGrid.selected[0].data.Title;
             });
         }
 
