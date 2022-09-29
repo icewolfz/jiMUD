@@ -791,7 +791,7 @@
             //document.getElementById('mail').style.display = client.options.buttons.mail ? '' : 'none';
             //document.getElementById('compose').style.display = client.options.buttons.compose ? '' : 'none';
             document.getElementById('codeEditor').style.display = client.options.buttons.codeEditor ? '' : 'none';
-            document.getElementById('immortal').style.display = client.options.buttons.immortal && document.getElementById('immortal').dataset.show ? '' : 'none';
+            document.getElementById('immortal').style.display = client.options.buttons.immortal && document.getElementById('immortal').dataset.show === 'true' ? '' : 'none';
             if (client.enableParsing)
                 document.getElementById('btnParsing').classList.add('on');
             else
@@ -2706,8 +2706,8 @@
                 { menu: ['view', 'lock'], options: { checked: client.options.scrollLocked } },
                 { menu: ['view', 'buttons', 'connectbutton'], options: { checked: client.options.buttons.connect } },
                 { menu: ['view', 'buttons', 'preferencesbutton'], options: { checked: client.options.buttons.preferences } },
-                { menu: ['view', 'buttons', 'codeEditor'], options: { checked: client.options.buttons.codeEditor } },
-                { menu: ['view', 'buttons', 'immortal'], options: { checked: client.options.buttons.immortal } },
+                { menu: ['view', 'buttons', 'codeEditorbutton'], options: { checked: client.options.buttons.codeEditor } },
+                { menu: ['view', 'buttons', 'immortalbutton'], options: { checked: client.options.buttons.immortal } },
                 { menu: ['view', 'buttons', 'logbutton'], options: { checked: client.options.buttons.log } },
                 { menu: ['view', 'buttons', 'clearbutton'], options: { checked: client.options.buttons.clear } },
                 { menu: ['view', 'buttons', 'lockbutton'], options: { checked: client.options.buttons.lock } },

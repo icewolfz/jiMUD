@@ -3944,8 +3944,9 @@ function createMenu(window) {
                         {
                             label: '&Immortal tools',
                             id: 'immortalbutton',
+                            type: 'checkbox',
                             visible: false,
-                            checked: true,
+                            checked: false,
                             click: (item, mWindow) => {
                                 executeScriptClient('toggleView("button.immortal")', window || mWindow, true);
                             }
@@ -3954,7 +3955,7 @@ function createMenu(window) {
                             label: '&Preferences',
                             id: 'preferencesbutton',
                             type: 'checkbox',
-                            checked: true,
+                            checked: false,
                             click: (item, mWindow) => {
                                 executeScriptClient('toggleView("button.preferences")', window || mWindow, true);
                             }
