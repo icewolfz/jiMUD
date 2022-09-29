@@ -72,6 +72,10 @@ Usage: `jiMUD [arguments...]`
 - `-nci, --no-character-import` Do not import old character.json
 - `-f, --force` Force load of instance even if single only instance enable
 - `-nls, --no-layout-save` Do not save any layout changes when application is closed
+- `-nw, --new-window` Open a new window
+- `-nw=[id], --new-window=[id]` Open a new window with and load a character
+- `-nc, --new-connection` Open a new connection
+- `-nc=[id], --new-connection=[id]` Open a new connection and load a character, similar to --character but will not replace current active connection if it exist
 
 ## References
 

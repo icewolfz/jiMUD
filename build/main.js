@@ -214,7 +214,11 @@ function commandLineArgumentHelp() {
     msg += '-il, --ignore-layout - Ignore layout and do not save window states\n';
     msg += '-nci, --no-character-import - Do not import old characters.json\n';
     msg += '-f, --force - Force load of instance even if single only instance enabled\n';
-    msg += '-nls, --no-layout-save - Do not save any layout changes when application is closed'
+    msg += '-nls, --no-layout-save - Do not save any layout changes when application is closed\n';
+    msg += '-nw, --new-window - Open a new window\n';
+    msg += '-nw=[id], --new-window=[id] - Open a new window with and load a character\n';
+    msg += '-nc, --new-connection - Open a new connection\n';
+    msg += '-nc=[id], --new-connection=[id] - Open a new connection and load a character, similar to --character but will not replace current active connection if it exist';
     return msg;
 }
 
@@ -237,6 +241,10 @@ function displayConsoleHelp() {
     console.log('-nci, --no-character-import               Do not import old characters.json');
     console.log('-f, --force                               Force load of instance even if single only instance enabled');
     console.log('-nls, --no-layout-save                    Do not save any layout changes when application is closed');
+    console.log('-nw, --new-window                         Open a new window');
+    console.log('-nw=[id], --new-window=[id]               Open a new window with and load a character');
+    console.log('-nc, --new-connection                     Open a new connection')
+    console.log('-nc=[id], --new-connection=[id]           Open a new connection and load a character, similar to --character but will not replace current active connection if it exist');
 }
 
 //id, data, file, title, icon
@@ -900,7 +908,7 @@ app.on('ready', () => {
     //attempt to load layout, 
     if (isFileSync(_layout)) {
         if (!argv.il) {
-            if (!global.editorOnly && argv.c) {
+            if (!global.editorOnly && (argv.c || argv.nc)) {
                 if (Array.isArray(argv.c))
                     charID = argv.c.map(c => {
                         char = getCharacterFromId(c);
@@ -911,7 +919,7 @@ app.on('ready', () => {
                             port: char.Port
                         }
                     });
-                else {
+                else if (argv.c) {
                     getCharacterFromId(argv.c);
                     charID = [{
                         characterId: charID.ID,
@@ -919,6 +927,40 @@ app.on('ready', () => {
                         map: parseTemplate(charID.Map),
                         port: charID.Port
                     }];
+                }
+                //not set so set first as null as new connections do not replace current connection
+                if (!charID) charID = [null];
+                if (Array.isArray(argv.nc))
+                    charID.push(...argv.nc.map(c => {
+                        if (typeof c === 'string' || typeof c === 'number') {
+                            char = getCharacterFromId(c);
+                            return {
+                                characterId: char.ID,
+                                settings: parseTemplate(char.Preferences),
+                                map: parseTemplate(char.Map),
+                                port: char.Port
+                            }
+                        }
+                        else
+                            return {
+                                settings: global.settingsFile,
+                                map: global.mapFile
+                            }
+                    }));
+                else if (typeof argv.nc === 'string' || typeof argv.nc === 'number') {
+                    char = getCharacterFromId(argv.nc);
+                    charID.push({
+                        characterId: char.ID,
+                        settings: parseTemplate(char.Preferences),
+                        map: parseTemplate(char.Map),
+                        port: char.Port
+                    });
+                }
+                else if (argv.nc) {
+                    charID.push({
+                        settings: global.settingsFile,
+                        map: global.mapFile
+                    });
                 }
                 _loaded = loadWindowLayout(_layout, charID);
             }
@@ -935,7 +977,7 @@ app.on('ready', () => {
         _loaded = _ignore;
         if (global.editorOnly)
             newEditorWindow(null, argv.eo);
-        else if (argv.c) {
+        else if (argv.c || argv.nc) {
             if (Array.isArray(argv.c))
                 charID = argv.c.map(c => {
                     char = getCharacterFromId(c);
@@ -946,7 +988,7 @@ app.on('ready', () => {
                         port: char.Port
                     }
                 });
-            else {
+            else if (argv.c) {
                 getCharacterFromId(argv.c);
                 charID = [{
                     characterId: charID.ID,
@@ -954,6 +996,39 @@ app.on('ready', () => {
                     map: parseTemplate(charID.Map),
                     port: charID.Port
                 }];
+            }
+            if (!charID) charID = [];
+            if (Array.isArray(argv.nc))
+                charID.push(...argv.nc.map(c => {
+                    if (typeof c === 'string' || typeof c === 'number') {
+                        char = getCharacterFromId(c);
+                        return {
+                            characterId: char.ID,
+                            settings: parseTemplate(char.Preferences),
+                            map: parseTemplate(char.Map),
+                            port: char.Port
+                        }
+                    }
+                    else
+                        return {
+                            settings: global.settingsFile,
+                            map: global.mapFile
+                        }
+                }));
+            else if (typeof argv.nc === 'string' || typeof argv.nc === 'number') {
+                char = getCharacterFromId(argv.nc);
+                charID.push({
+                    characterId: char.ID,
+                    settings: parseTemplate(char.Preferences),
+                    map: parseTemplate(char.Map),
+                    port: char.Port
+                });
+            }
+            else if (argv.nc) {
+                charID.push({
+                    settings: global.settingsFile,
+                    map: global.mapFile
+                });
             }
             newClientWindow(null, null, charID);
         }
@@ -981,6 +1056,34 @@ app.on('ready', () => {
                 executeScriptClient(`openFiles("${argv.e}")`, window.window, true);
             else
                 executeScriptClient('openWindow("code.editor")', window.window, true);
+        }
+
+        if (Array.isArray(argv.nw)) {
+            for (let nc = 0, ncl = argv.nw.length; nc < ncl; nc++) {
+                if (typeof argv.nw[nc] === 'string' || typeof argv.nw[nc] === 'number') {
+                    char = getCharacterFromId(argv.nw[nc]);
+                    newClientWindow(window.window, null, {
+                        characterId: char.ID,
+                        settings: parseTemplate(char.Preferences),
+                        map: parseTemplate(char.Map),
+                        port: char.Port
+                    });
+                }
+                else
+                    newClientWindow(window.window);
+            }
+        }
+        else if (typeof argv.nw === 'string' || typeof argv.nw === 'number') {
+            char = getCharacterFromId(argv.nw);
+            newClientWindow(window.window, null, {
+                characterId: char.ID,
+                settings: parseTemplate(char.Preferences),
+                map: parseTemplate(char.Map),
+                port: char.Port
+            });
+        }
+        else if (argv.nw) {
+            newClientWindow(window.window);
         }
         createTray();
     }
@@ -3478,7 +3581,8 @@ function loadWindowLayout(file, charData) {
     for (i = 0; i < il; i++) {
         const client = data.clients[i];
         if (client.id === windows[focusedWindow].current && charData) {
-            client.data = charData[0];
+            if (charData[0])
+                client.data = charData[0];
             charData.shift();
         }
         createClient({ bounds: client.state.bounds, id: client.id, data: client, file: client.file });
