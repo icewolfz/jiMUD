@@ -130,50 +130,6 @@ let _characters;
 let tray = null;
 const stateMap = new Map();
 
-//do not import if editor only mode
-if (!argv.eo && !argv.nci && isFileSync(path.join(app.getPath('userData'), 'characters.json'))) {
-    let oldCharacters = fs.readFileSync(path.join(app.getPath('userData'), 'characters.json'), 'utf-8');
-    try {
-        //data try and convert and then import any found data
-        if (oldCharacters && oldCharacters.length > 0) {
-            _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
-            oldCharacters = JSON.parse(oldCharacters);
-            for (title in oldCharacters.characters) {
-                if (!Object.prototype.hasOwnProperty.call(oldCharacters.characters, title))
-                    continue;
-                const character = oldCharacters.characters[title];
-                _characters.addCharacter({
-                    Title: title,
-                    Host: 'www.shadowmud.com',
-                    Port: character.dev ? 1035 : 1030,
-                    AutoLoad: oldCharacters.load === title,
-                    Disconnect: character.disconnect,
-                    UseAddress: false,
-                    Days: 0,
-                    Name: character.name || (title || '').replace(/[^a-zA-Z0-9]+/g, ''),
-                    Password: character.password,
-                    Preferences: character.settings,
-                    Map: character.map,
-                    Notes: path.join('{characters}', `${title}.notes`),
-                    TotalMilliseconds: 0,
-                    TotalDays: 0,
-                    LastConnected: 0
-                });
-            }
-            oldCharacters = null;
-            _characters.save();
-        }
-        // Rename the file old file as no longer needed just in case
-        fs.rename(path.join(app.getPath('userData'), 'characters.json'), path.join(app.getPath('userData'), 'characters.json.bak'), (err) => {
-            if (err)
-                logError(err);
-        });
-    }
-    catch (e) {
-        logError(e);
-    }
-}
-
 process.on('uncaughtException', (err) => {
     logError(err);
 });
@@ -814,6 +770,50 @@ if (_settings.useSingleInstance && !global.editorOnly && !argv.f) {
                 active.window.focus();
             }
         });
+}
+
+//do not import if editor only mode, process after instance use to avoid processing file if not needed
+if (!argv.eo && !argv.nci && isFileSync(path.join(app.getPath('userData'), 'characters.json'))) {
+    let oldCharacters = fs.readFileSync(path.join(app.getPath('userData'), 'characters.json'), 'utf-8');
+    try {
+        //data try and convert and then import any found data
+        if (oldCharacters && oldCharacters.length > 0) {
+            _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
+            oldCharacters = JSON.parse(oldCharacters);
+            for (title in oldCharacters.characters) {
+                if (!Object.prototype.hasOwnProperty.call(oldCharacters.characters, title))
+                    continue;
+                const character = oldCharacters.characters[title];
+                _characters.addCharacter({
+                    Title: title,
+                    Host: 'www.shadowmud.com',
+                    Port: character.dev ? 1035 : 1030,
+                    AutoLoad: oldCharacters.load === title,
+                    Disconnect: character.disconnect,
+                    UseAddress: false,
+                    Days: 0,
+                    Name: character.name || (title || '').replace(/[^a-zA-Z0-9]+/g, ''),
+                    Password: character.password,
+                    Preferences: character.settings,
+                    Map: character.map,
+                    Notes: path.join('{characters}', `${title}.notes`),
+                    TotalMilliseconds: 0,
+                    TotalDays: 0,
+                    LastConnected: 0
+                });
+            }
+            oldCharacters = null;
+            _characters.save();
+        }
+        // Rename the file old file as no longer needed just in case
+        fs.rename(path.join(app.getPath('userData'), 'characters.json'), path.join(app.getPath('userData'), 'characters.json.bak'), (err) => {
+            if (err)
+                logError(err);
+        });
+    }
+    catch (e) {
+        logError(e);
+    }
 }
 
 if (Array.isArray(argv.l))
