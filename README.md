@@ -70,6 +70,7 @@ Usage: `jiMUD [arguments...]`
 - `-l=[file], -layout=[file]` Load window layout file
 - `-il, --ignore-layout` Ignore layout and do not save window states
 - `-nci, --no-character-import` Do not import old character.json
+- `-f, --force` Force load of instance even if single only instance enable
 
 ## References
 

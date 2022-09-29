@@ -67,7 +67,7 @@
         <a href="javascript:void(0)" title="Characters" id="characters" class="button" onclick="openWindow('characters');">
             <i class="fa fa-user"></i>
         </a>
-        <a href="javascript:void(0)" title="Immortal Tools" id="immortal" class="button" onclick="openWindow('immortal')" style="display: none">
+        <a href="javascript:void(0)" title="Immortal Tools" id="immortal" data-show="false" class="button" onclick="openWindow('immortal')" style="display: none">
             <i class="fa fa-code-fork"></i>
         </a>
         <a href="javascript:void(0)" title="Code Editor" id="codeEditor" class="button" onclick="openWindow('code.editor')">
@@ -791,7 +791,7 @@
             //document.getElementById('mail').style.display = client.options.buttons.mail ? '' : 'none';
             //document.getElementById('compose').style.display = client.options.buttons.compose ? '' : 'none';
             document.getElementById('codeEditor').style.display = client.options.buttons.codeEditor ? '' : 'none';
-            document.getElementById('immortal').style.display = client.options.buttons.immortal ? '' : 'none';
+            document.getElementById('immortal').style.display = client.options.buttons.immortal && document.getElementById('immortal').dataset.show ? '' : 'none';
             if (client.enableParsing)
                 document.getElementById('btnParsing').classList.add('on');
             else
@@ -1562,6 +1562,7 @@
                     { menu: ['window', 'immortal'], options: { visible: false } },
                     { menu: ['view', 'buttons', 'immortalbutton'], options: { visible: false } }
                 ]);
+                document.getElementById('immortal').dataset.show = 'false';
                 document.getElementById('immortal').style.display = 'none';
                 updateTitle();
                 ipcRenderer.send('update-title', { icon: client.port === 1035 ? 4 : 1 });
@@ -1743,7 +1744,11 @@
                             { menu: ['window', 'immortal'], options: { visible: true } },
                             { menu: ['view', 'buttons', 'immortalbutton'], options: { visible: true } }
                         ]);
-                        document.getElementById('immortal').style.display = 'block';
+                        document.getElementById('immortal').dataset.show = 'true';
+                        if(client.options.buttons.immortal)
+                            document.getElementById('immortal').style.display = 'block';
+                        else
+                            document.getElementById('immortal').style.display = 'none';
                         break;
                 }
                 //TODO just have child windows do window.opener.client.on(...) directly, note will need to also make sure they unhook event when closed
@@ -2014,7 +2019,7 @@
                         toggleView('button.codeEditor');
                     }
                 }));
-                if (document.getElementById('immortal').style.display !== 'none')
+                if (document.getElementById('immortal').dataset.show === 'true')
                     c.append(new MenuItem({
                         label: 'Immortal tools',
                         type: 'checkbox',

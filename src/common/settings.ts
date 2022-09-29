@@ -583,6 +583,8 @@ export class Settings {
     public lockLayout: boolean = false;
     public loadLayout: string = '';
 
+    public useSingleInstance: boolean = true;
+
     public static load(file) {
         try {
             if (!fs.statSync(file).isFile())

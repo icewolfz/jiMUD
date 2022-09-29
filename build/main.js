@@ -41,7 +41,7 @@ else //not found use native
 
 argv = require('yargs-parser')(argv, {
     string: ['data-dir', 's', 'setting', 'm', 'map', 'c', 'character', 'l', 'layout'],
-    boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import'],
+    boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import', 'f', 'force', 'new-connection', 'nw', 'new-window'],
     alias: {
         'd': ['debug'],
         'eo': ['editorOnly', 'editoronly'],
@@ -54,7 +54,10 @@ argv = require('yargs-parser')(argv, {
         'e': ['editor'],
         'l': ['layout'],
         'il': ['ignore-layout'],
-        'nci': ['no-character-import']
+        'nci': ['no-character-import'],
+        'f': ['force'],
+        'nc': ['new-connection'],
+        'nw': ['new-window']
     },
     configuration: {
         'short-option-groups': false
@@ -75,6 +78,26 @@ if (!process.env.PORTABLE_EXECUTABLE_DIR) {
         return;
     }
     else if (argv.v) {
+        console.log(`jiMUD v${require('../package.json').version}`);
+        app.quit();
+        return;
+    }
+}
+else if (process.env.PORTABLE_EXECUTABLE_DIR) {
+    if (argv._.indexOf('/?') !== -1 || argv.h) {
+        dialog.showMessageBox({
+            type: 'info',
+            message: commandLineArgumentHelp()
+        });
+        displayConsoleHelp();
+        app.quit();
+        return;
+    }
+    else if (argv.v) {
+        dialog.showMessageBox({
+            type: 'info',
+            message: `jiMUD v${require('../package.json').version}`
+        });
         console.log(`jiMUD v${require('../package.json').version}`);
         app.quit();
         return;
@@ -232,7 +255,8 @@ function commandLineArgumentHelp() {
     msg += '-data-dir=[file] - Set a custom directory to store saved data\n';
     msg += '-l=[file], --layout=[file] - Load window layout file\n';
     msg += '-il, --ignore-layout - Ignore layout and do not save window states\n';
-    msg += '-nci, --no-character-import - Do not import old characters.json';
+    msg += '-nci, --no-character-import - Do not import old characters.json\n';
+    msg += '-f, --force - Force load of instance even if single only instance enabled';
     return msg;
 }
 
@@ -253,6 +277,7 @@ function displayConsoleHelp() {
     console.log('-l=[file], --layout=[file]                Load window layout file');
     console.log('-il, --ignore-layout                      Ignore layout and do not save window states');
     console.log('-nci, --no-character-import               Do not import old characters.json');
+    console.log('-f, --force                               Force load of instance even if single only instance enabled');
 }
 
 //id, data, file, title, icon
@@ -672,6 +697,127 @@ function createDialog(options) {
 if (argv['disable-gpu'])
     app.disableHardwareAcceleration();
 
+global.debug = argv.debug;
+if (Array.isArray(argv.s)) {
+    global.settingsFile = parseTemplate(argv.s[0]);
+    _settings = settings.Settings.load(global.settingsFile);
+}
+else if (argv.s) {
+    global.settingsFile = parseTemplate(argv.s);
+    _settings = settings.Settings.load(global.settingsFile);
+}
+
+if (Array.isArray(argv.m))
+    global.mapFile = parseTemplate(argv.m[0]);
+else if (argv.m)
+    global.mapFile = parseTemplate(argv.m);
+
+if (argv.eo)
+    global.editorOnly = true;
+
+if (_settings.useSingleInstance && !global.editorOnly && !argv.f) {
+    var lock = app.requestSingleInstanceLock();
+    if (!lock) {
+        app.quit();
+        return;
+    }
+    else
+        app.on('second-instance', (event, second_argv, workingDirectory, additionalData) => {
+            second_argv = require('yargs-parser')(second_argv, {
+                string: ['data-dir', 's', 'setting', 'm', 'map', 'c', 'character', 'l', 'layout'],
+                boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import', 'f', 'force', 'nc', 'new-connection', 'nw', 'new-window'],
+                alias: {
+                    'd': ['debug'],
+                    'eo': ['editorOnly', 'editoronly'],
+                    'h': ['help', '?'],
+                    'v': ['version'],
+                    'no-pd': ['no-portable-dir'],
+                    's': ['settings'],
+                    'm': ['map'],
+                    'c': ['character', 'char'],
+                    'e': ['editor'],
+                    'l': ['layout'],
+                    'il': ['ignore-layout'],
+                    'nci': ['no-character-import'],
+                    'f': ['force'],
+                    'nc': ['new-connection'],
+                    'nw': ['new-window']
+                },
+                configuration: {
+                    'short-option-groups': false
+                }
+            });
+            const active = getActiveWindow();
+            let fWindow = false;
+            if (Array.isArray(second_argv.nc)) {
+                for (let nc = 0, ncl = second_argv.nc.length; nc < ncl; nc++)
+                    newConnection(active.window);
+                fWindow = true;
+            }
+            else if (second_argv.nc) {
+                newConnection(active.window);
+                fWindow = true;
+            }
+            if (Array.isArray(second_argv.nw)) {
+                for (let nc = 0, ncl = second_argv.nw.length; nc < ncl; nc++)
+                    newClientWindow(active.window);
+            }
+            else if (second_argv.nw) {
+                newClientWindow(active.window);
+            }
+            else
+                fWindow = true;
+
+            if (Array.isArray(second_argv.c)) {
+                second_argv.c.map(c => {
+                    char = getCharacterFromId(c);
+                    newConnection(active.window, null, {
+                        characterId: char.ID,
+                        settings: parseTemplate(char.Preferences),
+                        map: parseTemplate(char.Map),
+                        port: char.Port
+                    });
+                });
+                fWindow = true;
+            }
+            else if (second_argv.c) {
+                const charID = getCharacterFromId(second_argv.c);
+                newConnection(active.window, null, {
+                    characterId: charID.ID,
+                    settings: parseTemplate(charID.Preferences),
+                    map: parseTemplate(charID.Map),
+                    port: charID.Port
+                });
+                fWindow = true;
+            }
+            if (argv.e) {
+                //showCodeEditor();
+                if (Array.isArray(argv.e))
+                    executeScriptClient(`openFiles("${argv.e.join('", "')}")`, active.window, true);
+                else if (typeof argv.e === 'string')
+                    executeScriptClient(`openFiles("${argv.e}")`, active.window, true);
+                else
+                    executeScriptClient('openWindow("code.editor")', active.window, true);
+                fWindow = true;
+            }
+
+            if (fWindow) {
+                restoreWindowState(active.window, stateMap.get(active.window), 2);
+                active.window.focus();
+            }
+        });
+}
+
+if (Array.isArray(argv.l))
+    _layout = parseTemplate(argv.l[0]);
+else if (argv.l)
+    _layout = argv.l;
+else if (global.editorOnly)
+    _layout = parseTemplate(path.join('{data}', 'editor.layout'));
+else if (_settings.loadLayout)
+    _layout = parseTemplate(_settings.loadLayout);
+
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -680,55 +826,6 @@ app.on('ready', () => {
     let charID;
     if (!existsSync(path.join(app.getPath('userData'), 'characters')))
         fs.mkdirSync(path.join(app.getPath('userData'), 'characters'));
-
-    var a, al;
-    if (process.env.PORTABLE_EXECUTABLE_DIR) {
-        if (argv._.indexOf('/?') !== -1 || argv.h) {
-            dialog.showMessageBox({
-                type: 'info',
-                message: commandLineArgumentHelp()
-            });
-            displayConsoleHelp();
-            app.quit();
-            return;
-        }
-        else if (argv.v) {
-            dialog.showMessageBox({
-                type: 'info',
-                message: `jiMUD v${require('../package.json').version}`
-            });
-            console.log(`jiMUD v${require('../package.json').version}`);
-            app.quit();
-            return;
-        }
-    }
-
-    global.debug = argv.debug;
-    if (Array.isArray(argv.s)) {
-        global.settingsFile = parseTemplate(argv.s[0]);
-        _settings = settings.Settings.load(global.settingsFile);
-    }
-    else if (argv.s) {
-        global.settingsFile = parseTemplate(argv.s);
-        _settings = settings.Settings.load(global.settingsFile);
-    }
-
-    if (Array.isArray(argv.m))
-        global.mapFile = parseTemplate(argv.m[0]);
-    else if (argv.m)
-        global.mapFile = parseTemplate(argv.m);
-
-    if (argv.eo)
-        global.editorOnly = true;
-
-    if (Array.isArray(argv.l))
-        _layout = parseTemplate(argv.l[0]);
-    else if (argv.l)
-        _layout = argv.l;
-    else if (global.editorOnly)
-        _layout = parseTemplate(path.join('{data}', 'editor.layout'));
-    else if (_settings.loadLayout)
-        _layout = parseTemplate(_settings.loadLayout);
 
     //use default
     let _ignore = false;
@@ -868,6 +965,8 @@ app.on('before-quit', async (e) => {
         await saveWindowLayout();
         _saved = true;
     }
+    if (app.hasSingleInstanceLock())
+        app.releaseSingleInstanceLock();
 });
 
 ipcMain.on('log', (event, raw) => {
@@ -2469,45 +2568,36 @@ function updateJumpList() {
         items: [
             {
                 type: 'task',
-                title: 'New Code Editor',
+                title: 'New code editor',
                 description: 'Opens a new code editor',
                 program: process.execPath,
                 args: '-eo', // force editor only mode
                 iconPath: process.execPath,
                 iconIndex: 0
-            },
-            /** 
-             * TODO need to figure this out, 
-             * either need to use node-ipc or some way to communicate between instances, 
-             * also to see if an instance is even open, can use requestSingleInstanceLock
-             * but then everything has to be in 1 program even editor only and that
-             * requires changing how that works when client is also open
-             * 
-             * maybe offer an option to make all 1 instance or separate, and add/remove
-             * New connection as needed as if not single new connection would just open up a new window
-             */
-            /*
-            {
-                type: 'task',
-                title: 'New Connection',
-                description: 'Opens a new connection in active window',
-                program: process.execPath,
-                args: '-eo', // force editor only mode
-                iconPath: process.execPath,
-                iconIndex: 0
-            },
-            {
-                type: 'task',
-                title: 'New Window',
-                description: 'Opens a new window',
-                program: process.execPath,
-                args: '-eo', // force editor only mode
-                iconPath: process.execPath,
-                iconIndex: 0
-            }          
-            */
+            }
         ]
     });
+    if (_settings.useSingleInstance)
+        list[0].items.push(...[
+            {
+                type: 'task',
+                title: 'New connection',
+                description: 'Opens a new connection in active window',
+                program: process.execPath,
+                args: '-nc',
+                iconPath: process.execPath,
+                iconIndex: 0
+            },
+            {
+                type: 'task',
+                title: 'New window',
+                description: 'Opens a new window',
+                program: process.execPath,
+                args: '-nw',
+                iconPath: process.execPath,
+                iconIndex: 0
+            }
+        ]);
     //TODO add recent support, require instance check
     /*
     list.push({
@@ -3838,6 +3928,7 @@ function createMenu(window) {
                             label: 'Code &editor',
                             id: 'codeEditorbutton',
                             type: 'checkbox',
+                            checked: true,
                             click: (item, mWindow) => {
                                 executeScriptClient('toggleView("button.codeEditor")', window || mWindow, true);
                             }
