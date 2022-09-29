@@ -41,7 +41,7 @@ else //not found use native
 
 argv = require('yargs-parser')(argv, {
     string: ['data-dir', 's', 'setting', 'm', 'map', 'c', 'character', 'l', 'layout'],
-    boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import', 'f', 'force', 'new-connection', 'nw', 'new-window', 'nls', 'no-layout-save'],
+    boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import', 'f', 'force', 'nls', 'no-layout-save'],
     alias: {
         'd': ['debug'],
         'eo': ['editorOnly', 'editoronly'],
@@ -688,7 +688,7 @@ if (_settings.useSingleInstance && !global.editorOnly && !argv.f) {
         app.on('second-instance', (event, second_argv, workingDirectory, additionalData) => {
             second_argv = require('yargs-parser')(second_argv, {
                 string: ['data-dir', 's', 'setting', 'm', 'map', 'c', 'character', 'l', 'layout'],
-                boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import', 'f', 'force', 'nc', 'new-connection', 'nw', 'new-window', 'nls', 'no-layout-save'],
+                boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import', 'f', 'force', 'nls', 'no-layout-save'],
                 alias: {
                     'd': ['debug'],
                     'eo': ['editorOnly', 'editoronly'],
@@ -713,9 +713,31 @@ if (_settings.useSingleInstance && !global.editorOnly && !argv.f) {
             });
             const active = getActiveWindow();
             let fWindow = -1;
+            let char;
             if (Array.isArray(second_argv.nw)) {
-                for (let nc = 0, ncl = second_argv.nw.length; nc < ncl; nc++)
-                    newClientWindow(active.window);
+                for (let nc = 0, ncl = second_argv.nw.length; nc < ncl; nc++) {
+                    if (typeof second_argv.nw[nc] === 'string' || typeof second_argv.nw[nc] === 'number') {
+                        char = getCharacterFromId(second_argv.nw[nc]);
+                        newClientWindow(active.window, null, {
+                            characterId: char.ID,
+                            settings: parseTemplate(char.Preferences),
+                            map: parseTemplate(char.Map),
+                            port: char.Port
+                        });
+                    }
+                    else
+                        newClientWindow(active.window);
+                }
+                fWindow = 0;
+            }
+            else if (typeof second_argv.nw === 'string' || typeof second_argv.nw === 'number') {
+                char = getCharacterFromId(second_argv.nw);
+                newClientWindow(active.window, null, {
+                    characterId: char.ID,
+                    settings: parseTemplate(char.Preferences),
+                    map: parseTemplate(char.Map),
+                    port: char.Port
+                });
                 fWindow = 0;
             }
             else if (second_argv.nw) {
@@ -724,15 +746,35 @@ if (_settings.useSingleInstance && !global.editorOnly && !argv.f) {
             }
 
             if (Array.isArray(second_argv.nc)) {
-                for (let nc = 0, ncl = second_argv.nc.length; nc < ncl; nc++)
-                    newConnection(active.window);
+                for (let nc = 0, ncl = second_argv.nc.length; nc < ncl; nc++) {
+                    if (typeof second_argv.nw[nc] === 'string' || typeof second_argv.nw[nc] === 'number') {
+                        char = getCharacterFromId(second_argv.nw[nc]);
+                        newConnection(active.window, null, {
+                            characterId: char.ID,
+                            settings: parseTemplate(char.Preferences),
+                            map: parseTemplate(char.Map),
+                            port: char.Port
+                        });
+                    }
+                    else
+                        newConnection(active.window);
+                }
                 fWindow = 1;
+            }
+            else if (typeof second_argv.nc === 'string' || typeof second_argv.nc === 'number') {
+                char = getCharacterFromId(second_argv.nw);
+                newConnection(active.window, null, {
+                    characterId: char.ID,
+                    settings: parseTemplate(char.Preferences),
+                    map: parseTemplate(char.Map),
+                    port: char.Port
+                });
+                fWindow = 0;
             }
             else if (second_argv.nc) {
                 newConnection(active.window);
                 fWindow = 1;
             }
-
 
             if (Array.isArray(second_argv.c)) {
                 second_argv.c.map(c => {
@@ -747,12 +789,12 @@ if (_settings.useSingleInstance && !global.editorOnly && !argv.f) {
                 fWindow = 1;
             }
             else if (second_argv.c) {
-                const charID = getCharacterFromId(second_argv.c);
+                char = getCharacterFromId(second_argv.c);
                 newConnection(active.window, null, {
-                    characterId: charID.ID,
-                    settings: parseTemplate(charID.Preferences),
-                    map: parseTemplate(charID.Map),
-                    port: charID.Port
+                    characterId: char.ID,
+                    settings: parseTemplate(char.Preferences),
+                    map: parseTemplate(char.Map),
+                    port: char.Port
                 });
                 fWindow = 1;
             }
