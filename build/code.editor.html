@@ -4621,7 +4621,7 @@
         menubar.updateItem('file|open remote...', { enabled: connected });
         $('.connected').prop('disabled', !(connected && manager.active && manager.active.editor));
         if (manager.active && manager.active.editor)
-            manager.active.editor.updateMenu(menubar, connected);
+            manager.active.editor.update('menu', menubar, connected);
     };
     function clientClosed() {
         connected = false;
@@ -4634,7 +4634,7 @@
         menubar.updateItem('file|open remote...', { enabled: false });
         $('.connected').prop('disabled', true);
         if (manager.active && manager.active.editor)
-            manager.active.editor.updateMenu(menubar, connected);
+            manager.active.editor.update('menu', menubar, connected);
     };
 
     function reloadOptions() {
