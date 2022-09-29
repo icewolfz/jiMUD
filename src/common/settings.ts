@@ -1,6 +1,6 @@
 //spell-checker:words vscroll, hscroll, askoncancel, askonclose,commandon, cmdfont
 //spell-checker:ignore emoteto, emotetos askonchildren YYYYMMDD Hmmss
-import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect, ProfileSortOrder, OnProfileChange, OnProfileDeleted, TrayMenu } from './types';
+import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect, ProfileSortOrder, OnProfileChange, OnProfileDeleted, TrayMenu, OnSecondInstance } from './types';
 const path = require('path');
 const fs = require('fs');
 
@@ -584,6 +584,7 @@ export class Settings {
     public loadLayout: string = '';
 
     public useSingleInstance: boolean = true;
+    public onSecondInstance: OnSecondInstance = OnSecondInstance.Show;
 
     public static load(file) {
         try {

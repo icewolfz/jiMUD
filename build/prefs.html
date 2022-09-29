@@ -605,6 +605,22 @@
                         _settings.chat.captureAllLines = this.checked;
                         $('#chat-lines').prop('readonly', !_settings.chat.captureLines || this.checked);
                         break;
+                    case 'onSecondInstance-0':
+                        if (this.checked)
+                            _settings.onSecondInstance = 0;
+                        break;
+                    case 'onSecondInstance-1':
+                        if (this.checked)
+                            _settings.onSecondInstance = 1;
+                        break;
+                    case 'onSecondInstance-2':
+                        if (this.checked)
+                            _settings.onSecondInstance = 2;
+                        break;
+                    case 'onSecondInstance-4':
+                        if (this.checked)
+                            _settings.onSecondInstance = 4;
+                        break;
                 }
             });
 
@@ -673,7 +689,7 @@
                     _settings.loadLayout = templatePath(result.filePaths[0]);
                     $('#loadLayout').val(_settings.loadLayout);
                 });
-            });            
+            });
         });
 
         function sortFiles(a, b) {
@@ -856,6 +872,11 @@
             $('#trayDblClick-hide').prop('checked', _settings.trayDblClick === TrayClick.hide);
             $('#trayDblClick-toggle').prop('checked', _settings.trayDblClick === TrayClick.toggle);
             $('#trayDblClick-menu').prop('checked', _settings.trayDblClick === TrayClick.menu);
+
+            $('#onSecondInstance-0').prop('checked', _settings.onSecondInstance === 0);
+            $('#onSecondInstance-1').prop('checked', _settings.onSecondInstance === 1);
+            $('#onSecondInstance-2').prop('checked', _settings.onSecondInstance === 2);
+            $('#onSecondInstance-4').prop('checked', _settings.onSecondInstance === 4);
 
             $('#profiles-sortOrder-alpha').prop('checked', (_settings.profiles.sortOrder & 2) === 2);
             $('#profiles-sortOrder-priority').prop('checked', (_settings.profiles.sortOrder & 4) === 4);
@@ -1480,12 +1501,12 @@
                         <label class="control-label">
                             <input type="checkbox" id="showTabsAddNewButton" /> Show add new button next to tabs
                         </label>
-                    </div>   
+                    </div>
                     <div class="col-sm-6 form-group global">
                         <label class="control-label">
                             <input type="checkbox" id="lockLayout" /> Lock layout
                         </label>
-                    </div>      
+                    </div>
                     <div class="col-sm-12 form-group global">
                         <label class="control-label" style="width:100%">
                             Load layout on open
@@ -1498,7 +1519,7 @@
                                 </span>
                             </div>
                         </label>
-                    </div>                                                    
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="display">
                     <div class="col-sm-6 form-group">
@@ -2391,9 +2412,26 @@
                 <div role="tabpanel" class="pref-pane" id="advanced">
                     <div class="col-sm-6 form-group global">
                         <label class="control-label">
-                            <input type="checkbox" id="useSingleInstance" /> Allow only single instance
+                            <input type="checkbox" id="useSingleInstance" /> Use only single instance
                         </label>
-                    </div>                    
+                    </div>
+                    <div class="col-sm-6 form-group global">
+                        <label class="control-label">On second instance:</label>
+                        <div class="btn-group" data-toggle="buttons">
+                            <label class="btn btn-default btn-xs">
+                                <input type="radio" name="onSecondInstance" id="onSecondInstance-0"> Nothing
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="radio" name="onSecondInstance" id="onSecondInstance-1"> Show
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="radio" name="onSecondInstance" id="onSecondInstance-2"> New Connection
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="radio" name="onSecondInstance" id="onSecondInstance-4"> New Window
+                            </label>
+                        </div>
+                    </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="gamepads" /> Enable gamepads

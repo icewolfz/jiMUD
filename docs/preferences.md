@@ -222,12 +222,17 @@ Controls what is captured into the chat window
 
   ## Advanced
 
-- `Allow only single instance` Allow only one instance of the application to open, all other attempts to open another instance will show the active window of the current instance, may use `-f` or `--force` argument to force open a new instance, -eo/--editor-only will open a new instance always
+- `Use only single instance` Allow only one instance of the application to open, all other attempts to open another instance will show the active window of the current instance, may use `-f` or `--force` argument to force open a new instance, -eo/--editor-only will open a new instance always <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
   - Supported command arguments passed on:
     - `-c/--character` When passed will open new connection for character in active window
     - `-e/--editor` When passed will open code editor for active client
     - `-nc/--new-connection` special argument that will open a new connection in active window
     - `-nw/--new-window` special argument that will open a new window with a default connection
+- `On second instance` What to do when you open a second instance when use only one instance enabled and no command line arguments passed
+  - `Nothing` Do nothing
+  - `Show` Show and focus on active window
+  - `New Connection` Create a new connection in active window then show and focus on active window
+  - `New Window` Create a new window then focus on it
 - `Enable gamepads` Enable gamepad support to allow creating macros using gamepad axes or buttons. **Experimental**
 - `Enable GMCP Ping for lag meter` When text received from mud send back a GMCP ping if enabled to get a better time for the lag meter.
 - `Enable debug` Will display debug data to the dev tool console

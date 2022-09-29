@@ -27,6 +27,8 @@
     - `Show add new button next to tabs` add a button to allow creation of new connections from tab strip, *Global preference* 
     - `Lock layout` saving only the last known global window states and preserve the previous saved windows and clients opened, *Global preference*
     - `Load layout on open` set a layout file to use when loading client, *Global preference*
+    - `Use only single instance` Allow only one instance of the application to open, *Global preference*
+    - `On second instance` What to do whe na second instance is opened when `Use only single instance` is enabled and no command line arguments passed, *Global preference*
 - **Changed:**
   - Preferences that are now global:
     - `Spellchecking` can only now be set as a global preference and requires a restart to effect any already opening clients or windows as it can only be set on window creation

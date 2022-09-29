@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const URL = require('url');
 const settings = require('./js/settings');
-const { TrayClick, TrayMenu } = require('./js/types');
+const { TrayClick, TrayMenu, OnSecondInstance } = require('./js/types');
 const { Menubar } = require('./js/menubar');
 const { Characters } = require('./js/characters');
 
@@ -712,25 +712,27 @@ if (_settings.useSingleInstance && !global.editorOnly && !argv.f) {
                 }
             });
             const active = getActiveWindow();
-            let fWindow = false;
-            if (Array.isArray(second_argv.nc)) {
-                for (let nc = 0, ncl = second_argv.nc.length; nc < ncl; nc++)
-                    newConnection(active.window);
-                fWindow = true;
-            }
-            else if (second_argv.nc) {
-                newConnection(active.window);
-                fWindow = true;
-            }
+            let fWindow = -1;
             if (Array.isArray(second_argv.nw)) {
                 for (let nc = 0, ncl = second_argv.nw.length; nc < ncl; nc++)
                     newClientWindow(active.window);
+                fWindow = 0;
             }
             else if (second_argv.nw) {
                 newClientWindow(active.window);
+                fWindow = 0;
             }
-            else
-                fWindow = true;
+
+            if (Array.isArray(second_argv.nc)) {
+                for (let nc = 0, ncl = second_argv.nc.length; nc < ncl; nc++)
+                    newConnection(active.window);
+                fWindow = 1;
+            }
+            else if (second_argv.nc) {
+                newConnection(active.window);
+                fWindow = 1;
+            }
+
 
             if (Array.isArray(second_argv.c)) {
                 second_argv.c.map(c => {
@@ -742,7 +744,7 @@ if (_settings.useSingleInstance && !global.editorOnly && !argv.f) {
                         port: char.Port
                     });
                 });
-                fWindow = true;
+                fWindow = 1;
             }
             else if (second_argv.c) {
                 const charID = getCharacterFromId(second_argv.c);
@@ -752,7 +754,7 @@ if (_settings.useSingleInstance && !global.editorOnly && !argv.f) {
                     map: parseTemplate(charID.Map),
                     port: charID.Port
                 });
-                fWindow = true;
+                fWindow = 1;
             }
             if (argv.e) {
                 //showCodeEditor();
@@ -762,12 +764,28 @@ if (_settings.useSingleInstance && !global.editorOnly && !argv.f) {
                     executeScriptClient(`openFiles("${argv.e}")`, active.window, true);
                 else
                     executeScriptClient('openWindow("code.editor")', active.window, true);
-                fWindow = true;
+                fWindow = 1;
             }
 
-            if (fWindow) {
+            //if a new connect focus current
+            if (fWindow === 1) {
                 restoreWindowState(active.window, stateMap.get(active.window), 2);
                 active.window.focus();
+            }
+            //if no connection or window do onSecondInstance setting
+            else if (fWindow == -1) {
+                if (_settings.onSecondInstance === OnSecondInstance.Show) {
+                    restoreWindowState(active.window, stateMap.get(active.window), 2);
+                    active.window.focus();
+                }
+                else if (_settings.onSecondInstance === OnSecondInstance.NewConnection) {
+                    newConnection(active.window);
+                    restoreWindowState(active.window, stateMap.get(active.window), 2);
+                    active.window.focus();
+                }
+                else if (_settings.onSecondInstance === OnSecondInstance.NewWindow) {
+                    newClientWindow(active.window);
+                }
             }
         });
 }

@@ -92,6 +92,10 @@ export enum ProfileSortOrder {
   None = 0, Alpha = 2, Priority = 4, Index = 8
 }
 
+export enum OnSecondInstance {
+  Nothing = 0, Show = 1, NewConnection = 2, NewWindow = 4
+}
+
 /**
    * Enum flag for Font styles.
    * @readonly
