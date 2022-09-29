@@ -71,6 +71,7 @@ Usage: `jiMUD [arguments...]`
 - `-il, --ignore-layout` Ignore layout and do not save window states
 - `-nci, --no-character-import` Do not import old character.json
 - `-f, --force` Force load of instance even if single only instance enable
+- `-nls, --no-layout-save` Do not save any layout changes when application is closed
 
 ## References
 

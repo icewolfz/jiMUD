@@ -41,7 +41,7 @@ else //not found use native
 
 argv = require('yargs-parser')(argv, {
     string: ['data-dir', 's', 'setting', 'm', 'map', 'c', 'character', 'l', 'layout'],
-    boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import', 'f', 'force', 'new-connection', 'nw', 'new-window'],
+    boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import', 'f', 'force', 'new-connection', 'nw', 'new-window', 'nls', 'no-layout-save'],
     alias: {
         'd': ['debug'],
         'eo': ['editorOnly', 'editoronly'],
@@ -57,7 +57,8 @@ argv = require('yargs-parser')(argv, {
         'nci': ['no-character-import'],
         'f': ['force'],
         'nc': ['new-connection'],
-        'nw': ['new-window']
+        'nw': ['new-window'],
+        'nls': ['no-layout-save']
     },
     configuration: {
         'short-option-groups': false
@@ -256,7 +257,8 @@ function commandLineArgumentHelp() {
     msg += '-l=[file], --layout=[file] - Load window layout file\n';
     msg += '-il, --ignore-layout - Ignore layout and do not save window states\n';
     msg += '-nci, --no-character-import - Do not import old characters.json\n';
-    msg += '-f, --force - Force load of instance even if single only instance enabled';
+    msg += '-f, --force - Force load of instance even if single only instance enabled\n';
+    msg += '-nls, --no-layout-save - Do not save any layout changes when application is closed'
     return msg;
 }
 
@@ -278,6 +280,7 @@ function displayConsoleHelp() {
     console.log('-il, --ignore-layout                      Ignore layout and do not save window states');
     console.log('-nci, --no-character-import               Do not import old characters.json');
     console.log('-f, --force                               Force load of instance even if single only instance enabled');
+    console.log('-nls, --no-layout-save                    Do not save any layout changes when application is closed');
 }
 
 //id, data, file, title, icon
@@ -506,7 +509,7 @@ function createWindow(options) {
             stateMap.set(window, states[options.file]);
             //if _loaded and not saved and the last window open save as its the final state
             if (_loaded && !_saved && Object.keys(windows).length === 1) {
-                await saveWindowLayout();
+                await saveWindowLayout(null, _settings.lockLayout);
                 _saved = true;
             }
             window.close();
@@ -715,6 +718,10 @@ else if (argv.m)
 if (argv.eo)
     global.editorOnly = true;
 
+//fake already being saved to not save any changes
+if (argv.nls)
+    _saved = true;
+
 if (_settings.useSingleInstance && !global.editorOnly && !argv.f) {
     var lock = app.requestSingleInstanceLock();
     if (!lock) {
@@ -725,7 +732,7 @@ if (_settings.useSingleInstance && !global.editorOnly && !argv.f) {
         app.on('second-instance', (event, second_argv, workingDirectory, additionalData) => {
             second_argv = require('yargs-parser')(second_argv, {
                 string: ['data-dir', 's', 'setting', 'm', 'map', 'c', 'character', 'l', 'layout'],
-                boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import', 'f', 'force', 'nc', 'new-connection', 'nw', 'new-window'],
+                boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import', 'f', 'force', 'nc', 'new-connection', 'nw', 'new-window', 'nls', 'no-layout-save'],
                 alias: {
                     'd': ['debug'],
                     'eo': ['editorOnly', 'editoronly'],
@@ -741,7 +748,8 @@ if (_settings.useSingleInstance && !global.editorOnly && !argv.f) {
                     'nci': ['no-character-import'],
                     'f': ['force'],
                     'nc': ['new-connection'],
-                    'nw': ['new-window']
+                    'nw': ['new-window'],
+                    'nls': ['no-layout-save']
                 },
                 configuration: {
                     'short-option-groups': false
@@ -962,7 +970,7 @@ app.on('before-quit', async (e) => {
     //wait until save is done before continue just to be safe
     //only saved if not already been saved somewhere else and was loaded with no errors
     if (_loaded && !_saved) {
-        await saveWindowLayout();
+        await saveWindowLayout(null, _settings.lockLayout);
         _saved = true;
     }
     if (app.hasSingleInstanceLock())
@@ -1781,7 +1789,7 @@ ipcMain.on('quit', quitApp)
 async function quitApp() {
     if (await canCloseAllWindows(true)) {
         if (_loaded && !_saved) {
-            await saveWindowLayout();
+            await saveWindowLayout(null, _settings.lockLayout);
             _saved = true;
         }
         app.quit();
@@ -3247,13 +3255,13 @@ async function executeScriptClient(script, window, focus) {
 }
 //#endregion
 //#region window layout systems
-async function saveWindowLayout(file) {
+async function saveWindowLayout(file, locked) {
     if (!file)
         file = parseTemplate(path.join('{data}', global.editorOnly ? 'editor.layout' : 'window.layout'));
     let id;
     let data;
     //lock layout loads old layout data and only updates global states and leaves windows/clients alone
-    if (_settings.lockLayout) {
+    if (locked) {
         try {
             data = fs.readFileSync(file, 'utf-8');
         }
