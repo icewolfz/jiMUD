@@ -213,7 +213,7 @@
         function closeHidden(hidden) {
             if (mapper)
                 save();
-            return true;
+            if(hidden) return true;
         }
 
         // eslint-disable-next-line no-unused-vars

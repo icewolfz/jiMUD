@@ -3025,9 +3025,9 @@
         }
 
         // eslint-disable-next-line no-unused-vars
-        function closeHidden() {
+        function closeHidden(hidden) {
+            if (hidden) return true;
             //if (!closeable()) return false;
-            return true;
         }
 
         $closeWindow = false;
@@ -3050,8 +3050,10 @@
         }
 
         function closed() {
-            window.opener.client.off('options-loaded', optionsLoaded);
-            window.opener.client.off('received-GMCP', processGMCP);
+            if (window.opener) {
+                window.opener.client.off('options-loaded', optionsLoaded);
+                window.opener.client.off('received-GMCP', processGMCP);
+            }
             clearWatcher();
         };
 

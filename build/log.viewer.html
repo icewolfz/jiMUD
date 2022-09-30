@@ -1011,9 +1011,9 @@
     }
 
     // eslint-disable-next-line no-unused-vars
-    function closeHidden() {
+    function closeHidden(hidden) {
         //if (!closeable()) return false;
-        return true;
+        if (hidden) return true;
     }
 
     // eslint-disable-next-line no-unused-vars

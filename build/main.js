@@ -2198,7 +2198,7 @@ function createClient(options) {
         let file = url;
         if (url.startsWith('file:///' + __dirname.replace(/\\/g, '/')))
             file = url.substring(__dirname.length + 9);
-        initializeChildWindow(childWindow, url, details);
+        initializeChildWindow(childWindow, url, details, false);
 
         childWindow.on('resize', () => {
             clients[getClientId(view)].states[file] = states[file];
@@ -2479,7 +2479,7 @@ async function canCloseAllWindows(warn) {
     return true;
 }
 
-function initializeChildWindow(window, link, details) {
+function initializeChildWindow(window, link, details, noClose) {
     let file = link;
     if (link.startsWith('file:///' + __dirname.replace(/\\/g, '/')))
         file = link.substring(__dirname.length + 9);
@@ -2582,10 +2582,10 @@ function initializeChildWindow(window, link, details) {
 
     window.on('closed', () => {
         stateMap.delete(window);
-        if (!details || !details.options) return;
+        if (noClose || !details || !details.options) return;
         const parent = details.options.parent;
         if (parent && !parent.isDestroyed() && parent.webContents && !parent.webContents.isDestroyed())
-            executeScript(`if(typeof childClosed === "function") childClosed('${file}', '${link}', '${details.frameName}');`, parent, true);
+            executeScript(`if(typeof childClosed === "function") childClosed('${file}', '${link}', '${details.frameName}');`, parent, true).catch(err => logError(err));;
     });
 
     window.on('close', e => {
@@ -2612,9 +2612,18 @@ function getWindowClientId(window) {
 
 function executeCloseHooks(window) {
     if (!window) return;
-    executeScript('if(typeof closing === "function") closing();', window);
-    executeScript('if(typeof closed === "function") closed();', window);
-    executeScript('if(typeof closeHidden === "function") closeHidden();', window);
+    executeScript('if(typeof closing === "function") closing();', window).catch(err => {
+        if (err)
+            logError(err);
+    });
+    executeScript('if(typeof closed === "function") closed();', window).catch(err => {
+        if (err)
+            logError(err);
+    });
+    executeScript('if(typeof closeHidden === "function") closeHidden();', window).catch(err => {
+        if (err)
+            logError(err);
+    });
 }
 
 function updateIcon(window) {

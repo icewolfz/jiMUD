@@ -106,7 +106,7 @@
                     if (tabstrip.hideTabstrip && tabstrip.tabs.length === 1) {
                         ipcRenderer.send('update-client', tabstrip.tabs[0].client, 0);
                     }
-                    if (id === _current) {
+                    if (id === _current && tabs.length) {
                         if (t >= tabs.length - 1)
                             _current = tabs[t - 1].client;
                         else
