@@ -164,10 +164,10 @@
                 editor.getOriginalEditor()._standaloneKeybindingService.addDynamicKeybinding(`-actions.findWithSelection`, undefined, () => { });
                 editor.getOriginalEditor()._standaloneKeybindingService.addDynamicKeybinding(`-actions.find`, undefined, () => { });
                 editor.getOriginalEditor()._standaloneKeybindingService.addDynamicKeybinding(`-editor.action.startFindReplaceAction`, undefined, () => { });
-                
+
                 editor.getModifiedEditor()._standaloneKeybindingService.addDynamicKeybinding(`-actions.findWithSelection`, undefined, () => { });
                 editor.getModifiedEditor()._standaloneKeybindingService.addDynamicKeybinding(`-actions.find`, undefined, () => { });
-                editor.getModifiedEditor()._standaloneKeybindingService.addDynamicKeybinding(`-editor.action.startFindReplaceAction`, undefined, () => { });                
+                editor.getModifiedEditor()._standaloneKeybindingService.addDynamicKeybinding(`-editor.action.startFindReplaceAction`, undefined, () => { });
             }
 
             if (options && options.editorOptions)
@@ -3696,7 +3696,7 @@
             manager.active.editor.resizeMap(w, h, d, sf);
         }
         document.getElementById('map-resize').close();
-        setTimeout( () => {if (manager.active && manager.active.editor) manager.active.editor.focus(); }, 10);
+        setTimeout(() => { if (manager.active && manager.active.editor) manager.active.editor.focus(); }, 10);
     }
 
     // eslint-disable-next-line no-unused-vars
@@ -4973,6 +4973,10 @@
             }
             else if (template.files[c].endsWith('virtual.map'))
                 data.wizard = buildNewVirtualMap(+$('#new-virtual-area-width').val(), +$('#new-virtual-area-height').val(), +$('#new-virtual-area-depth').val(), Array.from(document.querySelectorAll('#new-virtual-area-default-exits input:checked')).map(f => +f.value).reduce((a, c) => a | c), Array.from(document.querySelectorAll('#new-virtual-area-default-states input:checked')).map(f => +f.value).reduce((a, c) => a | c));
+            else if (template.files[c].endsWith('virtual.state'))
+                data.wizard = buildNewVirtualMapStates(+$('#new-virtual-area-width').val(), +$('#new-virtual-area-height').val(), +$('#new-virtual-area-depth').val(), Array.from(document.querySelectorAll('#new-virtual-area-default-states input:checked')).map(f => +f.value).reduce((a, c) => a | c));
+            else if (template.files[c].endsWith('virtual.terrain'))
+                data.wizard = buildNewVirtualMapStates(+$('#new-virtual-area-width').val(), +$('#new-virtual-area-height').val(), +$('#new-virtual-area-depth').val(), '00');
             value = parseFileTemplate(value, data);
             file = template.files[c].replace(templateRegex, aPath);
             writeFile(file, value);
@@ -5035,6 +5039,27 @@
         m += (be & ~2 & ~1) + states + ' ';
         if (width > 2) m += Array(width - 1).join(be + states + ' ');
         m += (be & ~64 & ~32 & ~16) + states;
+        m += '\n';
+        for (var z = 0; z < depth; z++) f += m + '\n';
+        return f;
+    }
+
+    function buildNewVirtualMapStates(width, height, depth, states) {
+        var f = width + ' ' + height;
+        if (depth > 1) f += ' ' + depth;
+        f += '\n';
+        if (width > 2) m += Array(width - 1).join(states + ' ');
+        m += states;
+        m += '\n';
+        for (var y = 1; y < height - 1; y++) {
+            m += states + ' ';
+            if (width > 2) m += Array(width - 1).join(states + ' ');
+            m += states;
+            m += '\n';
+        }
+        m += states + ' ';
+        if (width > 2) m += Array(width - 1).join(states + ' ');
+        m += states;
         m += '\n';
         for (var z = 0; z < depth; z++) f += m + '\n';
         return f;
@@ -6544,8 +6569,8 @@
 
                             if ($dialogs.monster.options && $dialogs.monster.options.groups) {
                                 var groups = Object.keys($dialogs.monster.options.groups);
-                                Array.prototype.forEach.call( e.page.querySelectorAll('optgroup[data-types=moncustom]'), function( node ) {
-                                    node.parentNode.removeChild( node );
+                                Array.prototype.forEach.call(e.page.querySelectorAll('optgroup[data-types=moncustom]'), function (node) {
+                                    node.parentNode.removeChild(node);
                                 });
                                 groups.forEach(g => {
                                     var el = document.createElement('optgroup');
@@ -8906,7 +8931,7 @@
                 doUpdate(2);
                 if (length === -1)
                     sbSize.textContent = '';
-                else if(lines === -1)
+                else if (lines === -1)
                     sbSize.textContent = `Length: ${length.toLocaleString()}`;
                 else
                     sbSize.textContent = `Length: ${length.toLocaleString()}, Lines: ${lines.toLocaleString()}`;
