@@ -9302,8 +9302,9 @@ export class AreaDesigner extends EditorBase {
             el.setAttribute('for', this.parent.id + '-level');
             el.classList.add('label');
             el.textContent = 'Level';
+            el.appendChild(this.$depthToolbar);
             frag.appendChild(el);
-            frag.appendChild(this.$depthToolbar);
+            //frag.appendChild(this.$depthToolbar);
         }
         return [frag];
     }
