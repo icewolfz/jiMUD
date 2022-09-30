@@ -1923,9 +1923,23 @@ ipcMain.on('position-client', (event, id, options) => {
     }
 });
 
-ipcMain.on('focus-client', (event, id) => {
+ipcMain.on('focus-client', (event, id, window) => {
     if (!clients[id]) return;
+    if (window)
+        restoreWindowState(clients[id].parent, stateMap.get(clients[id].parent), 2);
     focusClient(id);
+});
+
+ipcMain.on('focus-window', (event, id, clientId) => {
+    if (!windows[id]) return;
+    restoreWindowState(windows[id].window, stateMap.get(windows[id].window), 2);
+    if (clientId && windows[id].clients.indexOf(id) !== -1)
+        windows[id].window.webContents.send('switch-client', parseInt(clientId, 10));
+})
+
+ipcMain.on('close-window', (event, id) => {
+    if (!windows[id]) return;
+    windows[id].window.close();
 });
 
 ipcMain.on('execute-client', (event, id, code) => {
@@ -2251,7 +2265,8 @@ function createClient(options) {
             executeCloseHooks(childWindow);
             if (childWindow && !childWindow.isDestroyed())
                 childWindow.close();
-            clients[getClientId(view)].parent.focus();
+            if (clients[getClientId(view)] && clients[getClientId(view)].parent)
+                clients[getClientId(view)].parent.focus();
         });
         clients[getClientId(view)].windows.push({ window: childWindow, details: details });
         idMap.set(childWindow, getClientId(view));
@@ -2452,14 +2467,6 @@ async function canCloseAllWindows(warn) {
             message: `Preference dialog must be closed before you can exit.`
         });
         getWindowId('prefs').focus();
-        return false;
-    }
-    if (getWindowId('windows') && !getWindowId('windows').isDestroyed()) {
-        dialog.showMessageBox(getWindowId('windows'), {
-            type: 'info',
-            message: `Windows dialog must be closed before you can exit.`
-        });
-        getWindowId('windows').focus();
         return false;
     }
     if (progressMap.size) {

@@ -25,10 +25,10 @@
 
         #window-tree {
             position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            top: 5px;
+            bottom: 5px;
+            left: 5px;
+            right: 90px;
             padding: 0;
             margin: 0;
         }
@@ -36,11 +36,27 @@
         .list-group {
             box-shadow: none;
         }
+
+        #controls {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 90px;
+        }
+
+        #controls button {
+            margin: 5px;
+            margin-bottom: 0px;
+        }
     </style>
 </head>
 
 <body>
     <div id="window-tree" class="panel panel-default"></div>
+    <div id="controls">
+        <button id="activate" type="button" class="btn btn-default" style="width: 80px" disabled="disabled" onclick="activate()">Activate</button>
+        <button id="close" type="button" class="btn btn-default" style="width: 80px" disabled="disabled" onclick="closeWindow()">Close</button>
+    </div>
     <script type="text/javascript">
         if (window.module) module = window.module;
         const remote = require('@electron/remote');
@@ -57,7 +73,8 @@
                     id: 'window' + windows[w].id,
                     image: getOverlayIcon(windows[w].overlay),
                     dataAttr: {
-                        index: w
+                        index: w,
+                        id: windows[w].id
                     }
                 }
                 if (windows[w].clients.length) {
@@ -68,7 +85,10 @@
                             id: 'client' + windows[w].clients[c].id,
                             image: getOverlayIcon(windows[w].clients[c].overlay),
                             dataAttr: {
-                                index: c
+                                index: c,
+                                id: windows[w].clients[c].id,
+                                clients: cl,
+                                parentId: windows[w].id
                             }
                         }
                         wData.nodes.push(cData);
@@ -95,7 +115,8 @@
                     node.$el.prop('title', node.text);
                 },
                 onNodeSelected: (event, node) => {
-
+                    document.getElementById('activate').disabled = false;
+                    document.getElementById('close').disabled = node.dataAttr.clients && parseInt(node.dataAttr.clients, 10) === 1 ? true : false;
                 },
                 data: data,
                 onInitialized: () => {
@@ -184,6 +205,25 @@
             return 'disconnected2-icon';
         }
 
+        function activate() {
+            let selected = $('#window-tree').treeview('getSelected')[0];
+            if (selected.id.startsWith('client'))
+                ipcRenderer.send('focus-window', parseInt(selected.dataAttr.parentId, 10), parseInt(selected.dataAttr.id, 10));
+            else
+                ipcRenderer.send('focus-window', parseInt(selected.dataAttr.id, 10));
+        }
+
+        function closeWindow() {
+            let selected = $('#window-tree').treeview('getSelected')[0];
+            if (selected.id.startsWith('client')) {
+                if (parseInt(selected.dataAttr.clients, 10) === 1) return;
+                ipcRenderer.send('remove-client', selected.dataAttr.id);
+            }
+            else
+                ipcRenderer.send('close-window', selected.dataAttr.id);
+            document.getElementById('activate').disabled = true;
+            document.getElementById('close').disabled = true;
+        }
     </script>
 </body>
 
