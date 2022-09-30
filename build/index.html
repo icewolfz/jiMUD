@@ -1001,7 +1001,7 @@
             });
 
             _backup.on('progress', (value) => {
-                $('#Progress progress').val(value);
+                document.querySelector('#Progress progress').value = value;
                 updateProgress(value / 100.0);
             });
 
@@ -1745,7 +1745,7 @@
                             { menu: ['view', 'buttons', 'immortalbutton'], options: { visible: true } }
                         ]);
                         document.getElementById('immortal').dataset.show = 'true';
-                        if(client.options.buttons.immortal)
+                        if (client.options.buttons.immortal)
                             document.getElementById('immortal').style.display = 'block';
                         else
                             document.getElementById('immortal').style.display = 'none';
@@ -2346,11 +2346,11 @@
             _logger.onmessage = (e) => {
                 switch (e.data.event) {
                     case 'started':
-                        $('#log').addClass('on');
+                        document.getElementById('log').classList.add('on');
                         ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], options: { checked: e.data.args } });
                         break;
                     case 'stopped':
-                        $('#log').removeClass('on');
+                        document.getElementById('log').classList.remove('on');
                         ipcRenderer.send('update-menuitem', { menu: ['file', 'log'], options: { checked: e.data.args } });
                         break;
                     case 'logging':
@@ -2437,7 +2437,7 @@
             let name = getCharacterName();
             if (name && name.length > 0) {
                 _logger.postMessage({ action: 'name', args: name });
-                $('#character-name').text(name);
+                document.getElementById('character-name').textContent = name;
                 ipcRenderer.send('update-title', { title: name });
                 document.title = name;
             }
@@ -2822,7 +2822,7 @@
             if (!client.connected) {
                 ipcRenderer.send('update-title', { title: character.Name || '' });
                 _logger.postMessage({ action: 'name', args: character.Name || '' });
-                $('#character-name').text(character.Name || '');
+                document.getElementById('character-name').textContent = character.Name || '';
             }
             else if (client.connected && character.Disconnect) {
                 _skipDisconnect = 1;
@@ -2870,7 +2870,7 @@
                 initWindows();
                 if (!client.connected) {
                     _logger.postMessage({ action: 'name', args: '' });
-                    $('#character-name').text('&nbsp;');
+                    document.getElementById('character-name').textContent = '\u00A0';
                 }
             }
             /*
@@ -2921,7 +2921,7 @@
             }
             if (!client.connected) {
                 _logger.postMessage({ action: 'name', args: character.Name || '' });
-                $('#character-name').text('&nbsp;');
+                document.getElementById('character-name').textContent = '\u00A0';
             }
             else if (client.connected && character.Disconnect) {
                 _skipDisconnect = 1;
@@ -3058,13 +3058,13 @@
                             x: params.x,
                             y: params.y,
                             click: function (item) {
-                                var el = $(document.elementFromPoint(item.x, item.y));
-                                var value = el.val();
-                                var start = el[0].selectionStart;
+                                var el = document.elementFromPoint(item.x, item.y);
+                                var value = el.value;
+                                var start = el.selectionStart;
                                 value = value.substring(0, item.start) + item.label + value.substring(item.end);
-                                el.val(value);
-                                el[0].selectionStart = start;
-                                el[0].selectionEnd = start + item.label.length + item.sel;
+                                el.value = value;
+                                el.selectionStart = start;
+                                el.selectionEnd = start + item.label.length + item.sel;
                                 el.blur();
                                 el.focus();
                             }
@@ -4059,8 +4059,7 @@
             };
             */
         }
-        //#endregion
-        //$(document).ready(init);     
+        //#endregion 
         init();
     </script>
 </body>

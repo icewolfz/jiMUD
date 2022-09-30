@@ -151,8 +151,8 @@
         }
 
         function clearButton(id) {
-            $(id).removeClass('open');
-            $(id).blur();
+            document.getElementById(id).classList.remove('open');
+            document.getElementById(id).blur();
         }
 
         function saveRoom() {

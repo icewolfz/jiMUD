@@ -117,14 +117,16 @@ export class Status extends EventEmitter {
                             env.classList.add('intensity-hard');
                     }
                     if (obj.tod) {
-                        $('#environment').removeClass('day night twilight dawn').addClass(obj.tod);
+                        const env = document.getElementById('environment');
+                        env.classList.remove('day', 'night', 'twilight', 'dawn');
+                        env.classList.add(obj.tod);
                         $('#environment').removeClass((index, className) => {
                             return (className.match(/(^|\s)moon\d-\S+/g) || []).join(' ');
                         });
                         if (obj.moons) {
-                            $('#environment').addClass('moon1-' + obj.moons[0]);
-                            $('#environment').addClass('moon2-' + obj.moons[1]);
-                            $('#environment').addClass('moon3-' + obj.moons[2]);
+                            env.classList.add('moon1-' + obj.moons[0]);
+                            env.classList.add('moon2-' + obj.moons[1]);
+                            env.classList.add('moon3-' + obj.moons[2]);
                         }
                     }
                     break;

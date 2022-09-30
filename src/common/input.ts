@@ -1361,13 +1361,13 @@ export class Input extends EventEmitter {
         }
         this._tests = new Tests(client);
         this._commandHistory = [];
-        $(document).keydown((event) => {
+        document.addEventListener('keydown', (event) => {
             if (!this.isLocked && this.ProcessMacros(event.which, event.altKey, event.ctrlKey, event.shiftKey, event.metaKey)) {
                 event.preventDefault();
                 event.stopPropagation();
             }
             //toggle scroll lock
-            else if (event.which === 145)
+            else if (event.key === 'ScrollLock')
                 this.toggleScrollLock();
         });
 
