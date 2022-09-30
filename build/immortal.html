@@ -31,7 +31,6 @@
         const { Settings } = require('./js/settings');
         const { Menubar } = require('./js/menubar');
         const fs = require('fs-extra');
-        const child_process = require('child_process');
         const path = require('path');
         const nodeDiskInfo = require('node-disk-info');
         const moment = require('moment');
@@ -224,6 +223,7 @@
                                 accelerator: 'CmdOrCtrl+Alt+E',
                                 click: () => {
                                     var data = localTable.rows({ selected: true }).data().pluck('path');
+                                    const child_process = require('child_process');
                                     for (var d = 0, dl = data.length; d < dl; d++) {
                                         var p = child_process.spawn(options.editor, [data[d]], { detached: true, stdio: ['ignore', 'ignore', 'ignore'] });
                                         p.unref();
@@ -3573,6 +3573,7 @@
                 return ids.indexOf(data.id) !== -1;
             }).remove();
             var rc = _remove.length;
+            const child_process = require('child_process');
             for (var r = 0; r < rc; r++) {
                 var item = _remove[r];
                 if (item.download) {
@@ -3835,6 +3836,7 @@
 
         function openWithExternalEditor() {
             var selected = localTable.rows({ selected: true }).data().pluck('path');
+            const child_process = require('child_process');
             for (var d = 0, dl = selected.length; d < dl; d++) {
                 var p = child_process.spawn(options.editor, [selected[d]], { detached: true, stdio: ['ignore', 'ignore', 'ignore'] });
                 p.unref();
