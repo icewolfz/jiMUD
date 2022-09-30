@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Windows</title>
+    <link rel="shortcut icon" href="../assets/icons/png/windows.png" />
+    <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-treeview.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/window.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript">
+        if (typeof module === 'object') { window.module = module; module = undefined; }
+    </script>
+    <script src="../lib/jquery.min.js"></script>
+    <script src="../lib/bootstrap.min.js"></script>
+    <script src="../lib/bootstrap-select.min.js"></script>
+    <script src="../lib/bootstrap-treeview.min.js"></script>
+    <style>
+        body {
+            background-color: white;
+        }
+
+        #window-tree {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 0;
+            margin: 0;
+        }
+
+        .list-group {
+            box-shadow: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="window-tree" class="panel panel-default"></div>
+    <script type="text/javascript">
+        if (window.module) module = window.module;
+        const remote = require('@electron/remote');
+        const { ipcRenderer } = require('electron');
+        const { cloneObject } = require('./js/library')
+        let windows;
+        let data;
+        function loadWindows() {
+            windows = ipcRenderer.sendSync('get-windows-and-clients');
+            data = [];
+            for (let w = 0, wl = windows.length; w < wl; w++) {
+                const wData = {
+                    text: windows[w].title,
+                    id: 'window' + windows[w].id,
+                    image: getOverlayIcon(windows[w].overlay),
+                    dataAttr: {
+                        index: w
+                    }
+                }
+                if (windows[w].clients.length) {
+                    wData.nodes = [];
+                    for (let c = 0, cl = windows[w].clients.length; c < cl; c++) {
+                        const cData = {
+                            text: windows[w].clients[c].title,
+                            id: 'client' + windows[w].clients[c].id,
+                            image: getOverlayIcon(windows[w].clients[c].overlay),
+                            dataAttr: {
+                                index: c
+                            }
+                        }
+                        wData.nodes.push(cData);
+                    }
+                }
+                data.push(wData);
+            }
+            buildTreeview(data);
+        }
+
+        function buildTreeview(data) {
+            $('#window-tree').treeview({
+                showBorder: false,
+                showImage: true,
+                showTags: true,
+                showCheckbox: false,
+                preventUnselect: true,
+                levels: 1,
+                checkedIcon: 'fa fa-check-square-o',
+                uncheckedIcon: 'fa fa-square-o',
+                expandIcon: 'fa fa-chevron-right',
+                collapseIcon: 'fa fa-chevron-down',
+                onNodeRendered: (event, node) => {
+                    node.$el.prop('title', node.text);
+                },
+                onNodeSelected: (event, node) => {
+
+                },
+                data: data,
+                onInitialized: () => {
+                    $('#window-tree').treeview('expandAll', { levels: 5, silent: true });
+                }
+            });
+        }
+
+        function cloneNode(node) {
+            return cleanNode(cloneObject(node));
+        }
+
+        function cleanNode(node) {
+            delete node.$el;
+            delete node.parentId;
+            delete node.nodeId;
+            delete node.level;
+            delete node.index;
+            if (!node.nodes)
+                return node;
+            const nl = node.nodes.length;
+            const nodes = node.nodes;
+            node.nodes = [];
+            for (let n = 0; n < nl; n++)
+                node.nodes.push(cleanNode(cloneObject(nodes[n])));
+            return node;
+        }
+
+
+        loadWindows();
+
+        ipcRenderer.on('clients-changed', (event, windowsCount, clientCount) => {
+            loadWindows();
+        });
+        ipcRenderer.on('client-updated', (event, client, parent) => {
+            var tree = $('#window-tree').treeview(true);
+            if (client && document.getElementById('client' + client.id)) {
+                let node = tree.findNodes('^client' + client.id + '$', 'id')[0];
+                node.text = client.title;
+                node.image = getOverlayIcon(client.overlay);
+                let newNode = cloneNode(node);
+                tree.updateNode(node, newNode);
+            }
+            if (parent && document.getElementById('window' + parent.id)) {
+                let wNode = tree.findNodes('^window' + parent.id + '$', 'id')[0];
+                wNode.text = parent.title;
+                wNode.image = getOverlayIcon(parent.overlay);
+                let newWNode = cloneNode(wNode);
+                tree.updateNode(wNode, newWNode);
+            }
+        });
+
+        function getOverlayIcon(overlay) {
+            switch (overlay) {
+                case 3:
+                    return '../assets/icons/png/code.disconnected.png';
+                case 4:
+                    return '../assets/icons/png/code.connected.png';
+                case 5:
+                    return '../assets/icons/png/code.connectednonactive.png';
+                case 1:
+                case 7:
+                    return '../assets/icons/png/connected2.png';
+                case 2:
+                case 8:
+                    return '../assets/icons/png/connectednonactive2.png';
+            }
+            return '../assets/icons/png/disconnected2.png';
+        }
+
+        function getOverlayClass(overlay) {
+            switch (overlay) {
+                case 3:
+                    return 'disconnected-code-icon';
+                case 4:
+                    return 'connected-code-icon';
+                case 5:
+                    return 'connectednonactive-code-icon';
+                case 1:
+                case 7:
+                    return 'connected2-icon';
+                case 2:
+                case 8:
+                    return 'connectednonactive2-icon';
+            }
+            return 'disconnected2-icon';
+        }
+
+    </script>
+</body>
+
+</html>

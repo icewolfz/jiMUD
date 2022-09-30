@@ -244,6 +244,7 @@
                 document.title = 'jiMUD - ' + txt.trim();
             else
                 document.title = 'jiMUD';
+            ipcRenderer.send('window-update-title');
         }
 
         ipcRenderer.on('focus', event => {

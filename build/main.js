@@ -1761,6 +1761,7 @@ ipcMain.on('switch-client', (event, id, offset) => {
         windows[windowId].current = id;
         clients[id].view.webContents.send('activated');
         //window.setBrowserView(clients[id].view);
+        window.addBrowserView(clients[id].view);
         window.setTopBrowserView(clients[id].view);
         //clients[id].menu.window = window;
         //window.setMenu(clients[id].menu);
@@ -1985,6 +1986,24 @@ ipcMain.on('update-title', (event, options) => {
         }
         else if (tray) //something changed the title even if icon did not change update the menu to be safe
             updateTrayContext();
+        const windowsDialog = getWindowId('windows');
+        if (windowsDialog) {
+            const windowId = getWindowId(client.parent);
+            windowsDialog.webContents.send('client-updated', {
+                id: getClientId(client.view), title: client.view.webContents.getTitle(), overlay: client.overlay
+            }, {
+                id: windowId, title: client.parent.getTitle(), overlay: windows[windowId].overlay
+            });
+        }
+    }
+});
+
+ipcMain.on('window-update-title', event => {
+    const windowsDialog = getWindowId('windows');
+    if (windowsDialog) {
+        const window = BrowserWindow.fromWebContents(event.sender);
+        const windowId = getWindowId(window);
+        windowsDialog.webContents.send('client-updated', null, { id: getWindowId(window), title: window.getTitle(), overlay: windows[windowId].overlay });
     }
 });
 
@@ -2039,6 +2058,60 @@ ipcMain.on('get-client-id', event => {
 ipcMain.on('get-window-id', event => {
     event.returnValue = getWindowId(event.sender);
 });
+
+ipcMain.on('get-windows-and-clients', event => {
+    const _windows = [];
+    for (window in windows) {
+        if (!Object.prototype.hasOwnProperty.call(windows, window))
+            continue;
+        const data = {
+            title: windows[window].window.getTitle(),
+            id: getWindowId(windows[window].window),
+            overlay: windows[window].overlay,
+            clients: [],
+            windows: []
+        };
+        for (let wc = 0, wcl = windows[window].windows.length; wc < wcl; wc++) {
+            data.windows.push({
+                title: windows[window].windows[wc].window.getTitle(),
+                index: wc
+            });
+        }
+        for (let c = 0, cl = windows[window].clients.length; c < cl; c++) {
+            if (!clients[windows[window].clients[c]] || !clients[windows[window].clients[c]].view) continue;
+            client = {
+                id: windows[window].clients[c],
+                title: clients[windows[window].clients[c]].view.webContents.getTitle(),
+                overlay: clients[windows[window].clients[c]].overlay,
+                windows: []
+            };
+            for (let wc = 0, wcl = clients[client.id].windows.length; wc < wcl; wc++) {
+                client.windows.push({
+                    title: clients[client.id].windows[wc].window.getTitle(),
+                    index: wc
+                });
+            }
+            data.clients.push(client);
+        }
+        _windows.push(data);
+    }
+    event.returnValue = _windows;
+});
+
+ipcMain.on('get-window-title', (event, id) => {
+    if (windows[id])
+        event.returnValue = windows[id].window.getTitle();
+    else
+        event.returnValue = '';
+});
+
+ipcMain.on('get-client-title', (event, id) => {
+    if (clients[id])
+        event.returnValue = clients[id].view.webContents.getTitle();
+    else
+        event.returnValue = '';
+});
+
 //bounds, id, data, file
 function createClient(options) {
     options = options || {};
@@ -2176,7 +2249,8 @@ function createClient(options) {
                 //clients[id].states[file] = states[file];
             }
             executeCloseHooks(childWindow);
-            childWindow.close();
+            if (childWindow && !childWindow.isDestroyed())
+                childWindow.close();
             clients[getClientId(view)].parent.focus();
         });
         clients[getClientId(view)].windows.push({ window: childWindow, details: details });
@@ -2292,11 +2366,15 @@ function setClientWindowsParent(id, parent, oldParent) {
 }
 
 function clientsChanged() {
+    const windowLength = Object.keys(windows).length;
     for (clientId in clients) {
         if (!Object.prototype.hasOwnProperty.call(clients, clientId))
             continue;
-        clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, windows[getWindowId(clients[clientId].parent)].clients.length);
+        clients[clientId].view.webContents.send('clients-changed', windowLength, windows[getWindowId(clients[clientId].parent)].clients.length);
     }
+    const windowsDialog = getWindowId('windows');
+    if (windowsDialog)
+        windowsDialog.webContents.send('clients-changed', windowLength, Object.keys(clients).length);
     updateTrayContext();
 }
 
@@ -2374,6 +2452,14 @@ async function canCloseAllWindows(warn) {
             message: `Preference dialog must be closed before you can exit.`
         });
         getWindowId('prefs').focus();
+        return false;
+    }
+    if (getWindowId('windows') && !getWindowId('windows').isDestroyed()) {
+        dialog.showMessageBox(getWindowId('windows'), {
+            type: 'info',
+            message: `Windows dialog must be closed before you can exit.`
+        });
+        getWindowId('windows').focus();
         return false;
     }
     if (progressMap.size) {
@@ -4511,6 +4597,11 @@ function createMenu(window) {
         // Window menu.
         menuTemp[5].submenu.push(
             {
+                label: '&Windows...',
+                click: (item, mWindow) => openWindows(window || mWindow)
+            },
+            { type: 'separator' },
+            {
                 label: 'Clo&se',
                 accelerator: 'CmdOrCtrl+W',
                 click: (item, mWindow) => {
@@ -4554,6 +4645,11 @@ function createMenu(window) {
     }
     else {
         menuTemp[4].submenu.push(
+            {
+                label: '&Windows...',
+                click: (item, mWindow) => openWindows(window || mWindow)
+            },
+            { type: 'separator' },
             {
                 role: 'minimize'
             },
@@ -4669,6 +4765,8 @@ ipcMain.on('show-window', (event, window, ...args) => {
         openPreferences(BrowserWindow.fromWebContents(event.sender));
     else if (window === 'progress')
         openProgress(BrowserWindow.fromWebContents(event.sender), ...args)
+    else if (window === 'windows')
+        openWindows(BrowserWindow.fromWebContents(event.sender));
 });
 
 const progressMap = new Map();
@@ -4745,6 +4843,36 @@ function openPreferences(parent) {
             stateMap.delete(window);
         });
         idMap.set('prefs', window);
+    }
+}
+
+function openWindows(parent) {
+    let window = getWindowId('windows');
+    if (window && !window.isDestroyed())
+        window.focus();
+    else {
+        let bounds = { width: 420, height: 300 };
+        if (states['windows.html']) {
+            bounds.x = states['windows.html'].bounds.x;
+            bounds.y = states['windows.html'].bounds.y;
+        }
+        window = createDialog({
+            show: true,
+            parent: parent,
+            url: path.join(__dirname, 'windows.html'),
+            title: 'Windows',
+            bounds: bounds,
+            icon: path.join(__dirname, '../assets/icons/png/windows.png'),
+            resize: false,
+            backgroundColor: 'white'
+        });
+        window.on('closed', () => {
+            idMap.delete('windows');
+        });
+        window.on('close', () => {
+            states['windows.html'] = saveWindowState(window);
+        });
+        idMap.set('windows', window);
     }
 }
 
@@ -5139,6 +5267,14 @@ async function _updateTrayContext() {
             },
             { type: 'separator' },
             {
+                label: '&Windows...',
+                click: (item, mWindow) => {
+                    if (!active) return;
+                    openWindows(active.window);
+                }
+            },
+            { type: 'separator' },
+            {
                 label: 'E&xit',
                 //role: 'quit'
                 click: quitApp
@@ -5258,11 +5394,21 @@ async function _updateTrayContext() {
         contextMenu.push(item);
         contextMenu.push({ type: 'separator' });
     }
-    contextMenu.push({
-        label: 'E&xit',
-        //role: 'quit'
-        click: quitApp
-    });
+    contextMenu.push(
+        {
+            label: '&Windows...',
+            click: (item, mWindow) => {
+                if (!active) return;
+                openWindows(active.window);
+            }
+        },
+        { type: 'separator' },
+        {
+            label: 'E&xit',
+            //role: 'quit'
+            click: quitApp
+        }
+    );
     tray.setContextMenu(Menu.buildFromTemplate(contextMenu));
     _trayContextTimer = 0;
 }
