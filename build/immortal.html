@@ -1212,7 +1212,7 @@
             loadOptions();
             window.opener.client.on('options-loaded', optionsLoaded);
             window.opener.client.on('received-GMCP', processGMCP);
-
+            //#region IED set up
             _ied = new IED(options.local, options.remote);
             _ied.prefix = 'manager-';
             _ied.local = options.local;
@@ -1618,7 +1618,7 @@
                     }
                 }
             });
-
+            //#endregion
             localTable = $('#local-list').DataTable();
             remoteTable = $('#remote-list').DataTable();
             queueTable = $('#queue-list').DataTable();
@@ -2215,7 +2215,10 @@
                 _remoteDrag = 0;
             };
 
-            $('#local')[0].ondragenter = (event) => {
+            //#region drag and drop support
+            let element = document.getElementById('local');
+
+            element.ondragenter = (event) => {
                 event.preventDefault();
                 event.cancelBubble = true;
                 event.stopPropagation();
@@ -2237,7 +2240,7 @@
                 return false;
             };
 
-            $('#local')[0].ondragover = (event) => {
+            element.ondragover = (event) => {
                 event.preventDefault();
                 event.cancelBubble = true;
                 event.stopPropagation();
@@ -2259,7 +2262,7 @@
                 return false;
             };
 
-            $('#local')[0].ondrop = (event) => {
+            element.ondrop = (event) => {
                 event.preventDefault();
                 event.cancelBubble = true;
                 event.stopPropagation();
@@ -2347,7 +2350,9 @@
                 }
             };
 
-            $('#remote')[0].ondragenter = (event) => {
+            element = document.getElementById('remote');
+
+            element.ondragenter = (event) => {
                 if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path.startsWith('jiMUD://') || event.dataTransfer.files[0].path.startsWith('/jiMUD:') || event.dataTransfer.files[0].path.startsWith('jiMUDPath://') || event.dataTransfer.files[0].path.startsWith('/jiMUDPath:'))) {
                     event.dataTransfer.dropEffect = 'none';
                     event.dataTransfer.effectAllowed = 'none';
@@ -2362,7 +2367,7 @@
                 return false;
             };
 
-            $('#remote')[0].ondragover = (event) => {
+            element.ondragover = (event) => {
                 if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path.startsWith('jiMUD://') || event.dataTransfer.files[0].path.startsWith('/jiMUD:') || event.dataTransfer.files[0].path.startsWith('jiMUDPath://') || event.dataTransfer.files[0].path.startsWith('/jiMUDPath:'))) {
                     event.dataTransfer.dropEffect = 'none';
                     event.dataTransfer.effectAllowed = 'none';
@@ -2377,7 +2382,7 @@
                 return false;
             };
 
-            $('#remote')[0].ondrop = (event) => {
+            element.ondrop = (event) => {
                 event.preventDefault();
                 if (_localDrag) {
                     _ied.begin();
@@ -2415,7 +2420,9 @@
                 }
             };
 
-            $('#local-list')[0].ondragstart = (event) => {
+            element = document.getElementById('local-list');
+
+            element.ondragstart = (event) => {
                 var row = $(document.elementFromPoint(event.pageX, event.pageY)).parent();
                 if (!$(row).hasClass('selected')) {
                     localTable.rows().deselect();
@@ -2435,21 +2442,23 @@
                 return false;
             };
 
-            $('#local-list')[0].ondragend = (event) => {
+            element.ondragend = (event) => {
                 event.preventDefault();
                 _localDrag = 0;
                 _remoteDrag = 0;
                 return false;
             };
 
-            $('#remote-list')[0].ondragend = (event) => {
+            element = document.getElementById('local-list');
+
+            element.ondragend = (event) => {
                 event.preventDefault();
                 _localDrag = 0;
                 _remoteDrag = 0;
                 return false;
             };
 
-            $('#remote-list')[0].ondragstart = (event) => {
+            element.ondragstart = (event) => {
                 var row = $(document.elementFromPoint(event.pageX, event.pageY)).parent();
                 if (!$(row).hasClass('selected')) {
                     remoteTable.rows().deselect();
@@ -2471,7 +2480,8 @@
                     ipcRenderer.send('ondragstart', files, path.join(__dirname, '../assets/icons/png/drag2.png'));
             };
 
-            $('#queue-list-container')[0].ondragenter = (event) => {
+            element = document.getElementById('queue-list-container');
+            element.ondragenter = (event) => {
                 event.dataTransfer.dropEffect = 'copy';
                 event.dataTransfer.effectAllowed = 'copy';
                 event.preventDefault();
@@ -2480,7 +2490,7 @@
                 return false;
             };
 
-            $('#queue-list-container')[0].ondragover = (event) => {
+            element.ondragover = (event) => {
                 event.dataTransfer.dropEffect = 'copy';
                 event.dataTransfer.effectAllowed = 'copy';
                 event.preventDefault();
@@ -2489,7 +2499,7 @@
                 return false;
             };
 
-            $('#queue-list-container')[0].ondrop = (event) => {
+            element.ondrop = (event) => {
                 event.preventDefault();
                 if (_localDrag) {
                     _ied.begin();
@@ -2558,7 +2568,7 @@
                     _ied.end();
                 }
             };
-
+            //#endregion
             $(window).trigger('resize');
         });
 
