@@ -861,9 +861,9 @@
                 editor.ui.registry.addIcon('flash', '<img src="../assets/icons/png/flash.png" />');
                 editor.ui.registry.addIcon('reverse', '<img src="../assets/icons/png/reverse.png" />');
 
-                editor.addButton('send', {
+                editor.ui.registry.addSplitButton('send', {
                     type: 'splitbutton',
-                    icon: 'fa-sendraw',
+                    icon: 'sendraw',
                     tooltip: 'Send mail',
                     onclick: sendFormatted,
                     menu: [
@@ -1073,7 +1073,7 @@
                 ],
                 color_picker_callback: function (editor, color, format) { openColorDialog(format, color || ''); },
                 color_picker_caption: 'More&hellip;',
-                //contextmenu: "shadowfore shadowback | bold italic underline strikethrough overline dblunderline flash reverse",
+                //contextmenu: "undo redo | cut copy paste | style",
                 //nonbreaking_force_tab: true,
                 //textcolor_map: _ColorTable,
                 //textcolor_rows: "17",
@@ -1123,6 +1123,7 @@
                     editor.on('PastePreProcess', function () {
                         addReverse($('.reverse', $(editor.getDoc()).contents()));
                     });
+                    window.dispatchEvent(new Event('editor-init'));
                 },
                 paste_data_images: false,
                 paste_word_valid_elements: 'b,strong,i,em,u,s,span,strike',
@@ -1228,7 +1229,7 @@
             color = new rgbcolor(options.colors[15] || _dColors[15]).toHex().substr(1).toUpperCase();
             _colors[color] = 'BOLD%^%^WHITE';
             _ColorTable.push(color, 'BOLD WHITE');
-            _bold.push(color);
+            //_bold.push(color);
 
             for (r = 0; r < 6; r++) {
                 for (g = 0; g < 6; g++) {
@@ -1279,14 +1280,17 @@
                         _colors[g] = 'mono' + (r - 232);
                 }
             }
+            _colorCodes = invert(_colors);
             for (b = 0, bl = _bold.length; b < bl; b++) {
                 _colors['B' + _bold[b]] = _colors[nearestHex('#' + _bold[b]).substr(1)].toUpperCase();
             }
+            _colors['BFFFFFF'] = 'RGB555';
             tinymce.activeEditor.settings.textcolor_map = _ColorTable;
+            tinymce.activeEditor.settings.color_map = _ColorTable;
         }
 
         function loadOptions() {
-            options = Settings.load(window.getGlobal('settingsFile'));
+            options = window.opener.client.options;
             $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-size', options.cmdfontSize);
             $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-family', options.cmdfont + ', monospace');
             if (tinymce.activeEditor.formatter)
@@ -1294,6 +1298,15 @@
             else
                 tinymce.activeEditor.settings.formats['flash'] = { inline: 'span', 'classes': options.flashing ? 'flash' : 'noflash', links: true, remove_similar: true };
             loadColors();
+        }
+
+        function openColorDialog(type, color) {
+            if (!_colorDialog || _colorDialog.closed)
+                _colorDialog = createColorDialog();
+            _colorDialog.addEventListener('DOMContentLoaded', () => {
+                _colorDialog.setColor(color || '');
+                _colorDialog.setType(type || '');
+            }, { once: true });
         }
 
         ipcRenderer.on('reload-options', () => {
