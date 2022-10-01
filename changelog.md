@@ -9,7 +9,7 @@
   - Command line arguments:
     - Fixed --profiles/-pf not loading new profiles and only setting already loaded profiles as enabled
 - **Changed:**
-  - Update electron 19.0.16 to 19.1.0
+  - Update electron 19.0.16 to 19.1.1
   - Code editor:
     - Virtual area editor: When creating a new virtual area will create a separate terrain and state file to reduce file size instead of one large map file
     - Area designer: Compress design files using gzip to save space
