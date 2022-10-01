@@ -1550,9 +1550,9 @@ app.on('ready', () => {
         global.mapFile = parseTemplate(argv.mf);
 
     if (Array.isArray(argv.pf))
-        global.profiles = parseTemplate(argv.pf[0]);
+        global.profiles = parseTemplate(argv.pf[0]).split(',');
     else if (argv.pf)
-        global.profiles = parseTemplate(argv.pf);
+        global.profiles = parseTemplate(argv.pf).split(',');
 
     if (global.editorOnly)
         showCodeEditor();
