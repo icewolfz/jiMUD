@@ -506,11 +506,11 @@ export function RunTester() {
 }
 
 function addTriggerStateDropdown(item, state, contentOnly?) {
-    var content = `<a href="#" style="padding-right: 62px;" onclick="profileUI.SelectTriggerState(${state});">${state}: ${htmlEncode(GetDisplay(item))}
+    var content = `<a href="#" style="padding-right: 62px;" onclick="manager.SelectTriggerState(${state});">${state}: ${htmlEncode(GetDisplay(item))}
     <span class="btn-group" style="right: 0px;position: absolute;padding-right: 15px;">    
-    <button title="Move state up" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="profileUI.moveTriggerState(${state}, -1);event.cancelBubble = true;">
+    <button title="Move state up" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="manager.moveTriggerState(${state}, -1);event.cancelBubble = true;">
     <i class="fa fa-angle-double-up"></i></button>
-    <button title="Move state down" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="profileUI.moveTriggerState(${state}, 1);event.cancelBubble = true;"><i class="fa fa-angle-double-down"></i></button></span></a>`;
+    <button title="Move state down" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="manager.moveTriggerState(${state}, 1);event.cancelBubble = true;"><i class="fa fa-angle-double-down"></i></button></span></a>`;
     if (contentOnly)
         return content;
     return `<li>${content}</li>`;
@@ -3613,8 +3613,8 @@ function loadActions(p, root) {
         if (fs.lstatSync(path.join(p, files[f])).isDirectory())
             loadActions(path.join(p, files[f]), path.join(root, files[f]));
         else {
-            $('#button-actions-dropdown').append('<li title="' + path.basename(files[f], path.extname(files[f])) + '"><a href="#" onclick="profileUI.setIcon(\'' + path.join(root, files[f]).replace(/\\/g, '\\\\') + '\')"><img class="action-icon" src="' + path.join(p, files[f]) + '"><div class="overlay"></div></a></li>');
-            $('#context-actions-dropdown').append('<li title="' + path.basename(files[f], path.extname(files[f])) + '"><a href="#" onclick="profileUI.setIcon(\'' + path.join(root, files[f]).replace(/\\/g, '\\\\') + '\', \'context\', profileUI.UpdateContextSample)"><img class="action-icon" src="' + path.join(p, files[f]) + '"><div class="overlay"></div></a></li>');
+            $('#button-actions-dropdown').append('<li title="' + path.basename(files[f], path.extname(files[f])) + '"><a href="#" onclick="manager.setIcon(\'' + path.join(root, files[f]).replace(/\\/g, '\\\\') + '\')"><img class="action-icon" src="' + path.join(p, files[f]) + '"><div class="overlay"></div></a></li>');
+            $('#context-actions-dropdown').append('<li title="' + path.basename(files[f], path.extname(files[f])) + '"><a href="#" onclick="manager.setIcon(\'' + path.join(root, files[f]).replace(/\\/g, '\\\\') + '\', \'context\', manager.UpdateContextSample)"><img class="action-icon" src="' + path.join(p, files[f]) + '"><div class="overlay"></div></a></li>');
         }
     }
 }
