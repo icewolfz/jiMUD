@@ -48,7 +48,9 @@
   - Immortal tools: Fixed error when navigating by using keyboard
 - **Changed:**
   - Update electron 19.0.16 to 19.1.0
-  - Code editor: When creating a new virtual area will create a separate terrain and state file to reduce file size instead of one large map file
+  - Code editor:
+    - Virtual area editor: When creating a new virtual area will create a separate terrain and state file to reduce file size instead of one large map file
+    - Area designer: Compress design files using gzip to save space
 
 ## 0.19.5 2022-09-14
 

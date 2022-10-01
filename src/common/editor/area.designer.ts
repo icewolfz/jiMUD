@@ -11,6 +11,7 @@ import { copy, formatString, isFileSync, capitalize, Cardinal, pinkfishToHTML, s
 const { clipboard } = require('electron');
 const path = require('path');
 const fs = require('fs-extra');
+const { deflateSync, unzipSync } = require('zlib');
 import { Wizard, WizardPage, WizardDataGridPage } from '../wizard';
 import { MousePosition, RoomExits, shiftType, FileBrowseValueEditor, RoomExit, flipType } from './virtual.editor';
 
@@ -803,6 +804,9 @@ class Area {
         if (data.length === 0)
             return new Area(25, 25, 1);
         try {
+            //compressed so un-compress it
+            if(!data.startsWith('{'))
+                data = unzipSync(Buffer.from(data, 'base64')).toString();
             data = JSON.parse(data);
         }
         catch (e) {
@@ -862,8 +866,8 @@ class Area {
         return area;
     }
 
-    public save(file) {
-        fs.writeFileSync(file, this.raw);
+    public save(file) {        
+        fs.writeFileSync(file, deflateSync(this.raw).toString('base64'));
     }
 
     public get raw() {
