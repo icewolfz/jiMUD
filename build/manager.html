@@ -390,7 +390,7 @@
                     { type: 'separator' },
                     {
                         label: 'Windows...',
-                        click: () => ipcRenderer.send('show-window', 'windows')
+                        click: 'ipcRenderer.send("show-window", "windows")'
                     }
                 ];
                 if (window.getGlobal('debug')) {
@@ -447,7 +447,7 @@
                     { type: 'separator' },
                     {
                         label: 'Windows...',
-                        click: () => ipcRenderer.send('show-window', 'windows')
+                        click: 'ipcRenderer.send("show-window", "windows")'
                     }
                 ]);
                 menu.push(
