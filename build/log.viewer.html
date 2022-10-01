@@ -1016,11 +1016,6 @@
         if (hidden) return true;
     }
 
-    // eslint-disable-next-line no-unused-vars
-    function closed() {
-        ipcRenderer.invoke('window', 'clearCache')
-    }
-
     function closeable(all) {
         if (document.activeElement)
             document.activeElement.blur();
@@ -1063,7 +1058,9 @@
         return $closeWindow;
     }
 
-    function closed() {
+    // eslint-disable-next-line no-unused-vars
+    window.onbeforeunload = () => {
+        ipcRenderer.invoke('window', 'clearCache')
         var keys = Object.keys(_viewers);
         var p = keys.length;
         while (p--)

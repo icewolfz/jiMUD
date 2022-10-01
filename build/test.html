@@ -25,11 +25,7 @@
         function getId() {
             return _id;
         }
-
-        function closed() {
-            return _close;
-        }
-
+        
         function closeable(all) {
             if (!_close) {
                 var choice = dialog.showMessageBoxSync({

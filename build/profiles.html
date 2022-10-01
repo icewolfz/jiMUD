@@ -672,7 +672,7 @@
             return manager.closeable(all);
         }
 
-        function closed() {
+        window.onbeforeunload = () => {
             manager.closed();
         }
     </script>

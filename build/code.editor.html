@@ -13,7 +13,7 @@
     <link href="css/cm.css" rel="stylesheet" type="text/css" />
     <link href="css/code.editor.css" rel="stylesheet" type="text/css" />
     <link href="css/propertygrid.css" rel="stylesheet" type="text/css" />
-    <link href="css/datagrid.css" rel="stylesheet" type="text/css" />    
+    <link href="css/datagrid.css" rel="stylesheet" type="text/css" />
     <link href="css/editorcontent.css" rel="stylesheet" type="text/css" />
     <script type="text/javascript">
         // eslint-disable-next-line no-unused-vars
@@ -4468,21 +4468,6 @@
         return true;
     }
 
-    function closed() {
-        //clean up
-        if (window.opener) {
-            window.opener.client.off('received-GMCP', processGMCP);
-            window.opener.client.off('connected', clientConnected);
-            window.opener.client.off('closed', clientClosed);
-        }
-        var keys = Object.keys(_editors);
-        var p = keys.length;
-        while (p--)
-            closeEditor(_editors[keys[p]]);
-        if (watcher)
-            watcher.close();
-    }
-
     function closeable(all) {
         if (!$closeWindow) {
             for (key in _windows) {
@@ -4533,13 +4518,30 @@
             if (_close) return;
             setTimeout(() => {
                 if (!closeable()) return;
-                closed();
+                cleanUp();
                 _close = true;
                 window.close();
             });
             e.returnValue = false;
             return 'no';
         };
+    }
+    else
+        window.onbeforeunload = cleanUp;
+
+    function cleanUp() {
+        //clean up
+        if (window.opener) {
+            window.opener.client.off('received-GMCP', processGMCP);
+            window.opener.client.off('connected', clientConnected);
+            window.opener.client.off('closed', clientClosed);
+        }
+        var keys = Object.keys(_editors);
+        var p = keys.length;
+        while (p--)
+            closeEditor(_editors[keys[p]]);
+        if (watcher)
+            watcher.close();
     }
 
     ipcRenderer.on('progress', (event, ...args) => {

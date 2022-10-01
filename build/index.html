@@ -3863,11 +3863,10 @@
         //#endregion
 
         //#region Close hooks
-        function closed() {
+        window.onbeforeunload = () => {
             client.raise('closed');
             _logger.postMessage({ action: 'flush' });
             clearWatcher();
-            return closeWindow;
         }
 
         function closeable(all, allWindows) {

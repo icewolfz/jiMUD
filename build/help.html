@@ -463,7 +463,7 @@
             updateButtons();
         }
 
-        function closed() {
+        window.onbeforeunload = () => {
             window.opener.client.removeListener('options-loaded', optionsLoaded);
         };       
     </script>

@@ -213,7 +213,7 @@
         function closeHidden(hidden) {
             if (mapper)
                 save();
-            if(hidden) return true;
+            if (hidden) return true;
         }
 
         // eslint-disable-next-line no-unused-vars
@@ -250,9 +250,7 @@
             window.opener.removeEventListener('resetCharacter', updateCharacter);
         }
 
-        function closed() {
-            removeEvents();
-        };
+        window.onbeforeunload = removeEvents;
 
         $(document).ready(() => {
             try {

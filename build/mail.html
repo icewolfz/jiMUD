@@ -998,7 +998,7 @@
             display.updateScrollbars();
         }
 
-        window.onbeforeunload = function () {
+        window.onbeforeunload = () => {
             if (mail) mail.close();
         };
     </script>

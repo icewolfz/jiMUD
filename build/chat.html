@@ -267,14 +267,14 @@
             window.opener.client.saveOptions();
         }
 
-        function closed() {
+        window.onbeforeunload = () => {
             window.opener._status.off('set-title', events['set-title']);
             window.opener.removeEventListener('loadCharacter', updateCharacter);
             window.opener.removeEventListener('updateCharacter', updateCharacter);
             window.opener.removeEventListener('resetCharacter', updateCharacter);
             window.opener.client.off('options-loaded', events['options-loaded']);
             window.opener.client.off('connecting', events['connecting']);
-        };        
+        };
     </script>
 </head>
 

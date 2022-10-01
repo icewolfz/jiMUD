@@ -3059,7 +3059,7 @@
             return $closeWindow;
         }
 
-        function closed() {
+        window.onbeforeunload = () => {
             if (window.opener) {
                 window.opener.client.off('options-loaded', optionsLoaded);
                 window.opener.client.off('received-GMCP', processGMCP);
