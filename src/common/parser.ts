@@ -2537,18 +2537,18 @@ export class Parser extends EventEmitter {
     }
 
     public get parseQueueEndOfLine() {
-        if(this.parsing.length)
+        if (this.parsing.length)
             return this.parsing[this.parsing.length - 1][0].endsWith('\n');
         return false;
     }
 
-    public parse(text: string, remote?: boolean, force?: boolean) {
+    public parse(text: string, remote?: boolean, force?: boolean, prependSplit?: boolean) {
         if (text == null || text.length === 0)
             return text;
         if (remote == null) remote = false;
         //query data in case already parsing
         if (this.parsing.length > 0 && !force) {
-            this.parsing.push([text, remote]);
+            this.parsing.push([text, remote, prependSplit]);
             return;
         }
         let _TermTitle = '';
@@ -2569,10 +2569,13 @@ export class Parser extends EventEmitter {
         let _MXPArgs;
         let skip = false;
         this.busy = true;
-        this.parsing.unshift([text, remote]);
+        this.parsing.unshift([text, remote, prependSplit]);
         let format;
         if (this._SplitBuffer.length > 0) {
-            text = this._SplitBuffer + text;
+            if (prependSplit)
+                text = text + this._SplitBuffer;
+            else
+                text = this._SplitBuffer + text;
             this._SplitBuffer = '';
         }
         //not end of line but text, so fragment, re-get and re-parse to ensure proper triggering
@@ -4068,7 +4071,7 @@ export class Parser extends EventEmitter {
 
     private parseNext() {
         const iTmp = this.parsing.shift();
-        return () => { this.parse(iTmp[0], iTmp[1], true); };
+        return () => { this.parse(iTmp[0], iTmp[1], true, iTmp[2]); };
     }
 
     public updateWindow(width, height) {

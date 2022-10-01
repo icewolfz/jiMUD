@@ -9,7 +9,166 @@
   - Add [#TEMPVAR](docs/commands.md#createmodify-profile-or-item) to create session only variables
   - Add `Expression` trigger type that will execute when variable values have changed
 
-## v0.18.0
+## 0.19.6
+
+- **Fixed:**
+  - Fixed disconnect dialog when screen size is small
+  - Immortal tools: Fixed error when navigating by using keyboard
+    - Code editor: Fixed bugs in tabstrip
+  - Command line arguments:
+    - Fixed --profiles/-pf not loading new profiles and only setting already loaded profiles as enabled
+- **Changed:**
+  - Update electron 19.0.16 to 19.1.1
+  - Code editor:
+    - Virtual area editor: When creating a new virtual area will create a separate terrain and state file to reduce file size instead of one large map file
+    - Area designer: Compress design files using gzip to save space
+
+## 0.19.5 2022-09-14
+
+- **Fixed:**
+  - Immortal tools: Fixed a bug introduced in 19.4 performance updates
+- **Changed:**
+  - About: rename memory tab to resources
+  - Exclude a bundled module to make packaged size smaller
+  - Update mathjs 11.2.0 to 11.2.1
+
+## 0.19.4 2022-09-12
+
+- **New:**
+  - Profile Manager: Add a break out editor for trigger pattern to allow easier editing of more complex patterns
+- **Fixed:**
+  - Auto update: close download dialog when error happens
+  - Fixed an issue that caused window to now close correctly, causing the main window to hang and requiring a second close
+  - Code editor: Fixed bugs in tabstrip
+  - Command line arguments:
+    - Fixed --map/-mf not correctly setting the map file and breaking settings
+    - Fixed --profiles/-pf not correctly setting the profile list and breaking settings
+    - Fixed --character/-c when more then one is set, now if more then one, only first is used
+    - Fixed --editor/-e to work and load new files in code editor while opening default client
+  - Fixed issues with display scrollbar corner in several themes
+- **Changed:**
+  - Update electron 19.0.14 to 19.0.16
+  - Switch mathjs from module to script to speed up load times
+  - Update mathjs 11.1.0 to 11.2.0
+  - Convert several internal functions into async to speed up load times
+
+## 0.19.3 2022-08-27
+
+- **New:**
+  - [Preferences](docs/preferences.md):
+    - Add `MSP: max retries on error`, Amount of retries to attempt play a file before stopping
+- **Fixed:**
+  - Fixed alarm wildcard patterns that have no # eg *:*:30 would fire every 30 seconds but errors as it fails to parse the *:*: right, *:*:30 should be the same as just 30
+  - Fixed alarm error invalid formats to use disableTriggerOnError when enabled
+  - Profile manager: Fix trigger tester failing on multi group optional triggers
+  - Fixed %x# variables when multi group optional trigger pattern used
+  - Fixed #show and #showprompt breaking telnet ops when split buffer happens
+  - Fixed Linux icon not being correctly set in built packages, use mac icns file instead to generate all the correct files, fixes AppImage icons and others
+  - Fixed ansi parsing when remote data is split and appending local text to prevent split ansi codes
+  - Added an error check to context menu if unable to determine focused control to fall back to default context menu
+  - [Preferences](docs/preferences.md):
+    - Fixed reset not working
+    - Fixed log viewer window options not being saved always
+  - MSP: Fixed rare instant where volume or playing status would be wrong due to loading taking awhile from async loading of data
+- **Changed:**
+  - Update electron 19.0.13 to 19.0.14
+  - Update mathjs 11.0.1 to 11.1.0
+
+## 0.19.2 2022-08-17
+
+- **New:**
+  - Code editor: 
+    - Line count is now displayed in the status bar after file length
+    - Area designer: Add \${rms}, \${mon}, \${std}, \${obj}, \${cmds} variables for exit destinations
+    - New code overlay icon for editor only when used on windows
+- **Fixed:**
+  - Code editor:
+    - Fixed text color for select dropdowns for selected items being hard to read 
+    - Monster wizard: Fixed not correctly clearing out monster type list
+    - Datagrid: Fix some editor width issues being cut off by buttons
+    - Fixed issue when closing resize dialog caused focus to be lost
+    - Virtual area editor:
+      - Used state data instead of terrain data when updating terrain data
+      - Fixed room editor not updating after changing terrain or item indexes
+      - Fixed undo/redo when multiple rooms are changed at one time
+      - Fixed undo/redo not changing synced item index with terrain index
+      - Fixed undo/redo when map is shrunk and rooms deleted
+      - Fixed resize map issues when odd numbered dimensions and center
+    - Area designer:
+      - Fixed undo/redo when multiple rooms are changed at one time
+      - Fixed exit paths when using the area path, std, mon, cmds, obj paths to reduce duplicate defines
+      - Fixed room editor not updating after changes
+      - Fixed room preview not updating when some items changed
+      - Fixed room preview object line not clearing when 1 item and set to 0 after being set to 1
+      - Fixed undo/redo when map is shrunk and rooms deleted
+      - Fixed resize map issues when odd numbered dimensions and center
+  - Fix Auto create character system
+  - Fix sub windows not getting load-char event when loading a new character
+  - Fix issue with about dialog and memory display for non window systems
+- **Changed:**
+  - Code editor:
+    - Find will now update to current selection when using shortcut or menu items
+    - Editor only mode window icon will now have a code icon overlay on windows, and set the icon to code icon on linux
+  - Update electron 19.0.8 to 19.0.13
+  - Update mathjs 10.6.4 to 11.0.1
+  - Update electron-updater 5.0.5 to 5.2.1
+  - Update monaco-editor 0.33.0 to 0.34.0
+  - Update yargs-parser 21.0.1 to 21.1.1
+
+## 0.19.1 2022-07-20
+
+- **New:**
+  - Code editor:
+    - Virtual area editor:
+      - Add flip area horizontally, vertically, or by depth
+    - Area designer:
+      - Add flip area horizontally, vertically, or by depth
+- **Fixed:**
+  - Character manager: Fix context menu items not working
+  - Code editor:
+    - Virtual area editor:
+      - Resize did not correctly shift external exit coordinates based on anchor settings
+      - Fix edit menu items not being added
+      - Fix resizing breaking external exit table editor
+      - Fix undo for external exits set by room editor
+    - Area designer:
+      - Fix edit exit context menu item not opening exit editor dialog
+      - Fix not marking map as changed when resized
+  - Fixed a minor error when trying to update interface before client has finished loading
+- **Changed:**
+  - Update better-sqlite3 7.5.3 to 7.6.2
+  - Update moment 2.29.3 to 2.29.4
+  - Update electron 19.0.7 to 19.0.8
+
+## 0.19.0 2022-07-04
+
+- **Fixed:**
+  - Code editor: Virtual area editor:
+      - Fixed infinite loop when building terrain and state data
+- **Changed:**
+  - Linux 32bit is no longer supported
+  - Update electron 17.3.1 to 19.0.7
+  - Update electron-updater 4.6.5 to 5.0.5
+  - Update better-sqlite3 7.5.0 to 7.5.3
+  - Update moment 2.29.2 to 2.29.3
+  - Update mathjs 10.4.2 to 10.6.4
+  - Update markdown-it 12.3.2 to 13.0.1
+  - Update fs-extra 10.0.1 to 10.1.0
+
+## v0.18.1 2022-04-04
+
+- **Fixed:**
+  - Character manager: Fix name list not scrolling
+- **Changed:**
+  - Update electron 17.0.1 to 17.3.1
+  - Update @electron/remote 2.0.4 to 2.0.8
+  - Update fs-extra 10.0.0 to 10.0.1
+  - Update yargs-parser 21.0.0 to 21.0.1
+  - Update mathjs 10.1.1 to 10.4.2
+  - Update monaco-editor 0.32.1 to 0.33.0
+  - Update moment 2.29.1 to 2.29.2
+
+## v0.18.0 2022-02-16
 
 - **New:**
   - New speed path system, adds option to group by amount of commands, and the delay between each group
@@ -25,14 +184,14 @@
   - Profile manager: double clicking an item in treeview will now toggle expand or collapse state
 - **Fixed:**
   - Try to make sure window size is sent to the mud more accurately
-  - Optimize debounce system so it is cleaner and runs less
-  - Mapper: Default to 1 if [Directions to send](docs/preferences.md#mapper) is ever less then 1 so speed walk path sent always
+  - Optimize debounce systems so it is cleaner and runs less
+  - Mapper: Default to 1 if [Directions to send](docs/preferences.md#mapper) is ever less then 1 so auto walk path sent always
   - Remove extra `Enable Double Parameter Escaping` from preferences dialog.
   - Immortal tools: fix minor bug in remote drag and drop download
   - Profile manager: Fixed issue when sub item group was selected and profile option changed that would cause treeview to replace sub item with profile
 - **Changed:**
-  - Profile manager: sort profiles by priority sort set, then alpha always
-  - Update electron 16.0.8 to 17.0.0
+  - Profile manager: sort profiles by priority sort if set, then alpha always, ignore index as profiles are stored by name
+  - Update electron 16.0.8 to 17.0.1
   - Update monaco-editor 0.31.1 to 0.32.1  
   - Update fswin 2.21.1015 to 3.22.106
   - Update electron-updater 4.6.1 to 4.6.5
@@ -2784,7 +2943,7 @@
     - `-s=[file], --setting=[file]` override default setting file
     - `-mf=[file], --map=[file]` override default map file
     - `-c=[name], --character=[name]` allows you to load/create a character from character database
-    - `-pf=[list], --profiles[]` set which profiles will be enabled, if not found will default
+    - `-pf=[list], --profiles=[list]` set which profiles will be enabled, if not found will default
   - About memory tab now includes process type, cpu usage and idle wakeups as of when the dialog was opened.
 - **Changed:**
   - Profiles: enabled systems are no longer linked to profiles but will instead be saved with the setting systems, this allows per setting file enabled profile list, allow better multiple instances of the client to not clash

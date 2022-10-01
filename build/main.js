@@ -62,7 +62,8 @@ argv = require('yargs-parser')(argv, {
         's': ['settings'],
         'mf': ['map', 'm'],
         'c': ['character', 'char'],
-        'pf': ['profiles']
+        'pf': ['profiles'],
+        'e': ['editor']
     },
     configuration: {
         'short-option-groups': false
@@ -1529,23 +1530,9 @@ app.on('ready', () => {
         }
         global.editorOnly = true;
     }
-    if (argv.e) {
-        showCodeEditor();
-        if (Array.isArray(argv.eo)) {
-            al = argv.eo.length;
-            a = 0;
-            for (; a < al; a++) {
-                if (typeof argv.eo[a] === 'string')
-                    openEditor(argv.eo[a]);
-            }
-        }
-        else if (typeof argv.eo === 'string') {
-            openEditor(argv.eo);
-        }
-    }
 
     if (Array.isArray(argv.c)) {
-        global.character = argv.c;
+        global.character = argv.c[0];
         loadCharacter(global.character);
     }
     else if (argv.c) {
@@ -1558,25 +1545,35 @@ app.on('ready', () => {
         global.settingsFile = parseTemplate(argv.s);
 
     if (Array.isArray(argv.mf))
-        global.settingsFile = parseTemplate(argv.mf[0]);
+        global.mapFile = parseTemplate(argv.mf[0]);
     else if (argv.mf)
-        global.settingsFile = parseTemplate(argv.mf);
+        global.mapFile = parseTemplate(argv.mf);
 
     if (Array.isArray(argv.pf))
-        global.settingsFile = parseTemplate(argv.pf[0]);
+        global.profiles = parseTemplate(argv.pf[0]).split(',');
     else if (argv.pf)
-        global.settingsFile = parseTemplate(argv.pf);
-
-    if (Array.isArray(argv.s))
-        global.settingsFile = parseTemplate(argv.s[0]);
-    else if (argv.s)
-        global.settingsFile = parseTemplate(argv.s);
+        global.profiles = parseTemplate(argv.pf).split(',');
 
     if (global.editorOnly)
         showCodeEditor();
     else {
         createTray();
         createWindow();
+        //only load after as it requires a client window
+        if (argv.e) {
+            showCodeEditor();
+            if (Array.isArray(argv.e)) {
+                al = argv.eo.length;
+                a = 0;
+                for (; a < al; a++) {
+                    if (typeof argv.eo[a] === 'string')
+                        openEditor(argv.eo[a]);
+                }
+            }
+            else if (typeof argv.e === 'string') {
+                openEditor(argv.e);
+            }
+        }
     }
 });
 
@@ -1696,7 +1693,82 @@ ipcMain.on('load-default', () => {
         createCodeEditor();
 });
 
+ipcMain.on('change-char', (event, char, create, empty) => {
+    if (create && !characters.characters[char]) {
+        var wins = BrowserWindow.getAllWindows();
+        var current = BrowserWindow.fromWebContents(event.sender);
+        //TODO add a setting to enable this
+        /*
+        for (var w = 0, wl = wins.length; w < wl; w++) {
+            if (wins[w].getTitle().startsWith('Character manager') && wins[w].getParentWindow() === current) {
+                wins[w].webContents.send('add-char', char, empty, null, true);
+                return;
+            }
+        }
+        */
+        characters.characters[char] = { name: char.replace(/[^a-zA-Z0-9]+/g, ''), settings: path.join('{characters}', char + '.json'), map: path.join('{characters}', char + '.map') };
+        var sf = parseTemplate(characters.characters[char].settings);
+        var response;
+        var d;
+        if (isFileSync(sf)) {
+            //TODO add a setting to control how the setting file is handled
+            /*
+            response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                type: 'warning',
+                title: 'File exists',
+                message: 'Setting file for ' + char + ' exist, replace?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+            });
+            if (response === 0) {
+                d = Settings.load(parseTemplate(path.join('{data}', 'settings.json')));
+                d.save(sf);
+            }
+            */
+        }
+        else {
+            if (empty)
+                d = new Settings();
+            else
+                d = Settings.load(parseTemplate(path.join('{data}', 'settings.json')));
+            d.save(sf);
+        }
+        sf = parseTemplate(characters.characters[char].map);
+        if (isFileSync(sf)) {
+            //TODO add setting to control what to do if map exist
+            /*
+            response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                type: 'warning',
+                title: 'File exists',
+                message: 'Map file for ' + char + ' exist, replace?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+            });
+            if (response === 0) {
+                if (isFileSync(parseTemplate(path.join('{data}', 'map.sqlite'))))
+                    copyFile(parseTemplate(path.join('{data}', 'map.sqlite')), sf);
+                else
+                    fs.closeSync(fs.openSync(sf, 'w'));
+            }
+            */
+        }
+        else if (!empty && isFileSync(parseTemplate(path.join('{data}', 'map.sqlite'))))
+            copyFile(parseTemplate(path.join('{data}', 'map.sqlite')), sf);
+        else
+            fs.closeSync(fs.openSync(sf, 'w'));
+        for (var w = 0, wl = wins.length; w < wl; w++) {
+            wins[w].webContents.send('add-char', char, empty, characters.characters[char]);
+        }
+    }
+    if (characters.characters[char])
+        changeCharacter(char);
+});
+
 ipcMain.on('load-char', (event, char) => {
+    changeCharacter(char);
+});
+
+function changeCharacter(char) {
     var name;
     //already loaded so no need to switch
     if (char === global.character) {
@@ -1737,6 +1809,13 @@ ipcMain.on('load-char', (event, char) => {
     set = settings.Settings.load(global.settingsFile);
     if (win && !win.isDestroyed() && win.webContents)
         win.webContents.send('load-char', char);
+    if (winMap)
+        winMap.webContents.send('load-char', char);
+    for (name in windows) {
+        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
+            continue;
+        windows[name].window.webContents.send('load-char', char);
+    }
 
     if (winMap) {
         executeScript('closeWindow()', winMap);
@@ -1796,7 +1875,7 @@ ipcMain.on('load-char', (event, char) => {
         }
     }
     set.save(global.settingsFile);
-});
+}
 
 ipcMain.on('options-changed', () => {
     set = settings.Settings.load(global.settingsFile);
@@ -2232,6 +2311,12 @@ ipcMain.on('set-overlay', (event, args) => {
                 win.setIcon(path.join(__dirname, '../assets/icons/png/connectednonactive2.png'));
             else
                 win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connectednonactive.png'), 'Received data');
+            break;
+        case 'code':
+            if (process.platform === 'linux')
+                win.setIcon(path.join(__dirname, '../assets/icons/png/code.png'));
+            else
+                win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/codeol.png'), 'Received data');
             break;
         default:
             if (process.platform === 'linux')
@@ -2773,7 +2858,7 @@ ipcMain.on('parseTemplate', (event, str, data) => {
 
 ipcMain.handle('window', (event, action, ...args) => {
     var current = BrowserWindow.fromWebContents(event.sender);
-    if (!current) return;
+    if (!current || current.isDestroyed()) return;
     if (action === "focus")
         current.focus();
     else if (action === "hide")
@@ -2852,7 +2937,7 @@ ipcMain.on('window-info', (event, info, ...args) => {
         for (var w = 0, wl = wins.length; w < wl; w++) {
             if (wins[w] === current || !wins[w].isVisible())
                 continue;
-            if (v[w].getTitle().startsWith(args[0]) && v[w].getParentWindow() === current) {
+            if (wins[w].getTitle().startsWith(args[0]) && wins[w].getParentWindow() === current) {
                 event.returnValue = 1;
                 return;
             }
@@ -2873,6 +2958,7 @@ ipcMain.on('window-info', (event, info, ...args) => {
                         continue;
                     executeScript('if(closing) closing();', windows[name].window);
                     executeScript('if(closed) closed();', windows[name].window);
+                    executeScript('if(closeHidden) closeHidden()', windows[name].window);
                     set.windows[name] = getWindowState(name, windows[name].window);
                     set.windows[name].options = copyWindowOptions(name);
                     windows[name].window = null;
@@ -3897,10 +3983,6 @@ function createNewWindow(name, options) {
 
     windows[name].window.on('maximize', () => {
         trackWindowState(name, windows[name].window);
-    });
-
-    windows[name].window.on('maximize', () => {
-        trackWindowState(name, windows[name].window);
         states[name].maximized = true;
     });
 
@@ -3985,9 +4067,11 @@ function createNewWindow(name, options) {
     });
 
     windows[name].window.on('close', (e) => {
+        //something already closed the window
+        if (!windows[name]) return;
         set = settings.Settings.load(global.settingsFile);
         set.windows[name] = getWindowState(name, e.sender);
-        if (windows[name].window === e.sender)
+        if (windows[name] && windows[name].window === e.sender)
             windows[name].show = false;
         set.windows[name].options = copyWindowOptions(name);
         set.save(global.settingsFile);
@@ -4340,6 +4424,10 @@ function createCodeEditor(show, loading, loaded) {
         if (global.editorOnly) {
             updateJumpList();
             checkForUpdates();
+            if (process.platform === 'linux')
+                winCode.setIcon(path.join(__dirname, '../assets/icons/png/code.png'));
+            else
+                winCode.setOverlayIcon(path.join(__dirname, '../assets/icons/png/codeol.png'), 'Received data');
         }
     });
 
@@ -4518,6 +4606,19 @@ function checkForUpdates() {
             //store current line arguments to use on next load
             fs.writeFileSync(path.join(app.getPath('userData'), 'argv.json'), JSON.stringify(process.argv));
         });
+        autoUpdater.on('error', (error) => {
+            dialog.showErrorBox('Error: ', error == null ? 'unknown' : (error.stack || error).toString());
+            if (global.editorOnly) {
+                winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: true });
+                winCode.setProgressBar(-1);
+                winCode.webContents.send('update-downloaded');
+            }
+            else {
+                updateMenuItem({ menu: ['help', 'updater'], enabled: true });
+                win.setProgressBar(-1);
+                win.webContents.send('update-downloaded');
+            }
+        });
         autoUpdater.checkForUpdatesAndNotify();
     }
 }
@@ -4537,10 +4638,16 @@ function checkForUpdatesManual() {
     autoUpdater.autoDownload = false;
     autoUpdater.on('error', (error) => {
         dialog.showErrorBox('Error: ', error == null ? 'unknown' : (error.stack || error).toString());
-        if (global.editorOnly)
+        if (global.editorOnly) {
             winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: true });
-        else
+            winCode.setProgressBar(-1);
+            winCode.webContents.send('update-downloaded');
+        }
+        else {
             updateMenuItem({ menu: ['help', 'updater'], enabled: true });
+            win.setProgressBar(-1);
+            win.webContents.send('update-downloaded');
+        }
     });
 
     autoUpdater.on('update-available', () => {
@@ -4696,7 +4803,7 @@ async function executeScript(script, w, f) {
             reject();
             return;
         }
-        w.webContents.executeJavaScript(script).then(() => resolve()).catch(err => {
+        w.webContents.executeJavaScript(script).then(results => resolve(results)).catch(err => {
             if (err)
                 logError(err);
             reject();
@@ -4713,7 +4820,7 @@ async function executeScriptContents(script, w) {
             reject();
             return;
         }
-        w.executeJavaScript(script).then(() => resolve()).catch(err => {
+        w.executeJavaScript(script).then(results => resolve(results)).catch(err => {
             if (err)
                 logError(err);
             reject();

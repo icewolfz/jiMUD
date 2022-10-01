@@ -313,7 +313,9 @@
                     case 'logging-viewer-alwaysOnTopClient':
                     case 'logging-viewer-alwaysOnTop':
                     case 'logging-viewer-persistent':
-                        if (!_settings.windows['log-viewer'] || !_settings.windows['log-viewer'].options)
+                        if (!_settings.windows['log-viewer'])
+                            _settings.windows['log-viewer'] = {};
+                        if (!_settings.windows['log-viewer'].options)
                             _settings.windows['log-viewer'].options = {
                                 persistent: false,
                                 alwaysOnTopClient: true,
@@ -819,7 +821,6 @@
                 $('#logging-viewer-alwaysOnTopClient').prop('checked', true);
                 $('#logging-viewer-alwaysOnTop').prop('checked', false);
                 $('#logging-viewer-persistent').prop('checked', true);
-
             }
             else {
                 $('#logging-viewer-alwaysOnTopClient').prop('checked', _settings.windows['log-viewer'].options.alwaysOnTopClient);
@@ -847,7 +848,9 @@
         // eslint-disable-next-line no-unused-vars
         function resetSettings() {
             _settings = new Settings();
-            if (!_settings.windows['log-viewer'] || !_settings.windows['log-viewer'].options)
+            if (!_settings.windows['log-viewer'])
+                _settings.windows['log-viewer'] = {};
+            if (!_settings.windows['log-viewer'].options)
                 _settings.windows['log-viewer'].options = {
                     persistent: false,
                     alwaysOnTopClient: true,
@@ -869,6 +872,7 @@
         }
 
         function resetWindows() {
+            if (!_settings.windows) return;
             for (var name in _settings.windows) {
                 _settings.windows[name].x = 0;
                 _settings.windows[name].y = 0;
@@ -2157,7 +2161,13 @@
                         <label class="control-label">
                             <input type="checkbox" id="notifyMSPPlay" /> Display Notification on MSP Play
                         </label>
-                    </div>
+                    </div>                  
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            MSP: max retries on error
+                            <input type="number" id="mspMaxRetriesOnError" class="input-sm form-control" min="0" max="100" />
+                        </label>
+                    </div>                    
                 </div>
                 <div role="tabpanel" class="pref-pane" id="status">
                     <div class="col-sm-6 form-group">

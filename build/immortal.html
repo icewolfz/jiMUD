@@ -1831,7 +1831,10 @@
                 //$("body")[0].scrollTop = 0
                 row.select();
                 //hack, seems this gets set wrong and causes shift click selection to act wonky, setting to current item index seems to fix it
-                localTable.context[0]._select_lastCell.row = row.index();
+                if (localTable.context[0]._select_lastCell)
+                    localTable.context[0]._select_lastCell.row = row.index();
+                else
+                    localTable.context[0]._select_lastCell = { row: row.index(), column: 0, columnVisible: 0 };
                 clearTimeout(keyClearID);
                 keyClearID = setTimeout(() => {
                     key = '';
@@ -1880,7 +1883,10 @@
                 //$("body")[0].scrollTop = 0
                 row.select();
                 //hack, seems this gets set wrong and causes shift click selection to act wonky, setting to current item index seems to fix it
-                remoteTable.context[0]._select_lastCell.row = row.index();
+                if (remoteTable.context[0]._select_lastCell)
+                    remoteTable.context[0]._select_lastCell.row = row.index();
+                else
+                    remoteTable.context[0]._select_lastCell = { row: row.index(), column: 0, columnVisible: 0 };
                 clearTimeout(keyClearID);
                 keyClearID = setTimeout(() => {
                     key = '';
@@ -3718,12 +3724,13 @@
             _qUpdateID = null;
         }
 
+        var _rTimeout = 0;
         function doUpdate(type) {
             if (!type) return;
             _updating |= type;
-            if (_updating === 0)
+            if (_updating === 0 || _rTimeout)
                 return;
-            window.requestAnimationFrame(() => {
+            _rTimeout = window.requestAnimationFrame(() => {
                 if ((this._updating & 1) === 1) {
                     updateStatus();
                     _updating &= ~1;
@@ -3771,6 +3778,7 @@
                     queueTable.rows().invalidate('data').draw();
                     _updating &= ~256;
                 }
+                _rTimeout = 0;
                 doUpdate(_updating);
             });
         }

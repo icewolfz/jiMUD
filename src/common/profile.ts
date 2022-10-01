@@ -165,88 +165,120 @@ export class Alarm {
             if (parts.length === 0)
                 throw new Error('Invalid format: ' + pattern);
             if (parts.length === 1) {
-                if (parts[0][0] === '*') {
+                if (parts[0] === '*') {
                     t.secondsWildcard = true;
-                    parts[0] = parts[0].substr(1);
+                    t.seconds = -1;
                 }
-                else
-                    t.secondsWildcard = false;
-                tmp = parseInt(parts[0], 10);
-                if (isNaN(tmp))
-                    throw new Error('Invalid Format: ' + parts[0]);
-                if (tmp < 0)
-                    throw new Error('Seconds must be greater than or equal to 0.');
-                else if (tmp > 59)
-                    t.secondsWildcard = true;
-                t.seconds = tmp;
+                else {
+                    if (parts[0][0] === '*') {
+                        t.secondsWildcard = true;
+                        parts[0] = parts[0].substr(1);
+                    }
+                    else
+                        t.secondsWildcard = false;
+                    tmp = parseInt(parts[0], 10);
+                    if (isNaN(tmp))
+                        throw new Error('Invalid Format: ' + parts[0]);
+                    if (tmp < 0)
+                        throw new Error('Seconds must be greater than or equal to 0.');
+                    else if (tmp > 59)
+                        t.secondsWildcard = true;
+                    t.seconds = tmp;
+                }
             }
             else if (parts.length === 2) {
-                if (parts[0][0] === '*') {
+                if (parts[0] === '*') {
                     t.minutesWildcard = true;
-                    parts[0] = parts[0].substr(1);
+                    t.minutes = -1;
                 }
-                else
-                    t.minutesWildcard = false;
-                tmp = parseInt(parts[0], 10);
-                if (isNaN(tmp))
-                    throw new Error('Invalid Format: ' + parts[0]);
-                if (tmp < 0 || tmp > 59)
-                    throw new Error('Minutes can only be 0 to 59');
-                t.minutes = tmp;
-
-                if (parts[1][0] === '*') {
+                else {
+                    if (parts[0][0] === '*') {
+                        t.minutesWildcard = true;
+                        parts[0] = parts[0].substr(1);
+                    }
+                    else
+                        t.minutesWildcard = false;
+                    tmp = parseInt(parts[0], 10);
+                    if (isNaN(tmp))
+                        throw new Error('Invalid Format: ' + parts[0]);
+                    if (tmp < 0 || tmp > 59)
+                        throw new Error('Minutes can only be 0 to 59');
+                    t.minutes = tmp;
+                }
+                if (parts[1] === '*') {
                     t.secondsWildcard = true;
-                    parts[1] = parts[1].substr(1);
+                    t.seconds = -1;
                 }
-                else
-                    t.secondsWildcard = false;
-                tmp = parseInt(parts[1], 10);
-                if (isNaN(tmp))
-                    throw new Error('Invalid Format: ' + parts[1]);
-                if (tmp < 0 || tmp > 59)
-                    throw new Error('Seconds can only be 0 to 59');
-                t.seconds = tmp;
-
+                else {
+                    if (parts[1][0] === '*') {
+                        t.secondsWildcard = true;
+                        parts[1] = parts[1].substr(1);
+                    }
+                    else
+                        t.secondsWildcard = false;
+                    tmp = parseInt(parts[1], 10);
+                    if (isNaN(tmp))
+                        throw new Error('Invalid Format: ' + parts[1]);
+                    if (tmp < 0 || tmp > 59)
+                        throw new Error('Seconds can only be 0 to 59');
+                    t.seconds = tmp;
+                }
             }
             else {
-                if (parts[0][0] === '*') {
+                if (parts[0] === '*') {
                     t.hoursWildcard = true;
-                    parts[0] = parts[0].substr(1);
+                    t.hours = -1;
                 }
-                else
-                    t.hoursWildcard = false;
-                tmp = parseInt(parts[0], 10);
-                if (isNaN(tmp))
-                    throw new Error('Invalid Format: ' + parts[0]);
-                if (tmp < 0 || tmp > 23)
-                    throw new Error('Hours can only be 0 to 23');
-                t.hours = tmp;
-
-                if (parts[1][0] === '*') {
+                else {
+                    if (parts[0][0] === '*') {
+                        t.hoursWildcard = true;
+                        parts[0] = parts[0].substr(1);
+                    }
+                    else
+                        t.hoursWildcard = false;
+                    tmp = parseInt(parts[0], 10);
+                    if (isNaN(tmp))
+                        throw new Error('Invalid Format: ' + parts[0]);
+                    if (tmp < 0 || tmp > 23)
+                        throw new Error('Hours can only be 0 to 23');
+                    t.hours = tmp;
+                }
+                if (parts[1] === '*') {
                     t.minutesWildcard = true;
-                    parts[1] = parts[1].substr(1);
+                    t.seconds = -1;
                 }
-                else
-                    t.minutesWildcard = false;
-                tmp = parseInt(parts[1], 10);
-                if (isNaN(tmp))
-                    throw new Error('Invalid Format: ' + parts[1]);
-                if (tmp < 0 || tmp > 59)
-                    throw new Error('Minutes can only be 0 to 59');
-                t.minutes = tmp;
-
-                if (parts[2][0] === '*') {
+                else {
+                    if (parts[1][0] === '*') {
+                        t.minutesWildcard = true;
+                        parts[1] = parts[1].substr(1);
+                    }
+                    else
+                        t.minutesWildcard = false;
+                    tmp = parseInt(parts[1], 10);
+                    if (isNaN(tmp))
+                        throw new Error('Invalid Format: ' + parts[1]);
+                    if (tmp < 0 || tmp > 59)
+                        throw new Error('Minutes can only be 0 to 59');
+                    t.minutes = tmp;
+                }
+                if (parts[2] === '*') {
                     t.secondsWildcard = true;
-                    parts[2] = parts[2].substr(2);
+                    t.seconds = -1;
                 }
-                else
-                    t.secondsWildcard = false;
-                tmp = parseInt(parts[2], 10);
-                if (isNaN(tmp))
-                    throw new Error('Invalid Format: ' + parts[2]);
-                if (tmp < 0 || tmp > 59)
-                    throw new Error('Seconds can only be 0 to 59');
-                t.seconds = tmp;
+                else {
+                    if (parts[2][0] === '*') {
+                        t.secondsWildcard = true;
+                        parts[2] = parts[2].substr(2);
+                    }
+                    else
+                        t.secondsWildcard = false;
+                    tmp = parseInt(parts[2], 10);
+                    if (isNaN(tmp))
+                        throw new Error('Invalid Format: ' + parts[2]);
+                    if (tmp < 0 || tmp > 59)
+                        throw new Error('Seconds can only be 0 to 59');
+                    t.seconds = tmp;
+                }
             }
         }
         if (readOnly)

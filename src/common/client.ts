@@ -75,10 +75,18 @@ export class Client extends EventEmitter {
         const a = [];
         let v;
         let vl;
+        const p = path.join(parseTemplate('{data}'), 'profiles')
         //can only enable profiles that exist, so scan the array for valid profiles
         for (v = 0, vl = value.length; v < vl; v++) {
+            //found so already loaded just save it
             if (this.profiles.contains(value[v]))
                 a.push(value[v]);
+            else {
+                //if not loaded, attempt to load it
+                this.profiles.load(value[v], p);
+                if (this.profiles.contains(value[v]))
+                    a.push(value[v]);
+            }
         }
         if (a.length === 0)
             a.push('default');
@@ -1060,14 +1068,29 @@ export class Client extends EventEmitter {
             let alarm = patterns[a];
             //not found build cache
             if (!alarm) {
-                patterns[a] = {};
-                if (trigger.type === TriggerType.Alarm)
-                    patterns[a][0] = Alarm.parse(trigger);
-                for (let s = 0, sl = trigger.triggers.length; s < sl; s++) {
-                    if (trigger.triggers[s].type === TriggerType.Alarm)
-                        patterns[a][s] = Alarm.parse(trigger.triggers[s]);
+                try {
+                    patterns[a] = {};
+                    if (trigger.type === TriggerType.Alarm)
+                        patterns[a][0] = Alarm.parse(trigger);
+                    for (let s = 0, sl = trigger.triggers.length; s < sl; s++) {
+                        if (trigger.triggers[s].type === TriggerType.Alarm)
+                            patterns[a][s] = Alarm.parse(trigger.triggers[s]);
+                    }
+                }
+                catch (e) {
+                    patterns[a] = null;
+                    if (this.options.disableTriggerOnError) {
+                        trigger.enabled = false;
+                        setTimeout(() => {
+                            this.saveProfile(parent.profile.name, false, ProfileSaveType.Trigger);
+                            this.emit('item-updated', 'trigger', parent.profile, parent.profile.triggers.indexOf(parent), parent);
+                        });
+                    }
+                    throw e;
                 }
                 alarm = patterns[a];
+                //what ever reason the alarm failed to create so move on to next alarm
+                if (!alarm) continue;
             }
             //we want to sub state pattern
             alarm = alarm[trigger.state];
@@ -1492,6 +1515,7 @@ export class Client extends EventEmitter {
         this.MSP.enabled = this.options.enableMSP;
         this.MSP.enableSound = this.options.enableSound;
         this.MSP.savePath = parseTemplate(this.options.soundPath);
+        this.MSP.maxErrorRetries = this.options.mspMaxRetriesOnError;
 
         this._input.scrollLock = this.options.scrollLocked;
         this._input.enableParsing = this.options.enableParsing;
@@ -1552,11 +1576,11 @@ export class Client extends EventEmitter {
     }
 
     public parse(txt: string) {
-        this.parseInternal(txt, false);
+        this.parseInternal(txt, false, false, true);
     }
 
-    private parseInternal(txt: string, remote: boolean, force?: boolean) {
-        this.display.append(txt, remote, force);
+    private parseInternal(txt: string, remote: boolean, force?: boolean, prependSplit?: boolean) {
+        this.display.append(txt, remote, force, prependSplit);
     }
 
     public error(err: any) {
@@ -1614,16 +1638,16 @@ export class Client extends EventEmitter {
     }
 
     public print(txt: string, newline?: boolean) {
-        this.printInternal(txt, newline, false);
+        this.printInternal(txt, newline, false, true);
     }
 
-    private printInternal(txt: string, newline?: boolean, remote?: boolean) {
+    private printInternal(txt: string, newline?: boolean, remote?: boolean, prependSplit?: boolean) {
         if (txt == null || typeof txt === 'undefined') return;
         if (newline == null) newline = false;
         if (remote == null) remote = false;
         if (newline && this.display.textLength > 0 && !this.display.EndOfLine && this.display.EndOfLineLength !== 0 && !this.telnet.prompt && !this.display.parseQueueEndOfLine)
             txt = '\n' + txt;
-        this.parseInternal(txt, remote);
+        this.parseInternal(txt, remote, false, prependSplit);
     }
 
     public send(data, echo?: boolean) {

@@ -296,7 +296,7 @@ export class Telnet extends EventEmitter {
      * @param {String} data string received from host
      * @fires Telnet#received-data
      */
-    public receivedData(data, skipDecompress?: boolean) {
+    public receivedData(data, skipDecompress?: boolean, prependSplit?: boolean) {
         if (this.enableLatency) {
             if (this._latencyTime !== null) {
                 this.latency = new Date().getTime() - this._latencyTime.getTime();
@@ -317,7 +317,7 @@ export class Telnet extends EventEmitter {
         }
         if (this.enableDebug)
             this.emit('debug', 'PreProcess:' + data, 1);
-        data = this.processData(data, skipDecompress);
+        data = this.processData(data, skipDecompress, false, prependSplit);
         if (this.enableDebug)
             this.emit('debug', 'PostProcess:' + data, 1);
         this.emit('received-data', data);
@@ -414,7 +414,7 @@ export class Telnet extends EventEmitter {
      * @fires Telnet#receive-CHARSET
      */
     //this.processData = function(data) { return data; };
-    public processData(data, skipDecompress?: boolean, returnRaw?: boolean) {
+    public processData(data, skipDecompress?: boolean, returnRaw?: boolean, prependSplit?: boolean) {
         let len: number;
         let _sb;
         if (data == null)
@@ -430,7 +430,10 @@ export class Telnet extends EventEmitter {
         this._splitBuffer = [];
         if (_sb.length > 0) {
             if (this.enableDebug) this.emit('debug', 'Split buffer length: ' + _sb.length, 1);
-            data = Buffer.concat([Buffer.from(_sb, 'binary'), data]);
+            if(prependSplit)
+                data = Buffer.concat([data, Buffer.from(_sb, 'binary')]);
+            else
+                data = Buffer.concat([Buffer.from(_sb, 'binary'), data]);
             _sb = [];
             len = data.length;
         }

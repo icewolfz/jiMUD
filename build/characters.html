@@ -70,11 +70,11 @@
                 c.push({ label: 'Add empty', click: "addEmpty()" });
                 if (item !== undefined) {
                     c.push({ type: 'separator' });
-                    c.push({ label: 'Rename', click: `rename(${item})` });
-                    c.push({ label: 'Copy', click: `copy(${item})` });
-                    c.push({ label: 'Delete', click: `remove(${item})` });
+                    c.push({ label: 'Rename', click: `rename('${item}')` });
+                    c.push({ label: 'Copy', click: `copy('${item}')` });
+                    c.push({ label: 'Delete', click: `remove('${item})'` });
                     c.push({ type: 'separator' });
-                    c.push({ label: 'Load', click: `load(${item})` });
+                    c.push({ label: 'Load', click: `load('${item})'` });
                 }
                 ipcRenderer.invoke('show-context', c);
             });
@@ -825,6 +825,62 @@
         }
 
         //ipcRenderer.invoke('window', 'openDevTools');
+
+        ipcRenderer.on('add-char', (event, char, empty, data, dialog) => {
+            if (dialog)
+                showGetName(char, function (event, name) {
+                    characters.characters[name] = { name: name.replace(/[^a-zA-Z0-9]+/g, ''), settings: path.join('{characters}', name + '.json'), map: path.join('{characters}', name + '.map') };
+                    var sf = parseTemplate(characters.characters[name].settings);
+                    var response, d;
+                    if (isFileSync(sf)) {
+                        response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                            type: 'warning',
+                            title: 'File exists',
+                            message: 'Setting file for ' + name + ' exist, replace?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1,
+                        });
+                        if (response === 0) {
+                            d = empty ? new Settings() : Settings.load(parseTemplate(path.join('{data}', 'settings.json')));
+                            d.save(sf);
+                        }
+                    }
+                    else {
+                        d = empty ? new Settings() : Settings.load(parseTemplate(path.join('{data}', 'settings.json')));
+                        d.save(sf);
+                    }
+                    sf = parseTemplate(characters.characters[name].map);
+                    if (isFileSync(sf)) {
+                        response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                            type: 'warning',
+                            title: 'File exists',
+                            message: 'Map file for ' + name + ' exist, replace?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1,
+                        });
+                        if (response === 0) {
+                            if (!empty && isFileSync(parseTemplate(path.join('{data}', 'map.sqlite'))))
+                                copyFile(parseTemplate(path.join('{data}', 'map.sqlite')), sf);
+                            else
+                                fs.closeSync(fs.openSync(sf, 'w'));
+                        }
+                    }
+                    else if (!empty && isFileSync(parseTemplate(path.join('{data}', 'map.sqlite'))))
+                        copyFile(parseTemplate(path.join('{data}', 'map.sqlite')), sf);
+                    else
+                        fs.closeSync(fs.openSync(sf, 'w'));
+                    changed++;
+                    createItem(name);
+                    saveCharacters();
+                    sortList();
+                });
+            else if (data && !characters[char]) {
+                characters[char] = data;
+                createItem(char);
+                saveCharacters();
+                sortList();
+            }
+        })
     </script>
     <style type="text/css">
         .form-control-feedback,
@@ -894,7 +950,7 @@
         </button>
     </div>
     <div id="main">
-        <div id="characters-container" class="panel panel-default" style="position: absolute;left: 2px;top: 2px;bottom:2px;width:200px;margin:0">
+        <div id="characters-container" class="panel panel-default" style="position: absolute;left: 2px;top: 2px;bottom:2px;width:200px;margin:0;overflow: auto;">
             <ul id="characters-list" class="list-group">
 
             </ul>

@@ -193,7 +193,7 @@ Start Rainbow 256 example
 syntax: rs [text]
 
 to use this alias, create a new alias named rs, set the style to Script
-and ensure append arguments is checked and past this in the value
+and ensure append arguments is checked and paste this in the value
 */
 //the string to send to the mud
 var out = '';
@@ -234,4 +234,61 @@ for(i=0; i<l; i++)
    out += window.forecolors256[i2]+str[i];
 }
 client.sendCommand("'%^RESET%^"+out+"%^DEFAULT%^");
+```
+
+### Status display dots
+
+```javascript
+/*
+Status display dots
+
+syntax:
+  statuschange id color - change a status dot color
+  statuschange reset - reset all dots to default
+  statuschange remove - remove all dots
+
+to use this alias, create a new alias named statuschange, set the style to Script
+and ensure append arguments is checked and paste this in the value
+*/
+//add a reset option
+if(arguments.length === 2 && arguments[1] === 'reset')
+   $('#dot-status').remove();
+//remove dots
+if(arguments.length === 2 && arguments[1] === 'remove') {
+   $('#dot-status').remove();
+   return;
+}
+//create status display
+if($('#dot-status').length === 0){
+   //first try web client
+   var body = $('#phil');
+   //# of columns, change this if you add more then 6 dots to allow better formatting
+   var columns = 1;
+   //if not found use jimud
+   if(body.length === 0) {
+      body = $('#limbs');
+	  body.append('<span id="dot-status" class="dot-container" style="display: inline-block;bottom: 70px;position: absolute;left: 0;width:'+(columns * 20)+'px;">');
+   } //position based on phill
+   else
+      body.append('<span id="dot-status" class="dot-container" style="display: inline-block;bottom: 0;position: absolute;width:'+(columns * 20)+'px;left: -25px;">');
+   //get container
+   body = $('#dot-status');
+   //easy build of status
+   var cStatus = function(id) {
+      return '<span class="dot" id="'+id+'" style="height: 10px;width: 10px;background-color: white;border-radius: 50%;display: inline-block;margin-left: 5px;"></span>';
+   }
+   //create status dots
+   //create a dot named stat, use statuschange stat [color] to change its color
+   body.append(cStatus('stat')); //copy this line and change stat to a unique name, then use statuschange [name] [color]
+   //create as many other dots with unique ids as you want, if you add more then 6 add more columns above, remove // from below to add these dots
+   //body.append(cStatus('buffer'));
+   //body.append(cStatus('mantle'));
+   //body.append(cStatus('quicken'));
+   //body.append(cStatus('poison'));
+   //body.append(cStatus('wbreathing'));
+}
+if(arguments.length === 3)
+   $('#' + (arguments[1] || 'stat')).css('background', arguments[2] || 'white');
+else
+   $('#' + ('stat')).css('background', arguments[1] || 'white');
 ```

@@ -442,7 +442,8 @@
                 client.display.updateLayout();
         }
 
-        function updateInterface() {
+        async function updateInterface() {
+            if(!client || !client.options) return;
             loadTheme(client.options.theme);
             $('#display').css('left', '');
             $('#display-border').css('left', '');
@@ -579,7 +580,7 @@
               return menuItems;
             }
         */
-        function buildContextMenu() {
+        async function buildContextMenu() {
             _context = [];
             $contextMenu = _context;
             var context = client.contexts;
@@ -618,7 +619,7 @@
             }
         }
 
-        function updateButtonBar() {
+        async function updateButtonBar() {
             const $bar = document.getElementById('buttonbar');
             const $scrollUp = document.getElementById('bb-scroll-up');
             const $scrollDown = document.getElementById('bb-scroll-down');
@@ -1733,8 +1734,9 @@
 
             _status.ac = client.options.showArmor;
             _status.on('set-title', (title) => {
+                //TODO Add setting to control empty/defaults
                 if (client.options.autoCreateCharacter)
-                    ipcRenderer.send('change-char', title);
+                    ipcRenderer.send('change-char', title, true);
                 _logger.postMessage({ action: 'name', args: title });
                 ipcRenderer.send('set-title', title);
             });
@@ -2124,7 +2126,7 @@
                 const { selectionText, isEditable } = params;
                 if (isEditable) {
                     input = document.elementFromPoint(params.x, params.y);
-                    if (input.id === 'commandinput') {
+                    if (input && input.id === 'commandinput') {
                         //e.preventDefault();
                         $('#commandinput').data('selStart', client.commandInput[0].selectionStart);
                         $('#commandinput').data('selEnd', client.commandInput[0].selectionEnd);
@@ -2387,7 +2389,7 @@
             return true;
         }
 
-        function buildButtons() {
+        async function buildButtons() {
             var buttons = $('#user-buttons');
             buttons.empty();
             if (!client.options.buttons.user)
@@ -3401,7 +3403,7 @@
         </div>
         <div class="dialog-body" style="padding-top:25px">
 
-            <div class="col-sm-7 form-group">
+            <div class="col-xs-7 form-group">
                 <p>You have been Disconnected.</p>
                 <p>
                     The reason for this may vary:
@@ -3415,7 +3417,7 @@
                     <span id="disconnectTimer"></span>
                 </p>
             </div>
-            <div class="col-sm-5 form-group">
+            <div class="col-xs-5 form-group">
                 <button id="disconnectDialogReconnect" style="float: right" type="button" class="btn btn-primary btn-block" onclick="closeDisconnectDialog();client.connect();" accesskey="r">
                     <i class="fa fa-refresh"></i>
                     <u>R</u>econnect</button>

@@ -20,6 +20,7 @@ export class Status extends EventEmitter {
     private _ac: boolean = false;
     private lagMeter: HTMLElement;
     private _updating: UpdateType;
+    private _rTimeout = 0;
     private dragging = false;
     private _spitterDistance;
 
@@ -833,9 +834,9 @@ export class Status extends EventEmitter {
     private doUpdate(type?: UpdateType) {
         if (!type) return;
         this._updating |= type;
-        if (this._updating === UpdateType.none)
+        if (this._updating === UpdateType.none || this._rTimeout)
             return;
-        window.requestAnimationFrame(() => {
+        this._rTimeout = window.requestAnimationFrame(() => {
             if ((this._updating & UpdateType.status) === UpdateType.status) {
                 this.updateStatus();
                 this._updating &= ~UpdateType.status;
@@ -856,6 +857,7 @@ export class Status extends EventEmitter {
                 this.updateXP();
                 this._updating &= ~UpdateType.xp;
             }
+            this._rTimeout = 0;
             this.doUpdate(this._updating);
         });
     }

@@ -83,6 +83,7 @@ export class DataGrid extends EventEmitter {
     private $body: HTMLElement;
     private $dataBody: HTMLElement;
     private _updating;
+    private _rTimeout = 0;
     private $dataWidth = 0;
     private $dataHeight = 0;
     private $headerWidth = 0;
@@ -1989,9 +1990,9 @@ export class DataGrid extends EventEmitter {
     private doUpdate(type?: UpdateType) {
         if (!type) return;
         this._updating |= type;
-        if (this._updating === UpdateType.none)
+        if (this._updating === UpdateType.none || this._rTimeout)
             return;
-        window.requestAnimationFrame(() => {
+        this._rTimeout = window.requestAnimationFrame(() => {
             if ((this._updating & UpdateType.headerWidth) === UpdateType.headerWidth) {
                 this.$headerWidth = this.$header.clientWidth;
                 this._updating &= ~UpdateType.headerWidth;
@@ -2026,6 +2027,7 @@ export class DataGrid extends EventEmitter {
                     this._updating &= ~UpdateType.resizeWidth;
                 }
             }
+            this._rTimeout = 0;
             this.doUpdate(this._updating);
         });
     }
