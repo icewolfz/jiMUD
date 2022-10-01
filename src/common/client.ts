@@ -74,14 +74,22 @@ export class Client extends EventEmitter {
         const a = [];
         let v;
         let vl;
+        const p = path.join(parseTemplate('{data}'), 'profiles')
         //can only enable profiles that exist, so scan the array for valid profiles
         for (v = 0, vl = value.length; v < vl; v++) {
+            //found so already loaded just save it
             if (this.profiles.contains(value[v]))
                 a.push(value[v]);
+            else {
+                //if not loaded, attempt to load it
+                this.profiles.load(value[v], p);
+                if (this.profiles.contains(value[v]))
+                    a.push(value[v]);
+            }
         }
         if (a.length === 0)
             a.push('default');
-        this.options.profiles.enabled = a;
+        this.options.profiles.enabled = value;
         this.saveOptions();
     }
 

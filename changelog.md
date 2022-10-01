@@ -46,8 +46,11 @@
 - **Fixed:**
   - Fixed disconnect dialog when screen size is small
   - Immortal tools: Fixed error when navigating by using keyboard
+    - Code editor: Fixed bugs in tabstrip
+  - Command line arguments:
+    - Fixed --profiles/-pf not loading new profiles and only setting already loaded profiles as enabled
 - **Changed:**
-  - Update electron 19.0.16 to 19.1.0
+  - Update electron 19.0.16 to 19.1.1
   - Code editor:
     - Virtual area editor: When creating a new virtual area will create a separate terrain and state file to reduce file size instead of one large map file
     - Area designer: Compress design files using gzip to save space
@@ -2972,7 +2975,7 @@
     - `-s=[file], --setting=[file]` override default setting file
     - `-mf=[file], --map=[file]` override default map file
     - `-c=[name], --character=[name]` allows you to load/create a character from character database
-    - `-pf=[list], --profiles[]` set which profiles will be enabled, if not found will default
+    - `-pf=[list], --profiles=[list]` set which profiles will be enabled, if not found will default
   - About memory tab now includes process type, cpu usage and idle wakeups as of when the dialog was opened.
 - **Changed:**
   - Profiles: enabled systems are no longer linked to profiles but will instead be saved with the setting systems, this allows per setting file enabled profile list, allow better multiple instances of the client to not clash
