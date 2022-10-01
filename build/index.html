@@ -1006,12 +1006,12 @@
             });
 
             _backup.on('import-map', (data) => {
-                if (!_windows['mapper'])
+                if (!_windows['mapper.html'])
                     openWindow('mapper').then(() => {
-                        _windows['mapper'].addEventListener('load', () => _windows['mapper'].importData(data), { once: true });
+                        _windows['mapper.html'].addEventListener('load', () => _windows['mapper.html'].importData(data), { once: true });
                     });
                 else
-                    _windows['mapper'].importData(data);
+                    _windows['mapper.html'].importData(data);
             });
 
             _backup.on('imported-profiles', () => {
@@ -2106,11 +2106,11 @@
                         profile: b.dataset.profile,
                         bIndex: b.dataset.index,
                         click: (item) => {
-                            if (_windows['profiles'])
-                                _windows['profiles'].manager.editItem(item.profile, 'buttons', +item.bIndex);
+                            if (_windows['profiles.html'])
+                                _windows['profiles.html'].manager.editItem(item.profile, 'buttons', +item.bIndex);
                             else
                                 openWindow('profiles').then(() => {
-                                    _windows['profiles'].addEventListener('load', () => _windows['profiles'].manager.editItem(item.profile, 'buttons', +item.bIndex), { once: true });
+                                    _windows['profiles.html'].addEventListener('load', () => _windows['profiles.html'].manager.editItem(item.profile, 'buttons', +item.bIndex), { once: true });
                                 });
                         }
                     }));
@@ -3607,23 +3607,23 @@
         function openFiles(...files) {
             const fl = files.length;
             let f = 0;
-            if (!_windows['code.editor']) {
+            if (!_windows['code.editor.html']) {
                 openWindow('code.editor').then(() => {
                     //not opened for what ever reason
-                    if (!_windows['code.editor']) return;
-                    _windows['code.editor'].addEventListener('load', () => {
+                    if (!_windows['code.editor.html']) return;
+                    _windows['code.editor.html'].addEventListener('load', () => {
                         for (; f < fl; f++) {
-                            _windows['code.editor'].openEditor(files[f]);
+                            _windows['code.editor.html'].openEditor(files[f]);
                         }
-                        _windows['code.editor'].focus();
+                        _windows['code.editor.html'].focus();
                     });
                 });
             }
             else {
                 for (; f < fl; f++) {
-                    _windows['code.editor'].openEditor(files[f]);
+                    _windows['code.editor.html'].openEditor(files[f]);
                 }
-                _windows['code.editor'].focus();
+                _windows['code.editor.html'].focus();
             }
         }
 

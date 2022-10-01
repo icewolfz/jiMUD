@@ -900,15 +900,15 @@
                                     if (!window.opener._windows['code.editor']) {
                                         window.opener.openWindow('code.editor').then(() => {
                                             //not opened for what ever reason
-                                            if (!window.opener._windows['code.editor']) return;
-                                            windows['code.editor'].addEventListener('load', () => {
-                                                window.opener._windows['code.editor'].updateValue(getFormattedText().replace(/(?:\r)/g, ''));
+                                            if (!window.opener._windows['code.editor.html']) return;
+                                            windows['code.editor.html'].addEventListener('load', () => {
+                                                window.opener._windows['code.editor.html'].updateValue(getFormattedText().replace(/(?:\r)/g, ''));
                                             }, { once: true });
                                         });
                                         return;
                                     }
                                     else
-                                        window.opener._windows['code.editor'].updateValue(getFormattedText().replace(/(?:\r)/g, ''));
+                                        window.opener._windows['code.editor.html'].updateValue(getFormattedText().replace(/(?:\r)/g, ''));
                                     break;
                             }
                         },

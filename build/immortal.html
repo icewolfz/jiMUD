@@ -2449,7 +2449,7 @@
                 return false;
             };
 
-            element = document.getElementById('local-list');
+            element = document.getElementById('remote-list');
 
             element.ondragend = (event) => {
                 event.preventDefault();
@@ -2894,19 +2894,19 @@
         }
 
         function openEditor(file, remote, remoteEdit) {
-            if (!window.opener._windows['code.editor']) {
+            if (!window.opener._windows['code.editor.html']) {
                 window.opener.openWindow('code.editor').then(() => {
                     //not opened for what ever reason
-                    if (!window.opener._windows['code.editor']) return;
-                    windows['code.editor'].addEventListener('load', () => {
-                        window.opener._windows['code.editor'].openEditor(file, remote, remoteEdit);
-                        window.opener._windows['code.editor'].focus();
+                    if (!window.opener._windows['code.editor.html']) return;
+                    window.opener._windows['code.editor.html'].addEventListener('load', () => {
+                        window.opener._windows['code.editor.html'].openEditor(file, remote, remoteEdit);
+                        window.opener._windows['code.editor.html'].focus();
                     });
                 });
             }
             else {
-                window.opener._windows['code.editor'].openEditor(data, remote, remoteEdit);
-                window.opener._windows['code.editor'].focus();
+                window.opener._windows['code.editor.html'].openEditor(file, remote, remoteEdit);
+                window.opener._windows['code.editor.html'].focus();
             }
         }
 
