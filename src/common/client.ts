@@ -89,7 +89,7 @@ export class Client extends EventEmitter {
         }
         if (a.length === 0)
             a.push('default');
-        this.options.profiles.enabled = value;
+        this.options.profiles.enabled = a;
         this.saveOptions();
     }
 
