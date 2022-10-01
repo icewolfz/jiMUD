@@ -1751,8 +1751,6 @@
                             document.getElementById('immortal').style.display = 'none';
                         break;
                 }
-                //TODO just have child windows do window.opener.client.on(...) directly, note will need to also make sure they unhook event when closed
-                //ipcRenderer.send('GMCP-received', { mod: mod, obj: obj });
             });
 
             client.on('item-added', (type, profile, item) => {
@@ -1782,7 +1780,6 @@
             });
 
             client.on('window', (window, args) => {
-                //TODO recode this to use windows variable and open functions as needed
                 switch (window) {
                     case 'mapper':
                     case 'editor':
@@ -3587,7 +3584,6 @@
         }
 
         function updateChat(data) {
-            //TODO refine when new chat window finished
             if (_windows['chat.html'])
                 _windows['chat.html'].updateChat(data);
             /*
@@ -3872,7 +3868,6 @@
         function closeable(all, allWindows) {
             if (window.getGlobal('updating'))
                 return true;
-            //TODO convert the old  onbeforeunload to new closeable hook
             if (!closeWindow) {
                 if (client.options.askonchildren) {
                     //TODO may not need this any more as all child windows have a closable function that is called and required to be true
@@ -3944,119 +3939,6 @@
                     closeWindow = true;
             }
             return closeWindow;
-            /*
-            window.onbeforeunload = function (evt) {
-                if (!closeWindow && client.options.askonclose && client.connected) {
-                    evt.returnValue = false;
-                    setTimeout(() => {
-                        if (client.options.askonchildren) {
-                            if (ipcRenderer.sendSync('window-info', 'child-open', 'Code Editor')) {
-                                choice = dialog.showMessageBoxSync({
-                                        type: 'warning',
-                                        title: 'Code editor open',
-                                        message: 'Code editor open, will lose any unsaved work, close anyways?',
-                                        buttons: ['Yes', 'No', 'Never ask again'],
-                                        defaultId: 1,
-                        noLink: true
-                                    });
-                                if (choice === 2) {
-                                    client.options.askonchildren = false;
-                                    client.saveOptions();
-                                }
-                                if (choice === 1) {
-                                    evt.returnValue = false;
-                                    return 'no';
-                                }
-                            }
-                        }
-                        choice = dialog.showMessageBoxSync({
-                                type: 'warning',
-                                title: 'Connected',
-                                message: 'Closing will disconnect you from the mud, close anyway?',
-                                buttons: ['Yes', 'No', 'Never ask again'],
-                                defaultId: 1,
-                        noLink: true
-                            });
-                        if (choice === 2) {
-                            client.raise('closed');
-                            _logger.postMessage({ action: 'flush' });
-                            client.options.askonclose = false;
-                            client.saveOptions();
-                            closeWindow = true;
-                            clearWatcher();
-                            ipcRenderer.invoke('window', 'closeWindows');
-                            window.close();
-                            return;
-                        }
-                        if (choice !== 0) {
-                            evt.returnValue = false;
-                            return 'no';
-                        }
-                        client.raise('closed');
-                        _logger.postMessage({ action: 'flush' });
-                        closeWindow = true;
-                        clearWatcher();
-                        ipcRenderer.invoke('window', 'closeWindows');
-                        window.close()
-                    });
-                    return;
-                }
-                else if (!closeWindow && client.options.askonchildren) {
-                    evt.returnValue = false;
-                    setTimeout(() => {
-                        if (ipcRenderer.sendSync('window-info', 'child-close', 'Code Editor')) {
-                            choice = dialog.showMessageBoxSync({
-                                    type: 'warning',
-                                    title: 'Code editor open',
-                                    message: 'Code editor open, will lose any unsaved work, close anyways?',
-                                    buttons: ['Yes', 'No', 'Never ask again'],
-                                    defaultId: 1,
-                        noLink: true
-                                });
-                            if (choice === 2) {
-                                client.options.askonchildren = false;
-                                client.saveOptions();
-                            }
-                            else if (choice === 1) {
-                                evt.returnValue = false;
-                                return 'no';
-                            }
-                        }
-                        client.raise('closed');
-                        _logger.postMessage({ action: 'flush' });
-                        closeWindow = true;
-                        clearWatcher();
-                        ipcRenderer.invoke('window', 'closeWindows');
-                        window.close();
-                    });
-                    return;
-                }
-                else if (!closeWindow) {
-                    setTimeout(() => {
-                        for (var w = 0, wl = windows.length; w < wl; w++) {
-                            if (windows[w] === current || !windows[w].isVisible())
-                                continue;
-                            if (windows[w].getParentWindow() !== current)
-                                continue;
-                            windows[w].close();
-                        }
-                        client.raise('closed');
-                        _logger.postMessage({ action: 'flush' });
-                        closeWindow = true;
-                        clearWatcher();
-                        ipcRenderer.invoke('window', 'closeWindows');
-                        window.close();
-                    });
-                }
-                client.raise('closed');
-                _logger.postMessage({ action: 'flush' });
-                closeWindow = true;
-                clearWatcher();
-                ipcRenderer.invoke('window', 'closeWindows');
-                window.close();
-                return;
-            };
-            */
         }
         //#endregion 
         init();

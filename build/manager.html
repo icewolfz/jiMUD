@@ -30,7 +30,7 @@
         var tabStrip;
         var _current = 0;
         var _loading = 0;
-        
+
         window.addEventListener('error', (e) => {
             const { message, filename, lineno, colno, error } = e;
             ipcRenderer.send('log-error', {
@@ -387,14 +387,11 @@
                         else
                             ipcRenderer.send('new-window');`
                     },
-                    /*
-                    //TODO dialog of all clients/child windows for current window
                     { type: 'separator' },
-                    ,
                     {
-                        label: 'Windows...'
+                        label: 'Windows...',
+                        click: () => ipcRenderer.send('show-window', 'windows')
                     }
-                    */
                 ];
                 if (window.getGlobal('debug')) {
                     menu.push({ type: 'separator' });
@@ -447,14 +444,11 @@
                         else
                             ipcRenderer.send('new-window');`
                     },
-                    /*
-                    //TODO dialog of all clients/child windows for current window
                     { type: 'separator' },
-                    ,
                     {
-                        label: 'Windows...'
+                        label: 'Windows...',
+                        click: () => ipcRenderer.send('show-window', 'windows')
                     }
-                    */
                 ]);
                 menu.push(
                     { type: 'separator' },
