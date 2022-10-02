@@ -9,6 +9,7 @@
   - Command line arguments:
     - Fixed --profiles/-pf not loading new profiles and only setting already loaded profiles as enabled
   - Remove `Hide On Minimize` hack as electron fixed minimize event and hack now breaks linux when option enabled
+  - Display: revert a performance fix that added flicker
 - **Changed:**
   - Update electron 19.0.16 to 19.1.1
   - Code editor:
