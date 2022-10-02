@@ -867,7 +867,8 @@ if (!argv.eo && !argv.nci && isFileSync(path.join(app.getPath('userData'), 'char
                     Notes: path.join('{characters}', `${title}.notes`),
                     TotalMilliseconds: 0,
                     TotalDays: 0,
-                    LastConnected: 0
+                    LastConnected: 0,
+                    LastDisconnected: 0
                 });
             }
             oldCharacters = null;

@@ -177,6 +177,20 @@
                     }
                 },
                 {
+                    label: 'Last disconnected',
+                    field: 'LastDisconnected',
+                    width: 250,
+                    readonly: true,
+                    formatter: (data) => {
+                        if (!data || data.row.LastDisconnected === 0) return '';
+                        return new moment(data.row.LastDisconnected).format('MM/DD/YYYY hh:mm:ss A');
+                    },
+                    tooltipFormatter: (data) => {
+                        if (!data || data.row.LastDisconnected === 0) return '';
+                        return new moment(data.row.LastDisconnected).format('MM/DD/YYYY hh:mm:ss A');
+                    }
+                },
+                {
                     label: 'Total time connected',
                     field: 'TotalMilliseconds',
                     width: 250,
@@ -406,6 +420,10 @@
                 $('#lastConnected').text(new moment(character.LastConnected).format('MM/DD/YYYY hh:mm:ss A'));
             else
                 $('#lastConnected').text('');
+            if (character.LastDisconnected !== 0)
+                $('#lastDisconnected').text(new moment(character.LastDisconnected).format('MM/DD/YYYY hh:mm:ss A'));
+            else
+                $('#lastDisconnected').text('');
             $('#totalTime').text(getTimeSpan(character.TotalMilliseconds));
             $('.nav-tabs a[href="#tab-general"]').tab('show');
             changed = 0;
@@ -432,6 +450,7 @@
             $('#character-editor textarea').prop('disabled', true);
             $('#title').text('');
             $('#lastConnected').text('');
+            $('#lastDisconnected').text('');
             $('#totalTime').text('');
         }
 
@@ -1227,6 +1246,8 @@
                     <div role="tabpanel" class="container tab-pane fade in" id="tab-stats" style="width: auto;">
                         <h4>Last connected</h4>
                         <span id="lastConnected"></span>
+                        <h4>Last Disconnected</h4>
+                        <span id="lastDisconnected"></span>
                         <h4>Total time connected</h4>
                         <span id="totalTime"></span>
                     </div>

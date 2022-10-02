@@ -3080,8 +3080,12 @@ export class Input extends EventEmitter {
                 return null;
             case 'connect':
             case 'connecttime':
-                if (!this.client.connectTime)
-                    this.client.echo('Not connected', -7, -8, true, true);
+                if (!this.client.connectTime) {
+                    if(this.client.disconnectTime)
+                        this.client.echo('Disconnected since: ' + new moment(this.client.disconnectTime).format('MM/DD/YYYY hh:mm:ss A'), -7, -8, true, true);
+                    else
+                        this.client.echo('Not connected', -7, -8, true, true);
+                }
                 else
                     this.client.echo('You have been connected: ' + getTimeSpan(Date.now() - this.client.connectTime), -7, -8, true, true);
                 return null;

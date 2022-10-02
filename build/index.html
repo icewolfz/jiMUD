@@ -1579,7 +1579,7 @@
 
             client.on('closed', () => {
                 if (_windowState.data.characterId > 0)
-                    ipcRenderer.send('update-character-time', { ID: _windowState.data.characterId, TotalMilliseconds: Date.now() - client.connectTime }, getId());
+                    ipcRenderer.send('update-character-time', { ID: _windowState.data.characterId, LastDisconnected: client.disconnectTime, TotalMilliseconds: client.disconnectTime - client.connectTime }, getId());
                 if (client.options.buttons.connect) {
                     document.getElementById('connect').style.display = '';
                     document.getElementById('disconnect').style.display = 'none';

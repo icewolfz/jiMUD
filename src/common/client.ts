@@ -65,6 +65,7 @@ export class Client extends EventEmitter {
     public telnet: Telnet;
     public profiles: ProfileCollection;
     public connectTime: number = 0;
+    public disconnectTime: number = 0;
     public lastSendTime: number = 0;
     public defaultTitle = 'jiMUD';
 
@@ -987,6 +988,7 @@ export class Client extends EventEmitter {
             this.connecting = false;
             this.echo('Connected...', AnsiColorCode.InfoText, AnsiColorCode.InfoBackground, true, true);
             this.connectTime = Date.now();
+            this.disconnectTime = 0;
             this.lastSendTime = Date.now();
             this.emit('connected');
             this.raise('connected');
@@ -1002,6 +1004,7 @@ export class Client extends EventEmitter {
             this.connecting = false;
             this.echo('Connection closed to ' + this.host + ':' + this.port, AnsiColorCode.InfoText, AnsiColorCode.InfoBackground, true, true);
             this.MSP.reset();
+            this.disconnectTime = Date.now();
             this.emit('closed');
             this.raise('disconnected');
             //clear after events in case events need the times
