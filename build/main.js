@@ -1741,7 +1741,7 @@ ipcMain.on('switch-client', (event, id, offset) => {
         const window = BrowserWindow.fromWebContents(event.sender);
         const windowId = getWindowId(window);
         if (window != clients[id].parent) {
-            //TODO probably wanting to dock from 1 window to another
+            //Probably wanting to dock from 1 window to another, so just ignore
             return;
         }
         const bounds = window.getContentBounds();
@@ -2390,7 +2390,7 @@ function clientsChanged() {
     const windowsDialog = getWindowId('windows');
     if (windowsDialog)
         windowsDialog.webContents.send('clients-changed', windowLength, Object.keys(clients).length);
-    updateTrayContext();
+    updateTray();
 }
 
 async function canCloseClient(id, warn, all, allWindows) {
@@ -5027,7 +5027,7 @@ function getClientConnectionState(clientId) {
         dev = false;
     let name = title.split(' as ');
     if (name.length === 2) {
-        tile = name[0];
+        title = name[0];
         name = name[1];
     }
     else
@@ -5430,86 +5430,57 @@ async function _updateTrayContext() {
 }
 
 async function updateTray() {
-    //TODO figure out better tool tip/title
     if (!tray) return;
     let overlay = 0;
-    let windowId;
-    //use the last active window as the target to update info
-    for (windowId in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, windowId))
+    const cState = {
+        connected: 0,
+        total: 0,
+    }
+    for (clientId in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId))
             continue;
-        const cl = windows[windowId].clients.length;
-        for (let idx = 0; idx < cl; idx++) {
-            switch (clients[windows[windowId].clients[idx]].overlay) {
-                case 4:
-                case 1:
-                    if (overlay < 1)
-                        overlay = 1;
-                    break;
-                case 5:
-                case 2:
-                    if (overlay < 2)
-                        overlay = 2;
-                    break;
-            }
+        cState.total++;
+        switch (clients[clientId].overlay) {
+            case 4:
+            case 1:
+                if (overlay < 1)
+                    overlay = 1;
+                cState.connected++;
+                break;
+            case 5:
+            case 2:
+                if (overlay < 2)
+                    overlay = 2;
+                cState.connected++;
+                break;
         }
     }
     let title = '';
+    if (cState.total === 1)
+        title = cState.connected ? 'Connected' : 'Disconnected';
+    else {
+        if (cState.connected)
+            title = `${cState.connected} Connected`;
+        if (cState.total !== cState.connected)
+            title += `${title ? ', ' : ''}${cState.total - cState.connected} Disconnected`;
+    }
+    title += ' - jiMUD';
     switch (overlay) {
         case 4:
         case 1:
             tray.setImage(getOverlayIcon(7));
-            title = 'A client is connected';
             break;
         case 5:
         case 2:
             tray.setImage(getOverlayIcon(8));
-            title = 'A client received data';
             break;
         default:
             tray.setImage(getOverlayIcon(6));
-            title = 'Disconnected';
             break;
     }
     tray.setTitle(title);
     tray.setToolTip(title);
     updateTrayContext();
-
-    /*
-    let t = '';
-    let d = '';
-    let title = global.title;
-    if (!title || title.length === 0)
-        title = global.character;
-    if ((_settings && _settings.dev) || global.dev)
-        d = ' to Development';
-    switch (overlay) {
-        case 1:
-            tray.setImage(path.join(__dirname, '../assets/icons/png/connected2.png'));
-            if (title && title.length > 0)
-                t = `Connected${d} as ${title} - jiMUD`;
-            else
-                t = `Connected${d} - jiMUD`;
-            break;
-        case 2:
-            if (title && title.length > 0)
-                t = `Connected${d} as ${title} - jiMUD`;
-            else
-                t = `Connected${d} - jiMUD`;
-            tray.setImage(path.join(__dirname, '../assets/icons/png/connectednonactive2.png'));
-            break;
-        default:
-            if (title && title.length > 0)
-                t = `Disconnected${d} as ${title} - jiMUD`;
-            else
-                t = `Disconnected${d} - jiMUD`;
-            tray.setImage(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
-            break;
-    }
-
-    tray.setTitle(t);
-    tray.setToolTip(t);
-    */
 }
 //#endregion
 
