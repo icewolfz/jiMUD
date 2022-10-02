@@ -1,11 +1,11 @@
 # Changelog
 
-## 0.19.6
+## 0.19.6 2022-10-2
 
 - **Fixed:**
-  - Fixed disconnect dialog when screen size is small
+  - Fixed disconnect dialog when window size is small
   - Immortal tools: Fixed error when navigating by using keyboard
-    - Code editor: Fixed bugs in tabstrip
+  - Code editor: Fixed bugs in tabstrip
   - Command line arguments:
     - Fixed --profiles/-pf not loading new profiles and only setting already loaded profiles as enabled
   - Remove `Hide On Minimize` hack as electron fixed minimize event and hack now breaks linux when option enabled
