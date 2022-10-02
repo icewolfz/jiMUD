@@ -187,7 +187,7 @@
                     },
                     tooltipFormatter: (data) => {
                         if (!data || data.row.TotalMilliseconds === 0) return '';
-                        return  getTimeSpan(data.row.TotalMilliseconds);
+                        return getTimeSpan(data.row.TotalMilliseconds);
                     }
                 },
             ];
@@ -402,6 +402,11 @@
                 $('#notes').val(fs.readFileSync(notes, 'utf-8'));
             else
                 $('#notes').val('');
+            if (character.LastConnected !== 0)
+                $('#lastConnected').text(new moment(character.LastConnected).format('MM/DD/YYYY hh:mm:ss A'));
+            else
+                $('#lastConnected').text('');
+            $('#totalTime').text(getTimeSpan(character.TotalMilliseconds));
             $('.nav-tabs a[href="#tab-general"]').tab('show');
             changed = 0;
         }
@@ -426,6 +431,8 @@
             $('#character-editor button').prop('disabled', true);
             $('#character-editor textarea').prop('disabled', true);
             $('#title').text('');
+            $('#lastConnected').text('');
+            $('#totalTime').text('');
         }
 
         function sanitizeID(id) {
@@ -1158,6 +1165,9 @@
                     <li role="presentation">
                         <a href="#tab-notes" role="tab" data-toggle="tab">Notes</a>
                     </li>
+                    <li role="presentation">
+                        <a href="#tab-stats" role="tab" data-toggle="tab">Stats</a>
+                    </li>
                 </ul>
                 <div class="tab-content" style="position: absolute;bottom: 0;top: 42px;overflow: auto;left: 0;right: 0;">
                     <div role="tabpanel" class="container tab-pane fade in active" id="tab-general" style="width: 100%;">
@@ -1213,6 +1223,12 @@
                     </div>
                     <div role="tabpanel" class="container tab-pane fade in" id="tab-notes" style="width: auto;">
                         <textarea id="notes" wrap="off" spellcheck="true" cols="20" rows="20" class="form-control" disabled="disabled"></textarea>
+                    </div>
+                    <div role="tabpanel" class="container tab-pane fade in" id="tab-stats" style="width: auto;">
+                        <h4>Last connected</h4>
+                        <span id="lastConnected"></span>
+                        <h4>Total time connected</h4>
+                        <span id="totalTime"></span>
                     </div>
                 </div>
             </div>
