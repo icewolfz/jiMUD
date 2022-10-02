@@ -1001,11 +1001,12 @@ export class Client extends EventEmitter {
         this.telnet.on('close', () => {
             this.connecting = false;
             this.echo('Connection closed to ' + this.host + ':' + this.port, AnsiColorCode.InfoText, AnsiColorCode.InfoBackground, true, true);
-            this.connectTime = 0;
-            this.lastSendTime = 0;
             this.MSP.reset();
             this.emit('closed');
             this.raise('disconnected');
+            //clear after events in case events need the times
+            this.connectTime = 0;
+            this.lastSendTime = 0;
         });
         this.telnet.on('received-data', (data) => {
             data = { value: data };

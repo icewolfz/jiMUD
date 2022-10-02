@@ -1437,6 +1437,26 @@ ipcMain.on('update-character', (event, character, id) => {
     }
 });
 
+ipcMain.on('update-character-time', (event, data, id) => {
+    if (!_characters)
+        _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
+    let character = _characters.getCharacter(data.ID);
+    data.TotalMilliseconds += character.TotalMilliseconds;
+    /*
+    if (data.TotalMilliseconds >= 86400000)
+    {
+        data.TotalDays = character.TotalDays + (data.TotalMilliseconds / 86400000);
+        data.TotalMilliseconds %= 86400000;
+    }
+    */
+    _characters.updateCharacter(data);
+    for (clientId in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId) || parseInt(clientId, 10) === id)
+            continue;
+        clients[clientId].view.webContents.send('character-updated', character);
+    }
+});
+
 ipcMain.on('add-character', (event, character) => {
     if (!_characters)
         _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });

@@ -1578,6 +1578,8 @@
             });
 
             client.on('closed', () => {
+                if (_windowState.data.characterId > 0)
+                    ipcRenderer.send('update-character-time', { ID: _windowState.data.characterId, TotalMilliseconds: Date.now() - client.connectTime }, getId());
                 if (client.options.buttons.connect) {
                     document.getElementById('connect').style.display = '';
                     document.getElementById('disconnect').style.display = 'none';
@@ -1641,6 +1643,8 @@
             });
 
             client.on('connected', () => {
+                if (_windowState.data.characterId > 0)
+                    ipcRenderer.send('update-character', { ID: _windowState.data.characterId, LastConnected: client.connectTime }, getId());
                 updateTitle();
                 ipcRenderer.send('update-title', { icon: client.port === 1035 ? 4 : 1 });
                 if (_disconnectTimerID) {
@@ -3860,6 +3864,8 @@
 
         //#region Close hooks
         window.onbeforeunload = () => {
+            if (client.connected)
+                client.close();
             client.raise('closed');
             _logger.postMessage({ action: 'flush' });
             clearWatcher();
