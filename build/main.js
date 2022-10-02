@@ -2260,7 +2260,7 @@ function createClient(options) {
                     clients[getClientId(view)].states[file] = states[file];
                     return;
                 }
-                //clients[id].states[file] = states[file];
+                clients[id].states[file] = states[file];
             }
             executeCloseHooks(childWindow);
             if (childWindow && !childWindow.isDestroyed())
