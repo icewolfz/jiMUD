@@ -41,6 +41,7 @@
 
         var changed = 0;
         var askonloadCharacter = window.getSetting('askonloadCharacter');
+        var setTab;
 
         $(window).keydown((event) => {
             if (document.getElementById('progress-dialog').open) {
@@ -216,7 +217,8 @@
             });
             _charactersDataGrid.on('selection-changed', () => {
                 if (_charactersDataGrid.selectedCount) {
-                    editCharacter(_charactersDataGrid.selected[0].data);
+                    editCharacter(_charactersDataGrid.selected[0].data, setTab);
+                    setTab = null;
                 }
                 else {
                     updateCurrent()
@@ -384,7 +386,7 @@
             _charactersDataGrid.rows = characters;
         }
 
-        function editCharacter(character) {
+        function editCharacter(character, tab) {
             $('#btn-rename').prop('disabled', false);
             $('#btn-copy').prop('disabled', false);
             $('#btn-delete').prop('disabled', false);
@@ -425,7 +427,10 @@
             else
                 $('#lastDisconnected').text('Not Available');
             $('#totalTime').text(getTimeSpan(character.TotalMilliseconds));
-            $('.nav-tabs a[href="#tab-general"]').tab('show');
+            if (!tab || tab.length === 0)
+                $('.nav-tabs a[href="#tab-general"]').tab('show');
+            else
+                $('.nav-tabs a[href="' + tab + '"]').tab('show');
             changed = 0;
         }
 
@@ -997,7 +1002,7 @@
                 character = ipcRenderer.sendSync('get-character', character);
             var rows = _charactersDataGrid.rows.filter(r => r.ID == character.ID).length !== 0;
             //not created so just add it
-            if (_charactersDataGrid.rows.filter(r => r.ID == character.ID).length !== 0)
+            if (rows.length === 0)
                 _charactersDataGrid.addRow(character);
             else if (_charactersDataGrid.selectedCount !== 0 && character.ID === _charactersDataGrid.selected[0].data.ID) {
                 if (changed > 0) {
@@ -1010,16 +1015,20 @@
                         noLink: true
                     }).then((result) => {
                         if (result.response === 0) {
+                            setTab = $('.nav.nav-tabs li.active a').attr('href');
                             _charactersDataGrid.updateRow(_charactersDataGrid.selected[0].row, character)
-                            editCharacter(character);
+                            _charactersDataGrid.select(character);
                         }
                     });
                 }
                 else {
+                    setTab = $('.nav.nav-tabs li.active a').attr('href');
                     _charactersDataGrid.updateRow(_charactersDataGrid.selected[0].row, character);
-                    editCharacter(character);
+                    _charactersDataGrid.select(character);
                 }
             }
+            else
+                _charactersDataGrid.updateRow(rows[0], character);
         }
 
 

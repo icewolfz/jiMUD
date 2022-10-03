@@ -1579,7 +1579,7 @@
 
             client.on('closed', () => {
                 if (_windowState.data.characterId > 0)
-                    ipcRenderer.send('update-character-time', { ID: _windowState.data.characterId, LastDisconnected: client.disconnectTime, TotalMilliseconds: client.disconnectTime - client.connectTime }, getId());
+                    ipcRenderer.send('update-character-time', { ID: _windowState.data.characterId, LastDisconnected: client.disconnectTime, TotalMilliseconds: client.disconnectTime - client.connectTime });
                 if (client.options.buttons.connect) {
                     document.getElementById('connect').style.display = '';
                     document.getElementById('disconnect').style.display = 'none';
@@ -1644,7 +1644,7 @@
 
             client.on('connected', () => {
                 if (_windowState.data.characterId > 0)
-                    ipcRenderer.send('update-character', { ID: _windowState.data.characterId, LastConnected: client.connectTime }, getId(), true);
+                    ipcRenderer.send('update-character', { ID: _windowState.data.characterId, LastConnected: client.connectTime }, 0, true);
                 updateTitle();
                 ipcRenderer.send('update-title', { icon: client.port === 1035 ? 4 : 1 });
                 if (_disconnectTimerID) {
@@ -2928,7 +2928,12 @@
         }
 
         ipcRenderer.on('character-updated', (event, character, noReload) => {
-            if (!noReload) updateCharacter(character.ID);
+            if (!noReload) {
+                if (typeof character === 'number')
+                    updateCharacter(character);
+                else
+                    updateCharacter(character.ID);
+            }
             if (_windows['characters.html'])
                 _windows['characters.html'].characterUpdated(character);
         });

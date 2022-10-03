@@ -1434,7 +1434,7 @@ ipcMain.on('update-character', (event, character, id, noReload) => {
     for (clientId in clients) {
         if (!Object.prototype.hasOwnProperty.call(clients, clientId) || parseInt(clientId, 10) === id)
             continue;
-        clients[clientId].view.webContents.send('character-updated', character, noReload);
+        clients[clientId].view.webContents.send('character-updated', character.ID, noReload);
     }
 });
 
@@ -1454,7 +1454,7 @@ ipcMain.on('update-character-time', (event, data, id) => {
     for (clientId in clients) {
         if (!Object.prototype.hasOwnProperty.call(clients, clientId) || parseInt(clientId, 10) === id)
             continue;
-        clients[clientId].view.webContents.send('character-updated', character, true);
+        clients[clientId].view.webContents.send('character-updated', character.ID, true);
     }
 });
 

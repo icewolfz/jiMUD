@@ -924,7 +924,7 @@ export class DataGrid extends EventEmitter {
         this.emit('selection-changed');
     }
 
-    public select(rows, scroll?) {
+    public select(rows, scroll?, silent?) {
         if ((this._updating & UpdateType.sort) === UpdateType.sort) {
             setTimeout(() => {
                 this.select(rows, scroll);
@@ -935,6 +935,11 @@ export class DataGrid extends EventEmitter {
             rows = [rows];
         else if (!this.$allowMultiSelection)
             rows = [rows[0]];
+        rows = rows.map(r => {
+            if (typeof r === 'number')
+                return r;
+            return this.$sortedRows.indexOf(this.$rows.indexOf(r));
+        });
         Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
         this.$selected = rows;
         this.$selected.forEach(r => {
@@ -943,7 +948,8 @@ export class DataGrid extends EventEmitter {
         });
         if (scroll)
             this.scrollToRow(this.$selected[0]);
-        this.emit('selection-changed');
+        if (!silent)
+            this.emit('selection-changed');
     }
 
     public selectByDataIndex(indexes, scroll?) {
