@@ -31,6 +31,7 @@
     - `On second instance` What to do whe na second instance is opened when `Use only single instance` is enabled and no command line arguments passed, *Global preference*
   - `#connecttime` now display last disconnect time when possible if disconnected
 - **Changed:**
+  - All dark icons now have a white stroke to make them work better with dark mode and dark colors
   - Preferences that are now global:
     - `Spellchecking` can only now be set as a global preference and requires a restart to effect any already opening clients or windows as it can only be set on window creation
     - `Theme` only the global preference theme will be used for all clients
