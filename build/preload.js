@@ -20,6 +20,9 @@ window.setSetting = (variable, value) => ipcRenderer.send('set-setting', variabl
 window.error = (error) => ipcRenderer.send('error', error);
 window.debug = (message) => ipcRenderer.send('debug', message);
 
+window.addContext = func => ipcRenderer.addListener('context-menu', func);
+window.removeContext = func =>  ipcRenderer.removeListener('context-menu', func);
+
 dialog = {
     showOpenDialog: (options) => ipcRenderer.invoke('show-dialog', 'showOpenDialog', options),
     showSaveDialog: (options) => ipcRenderer.invoke('show-dialog', 'showSaveDialog', options),

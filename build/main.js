@@ -2562,6 +2562,10 @@ function initializeChildWindow(window, link, details, noClose) {
         initializeChildWindow(childWindow, childDetails.url, childDetails);
     });
 
+    window.webContents.on('context-menu', (e, params) => {
+        window.webContents.send('context-menu', params);
+    });
+
     window.on('resize', () => {
         states[file] = saveWindowState(window, stateMap.get(window) || states[file]);
         stateMap.set(window, states[file]);

@@ -1136,7 +1136,7 @@
                 color_map: _ColorTable,
             });
 
-            remote.getCurrentWindow().webContents.on('context-menu', (e, params) => {
+            window.addContext((e, params) => {
                 //const { selectionText, isEditable } = params;
                 //if (isEditable) {
                 if ((params.y) < 37) return;
@@ -1153,7 +1153,7 @@
                             }
                         }));
                 }
-                cMenu.popup({ window: remote.getCurrentWindow() });
+                cMenu.popup();
             });
             loadOptions();
             window.opener.client.on('options-loaded', optionsLoaded);

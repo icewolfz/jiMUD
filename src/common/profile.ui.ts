@@ -251,7 +251,7 @@ interface MenuItemConstructorOptionsCustom extends Electron.MenuItemConstructorO
     word?: string;
 }
 
-function addInputContext() {
+function addInputContext() {    
     remote.getCurrentWindow().webContents.on('context-menu', (e, props) => {
         e.preventDefault();
         const inputMenu = Menu.buildFromTemplate(<Electron.MenuItemConstructorOptions[]>[
@@ -308,7 +308,7 @@ function addInputContext() {
                 }));
             }
         }
-        inputMenu.popup({ window: remote.getCurrentWindow() });
+        inputMenu.popup();
     });
 }
 
