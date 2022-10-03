@@ -1,6 +1,7 @@
 {
     "compileOnSave": true,
     "compilerOptions": {
+        "incremental": true,
         "target": "es2017",
         "module": "none",
         "moduleResolution": "classic",
