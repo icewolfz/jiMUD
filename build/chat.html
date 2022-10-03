@@ -11,9 +11,11 @@
     <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
     <link href="css/main.css" rel="stylesheet" type="text/css" />
     <link href="css/ansi.css" rel="stylesheet" type="text/css" />
-    <link href="css/chat.css" rel="stylesheet" type="text/css" />
     <link href="css/theme.css" rel="stylesheet" type="text/css" />
+    <link id="theme" rel="stylesheet" href="themes/default.css" type="text/css" />
+    <link href="css/chat.css" rel="stylesheet" type="text/css" />
     <script type="text/javascript">
+        window.loadTheme();
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js"></script>
@@ -88,7 +90,7 @@
         }
 
         $(document).ready(function () {
-            display = new Display('display');
+            display = new Display('chat-display');
 
             display.on('split-move-done', (h) => {
                 window.opener.client.options.chat.splitHeight = h;
@@ -226,6 +228,9 @@
             'options-loaded': () => {
                 loadOptions();
             },
+            'load-theme': () => {
+                window.loadTheme();
+            },
             'connecting': () => {
                 if (!options)
                     loadOptions();
@@ -241,6 +246,7 @@
         window.opener.addEventListener('loadCharacter', updateCharacter);
         window.opener.addEventListener('updateCharacter', updateCharacter);
         window.opener.addEventListener('resetCharacter', updateCharacter);
+        window.opener.client.on('load-theme', events['load-theme']);
         window.opener.client.on('options-loaded', events['options-loaded']);
         window.opener.client.on('connecting', events['connecting']);
 
@@ -272,6 +278,7 @@
             window.opener.removeEventListener('loadCharacter', updateCharacter);
             window.opener.removeEventListener('updateCharacter', updateCharacter);
             window.opener.removeEventListener('resetCharacter', updateCharacter);
+            window.opener.client.off('load-theme', events['load-theme']);
             window.opener.client.off('options-loaded', events['options-loaded']);
             window.opener.client.off('connecting', events['connecting']);
         };
@@ -315,7 +322,7 @@
             </button>
         </div>
     </div>
-    <div id="display"></div>
+    <div id="chat-display"></div>
 </body>
 
 </html>

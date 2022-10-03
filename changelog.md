@@ -30,6 +30,7 @@
     - `Use only single instance` Allow only one instance of the application to open, *Global preference*
     - `On second instance` What to do whe na second instance is opened when `Use only single instance` is enabled and no command line arguments passed, *Global preference*
   - `#connecttime` now display last disconnect time when possible if disconnected
+  - Chat window display now uses global theme for display scroll bars
 - **Changed:**
   - All dark icons now have a white stroke to make them work better with dark mode and dark colors
   - Preferences that are now global:

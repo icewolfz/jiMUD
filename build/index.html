@@ -2977,7 +2977,10 @@
         });
 
         function reloadOptions(settings, global) {
-            if (global) window.loadTheme();
+            if (global) {
+                window.loadTheme();
+                client.emit('load-theme');
+            }
             if (settings !== _windowState.data.settings) return;
             client.loadOptions();
             _logger.postMessage({
