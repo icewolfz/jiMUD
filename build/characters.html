@@ -168,11 +168,11 @@
                     width: 250,
                     readonly: true,
                     formatter: (data) => {
-                        if (!data || data.row.LastConnected === 0) return '';
+                        if (!data || !data.row.LastConnected || data.row.LastConnected === 0) return '';
                         return new moment(data.row.LastConnected).format('MM/DD/YYYY hh:mm:ss A');
                     },
                     tooltipFormatter: (data) => {
-                        if (!data || data.row.LastConnected === 0) return '';
+                        if (!data || !data.row.LastConnected || data.row.LastConnected === 0) return '';
                         return new moment(data.row.LastConnected).format('MM/DD/YYYY hh:mm:ss A');
                     }
                 },
@@ -182,11 +182,11 @@
                     width: 250,
                     readonly: true,
                     formatter: (data) => {
-                        if (!data || data.row.LastDisconnected === 0) return '';
+                        if (!data || !data.row.LastDisconnected || data.row.LastDisconnected === 0) return '';
                         return new moment(data.row.LastDisconnected).format('MM/DD/YYYY hh:mm:ss A');
                     },
                     tooltipFormatter: (data) => {
-                        if (!data || data.row.LastDisconnected === 0) return '';
+                        if (!data || !data.row.LastDisconnected || data.row.LastDisconnected === 0) return '';
                         return new moment(data.row.LastDisconnected).format('MM/DD/YYYY hh:mm:ss A');
                     }
                 },
@@ -416,14 +416,14 @@
                 $('#notes').val(fs.readFileSync(notes, 'utf-8'));
             else
                 $('#notes').val('');
-            if (character.LastConnected !== 0)
+            if (character.LastConnected || character.LastConnected !== 0)
                 $('#lastConnected').text(new moment(character.LastConnected).format('MM/DD/YYYY hh:mm:ss A'));
             else
-                $('#lastConnected').text('');
-            if (character.LastDisconnected !== 0)
+                $('#lastConnected').text('Not Available');
+            if (character.LastDisconnected || character.LastDisconnected !== 0)
                 $('#lastDisconnected').text(new moment(character.LastDisconnected).format('MM/DD/YYYY hh:mm:ss A'));
             else
-                $('#lastDisconnected').text('');
+                $('#lastDisconnected').text('Not Available');
             $('#totalTime').text(getTimeSpan(character.TotalMilliseconds));
             $('.nav-tabs a[href="#tab-general"]').tab('show');
             changed = 0;
