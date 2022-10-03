@@ -2322,7 +2322,7 @@
         }
 
         async function init() {
-            //TODO need to redo this if upgrade to newer bootstrap and move away from jquery but as of current used bootstrap impossible to remove
+            //FIXME need to redo this if upgrade to newer bootstrap and move away from jquery but as of current used bootstrap impossible to remove
             $('.dropdown').on('show.bs.dropdown', () => {
                 $('.command-history ul').css('max-height', $('#display').outerHeight() + 'px');
                 $('.command-history ul').css('max-width', ($('#command').outerWidth() - 100) + 'px');
@@ -2390,11 +2390,6 @@
             client = new (require('./js/client.js').Client)('display', 'commandInput', _windowState.data.settings);
             initClientEvents();
             client.sendChat = updateChat;
-            /*
-            //TODO this is no longer supported as multi window, need to either remove or rethink this commafparent.classList.containsnd line argument
-            if (window.getGlobal('profiles') && window.getGlobal('profiles').length > 0)
-                client.enabledProfiles = window.getGlobal('profiles');
-            */
             client.display.enableBell = false;
             window.client = client;
             window.OoMUD = client;
