@@ -361,8 +361,8 @@
                 ipcRenderer.send('update-character', changes, window.opener.getId());
                 window.opener.updateCharacter(character.ID);
                 changed = 0;
-                //TODO if more columns added call this to update changed data
-                //_charactersDataGrid.updateRows();
+                //If more columns added call this to update changed data
+                _charactersDataGrid.updateRows();
             }
         }
 

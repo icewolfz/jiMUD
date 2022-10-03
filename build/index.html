@@ -1644,7 +1644,7 @@
 
             client.on('connected', () => {
                 if (_windowState.data.characterId > 0)
-                    ipcRenderer.send('update-character', { ID: _windowState.data.characterId, LastConnected: client.connectTime }, getId());
+                    ipcRenderer.send('update-character', { ID: _windowState.data.characterId, LastConnected: client.connectTime }, getId(), true);
                 updateTitle();
                 ipcRenderer.send('update-title', { icon: client.port === 1035 ? 4 : 1 });
                 if (_disconnectTimerID) {
@@ -2901,7 +2901,7 @@
                 _backup.mapFile = _windowState.data.map;
                 same = false;
             }
-            if (character.name && _windowState.data.character != character.name)
+            if (character.Name && _windowState.data.character != character.Name)
                 delete _windowState.data.character;
             _skipDisconnect = 0;
             if (character.Port !== _windowState.data.port)
@@ -2932,8 +2932,8 @@
             window.dispatchEvent(new CustomEvent('updateCharacter', { detail: { ID: ID } }));
         }
 
-        ipcRenderer.on('character-updated', (event, character) => {
-            updateCharacter(character.ID);
+        ipcRenderer.on('character-updated', (event, character, noReload) => {
+            if (!noReload) updateCharacter(character.ID);
             if (_windows['characters.html'])
                 _windows['characters.html'].characterUpdated(character);
         });
@@ -2996,12 +2996,10 @@
             });
             doUpdate(76);
             client.sendGMCP('Core.Hello { "client": "' + client.telnet.terminal + '", "version": "' + client.telnet.version + '" }');
-            //TODO close wold windows maybe?
-            //closeWindows();
             initWindows();
         }
 
-        ipcRenderer.on('context-menu', (event, params) => {
+        window.addContext((event, params) => {
             var inputMenu, start, end, w, input;
             const { selectionText, isEditable } = params;
             if (isEditable) {
@@ -3302,7 +3300,7 @@
             }
         }
 
-        async function initWindows() {
+        async function initWindows(close) {
             var enableBackgroundThrottling = window.getSetting('enableBackgroundThrottling');
             if (!_windows['mapper.html']) {
                 if (client.options.showMapper)
@@ -3310,7 +3308,9 @@
                 else if (client.options.mapper.enabled || client.options.mapper.persistent)
                     openWindow('mapper', { state: { visible: false } });
             }
-            else
+            else if (close && !client.options.showMapper && !client.options.mapper.enabled && !client.options.mapper.persistent)
+                _windows['mapper.html'].close();
+            else {
                 updateWindow(_windows['mapper.html'], {
                     alwaysOnTopClient: client.options.mapper.alwaysOnTopClient,
                     alwaysOnTop: client.options.mapper.alwaysOnTop,
@@ -3318,12 +3318,15 @@
                     enableBackgroundThrottling: enableBackgroundThrottling,
                     persistent: client.options.mapper.persistent
                 });
+            }
             if (!_windows['editor.html']) {
                 if (client.options.showEditor)
                     openWindow('editor');
                 else if (client.options.editorPersistent)
                     openWindow('editor', { state: { visible: false } });
             }
+            else if (close && !client.options.showEditor && !client.options.editorPersistent)
+                _windows['editor.html'].close();
             else
                 updateWindow(_windows['editor.html'], {
                     enableBackgroundThrottling: enableBackgroundThrottling,
@@ -3335,6 +3338,8 @@
                 else if (client.options.chat.persistent || client.options.chat.captureTells || client.options.chat.captureTalk || client.options.chat.captureLines)
                     openWindow('chat', { state: { visible: false } });
             }
+            else if (close && !client.options.showChat && !client.options.chat.persistent && !client.options.chat.captureTells && client.options.chat.captureTalk && client.options.chat.captureLines)
+                _windows['chat.html'].close();
             else
                 updateWindow(_windows['chat.html'], {
                     alwaysOnTopClient: client.options.mapper.alwaysOnTopClient,
@@ -3349,6 +3354,8 @@
                 else if (client.options.codeEditor.persistent)
                     openWindow('code.editor', { state: { visible: false } });
             }
+            else if (close && !client.options.showCodeEditor && !client.options.codeEditor.persistent)
+                _windows['code.editor.html'].close();
             else
                 updateWindow(_windows['code.editor.html'], {
                     alwaysOnTopClient: client.options.codeEditor.alwaysOnTopClient,
@@ -3370,6 +3377,8 @@
                             openWindow(name, { details: client.options.windows[name].options, state: { visible: false } });
                         }
                     }
+                    else if (close && !client.options.windows[name].options.show && !client.options.windows[name].options.persistent)
+                        _windows[name + '.html'].close();
                     else {
                         updateWindow(_windows[name + '.html'], {
                             alwaysOnTopClient: client.options.windows[name].options.alwaysOnTopClient,

@@ -1427,14 +1427,14 @@ ipcMain.on('get-character', (event, id, property) => {
     event.returnValue = character ? (property ? character[property] : character) : null;
 });
 
-ipcMain.on('update-character', (event, character, id) => {
+ipcMain.on('update-character', (event, character, id, noReload) => {
     if (!_characters)
         _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
     _characters.updateCharacter(character);
     for (clientId in clients) {
         if (!Object.prototype.hasOwnProperty.call(clients, clientId) || parseInt(clientId, 10) === id)
             continue;
-        clients[clientId].view.webContents.send('character-updated', character);
+        clients[clientId].view.webContents.send('character-updated', character, noReload);
     }
 });
 
@@ -1454,7 +1454,7 @@ ipcMain.on('update-character-time', (event, data, id) => {
     for (clientId in clients) {
         if (!Object.prototype.hasOwnProperty.call(clients, clientId) || parseInt(clientId, 10) === id)
             continue;
-        clients[clientId].view.webContents.send('character-updated', character);
+        clients[clientId].view.webContents.send('character-updated', character, true);
     }
 });
 
