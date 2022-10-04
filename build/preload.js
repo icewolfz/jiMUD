@@ -21,7 +21,7 @@ window.error = (error) => ipcRenderer.send('error', error);
 window.debug = (message) => ipcRenderer.send('debug', message);
 
 window.addContext = func => ipcRenderer.addListener('context-menu', func);
-window.removeContext = func =>  ipcRenderer.removeListener('context-menu', func);
+window.removeContext = func => ipcRenderer.removeListener('context-menu', func);
 
 dialog = {
     showOpenDialog: (options) => ipcRenderer.invoke('show-dialog', 'showOpenDialog', options),
@@ -34,11 +34,13 @@ dialog = {
 };
 
 window.loadTheme = (theme, force) => {
-    if(!theme) theme = window.getSetting('theme');
+    if (!theme) theme = window.getSetting('theme');
+    var el = document.getElementById('theme');
+    if (!el) return;
     theme = parseTemplate(theme) + '.css';
     if (!isFileSync(theme))
         theme = parseTemplate(path.join('{themes}', 'default')) + '.css';
-    var el = document.getElementById('theme');
-    if (el && el.getAttribute('href') !== theme || force)
+    if (el.getAttribute('href') !== theme || force)
         el.setAttribute('href', theme);
 }
+window.loadTheme();
