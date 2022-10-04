@@ -67,6 +67,8 @@ export class DockManager extends EventEmitter {
     private $bars: HTMLElement[] = [];
     private $ghostBar: HTMLElement = null;
 
+    private _dropDataFormat: string = 'dockmanger/tab';
+
     constructor(options?: any | DockManagerOptions) {
         super();
 
@@ -107,6 +109,7 @@ export class DockManager extends EventEmitter {
         this.emit('create-pane', pane);
         pane.hideTabstrip = this._hideTabs;
         pane.useNativeMenus = this._useNativeMenus;
+        pane.dropDataFormat = this._dropDataFormat;
         pane.manager = this;
         pane.on('mousedown', (e) => {
             this.focusPane(pane);
@@ -516,6 +519,18 @@ export class DockManager extends EventEmitter {
             this.panes[pl].hideTabstrip = value;
     }
 
+    public get dropDataFormat(): string {
+        return this._dropDataFormat;
+    }
+
+    public set dropDataFormat(value: string) {
+        if (this._dropDataFormat === value) return;
+        this._dropDataFormat = value;
+        let pl = this.panes.length;
+        while (pl--)
+            this.panes[pl].dropDataFormat = value;
+    }
+
     public get useNativeMenus(): boolean {
         return this._useNativeMenus;
     }
@@ -526,7 +541,7 @@ export class DockManager extends EventEmitter {
         let pl = this.panes.length;
         while (pl--)
             this.panes[pl].useNativeMenus = value;
-    }    
+    }
 
     public get active() {
         return this.$activePane.active;
@@ -582,7 +597,7 @@ export class DockManager extends EventEmitter {
 
     }
     public removePanel(panel?, dock?, silent?) {
-        if(typeof dock === 'boolean') {
+        if (typeof dock === 'boolean') {
             silent = dock;
             dock = null;
         }
@@ -759,6 +774,8 @@ export class DockPane extends EventEmitter {
     private $addCache = [];
     private $measure: HTMLElement;
 
+    public dropDataFormat = 'dockmanger/tab';
+
     public set focused(value) {
         if (value)
             this.$el.classList.add('focused');
@@ -813,7 +830,7 @@ export class DockPane extends EventEmitter {
     }
 
     public get tabstripHeight() {
-        if(this.hideTabstrip)
+        if (this.hideTabstrip)
             return 0;
         return Math.max(this.$tabstrip.offsetHeight, this.$tabstrip.clientHeight);
     }
@@ -1179,14 +1196,14 @@ export class DockPane extends EventEmitter {
         const idx = this.getPanelIndex(panel);
         if (idx === -1) return;
         let i = 0;
-        //TODO formula should be width - padding + borders, calculate padding/border sizes
+        //Formula should be width - padding + borders, calculate padding/border sizes
         i = idx * (panel.tab.clientWidth - 8);
         if (i <= this._scroll) {
             this._scroll = i - 10;
         }
         else {
             i += panel.tab.clientWidth - 8;
-            //50 is tab strip right padding + width of scroll button + shadow width + drop down with
+            //58 is tab strip right padding + width of scroll button + shadow width + drop down with
             if (i >= this._scroll + this.$tabstrip.clientWidth - 58)
                 this._scroll = i + 58 - this.$tabstrip.clientWidth;
         }
@@ -1245,8 +1262,7 @@ export class DockPane extends EventEmitter {
             }
             var bounds = panel.tab.getBoundingClientRect();
             data.offset = { x: Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth)), y: Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight)) };
-            //TODO recode this to be changeable to allow multiple dockmangers in 1 window if need be
-            e.dataTransfer.setData('dockmanger/tab', JSON.stringify(data));
+            e.dataTransfer.setData(this.dropDataFormat, JSON.stringify(data));
             const eDrag = { id: panel.id, panel: panel, preventDefault: false, event: e };
             panel.dock.emit('tab-drag', eDrag);
             if (eDrag.preventDefault) return;

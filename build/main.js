@@ -2652,7 +2652,6 @@ function executeCloseHooks(window) {
 }
 
 function updateIcon(window) {
-    //TODO needs better logic to handle focus/unfocused of multiple windows
     const windowId = getWindowId(window);
     switch (clients[windows[windowId].current].overlay) {
         case 4:
@@ -2860,7 +2859,6 @@ function updateJumpList() {
     if (process.platform !== 'win32')
         return;
     const list = [];
-    //TODO figure out some way to open editor window for current jimud instance
     list.push({
         type: 'tasks',
         items: [

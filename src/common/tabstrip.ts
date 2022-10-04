@@ -58,6 +58,8 @@ export class TabStrip extends EventEmitter {
 
     private _tabID = 0;
 
+    public dropDataFormat = 'jimud/tab';
+
     public set showAddNewButton(value) {
         if(this._showAddButton === value) return;
         this.$addNewButton.style.display = value ? '' : 'none';
@@ -510,20 +512,6 @@ export class TabStrip extends EventEmitter {
             this._scroll = bounds.right;
         else if (!this._showAddButton && !(bounds.left > this._scroll && bounds.right < this._scroll + this.$tabstrip.clientWidth - 32))
             this._scroll = bounds.right;        
-        /*
-        let i = 0;
-        //TODO formula should be width - padding + borders, calculate padding/border sizes
-        i = idx * (tab.tab.clientWidth - 8);
-        if (i <= this._scroll) {
-            this._scroll = i - 10;
-        }
-        else {
-            i += tab.tab.clientWidth - 8;
-            //50 is tab strip right padding + width of scroll button + shadow width + drop down with
-            if (i >= this._scroll + this.$tabstrip.clientWidth - 136)
-                this._scroll = i + 136 - this.$tabstrip.clientWidth;
-        }
-        */
         this.doUpdate(UpdateType.scroll);
     }
 
@@ -577,8 +565,7 @@ export class TabStrip extends EventEmitter {
             }
             var bounds = tab.tab.getBoundingClientRect();
             data.offset = { x: Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth)), y: Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight)) };
-            //TODO recode this to be changeable to allow multiple tab strips in 1 window if need be
-            e.dataTransfer.setData('jimud/tab', JSON.stringify(data));
+            e.dataTransfer.setData(this.dropDataFormat, JSON.stringify(data));
             const eDrag = { id: tab.id, tab: tab, preventDefault: false, event: e };
             this.emit('tab-drag', eDrag);
             if (eDrag.preventDefault) return;

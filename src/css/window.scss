@@ -5,8 +5,7 @@ $tabBackground: menu;
 $tabHeight: 26;
 
 body {
-    /*TODO temp fix until tabs support theming to prevent black to white flicking*/
-    /*background-color: rgb(255, 255, 255);*/
+    /*FIXME this seems to cause a flicker, it is fine as long as the theme is black bg*/
     background-color: #000;
 }
 
