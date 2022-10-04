@@ -423,7 +423,7 @@ function createWindow(options) {
         }
         windows[windowId].window = null;
         delete windows[windowId];
-        if (windowId === focusedWindow) {
+        if (windowId === focusedWindow && Object.keys(windows).length) {
             if (global.editorOnly) //editor only just to be safe
                 focusedWindow = parseInt(Object.keys(windows)[0], 10);
             else
@@ -3402,7 +3402,7 @@ function newConnection(window, connection, data) {
     });
 }
 
-function newClientWindow(caller, connection, data) {
+async function newClientWindow(caller, connection, data) {
     if (caller) {
         //save the current states so it has the latest for new window
         states['manager.html'] = saveWindowState(caller, stateMap.get(caller) || states['manager.html']);
@@ -3425,6 +3425,7 @@ function newClientWindow(caller, connection, data) {
     windows[windowId].menubar = createMenu(windows[windowId].window);
     //windows[windowId].menubar.enabled = false;    
     let window = windows[windowId];
+    let id;
     if (Array.isArray(data)) {
         for (let d = 0, dl = data.length; d < dl; d++) {
             id = createClient({ bounds: window.window.getContentBounds(), data: { data: data[d] } });
@@ -3474,7 +3475,8 @@ function newClientWindow(caller, connection, data) {
         });
         window.window.webContents.once('dom-ready', () => {
             window.window.webContents.send('new-client', { id: id });
-            focusWindow(window.window, true);
+            if (focusedClient === id && focusedWindow === windowId)
+                focusWindow(window.window, true);
         });
     }
     return window.window;
@@ -3785,6 +3787,8 @@ function loadWindowLayout(file, charData) {
 }
 
 function saveWindowState(window, previous) {
+    if(!window || window.isDestroyed())
+        return previous;
     return {
         bounds: previous && previous.fullscreen ? previous.bounds : window.getNormalBounds(),
         fullscreen: previous ? previous.fullscreen : window.isFullScreen(),
