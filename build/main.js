@@ -1779,6 +1779,9 @@ ipcMain.on('switch-client', (event, id, offset) => {
             width: bounds.width,
             height: bounds.height - (offset || 0)
         });
+        //closed or some other reason so do not switch
+        if (window.getBrowserViews().length === 0)
+            return;
         if (windowId === focusedWindow)
             focusedClient = id;
         //already active
@@ -1788,11 +1791,8 @@ ipcMain.on('switch-client', (event, id, offset) => {
             clients[windows[windowId].current].view.webContents.send('deactivated');
         windows[windowId].current = id;
         clients[id].view.webContents.send('activated');
-        //window.setBrowserView(clients[id].view);
-        window.addBrowserView(clients[id].view);
+        //window.addBrowserView(clients[id].view);
         window.setTopBrowserView(clients[id].view);
-        //clients[id].menu.window = window;
-        //window.setMenu(clients[id].menu);
         focusWindow(window, true);
     }
 });
@@ -3787,7 +3787,7 @@ function loadWindowLayout(file, charData) {
 }
 
 function saveWindowState(window, previous) {
-    if(!window || window.isDestroyed())
+    if (!window || window.isDestroyed())
         return previous;
     return {
         bounds: previous && previous.fullscreen ? previous.bounds : window.getNormalBounds(),
