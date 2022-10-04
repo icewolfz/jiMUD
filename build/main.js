@@ -1903,7 +1903,8 @@ ipcMain.on('dock-client', (event, id, options) => {
         //window.setMenu(clients[id].menu);
         window.webContents.once('dom-ready', () => {
             window.webContents.send('new-client', { id: id });
-            focusWindow(window, true);
+            if (focusedClient === id && focusedWindow === windowId)
+                focusWindow(window, true);
             clientsChanged();
         });
         return;
@@ -3397,7 +3398,8 @@ function newConnection(window, connection, data) {
         window.webContents.send('new-client', { id: id, current: windows[windowId].current === id });
         if (connection)
             clients[id].view.webContents.send('connection-settings', connection);
-        focusWindow(window, true);
+        if (focusedClient === id && focusedWindow === windowId)
+            focusWindow(window, true);
         clientsChanged();
     });
 }
@@ -3453,7 +3455,8 @@ async function newClientWindow(caller, connection, data) {
                 };
             }), window.current);
             window.window.setTopBrowserView(clients[window.current].view);
-            focusWindow(window.window, true);
+            if (focusedWindow === windowId)
+                focusWindow(window.window, true);
         });
     }
     else {
