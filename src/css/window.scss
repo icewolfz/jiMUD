@@ -5,8 +5,7 @@ $tabBackground: menu;
 $tabHeight: 26;
 
 body {
-    /*FIXME this seems to cause a flicker, it is fine as long as the theme is black bg*/
-    background-color: #000;
+    background-color: initial;
 }
 
 .cm {
