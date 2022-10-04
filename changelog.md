@@ -36,6 +36,7 @@
   - Preferences that are now global:
     - `Spellchecking` can only now be set as a global preference and requires a restart to effect any already opening clients or windows as it can only be set on window creation
     - `Theme` only the global preference theme will be used for all clients
+  - Preferences: Remove `Enable warning dialog when closing client and child windows are open` as each child window now has it's own close rules
   - Removed character auto load system as it was limited, replaced with saveable layout that can remember all open characters and reload them based on settings
   - Command line arguments:
     - Changed -s/--setting to set the global preference file to use

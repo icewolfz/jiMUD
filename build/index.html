@@ -3887,9 +3887,6 @@
             if (window.getGlobal('updating'))
                 return true;
             if (!closeWindow) {
-                if (client.options.askonchildren) {
-                    //TODO may not need this any more as all child windows have a closable function that is called and required to be true
-                }
                 //if closing all windows, and more then 1 client use ask all setting or if not all or 1 client use per client ask
                 if (client.connected) {
                     if (all && (_clients.clients > 1 || _clients.windows > 1) && window.getSetting('askOnCloseAll')) {
