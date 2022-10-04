@@ -894,6 +894,13 @@ else if (global.editorOnly)
 else if (_settings.loadLayout)
     _layout = parseTemplate(_settings.loadLayout);
 
+app.on('render-process-gone', (event, webContents, details) => {
+    logError(`Render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
+});
+
+app.on('child-process-gone', (event, details) => {
+    logError(`Child process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
+});
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -1770,7 +1777,7 @@ ipcMain.on('switch-client', (event, id, offset) => {
             x: 0,
             y: (offset || 0),
             width: bounds.width,
-            height: bounds.height - offset
+            height: bounds.height - (offset || 0)
         });
         if (windowId === focusedWindow)
             focusedClient = id;
@@ -2201,6 +2208,10 @@ function createClient(options) {
         });
     });
 
+    view.webContents.on('render-process-gone', (event, goneDetails) => {
+        logError(`${link} render process gone, reason: ${goneDetails.reason}, exitCode ${goneDetails.exitCode}\n`, true);
+    });
+
     view.webContents.setWindowOpenHandler((details) => {
         var u = new URL.URL(details.url);
         if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'mailto:') {
@@ -2309,7 +2320,7 @@ function createClient(options) {
             x: 0,
             y: options.offset || 0,
             width: options.bounds.width,
-            height: options.bounds.height
+            height: options.bounds.height - (options.offset || 0)
         });
         if (global.debug)
             openDevtools(view.webContents, { activate: false });
