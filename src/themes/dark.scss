@@ -968,7 +968,7 @@ body {
 
 #loader {
     color: #5a5d5e;
-    background-color: black;
+    background-color: #{$panelBackground};
 }
 
 .loader {
