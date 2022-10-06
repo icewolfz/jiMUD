@@ -463,7 +463,7 @@
         var _watcher = null;
         var _windowState = getWindowOptions();
         var _windows = {};
-        let closeWindow = false;
+        let _closeWindow = false;
         //#endregion
         //#region window events
         window.addEventListener('keydown', (event) => {
@@ -1783,58 +1783,109 @@
                     document.getElementById('btnTriggers').classList.remove('on');
             });
 
+            client.on('connection', char => {
+                if (char) {
+                    char = ipcRenderer.sendSync('get-character-from-id', char);
+                    if (!char) {
+                        throw new Error('Character not found');
+                        return;
+                    }
+                    ipcRenderer.send('new-client', null, {
+                        characterId: char.ID,
+                        settings: parseTemplate(char.Preferences),
+                        map: parseTemplate(char.Map),
+                        port: char.Port
+                    });
+                }
+                else
+                    ipcRenderer.send('new-client');
+            });
+
             client.on('window', (window, args) => {
                 switch (window) {
                     case 'mapper':
                     case 'editor':
                     case 'chat':
-                        openWindow(window);
+                    case 'help':
+                    case 'smhelp':
+                    case 'skills':
+                    case 'who':
+                        if (args === 'close')
+                            closeWindow(window);
+                        else
+                            openWindow(window);
                         break;
                     case 'about':
-                        ipcRenderer.send('show-window', 'about');
+                        if (args === 'close')
+                            ipcRenderer.send('close-window', 'about');
+                        else
+                            ipcRenderer.send('show-window', 'about');
                         break;
                     case 'code-editor':
                     case 'code.editor':
-                        openWindow('code.editor');
+                        if (args === 'close')
+                            closeWindow('code.editor');
+                        else
+                            openWindow('code.editor');
                         break;
                     case 'profiles':
                     case 'profiles-manager':
                     case 'profile-manager':
                     case 'manager':
-                        openWindow('profiles');
+                        if (args === 'close')
+                            closeWindow('profiles');
+                        else
+                            openWindow('profiles');
                         break;
                     case 'prefs':
                     case 'options':
                     case 'preferences':
-                        openWindow('prefs');
-                        break;
-                    case 'help':
-                        openWindow('help');
-                        break;
-                    case 'smhelp':
-                        openWindow('smhelp');
+                        if (args === 'close')
+                            closeWindow('prefs');
+                        else
+                            openWindow('prefs');
                         break;
                     case 'immortal':
                     case 'immortals':
-                        openWindow('immortal');
+                        if (args === 'close')
+                            closeWindow('immortal');
+                        else
+                            openWindow('immortal');
                         break;
                     case 'history':
                     case 'command-history':
-                        openWindow('history');
+                        if (args === 'close')
+                            closeWindow('history');
+                        else
+                            openWindow('history');
                         break;
                     case 'log-viewer':
                     case 'logs':
                     case 'log.viewer':
-                        openWindow('log.viewer');
+                        if (args === 'close')
+                            closeWindow('log.viewer');
+                        else
+                            openWindow('log.viewer');
                         break;
-                    case 'skills':
-                        openWindow('skills');
-                        break;
-                    case 'who':
-                        openWindow('who');
-                        break;
+                    case 'new':
+                        if (args) {
+                            char = ipcRenderer.sendSync('get-character-from-id', args);
+                            if (!char) {
+                                throw new Error('Character not found');
+                                return;
+                            }
+                            ipcRenderer.send('new-window', null, {
+                                characterId: char.ID,
+                                settings: parseTemplate(char.Preferences),
+                                map: parseTemplate(char.Map),
+                                port: char.Port
+                            });
+                        }
+                        else
+                            ipcRenderer.send('new-window', null, args);
+                        break
                     default:
-                        throw new Error('Invalid window name must be: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills');
+                        throw new Error('Invalid window name must be: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills, or new');
                 }
             });
             //xterm set title support
@@ -2412,7 +2463,10 @@
             };
             client.readClipboard = window.readClipboard;
             client.writeClipboard = window.writeClipboard;
-
+            client.sendAll = (text, echo,) => ipcRenderer.send('execute-all-clients', `client.send(${JSON.stringify(text)},${echo});`);
+            client.sendAllRaw = (text) => ipcRenderer.send('execute-all-clients', `client.raw(${JSON.stringify(text)});`);
+            client.sendAllCommand = (text, noEcho, comments) => ipcRenderer.send('execute-all-clients', `client.sendCommand(${JSON.stringify(text)},${noEcho}, ${comments});`);
+            client.sendAllBackground = (text, noEcho, comments) => ipcRenderer.send('execute-all-clients', `client.sendBackground(${JSON.stringify(text)},${noEcho}, ${comments});`);
             window.readClipboardHTML = () => { return clipboard.readHTML('selection') || clipboard.readHTML() || ''; };
             client.readClipboardHTML = window.readClipboardHTML;
 
@@ -3289,6 +3343,17 @@
                 _windows[name + '.html'].restoreWindow(data.data);
         }
 
+        async function closeWindow(name) {
+            if (name === 'log-viewer')
+                name = 'log.viewer';
+            else if (name === 'preferences' || name === 'options')
+                name = 'prefs';
+            if (_windows[name + '.html'])
+                _windows[name + '.html'].close();
+            if (name === 'prefs' && window.getGlobal('settingsFile') === _windowState.data.settings)
+                ipcRenderer.send('close-window', 'global-preferences');
+        }
+
         function buildWindowOptions(options, filters) {
             if (!options) return '';
             if (!filters) filters = [];
@@ -3886,17 +3951,17 @@
         function closeable(all, allWindows) {
             if (window.getGlobal('updating'))
                 return true;
-            if (!closeWindow) {
+            if (!_closeWindow) {
                 //if closing all windows, and more then 1 client use ask all setting or if not all or 1 client use per client ask
                 if (client.connected) {
                     if (all && (_clients.clients > 1 || _clients.windows > 1) && window.getSetting('askOnCloseAll')) {
                         if (window.getGlobal('closeAll')) {
-                            closeWindow = true;
-                            return closeWindow;
+                            _closeWindow = true;
+                            return _closeWindow;
                         }
                         else if (window.getGlobal('noCloseAll')) {
-                            closeWindow = false;
-                            return closeWindow;
+                            _closeWindow = false;
+                            return _closeWindow;
                         }
                         choice = dialog.showMessageBoxSync({
                             type: 'warning',
@@ -3907,26 +3972,26 @@
                             noLink: true
                         });
                         if (choice === 2) { //yes to all
-                            closeWindow = true;
+                            _closeWindow = true;
                             window.setGlobal('closeAll', true);
                         }
                         else if (choice === 3) { //no to all
-                            closeWindow = false;
+                            _closeWindow = false;
                             window.setGlobal('noCloseAll', true);
                         }
                         else if (choice === 4) {
                             client.options.askonclose = false;
                             client.saveOptions();
-                            closeWindow = true;
+                            _closeWindow = true;
                         }
                         else if (choice === 5) {
                             window.setSetting('askOnCloseAll', false);
-                            closeWindow = true;
+                            _closeWindow = true;
                         }
                         else if (choice !== 0)
-                            closeWindow = false;
+                            _closeWindow = false;
                         else
-                            closeWindow = true;
+                            _closeWindow = true;
                     }
                     else if ((!all || (_clients.clients === 1 && _clients.windows === 1)) && client.options.askonclose) {
                         choice = dialog.showMessageBoxSync({
@@ -3940,20 +4005,20 @@
                         if (choice === 2) {
                             client.options.askonclose = false;
                             client.saveOptions();
-                            closeWindow = true;
+                            _closeWindow = true;
                         }
                         else if (choice !== 0)
-                            closeWindow = false;
+                            _closeWindow = false;
                         else
-                            closeWindow = true;
+                            _closeWindow = true;
                     }
                     else
-                        closeWindow = true;
+                        _closeWindow = true;
                 }
                 else
-                    closeWindow = true;
+                    _closeWindow = true;
             }
-            return closeWindow;
+            return _closeWindow;
         }
         //#endregion 
         init();

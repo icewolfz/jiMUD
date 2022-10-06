@@ -217,6 +217,9 @@ Display text to the screen, and the display text will not fire triggers
 <u>#AD</u>D name value
 >Add value to variable named name, if current value is non numeric an error will be displayed
 
+#ALL {commands}
+>Send commands to all client windows as if sent from command line
+
 <u>#CH</u>AT text
 >Send text to chat window and append a new line
 
@@ -226,11 +229,17 @@ Display text to the screen, and the display text will not fire triggers
 <u>#CHAR</u>ACTER
 >Send current character name to the mud, without echoing to the screen
 
+<u>#CL</u>OSE name
+>Close an open window
+
 #CR
 >Send a blank line to the mud
 
 <u>#COMM</u>ENT *text*
 >Does nothing, allows commenting scripts
+
+<u>#CONN</u>TION *character or id*
+>Create a new client connection in current window
 
 <u>#CONNECT</u>TIME
 >display time since connected
@@ -283,8 +292,12 @@ Display text to the screen, and the display text will not fire triggers
 [<u>#WA</u>IT](commands/WAIT.md) amount
 > Pause current block for a number of milliseconds
 
-<u>#WIN</u>DOW name
+<u>#WIN</u>DOW name *close*
 >Open or show named window, supported names: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills, who
+>Pass close as 3rd argument will close the window if open and possible
+
+<u>#WIN</u>DOW new *character or id*
+>Create a new client window using the optional character title or id
 
 [<u>#VE</u>RSION](commands/VERSION.md)
 >Display current jiMUD version information

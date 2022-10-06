@@ -31,6 +31,14 @@
     - `On second instance` What to do whe na second instance is opened when `Use only single instance` is enabled and no command line arguments passed, *Global preference*
   - `#connecttime` now display last disconnect time when possible if disconnected
   - Chat window display now uses global theme for display scroll bars
+  - Add [#WINDOW](docs/commands.md) close and new argument support
+  - Add [#CLOSE](docs/commands.md) close an open window
+  - Add [#ALL](docs/commands.md) send commands to all client windows as if sent from command line
+  - Add [#CONNECTION](docs/commands.md) send commands to all client windows as if sent from command line
+  - Add [client.sendAll](docs/scripting.md) for scripting to send text to mud for all client windows
+  - Add [client.sendAllRaw](docs/scripting.md) for scripting to send raw text to mud for all client windows
+  - Add [client.sendAllCommand](docs/scripting.md) for scripting to send command to all client windows
+  - Add [client.sendAllBackground](docs/scripting.md) for scripting to send command to all client windows
 - **Changed:**
   - All dark icons now have a white stroke to make them work better with dark mode and dark colors
   - Preferences that are now global:

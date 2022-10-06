@@ -57,8 +57,16 @@ this.print(name + ' says ' + message);
 - `client.send(text, echo?)` send text directly to the mud, telnet code IAC is escaped, note you should always try and append a new line as most muds require it to process any text.
   - `text` the text to send
   - `echo` echo text to display
+- `client.sendAll(text, echo?)` send text directly to the mud, telnet code IAC is escaped, note you should always try and append a new line as most muds require it to process any text to all clients
+  - `text` the text to send
+  - `echo` echo text to display  
 - `client.sendRaw(text)` sends raw text directly to the mud as is
+- `client.sendAllRaw(text)` sends raw text directly to the mud as is for all clients
 - `client.sendCommand(text, noEcho?, comments?)` sends a command as if sent from the command line
+  - `text` the text to send
+  - `noEcho` do not echo text to screen
+  - `comments` parse inline and block comments
+- `client.sendAllCommand(text, noEcho?, comments?)` send a command to all client windows
   - `text` the text to send
   - `noEcho` do not echo text to screen
   - `comments` parse inline and block comments
@@ -66,6 +74,10 @@ this.print(name + ' says ' + message);
   - `text` the text to send
   - `noEcho` do not echo text to screen
   - `comments` parse inline and block comments
+- `client.sendAllBackground(text, noEcho?, comments?)` send a command to all client windows with out modifying current command line
+  - `text` the text to send
+  - `noEcho` do not echo text to screen
+  - `comments` parse inline and block comments  
 - `client.print(text, newline)` print text to screen, newline argument is optional and controls weather to start a newline if last line was a fragment/prompt
 - `client.echo(text, fore, back, newline, forceline)` echo text to the screen
   - `test` the text to echo

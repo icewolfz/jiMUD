@@ -14,6 +14,7 @@ import { SettingList } from './settings';
 import { getAnsiColorCode, getColorCode, isMXPColor, getAnsiCode } from './ansi';
 
 declare let getCharacterNotes;
+
 /**
  * MATHJS expression engine
  * @constant
@@ -3004,6 +3005,25 @@ export class Input extends EventEmitter {
                 else
                     this.client.raise(args[0], args.slice(1));
                 return null;
+            case 'cl':
+            case 'close':
+                if (this.client.options.parseDoubleQuotes)
+                    args.forEach((a) => {
+                        return a.replace(/^\"(.*)\"$/g, (v, e, w) => {
+                            return e.replace(/\\\"/g, '"');
+                        });
+                    });
+                if (this.client.options.parseSingleQuotes)
+                    args.forEach((a) => {
+                        return a.replace(/^\'(.*)\'$/g, (v, e, w) => {
+                            return e.replace(/\\\'/g, '\'');
+                        });
+                    });
+                if (args.length === 0 || args.length > 2)
+                    throw new Error('Invalid syntax use ' + cmdChar + '\x1b[4mcl\x1b[0;-11;-12mose');
+                else
+                    this.client.emit('window', this.stripQuotes(this.parseInline(args[0])), 'close');
+                return null;
             case 'window':
             case 'win':
                 if (this.client.options.parseDoubleQuotes)
@@ -3019,11 +3039,44 @@ export class Input extends EventEmitter {
                         });
                     });
                 if (args.length === 0 || args.length > 2)
-                    throw new Error('Invalid syntax use ' + cmdChar + '\x1b[4mwin\x1b[0;-11;-12mdow name');
+                    throw new Error('Invalid syntax use ' + cmdChar + '\x1b[4mwin\x1b[0;-11;-12mdow name \x1b[3mclose\x1b[0;-11;-12m or ' + cmdChar + '\x1b[4mwin\x1b[0;-11;-12mdow new \x1b[3mcharacter\x1b[0;-11;-12m');
                 else if (args.length === 1)
                     this.client.emit('window', this.stripQuotes(this.parseInline(args[0])));
                 else
                     this.client.emit('window', this.stripQuotes(this.parseInline(args[0])), this.stripQuotes(this.parseInline(args.slice(1).join(' '))));
+                return null;
+            case 'conn':
+            case 'connection':
+                if (this.client.options.parseDoubleQuotes)
+                    args.forEach((a) => {
+                        return a.replace(/^\"(.*)\"$/g, (v, e, w) => {
+                            return e.replace(/\\\"/g, '"');
+                        });
+                    });
+                if (this.client.options.parseSingleQuotes)
+                    args.forEach((a) => {
+                        return a.replace(/^\'(.*)\'$/g, (v, e, w) => {
+                            return e.replace(/\\\'/g, '\'');
+                        });
+                    });
+                if (args.length > 1)
+                    throw new Error('Invalid syntax use ' + cmdChar + '\x1b[4mconn\x1b[0;-11;-12mection character or id');
+                else if (args.length === 1)
+                    this.client.emit('connection', this.stripQuotes(this.parseInline(args[0])));
+                else
+                    this.client.emit('connection');
+                return null;
+            case 'all':
+                if (args.length < 1 || args.length > 2)
+                    throw new Error('Invalid syntax use ' + cmdChar + 'all {commands}');
+                if (args[0].length === 0)
+                    throw new Error('Missing commands');
+                //{pattern}
+                if (args[0].match(/^\{.*\}$/g))
+                    args[0] = this.parseInline(args[0].substr(1, args[0].length - 2));
+                else
+                    args[0] = this.parseInline(this.stripQuotes(args[0]));
+                (<any>this.client).sendAllBackground(args[0], null, this.client.options.allowCommentsFromCommand);
                 return null;
             case 'raisedelayed':
             case 'raisede':
@@ -3081,7 +3134,7 @@ export class Input extends EventEmitter {
             case 'connect':
             case 'connecttime':
                 if (!this.client.connectTime) {
-                    if(this.client.disconnectTime)
+                    if (this.client.disconnectTime)
                         this.client.echo('Disconnected since: ' + new moment(this.client.disconnectTime).format('MM/DD/YYYY hh:mm:ss A'), -7, -8, true, true);
                     else
                         this.client.echo('Not connected', -7, -8, true, true);

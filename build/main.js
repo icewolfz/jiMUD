@@ -1490,6 +1490,13 @@ ipcMain.on('remove-character', (event, id) => {
     _characters.removeCharacter(id);
 });
 
+ipcMain.on('get-character-from-id', (event, id, property) => {
+    if (!_characters)
+        _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
+    let character = getCharacterFromId(id);
+    event.returnValue = character ? (property ? character[property] : character) : null;
+});
+
 function getCharacterId(id) {
     if (!_characters)
         _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
@@ -1967,13 +1974,34 @@ ipcMain.on('focus-window', (event, id, clientId) => {
 })
 
 ipcMain.on('close-window', (event, id) => {
-    if (!windows[id]) return;
-    windows[id].window.close();
+    let window;
+    if (window === 'profile-manager')
+        window = getWindowId('profiles');
+    else if (window === 'about')
+        window = getWindowId('about');
+    else if (window === 'global-preferences')
+        window = getWindowId('prefs');
+    else if (window === 'progress')
+        window = progressMap.get(BrowserWindow.fromWebContents(event.sender));
+    else if (window === 'windows')
+        window = getWindowId('windows');
+    else if (windows[id])
+        window = windows[id].window;
+    if (window)
+        window.close();
 });
 
 ipcMain.on('execute-client', (event, id, code) => {
     if (clients[id])
         executeScript(code, clients[id].view);
+});
+
+ipcMain.on('execute-all-clients', (event, code) => {
+    for (id in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, id) || getClientId(clients[id].view) === clientId)
+            continue;
+        executeScript(code, clients[id].view);
+    }
 });
 
 ipcMain.on('update-client', (event, id, offset) => {
