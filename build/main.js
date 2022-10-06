@@ -3808,10 +3808,8 @@ function loadWindowLayout(file, charData) {
             }), current);
 
             window.window.setTopBrowserView(clients[current].view);
-            //clients[current].menu.window = window.window;
-            //window.window.setMenu(clients[current].menu);
-            if (data.focusedWindow === getWindowId(window))
-                focusWindow(window, true);
+            if (data.focusedWindow === getWindowId(window.window))
+                focusWindow(window.window, true);
         });
     }
     return true;
