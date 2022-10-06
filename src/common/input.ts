@@ -3067,16 +3067,20 @@ export class Input extends EventEmitter {
                     this.client.emit('connection');
                 return null;
             case 'all':
-                if (args.length < 1 || args.length > 2)
+                if (args.length === 0)
                     throw new Error('Invalid syntax use ' + cmdChar + 'all {commands}');
-                if (args[0].length === 0)
-                    throw new Error('Missing commands');
                 //{pattern}
-                if (args[0].match(/^\{.*\}$/g))
+                if (args[0].match(/^\{.*\}$/g)) {
                     args[0] = this.parseInline(args[0].substr(1, args[0].length - 2));
-                else
-                    args[0] = this.parseInline(this.stripQuotes(args[0]));
-                (<any>this.client).sendAllBackground(args[0], null, this.client.options.allowCommentsFromCommand);
+                    (<any>this.client).sendAllBackground(args[0], null, this.client.options.allowCommentsFromCommand);
+                }
+                else {
+                    args = args.join(' ');
+                    if (args.length === 0)
+                        throw new Error('Missing commands');
+                    (<any>this.client).sendAllBackground(this.parseInline(this.stripQuotes(args)), null, this.client.options.allowCommentsFromCommand);
+                }
+
                 return null;
             case 'raisedelayed':
             case 'raisede':
