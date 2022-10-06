@@ -1792,9 +1792,9 @@ export class Input extends EventEmitter {
         }
         if (fun.length > 0) {
             //if (state === 3)
-                //arg += '"';
+            //arg += '"';
             //else if (state === 4)
-                //arg += '\'';
+            //arg += '\'';
             if (arg.endsWith('\n'))
                 arg = arg.substring(0, arg.length - 1);
             if (arg.length > 0) args.push(arg);
@@ -3045,6 +3045,7 @@ export class Input extends EventEmitter {
                 else
                     this.client.emit('window', this.stripQuotes(this.parseInline(args[0])), this.stripQuotes(this.parseInline(args.slice(1).join(' '))));
                 return null;
+            case 'tab':
             case 'conn':
             case 'connection':
                 if (this.client.options.parseDoubleQuotes)
@@ -3059,8 +3060,12 @@ export class Input extends EventEmitter {
                             return e.replace(/\\\'/g, '\'');
                         });
                     });
-                if (args.length > 1)
-                    throw new Error('Invalid syntax use ' + cmdChar + '\x1b[4mconn\x1b[0;-11;-12mection \x1b[3mcharacter or id');
+                if (args.length > 1) {
+                    if (fun.toLowerCase() === 'tab')
+                        throw new Error('Invalid syntax use ' + cmdChar + 'tab \x1b[3mcharacter or id');
+                    else
+                        throw new Error('Invalid syntax use ' + cmdChar + '\x1b[4mconn\x1b[0;-11;-12mection \x1b[3mcharacter or id');
+                }
                 else if (args.length === 1)
                     this.client.emit('connection', this.stripQuotes(this.parseInline(args[0])));
                 else
@@ -3069,18 +3074,17 @@ export class Input extends EventEmitter {
             case 'all':
                 if (args.length === 0)
                     throw new Error('Invalid syntax use ' + cmdChar + 'all {commands}');
-                //{pattern}
                 if (args[0].match(/^\{.*\}$/g)) {
-                    args[0] = this.parseInline(args[0].substr(1, args[0].length - 2));
-                    (<any>this.client).sendAllBackground(args[0], null, this.client.options.allowCommentsFromCommand);
+                    if (args.length !== 1)
+                        throw new Error('Extra arguments use ' + cmdChar + 'all {commands}');
+                    args = this.parseInline(args[0].substr(1, args[0].length - 2));
                 }
                 else {
                     args = args.join(' ');
                     if (args.length === 0)
-                        throw new Error('Missing commands');
-                    (<any>this.client).sendAllBackground(this.parseInline(this.stripQuotes(args)), null, this.client.options.allowCommentsFromCommand);
+                        throw new Error('Missing commands argument');
                 }
-
+                (<any>this.client).sendAllBackground(this.parseInline(this.stripQuotes(args)), null, this.client.options.allowCommentsFromCommand);
                 return null;
             case 'raisedelayed':
             case 'raisede':

@@ -260,7 +260,7 @@
                     c.push({ label: 'Delete', click: `remove(${ed.row.ID})` });
                     c.push({ type: 'separator' });
                     c.push({ label: 'Load', click: `load(${ed.row.ID})` });
-                    c.push({ label: 'Load in new connection', click: `newConnection(${ed.row.ID})` });
+                    c.push({ label: 'Load in new tab', click: `newConnection(${ed.row.ID})` });
                     c.push({ label: 'Load in new window', click: `newWindow(${ed.row.ID})` });
                 }
                 window.showContext(c);
@@ -1169,7 +1169,7 @@
             <button id="btn-load" type="button" disabled="disabled" class="btn btn-warning btn-xs" title="Load in current" onclick="if(load() === 0) doClose()">
                 <i class="fa fa-play"></i>
             </button>
-            <button id="btn-load-connection" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Load in new connection" onclick="newConnection()">
+            <button id="btn-load-connection" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Load in new tab" onclick="newConnection()">
                 <i class="fa fa-plus"></i>
             </button>
             <button id="btn-load-window" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Load in new window" onclick="newWindow()">

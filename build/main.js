@@ -56,7 +56,7 @@ argv = require('yargs-parser')(argv, {
         'il': ['ignore-layout'],
         'nci': ['no-character-import'],
         'f': ['force'],
-        'nc': ['new-connection'],
+        'nc': ['new-connection', 'nt', 'new-tab'],
         'nw': ['new-window'],
         'nls': ['no-layout-save']
     },
@@ -217,8 +217,8 @@ function commandLineArgumentHelp() {
     msg += '-nls, --no-layout-save - Do not save any layout changes when application is closed\n';
     msg += '-nw, --new-window - Open a new window\n';
     msg += '-nw=[id], --new-window=[id] - Open a new window with and load a character\n';
-    msg += '-nc, --new-connection - Open a new connection\n';
-    msg += '-nc=[id], --new-connection=[id] - Open a new connection and load a character, similar to --character but will not replace current active connection if it exist';
+    msg += '-nt, --new-tab - Open a new tab\n';
+    msg += '-nt=[id], --new-tab=[id] - Open a new tab and load a character, similar to --character but will not replace current active connection if it exist';
     return msg;
 }
 
@@ -243,8 +243,8 @@ function displayConsoleHelp() {
     console.log('-nls, --no-layout-save                    Do not save any layout changes when application is closed');
     console.log('-nw, --new-window                         Open a new window');
     console.log('-nw=[id], --new-window=[id]               Open a new window with and load a character');
-    console.log('-nc, --new-connection                     Open a new connection')
-    console.log('-nc=[id], --new-connection=[id]           Open a new connection and load a character, similar to --character but will not replace current active connection if it exist');
+    console.log('-nt, --new-tab                            Open a new tab')
+    console.log('-nt=[id], --new-tab=[id]                  Open a new tab and load a character, similar to --character but will not replace current active connection if it exist');
 }
 
 //id, data, file, title, icon
@@ -711,7 +711,7 @@ if (_settings.useSingleInstance && !global.editorOnly && !argv.f) {
                     'il': ['ignore-layout'],
                     'nci': ['no-character-import'],
                     'f': ['force'],
-                    'nc': ['new-connection'],
+                    'nc': ['new-connection', 'nt', 'new-tab'],
                     'nw': ['new-window'],
                     'nls': ['no-layout-save']
                 },
@@ -2917,10 +2917,10 @@ function updateJumpList() {
         list[0].items.push(...[
             {
                 type: 'task',
-                title: 'New connection',
-                description: 'Opens a new connection in active window',
+                title: 'New tab',
+                description: 'Opens a new tab in active window',
                 program: process.execPath,
-                args: '-nc',
+                args: '-nt',
                 iconPath: process.execPath,
                 iconIndex: 0
             },
@@ -3868,7 +3868,7 @@ function createMenu(window) {
             id: 'file',
             submenu: [
                 {
-                    label: 'New &Connection',
+                    label: 'New &Tab',
                     id: 'newConnect',
                     accelerator: 'CmdOrCtrl+Shift+N',
                     click: (item, mWindow, keyboard) => {
@@ -5194,7 +5194,7 @@ function getTrayWindowContext(window, windowId, noNew) {
     if (!noNew)
         contextMenu.push(...[
             {
-                label: 'New &Connection',
+                label: 'New &Tab',
                 id: 'newConnect',
                 click: (item, mWindow, keyboard) => {
                     if (!window) return;
@@ -5298,7 +5298,7 @@ async function _updateTrayContext() {
     if (_settings.trayMenu === TrayMenu.simple) {
         contextMenu.push(...[
             {
-                label: 'New &Connection',
+                label: 'New &Tab',
                 id: 'newConnect',
                 click: (item, mWindow, keyboard) => {
                     if (!active) return;
@@ -5375,7 +5375,7 @@ async function _updateTrayContext() {
     if (activeID && Object.keys(windows).length === 1) {
         contextMenu.push(...[
             {
-                label: 'New &Connection',
+                label: 'New &Tab',
                 id: 'newConnect',
                 click: (item, mWindow, keyboard) => {
                     if (!active) return;

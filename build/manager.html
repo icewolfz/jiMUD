@@ -361,7 +361,7 @@
             tabstrip.on('contextmenu', (e) => {
                 menu = [
                     {
-                        label: 'New Connection',
+                        label: 'New Tab',
                         click: `if (!event.triggeredByAccelerator) {
                             if (event.ctrlKey)
                                 ipcRenderer.send('new-client', { port: 1035 });
@@ -418,7 +418,7 @@
                 menu.push(...[
                     { type: 'separator' },
                     {
-                        label: 'New Connection',
+                        label: 'New Tab',
                         click: `if (!event.triggeredByAccelerator) {
                             if (event.ctrlKey)
                                 ipcRenderer.send('new-client', { port: 1035 });

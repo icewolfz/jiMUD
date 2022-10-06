@@ -286,6 +286,9 @@ Display text to the screen, and the display text will not fire triggers
 <u>#SHOWCL</u>IENT
 >Show client window
 
+#TAB *character or id*
+>Create a new client tab in current window
+
 <u>#TOGGLECL</u>IENT
 >Toggle show and hide of client window
 
