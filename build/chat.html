@@ -234,7 +234,7 @@
             'connecting': () => {
                 if (!options)
                     loadOptions();
-                _logger.postMessage({ action: 'connected', args: client.connected });
+                _logger.postMessage({ action: 'connected', args: window.opener.client.connected });
             }
         }
 

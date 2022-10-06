@@ -47,20 +47,6 @@ body {
     margin-bottom: 0 !important;
 }
 
-#chat-display-container {
-    position: absolute;
-    z-index: 2;
-    overflow: hidden;
-    -webkit-user-select: auto;
-    user-select: auto;
-    color: #BBBBBB;
-    font-family: "Courier New", monospace;
-    text-align: left;
-    font-size: 1em;
-    background-color: black;
-    text-shadow: none;
-}
-
 #chat-display {
     z-index: 2;
     overflow: hidden;

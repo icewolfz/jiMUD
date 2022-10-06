@@ -442,7 +442,6 @@
         var autoConnectID;
         var autoLoginCounter = 0;
         var lastMouse;
-        var chatWin;
         var _nextClear = Date.now() + 3600000;
         var client, _status, _backup;
         var _logger;
@@ -464,6 +463,7 @@
         var _windowState = getWindowOptions();
         var _windows = {};
         let _closeWindow = false;
+        let _chat;
         //#endregion
         //#region window events
         window.addEventListener('keydown', (event) => {
@@ -3668,16 +3668,12 @@
             if (_windows['chat.html'])
                 _windows['chat.html'].updateChat(data);
             /*
-            if (typeof data === 'string') {
-                display.append(data);
-                data = {
-                    line: data,
-                    formats: [{ formatType: 0 }],
-                    raw: data
-                };
+            if (_chat) {
+                if (typeof data === 'string')
+                    _chat.append(data);
+                else
+                    _chat.addParserLine(data);
             }
-            else
-                display.addParserLine(data);
             */
         }
 
