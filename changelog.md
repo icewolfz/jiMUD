@@ -39,6 +39,8 @@
   - Add [client.sendAllRaw](docs/scripting.md) for scripting to send raw text to mud for all client windows
   - Add [client.sendAllCommand](docs/scripting.md) for scripting to send command to all client windows
   - Add [client.sendAllBackground](docs/scripting.md) for scripting to send command to all client windows
+- **Fixed:**
+  - Fix a bug in parsing #command arguments and quotes
 - **Changed:**
   - All dark icons now have a white stroke to make them work better with dark mode and dark colors
   - Preferences that are now global:

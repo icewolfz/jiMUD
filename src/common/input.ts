@@ -1791,10 +1791,10 @@ export class Input extends EventEmitter {
             }
         }
         if (fun.length > 0) {
-            if (state === 3)
-                arg += '"';
-            else if (state === 4)
-                arg += '\'';
+            //if (state === 3)
+                //arg += '"';
+            //else if (state === 4)
+                //arg += '\'';
             if (arg.endsWith('\n'))
                 arg = arg.substring(0, arg.length - 1);
             if (arg.length > 0) args.push(arg);
