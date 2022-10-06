@@ -3060,7 +3060,7 @@ export class Input extends EventEmitter {
                         });
                     });
                 if (args.length > 1)
-                    throw new Error('Invalid syntax use ' + cmdChar + '\x1b[4mconn\x1b[0;-11;-12mection character or id');
+                    throw new Error('Invalid syntax use ' + cmdChar + '\x1b[4mconn\x1b[0;-11;-12mection \x1b[3mcharacter or id');
                 else if (args.length === 1)
                     this.client.emit('connection', this.stripQuotes(this.parseInline(args[0])));
                 else
