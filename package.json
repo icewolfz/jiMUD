@@ -128,7 +128,10 @@
     },
     "asarUnpack": [
       "**/*.node",
-      "./assets/icons/win/code.ico"
+      "./assets/icons/win/code.ico",
+      "./assets/icons/win/code2.ico",
+      "./assets/icons/win/tab.ico",
+      "./assets/icons/win/window.ico"
     ],
     "win": {
       "icon": "./assets/icons/win/app.ico"

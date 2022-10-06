@@ -2908,7 +2908,7 @@ function updateJumpList() {
                 description: 'Opens a new code editor',
                 program: process.execPath,
                 args: '-eo', // force editor only mode
-                iconPath: path.join(__dirname, '..', 'assets', 'icons', 'win', 'code2.ico'),//process.execPath,
+                iconPath: path.join(__dirname, '..', '..', 'app.asar.unpacked', 'assets', 'icons', 'win', 'code2.ico'),//process.execPath,
                 iconIndex: 0
             }
         ]
@@ -2921,7 +2921,7 @@ function updateJumpList() {
                 description: 'Opens a new tab in active window',
                 program: process.execPath,
                 args: '-nt',
-                iconPath: path.join(__dirname, '..', 'assets', 'icons', 'win', 'tab.ico'),
+                iconPath: path.join(__dirname, '..', '..', 'app.asar.unpacked', 'assets', 'icons', 'win', 'tab.ico'),
                 iconIndex: 0
             },
             {
@@ -2930,7 +2930,7 @@ function updateJumpList() {
                 description: 'Opens a new window',
                 program: process.execPath,
                 args: '-nw',
-                iconPath: path.join(__dirname, '..', 'assets', 'icons', 'win', 'window.ico'),
+                iconPath: path.join(__dirname, '..', '..', 'app.asar.unpacked', 'assets', 'icons', 'win', 'window.ico'),
                 iconIndex: 0
             }
         ]);
@@ -3668,7 +3668,7 @@ async function saveWindowLayout(file, locked) {
             for (var idx = 0; idx < wl; idx++) {
                 const window = clients[id].windows[idx].window;
                 //for what ever reason skip the window, eg chat window no longer needed for what ever reason
-                if(await executeScript(`if(typeof skipSaveWindow === "function") skipSaveWindow(); else (function() { return false; })();`, window))
+                if (await executeScript(`if(typeof skipSaveWindow === "function") skipSaveWindow(); else (function() { return false; })();`, window))
                     continue;
                 const wData = {
                     client: getClientId(clients[id].view), //use function to ensure proper id data type
