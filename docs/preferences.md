@@ -242,6 +242,7 @@ Controls what is captured into the chat window
 - `Hide when minimized` will hide the main window and any window set as a child **note** due to bugs in linux this feature may not work <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
 - `Show in taskbar` will show or hide the main window from the system's taskbar <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
 - `Enable Background Throttling` disable or enable throttling when a window is in the background or hidden <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
+- `Enable Background Throttling for Clients` disable or enable throttling when a client is in the background or hidden <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
 - `Enable warning dialog when connected and closing client` disable or enable warning check when closing mud and connected
 - `Enable warning dialog when any client is connected and closing window with more then 1 client` disable or enable warning check when closing window with more then one client open <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
 - `Enable warning dialog when closing client and child windows are open` disable or enable warning dialog when closing and child windows are open

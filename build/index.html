@@ -3032,6 +3032,7 @@
 
         function reloadOptions(settings, global) {
             if (global) {
+                window.update({ enableBackgroundThrottling: settings.enableBackgroundThrottlingClients })
                 window.loadTheme();
                 client.emit('load-theme');
             }
@@ -3865,6 +3866,8 @@
         }
 
         function saveWindow() {
+            if(_windowState.data && 'character' in _windowState.data && _windowState.data.character.length === 0)
+                delete _windowState.data.character;
             return _windowState.data;
         }
 

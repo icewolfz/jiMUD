@@ -400,6 +400,7 @@ export class Settings {
     public fixHiddenWindows: boolean = true;
     public maxReconnectDelay: number = 3600;
     public enableBackgroundThrottling: boolean = true;
+    public enableBackgroundThrottlingClients: boolean = false;
     public showInTaskBar: boolean = true;
     public showLagInTitle: boolean = false;
 

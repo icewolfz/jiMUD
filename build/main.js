@@ -2118,7 +2118,12 @@ ipcMain.on('reload-options', (events, preferences, clientId) => {
         if (!Object.prototype.hasOwnProperty.call(clients, id) || getClientId(clients[id].view) === clientId)
             continue;
         clients[id].view.webContents.send('reload-options', preferences, preferences === global.settingsFile);
-        updateWebContents(clients[id].view.webContents, _settings);
+        updateWebContents(clients[id].view.webContents, { enableBackgroundThrottling: _settings.enableBackgroundThrottlingClients });
+    }
+    for (window in windows) {
+        if (!Object.prototype.hasOwnProperty.call(windows, window))
+            continue;
+        updateWebContents(windows[window].window.webContents, { enableBackgroundThrottling: _settings.enableBackgroundThrottling });
     }
 });
 
@@ -2197,7 +2202,7 @@ function createClient(options) {
             spellcheck: _settings ? _settings.spellchecking : false,
             enableRemoteModule: true,
             contextIsolation: false,
-            backgroundThrottling: _settings ? _settings.enableBackgroundThrottling : true,
+            backgroundThrottling: _settings ? _settings.enableBackgroundThrottlingClients : true,
             preload: path.join(__dirname, 'preload.js')
         }
     });
@@ -3630,7 +3635,7 @@ async function saveWindowLayout(file, locked) {
                 clients: windows[id].clients,
                 current: windows[id].current,
                 //get any custom data from window
-                data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].window),
+                data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].window).catch(err => logError(err)),
                 state: saveWindowState(windows[id].window, stateMap.get(windows[id].window)),
                 menubar: windows[id].menubar ? true : false,
                 options: windows[id].options,
@@ -3641,7 +3646,7 @@ async function saveWindowLayout(file, locked) {
                 wData.push({
                     options: windows[id].windows[idx].details.options.features,
                     state: saveWindowState(windows[id].windows[idx].window, stateMap.get(windows[id].windows[idx].window)),
-                    data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].windows[idx].window),
+                    data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].windows[idx].window).catch(err => logError(err)),
                 });
             }
             data.windows.push(wData);
@@ -3661,21 +3666,21 @@ async function saveWindowLayout(file, locked) {
                     devTools: clients[id].view.webContents.isDevToolsOpened()
                 },
                 //get any custom data from window
-                data: await executeScript('if(typeof saveWindow === "function") saveWindow()', clients[id].view),
+                data: await executeScript('if(typeof saveWindow === "function") saveWindow()', clients[id].view).catch(err => logError(err)),
                 states: clients[id].states
             }
             const wl = clients[id].windows.length;
             for (var idx = 0; idx < wl; idx++) {
                 const window = clients[id].windows[idx].window;
                 //for what ever reason skip the window, eg chat window no longer needed for what ever reason
-                if (await executeScript(`if(typeof skipSaveWindow === "function") skipSaveWindow(); else (function() { return false; })();`, window))
+                if (await executeScript(`if(typeof skipSaveWindow === "function") skipSaveWindow(); else (function() { return false; })();`, window).catch(err => logError(err)))
                     continue;
                 const wData = {
                     client: getClientId(clients[id].view), //use function to ensure proper id data type
                     state: saveWindowState(window, stateMap.get(window)),
                     details: { url: clients[id].windows[idx].details.url, options: clients[id].windows[idx].details.options.features },
                     //get any custom data from window
-                    data: await executeScript('if(typeof saveWindow === "function") saveWindow()', window)
+                    data: await executeScript('if(typeof saveWindow === "function") saveWindow()', window).catch(err => logError(err))
                 }
                 for (key in wData.state) {
                     if (!Object.prototype.hasOwnProperty.call(wData.state, key) || key === 'alwaysOnTop')
