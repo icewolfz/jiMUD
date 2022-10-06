@@ -241,7 +241,19 @@
             return $closeWindow;
         }
 
-        function removeEvents() {
+        function skipSaveWindow() {
+            if (window.opener.client.options.mapper.enabled || window.opener.client.options.mapper.persistent)
+                return false;
+            //if not visible do not save this window as it was probably preserved due to a setting change
+            return !window.isVisible();
+        }
+
+        function removeEvents(e) {
+            if (window.opener.client.options.mapper.enabled || window.opener.client.options.mapper.persistent) {
+                window.hide();
+                e.returnValue = false;
+                return 'no';
+            }
             window.opener.client.off('received-GMCP', processGMCP);
             window.opener.client.off('options-loaded', optionsLoaded);
             window.opener._status.off('set-title', setTitle);

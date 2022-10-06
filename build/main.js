@@ -3667,6 +3667,9 @@ async function saveWindowLayout(file, locked) {
             const wl = clients[id].windows.length;
             for (var idx = 0; idx < wl; idx++) {
                 const window = clients[id].windows[idx].window;
+                //for what ever reason skip the window, eg chat window no longer needed for what ever reason
+                if(await executeScript(`if(typeof skipSaveWindow === "function") skipSaveWindow(); else (function() { return false; })();`, window))
+                    continue;
                 const wData = {
                     client: getClientId(clients[id].view), //use function to ensure proper id data type
                     state: saveWindowState(window, stateMap.get(window)),

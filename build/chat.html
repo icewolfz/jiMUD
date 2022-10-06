@@ -287,6 +287,13 @@
             window.opener.client.off('options-loaded', events['options-loaded']);
             window.opener.client.off('connecting', events['connecting']);
         };
+
+        function skipSaveWindow() {
+            if (window.opener.client.options.chat.persistent || window.opener.client.options.chat.captureTells || window.opener.client.options.chat.captureTalk || window.opener.client.options.chat.captureLines)
+                return false;
+            //if not visible do not save this window as it was probably preserved due to a setting change
+            return !window.isVisible();
+        }
     </script>
 </head>
 
