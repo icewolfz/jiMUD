@@ -49,6 +49,7 @@
                 display.enableColors = options.display.enableColors;
                 display.enableBackgroundColors = options.display.enableBackgroundColors;
             }
+            initLogger();
             if (_logger) {
                 _logger.postMessage({
                     action: 'options', args: {
@@ -68,6 +69,46 @@
             }
             _zoom = options.chat.zoom;
             webFrame.setZoomFactor(_zoom);
+        }
+
+        function initLogger() {
+            if (_logger) return;
+            _logger = new Worker('./js/logging.js');
+            _logger.onmessage = (e) => {
+                switch (e.data.event) {
+                    case 'started':
+                        $('#btn-enable').button('toggle');
+                        window.opener.client.options.chat.log = e.data.args;
+                        window.opener.client.saveOptions();
+                        break;
+                    case 'stopped':
+                        $('#btn-enable').button('toggle');
+                        window.opener.client.options.chat.log = e.data.args;
+                        window.opener.client.saveOptions();
+                        break;
+                    case 'logging':
+                        break;
+                    case 'error':
+                        error(e.data.args);
+                        break;
+                    case 'debug':
+                        if (options.enableDebug)
+                            console.debug(e.data.args);
+                        break;
+                    case 'toggled':
+                        options.chat.log = e.data.args;
+                        window.opener.client.options.chat.log = e.data.args;
+                        window.opener.client.saveOptions();
+                        break;
+                    case 'startInternal':
+                    case 'start':
+                        _logger.postMessage({ action: e.data.event, args: { lines: display.lines, raw: display.rawLines, formats: display.lineFormats, fragment: display.EndOfLine } });
+                        break;
+                }
+            };
+            _logger.onerror = (e) => {
+                error(e);
+            };
         }
 
         function error(err) {
@@ -110,46 +151,7 @@
                     display.clearSelection();
                 }
             });
-            _logger = new Worker('./js/logging.js');
-            _logger.onmessage = (e) => {
-                switch (e.data.event) {
-                    case 'started':
-                        $('#btn-enable').button('toggle');
-                        window.opener.client.options.chat.log = e.data.args;
-                        window.opener.client.saveOptions();
-                        break;
-                    case 'stopped':
-                        $('#btn-enable').button('toggle');
-                        window.opener.client.options.chat.log = e.data.args;
-                        window.opener.client.saveOptions();
-                        break;
-                    case 'logging':
-                        break;
-                    case 'error':
-                        error(e.data.args);
-                        break;
-                    case 'debug':
-                        if (options.enableDebug)
-                            console.debug(e.data.args);
-                        break;
-                    case 'toggled':
-                        options.chat.log = e.data.args;
-                        window.opener.client.options.chat.log = e.data.args;
-                        window.opener.client.saveOptions();
-                        break;
-                    case 'startInternal':
-                    case 'start':
-                        _logger.postMessage({ action: e.data.event, args: { lines: display.lines, raw: display.rawLines, formats: display.lineFormats, fragment: display.EndOfLine } });
-                        break;
-                }
-            };
-            _logger.onerror = (e) => {
-                error(e);
-            };
-
-
             loadOptions();
-
             ['copy'].forEach(function (event) {
                 document.addEventListener(event, function () {
                     if (display.hasSelection) {
@@ -216,14 +218,16 @@
                 display.addParserLine(data);
             if (!options)
                 loadOptions();
-            _logger.postMessage({ action: 'add-line', args: data });
+            if (_logger)
+                _logger.postMessage({ action: 'add-line', args: data });
         }
 
         var events = {
             'set-title': (title, lag) => {
                 if (!options)
                     loadOptions();
-                _logger.postMessage({ action: 'name', args: title });
+                if (_logger)
+                    _logger.postMessage({ action: 'name', args: title });
             },
             'options-loaded': () => {
                 loadOptions();
@@ -234,7 +238,8 @@
             'connecting': () => {
                 if (!options)
                     loadOptions();
-                _logger.postMessage({ action: 'connected', args: window.opener.client.connected });
+                if (_logger)
+                    _logger.postMessage({ action: 'connected', args: window.opener.client.connected });
             }
         }
 
