@@ -273,7 +273,12 @@
             window.opener.client.saveOptions();
         }
 
-        window.onbeforeunload = () => {
+        window.onbeforeunload = e => {
+            if (window.opener.client.options.chat.persistent || window.opener.client.options.chat.captureTells || window.opener.client.options.chat.captureTalk || window.opener.client.options.chat.captureLines) {
+                window.hide();
+                e.returnValue = false;
+                return 'no';
+            }
             window.opener._status.off('set-title', events['set-title']);
             window.opener.removeEventListener('loadCharacter', updateCharacter);
             window.opener.removeEventListener('updateCharacter', updateCharacter);

@@ -2318,7 +2318,7 @@ function createClient(options) {
                 if (index !== -1 && clients[id].windows[index].details.options.persistent) {
                     e.preventDefault();
                     executeScript('if(typeof closeHidden !== "function" || closeHidden(true)) window.hide();', childWindow);
-                    clients[getClientId(view)].states[file] = states[file];
+                    clients[id].states[file] = states[file];
                     return;
                 }
                 clients[id].states[file] = states[file];
@@ -2326,8 +2326,8 @@ function createClient(options) {
             executeCloseHooks(childWindow);
             if (childWindow && !childWindow.isDestroyed())
                 childWindow.close();
-            if (clients[getClientId(view)] && clients[getClientId(view)].parent)
-                clients[getClientId(view)].parent.focus();
+            if (clients[id] && clients[id].parent)
+                clients[id].parent.focus();
         });
         clients[getClientId(view)].windows.push({ window: childWindow, details: details });
         idMap.set(childWindow, getClientId(view));
