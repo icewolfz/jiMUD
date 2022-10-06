@@ -1366,8 +1366,22 @@
 
         window.onbeforeunload = () => {
             if (!editorOnly && window.opener.client) {
+                if (window.opener.client.options.editorPersistent) {
+                    window.hide();
+                    e.returnValue = false;
+                    return 'no';
+                }
                 window.opener.client.off('options-loaded', optionsLoaded);
             }
+        }
+
+        function skipSaveWindow() {
+            if (!editorOnly && window.opener.client) {
+                if (window.opener.client.options.editorPersistent)
+                    return false;
+            }
+            //if not visible do not save this window as it was probably preserved due to a setting change
+            return !window.isVisible();
         }
 
         function setColor(type, color, code) {

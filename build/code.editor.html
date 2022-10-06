@@ -4529,9 +4529,14 @@
     else
         window.onbeforeunload = cleanUp;
 
-    function cleanUp() {
+    function cleanUp(e) {
         //clean up
         if (window.opener) {
+            if (window.opener.client.options.codeEditor.persistent) {
+                window.hide();
+                e.returnValue = false;
+                return 'no';
+            }
             window.opener.client.off('received-GMCP', processGMCP);
             window.opener.client.off('connected', clientConnected);
             window.opener.client.off('closed', clientClosed);
@@ -4542,6 +4547,16 @@
             closeEditor(_editors[keys[p]]);
         if (watcher)
             watcher.close();
+    }
+
+    function skipSaveWindow() {
+        if (window.opener) {
+            if (window.opener.client.options.codeEditor.persistent)
+                return false;
+            //if not visible do not save this window as it was probably preserved due to a setting change
+            return !window.isVisible();
+        }
+        return false;
     }
 
     ipcRenderer.on('progress', (event, ...args) => {
