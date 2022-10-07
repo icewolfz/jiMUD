@@ -403,6 +403,7 @@ export class TabStrip extends EventEmitter {
         this.$addNewButton = document.createElement('div');
         this.$addNewButton.innerHTML = '<a  href="javascript:void(0)"><i class="fa fa-plus"></i></a>';
         this.$addNewButton.id = 'cm-add-tab';
+        this.$addNewButton.title = 'Add new tab';
         this.$addNewButton.firstElementChild.addEventListener('click', (e) => {
             e.stopPropagation();
             e.preventDefault();
