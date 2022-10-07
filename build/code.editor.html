@@ -101,7 +101,7 @@
                 editor.onContextMenu((e) => {
                     let idx = window.$editors.indexOf(editor);
                     if (manager.activePane === manager.panes[idx])
-                        manager.active.editor.emit('contextmenu', e);
+                        manager.active.editor.emit('contextmenu', e, editor);
                 });
                 editor.onDidChangeCursorSelection(() => {
                     doUpdate(32);
@@ -135,7 +135,7 @@
                 editor.getOriginalEditor().onContextMenu((e) => {
                     let idx = window.$dEditors.indexOf(editor);
                     if (manager.activePane === manager.panes[idx])
-                        manager.active.editor.emit('contextmenu-diff', e);
+                        manager.active.editor.emit('contextmenu-diff', e, editor.getOriginalEditor());
                 });
                 editor.getOriginalEditor().onDidChangeCursorSelection(() => {
                     doUpdate(32);
@@ -149,7 +149,7 @@
                 editor.getModifiedEditor().onContextMenu((e) => {
                     let idx = window.$dEditors.indexOf(editor);
                     if (manager.activePane === manager.panes[idx])
-                        manager.active.editor.emit('contextmenu', e);
+                        manager.active.editor.emit('contextmenu', e, editor.getModifiedEditor());
                 });
                 editor.getModifiedEditor().onDidChangeCursorSelection(() => {
                     doUpdate(32);
@@ -9187,8 +9187,26 @@
                 let inputMenu = Menu.buildFromTemplate(temp);
                 inputMenu.popup({ window: remote.getCurrentWindow() });
             });
-            p.editor.on('contextmenu', () => {
+            p.editor.on('contextmenu', (e, editor) => {
+                /*
+                //Broken on windows, seems spell checker always returns false try again once fixed to add spell checker
+                const word = editor.getModel().getWordAtPosition(e.target.position);
                 var temp = [];
+                if (word && word.length !== 0 && webFrame.isWordMisspelled(word.word)) {
+                    let words = webFrame.getWordSuggestions(word.word);
+                    if (words.length) {
+                        for (let w = 0, wl = words.length; w < wl; w++)
+                            temp.push({
+                                label: words[w],
+                                position: e.target.poistion,
+                                click: (item) => {
+                                    console.log(item.label);
+                                }
+                            });
+                        temp.push({ type: 'separator' });
+                    }
+                }
+                */
                 if (p.editor.supports('refresh')) {
                     temp.push({
                         label: 'Refresh',
