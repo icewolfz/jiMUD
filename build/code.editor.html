@@ -9188,13 +9188,14 @@
                 inputMenu.popup({ window: remote.getCurrentWindow() });
             });
             p.editor.on('contextmenu', (e, editor) => {
-                /*
                 //Broken on windows, seems spell checker always returns false try again once fixed to add spell checker
                 //seems if you change the lang to en-GB it will work, seems en-US is broken
+                /*
+                //const curr = remote.getCurrentWindow().webContents.session.getSpellCheckerLanguages() || [];
                 //remote.getCurrentWindow().webContents.session.setSpellCheckerLanguages(['en-GB'])
                 const word = editor.getModel().getWordAtPosition(e.target.position);
                 var temp = [];
-                if (word && word.length !== 0 && webFrame.isWordMisspelled(word.word)) {
+                if (word && word.word.length !== 0 && webFrame.isWordMisspelled(word.word)) {
                     let words = webFrame.getWordSuggestions(word.word);
                     if (words.length) {
                         for (let w = 0, wl = words.length; w < wl; w++)
@@ -9209,6 +9210,7 @@
                     }
                 }
                 */
+                remote.getCurrentWindow().webContents.session.setSpellCheckerLanguages(curr)
                 if (p.editor.supports('refresh')) {
                     temp.push({
                         label: 'Refresh',
