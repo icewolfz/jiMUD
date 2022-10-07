@@ -10,7 +10,11 @@ when [Show add new button next to tabs](preferences.md#interface) enabled displa
 ### File
 
 - `New Tab` Create a new connections in current window
+    - Ctrl click will force new tab to connect to developer port and ignore setting/inherited settings
+    - Shift click will force new tab to connect to main port and ignore setting/inherited settings
 - `New Window` Open a new window with a single mud connection
+    - Ctrl click will force new window to connect to developer port and ignore setting/inherited settings
+    - Shift click will force new window to connect to main port and ignore setting/inherited settings
 - `Connect` Connect to the mud
 - `Disconnect` Disconnect from the mud
 - `Enable parsing` toggle input parsing on and off
