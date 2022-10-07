@@ -40,7 +40,9 @@
   - Add [client.sendAllCommand](docs/scripting.md) for scripting to send command to all client windows
   - Add [client.sendAllBackground](docs/scripting.md) for scripting to send command to all client windows
 - **Fixed:**
-  - Fix a bug in parsing #command arguments and quotes
+  - Fixed a bug in parsing #command arguments and quotes
+  - Immortal tools: Fixed issue with multiple events not correctly working
+  - Profile manager: Fixed code editor spell checking replacement
 - **Changed:**
   - All dark icons now have a white stroke to make them work better with dark mode and dark colors
   - Preferences that are now global:

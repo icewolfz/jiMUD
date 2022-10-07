@@ -164,24 +164,8 @@ function addInputContext(window, spellcheck) {
                 for (var w = props.dictionarySuggestions.length - 1; w >= 0; w--) {
                     inputMenu.insert(0, new MenuItem({
                         label: props.dictionarySuggestions[w],
-                        x: props.x,
-                        y: props.y,
-                        sel: props.selectionText.length - props.misspelledWord.length,
-                        idx: props.selectionText.indexOf(props.misspelledWord),
-                        word: props.misspelledWord,
                         click: (item, mWindow) => {
-                            executeScript(`(function spellTemp() {
-                                var el = $(document.elementFromPoint(${item.x}, ${item.y}));
-                                var value = el.val();
-                                var start = el[0].selectionStart;
-                                var wStart = start + ${item.idx};
-                                value = value.substring(0, wStart) + '${item.label}' + value.substring(wStart + ${item.word.length});
-                                el.val(value);
-                                el[0].selectionStart = start;
-                                el[0].selectionEnd = start + ${item.label.length + item.sel};
-                                if(typeof windowType === 'undefined' || windowType() !== 'codeEditor') el.blur();
-                                el.focus();
-                            })();`, mWindow, true);
+                            mWindow.webContents.replaceMisspelling(item.label);
                         }
                     }));
                 }
@@ -1596,7 +1580,6 @@ function showContext(event, template, options, show, close) {
         });
     cMenu.popup(options);
 }
-
 //#endregion
 
 ipcMain.on('trash-item', (event, file) => {
@@ -1710,6 +1693,10 @@ ipcMain.handle('contents', (event, action, ...args) => {
     if (event.sender.isDestroyed()) return;
     if (action === 'update')
         updateWebContents(event.sender, ...args);
+    else if (action === 'replaceMisspelling')
+        event.sender.replaceMisspelling(...args);
+    else if(action === 'inspectElement')
+        event.sender.inspectElement(...args);
 })
 
 ipcMain.on('window-info', (event, info, id, ...args) => {
@@ -1756,10 +1743,6 @@ ipcMain.on('window-info', (event, info, id, ...args) => {
         var current = BrowserWindow.fromWebContents(event.sender);
         event.returnValue = current ? current.isMinimized() : 0;
     }
-});
-
-ipcMain.on('inspect', (event, x, y) => {
-    event.sender.inspectElement(x || 0, y || 0);
 });
 
 //#region Client creation, docking, and related management

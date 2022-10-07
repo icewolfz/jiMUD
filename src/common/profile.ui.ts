@@ -279,7 +279,7 @@ function addInputContext() {
                 x: props.x,
                 y: props.y,
                 click: (item: any) => {
-                    remote.getCurrentWindow().webContents.inspectElement(item.x, item.y);
+                    ipcRenderer.invoke('contents', 'inspectElement', item.x, item.y);
                 }
             }));
         }
@@ -289,21 +289,19 @@ function addInputContext() {
                 inputMenu.insert(0, new MenuItem(<MenuItemConstructorOptionsCustom>{
                     label: props.dictionarySuggestions[w],
                     x: props.x,
-                    y: props.y,
-                    sel: props.selectionText.length - props.misspelledWord.length,
-                    idx: props.selectionText.indexOf(props.misspelledWord),
-                    word: props.misspelledWord,
+                    y: props.y,            
                     click: (item: any) => {
-                        const el = $(document.elementFromPoint(item.x, item.y));
-                        let value: string = (<string>el.val());
-                        const start = (<HTMLInputElement>el[0]).selectionStart;
-                        const wStart = start + item.idx;
-                        value = value.substring(0, wStart) + item.label + value.substring(wStart + item.word.length);
-                        el.val(value);
-                        (<HTMLInputElement>el[0]).selectionStart = start;
-                        (<HTMLInputElement>el[0]).selectionEnd = start + item.label.length + item.sel;
-                        el.blur();
-                        el.focus();
+                        let el = document.elementFromPoint(item.x, item.y);
+                        if(el.classList.contains('ace_content'))
+                        {
+                            el = el.closest('pre');
+                            let editor = el.id.substring(0, el.id.lastIndexOf('-'));
+                            const cursor = editors[editor].selection.getCursor();
+                            editors[editor].getSession().markUndoGroup();
+                            editors[editor].getSession().replace(editors[editor].getSession().getWordRange(cursor.row, cursor.column), item.label);
+                        }
+                        else
+                            ipcRenderer.invoke('contents', 'replaceMisspelling', item.label);
                     }
                 }));
             }

@@ -643,7 +643,7 @@
                             { type: 'separator' },
                             {
                                 label: 'Inspect', click: () => {
-                                    remote.getCurrentWindow().webContents.inspectElement(e.pageX, e.pageY);
+                                    ipcRenderer.invoke('contents', 'inspectElement', e.pageX, e.pageY);
                                 }
                             }
                         ]);
@@ -661,7 +661,7 @@
                             { type: 'separator' },
                             {
                                 label: 'Inspect', click: () => {
-                                    remote.getCurrentWindow().webContents.inspectElement(e.pageX, e.pageY);
+                                    ipcRenderer.invoke('contents', 'inspectElement', e.pageX, e.pageY);
                                 }
                             }]);
                     }

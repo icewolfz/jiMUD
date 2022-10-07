@@ -1234,7 +1234,7 @@
                         c.append(new MenuItem({ type: 'separator' }));
                         c.append(new MenuItem({
                             label: 'Inspect', click: () => {
-                                ipcRenderer.send('inspect', e.pageX, e.pageY);
+                                ipcRenderer.invoke('contents', 'inspectElement', e.pageX, e.pageY);
                             }
                         }));
                     }
@@ -2171,7 +2171,7 @@
                     c.append(new MenuItem({ type: 'separator' }));
                     c.append(new MenuItem({
                         label: 'Inspect', click: () => {
-                            ipcRenderer.send('inspect', e.pageX, e.pageY);
+                            ipcRenderer.invoke('contents', 'inspectElement', e.pageX, e.pageY);
                         }
                     }));
                 }
@@ -2363,7 +2363,7 @@
                     c.append(new MenuItem({ type: 'separator' }));
                     c.append(new MenuItem({
                         label: 'Inspect', click: () => {
-                            ipcRenderer.send('inspect', e.pageX, e.pageY);
+                            ipcRenderer.invoke('contents', 'inspectElement', e.pageX, e.pageY);
                         }
                     }));
                 }
@@ -3098,7 +3098,7 @@
                     inputMenu.append(new MenuItem({ type: 'separator' }));
                     inputMenu.append(new MenuItem({
                         label: 'Inspect', click: () => {
-                            ipcRenderer.send('inspect', params.x, params.y);
+                            ipcRenderer.invoke('contents', 'inspectElement', params.x, params.y);
                         }
                     }));
                 }
@@ -3109,21 +3109,8 @@
                     for (w = params.dictionarySuggestions.length - 1; w >= 0; w--) {
                         inputMenu.insert(0, new MenuItem({
                             label: params.dictionarySuggestions[w],
-                            start: start,
-                            end: end,
-                            sel: params.selectionText.length - params.misspelledWord.length,
-                            x: params.x,
-                            y: params.y,
                             click: function (item) {
-                                var el = document.elementFromPoint(item.x, item.y);
-                                var value = el.value;
-                                var start = el.selectionStart;
-                                value = value.substring(0, item.start) + item.label + value.substring(item.end);
-                                el.value = value;
-                                el.selectionStart = start;
-                                el.selectionEnd = start + item.label.length + item.sel;
-                                el.blur();
-                                el.focus();
+                                ipcRenderer.invoke('contents', 'replaceMisspelling', item.label);
                             }
                         }));
                     }
@@ -3331,8 +3318,8 @@
                     break;
                 case 'profiles':
                     if (data && data.details)
-                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultX', 'defaultY', 'showInTaskBar', ...Object.keys(data.state || {})]);
-                    _windows['profiles.html'] = window.open('profiles.html', 'Profiles-' + getId(), `defaultY=${window.screenY + window.outerHeight / 2 - 300},defaultX=${window.screenX + window.outerWidth / 2 - 400},alwaysOnTopClient=true,showInTaskBar=${client.options.profiles.showInTaskBar},defaultHeight=600,defaultWidth=800,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/profiles.png')}${_options}`);
+                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultX', 'defaultY', 'showInTaskBar', 'noInputContext', ...Object.keys(data.state || {})]);
+                    _windows['profiles.html'] = window.open('profiles.html', 'Profiles-' + getId(), `noInputContext=true,defaultY=${window.screenY + window.outerHeight / 2 - 300},defaultX=${window.screenX + window.outerWidth / 2 - 400},alwaysOnTopClient=true,showInTaskBar=${client.options.profiles.showInTaskBar},defaultHeight=600,defaultWidth=800,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/profiles.png')}${_options}`);
                     break;
                 case 'code.editor':
                     if (data && data.details)
@@ -3866,7 +3853,7 @@
         }
 
         function saveWindow() {
-            if(_windowState.data && 'character' in _windowState.data && _windowState.data.character.length === 0)
+            if (_windowState.data && 'character' in _windowState.data && _windowState.data.character.length === 0)
                 delete _windowState.data.character;
             return _windowState.data;
         }

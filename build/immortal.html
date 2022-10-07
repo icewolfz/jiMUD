@@ -1642,7 +1642,7 @@
                 }
             });
 
-            $('#local-list tbody').on('contextmenu', 'tr', function () {
+            $('#local-list tbody').on('contextmenu', 'tr', function (event) {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
@@ -1654,14 +1654,14 @@
                 showLocalContextMenu();
             });
 
-            $('#local-list-container').on('contextmenu', function () {
+            $('#local-list-container').on('contextmenu', function (event) {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
                 showLocalContextMenu();
             });
 
-            $('#remote-list tbody').on('contextmenu', 'tr', function () {
+            $('#remote-list tbody').on('contextmenu', 'tr', function (event) {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
@@ -1673,14 +1673,14 @@
                 showRemoteContextMenu();
             });
 
-            $('#remote-list-container').on('contextmenu', function () {
+            $('#remote-list-container').on('contextmenu', function (event) {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
                 showRemoteContextMenu();
             });
 
-            $('#queue-list tbody').on('contextmenu', 'tr', function () {
+            $('#queue-list tbody').on('contextmenu', 'tr', function (event) {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
@@ -1692,14 +1692,14 @@
                 showQueueContextMenu();
             });
 
-            $('#queue-list-container').on('contextmenu', function () {
+            $('#queue-list-container').on('contextmenu', function (event) {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
                 showQueueContextMenu();
             });
 
-            logView.on('contextmenu', function () {
+            logView.on('contextmenu', function (event) {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
@@ -3399,7 +3399,7 @@
                 editor = null;
             };
             editor.on('blur', editor.close);
-            editor.on('click', function () {
+            editor.on('click', function (event) {
                 event.cancelable = true;
                 event.stopPropagation();
             });
@@ -3419,17 +3419,17 @@
             $(window).on('click', editor.update);
             editor.context = e => {
                 if (e && e.target === editor[0]) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    event.cancelBubble = true;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.cancelBubble = true;
                     return;
                 }
                 editor.close();
             };
             editor.on('contextmenu', e => {
-                event.preventDefault();
-                event.stopPropagation();
-                event.cancelBubble = true;
+                e.preventDefault();
+                e.stopPropagation();
+                e.cancelBubble = true;
 
                 let menu = [
                     { role: 'undo' },
@@ -3443,7 +3443,7 @@
                 ];
                 if (window.getGlobal('debug')) {
                     menu.push({ type: 'separator' });
-                    menu.push({ label: 'Inspect', click: `ipcRenderer.send('inspect', ${e.pageX}, ${e.pageY})` });
+                    menu.push({ label: 'Inspect', click: `ipcRenderer.invoke('contents', 'inspectElement', ${e.pageX}, ${e.pageY})` });
                 }
                 window.showContext(menu);
             })
