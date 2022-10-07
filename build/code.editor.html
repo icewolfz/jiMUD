@@ -9190,6 +9190,8 @@
             p.editor.on('contextmenu', (e, editor) => {
                 /*
                 //Broken on windows, seems spell checker always returns false try again once fixed to add spell checker
+                //seems if you change the lang to en-GB it will work, seems en-US is broken
+                //remote.getCurrentWindow().webContents.session.setSpellCheckerLanguages(['en-GB'])
                 const word = editor.getModel().getWordAtPosition(e.target.position);
                 var temp = [];
                 if (word && word.length !== 0 && webFrame.isWordMisspelled(word.word)) {
