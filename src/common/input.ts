@@ -3096,8 +3096,8 @@ export class Input extends EventEmitter {
                     });
                 if (args.length > 2)
                     throw new Error('Invalid syntax use ' + cmdChar + '\x1b[4mna\x1b[0;-11;-12mme name \x1b[3mid');
-                else if(args.length === 0) {
-                    if(getName())
+                else if (args.length === 0) {
+                    if (getName())
                         this.client.echo('Client name: ' + getName(), -7, -8, true, true);
                     else
                         this.client.echo('Client name: Not set', -7, -8, true, true);
@@ -3118,17 +3118,29 @@ export class Input extends EventEmitter {
             case 'all':
                 if (args.length === 0)
                     throw new Error('Invalid syntax use ' + cmdChar + 'all {commands}');
-                if (args[0].match(/^\{.*\}$/g)) {
-                    if (args.length !== 1)
-                        throw new Error('Extra arguments use ' + cmdChar + 'all {commands}');
+                if (args[0].match(/^\{.*\}$/g))
                     args = this.parseInline(args[0].substr(1, args[0].length - 2));
-                }
-                else {
+                else
                     args = args.join(' ');
                     if (args.length === 0)
                         throw new Error('Missing commands argument');
-                }
                 (<any>this.client).sendAllBackground(this.parseInline(this.stripQuotes(args)), null, this.client.options.allowCommentsFromCommand);
+                return null;
+            case 'to':
+                if (args.length < 2)
+                    throw new Error('Invalid syntax use ' + cmdChar + 'to name|id {commands}');
+                name = args[0];
+                args = args.slice(1);
+                if (name.match(/^\{.*\}$/g))
+                    name = name.substr(1, name.length - 2);
+                name = this.parseInline(this.stripQuotes(name));
+                if (args[0].match(/^\{.*\}$/g))
+                    args = this.parseInline(args[0].substr(1, args[0].length - 2));
+                else
+                    args = args.join(' ');
+                if (args.length === 0)
+                    throw new Error('Missing commands argument');
+                (<any>this.client).sendToBackground(name, this.parseInline(this.stripQuotes(args)), null, this.client.options.allowCommentsFromCommand);
                 return null;
             case 'raisedelayed':
             case 'raisede':

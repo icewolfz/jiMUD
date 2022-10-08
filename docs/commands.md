@@ -290,6 +290,9 @@ Display text to the screen, and the display text will not fire triggers
 #TAB *character or id*
 >Create a new client tab in current window
 
+#TO name or id {commands}
+>Send commands to named client or client id as if sent from command line
+
 <u>#TOGGLECL</u>IENT
 >Toggle show and hide of client window
 

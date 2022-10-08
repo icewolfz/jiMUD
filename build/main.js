@@ -1944,13 +1944,13 @@ ipcMain.on('position-client', (event, id, options) => {
     }
 });
 
-ipcMain.on('focus-client', (event, id, window) => {
+ipcMain.on('focus-client', (event, id, window, switchClient) => {
     if (typeof id === 'string')
         id = names[id];
     if (!clients[id]) return;
     if (window)
         restoreWindowState(clients[id].parent, stateMap.get(clients[id].parent), 2);
-    focusClient(id);
+    focusClient(id, false, switchClient);
 });
 
 ipcMain.on('focus-window', (event, id, clientId) => {
@@ -3360,7 +3360,7 @@ function focusWindow(window, focusWindow) {
     client.view.webContents.focus();
 }
 
-function focusClient(clientId, focusWindow) {
+function focusClient(clientId, focusWindow, switchClient) {
     if (!clients[clientId]) return;
     client = clients[clientId];
     //client.parent.webContents.send('switch-client', clientId);
@@ -3369,7 +3369,7 @@ function focusClient(clientId, focusWindow) {
         client.parent.webContents.focus();
     }
     const windowId = getWindowId(client.parent);
-    if(windows[windowId].current !== clientId)
+    if (switchClient && windows[windowId].current !== clientId)
         client.parent.webContents.send('switch-client', clientId);
     client.view.webContents.focus();
 }
@@ -3682,7 +3682,6 @@ async function saveWindowLayout(file, locked) {
             logError(e);
             return;
         }
-        data.names = names;
         data.states = states;
     }
     else {
@@ -3793,7 +3792,6 @@ function loadWindowLayout(file, charData) {
         return false;
     }
     states = data.states || {};
-    names = data.names || {};
     //no windows so for what ever reason so just start a clean client
     if (data.windows.length === 0) {
         if (global.editorOnly)
@@ -3804,6 +3802,7 @@ function loadWindowLayout(file, charData) {
             newClientWindow();
         return true;
     }
+    names = data.names || {};
     //_windowID = data.windowID;
     //_clientID = data.clientID;
     focusedClient = data.focusedClient;
@@ -3836,6 +3835,13 @@ function loadWindowLayout(file, charData) {
         }
         createClient({ bounds: client.state.bounds, id: client.id, data: client, file: client.file });
         clients[client.id].parent = windows[client.parent].window;
+    }
+    //set any client names
+    for (name in names) {
+        if (!Object.prototype.hasOwnProperty.call(names, name))
+            continue;
+        if (clients[names[name]])
+            clients[names[name]].name = name;
     }
     //append any remaining new characters
     if (charData && charData.length) {
