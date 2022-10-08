@@ -943,29 +943,27 @@
         }
 
         function resetWindows() {
-            //TODO make reset windows work, will need a ipc to reset global states, and the per window states and update current window to new state
-            /*
-            var choice = dialog.showMessageBoxSync({
-                        type: 'warning',
-                        title: 'Reset windows',
-                        message: 'Windows are stored separately, once reset positions can not be restored, reset?',
-                        buttons: ['Yes', 'No'],
-                        defaultId: 1,
-                        noLink: true
-                    });
-                if (choice === 0) {
-                    //RESET
-                }      
-                */
-            //if (!_settings.windows) return;
-            /*
-            for (var name in _settings.windows) {
-                _settings.windows[name].x = 0;
-                _settings.windows[name].y = 0;
-                _settings.windows[name].width = 800;
-                _settings.windows[name].height = 600;
-            }
-            */
+            if (dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Reset windows',
+                message: 'Will rest all client child windows and window states, once reset can not be restored, reset?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+                noLink: true
+            }) === 0)
+                window.opener.resetWindows();
+        }
+
+        function resetAllWindows() {
+            if (dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Reset windows',
+                message: 'Will reset all windows and stored window states, once reset can not be restored, reset?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+                noLink: true
+            }) === 0)
+                ipcRenderer.send('reset-windows');
         }
 
         function setColor(id, color, noChange) {
@@ -2477,7 +2475,7 @@
                         <label class="control-label">
                             <input type="checkbox" id="enableBackgroundThrottlingClients" /> Enable Background Throttling for Clients
                         </label>
-                    </div>                    
+                    </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="askonclose" /> Enable warning dialog when connected and closing client
@@ -2900,8 +2898,8 @@
     <div class="dialog-footer">
         <button style="float: left" type="button" class="btn btn-default" onclick="resetSettings()">Reset</button>
         <button style="float: left" type="button" class="btn btn-default" onclick="backup()">Backup</button>
-        <!--TODO readd reset windows, this requires rethinking as states are stored in real time and updated based on window-->
-        <!--<button style="float: left" type="button" class="btn btn-default" onclick="resetWindows()">Reset Windows</button>-->
+        <button style="float: left" type="button" class="btn btn-default" onclick="resetWindows()">Reset client windows</button>
+        <button style="float: left" type="button" class="btn btn-default" onclick="resetAllWindows()">Reset all windows</button>
         <button style="float: right" type="button" class="btn btn-default" onclick="window.close()">Cancel</button>
         <button style="float: right" type="button" class="btn btn-primary" onclick="saveSettings()">Ok</button>
     </div>

@@ -3342,6 +3342,53 @@
                 ipcRenderer.send('close-window', 'global-preferences');
         }
 
+        function resetWindows(all) {
+            const pX = window.screenX + window.outerWidth / 2;
+            const pY = window.screenY + window.outerHeight / 2
+            for (_window in _windows) {
+                if (!Object.prototype.hasOwnProperty.call(_windows, _window))
+                    continue;
+                let width = 800;
+                let height = 600;
+                if(!all) //do not recurse call as all already clears this
+                    ipcRenderer.sendSync('reset-windows', getId());
+                switch (_window) {
+                    //x,y,width,height
+                    case 'characters.html': //center,center,650,555                    
+                        width = 650;
+                        height = 555;
+                        break;
+                    case 'editor.html'://center,center,300,225
+                        width = 300;
+                        height = 225;
+                        break;
+                    case 'chat.html'://center,center,300,225
+                        width = 300;
+                        height = 225;
+                        break;
+                    case 'prefs.html'://center,center,800,400
+                        width = 800;
+                        height = 460;
+                        break;
+                    case 'history.html'://center,center,400,275
+                        width = 400;
+                        height = 275;
+                        break;
+                    case 'mapper.html'://center,center,800,600
+                    case 'immortal.html'://center,center,800,600
+                    case 'help.html'://center,center.800,600
+                    case 'smhelp.html'://center,center,800,600
+                    case 'who.html'://center,center,800,600
+                    case 'skills.html'://center,center,800,600
+                    case 'profiles.html'://center,center,800,600
+                    case 'code.editor.html'://center,center,800,600
+                        break;
+                }
+                _windows[_window].moveTo(pX - width / 2, pY - height / 2);
+                _windows[_window].resizeTo(width, height);
+            }
+        }
+
         function buildWindowOptions(options, filters) {
             if (!options) return '';
             if (!filters) filters = [];

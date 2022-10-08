@@ -4869,6 +4869,34 @@ ipcMain.on('show-window', (event, window, ...args) => {
         openWindows(BrowserWindow.fromWebContents(event.sender));
 });
 
+ipcMain.on('reset-windows', (event, id) => {
+    if (id) {
+        if (clients[id])
+            clients[id].states = {};
+    }
+    else {
+        //clear window states
+        states = {};
+        let x = 0;
+        let y = 0;
+        for (window in windows) {
+            if (!Object.prototype.hasOwnProperty.call(windows, window))
+                continue;
+            windows[window].window.setBounds({ x: x, y: y, width: 800, height: 600 });
+            x += 10;
+            y += 10;
+            windows[window].state = saveWindowState(windows[window].window);
+        }
+        for (client in clients) {
+            if (!Object.prototype.hasOwnProperty.call(clients, client))
+                continue;
+            clients[client].states = {};
+            executeScript('resetWindows()', clients[client].view);
+        }
+    }
+    event.returnValue = true;
+});
+
 const progressMap = new Map();
 ipcMain.on('progress', (event, ...args) => {
     window = BrowserWindow.fromWebContents(event.sender);
