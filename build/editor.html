@@ -1169,7 +1169,7 @@
             window.addContext((e, params) => {
                 //const { selectionText, isEditable } = params;
                 //if (isEditable) {
-                if ((params.y) < 37) return;
+                if (params.y < 37 || !params.editFlags.canEditRichly) return;
                 var cMenu = tinymce.activeEditor.plugins['shadowmud'].buildMenu(params.editFlags);
                 if (window.getSetting('spellchecking') && params.dictionarySuggestions.length) {
                     cMenu.insert(0, new MenuItem({ type: 'separator' }));
