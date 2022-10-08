@@ -232,8 +232,8 @@ Display text to the screen, and the display text will not fire triggers
 <u>#CLEARNA</u>ME *name or id*
 >Clear client current or named client's name
 
-<u>#CL</u>OSE name
->Close an open window
+<u>#CL</u>OSE *name or id*
+>Close current tab/window or named window
 
 #CR
 >Send a blank line to the mud

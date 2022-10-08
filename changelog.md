@@ -46,6 +46,7 @@
   - Add [client.sendToRaw](docs/scripting.md) for scripting to send raw text to mud for all client windows
   - Add [client.sendToCommand](docs/scripting.md) for scripting to send command to all client windows
   - Add [client.sendToBackground](docs/scripting.md) for scripting to send command to all client windows  
+  - Add [client.closeWindow](docs/scripting.md) for scripting to close an open window/tab
 - **Fixed:**
   - Fixed a bug in parsing #command arguments and quotes
   - Immortal tools: Fixed issue with multiple events not correctly working

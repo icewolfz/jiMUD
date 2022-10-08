@@ -2494,11 +2494,64 @@
             client.sendAllCommand = (text, noEcho, comments) => ipcRenderer.send('execute-all-clients', `client.sendCommand(${JSON.stringify(text)},${noEcho}, ${comments});`);
             client.sendAllBackground = (text, noEcho, comments) => ipcRenderer.send('execute-all-clients', `client.sendBackground(${JSON.stringify(text)},${noEcho}, ${comments});`);
 
-
             client.sendTo = (id, text, echo) => ipcRenderer.send('execute-client', id, `client.send(${JSON.stringify(text)},${echo});`);
             client.sendToRaw = (id, text) => ipcRenderer.send('execute-client', id, `client.raw(${JSON.stringify(text)});`);
             client.sendToCommand = (id, text, noEcho, comments) => ipcRenderer.send('execute-client', id, `client.sendCommand(${JSON.stringify(text)},${noEcho}, ${comments});`);
             client.sendToBackground = (id, text, noEcho, comments) => ipcRenderer.send('execute-client', id, `client.sendBackground(${JSON.stringify(text)},${noEcho}, ${comments});`);
+
+
+            client.closeWindow = window => {
+                switch (window) {
+                    case 'mapper':
+                    case 'editor':
+                    case 'chat':
+                    case 'help':
+                    case 'smhelp':
+                    case 'skills':
+                    case 'who':
+                        closeWindow(window);
+                        break;
+                    case 'about':
+                        ipcRenderer.send('close-window', 'about');
+                        break;
+                    case 'code-editor':
+                    case 'code.editor':
+                        closeWindow('code.editor');
+                        break;
+                    case 'profiles':
+                    case 'profiles-manager':
+                    case 'profile-manager':
+                    case 'manager':
+                        closeWindow('profiles');
+                        break;
+                    case 'prefs':
+                    case 'options':
+                    case 'preferences':
+                        closeWindow('prefs');
+                        break;
+                    case 'immortal':
+                    case 'immortals':
+                        closeWindow('immortal');
+                        break;
+                    case 'history':
+                    case 'command-history':
+                        closeWindow('history');
+                        break;
+                    case 'log-viewer':
+                    case 'logs':
+                    case 'log.viewer':
+                        closeWindow('log.viewer');
+                        break;
+                    default:
+                        if (!window)
+                            ipcRenderer.send('remove-client', getId());
+                        else if (ipcRenderer.sendSync('is-client-name', window))
+                            ipcRenderer.send('remove-client', ipcRenderer.sendSync('get-client-id', window));
+                        else
+                            ipcRenderer.send('remove-client', window);
+                        break;
+                }
+            };
 
             window.readClipboardHTML = () => { return clipboard.readHTML('selection') || clipboard.readHTML() || ''; };
             client.readClipboardHTML = window.readClipboardHTML;

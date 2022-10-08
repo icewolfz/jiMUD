@@ -3022,10 +3022,12 @@ export class Input extends EventEmitter {
                             return e.replace(/\\\'/g, '\'');
                         });
                     });
-                if (args.length === 0 || args.length > 2)
+                if (args.length > 2)
                     throw new Error('Invalid syntax use ' + cmdChar + '\x1b[4mcl\x1b[0;-11;-12mose');
+                else if (args.length === 0)
+                    (<any>this.client).closeWindow();
                 else
-                    this.client.emit('window', this.stripQuotes(this.parseInline(args[0])), 'close');
+                    (<any>this.client).closeWindow(this.stripQuotes(this.parseInline(args[0])));
                 return null;
             case 'id':
                 this.client.echo('Client ID: ' + getId(), -7, -8, true, true);

@@ -50,6 +50,8 @@ this.print(name + ' says ' + message);
 
 ## Basic function list
 
+- `client.closeWindow(name|id)` Close an open window or tab
+  - `name|id` if no name or id will attempt to close current tab/window, otherwise will attempt to close named window or by id
 - `client.beep()` play system beep sound
 - `client.readClipboard()` read text from clipboard, can also access from window.readClipboard()
 - `client.writeClipboard(text, html)` write text to clipboard, can also access from window.writeClipboard(text), html argument is optional, allows formatted html markup of text for applications that support pasting html
