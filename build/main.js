@@ -31,10 +31,7 @@ if (isFileSync(path.join(app.getPath('userData'), 'argv.json'))) {
         argv = process.argv;
     }
     //remove file as no longer needed
-    fs.unlink(path.join(app.getPath('userData'), 'argv.json'), err => {
-        if (err)
-            logError(err);
-    });
+    fs.unlink(path.join(app.getPath('userData'), 'argv.json'), logError);
 }
 else //not found use native
     argv = process.argv;
@@ -131,8 +128,16 @@ let _characters;
 let tray = null;
 const stateMap = new Map();
 
-process.on('uncaughtException', (err) => {
-    logError(err);
+process.on('uncaughtException', logError);
+process.on('unhandledRejection', (reason, promise) => {
+    logError(reason);
+    if (global.debug || _settings.enableDebug)
+        console.error(promise);
+});
+
+process.on('warning', warning => {
+    if (global.debug || _settings.enableDebug)
+        console.warning(warning);
 });
 
 function addInputContext(window, spellcheck) {
@@ -371,7 +376,7 @@ function createWindow(options) {
 
         childWindow.on('closed', e => {
             if (window && !window.isDestroyed())
-                executeScriptClient(`if(typeof childClosed === "function") childClosed('${file}', '${url}', '${frameName}');`, window, true);
+                executeScriptClient(`if(typeof childClosed === "function") childClosed('${file}', '${url}', '${frameName}');`, window, true).catch(logError);
             idMap.delete(childWindow);
             stateMap.delete(childWindow);
         });
@@ -454,7 +459,7 @@ function createWindow(options) {
             return;
         e.preventDefault();
         //for what ever reason electron does not seem to work well with await, it sill continues to execute async instead of waiting when using ipcrender
-        _close = await canCloseAllClients(getWindowId(window));
+        _close = await canCloseAllClients(getWindowId(window)).catch(logError);
         if (_close) {
             states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
             stateMap.set(window, states[options.file]);
@@ -862,10 +867,7 @@ if (!argv.eo && !argv.nci && isFileSync(path.join(app.getPath('userData'), 'char
             _characters.save();
         }
         // Rename the file old file as no longer needed just in case
-        fs.rename(path.join(app.getPath('userData'), 'characters.json'), path.join(app.getPath('userData'), 'characters.json.bak'), (err) => {
-            if (err)
-                logError(err);
-        });
+        fs.rename(path.join(app.getPath('userData'), 'characters.json'), path.join(app.getPath('userData'), 'characters.json.bak'), logError);
     }
     catch (e) {
         logError(e);
@@ -1591,11 +1593,11 @@ function showContext(event, template, options, show, close) {
 ipcMain.on('trash-item', (event, file) => {
     if (!file)
         return;
-    shell.trashItem(file).catch(err => logError(err));
+    shell.trashItem(file).catch(logError);
 });
 
 ipcMain.on('trash-item-sync', async (event, file) => {
-    await shell.trashItem(file).catch(err => logError(err));
+    await shell.trashItem(file).catch(logError);
     event.returnValue = true;
 });
 
@@ -2342,7 +2344,7 @@ function createClient(options) {
 
         childWindow.on('closed', () => {
             if (view && view.webContents && !view.webContents.isDestroyed()) {
-                executeScript(`if(typeof childClosed === "function") childClosed('${file}', '${url}', '${frameName}');`, view, true);
+                executeScript(`if(typeof childClosed === "function") childClosed('${file}', '${url}', '${frameName}');`, view, true).catch(logError);
                 //remove remove from list
                 const id = getClientId(view);
                 if (clients[id]) {
@@ -2361,14 +2363,14 @@ function createClient(options) {
         childWindow.on('close', async e => {
             if (_close) return;
             e.preventDefault();
-            _close = await executeScript(`if(typeof closeable === "function") closeable(); else (function() { return true; })();`, childWindow);
+            _close = await executeScript(`if(typeof closeable === "function") closeable(); else (function() { return true; })();`, childWindow).catch(logError);
             if (!_close) return;
             const id = getClientId(view);
             if (clients[id]) {
                 const index = getChildWindowIndex(clients[id].windows, childWindow);
                 if (index !== -1 && clients[id].windows[index].details.options.persistent) {
                     e.preventDefault();
-                    executeScript('if(typeof closeHidden !== "function" || closeHidden(true)) window.hide();', childWindow);
+                    executeScript('if(typeof closeHidden !== "function" || closeHidden(true)) window.hide();', childWindow).catch(logError);
                     clients[id].states[file] = states[file];
                     return;
                 }
@@ -2506,7 +2508,7 @@ function setClientWindowsParent(id, parent, oldParent) {
 function clientsChanged() {
     const windowLength = Object.keys(windows).length;
     for (clientId in clients) {
-        if (!Object.prototype.hasOwnProperty.call(clients, clientId))
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId) || !clients[clientId].view.webContents || clients[clientId].view.webContents.isDestroyed())
             continue;
         clients[clientId].view.webContents.send('clients-changed', windowLength, windows[getWindowId(clients[clientId].parent)].clients.length);
     }
@@ -2712,7 +2714,7 @@ function initializeChildWindow(window, link, details, noClose) {
         if (noClose || !details || !details.options) return;
         const parent = details.options.parent;
         if (parent && !parent.isDestroyed() && parent.webContents && !parent.webContents.isDestroyed())
-            executeScript(`if(typeof childClosed === "function") childClosed('${file}', '${link}', '${details.frameName}');`, parent, true).catch(err => logError(err));;
+            executeScript(`if(typeof childClosed === "function") childClosed('${file}', '${link}', '${details.frameName}');`, parent, true).catch(logError);
     });
 
     window.on('close', e => {
@@ -2739,18 +2741,9 @@ function getWindowClientId(window) {
 
 function executeCloseHooks(window) {
     if (!window) return;
-    executeScript('if(typeof closing === "function") closing();', window).catch(err => {
-        if (err)
-            logError(err);
-    });
-    executeScript('if(typeof closed === "function") closed();', window).catch(err => {
-        if (err)
-            logError(err);
-    });
-    executeScript('if(typeof closeHidden === "function") closeHidden();', window).catch(err => {
-        if (err)
-            logError(err);
-    });
+    executeScript('if(typeof closing === "function") closing();', window).catch(logError);
+    executeScript('if(typeof closed === "function") closed();', window).catch(logError);
+    executeScript('if(typeof closeHidden === "function") closeHidden();', window).catch(logError);
 }
 
 function updateIcon(window) {
@@ -2915,6 +2908,7 @@ function isFileSync(aPath) {
 //#endregion
 
 function logError(err, skipClient) {
+    if (!err) err = 'Unknown error';
     var msg = '';
     if (global.debug || _settings.enableDebug)
         console.error(err);
@@ -3717,7 +3711,7 @@ async function saveWindowLayout(file, locked) {
                 clients: windows[id].clients,
                 current: windows[id].current,
                 //get any custom data from window
-                data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].window).catch(err => logError(err)),
+                data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].window).catch(logError),
                 state: saveWindowState(windows[id].window, stateMap.get(windows[id].window)),
                 menubar: windows[id].menubar ? true : false,
                 options: windows[id].options,
@@ -3728,7 +3722,7 @@ async function saveWindowLayout(file, locked) {
                 wData.push({
                     options: windows[id].windows[idx].details.options.features,
                     state: saveWindowState(windows[id].windows[idx].window, stateMap.get(windows[id].windows[idx].window)),
-                    data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].windows[idx].window).catch(err => logError(err)),
+                    data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].windows[idx].window).catch(logError),
                 });
             }
             data.windows.push(wData);
@@ -3748,7 +3742,7 @@ async function saveWindowLayout(file, locked) {
                     devTools: clients[id].view.webContents.isDevToolsOpened()
                 },
                 //get any custom data from window
-                data: await executeScript('if(typeof saveWindow === "function") saveWindow()', clients[id].view).catch(err => logError(err)),
+                data: await executeScript('if(typeof saveWindow === "function") saveWindow()', clients[id].view).catch(logError),
                 states: clients[id].states,
                 name: clients[id].name
             }
@@ -3756,14 +3750,14 @@ async function saveWindowLayout(file, locked) {
             for (var idx = 0; idx < wl; idx++) {
                 const window = clients[id].windows[idx].window;
                 //for what ever reason skip the window, eg chat window no longer needed for what ever reason
-                if (await executeScript(`if(typeof skipSaveWindow === "function") skipSaveWindow(); else (function() { return false; })();`, window).catch(err => logError(err)))
+                if (await executeScript(`if(typeof skipSaveWindow === "function") skipSaveWindow(); else (function() { return false; })();`, window).catch(logError))
                     continue;
                 const wData = {
                     client: getClientId(clients[id].view), //use function to ensure proper id data type
                     state: saveWindowState(window, stateMap.get(window)),
                     details: { url: clients[id].windows[idx].details.url, options: clients[id].windows[idx].details.options.features },
                     //get any custom data from window
-                    data: await executeScript('if(typeof saveWindow === "function") saveWindow()', window).catch(err => logError(err))
+                    data: await executeScript('if(typeof saveWindow === "function") saveWindow()', window).catch(logError)
                 }
                 for (key in wData.state) {
                     if (!Object.prototype.hasOwnProperty.call(wData.state, key) || key === 'alwaysOnTop')
@@ -3906,19 +3900,25 @@ function loadWindowLayout(file, charData) {
 }
 
 function saveWindowState(window, previous) {
-    if (!window || window.isDestroyed())
-        return previous;
-    return {
-        bounds: previous && previous.fullscreen ? previous.bounds : window.getNormalBounds(),
-        fullscreen: previous ? previous.fullscreen : window.isFullScreen(),
-        maximized: previous ? previous.maximized : window.isMaximized(),
-        minimized: previous ? previous.minimized : window.isMinimized(),
-        devTools: global.debug ? false : window.webContents.isDevToolsOpened(),
-        visible: window.isVisible(),
-        normal: window.isNormal(),
-        enabled: window.isEnabled(),
-        alwaysOnTop: window.isAlwaysOnTop()
-    };
+    try {
+        if (!window || window.isDestroyed())
+            return previous;
+        return {
+            bounds: previous && previous.fullscreen ? previous.bounds : window.getNormalBounds(),
+            fullscreen: previous ? previous.fullscreen : window.isFullScreen(),
+            maximized: previous ? previous.maximized : window.isMaximized(),
+            minimized: previous ? previous.minimized : window.isMinimized(),
+            devTools: global.debug ? false : window.webContents.isDevToolsOpened(),
+            visible: window.isVisible(),
+            normal: window.isNormal(),
+            enabled: window.isEnabled(),
+            alwaysOnTop: window.isAlwaysOnTop()
+        };
+    }
+    catch (err) {
+        logError(err);
+    }
+    return previous;
 }
 
 function restoreWindowState(window, state, showType) {
