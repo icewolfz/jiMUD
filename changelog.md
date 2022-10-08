@@ -34,11 +34,16 @@
   - Add [#WINDOW](docs/commands.md) close and new argument support
   - Add [#CLOSE](docs/commands.md) close an open window
   - Add [#ALL](docs/commands.md) send commands to all client windows as if sent from command line
-  - Add [#CONNECTION](docs/commands.md) send commands to all client windows as if sent from command line
+  - Add [#TAB](docs/commands.md) Create a new client tab in current window
+  - Add [#NAME](docs/commands.md) Set name for current tab or client id
   - Add [client.sendAll](docs/scripting.md) for scripting to send text to mud for all client windows
   - Add [client.sendAllRaw](docs/scripting.md) for scripting to send raw text to mud for all client windows
   - Add [client.sendAllCommand](docs/scripting.md) for scripting to send command to all client windows
   - Add [client.sendAllBackground](docs/scripting.md) for scripting to send command to all client windows
+  - Add [client.sendTo](docs/scripting.md) for scripting to send text to mud for all client windows
+  - Add [client.sendToRaw](docs/scripting.md) for scripting to send raw text to mud for all client windows
+  - Add [client.sendToCommand](docs/scripting.md) for scripting to send command to all client windows
+  - Add [client.sendToBackground](docs/scripting.md) for scripting to send command to all client windows  
 - **Fixed:**
   - Fixed a bug in parsing #command arguments and quotes
   - Immortal tools: Fixed issue with multiple events not correctly working

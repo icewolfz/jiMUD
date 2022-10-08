@@ -238,9 +238,6 @@ Display text to the screen, and the display text will not fire triggers
 <u>#COMM</u>ENT *text*
 >Does nothing, allows commenting scripts
 
-<u>#CONN</u>TION *character or id*
->Create a new client connection in current window
-
 <u>#CONNECT</u>TIME
 >display time since connected
 
@@ -258,6 +255,10 @@ Display text to the screen, and the display text will not fire triggers
 
 <u>#MAT</u>H name value
 >Set value to variable named name
+
+<u>#NA</u>ME *name id*
+>Set the name for the current window or for the window id
+>If no arguments, displays current window name
 
 <u>#NO</u>OP *text*
 >Does nothing, but will expand arguments
@@ -296,11 +297,13 @@ Display text to the screen, and the display text will not fire triggers
 > Pause current block for a number of milliseconds
 
 <u>#WIN</u>DOW name *close*
->Open or show named window, supported names: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills, who
+<u>#WIN</u>DOW name *character or id*
+>Open or show named window or create new window with name, supported names: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills, who
 >Pass close as 3rd argument will close the window if open and possible
 
-<u>#WIN</u>DOW new *character or id*
+<u>#WIN</u>DOW new *character or id* *name*
 >Create a new client window using the optional character title or id
+>If character or id argument is 0 it will create just a new window with name
 
 [<u>#VE</u>RSION](commands/VERSION.md)
 >Display current jiMUD version information

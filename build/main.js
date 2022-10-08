@@ -119,6 +119,7 @@ let _layout = parseTemplate(path.join('{data}', 'window.layout'));
 let clients = {}
 let windows = {};
 let states = {};
+let names = {};
 let focusedClient = 0;
 let focusedWindow = 0;
 let _clientID = 0;
@@ -402,6 +403,8 @@ function createWindow(options) {
                 window.removeBrowserView(clients[id].view);
             idMap.delete(clients[id].view);
             clients[id].view.webContents.destroy();
+            if (clients[id].name)
+                delete names[clients[id].name];
             clients[id] = null;
             delete clients[id];
         }
@@ -1235,7 +1238,6 @@ ipcMain.on('set-global', (event, key, value) => {
     }
 });
 
-
 ipcMain.on('get-setting', (event, key) => {
     if (!_settings) {
         event.returnValue = null;
@@ -1746,12 +1748,12 @@ ipcMain.on('window-info', (event, info, id, ...args) => {
 });
 
 //#region Client creation, docking, and related management
-ipcMain.on('new-client', (event, connection, data) => {
-    newConnection(BrowserWindow.fromWebContents(event.sender), connection, data);
+ipcMain.on('new-client', (event, connection, data, name) => {
+    newConnection(BrowserWindow.fromWebContents(event.sender), connection, data, name);
 });
 
-ipcMain.on('new-window', (event, connection, data) => {
-    newClientWindow(BrowserWindow.fromWebContents(event.sender), connection, data);
+ipcMain.on('new-window', (event, connection, data, name) => {
+    newClientWindow(BrowserWindow.fromWebContents(event.sender), connection, data, name);
 });
 
 ipcMain.on('switch-client', (event, id, offset) => {
@@ -1943,6 +1945,8 @@ ipcMain.on('position-client', (event, id, options) => {
 });
 
 ipcMain.on('focus-client', (event, id, window) => {
+    if (typeof id === 'string')
+        id = names[id];
     if (!clients[id]) return;
     if (window)
         restoreWindowState(clients[id].parent, stateMap.get(clients[id].parent), 2);
@@ -1975,6 +1979,8 @@ ipcMain.on('close-window', (event, id) => {
 });
 
 ipcMain.on('execute-client', (event, id, code) => {
+    if (typeof id === 'string')
+        id = names[id];
     if (clients[id])
         executeScript(code, clients[id].view);
 });
@@ -2110,8 +2116,40 @@ ipcMain.on('reload-options', (events, preferences, clientId) => {
     }
 });
 
-ipcMain.on('get-client-id', event => {
-    event.returnValue = getClientId(browserViewFromContents(event.sender));
+ipcMain.on('get-client-id', (event, name) => {
+    if (name)
+        event.returnValue = names[name];
+    else
+        event.returnValue = getClientId(browserViewFromContents(event.sender));
+});
+
+ipcMain.on('get-client-name', (event, id) => {
+    if (!id)
+        id = getClientId(browserViewFromContents(event.sender));
+    if (clients[id])
+        event.returnValue = clients[id].name;
+    else
+        event.returnValue = null;
+});
+
+ipcMain.on('set-client-name', (event, name, id) => {
+    if (!id)
+        id = getClientId(browserViewFromContents(event.sender));
+    if (clients[id]) {
+        //if already named remove name from old window
+        if (names[name] && clients[names[name]])
+            delete clients[names[name]].name;
+        clients[id].name = name;
+        names[name] = id;
+    }
+});
+
+ipcMain.on('is-client-name', (event, id) => {
+    event.returnValue = names[id] ? true : false
+});
+
+ipcMain.on('is-client', (event, id) => {
+    event.returnValue = names[id] || clients[id] ? true : false
 });
 
 ipcMain.on('get-window-id', event => {
@@ -2375,11 +2413,16 @@ async function removeClient(id) {
     //dont close
     if (cancel !== true)
         return;
-    //close client windows first incase they need parent window set
-    closeClientWindows(id);
     const window = client.parent;
     const windowId = getWindowId(window);
     const idx = windows[windowId].clients.indexOf(id);
+    //last client so close window instead of removing
+    if (windows[windowId].clients.length === 1 && idx !== -1) {
+        windows[windowId].window.close();
+        return;
+    }
+    //close client windows first incase they need parent window set
+    closeClientWindows(id);
     windows[windowId].clients.splice(idx, 1);
     if (windows[windowId].current === id) {
         if (idx >= windows[windowId].clients.length)
@@ -2393,6 +2436,8 @@ async function removeClient(id) {
     //close the view
     executeCloseHooks(client.view);
     client.view.webContents.destroy();
+    if (clients[id].name)
+        delete names[clients[id].name];
     clients[id] = null;
     delete clients[id];
     window.webContents.send('removed-client', id);
@@ -3323,6 +3368,9 @@ function focusClient(clientId, focusWindow) {
         client.parent.focus();
         client.parent.webContents.focus();
     }
+    const windowId = getWindowId(client.parent);
+    if(windows[windowId].current !== clientId)
+        client.parent.webContents.send('switch-client', clientId);
     client.view.webContents.focus();
 }
 
@@ -3420,7 +3468,7 @@ function newConnectionFromCharacterId(id, window) {
     }
 }
 
-function newConnection(window, connection, data) {
+function newConnection(window, connection, data, name) {
     let windowId = getWindowId(window);
     let id;
     if (data)
@@ -3432,6 +3480,10 @@ function newConnection(window, connection, data) {
     windows[windowId].clients.push(id);
     windows[windowId].current = id;
     clients[id].parent = window;
+    if (name && name.length !== 0) {
+        clients[id].name = name;
+        names[name] = id;
+    }
     //did-navigate //fires before dom-ready but view seems to still not be loaded and delayed
     //did-finish-load //slowest but ensures the view is in the window and visible before firing
     window.addBrowserView(clients[id].view);
@@ -3446,7 +3498,7 @@ function newConnection(window, connection, data) {
     });
 }
 
-async function newClientWindow(caller, connection, data) {
+async function newClientWindow(caller, connection, data, name) {
     if (caller) {
         //save the current states so it has the latest for new window
         states['manager.html'] = saveWindowState(caller, stateMap.get(caller) || states['manager.html']);
@@ -3478,6 +3530,10 @@ async function newClientWindow(caller, connection, data) {
             window.clients.push(id);
             window.current = id;
             clients[id].parent = window.window;
+            if (d === 0 && name && name.length !== 0) {
+                clients[id].name = name;
+                names[name] = id;
+            }
         }
         window.window.webContents.once('ready-to-show', () => {
             for (var c = 0, cl = window.clients.length; c < cl; c++) {
@@ -3511,6 +3567,10 @@ async function newClientWindow(caller, connection, data) {
         window.clients.push(id);
         window.current = id;
         clients[id].parent = window.window;
+        if (name && name.length !== 0) {
+            clients[id].name = name;
+            names[name] = id;
+        }
         window.window.addBrowserView(clients[id].view);
         window.window.setTopBrowserView(clients[id].view);
         clients[id].view.webContents.once('dom-ready', () => {
@@ -3622,6 +3682,7 @@ async function saveWindowLayout(file, locked) {
             logError(e);
             return;
         }
+        data.names = names;
         data.states = states;
     }
     else {
@@ -3632,7 +3693,8 @@ async function saveWindowLayout(file, locked) {
             focusedWindow: focusedWindow,
             windows: [],
             clients: [],
-            states: states
+            states: states,
+            names: names
         }
         //save windows
         //{ window: window, clients: [], current: 0 }
@@ -3731,6 +3793,7 @@ function loadWindowLayout(file, charData) {
         return false;
     }
     states = data.states || {};
+    names = data.names || {};
     //no windows so for what ever reason so just start a clean client
     if (data.windows.length === 0) {
         if (global.editorOnly)

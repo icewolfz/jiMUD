@@ -1783,7 +1783,11 @@
                     document.getElementById('btnTriggers').classList.remove('on');
             });
 
-            client.on('connection', char => {
+            client.on('set-name', (name, id) => {
+                setName(name, id);
+            });
+
+            client.on('connection', (char, name) => {
                 if (char) {
                     char = ipcRenderer.sendSync('get-character-from-id', char);
                     if (!char) {
@@ -1795,13 +1799,13 @@
                         settings: parseTemplate(char.Preferences),
                         map: parseTemplate(char.Map),
                         port: char.Port
-                    });
+                    }, name);
                 }
                 else
-                    ipcRenderer.send('new-client');
+                    ipcRenderer.send('new-client', null, null, name);
             });
 
-            client.on('window', (window, args) => {
+            client.on('window', (window, args, name) => {
                 switch (window) {
                     case 'mapper':
                     case 'editor':
@@ -1868,7 +1872,7 @@
                             openWindow('log.viewer');
                         break;
                     case 'new':
-                        if (args) {
+                        if (args && args !== '0') {
                             char = ipcRenderer.sendSync('get-character-from-id', args);
                             if (!char) {
                                 throw new Error('Character not found');
@@ -1879,13 +1883,35 @@
                                 settings: parseTemplate(char.Preferences),
                                 map: parseTemplate(char.Map),
                                 port: char.Port
-                            });
+                            }, name);
                         }
                         else
-                            ipcRenderer.send('new-window', null, args);
-                        break
+                            ipcRenderer.send('new-window', null, null, name);
+                        break;
                     default:
-                        throw new Error('Invalid window name must be: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills, or new');
+                        if (ipcRenderer.sendSync('is-client-name', window)) {
+                            window = ipcRenderer.sendSync('get-client-id', window);
+                            if (args === 'close')
+                                ipcRenderer.send('remove-client', window);
+                            else
+                                ipcRenderer.send('focus-client', window, true);
+                        }
+                        else if (args) {
+                            char = ipcRenderer.sendSync('get-character-from-id', args);
+                            if (!char) {
+                                throw new Error('Character not found');
+                                return;
+                            }
+                            ipcRenderer.send('new-window', null, {
+                                characterId: char.ID,
+                                settings: parseTemplate(char.Preferences),
+                                map: parseTemplate(char.Map),
+                                port: char.Port
+                            }, window);
+                        }
+                        else
+                            ipcRenderer.send('new-window', null, null, window);
+                        break;
                 }
             });
             //xterm set title support
@@ -2463,10 +2489,17 @@
             };
             client.readClipboard = window.readClipboard;
             client.writeClipboard = window.writeClipboard;
-            client.sendAll = (text, echo,) => ipcRenderer.send('execute-all-clients', `client.send(${JSON.stringify(text)},${echo});`);
+            client.sendAll = (text, echo) => ipcRenderer.send('execute-all-clients', `client.send(${JSON.stringify(text)},${echo});`);
             client.sendAllRaw = (text) => ipcRenderer.send('execute-all-clients', `client.raw(${JSON.stringify(text)});`);
             client.sendAllCommand = (text, noEcho, comments) => ipcRenderer.send('execute-all-clients', `client.sendCommand(${JSON.stringify(text)},${noEcho}, ${comments});`);
             client.sendAllBackground = (text, noEcho, comments) => ipcRenderer.send('execute-all-clients', `client.sendBackground(${JSON.stringify(text)},${noEcho}, ${comments});`);
+
+
+            client.sendTo = (id, text, echo) => ipcRenderer.send('execute-client', id, `client.send(${JSON.stringify(text)},${echo});`);
+            client.sendToRaw = (id, text) => ipcRenderer.send('execute-client', id, `client.raw(${JSON.stringify(text)});`);
+            client.sendToCommand = (id, text, noEcho, comments) => ipcRenderer.send('execute-client', id, `client.sendCommand(${JSON.stringify(text)},${noEcho}, ${comments});`);
+            client.sendToBackground = (id, text, noEcho, comments) => ipcRenderer.send('execute-client', id, `client.sendBackground(${JSON.stringify(text)},${noEcho}, ${comments});`);
+
             window.readClipboardHTML = () => { return clipboard.readHTML('selection') || clipboard.readHTML() || ''; };
             client.readClipboardHTML = window.readClipboardHTML;
 
@@ -3350,7 +3383,7 @@
                     continue;
                 let width = 800;
                 let height = 600;
-                if(!all) //do not recurse call as all already clears this
+                if (!all) //do not recurse call as all already clears this
                     ipcRenderer.sendSync('reset-windows', getId());
                 switch (_window) {
                     //x,y,width,height
@@ -3969,6 +4002,15 @@
             if (!_id)
                 _id = ipcRenderer.sendSync('get-client-id') || 0;
             return _id;
+        }
+        //#endregion
+        //#region Name functions
+        function setName(name, id) {
+            ipcRenderer.send('set-client-name', name, id || getId());
+        }
+
+        function getName() {
+            return ipcRenderer.sendSync('get-client-name', getId());
         }
         //#endregion
 

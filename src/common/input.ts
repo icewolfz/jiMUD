@@ -14,6 +14,8 @@ import { SettingList } from './settings';
 import { getAnsiColorCode, getColorCode, isMXPColor, getAnsiCode } from './ansi';
 
 declare let getCharacterNotes;
+declare let getId;
+declare let getName;
 
 /**
  * MATHJS expression engine
@@ -3024,6 +3026,9 @@ export class Input extends EventEmitter {
                 else
                     this.client.emit('window', this.stripQuotes(this.parseInline(args[0])), 'close');
                 return null;
+            case 'id':
+                this.client.echo('Client ID: ' + getId(), -7, -8, true, true);
+                return null
             case 'window':
             case 'win':
                 if (this.client.options.parseDoubleQuotes)
@@ -3038,8 +3043,10 @@ export class Input extends EventEmitter {
                             return e.replace(/\\\'/g, '\'');
                         });
                     });
-                if (args.length === 0 || args.length > 2)
+                if (args.length === 0 || args.length > 3)
                     throw new Error('Invalid syntax use ' + cmdChar + '\x1b[4mwin\x1b[0;-11;-12mdow name \x1b[3mclose\x1b[0;-11;-12m or ' + cmdChar + '\x1b[4mwin\x1b[0;-11;-12mdow new \x1b[3mcharacter\x1b[0;-11;-12m');
+                else if (args.length === 3)
+                    this.client.emit('window', this.stripQuotes(this.parseInline(args[0])), this.stripQuotes(this.parseInline(args[1])), this.stripQuotes(this.parseInline(args.slice(2).join(' '))));
                 else if (args.length === 1)
                     this.client.emit('window', this.stripQuotes(this.parseInline(args[0])));
                 else
@@ -3060,16 +3067,53 @@ export class Input extends EventEmitter {
                             return e.replace(/\\\'/g, '\'');
                         });
                     });
-                if (args.length > 1) {
+                if (args.length > 2) {
                     if (fun.toLowerCase() === 'tab')
                         throw new Error('Invalid syntax use ' + cmdChar + 'tab \x1b[3mcharacter or id');
                     else
                         throw new Error('Invalid syntax use ' + cmdChar + '\x1b[4mconn\x1b[0;-11;-12mection \x1b[3mcharacter or id');
                 }
+                else if (args.length === 2)
+                    this.client.emit('connection', this.stripQuotes(this.parseInline(args[0])), this.stripQuotes(this.parseInline(args[1])));
                 else if (args.length === 1)
                     this.client.emit('connection', this.stripQuotes(this.parseInline(args[0])));
                 else
                     this.client.emit('connection');
+                return null;
+            case 'na':
+            case 'name':
+                if (this.client.options.parseDoubleQuotes)
+                    args.forEach((a) => {
+                        return a.replace(/^\"(.*)\"$/g, (v, e, w) => {
+                            return e.replace(/\\\"/g, '"');
+                        });
+                    });
+                if (this.client.options.parseSingleQuotes)
+                    args.forEach((a) => {
+                        return a.replace(/^\'(.*)\'$/g, (v, e, w) => {
+                            return e.replace(/\\\'/g, '\'');
+                        });
+                    });
+                if (args.length > 2)
+                    throw new Error('Invalid syntax use ' + cmdChar + '\x1b[4mna\x1b[0;-11;-12mme name \x1b[3mid');
+                else if(args.length === 0) {
+                    if(getName())
+                        this.client.echo('Client name: ' + getName(), -7, -8, true, true);
+                    else
+                        this.client.echo('Client name: Not set', -7, -8, true, true);
+                }
+                else if (args.length === 2) {
+                    i = parseInt(this.stripQuotes(this.parseInline(args[1])), 10);
+                    if (isNaN(i))
+                        throw new Error('Invalid id \'' + args[1] + '\' for name');
+                    args[0] = this.stripQuotes(this.parseInline(args[0]));
+                    this.client.emit('set-name', args[0], i);
+                    this.client.echo(`Client ${i} set to ${args[0]}`, -7, -8, true, true);
+                }
+                else {
+                    this.client.emit('set-name', this.stripQuotes(this.parseInline(args[0])));
+                    this.client.echo('Client name set to ' + getName(), -7, -8, true, true);
+                }
                 return null;
             case 'all':
                 if (args.length === 0)
@@ -3090,7 +3134,7 @@ export class Input extends EventEmitter {
             case 'raisede':
                 if (args.length < 2)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'raisede\x1b[0;-11;-12mlayed milliseconds name or \x1b[4m' + cmdChar + 'raisede\x1b[0;-11;-12mlayed milliseconds name arguments');
-                i = parseInt(this.stripQuotes(args[0]), 10);
+                i = parseInt(this.stripQuotes(this.parseInline(args[0])), 10);
                 if (isNaN(i))
                     throw new Error('Invalid number \'' + args[0] + '\' for raisedelayed');
                 if (i < 1)

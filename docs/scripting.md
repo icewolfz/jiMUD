@@ -59,9 +59,16 @@ this.print(name + ' says ' + message);
   - `echo` echo text to display
 - `client.sendAll(text, echo?)` send text directly to the mud, telnet code IAC is escaped, note you should always try and append a new line as most muds require it to process any text to all clients
   - `text` the text to send
+  - `echo` echo text to display
+- `client.sendTo(name|id, text, echo?)` send text directly to the mud, telnet code IAC is escaped, note you should always try and append a new line as most muds require it to process any text to all clients
+  - `name|id` the client name or id of the mud to send to
+  - `text` the text to send
   - `echo` echo text to display  
 - `client.sendRaw(text)` sends raw text directly to the mud as is
 - `client.sendAllRaw(text)` sends raw text directly to the mud as is for all clients
+- `client.sendToRaw(name|id, text)` sends raw text directly to the client name or id
+  - `name|id` the client name or id of the mud to send to
+  - `text` the text to send
 - `client.sendCommand(text, noEcho?, comments?)` sends a command as if sent from the command line
   - `text` the text to send
   - `noEcho` do not echo text to screen
@@ -70,6 +77,11 @@ this.print(name + ' says ' + message);
   - `text` the text to send
   - `noEcho` do not echo text to screen
   - `comments` parse inline and block comments
+- `client.sendToCommand(name|id, text, noEcho?, comments?)` send a command to all client windows
+  - `name|id` the client name or id of the mud to send to
+  - `text` the text to send
+  - `noEcho` do not echo text to screen
+  - `comments` parse inline and block comments  
 - `client.sendBackground(text, noEcho?, comments?)` sends a command as if sent from the command line with out modifying the current command line
   - `text` the text to send
   - `noEcho` do not echo text to screen
@@ -77,7 +89,12 @@ this.print(name + ' says ' + message);
 - `client.sendAllBackground(text, noEcho?, comments?)` send a command to all client windows with out modifying current command line
   - `text` the text to send
   - `noEcho` do not echo text to screen
-  - `comments` parse inline and block comments  
+  - `comments` parse inline and block comments
+- `client.sendToBackground(name|id, text, noEcho?, comments?)` send a command to all client windows with out modifying current command line
+  - `name|id` the client name or id of the mud to send to
+  - `text` the text to send
+  - `noEcho` do not echo text to screen
+  - `comments` parse inline and block comments    
 - `client.print(text, newline)` print text to screen, newline argument is optional and controls weather to start a newline if last line was a fragment/prompt
 - `client.echo(text, fore, back, newline, forceline)` echo text to the screen
   - `test` the text to echo
