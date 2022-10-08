@@ -2132,6 +2132,17 @@ ipcMain.on('get-client-name', (event, id) => {
         event.returnValue = null;
 });
 
+ipcMain.on('clear-client-name', (event, id) => {
+    if (!id)
+        id = getClientId(browserViewFromContents(event.sender));
+    else if (typeof id === 'string')
+        id = names[id];        
+    if (clients[id] && clients[id].name) {
+        delete names[clients[id].name];
+        delete clients[id].name;
+    }
+});
+
 ipcMain.on('set-client-name', (event, name, id) => {
     if (!id)
         id = getClientId(browserViewFromContents(event.sender));

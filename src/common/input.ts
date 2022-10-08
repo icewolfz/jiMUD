@@ -16,6 +16,7 @@ import { getAnsiColorCode, getColorCode, isMXPColor, getAnsiCode } from './ansi'
 declare let getCharacterNotes;
 declare let getId;
 declare let getName;
+declare let clearName;
 
 /**
  * MATHJS expression engine
@@ -3115,6 +3116,36 @@ export class Input extends EventEmitter {
                     this.client.echo('Client name set to ' + getName(), -7, -8, true, true);
                 }
                 return null;
+            case 'clearna':
+            case 'clearname':
+                if (this.client.options.parseDoubleQuotes)
+                    args.forEach((a) => {
+                        return a.replace(/^\"(.*)\"$/g, (v, e, w) => {
+                            return e.replace(/\\\"/g, '"');
+                        });
+                    });
+                if (this.client.options.parseSingleQuotes)
+                    args.forEach((a) => {
+                        return a.replace(/^\'(.*)\'$/g, (v, e, w) => {
+                            return e.replace(/\\\'/g, '\'');
+                        });
+                    });
+                if (args.length > 2)
+                    throw new Error('Invalid syntax use ' + cmdChar + '\x1b[4mclearna\x1b[0;-11;-12mme \x1b[3mname or id');
+                else if (args.length === 0) {
+                    clearName();
+                    this.client.echo('Client name cleared', -7, -8, true, true);
+                }
+                else {
+                    name = this.parseInline(args[0]);
+                    i = parseInt(name, 10);
+                    if (isNaN(i))
+                        clearName(this.stripQuotes(name));
+                    else
+                        clearName(i);
+                    this.client.echo('Client ' + name + ' cleared', -7, -8, true, true);
+                }
+                return null;
             case 'all':
                 if (args.length === 0)
                     throw new Error('Invalid syntax use ' + cmdChar + 'all {commands}');
@@ -3122,8 +3153,8 @@ export class Input extends EventEmitter {
                     args = this.parseInline(args[0].substr(1, args[0].length - 2));
                 else
                     args = args.join(' ');
-                    if (args.length === 0)
-                        throw new Error('Missing commands argument');
+                if (args.length === 0)
+                    throw new Error('Missing commands argument');
                 (<any>this.client).sendAllBackground(this.parseInline(this.stripQuotes(args)), null, this.client.options.allowCommentsFromCommand);
                 return null;
             case 'to':

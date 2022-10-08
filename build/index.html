@@ -4012,6 +4012,10 @@
         function getName() {
             return ipcRenderer.sendSync('get-client-name', getId());
         }
+
+        function clearName(id) {
+            ipcRenderer.send('clear-client-name', id || getId());
+        }
         //#endregion
 
         //#region Close hooks

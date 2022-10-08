@@ -229,6 +229,9 @@ Display text to the screen, and the display text will not fire triggers
 <u>#CHAR</u>ACTER
 >Send current character name to the mud, without echoing to the screen
 
+<u>#CLEARNA</u>ME *name or id*
+>Clear client current or named client's name
+
 <u>#CL</u>OSE name
 >Close an open window
 
