@@ -1806,7 +1806,13 @@ ipcMain.on('remove-other-clients', (event, id) => {
 });
 
 ipcMain.on('goto-client', (event, id, action) => {
-    const window = BrowserWindow.fromWebContents(event.sender);
+    let window;
+    if (action === 3) {
+        if (!clients[id]) return;
+        window = clients[id].parent;
+    }
+    else
+        window = BrowserWindow.fromWebContents(event.sender);
     const windowId = getWindowId(window);
     let idx;
     //if only 1 client or no clients ignore
@@ -2136,7 +2142,7 @@ ipcMain.on('clear-client-name', (event, id) => {
     if (!id)
         id = getClientId(browserViewFromContents(event.sender));
     else if (typeof id === 'string')
-        id = names[id];        
+        id = names[id];
     if (clients[id] && clients[id].name) {
         delete names[clients[id].name];
         delete clients[id].name;

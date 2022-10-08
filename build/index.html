@@ -1894,7 +1894,7 @@
                             if (args === 'close')
                                 ipcRenderer.send('remove-client', window);
                             else
-                                ipcRenderer.send('focus-client', window, true, true);
+                                ipcRenderer.send('goto-client', window, 3);
                         }
                         else if (args) {
                             char = ipcRenderer.sendSync('get-character-from-id', args);
