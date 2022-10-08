@@ -2406,7 +2406,7 @@ function createClient(options) {
             _clientID++;
         options.id = _clientID;
     }
-    clients[options.id] = { view: view, windows: [], parent: null, file: options.file !== 'build/index.html' ? options.file : 0, states: {} };
+    clients[options.id] = { view: view, windows: [], parent: options.parent, file: options.file !== 'build/index.html' ? options.file : 0, states: {} };
     idMap.set(view, options.id);
     loadWindowScripts(view, options.script || 'user');
     script = `if(typeof setId === "function") setId(${options.id});window.loadTheme();`;
@@ -2416,6 +2416,10 @@ function createClient(options) {
         clients[options.id].options = { data: {}, windows: [], states: {} };
     // + 'if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify(clients[options.id].options) + ');'
     executeScript(script, clients[options.id].view);
+    if (options.name && options.name.length !== 0) {
+        clients[options.id].name = options.name;
+        names[options.name] = options.id;
+    }
     //win.setTopBrowserView(view)    
     //addBrowserView
     //setBrowserView  
@@ -3489,18 +3493,13 @@ function newConnection(window, connection, data, name) {
     let windowId = getWindowId(window);
     let id;
     if (data)
-        id = createClient({ offset: windows[windowId].clients.length ? clients[windows[windowId].current].view.getBounds().y : 0, bounds: window.getContentBounds(), data: { data: data } });
+        id = createClient({ parent: window, name: name, offset: windows[windowId].clients.length ? clients[windows[windowId].current].view.getBounds().y : 0, bounds: window.getContentBounds(), data: { data: data } });
     else
-        id = createClient({ offset: windows[windowId].clients.length ? clients[windows[windowId].current].view.getBounds().y : 0, bounds: window.getContentBounds() });
+        id = createClient({ parent: window, name: name, offset: windows[windowId].clients.length ? clients[windows[windowId].current].view.getBounds().y : 0, bounds: window.getContentBounds() });
     focusedWindow = windowId;
     focusedClient = id;
     windows[windowId].clients.push(id);
     windows[windowId].current = id;
-    clients[id].parent = window;
-    if (name && name.length !== 0) {
-        clients[id].name = name;
-        names[name] = id;
-    }
     //did-navigate //fires before dom-ready but view seems to still not be loaded and delayed
     //did-finish-load //slowest but ensures the view is in the window and visible before firing
     window.addBrowserView(clients[id].view);
@@ -3539,19 +3538,14 @@ async function newClientWindow(caller, connection, data, name) {
     //windows[windowId].menubar.enabled = false;    
     let window = windows[windowId];
     let id;
+    focusedWindow = windowId;
     if (Array.isArray(data)) {
         for (let d = 0, dl = data.length; d < dl; d++) {
-            id = createClient({ bounds: window.window.getContentBounds(), data: { data: data[d] } });
-            focusedWindow = windowId;
-            focusedClient = id;
+            id = createClient({ parent: window, name: d === 0 ? name : null, bounds: window.window.getContentBounds(), data: { data: data[d] } });
             window.clients.push(id);
-            window.current = id;
-            clients[id].parent = window.window;
-            if (d === 0 && name && name.length !== 0) {
-                clients[id].name = name;
-                names[name] = id;
-            }
         }
+        window.current = id;
+        focusedClient = id;
         window.window.webContents.once('ready-to-show', () => {
             for (var c = 0, cl = window.clients.length; c < cl; c++) {
                 const clientId = window.clients[c];
@@ -3576,18 +3570,12 @@ async function newClientWindow(caller, connection, data, name) {
     }
     else {
         if (data)
-            id = createClient({ bounds: window.window.getContentBounds(), data: { data: data } });
+            id = createClient({ parent: window, name: name, bounds: window.window.getContentBounds(), data: { data: data } });
         else
-            id = createClient({ bounds: window.window.getContentBounds() });
-        focusedWindow = windowId;
+            id = createClient({ parent: window, name: name, bounds: window.window.getContentBounds() });
+        window.current = id;
         focusedClient = id;
         window.clients.push(id);
-        window.current = id;
-        clients[id].parent = window.window;
-        if (name && name.length !== 0) {
-            clients[id].name = name;
-            names[name] = id;
-        }
         window.window.addBrowserView(clients[id].view);
         window.window.setTopBrowserView(clients[id].view);
         clients[id].view.webContents.once('dom-ready', () => {
@@ -3709,8 +3697,7 @@ async function saveWindowLayout(file, locked) {
             focusedWindow: focusedWindow,
             windows: [],
             clients: [],
-            states: states,
-            names: names
+            states: states
         }
         //save windows
         //{ window: window, clients: [], current: 0 }
@@ -3754,7 +3741,8 @@ async function saveWindowLayout(file, locked) {
                 },
                 //get any custom data from window
                 data: await executeScript('if(typeof saveWindow === "function") saveWindow()', clients[id].view).catch(err => logError(err)),
-                states: clients[id].states
+                states: clients[id].states,
+                name: clients[id].name
             }
             const wl = clients[id].windows.length;
             for (var idx = 0; idx < wl; idx++) {
@@ -3819,7 +3807,6 @@ function loadWindowLayout(file, charData) {
             newClientWindow();
         return true;
     }
-    names = data.names || {};
     //_windowID = data.windowID;
     //_clientID = data.clientID;
     focusedClient = data.focusedClient;
@@ -3850,27 +3837,19 @@ function loadWindowLayout(file, charData) {
                 client.data = charData[0];
             charData.shift();
         }
-        createClient({ bounds: client.state.bounds, id: client.id, data: client, file: client.file });
-        clients[client.id].parent = windows[client.parent].window;
-    }
-    //set any client names
-    for (name in names) {
-        if (!Object.prototype.hasOwnProperty.call(names, name))
-            continue;
-        if (clients[names[name]])
-            clients[names[name]].name = name;
+        createClient({ parent: windows[client.parent].window, name: client.name, bounds: client.state.bounds, id: client.id, data: client, file: client.file });
     }
     //append any remaining new characters
     if (charData && charData.length) {
         il = charData.length;
+        let id;
         for (i = 0; i < il; i++) {
-            id = createClient({ bounds: windows[focusedWindow].window.getContentBounds(), data: { data: charData[i] } });
+            id = createClient({ parent: windows[focusedWindow].window, bounds: windows[focusedWindow].window.getContentBounds(), data: { data: charData[i] } });
             windows[focusedWindow].clients.push(id);
-            windows[focusedWindow].current = id;
-            focusedClient = id;
-            clients[id].parent = windows[focusedWindow].window;
-            data.windows[i].current = id;
         }
+        windows[focusedWindow].current = id;
+        focusedClient = id;
+        data.windows[i].current = id;
     }
     //set current clients for each window after everything is created
     il = data.windows.length;
