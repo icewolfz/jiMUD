@@ -1529,6 +1529,10 @@ ipcMain.on('show-dialog-sync', (event, type, ...args) => {
         event.returnValue = dialog.showSaveDialogSync(sWindow, ...args);
     else if (type === 'showOpenDialog')
         event.returnValue = dialog.showOpenDialogSync(sWindow, ...args);
+    else {
+        logError('Invalid show-dialog-sync: ' + type);
+        event.returnValue = null;
+    }
 });
 
 ipcMain.handle('show-dialog', (event, type, ...args) => {
@@ -1744,6 +1748,10 @@ ipcMain.on('window-info', (event, info, id, ...args) => {
     else if (info === 'isMinimized') {
         var current = BrowserWindow.fromWebContents(event.sender);
         event.returnValue = current ? current.isMinimized() : 0;
+    }
+    else {
+        logError('Invalid window-info: ' + info);
+        event.returnValue = false;
     }
 });
 
