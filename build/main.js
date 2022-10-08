@@ -1695,7 +1695,7 @@ ipcMain.handle('contents', (event, action, ...args) => {
         updateWebContents(event.sender, ...args);
     else if (action === 'replaceMisspelling')
         event.sender.replaceMisspelling(...args);
-    else if(action === 'inspectElement')
+    else if (action === 'inspectElement')
         event.sender.inspectElement(...args);
 })
 
@@ -3136,10 +3136,16 @@ function buildOptions(details, window, settings) {
             switch (feature[0]) {
                 case '':
                     continue;
-                case 'defaultWidth':
-                case 'defaultHeight':
                 case 'defaultX':
                 case 'defaultY':
+                    if (feature[1] === 'center')
+                        options[feature[0]] = feature[1];
+                    else
+                        options[feature[0]] = parseInt(feature[1], 10);
+                    options.features[feature[0]] = options[feature[0]];
+                    break;
+                case 'defaultWidth':
+                case 'defaultHeight':
                 case "width":
                 case "height":
                 case "x":
@@ -3194,10 +3200,30 @@ function buildOptions(details, window, settings) {
         options.width = 'defaultWidth' in options ? options.defaultWidth : 800;
     if (!('height' in options))
         options.height = 'defaultHeight' in options ? options.defaultHeight : 600;
-    if (!('x' in options))
-        options.x = 'defaultX' in options && options.defaultX > 0 ? options.defaultX : 0;
-    if (!('y' in options))
-        options.y = 'defaultY' in options && options.defaultY > 0 ? options.defaultY : 0;
+    if (!('x' in options)) {
+        if ('defaultX' in options) {
+            if (options.defaultX === 'center') {
+                parentBounds = window.getBounds();
+                options.x = parentBounds.x + parentBounds.width / 2 + options.width / 2;
+            }
+            else
+                options.x = options.defaultX;
+        }
+        else
+            options.x = 0;
+    }
+    if (!('y' in options)) {
+        if ('defaultY' in options) {
+            if (options.defaultY === 'center') {
+                parentBounds = window.getBounds();
+                options.y = parentBounds.y + parentBounds.height / 2 + options.height / 2;
+            }
+            else
+                options.y = options.defaultY;
+        }
+        else
+            options.y = 0;
+    }
     if (details.frameName === 'modal' || details.frameName.startsWith('modal-')) {
         // open window as modal
         Object.assign(options, {
