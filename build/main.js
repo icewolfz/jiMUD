@@ -543,7 +543,7 @@ function createWindow(options) {
         */
     });
 
-    if (global.debug || _settings.enableDebug) {
+    if (global.debug) {
         window.webContents.on('ipc-message', (event, channel, ...args) => {
             if (channel.startsWith('REMOTE_')) return;
             console.log(`Window Id: ${getWindowId(window)}, ipc-message: ${channel}`);
@@ -649,7 +649,7 @@ function createDialog(options) {
         });
     });
 
-    if (global.debug || _settings.enableDebug) {
+    if (global.debug) {
         window.webContents.on('ipc-message', (event, channel, ...args) => {
             if (channel.startsWith('REMOTE_')) return;
             console.log(`Dialog URL: ${options.url}, ipc-message: ${channel}`);
@@ -2415,7 +2415,7 @@ function createClient(options) {
         idMap.set(childWindow, getClientId(view));
     });
 
-    if (global.debug || _settings.enableDebug) {
+    if (global.debug) {
         view.webContents.on('ipc-message', (event, channel, ...args) => {
             if (channel.startsWith('REMOTE_')) return;
             console.log(`Client Id: ${getClientId(view)}, ipc-message: ${channel}`);
