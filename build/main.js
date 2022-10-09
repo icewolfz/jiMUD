@@ -545,15 +545,13 @@ function createWindow(options) {
 
     if (global.debug || _settings.enableDebug) {
         window.webContents.on('ipc-message', (event, channel, ...args) => {
-            if(channel.startsWith('REMOTE_')) return;
-            console.log('Window Id: ' + getWindowId(window));
-            console.log('ipc-message: ' + channel);
+            if (channel.startsWith('REMOTE_')) return;
+            console.log(`Window Id: ${getWindowId(window)}, ipc-message: ${channel}`);
             console.log(args);
         });
         window.webContents.on('ipc-message-sync', (event, channel, ...args) => {
-            if(channel.startsWith('REMOTE_')) return;
-            console.log('Window Id: ' + getWindowId(window));
-            console.log('ipc-message-sync: ' + channel);
+            if (channel.startsWith('REMOTE_')) return;
+            console.log(`Window Id: ${getWindowId(window)}, ipc-message-sync: ${channel}`);
             console.log(args);
         });
     }
@@ -653,15 +651,13 @@ function createDialog(options) {
 
     if (global.debug || _settings.enableDebug) {
         window.webContents.on('ipc-message', (event, channel, ...args) => {
-            if(channel.startsWith('REMOTE_')) return;
-            console.log('Dialog URL: ' + options.url);
-            console.log('ipc-message: ' + channel);
+            if (channel.startsWith('REMOTE_')) return;
+            console.log(`Dialog URL: ${options.url}, ipc-message: ${channel}`);
             console.log(args);
         });
         window.webContents.on('ipc-message-sync', (event, channel, ...args) => {
-            if(channel.startsWith('REMOTE_')) return;
-            console.log('Dialog URL: ' + options.url);
-            console.log('ipc-message-sync: ' + channel);
+            if (channel.startsWith('REMOTE_')) return;
+            console.log(`Dialog URL: ${options.url}, ipc-message-sync: ${channel}`);
             console.log(args);
         });
     }
@@ -1176,17 +1172,19 @@ ipcMain.on('log-error', (event, err, skipClient) => {
     logError(err, skipClient);
 });
 
-ipcMain.on('debug', (event, msg) => {
-    let client = getActiveClient();
-    if (client)
-        client.view.webContents.send('debug', msg);
+ipcMain.on('debug', (event, msg, id) => {
+    sendClient('debug', msg, id);
 });
 
-ipcMain.on('error', (event, err) => {
-    let client = getActiveClient();
-    if (client)
-        client.view.webContents.send('error', err);
+ipcMain.on('error', (event, err, id) => {
+    sendClient('error', err.id);
 });
+
+function sendClient(channel, msg, id) {
+    let client = id ? clients[id] : getActiveClient();
+    if (client)
+        client.view.webContents.send(channel, msg);
+}
 
 ipcMain.on('ondragstart', (event, files, icon) => {
     if (!files || files.length === 0) return;
@@ -2419,15 +2417,13 @@ function createClient(options) {
 
     if (global.debug || _settings.enableDebug) {
         view.webContents.on('ipc-message', (event, channel, ...args) => {
-            if(channel.startsWith('REMOTE_')) return;
-            console.log('Client Id: ' + getClientId(view));
-            console.log('ipc-message: ' + channel);
+            if (channel.startsWith('REMOTE_')) return;
+            console.log(`Client Id: ${getClientId(view)}, ipc-message: ${channel}`);
             console.log(args);
         });
         view.webContents.on('ipc-message-sync', (event, channel, ...args) => {
-            if(channel.startsWith('REMOTE_')) return;
-            console.log('Client Id: ' + getClientId(view));
-            console.log('ipc-message-sync: ' + channel);
+            if (channel.startsWith('REMOTE_')) return;
+            console.log(`Client Id: ${getClientId(view)}, ipc-message-sync: ${channel}`);
             console.log(args);
         });
     }
@@ -2970,11 +2966,8 @@ function logError(err, skipClient) {
         msg = err.message;
     else
         msg = err;
-
-    let client = getActiveClient();
-
     if (!global.editorOnly && client && client.view.webContents && !skipClient)
-        client.view.webContents.send('error', msg);
+        sendClient('error', msg);
     else if (_settings.logErrors) {
         if (err.stack && !_settings.showErrorsExtended)
             msg = err.stack;
