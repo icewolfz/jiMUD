@@ -248,11 +248,6 @@
             ipcRenderer.send('window-update-title');
         }
 
-        ipcRenderer.on('focus', event => {
-            tabstrip.focused = true;
-            ipcRenderer.send('focus-client', _current);
-        })
-
         ipcRenderer.on('blur', event => {
             tabstrip.focused = false;
         })

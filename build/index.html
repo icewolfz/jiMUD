@@ -439,6 +439,7 @@
 
         //#region variable declarations
         var _id;
+        var _icon;
         var autoConnectID;
         var autoLoginCounter = 0;
         var lastMouse;
@@ -1512,7 +1513,7 @@
                 doUpdate(3);
                 client.port = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.options.dev ? 1035 : 1030);
                 updateTitle();
-                ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
+                updateIcon(client.port === 1035 ? 3 : 0);
                 createWatcher();
                 if (_logger)
                     _logger.postMessage({
@@ -1565,7 +1566,7 @@
                 document.getElementById('immortal').dataset.show = 'false';
                 document.getElementById('immortal').style.display = 'none';
                 updateTitle();
-                ipcRenderer.send('update-title', { icon: client.port === 1035 ? 4 : 1 });
+                updateIcon(client.port === 1035 ? 4 : 1);
                 _logger.postMessage({ action: 'connected', args: client.connected });
                 _logger.postMessage({
                     action: 'start', args: {
@@ -1590,7 +1591,7 @@
                     { menu: ['file', 'disconnect'], options: { enabled: false } }
                 ]);
                 updateTitle();
-                ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
+                updateIcon(client.port === 1035 ? 3 : 0);
                 _logger.postMessage({ action: 'connected', args: client.connected });
                 _logger.postMessage({ action: 'stop' });
                 if (_skipDisconnect) return;
@@ -1646,7 +1647,7 @@
                 if (_windowState.data.characterId > 0)
                     ipcRenderer.send('update-character', { ID: _windowState.data.characterId, LastConnected: client.connectTime }, 0, true);
                 updateTitle();
-                ipcRenderer.send('update-title', { icon: client.port === 1035 ? 4 : 1 });
+                updateIcon(client.port === 1035 ? 4 : 1);
                 if (_disconnectTimerID) {
                     clearTimeout(_disconnectTimerID);
                     _disconnectTimerID = null;
@@ -1661,7 +1662,7 @@
 
             client.on('connect', () => {
                 updateTitle();
-                ipcRenderer.send('update-title', { icon: client.port === 1035 ? 4 : 1 });
+                updateIcon(client.port === 1035 ? 4 : 1);
             });
 
             client.on('reconnect', () => {
@@ -1720,7 +1721,7 @@
             client.on('received-data', (data) => {
                 if (!active && client.connected && data.value.length > 0) {
                     updateTitle();
-                    ipcRenderer.send('update-title', { icon: client.port === 1035 ? 5 : 2 });
+                    updateIcon(client.port === 1035 ? 5 : 2);
                 }
             });
 
@@ -1956,13 +1957,14 @@
             });
             window.addEventListener('focus', function () {
                 active = true;
-                if (client && (client.connected || client.connecting)) {
+                if (!client) return;
+                if (client.connected || client.connecting) {
                     updateTitle();
-                    ipcRenderer.send('update-title', { icon: client.port === 1035 ? 4 : 1 });
+                    updateIcon(client.port === 1035 ? 4 : 1);
                 }
-                else if (client && !client.connecting) {
+                else if (!client.connecting) {
                     updateTitle();
-                    ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
+                    updateIcon(client.port === 1035 ? 3 : 0);
                 }
                 client.raise('focus');
                 client.commandInput.focus();
@@ -2597,7 +2599,7 @@
             client.display.Reverse = client.options.find.reverse;
             client.display.RegularExpression = client.options.find.regex;
             updateTitle();
-            ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
+            updateIcon(client.port === 1035 ? 3 : 0);
             if (client.options.find.show)
                 client.display.showFind();
             if (_windowState.windows.length) {
@@ -2948,7 +2950,7 @@
             client.host = (_windowState && 'host' in _windowState.data) ? (_windowState.data.host || character.Host || 'www.shadowmud.com') : (character.Host || 'www.shadowmud.com');
             client.port = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.options.dev ? 1035 : 1030);
             updateTitle();
-            ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
+            updateIcon(client.port === 1035 ? 3 : 0);
             if (_reload) {
                 closeWindows();
                 if (client.options.showCharacterManager)
@@ -2996,7 +2998,7 @@
             if (newPort !== client.port) {
                 client.port = newPort;
                 updateTitle();
-                ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
+                updateIcon(client.port === 1035 ? 3 : 0);
                 same = false;
             }
             if (_reload) {
@@ -3046,7 +3048,7 @@
             if (newPort !== client.port) {
                 client.port = newPort;
                 updateTitle();
-                ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
+                updateIcon(client.port === 1035 ? 3 : 0);
                 same = false;
             }
             if (_reload) {
@@ -3241,13 +3243,13 @@
                 delete _windowState.data.port;
                 client.port = client.options.dev ? 1035 : 1030;
                 updateTitle();
-                ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
+                updateIcon(client.port === 1035 ? 3 : 0);
             }
             else if ('port' in options) {
                 _windowState.data.port = options.port;
                 client.port = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.options.dev ? 1035 : 1030);
                 updateTitle();
-                ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
+                updateIcon(client.port === 1035 ? 3 : 0);
             }
             if ('host' in options) {
                 windowState.data.host = options.host;
@@ -3263,13 +3265,13 @@
                 delete _windowState.data.port;
                 client.port = client.options.port ? 1035 : 1030;
                 updateTitle();
-                ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
+                updateIcon(client.port === 1035 ? 3 : 0);
             }
             else if ('port' in options) {
                 _windowState.data.port = options.port;
                 client.port = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.options.dev ? 1035 : 1030);
                 updateTitle();
-                ipcRenderer.send('update-title', { icon: client.port === 1035 ? 3 : 0 });
+                updateIcon(client.port === 1035 ? 3 : 0);
             }
             if ('host' in options) {
                 windowState.data.host = options.host;
@@ -4024,6 +4026,12 @@
             return data;
         }
 
+        function updateIcon(icon) {
+            if (icon === _icon) return;
+            ipcRenderer.send('update-title', { icon: icon });
+            _icon = icon;
+        }
+
         function updateTitle(title) {
             var name = getCharacterName();
             if (client.connecting)
@@ -4041,9 +4049,6 @@
                     title += ' from Development';
             }
             document.title = title;
-            //client.port === 1035 ? 3 : 0            
-            //_windowState.data.character = title;
-            //getCharacterName()
         }
 
         //#region Id functions
