@@ -2950,12 +2950,13 @@ function isFileSync(aPath) {
 //#endregion
 
 function logError(err, skipClient) {
-    if (!err) err = 'Unknown error';
+    if (!err) {
+        if (!global.debug) return;
+        err = new Error('Empty error');
+    }
     var msg = '';
     if (global.debug || _settings.enableDebug)
         console.error(err);
-    if (!_settings)
-        _settings = settings.Settings.load(global.settingsFile);
     if (err.stack && _settings.showErrorsExtended)
         msg = err.stack;
     else if (err instanceof TypeError)
@@ -2969,8 +2970,18 @@ function logError(err, skipClient) {
     if (!global.editorOnly && client && client.view.webContents && !skipClient)
         sendClient('error', msg);
     else if (_settings.logErrors) {
-        if (err.stack && !_settings.showErrorsExtended)
+        if (!_settings.showErrorsExtended) {
+            if (err.stack)
+                msg = err.stack;
+            else {
+                err = new Error(err);
+                msg = err.stack;
+            }
+        }
+        else if (!err.stack) {
+            err = new Error(err);
             msg = err.stack;
+        }
         fs.writeFileSync(path.join(app.getPath('userData'), 'jimud.error.log'), new Date().toLocaleString() + '\n', { flag: 'a' });
         fs.writeFileSync(path.join(app.getPath('userData'), 'jimud.error.log'), msg + '\n', { flag: 'a' });
     }

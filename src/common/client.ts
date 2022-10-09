@@ -1268,10 +1268,10 @@ export class Client extends EventEmitter {
         this.debug(err);
         let msg = '';
         if (err == null || typeof err === 'undefined')
-            msg = 'Unknown';
+            err = new Error('Unknown');
         else if (typeof err === 'string' && err.length === 0)
-            msg = 'Unknown';
-        else if (err.stack && this.options.showErrorsExtended)
+            err = new Error('Unknown');
+        if (err.stack && this.options.showErrorsExtended)
             msg = err.stack;
         else if (err instanceof Error || err instanceof TypeError)
             msg = err.name + ': ' + err.message;
@@ -1286,8 +1286,18 @@ export class Client extends EventEmitter {
             this.echo('Error: ' + msg, AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
 
         if (this.options.logErrors) {
-            if (!this.options.showErrorsExtended && err.stack)
+            if (!this.options.showErrorsExtended) {
+                if (err.stack)
+                    msg = err.stack;
+                else {
+                    err = new Error(err || msg);
+                    msg = err.stack;
+                }
+            }
+            else if (!err.stack) {
+                err = new Error(err || msg);
                 msg = err.stack;
+            }
             fs.writeFileSync(parseTemplate(path.join('{data}', 'jimud.error.log')), new Date().toLocaleString() + '\n', { flag: 'a' });
             fs.writeFileSync(parseTemplate(path.join('{data}', 'jimud.error.log')), msg + '\n', { flag: 'a' });
         }

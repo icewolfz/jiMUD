@@ -850,8 +850,18 @@
             if (options.debug)
                 console.error(error);
             if (options.logErrors) {
-                if (!options.showErrorsExtended && error.stack)
+                if (!options.showErrorsExtended) {
+                    if (error.stack)
+                        msg = error.stack;
+                    else {
+                        error = new Error(error || 'Unknown');
+                        msg = error.stack;
+                    }
+                }
+                else if (!err.stack) {
+                    error = new Error(error || 'Unknown');
                     msg = error.stack;
+                }
                 fs.writeFileSync(parseTemplate(path.join('{data}', 'jimud.error.log')), 'Immortal Tools: ' + new Date().toLocaleString() + '\n', { flag: 'a' });
                 fs.writeFileSync(parseTemplate(path.join('{data}', 'jimud.error.log')), msg + '\n', { flag: 'a' });
             }
