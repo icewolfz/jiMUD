@@ -542,6 +542,22 @@ function createWindow(options) {
         stateMap.set(window, states[options.file]);
         */
     });
+
+    if (global.debug || _settings.enableDebug) {
+        window.webContents.on('ipc-message', (event, channel, ...args) => {
+            if(channel.startsWith('REMOTE_')) return;
+            console.log('Window Id: ' + getWindowId(window));
+            console.log('ipc-message: ' + channel);
+            console.log(args);
+        });
+        window.webContents.on('ipc-message-sync', (event, channel, ...args) => {
+            if(channel.startsWith('REMOTE_')) return;
+            console.log('Window Id: ' + getWindowId(window));
+            console.log('ipc-message-sync: ' + channel);
+            console.log(args);
+        });
+    }
+
     if (!options.id) {
         _windowID++;
         //in case the new id is used from old layout loop until find empty id
@@ -634,6 +650,21 @@ function createDialog(options) {
                 logError('Dialog unresponsive, waiting.\n', true);
         });
     });
+
+    if (global.debug || _settings.enableDebug) {
+        window.webContents.on('ipc-message', (event, channel, ...args) => {
+            if(channel.startsWith('REMOTE_')) return;
+            console.log('Dialog URL: ' + options.url);
+            console.log('ipc-message: ' + channel);
+            console.log(args);
+        });
+        window.webContents.on('ipc-message-sync', (event, channel, ...args) => {
+            if(channel.startsWith('REMOTE_')) return;
+            console.log('Dialog URL: ' + options.url);
+            console.log('ipc-message-sync: ' + channel);
+            console.log(args);
+        });
+    }
 
     window.removeMenu();
     // and load the index.html of the app.
@@ -2385,6 +2416,21 @@ function createClient(options) {
         clients[getClientId(view)].windows.push({ window: childWindow, details: details });
         idMap.set(childWindow, getClientId(view));
     });
+
+    if (global.debug || _settings.enableDebug) {
+        view.webContents.on('ipc-message', (event, channel, ...args) => {
+            if(channel.startsWith('REMOTE_')) return;
+            console.log('Client Id: ' + getClientId(view));
+            console.log('ipc-message: ' + channel);
+            console.log(args);
+        });
+        view.webContents.on('ipc-message-sync', (event, channel, ...args) => {
+            if(channel.startsWith('REMOTE_')) return;
+            console.log('Client Id: ' + getClientId(view));
+            console.log('ipc-message-sync: ' + channel);
+            console.log(args);
+        });
+    }
 
     view.setAutoResize({
         width: true,
