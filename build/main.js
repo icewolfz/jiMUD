@@ -3593,7 +3593,7 @@ async function newClientWindow(caller, connection, data, name) {
     focusedWindow = windowId;
     if (Array.isArray(data)) {
         for (let d = 0, dl = data.length; d < dl; d++) {
-            id = createClient({ parent: window, name: d === 0 ? name : null, bounds: window.window.getContentBounds(), data: { data: data[d] } });
+            id = createClient({ parent: window.window, name: d === 0 ? name : null, bounds: window.window.getContentBounds(), data: { data: data[d] } });
             window.clients.push(id);
         }
         window.current = id;
@@ -3622,9 +3622,9 @@ async function newClientWindow(caller, connection, data, name) {
     }
     else {
         if (data)
-            id = createClient({ parent: window, name: name, bounds: window.window.getContentBounds(), data: { data: data } });
+            id = createClient({ parent: window.window, name: name, bounds: window.window.getContentBounds(), data: { data: data } });
         else
-            id = createClient({ parent: window, name: name, bounds: window.window.getContentBounds() });
+            id = createClient({ parent: window.window, name: name, bounds: window.window.getContentBounds() });
         window.current = id;
         focusedClient = id;
         window.clients.push(id);
