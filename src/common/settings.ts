@@ -497,7 +497,7 @@ export class Settings {
     public echoSpeedpaths: boolean = false;
 
     public alwaysShowTabs: boolean = false;
-    public showTabsAddNewButton: boolean = false;
+    public migrate: number = 0;
 
     /**
      * @depreciated Allow window states have been moved to a separate layout system

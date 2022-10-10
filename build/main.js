@@ -38,7 +38,7 @@ else //not found use native
 
 argv = require('yargs-parser')(argv, {
     string: ['data-dir', 's', 'setting', 'm', 'map', 'c', 'character', 'l', 'layout'],
-    boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import', 'f', 'force', 'nls', 'no-layout-save'],
+    boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import', 'f', 'force', 'nls', 'no-layout-save', 'fci', 'force-character-import'],
     alias: {
         'd': ['debug'],
         'eo': ['editorOnly', 'editoronly'],
@@ -52,6 +52,7 @@ argv = require('yargs-parser')(argv, {
         'l': ['layout'],
         'il': ['ignore-layout'],
         'nci': ['no-character-import'],
+        'fci': ['force-character-import'],
         'f': ['force'],
         'nc': ['new-connection', 'nt', 'new-tab'],
         'nw': ['new-window'],
@@ -204,6 +205,7 @@ function commandLineArgumentHelp() {
     msg += '-l=[file], --layout=[file] - Load window layout file\n';
     msg += '-il, --ignore-layout - Ignore layout and do not save window states\n';
     msg += '-nci, --no-character-import - Do not import old characters.json\n';
+    msg += '-fci, --force-character-import - Force import old characters.json\n';
     msg += '-f, --force - Force load of instance even if single only instance enabled\n';
     msg += '-nls, --no-layout-save - Do not save any layout changes when application is closed\n';
     msg += '-nw, --new-window - Open a new window\n';
@@ -230,6 +232,7 @@ function displayConsoleHelp() {
     console.log('-l=[file], --layout=[file]                Load window layout file');
     console.log('-il, --ignore-layout                      Ignore layout and do not save window states');
     console.log('-nci, --no-character-import               Do not import old characters.json');
+    console.log('-fci, --force-character-import            Force import old characters.json');
     console.log('-f, --force                               Force load of instance even if single only instance enabled');
     console.log('-nls, --no-layout-save                    Do not save any layout changes when application is closed');
     console.log('-nw, --new-window                         Open a new window');
@@ -683,6 +686,12 @@ function createDialog(options) {
     return window;
 }
 
+function openCharacters() {
+    if (_characters) return;
+    _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
+    _characters.on('error', logError);
+}
+
 if (argv['disable-gpu'])
     app.disableHardwareAcceleration();
 
@@ -718,7 +727,7 @@ if (_settings.useSingleInstance && !global.editorOnly && !argv.f) {
         app.on('second-instance', (event, second_argv, workingDirectory, additionalData) => {
             second_argv = require('yargs-parser')(second_argv, {
                 string: ['data-dir', 's', 'setting', 'm', 'map', 'c', 'character', 'l', 'layout'],
-                boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import', 'f', 'force', 'nls', 'no-layout-save'],
+                boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import', 'f', 'force', 'nls', 'no-layout-save', 'fci', 'force-character-import'],
                 alias: {
                     'd': ['debug'],
                     'eo': ['editorOnly', 'editoronly'],
@@ -732,6 +741,7 @@ if (_settings.useSingleInstance && !global.editorOnly && !argv.f) {
                     'l': ['layout'],
                     'il': ['ignore-layout'],
                     'nci': ['no-character-import'],
+                    'fci': ['force-character-import'],
                     'f': ['force'],
                     'nc': ['new-connection', 'nt', 'new-tab'],
                     'nw': ['new-window'],
@@ -863,45 +873,12 @@ if (_settings.useSingleInstance && !global.editorOnly && !argv.f) {
 }
 
 //do not import if editor only mode, process after instance use to avoid processing file if not needed
-if (!argv.eo && !argv.nci && isFileSync(path.join(app.getPath('userData'), 'characters.json'))) {
-    let oldCharacters = fs.readFileSync(path.join(app.getPath('userData'), 'characters.json'), 'utf-8');
-    try {
-        //data try and convert and then import any found data
-        if (oldCharacters && oldCharacters.length > 0) {
-            _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
-            oldCharacters = JSON.parse(oldCharacters);
-            for (title in oldCharacters.characters) {
-                if (!Object.prototype.hasOwnProperty.call(oldCharacters.characters, title))
-                    continue;
-                const character = oldCharacters.characters[title];
-                _characters.addCharacter({
-                    Title: title,
-                    Host: 'www.shadowmud.com',
-                    Port: character.dev ? 1035 : 1030,
-                    AutoLoad: oldCharacters.load === title,
-                    Disconnect: character.disconnect,
-                    UseAddress: false,
-                    Days: 0,
-                    Name: character.name || (title || '').replace(/[^a-zA-Z0-9]+/g, ''),
-                    Password: character.password,
-                    Preferences: character.settings,
-                    Map: character.map,
-                    Notes: path.join('{characters}', `${title}.notes`),
-                    TotalMilliseconds: 0,
-                    TotalDays: 0,
-                    LastConnected: 0,
-                    LastDisconnected: 0
-                });
-            }
-            oldCharacters = null;
-            _characters.save();
-        }
-        // Rename the file old file as no longer needed just in case
-        fs.rename(path.join(app.getPath('userData'), 'characters.json'), path.join(app.getPath('userData'), 'characters.json.bak'), logError);
-    }
-    catch (e) {
-        logError(e);
-    }
+//only import if not migrate is not the same version as last, file exist, forced, and not editor only
+if (isFileSync(path.join(app.getPath('userData'), 'characters.json')) && (argv.fci || (!argv.eo && !argv.nci && _settings.migrate < 1))) {
+    _settings.migrate = 1;
+    _settings.save(global.settingsFile);
+    openCharacters();
+    _characters.import(path.join(app.getPath('userData'), 'characters.json'));
 }
 
 if (Array.isArray(argv.l))
@@ -1441,22 +1418,29 @@ ipcMain.on('reload-profile', (event, profile) => {
     }
 });
 
+ipcMain.on('import-characters', (event, file, id, backup, replace) => {
+    openCharacters();
+    _characters.import(file, backup , replace);
+    for (clientId in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId) || parseInt(clientId, 10) === id)
+            continue;
+        clients[clientId].view.webContents.send('characters-imported');
+    }
+});
+
 ipcMain.on('get-characters', (event, options) => {
-    if (!_characters)
-        _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
+    openCharacters();
     event.returnValue = _characters.getCharacters(options);
 });
 
 ipcMain.on('get-character', (event, id, property) => {
-    if (!_characters)
-        _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
+    openCharacters();
     let character = _characters.getCharacter(id);
     event.returnValue = character ? (property ? character[property] : character) : null;
 });
 
 ipcMain.on('update-character', (event, character, id, noReload) => {
-    if (!_characters)
-        _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
+    openCharacters();
     _characters.updateCharacter(character);
     for (clientId in clients) {
         if (!Object.prototype.hasOwnProperty.call(clients, clientId) || parseInt(clientId, 10) === id)
@@ -1466,8 +1450,7 @@ ipcMain.on('update-character', (event, character, id, noReload) => {
 });
 
 ipcMain.on('update-character-time', (event, data, id) => {
-    if (!_characters)
-        _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
+    openCharacters();
     let character = _characters.getCharacter(data.ID);
     data.TotalMilliseconds += character.TotalMilliseconds;
     /*
@@ -1486,8 +1469,7 @@ ipcMain.on('update-character-time', (event, data, id) => {
 });
 
 ipcMain.on('add-character', (event, character) => {
-    if (!_characters)
-        _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
+    openCharacters();
     const id = _characters.addCharacter(character);
     event.returnValue = id;
     character.ID = id;
@@ -1499,27 +1481,23 @@ ipcMain.on('add-character', (event, character) => {
 });
 
 ipcMain.on('get-character-next-id', (event) => {
-    if (!_characters)
-        _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
+    openCharacters();
     event.returnValue = _characters.getNextId();
 });
 
 ipcMain.on('remove-character', (event, id) => {
-    if (!_characters)
-        _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
+    openCharacters();
     _characters.removeCharacter(id);
 });
 
 ipcMain.on('get-character-from-id', (event, id, property) => {
-    if (!_characters)
-        _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
+    openCharacters();
     let character = getCharacterFromId(id);
     event.returnValue = character ? (property ? character[property] : character) : null;
 });
 
 function getCharacterId(id) {
-    if (!_characters)
-        _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
+    openCharacters();
     if (id.startsWith('id:')) {
         id = id.substring(3);
         if (id.length === 0)
@@ -1538,8 +1516,7 @@ function getCharacterId(id) {
 }
 
 function getCharacterFromId(id) {
-    if (!_characters)
-        _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
+    openCharacters();
     if (id.startsWith('id:')) {
         id = id.substring(3);
         if (id.length === 0)

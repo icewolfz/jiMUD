@@ -382,4 +382,79 @@ export class Characters extends EventEmitter {
             character.UseAddress = character.UseAddress ? true : false;
         return character;
     }
+
+    public import(file, backup, replaceOld) {
+        if (path.extname(file) === 'json') {
+            let oldCharacters = fs.readFileSync(file, 'utf-8');
+            try {
+                //data try and convert and then import any found data
+                if (oldCharacters && oldCharacters.length > 0) {
+                    oldCharacters = JSON.parse(oldCharacters);
+                    for (const title in oldCharacters.characters) {
+                        if (!Object.prototype.hasOwnProperty.call(oldCharacters.characters, title))
+                            continue;
+                        const character = oldCharacters.characters[title];
+                        this.addCharacter({
+                            Title: title,
+                            Host: 'www.shadowmud.com',
+                            Port: character.dev ? 1035 : 1030,
+                            AutoLoad: oldCharacters.load === title,
+                            Disconnect: character.disconnect,
+                            UseAddress: false,
+                            Days: 0,
+                            Name: character.name || (title || '').replace(/[^a-zA-Z0-9]+/g, ''),
+                            Password: character.password,
+                            Preferences: character.settings,
+                            Map: character.map,
+                            Notes: path.join('{characters}', `${title}.notes`),
+                            TotalMilliseconds: 0,
+                            TotalDays: 0,
+                            LastConnected: 0,
+                            LastDisconnected: 0
+                        });
+                    }
+                    oldCharacters = null;
+                    this.save();
+                }
+                // Rename the file old file as no longer needed just in case
+                if (backup)
+                    fs.rename(file, backup + '.bak', (err) => {
+                        this.emit('error', err);
+                    });
+            }
+            catch (e) {
+                this.emit('error', e);
+            }
+        }
+        else {
+            try {
+                this.ready = false;
+                if (replaceOld)
+                    this._db.exec(`
+                        ATTACH DATABASE '${file}' as Disk;
+                        PRAGMA Disk.synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA threads = 4;
+                        PRAGMA Disk.journal_mode=OFF;
+                        BEGIN TRANSACTION;
+                        INSERT INTO Characters (ID, Title, Host, Address, Port, Type, AutoLoad, Disconnect, UseAddress, Days, Name, Password, Preferences, Map, SessionID, Icon, IconPath, Notes, TotalMilliseconds, TotalDays, LastConnected, LastDisconnected) SELECT ID, Title, Host, Address, Port, Type, AutoLoad, Disconnect, UseAddress, Days, Name, Password, Preferences, Map, SessionID, Icon, IconPath, Notes, TotalMilliseconds, TotalDays, LastConnected, LastDisconnected FROM Disk.Characters;
+                        COMMIT TRANSACTION;
+                        DETACH DATABASE Disk
+                    `);
+                else
+                    this._db.exec(`
+                        ATTACH DATABASE '${file}' as Disk;
+                        PRAGMA Disk.synchronous=OFF;PRAGMA temp_store=MEMORY;PRAGMA threads = 4;
+                        PRAGMA Disk.journal_mode=OFF;
+                        BEGIN TRANSACTION;
+                        INSERT INTO Characters (Title, Host, Address, Port, Type, AutoLoad, Disconnect, UseAddress, Days, Name, Password, Preferences, Map, SessionID, Icon, IconPath, Notes, TotalMilliseconds, TotalDays, LastConnected, LastDisconnected) SELECT Title, Host, Address, Port, Type, AutoLoad, Disconnect, UseAddress, Days, Name, Password, Preferences, Map, SessionID, Icon, IconPath, Notes, TotalMilliseconds, TotalDays, LastConnected, LastDisconnected FROM Disk.Characters;
+                        COMMIT TRANSACTION;
+                        DETACH DATABASE Disk
+                    `);
+                this.ready = true;
+                this.save();
+            }
+            catch (err) {
+                this.emit('error', err);
+            }
+        }
+    }
 }

@@ -3091,6 +3091,11 @@
                 _windows['characters.html'].characterAdded(character);
         });
 
+        ipcRenderer.on('characters-imported', event => {
+            if (_windows['characters.html'])
+                _windows['characters.html'].refresh();
+        });
+
         ipcRenderer.on('reload-profiles', () => {
             //client.loadProfiles();
             client.loadOptions();
