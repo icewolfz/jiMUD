@@ -126,6 +126,7 @@ let _saved = false;
 let _loaded = false;
 let _characters;
 let tray = null;
+let _focused = false;
 const stateMap = new Map();
 
 process.on('uncaughtException', logError);
@@ -326,11 +327,13 @@ function createWindow(options) {
     window.on('focus', () => {
         focusedWindow = getWindowId(window);
         window.webContents.send('focus');
+        _focused = true;
     });
 
     window.on('blur', () => {
         if (window && !window.isDestroyed() && window.webContents)
             window.webContents.send('blur');
+        _focused = false;
     });
 
     window.on('minimize', () => {
@@ -2868,8 +2871,12 @@ function updateOverlay() {
             break;
         case 5:
         case 2:
-            if (process.platform !== 'linux')
-                window.setOverlayIcon(getOverlayIcon(21), 'Received data');
+            if (process.platform !== 'linux') {
+                if (_focused)
+                    window.setOverlayIcon(getOverlayIcon(1), 'Connected');
+                else
+                    window.setOverlayIcon(getOverlayIcon(2), 'Received data');
+            }
             break;
         case 'code':
             if (process.platform !== 'linux')
@@ -5684,7 +5691,11 @@ async function updateTray() {
                 break;
             case 5:
             case 2:
-                if (overlay < 2)
+                if (_focused) {
+                    if (overlay < 1)
+                        overlay = 1;
+                }
+                else if (overlay < 2)
                     overlay = 2;
                 cState.connected++;
                 break;
