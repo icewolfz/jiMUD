@@ -495,7 +495,10 @@
                 //c
                 else if (!(_clients.windows === 1 && _clients.clients === 1) && event.which == 67) {
                     closeDisconnectDialog(true);
-                    openWindow('characters');
+                    if (_clients.clients === 1)
+                        window.close();
+                    else
+                        ipcRenderer.send('remove-client', _id);
                     event.preventDefault();
                     event.cancelBubble = true;
                 }
