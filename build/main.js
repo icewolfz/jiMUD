@@ -875,10 +875,25 @@ if (_settings.useSingleInstance && !global.editorOnly && !argv.f) {
 //do not import if editor only mode, process after instance use to avoid processing file if not needed
 //only import if not migrate is not the same version as last, file exist, forced, and not editor only
 if (isFileSync(path.join(app.getPath('userData'), 'characters.json')) && (argv.fci || (!argv.eo && !argv.nci && _settings.migrate < 1))) {
-    _settings.migrate = 1;
-    _settings.save(global.settingsFile);
-    openCharacters();
-    _characters.import(path.join(app.getPath('userData'), 'characters.json'));
+    switch (dialog.showMessageBoxSync({
+        type: 'question',
+        title: 'Import characters',
+        message: 'Import old characters?',
+        buttons: ['Yes', 'No', 'Never ask again'],
+        defaultId: 1,
+        noLink: true
+    })) {
+        case 0:
+            _settings.migrate = 1;
+            _settings.save(global.settingsFile);
+            openCharacters();
+            _characters.import(path.join(app.getPath('userData'), 'characters.json'));
+            break;
+        case 2:
+            _settings.migrate = 1;
+            _settings.save(global.settingsFile);
+            break;
+    }
 }
 
 if (Array.isArray(argv.l))
@@ -1420,7 +1435,7 @@ ipcMain.on('reload-profile', (event, profile) => {
 
 ipcMain.on('import-characters', (event, file, id, backup, replace) => {
     openCharacters();
-    _characters.import(file, backup , replace);
+    _characters.import(file, backup, replace);
     for (clientId in clients) {
         if (!Object.prototype.hasOwnProperty.call(clients, clientId) || parseInt(clientId, 10) === id)
             continue;
