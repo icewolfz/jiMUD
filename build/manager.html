@@ -133,10 +133,10 @@
                         if (tabstrip.active === tabs[t])
                             setTitle(options.title);
                     }
-                    tabstrip.tabs[t].tab.classList.remove('connected');
-                    tabstrip.tabs[t].tab.classList.remove('disconnected');
-                    tabstrip.tabs[t].tab.classList.remove('connectednonactive');
                     if (typeof options.icon === 'number') {
+                        tabstrip.tabs[t].tab.classList.remove('connected');
+                        tabstrip.tabs[t].tab.classList.remove('disconnected');
+                        tabstrip.tabs[t].tab.classList.remove('connectednonactive');
                         switch (options.icon) {
                             case 1:
                                 tabstrip.setTabIconClass('connected-icon', t, true);
