@@ -3329,7 +3329,7 @@ function buildOptions(details, window, settings) {
         if ('defaultX' in options) {
             if (options.defaultX === 'center') {
                 parentBounds = window.getBounds();
-                options.x = parentBounds.x + parentBounds.width / 2 + options.width / 2;
+                options.x = Math.floor(parentBounds.x + parentBounds.width / 2 - options.width / 2);
             }
             else
                 options.x = options.defaultX;
@@ -3341,7 +3341,7 @@ function buildOptions(details, window, settings) {
         if ('defaultY' in options) {
             if (options.defaultY === 'center') {
                 parentBounds = window.getBounds();
-                options.y = parentBounds.y + parentBounds.height / 2 + options.height / 2;
+                options.y = Math.floor(parentBounds.y + parentBounds.height / 2 - options.height / 2);
             }
             else
                 options.y = options.defaultY;
