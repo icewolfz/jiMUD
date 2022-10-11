@@ -561,8 +561,8 @@
 
                 $('#MapLevel').val(options.mapper.active.z);
                 $('#MapZone').val(options.mapper.active.zone);
-                if (!options.mapper.room)
-                    $splitterEditor.panel2Collapsed = true;
+                $splitterEditor.panel2Collapsed = options.mapper.room;
+                toggleRooms();
                 $splitterEditor.SplitterDistance = options.mapper.roomWidth;
                 if ((options.mapper.roomGroups & 1) === 0)
                     $roomEditor.collapseGroup('General');
@@ -1045,7 +1045,6 @@
         }
 
         function toggleRooms() {
-            //TODO hide editor
             $splitterEditor.panel2Collapsed = !$splitterEditor.panel2Collapsed;
             if (!$splitterEditor.panel2Collapsed) {
                 $('#btn-room').addClass('active');
