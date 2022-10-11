@@ -9,6 +9,9 @@
     <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/form.css" rel="stylesheet" type="text/css" />
+    <link href="css/propertygrid.css" rel="stylesheet" type="text/css" />
+    <link href="css/datagrid.css" rel="stylesheet" type="text/css" />
     <link href="css/mapper.css" rel="stylesheet" type="text/css" />
     <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
@@ -16,21 +19,129 @@
     <script src="../lib/jquery.min.js"></script>
     <script src="../lib/bootstrap.min.js"></script>
     <script src="../lib/bootstrap-select.min.js"></script>
+</head>
+
+<body>
+    <div id="mapper-toolbar" class="btn-toolbar" role="toolbar">
+        <div class="btn-group" role="group">
+            <button id="btn-enable" type="button" class="btn btn-default btn-xs" title="Enabled" onclick="toggleEnabled()">
+                <i class="fa fa-map-o"></i>
+            </button>
+            <button id="btn-follow" type="button" class="btn btn-default btn-xs" title="Follow" onclick="toggleFollow()">
+                <i class="fa fa-paw"></i>
+            </button>
+            <button id="btn-legend" type="button" class="btn btn-default btn-xs" title="Show legend" onclick="toggleLegend()">
+                <i class="fa fa-map-marker"></i>
+            </button>
+            <button id="btn-room" type="button" class="btn btn-default btn-xs" title="Show room properties" onclick="toggleRooms();">
+                <i class="fa fa-list-alt"></i>
+            </button>
+        </div>
+        <div class="btn-group" role="group">
+            <button id="btn-refresh" type="button" class="btn btn-default btn-xs" title="Refresh map" onclick="refreshMap()">
+                <i class="fa fa-refresh"></i>
+            </button>
+            <button id="btn-compact" type="button" class="btn btn-default btn-xs" title="Compact map" onclick="compact()">
+                <i class="fa fa-compress"></i>
+            </button>
+        </div>
+        <div class="btn-group" role="group">
+            <button id="btn-split" type="button" class="btn btn-default btn-xs" title="Split areas" onclick="toggleSplitArea()">
+                <i class="fa fa-object-ungroup"></i>
+            </button>
+            <button id="btn-fill" type="button" class="btn btn-default btn-xs" title="Fill walls" onclick="toggleFillWalls()">
+                <i class="fa fa-building-o"></i>
+            </button>
+        </div>
+        <button id="btn-focus" type="button" class="btn btn-default btn-xs" title="Focus on current room" onclick="mapper.focusCurrentRoom()">
+            <i class="fa fa-crosshairs"></i>
+        </button>
+        <select id="select-area" class="form-control" title="Select Area"></select>
+        <div class="btn-group" style="float: left">
+            <label for="MapLevel" style="float: left">Level:</label>
+            <input id="MapLevel" class="form-control" type="number" title="Map Level">
+        </div>
+        <div class="btn-group" style="float: left">
+            <label for="MapZone" style="float: left">Zone:</label>
+            <input id="MapZone" class="form-control" type="number" title="Map Zone">
+        </div>
+        <div class="btn-group" role="group">
+            <button id="remove" type="button" class="btn btn-default btn-xs" aria-haspopup="true" title="Remove area/room">
+                <i class="fa fa-eraser"></i>&nbsp;
+                <span class="caret"></span>
+            </button>
+            <button id="export" type="button" class="btn btn-default btn-xs" aria-haspopup="true" title="Export/Import data">
+                <i class="fa fa-exchange"></i>&nbsp;
+                <span class="caret"></span>
+            </button>
+        </div>
+
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-default btn-xs" title="Set selected as current" onclick="mapper.setCurrent()">
+                <i class="fa fa-circle"></i>
+            </button>
+            <button id="btn-highlight" type="button" class="btn btn-default btn-xs" disabled="disabled" title="Highlight path" onclick="mapper.showPath()">
+                <i class="fa fa-paint-brush"></i>
+            </button>
+            <button id="btn-clear" type="button" class="btn btn-default btn-xs" disabled="disabled" title="Clear path" onclick="mapper.clearPath()">
+                <i class="fa fa-times"></i>
+            </button>
+            <button id="btn-walk" type="button" class="btn btn-default btn-xs" disabled="disabled" title="Walk path" onclick="mapper.walkPath()">
+                <i class="fa fa-blind"></i>
+            </button>
+        </div>
+        <div class="btn-group" style="float: left">
+            <label for="MapZoom" style="float: left">Zoom:</label>
+            <input id="MapZoom" type="range" min="25" max="200" step="5" oninput="zoomMap($('#MapZoom').val(), true)">
+
+            <label id="MapZoomDisplay">100%</label>
+        </div>
+
+    </div>
+    <div id="mapper-body">
+        <div id="map" style="display: none">
+            <div class="MapperNavButton" title="Scroll northwest" style="top:4px;left:4px;background-position: 0px 0px;" data-x="-1" data-y="-1"></div>
+            <div class="MapperNavButton" title="Scroll north" style="top:4px;left:50%;background-position: -22px 0px;margin-left:-11px;" data-x="0" data-y="-1"></div>
+            <div class="MapperNavButton" title="Scroll northeast" style="top:4px;left:100%;background-position: -44px 0px;margin-left:-26px;" data-x="1" data-y="-1"></div>
+            <div class="MapperNavButton" title="Scroll west" style="top:50%;left:4px;background-position: 0px -22px;margin-top:-11px;" data-x="-1" data-y="0"></div>
+            <div class="MapperNavButton" title="Scroll east" style="top:50%;left:100%;background-position: -44px -22px;margin-top:-11px;margin-left:-26px;" data-x="1" data-y="0"></div>
+            <div class="MapperNavButton" title="Scroll southwest" style="bottom:4px;left:4px;background-position: 0px -44px;" data-x="-1" data-y="1"></div>
+            <div class="MapperNavButton" title="Scroll south" style="bottom:4px;left:50%;background-position: -22px -44px;margin-left:-11px;" data-x="0" data-y="1"></div>
+            <div class="MapperNavButton" title="Scroll southeast" style="bottom:4px;left:100%;background-position: -44px -44px;margin-left:-26px;" data-x="1" data-y="1"></div>
+            <canvas id="MapperCanvas" class="map-canvas" tabindex="1"></canvas>
+        </div>
+    </div>
+    <dialog id="mapProgress" style="z-index:1000;text-align:center" onclose="menubar.enabled = true;" oncancel="menubar.enabled = true;">
+        <div id="mapProgressTitle">Importing data&hellip;</div>
+        <div id="mapProgressbar">
+            <progress max="100"></progress>
+        </div>
+        <div id="mapProgressCancel">
+            <button onclick="mapper.cancelExport();">
+                Cancel
+            </button>
+        </div>
+    </dialog>
+
     <script type="text/javascript">
         if (window.module) module = window.module;
-        //spell-checker:ignore hellip vscroll hscroll ungroup crosshairs haspopup tablist tabpanel labelledby
+        //spell-checker:ignore hellip vscroll hscroll ungroup crosshairs haspopup tablist tabpanel labelledby propertygrid
         const { RoomDetails, Mapper, ImportType } = require('./js/mapper');
         const { nativeImage, ipcRenderer } = require('electron');
         const remote = require('@electron/remote');
         const { Menu, MenuItem } = remote;
         const { Settings } = require('./js/settings');
         const { Menubar } = require('./js/menubar');
+        const { PropertyGrid } = require('./js/propertygrid');
+        const { Splitter, Orientation } = require('./js/splitter');
+        const { EditorType } = require('./js/value.editors');
         const fs = require('fs');
 
-        var roomEditor = false;
         var importType = ImportType.Replace;
         var _progress;
         var _enableDebug = false;
+        var $splitterEditor;
+        var $roomEditor;
 
         var menubar = new Menubar([
             {
@@ -156,50 +267,7 @@
         }
 
         function saveRoom() {
-            if (!roomEditor || !mapper.selected || mapper.selected.ID == null)
-                return;
-            var data = {};
-            data.x = parseInt($('#reX').val(), 10);
-            data.y = parseInt($('#reY').val(), 10);
-            data.z = parseInt($('#reZ').val(), 10) || 0;
-            data.zone = parseInt($('#reZone').val(), 10);
-            data.area = $('#reArea').val();
-            data.background = $('#reBackground').val();
-            data.env = $('#reTerrain').val();
-            data.indoors = $('#reIndoors')[0].checked;
-            data.notes = $('#reNotes').val();
-            data.details = RoomDetails.None;
-            if ($('#reDDock')[0].checked)
-                data.details |= RoomDetails.Dock;
-            if ($('#reDPier')[0].checked)
-                data.details |= RoomDetails.Pier;
-            if ($('#reDBank')[0].checked)
-                data.details |= RoomDetails.Bank;
-            if ($('#reDShop')[0].checked)
-                data.details |= RoomDetails.Shop;
-            if ($('#reDHospital')[0].checked)
-                data.details |= RoomDetails.Hospital;
-            if ($('#reDBar')[0].checked)
-                data.details |= RoomDetails.Bar;
-            if ($('#reDRestaurant')[0].checked)
-                data.details |= RoomDetails.Restaurant;
-            if ($('#reDWaterSource')[0].checked)
-                data.details |= RoomDetails.WaterSource;
-            if ($('#reDTrainer')[0].checked)
-                data.details |= RoomDetails.Trainer;
-            mapper.getRoom(mapper.selected.ID, (room) => {
-                room.x = data.x;
-                room.y = data.y;
-                room.z = data.z;
-                room.zone = data.zone;
-                room.area = data.area;
-                room.background = data.background;
-                room.env = data.env;
-                room.indoors = data.indoors;
-                room.details = data.details;
-                room.notes = data.notes;
-                mapper.addOrUpdateRoom(room);
-            });
+            $roomEditor.updateValue();
         }
 
         function save(callback) {
@@ -271,10 +339,6 @@
                     document.title = 'Mapper - ' + characterName;
                 else
                     document.title = 'Mapper';
-                $('#mapper-room input').prop('disabled', true);
-                $('#mapper-room textarea').prop('disabled', true);
-                $('#mapper-room select').prop('disabled', true);
-                $('#mapper-room button').prop('disabled', true);
                 const options = window.opener.client.options;
                 mapper = new Mapper(document.getElementById('MapperCanvas'), options.mapper.memory, options.mapper.memorySavePeriod, window.opener.getMapFile());
 
@@ -282,8 +346,212 @@
                     if (e.deltaY >= 0)
                         zoomMap(mapper.scale - 5);
                     else
-                        zoomMap(mapper.scale + 5);
+                        zoomMap(mapper.scale + f5);
                 }, { passive: true });
+
+                $splitterEditor = new Splitter({ parent: document.getElementById('mapper-body'), orientation: Orientation.vertical });
+                $splitterEditor.on('splitter-moved', (e) => {
+                    window.opener.client.options.mapper.roomWidth = e;
+                    window.opener.client.saveOptions();
+                    mapper._canvas.width = $splitterEditor.panel1.clientWidth - 60;
+                    mapper._canvas.height = $splitterEditor.panel1.clientHeight - 60;
+                    mapper.draw();
+
+                });
+                $splitterEditor.on('collapsed', (panel) => {
+                    //this.setButtonState('show room editor', panel !== 2);
+                });
+
+                $splitterEditor.panel1.appendChild(document.getElementById('map'));
+                document.getElementById('map').style.display = 'block';
+                $roomEditor = new PropertyGrid({ parent: $splitterEditor.panel2 });
+                $roomEditor.setPropertyOptions([
+                    {
+                        property: 'exits',
+                        visible: false
+                    },
+                    {
+                        property: 'ID',
+                        visible: false
+                    },
+                    {
+                        property: 'x',
+                        group: 'Location'
+                    },
+                    {
+                        property: 'y',
+                        group: 'Location'
+                    },
+                    {
+                        property: 'z',
+                        group: 'Location'
+                    },
+                    {
+                        property: 'zone',
+                        group: 'Location'
+                    },
+                    {
+                        property: 'indoors',
+                        group: 'Details'
+                    },
+                    {
+                        property: 'area',
+                        group: 'Location',
+                        editor: {
+                            type: EditorType.select,
+                            options: {
+                                data: []
+                            }
+                        }
+                    },
+                    {
+                        property: 'name',
+                        group: 'General',
+                        sort: 1,
+                        editor: {
+                            options: {
+                                singleLine: true,
+                                container: document.body
+                            }
+                        }
+                    },
+                    {
+                        property: 'env',
+                        group: 'Details',
+                        label: 'Terrain',
+                        editor: {
+                            type: EditorType.dropdown,
+                            options: {
+                                data: [
+                                    'beach',
+                                    'bog',
+                                    'city',
+                                    'cliff',
+                                    'cobble',
+                                    'desert',
+                                    'dirt',
+                                    'dirtroad',
+                                    'farmland',
+                                    'forest',
+                                    'grass',
+                                    'grassland',
+                                    'highmountain',
+                                    'hills',
+                                    'icesheet',
+                                    'jungle',
+                                    'lake',
+                                    'mountain',
+                                    'ocean',
+                                    'pavedroad',
+                                    'plains',
+                                    'prairie',
+                                    'river',
+                                    'rockdesert',
+                                    'rocky',
+                                    'sand',
+                                    'sanddesert',
+                                    'savannah',
+                                    'stone',
+                                    'swamp',
+                                    'tundra',
+                                    'underwater',
+                                    'water'
+                                ],
+                                container: document.body
+                            }
+                        },
+                        sort: 3
+                    },
+                    {
+                        property: 'background',
+                        label: 'Background',
+                        group: 'General',
+                        sort: 1,
+                        editor: {
+                            options: {
+                                singleLine: true,
+                                container: document.body
+                            }
+                        }
+                    },
+                    {
+                        label: 'Details',
+                        sort: 2,
+                        property: 'details',
+                        group: 'Details',
+                        editor: {
+                            type: EditorType.flag,
+                            options: {
+                                enum: RoomDetails,
+                                container: document.body
+                            }
+                        }
+                    },
+                    {
+                        property: 'notes',
+                        label: 'Notes',
+                        group: 'General',
+                        formatter: () => '',
+                        visible: true,
+                        align: 'center',
+                        sort: 7,
+                        editor: {
+                            options: {
+                                singleLine: true,
+                                container: document.body
+                            }
+                        }
+                    }
+                ]);
+
+                $roomEditor.on('group-expanded', group => {
+                    switch (group) {
+                        case 'General':
+                            window.opener.client.options.mapper.roomGroups |= 1;
+                            break;
+                        case 'Location':
+                            window.opener.client.options.mapper.roomGroups |= 2;
+                            break;
+                        case 'Details':
+                            window.opener.client.options.mapper.roomGroups |= 4;
+                            break;
+                    }
+                    window.opener.client.saveOptions();
+                });
+                $roomEditor.on('group-collapsed', group => {
+                    switch (group) {
+                        case 'General':
+                            window.opener.client.options.mapper.roomGroups &= ~1;
+                            break;
+                        case 'Location':
+                            window.opener.client.options.mapper.roomGroups &= ~2;
+                            break;
+                        case 'Details':
+                            window.opener.client.options.mapper.roomGroups &= ~4;
+                            break;
+                    }
+                    window.opener.client.saveOptions();
+                });
+
+                this.$roomEditor.on('value-changed', (prop, newValue, oldValue) => {
+                    const selected = this.$roomEditor.objects.length ? this.$roomEditor.objects[0] : null;
+                    if (!selected) return;
+                    mapper.getRoom(selected.ID, (room) => {
+                        room.x = selected.x;
+                        room.y = selected.y;
+                        room.z = selected.z;
+                        room.zone = selected.zone;
+                        room.area = selected.area;
+                        room.background = selected.background;
+                        room.env = selected.env;
+                        room.indoors = selected.indoors;
+                        room.details = selected.details;
+                        room.notes = selected.notes;
+                        mapper.addOrUpdateRoom(selected);
+                    });
+                });
+
+                $('#mapper-body').css('top', $('#mapper-toolbar').outerHeight() + 'px');
 
                 mapper.active = options.mapper.active;
                 mapper.commandDelay = options.commandDelay;
@@ -293,9 +561,15 @@
 
                 $('#MapLevel').val(options.mapper.active.z);
                 $('#MapZone').val(options.mapper.active.zone);
-                if (options.mapper.room)
-                    toggleRooms();
-
+                if (!options.mapper.room)
+                    $splitterEditor.panel2Collapsed = true;
+                $splitterEditor.SplitterDistance = options.mapper.roomWidth;
+                if ((options.mapper.roomGroups & 1) === 0)
+                    $roomEditor.collapseGroup('General');
+                if ((options.mapper.roomGroups & 2) === 0)
+                    $roomEditor.collapseGroup('Location');
+                if ((options.mapper.roomGroups & 4) === 0)
+                    $roomEditor.collapseGroup('Details');
                 mapper.on('debug', msg => {
                     if (_enableDebug)
                         console.log(msg);
@@ -314,52 +588,9 @@
                 });
 
                 mapper.on('room-before-selected', (room) => {
-                    if (!roomEditor || !room || room.ID == null)
+                    if ($splitterEditor.panel2Collapsed || !room || room.ID == null)
                         return;
-                    var data = {};
-                    data.x = parseInt($('#reX').val(), 10);
-                    data.y = parseInt($('#reY').val(), 10);
-                    data.z = parseInt($('#reZ').val(), 10) || 0;
-                    data.zone = parseInt($('#reZone').val(), 10);
-                    data.area = $('#reArea').val();
-                    data.background = $('#reBackground').val();
-                    data.env = $('#reTerrain').val();
-                    data.indoors = $('#reIndoors')[0].checked;
-                    data.notes = $('#reNotes').val();
-                    data.details = RoomDetails.None;
-                    if ($('#reDDock')[0].checked)
-                        data.details |= RoomDetails.Dock;
-                    if ($('#reDPier')[0].checked)
-                        data.details |= RoomDetails.Pier;
-                    if ($('#reDBank')[0].checked)
-                        data.details |= RoomDetails.Bank;
-                    if ($('#reDShop')[0].checked)
-                        data.details |= RoomDetails.Shop;
-                    if ($('#reDHospital')[0].checked)
-                        data.details |= RoomDetails.Hospital;
-                    if ($('#reDBar')[0].checked)
-                        data.details |= RoomDetails.Bar;
-                    if ($('#reDRestaurant')[0].checked)
-                        data.details |= RoomDetails.Restaurant;
-                    if ($('#reDWaterSource')[0].checked)
-                        data.details |= RoomDetails.WaterSource;
-                    if ($('#reDTrainer')[0].checked)
-                        data.details |= RoomDetails.Trainer;
-                    mapper.getRoom(room.ID, (room) => {
-                        if (room.x != data.x && room.y != data.y && room.z != data.z && room.zone != data.zone && room.area != data.area && room.background != data.background && room.env != data.env && room.indoors != data.indoors && room.details != data.details && room.notes != data.notes)
-                            return;
-                        room.x = data.x;
-                        room.y = data.y;
-                        room.z = data.z;
-                        room.zone = data.zone;
-                        room.area = data.area;
-                        room.background = data.background;
-                        room.env = data.env;
-                        room.indoors = data.indoors;
-                        room.details = data.details;
-                        room.notes = data.notes;
-                        mapper.addOrUpdateRoom(room);
-                    });
+                    saveRoom();
                 });
 
                 mapper.on('active-room-changed', (room) => {
@@ -385,6 +616,9 @@
                 });
 
                 mapper.on('current-room-changed', (room) => {
+                    if ($roomEditor.objects && room.ID === $roomEditor.objects[0].ID) {
+                        $roomEditor.objects = [room];
+                    }
                     $('#btn-walk').prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
                     $('#btn-highlight').prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
 
@@ -396,73 +630,21 @@
                 mapper.on('room-selected', (room) => {
                     $('#reDNone').prop('checked', true);
                     if (!room || room.ID == null) {
+                        this.$roomEditor.objects = null;
                         $('#btn-walk').prop('disabled', true);
                         $('#btn-highlight').prop('disabled', true);
-                        $('#mapper-room input').prop('disabled', true);
-                        $('#mapper-room select').prop('disabled', true);
-                        $('#mapper-room button').prop('disabled', true);
-                        $('#mapper-room textarea').prop('disabled', true);
-
                         menubar.updateItem('edit|Remove selected room', { enabled: false });
                         menubar.updateItem('actions|highlight path', { enabled: false });
                         menubar.updateItem('actions|walk path', { enabled: false });
-
-
-                        $('#reX').val('');
-                        $('#reY').val('');
-                        $('#reZ').val('');
-                        $('#reZone').val('');
-                        $('#reArea').val('');
-                        $('#reBackground').val('');
-                        $('#reTerrain').val('');
-                        $('#reNotes').val('');
-                        $('#reIndoors').prop('checked', false);
-
-                        $('#reDDock').prop('checked', false);
-                        $('#reDPier').prop('checked', false);
-                        $('#reDBank').prop('checked', false);
-                        $('#reDShop').prop('checked', false);
-
-                        $('#reDHospital').prop('checked', false);
-                        $('#reDBar').prop('checked', false);
-                        $('#reDRestaurant').prop('checked', false);
-                        $('#reDWaterSource').prop('checked', false);
-                        $('#reDTrainer').prop('checked', false);
-
-                        $('#reName').text('');
-
                     }
                     else {
+                        room.indoors = room.indoors ? true : false;
+                        this.$roomEditor.objects = [room];
                         $('#btn-walk').prop('disabled', !(mapper.current.ID && mapper.current.ID != room.ID));
                         $('#btn-highlight').prop('disabled', !(mapper.current.ID && mapper.current.ID != room.ID));
-                        $('#reName').text(room.name);
-                        $('#mapper-room input').prop('disabled', false);
-                        $('#mapper-room select').prop('disabled', false);
-                        $('#mapper-room button').prop('disabled', false);
-                        $('#mapper-room textarea').prop('disabled', false);
-
                         menubar.updateItem('edit|Remove selected room', { enabled: true });
                         menubar.updateItem('actions|highlight path', { enabled: mapper.current.ID && mapper.current.ID != room.ID });
                         menubar.updateItem('actions|walk path', { enabled: mapper.current.ID && mapper.current.ID != room.ID });
-
-                        $('#reX').val(room.x);
-                        $('#reY').val(room.y);
-                        $('#reZ').val(room.z);
-                        $('#reZone').val(room.zone);
-                        $('#reArea').val(room.area);
-                        $('#reBackground').val(room.background);
-                        $('#reTerrain').val(room.env);
-                        $('#reIndoors').prop('checked', room.indoors);
-                        $('#reNotes').val(room.notes);
-                        $('#reDDock').prop('checked', (room.details & RoomDetails.Dock) === RoomDetails.Dock);
-                        $('#reDPier').prop('checked', (room.details & RoomDetails.Pier) === RoomDetails.Pier);
-                        $('#reDBank').prop('checked', (room.details & RoomDetails.Bank) === RoomDetails.Bank);
-                        $('#reDShop').prop('checked', (room.details & RoomDetails.Shop) === RoomDetails.Shop);
-                        $('#reDHospital').prop('checked', (room.details & RoomDetails.Hospital) === RoomDetails.Hospital);
-                        $('#reDBar').prop('checked', (room.details & RoomDetails.Bar) === RoomDetails.Bar);
-                        $('#reDRestaurant').prop('checked', (room.details & RoomDetails.Restaurant) === RoomDetails.Restaurant);
-                        $('#reDWaterSource').prop('checked', (room.details & RoomDetails.WaterSource) === RoomDetails.WaterSource);
-                        $('#reDTrainer').prop('checked', (room.details & RoomDetails.Trainer) === RoomDetails.Trainer);
                     }
                 });
 
@@ -579,12 +761,8 @@
 
                 $(window).on('resize', () => {
                     $('#mapper-body').css('top', $('#mapper-toolbar').outerHeight() + 'px');
-                    $('#mapper-room').css('top', $('#mapper-toolbar').outerHeight() + 'px');
-                    if (roomEditor)
-                        mapper._canvas.width = $(window).width() - 60 - $('#mapper-room').outerWidth();
-                    else
-                        mapper._canvas.width = $(window).width() - 60;
-                    mapper._canvas.height = $(window).height() - 60 - $('#mapper-toolbar').outerHeight();
+                    mapper._canvas.width = $splitterEditor.panel1.clientWidth - 60;
+                    mapper._canvas.height = $splitterEditor.panel1.clientHeight - 60;
                     mapper.draw();
                 });
 
@@ -802,22 +980,33 @@
 
         function updateAreas() {
             $('#select-area option').remove();
-            $('#reArea option').remove();
             if (!mapper.ready) {
                 setTimeout(updateAreas, 10);
                 return;
             }
             let rows = mapper._db.prepare('SELECT DISTINCT Area from Rooms order by Area').all();
+            let data = [];
             if (rows && rows.length > 0) {
                 for (var a = 0; a < rows.length; a++) {
                     $('#select-area').append($('<option></option>').val(rows[a].Area).html(rows[a].Area));
-                    $('#reArea').append($('<option></option>').val(rows[a].Area).html(rows[a].Area));
+                    data.push(rows[a].Area);
                 }
                 if (mapper.active.area)
                     $('#select-area').val(mapper.active.area);
                 else
                     mapper.active.area = $('#select-area option:first').val();
             }
+
+            $roomEditor.setPropertyOptions({
+                property: 'area',
+                group: 'Location',
+                editor: {
+                    type: EditorType.select,
+                    options: {
+                        data: data
+                    }
+                }
+            });
         }
         function compact() {
             showProgress('Compacting map data&hellip;');
@@ -856,23 +1045,19 @@
         }
 
         function toggleRooms() {
-            roomEditor = !roomEditor;
-            if (roomEditor) {
-                $('#mapper-room').css('display', 'block');
-                $('#mapper-body').css('right', $('#mapper-room').outerWidth() + 'px');
+            //TODO hide editor
+            $splitterEditor.panel2Collapsed = !$splitterEditor.panel2Collapsed;
+            if (!$splitterEditor.panel2Collapsed) {
                 $('#btn-room').addClass('active');
-                $('#mapper-room').css('top', $('#mapper-toolbar').outerHeight() + 'px');
             }
             else {
-                $('#mapper-room').css('display', '');
-                $('#mapper-body').css('right', '');
                 $('#btn-room').removeClass('active');
             }
             $(window).trigger('resize');
-            window.opener.client.options.mapper.room = roomEditor;
+            window.opener.client.options.mapper.room = !$splitterEditor.panel2Collapsed;
             window.opener.client.saveOptions();
-            $('#btn-room').prop('aria-pressed', roomEditor);
-            menubar.updateItem('view|room properties', { checked: roomEditor });
+            $('#btn-room').prop('aria-pressed', !$splitterEditor.panel2Collapsed);
+            menubar.updateItem('view|room properties', { checked: !$splitterEditor.panel2Collapsed });
         }
 
         function refreshMap() {
@@ -1302,281 +1487,6 @@
             }
         });
     </script>
-</head>
-
-<body>
-    <div id="mapper-toolbar" class="btn-toolbar" role="toolbar">
-        <div class="btn-group" role="group">
-            <button id="btn-enable" type="button" class="btn btn-default btn-xs" title="Enabled" onclick="toggleEnabled()">
-                <i class="fa fa-map-o"></i>
-            </button>
-            <button id="btn-follow" type="button" class="btn btn-default btn-xs" title="Follow" onclick="toggleFollow()">
-                <i class="fa fa-paw"></i>
-            </button>
-            <button id="btn-legend" type="button" class="btn btn-default btn-xs" title="Show legend" onclick="toggleLegend()">
-                <i class="fa fa-map-marker"></i>
-            </button>
-            <button id="btn-room" type="button" class="btn btn-default btn-xs" title="Show room properties" onclick="toggleRooms();">
-                <i class="fa fa-list-alt"></i>
-            </button>
-        </div>
-        <div class="btn-group" role="group">
-            <button id="btn-refresh" type="button" class="btn btn-default btn-xs" title="Refresh map" onclick="refreshMap()">
-                <i class="fa fa-refresh"></i>
-            </button>
-            <button id="btn-compact" type="button" class="btn btn-default btn-xs" title="Compact map" onclick="compact()">
-                <i class="fa fa-compress"></i>
-            </button>
-        </div>
-        <div class="btn-group" role="group">
-            <button id="btn-split" type="button" class="btn btn-default btn-xs" title="Split areas" onclick="toggleSplitArea()">
-                <i class="fa fa-object-ungroup"></i>
-            </button>
-            <button id="btn-fill" type="button" class="btn btn-default btn-xs" title="Fill walls" onclick="toggleFillWalls()">
-                <i class="fa fa-building-o"></i>
-            </button>
-        </div>
-        <button id="btn-focus" type="button" class="btn btn-default btn-xs" title="Focus on current room" onclick="mapper.focusCurrentRoom()">
-            <i class="fa fa-crosshairs"></i>
-        </button>
-        <select id="select-area" class="form-control" title="Select Area"></select>
-        <div class="btn-group" style="float: left">
-            <label for="MapLevel" style="float: left">Level:</label>
-            <input id="MapLevel" class="form-control" type="number" title="Map Level">
-        </div>
-        <div class="btn-group" style="float: left">
-            <label for="MapZone" style="float: left">Zone:</label>
-            <input id="MapZone" class="form-control" type="number" title="Map Zone">
-        </div>
-        <div class="btn-group" role="group">
-            <button id="remove" type="button" class="btn btn-default btn-xs" aria-haspopup="true" title="Remove area/room">
-                <i class="fa fa-eraser"></i>&nbsp;
-                <span class="caret"></span>
-            </button>
-            <button id="export" type="button" class="btn btn-default btn-xs" aria-haspopup="true" title="Export/Import data">
-                <i class="fa fa-exchange"></i>&nbsp;
-                <span class="caret"></span>
-            </button>
-        </div>
-
-        <div class="btn-group" role="group">
-            <button type="button" class="btn btn-default btn-xs" title="Set selected as current" onclick="mapper.setCurrent()">
-                <i class="fa fa-circle"></i>
-            </button>
-            <button id="btn-highlight" type="button" class="btn btn-default btn-xs" disabled="disabled" title="Highlight path" onclick="mapper.showPath()">
-                <i class="fa fa-paint-brush"></i>
-            </button>
-            <button id="btn-clear" type="button" class="btn btn-default btn-xs" disabled="disabled" title="Clear path" onclick="mapper.clearPath()">
-                <i class="fa fa-times"></i>
-            </button>
-            <button id="btn-walk" type="button" class="btn btn-default btn-xs" disabled="disabled" title="Walk path" onclick="mapper.walkPath()">
-                <i class="fa fa-blind"></i>
-            </button>
-        </div>
-        <div class="btn-group" style="float: left">
-            <label for="MapZoom" style="float: left">Zoom:</label>
-            <input id="MapZoom" type="range" min="25" max="200" step="5" oninput="zoomMap($('#MapZoom').val(), true)">
-
-            <label id="MapZoomDisplay">100%</label>
-        </div>
-
-    </div>
-    <div id="mapper-body">
-        <div class="MapperNavButton" title="Scroll northwest" style="top:4px;left:4px;background-position: 0px 0px;" data-x="-1" data-y="-1"></div>
-        <div class="MapperNavButton" title="Scroll north" style="top:4px;left:50%;background-position: -22px 0px;margin-left:-11px;" data-x="0" data-y="-1"></div>
-        <div class="MapperNavButton" title="Scroll northeast" style="top:4px;left:100%;background-position: -44px 0px;margin-left:-26px;" data-x="1" data-y="-1"></div>
-        <div class="MapperNavButton" title="Scroll west" style="top:50%;left:4px;background-position: 0px -22px;margin-top:-11px;" data-x="-1" data-y="0"></div>
-        <div class="MapperNavButton" title="Scroll east" style="top:50%;left:100%;background-position: -44px -22px;margin-top:-11px;margin-left:-26px;" data-x="1" data-y="0"></div>
-        <div class="MapperNavButton" title="Scroll southwest" style="bottom:4px;left:4px;background-position: 0px -44px;" data-x="-1" data-y="1"></div>
-        <div class="MapperNavButton" title="Scroll south" style="bottom:4px;left:50%;background-position: -22px -44px;margin-left:-11px;" data-x="0" data-y="1"></div>
-        <div class="MapperNavButton" title="Scroll southeast" style="bottom:4px;left:100%;background-position: -44px -44px;margin-left:-26px;" data-x="1" data-y="1"></div>
-        <canvas id="MapperCanvas" class="map-canvas" tabindex="1"></canvas>
-    </div>
-    <div id="mapper-room">
-        <div class="panel-group" id="accordion" role="tablist" style="overflow: auto;bottom: 20px;position: absolute;top: 0px;width: 100%;">
-            <div class="panel panel-default">
-                <div class="panel-heading" role="tab" id="headingOne">
-                    <h4 class="panel-title">
-                        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                            General
-                        </a>
-                    </h4>
-                </div>
-                <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
-                    <div class="panel-body">
-                        <div class="form-group" style="text-align: center">
-                            <p class="form-control-static" id="reName"></p>
-                        </div>
-                        <div class="form-group">
-                            <label class="control-label">
-                                Background
-                                <input type="text" id="reBackground" class="form-control" />
-                            </label>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="control-label">
-                                Terrain
-                                <input type="text" id="reTerrain" class="form-control" />
-                            </label>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="control-label">
-                                <input type="checkbox" id="reIndoors" /> Indoors
-                            </label>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="control-label">
-                                Notes
-                                <textarea rows="3" id="reNotes" class="form-control" style="resize: none;"></textarea>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="panel panel-default">
-                <div class="panel-heading" role="tab" id="headingThree">
-                    <h4 class="panel-title">
-                        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                            Details
-                        </a>
-                    </h4>
-                </div>
-                <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
-                    <div class="panel-body">
-                        <fieldset>
-                            <legend>Room</legend>
-
-                            <div class="form-group">
-                                <label class="control-label">
-                                    <input type="checkbox" id="reDDock" /> Dock
-                                </label>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="control-label">
-                                    <input type="checkbox" id="reDPier" /> Pier
-                                </label>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="control-label">
-                                    <input type="checkbox" id="reDBank" /> Bank
-                                </label>
-                            </div>
-                            <div class="form-group">
-                                <label class="control-label">
-                                    <input type="checkbox" id="reDWaterSource" /> WaterSource
-                                </label>
-                            </div>
-                        </fieldset>
-                        <fieldset>
-                            <legend>NPC</legend>
-                            <div class="form-group">
-                                <label class="control-label">
-                                    <input type="radio" id="reDNone" name="dne" checked="checked" /> None
-                                </label>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="control-label">
-                                    <input type="radio" id="reDShop" name="dne" /> Shop
-                                </label>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="control-label">
-                                    <input type="radio" id="reDHospital" name="dne" /> Hospital
-                                </label>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="control-label">
-                                    <input type="radio" id="reDBar" name="dne" /> Bar
-                                </label>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="control-label">
-                                    <input type="radio" id="reDRestaurant" name="dne" /> Restaurant
-                                </label>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="control-label">
-                                    <input type="radio" id="reDTrainer" name="dne" /> Trainer
-                                </label>
-                            </div>
-                        </fieldset>
-                    </div>
-                </div>
-            </div>
-            <div class="panel panel-default">
-                <div class="panel-heading" role="tab" id="headingTwo">
-                    <h4 class="panel-title">
-                        <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                            Location
-                        </a>
-                    </h4>
-                </div>
-                <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
-                    <div class="panel-body">
-                        <div class="form-group">
-                            <label class="control-label">
-                                X
-                                <input type="number" id="reX" class="form-control" />
-                            </label>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="control-label">
-                                Y
-                                <input type="number" id="reY" class="form-control" />
-                            </label>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="control-label">
-                                Z
-                                <input type="number" id="reZ" class="form-control" />
-                            </label>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="control-label">
-                                Zone
-                                <input type="number" id="reZone" class="form-control" />
-                            </label>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="control-label">
-                                Area
-                                <select id="reArea" style="width:100%" name="reArea" class="form-control" data-width="auto"></select>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="form-group" style="width:100%;text-align: center;position: absolute;bottom:4px;">
-            <button type="button" class="btn btn-default" onclick="saveRoom();">
-                <i class="fa fa-save"></i> Save</button>
-        </div>
-    </div>
-    <dialog id="mapProgress" style="z-index:1000;text-align:center" onclose="menubar.enabled = true;" oncancel="menubar.enabled = true;">
-        <div id="mapProgressTitle">Importing data&hellip;</div>
-        <div id="mapProgressbar">
-            <progress max="100"></progress>
-        </div>
-        <div id="mapProgressCancel">
-            <button onclick="mapper.cancelExport();">
-                Cancel
-            </button>
-        </div>
-    </dialog>
 </body>
 
 </html>

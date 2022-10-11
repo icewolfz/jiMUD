@@ -47,6 +47,7 @@
   - Add [client.sendToCommand](docs/scripting.md) for scripting to send command to all client windows
   - Add [client.sendToBackground](docs/scripting.md) for scripting to send command to all client windows  
   - Add [client.closeWindow](docs/scripting.md) for scripting to close an open window/tab
+  - Mapper: Room editor panel is now resizable
 - **Fixed:**
   - Fixed a bug in parsing #command arguments and quotes
   - Immortal tools: Fixed issue with multiple events not correctly working
@@ -67,6 +68,7 @@
     - Changed -c/--character to support # ids
     - Removed -mf argument to keep argument name scheme flowing
     - Removed -pf/--profiles as no longer supported, use character manager with per user settings  
+  - Mapper: Switch room editor to property grid control
   - Update electron 19.1.1 to 19.1.2
   - Update electron-updater 5.2.1 to 5.3.0
 

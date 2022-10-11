@@ -175,6 +175,55 @@ export class PropertyGrid extends EventEmitter {
             this.createEditor(this.$editor.el);
     }
 
+    public toggleGroup(group) {
+        const c2 = document.querySelector(`[data-group="${group}"]`);
+        if (!c2) {
+            this.$state[group] = !this.$state[group];
+            return;
+        }
+        const el2 = (<HTMLElement>c2.parentElement.children[2]);
+        if (el2.style.display === 'none') {
+            el2.style.display = '';
+            c2.classList.remove('fa-chevron-right');
+            c2.classList.add('fa-chevron-down');
+            this.$state[group] = false;
+            this.emit('group-expanded', group)
+        }
+        else {
+            el2.style.display = 'none';
+            c2.classList.add('fa-chevron-right');
+            c2.classList.remove('fa-chevron-down');
+            this.$state[group] = true;
+            this.emit('group-collapsed', group)
+        }
+    }
+
+    public expandGroup(group) {
+        const c2 = document.querySelector(`[data-group="${group}"]`);
+        if (!c2)
+            this.$state[group] = false;        
+        if (!this.$state[group]) return;
+        const el2 = (<HTMLElement>c2.parentElement.children[2]);
+        el2.style.display = '';
+        c2.classList.remove('fa-chevron-right');
+        c2.classList.add('fa-chevron-down');
+        this.$state[group] = false;
+        this.emit('group-expanded', group)
+    }
+
+    public collapseGroup(group) {
+        const c2 = <HTMLElement>document.querySelector(`[data-group="${group}"]`);
+        if (!c2)
+            this.$state[group] = true;
+        if (this.$state[group]) return;
+        const el2 = (<HTMLElement>c2.parentElement.children[2]);
+        el2.style.display = 'none';
+        c2.classList.add('fa-chevron-right');
+        c2.classList.remove('fa-chevron-down');
+        this.$state[group] = true;
+        this.emit('group-collapsed', group)
+    }
+
     public get properties() {
         return Object.keys(this.$options);
     }
@@ -314,12 +363,14 @@ export class PropertyGrid extends EventEmitter {
                     c2.classList.remove('fa-chevron-right');
                     c2.classList.add('fa-chevron-down');
                     this.$state[c2.dataset.group] = false;
+                    this.emit('group-expanded', c2.dataset.group)
                 }
                 else {
                     el2.style.display = 'none';
                     c2.classList.add('fa-chevron-right');
                     c2.classList.remove('fa-chevron-down');
                     this.$state[c2.dataset.group] = true;
+                    this.emit('group-collapsed', c2.dataset.group)
                 }
             });
             el.appendChild(lbl);

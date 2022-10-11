@@ -17,6 +17,8 @@ export class Mapper {
     public split: boolean = false;
     public fill: boolean = false;
     public room: boolean = false;
+    public roomWidth: number = 200;
+    public roomGroups: number = 1 | 2 | 4;
     public importType = 1;
     public vscroll: number = 0;
     public hscroll: number = 0;
