@@ -2906,7 +2906,7 @@
         menubar.updateItem('edit|select all', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('selectall') : false });
     }
 
-    function createWatcher() {
+    async function createWatcher() {
         if (watcher)
             watcher.close();
         watcher = chokidar.watch('', {
@@ -3644,9 +3644,9 @@
         menubar.enabled = false;
         if (!$dialogs.progress) {
             $dialogs.progress = {};
-            progress.addEventListener('close', closeProgressDialog);
-            progress.addEventListener('cancel', closeProgressDialog);
-            document.getElementById('progress-dialog-cancel').addEventListener('click', closeProgressDialog);
+            progress.addEventListener('close', () => closeProgressDialog());
+            progress.addEventListener('cancel', () => closeProgressDialog());
+            document.getElementById('progress-dialog-cancel').addEventListener('click', () => closeProgressDialog());
         }
         setProgressDialogValue(0);
         progress.showModal();
@@ -3791,7 +3791,7 @@
             window.opener.client.on('received-GMCP', processGMCP);
             window.opener.client.on('connected', clientConnected);
             window.opener.client.on('closed', clientClosed);
-
+            //#region init IED
             _ied = new IED();
             _ied.prefix = 'editor-';
             _ied.compressUpload = true;
@@ -4185,6 +4185,11 @@
                         window.opener.client.sendGMCP('IED.cmd ' + JSON.stringify({ cmd: 'debug', path: path.dirname(item.remote), file: path.basename(item.remote), tag: 'editor-debug:' + id }));
                 }
             });
+            _ied.on('send-gmcp', command => {
+                if (window.opener)
+                    window.opener.client.sendGMCP(command);
+            });
+            //#endregion
         }
         $('#btm-drag-bar').mousedown(function (e) {
             e.preventDefault();
@@ -4337,7 +4342,7 @@
         postEditorLoad();
     });
 
-    function postEditorLoad() {
+    async function postEditorLoad() {
         if (!_ready) {
             setTimeout(postEditorLoad, 10);
             return;
