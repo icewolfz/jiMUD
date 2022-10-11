@@ -365,6 +365,21 @@
                 $splitterEditor.panel1.appendChild(document.getElementById('map'));
                 document.getElementById('map').style.display = 'block';
                 $roomEditor = new PropertyGrid({ parent: $splitterEditor.panel2 });
+                $roomEditor.hideUnSetProperties = true;
+                $roomEditor.setGroupOptions([
+                    {
+                        group: 'General',
+                        sort: 1
+                    },
+                    {
+                        group: 'Location',
+                        sort: 3
+                    },
+                    {
+                        group: 'Details',
+                        sort: 2
+                    }
+                ]);
                 $roomEditor.setPropertyOptions([
                     {
                         property: 'exits',
@@ -392,7 +407,8 @@
                     },
                     {
                         property: 'indoors',
-                        group: 'Details'
+                        group: 'Details',
+                        sort: 7
                     },
                     {
                         property: 'area',
@@ -466,7 +482,7 @@
                         property: 'background',
                         label: 'Background',
                         group: 'General',
-                        sort: 1,
+                        sort: 2,
                         editor: {
                             options: {
                                 singleLine: true,
