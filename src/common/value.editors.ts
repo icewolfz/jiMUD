@@ -135,7 +135,7 @@ export class TextValueEditor extends ValueEditor {
         this.$el = document.createElement('div');
         this.$el.dataset.editor = 'true';
         this.$el.classList.add('property-grid-editor-dropdown-fill');
-        if(this.options.noDropdown)
+        if (this.options && this.options.noDropdown)
             this.$el.classList.add('property-grid-no-dropdown');
         const el = document.createElement('div');
         el.classList.add('property-grid-editor-dropdown-fill-container');
@@ -259,7 +259,7 @@ export class TextValueEditor extends ValueEditor {
         });
 
         el.appendChild(this.$editor);
-        if (!this.options.noDropdown) {
+        if (!this.options || !this.options.noDropdown) {
             const vl = document.createElement('button');
             vl.title = 'Open editor...';
             vl.innerHTML = '<span class="caret"></span>';
@@ -1088,9 +1088,12 @@ export class DropDownEditValueEditor extends ValueEditor {
             if (height < 160) {
                 this.$dropdown.style.height = height + 'px';
                 this.$dropdown.style.overflow = 'hidden';
+                this.positionDropdown(height);
             }
-            else
+            else {
                 this.$dropdown.style.height = '160px';
+                this.positionDropdown(160);
+            }
             this.$dropdown.addEventListener('click', (e2) => {
                 e2.stopPropagation();
                 e2.cancelBubble = true;
@@ -1107,7 +1110,6 @@ export class DropDownEditValueEditor extends ValueEditor {
                 e2.stopPropagation();
                 e2.cancelBubble = true;
             });
-            this.positionDropdown();
             this.container.appendChild(this.$dropdown);
             this.$dropdown.focus();
         });
@@ -1133,12 +1135,12 @@ export class DropDownEditValueEditor extends ValueEditor {
 
     public openAdvanced() { /**/ }
 
-    private positionDropdown() {
+    private positionDropdown(height?) {
         const b = this.parent.getBoundingClientRect();
         const c = this.container.getBoundingClientRect();
         let left = 0;
         let width = 150;
-        let top = b.top + this.$editor.parentElement.offsetHeight - c.top;
+        let top = b.bottom - c.top;
         if (b.width < 150) {
             left = (b.left - 150 + b.width - c.left);
         }
@@ -1152,9 +1154,10 @@ export class DropDownEditValueEditor extends ValueEditor {
             width = document.body.clientWidth;
         if (Math.abs(left) + width > document.body.clientWidth)
             left = document.body.clientWidth - width;
+        height = height || this.$dropdown.offsetHeight;
         //extends past bottom so open up
-        if (top + this.$dropdown.offsetHeight > document.body.clientHeight)
-            top = b.top - this.$dropdown.offsetHeight;
+        if (top + height > document.body.clientHeight)
+            top = b.top - height;
 
         this.$dropdown.style.left = left + 'px';
         this.$dropdown.style.width = width + 'px';

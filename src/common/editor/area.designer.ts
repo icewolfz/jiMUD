@@ -1217,7 +1217,6 @@ export class AreaDesigner extends EditorBase {
         this.parent.appendChild(frag);
         //#region create map editor
         this.$splitterEditor = new Splitter({ parent: this.parent, orientation: Orientation.vertical });
-        this.$splitterEditor.Panel2MinSize = 300;
         this.$splitterEditor.on('splitter-moved', (e) => {
             this.emit('room-splitter-moved', e);
             this.emit('option-changed', 'editorWidth', e);

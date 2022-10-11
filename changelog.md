@@ -51,7 +51,9 @@
   - Fixed a bug in parsing #command arguments and quotes
   - Immortal tools: Fixed issue with multiple events not correctly working
   - Profile manager: Fixed code editor spell checking replacement
-  - Code editor: Fix upload cancel button
+  - Code editor:
+    - Fixed upload cancel button
+    - Fixed Area designer/Virtual area property drop downs shifting editors
 - **Changed:**
   - All dark icons now have a white stroke to make them work better with dark mode and dark colors
   - Preferences that are now global:
