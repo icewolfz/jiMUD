@@ -549,8 +549,8 @@
                     window.opener.client.saveOptions();
                 });
 
-                this.$roomEditor.on('value-changed', (prop, newValue, oldValue) => {
-                    const selected = this.$roomEditor.objects.length ? this.$roomEditor.objects[0] : null;
+                $roomEditor.on('value-changed', (prop, newValue, oldValue) => {
+                    const selected = $roomEditor.object;
                     if (!selected) return;
                     mapper.getRoom(selected.ID, (room) => {
                         room.x = selected.x;
@@ -632,8 +632,8 @@
                 });
 
                 mapper.on('current-room-changed', (room) => {
-                    if ($roomEditor.objects && $roomEditor.objects.length !== 0 && room.ID === $roomEditor.objects[0].ID) {
-                        $roomEditor.objects = [room];
+                    if ($roomEditor.object && room.ID === $roomEditor.object.ID) {
+                        $roomEditor.object = room;
                     }
                     $('#btn-walk').prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
                     $('#btn-highlight').prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
@@ -646,7 +646,7 @@
                 mapper.on('room-selected', (room) => {
                     $('#reDNone').prop('checked', true);
                     if (!room || room.ID == null) {
-                        this.$roomEditor.objects = null;
+                        $roomEditor.objects = null;
                         $('#btn-walk').prop('disabled', true);
                         $('#btn-highlight').prop('disabled', true);
                         menubar.updateItem('edit|Remove selected room', { enabled: false });
@@ -655,7 +655,7 @@
                     }
                     else {
                         room.indoors = room.indoors ? true : false;
-                        this.$roomEditor.objects = [room];
+                        $roomEditor.object = room;
                         $('#btn-walk').prop('disabled', !(mapper.current.ID && mapper.current.ID != room.ID));
                         $('#btn-highlight').prop('disabled', !(mapper.current.ID && mapper.current.ID != room.ID));
                         menubar.updateItem('edit|Remove selected room', { enabled: true });

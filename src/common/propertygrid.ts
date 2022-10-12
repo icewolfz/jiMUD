@@ -92,7 +92,7 @@ export class PropertyGrid extends EventEmitter {
         return this.$objects[0];
     }
     set object(value) {
-        this.objects = value;
+        this.objects = [value];
     }
 
     get objects() { return this.$objects; }
