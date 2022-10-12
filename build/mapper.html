@@ -723,6 +723,8 @@
                             },
                             {
                                 label: 'Remove', Room: room, click: (item) => {
+                                    if ($roomEditor.object && item.Room && item.Room.ID === $roomEditor.object.ID)
+                                        $roomEditor.object = null;
                                     mapper.removeRoom(item.Room);
                                 }
                             },
@@ -1380,8 +1382,11 @@
                 defaultId: 1,
                 noLink: true
             }).then(result => {
-                if (result.response === 0)
+                if (result.response === 0) {
+                    if (mapper.selected && $roomEditor.object && mapper.selected.ID === $roomEditor.object.ID)
+                        $roomEditor.object = null;
                     mapper.clearSelectedRoom();
+                }
             });
         }
 
@@ -1395,8 +1400,11 @@
                 defaultId: 1,
                 noLink: true
             }).then(result => {
-                if (result.response === 0)
+                if (result.response === 0) {
+                    if (mapper.current && $roomEditor.object && mapper.current.ID === $roomEditor.object.ID)
+                        $roomEditor.object = null;
                     mapper.clearRoom();
+                }
             });
         }
 
@@ -1410,8 +1418,11 @@
                 defaultId: 1,
                 noLink: true
             }).then(result => {
-                if (result.response === 0)
+                if (result.response === 0) {
+                    if ($roomEditor.object && $roomEditor.object.area === mapper.active.area)
+                        $roomEditor.object = null;
                     mapper.clearArea();
+                }
             });
         }
 
@@ -1425,8 +1436,11 @@
                 defaultId: 1,
                 noLink: true
             }).then(result => {
-                if (result.response === 0)
+                if (result.response === 0) {
+                    if ($roomEditor.object)
+                        $roomEditor.object = null;
                     mapper.clearAll();
+                }
             });
         }
 
@@ -1440,8 +1454,11 @@
                 defaultId: 1,
                 noLink: true
             }).then(result => {
-                if (result.response === 0)
+                if (result.response === 0) {
+                    if ($roomEditor.object)
+                        $roomEditor.object = null;
                     mapper.resetMap();
+                }
             });
         }
 
