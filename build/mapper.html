@@ -632,7 +632,7 @@
                 });
 
                 mapper.on('current-room-changed', (room) => {
-                    if ($roomEditor.objects && room.ID === $roomEditor.objects[0].ID) {
+                    if ($roomEditor.objects && $roomEditor.objects.length !== 0 && room.ID === $roomEditor.objects[0].ID) {
                         $roomEditor.objects = [room];
                     }
                     $('#btn-walk').prop('disabled', !(mapper.selected.ID && room.ID && mapper.selected.ID != room.ID));
