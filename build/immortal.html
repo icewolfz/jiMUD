@@ -1909,7 +1909,7 @@
             $('#queue-list tbody').on('dblclick', 'tr', function () {
                 var data = queueTable.row(this).data();
                 if (!data) return;
-                if (data.state === ItemState.paused)
+                if (data.state === ItemState.paused || data.state === ItemState.error)
                     _ied.startItem(data.id);
                 else
                     _ied.pauseItem(data.id);
@@ -3120,6 +3120,7 @@
                             //const localPath = path.dirname(local);
                             //name = getNewNamePath(path.basename(file), localPath);
                             //_ied.uploadTo(file, p + '/' + name, false, 0, true);
+                            _ied.uploadSkip(file, p + '/' + path.basename(file), 0, true, 'Renaming not allowed');
                             logMessage('Batch uploading does not support renaming if file exists, skipping file: ' + file);
                             return true;
                         }
@@ -3130,6 +3131,52 @@
                     _ied.uploadTo(file, p + '/' + path.basename(file), false, 0, true);
                     $('#Progress progress').val(Math.ceil((pTotal - pFiles.length) * 100 / pTotal));
                     setTimeout(upNext, 0);
+                });
+        }
+
+        function uploadAgain(item) {
+            //minor optimizing if just overwrite and queue/always just skip the server round trip
+            if (options.fileExistOverwrite === 1 && (_queue === 4 || options.fileExistAlways === 2))
+                _ied.startItem(item.id);
+            else
+                _ied.exist(item.remote, false, 'upload', async (target, data) => {
+                    //file exist if it returns an array of data, 0 is size, 1 is date
+                    if (Array.isArray(data)) {
+                        var remoteData = {
+                            name: path.basename(target),
+                            size: data[0],
+                            date: data[1],
+                            path: target,
+                        }
+                        var localData = IED.getFileInfo(item.local);
+                        //if not applied to queue or always ask
+                        if (_queue !== 4 && options.fileExistAlways !== 2)
+                            if (!await fileExist(localData, remoteData)) return false;
+
+                        if (options.fileExistOverwrite === 2 || options.fileExistOverwrite === 6) {
+                            //source older so skip
+                            if (remoteData.date <= localData.date)
+                                return true;
+                        }
+                        if (options.fileExistOverwrite === 4 || options.fileExistOverwrite === 6) {
+                            //same size so skip
+                            if (remoteData.size === localData.size)
+                                return true;
+                        }
+                        //rename
+                        if (options.fileExistOverwrite === 8) {
+                            //TODO think on how to do rename when remote file exist, maybe implement a new remote command that will generate a new file name
+                            //const localPath = path.dirname(local);
+                            //name = getNewNamePath(path.basename(file), localPath);
+                            //_ied.uploadTo(file, p + '/' + name, false, 0, true);
+                            logMessage('Batch uploading does not support renaming if file exists, skipping file: ' + file);
+                            return true;
+                        }
+                        //skip
+                        if (options.fileExistOverwrite === 16)
+                            return true;
+                    }
+                    _ied.startItem(item.id);
                 });
         }
 
@@ -3662,14 +3709,21 @@
         }
 
         function queueStart() {
-            var selected = queueTable.rows({ selected: true }).data().pluck('id');
-            for (var q = 0, ql = selected.length; q < ql; q++)
-                _ied.startItem(selected[q]);
+            var selected = queueTable.rows({ selected: true }).data();
+            for (var q = 0, ql = selected.length; q < ql; q++) {
+                if (selected[q].state === ItemState.error && selected[q].error === 'Renaming not allowed')
+                    uploadAgain(selected[q]);
+                else
+                    _ied.startItem(selected[q].id);
+            }
         }
         function queuePause() {
-            var selected = queueTable.rows({ selected: true }).data().pluck('id');
-            for (var q = 0, ql = selected.length; q < ql; q++)
-                _ied.pauseItem(selected[q]);
+            var selected = queueTable.rows({ selected: true }).data();
+            for (var q = 0, ql = selected.length; q < ql; q++) {
+                if (selected[q].state === ItemState.error && selected[q].error === 'Renaming not allowed')
+                    uploadAgain(selected[q]);
+                _ied.pauseItem(selected[q].id);
+            }
         }
         function queueStop() {
             var selected = queueTable.rows({ selected: true }).data().pluck('id');
@@ -4361,7 +4415,7 @@
         <div class="dialog-header" style="font-weight: bold">
             <button id="FileExist-header-close" type="button" class="close" data-dismiss="modal">&times;</button>
             <div style="padding-top: 2px;">File exists...</div>
-        </div>        
+        </div>
         <div class="dialog-body" style="margin-top:23px">
             <fieldset id="FileExist-source" class="col-sm-6 form-group" style="overflow: hidden">
                 <legend style="margin:0">Source:</legend>

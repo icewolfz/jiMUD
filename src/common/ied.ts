@@ -631,7 +631,7 @@ export class IED extends EventEmitter {
         }
     }
 
-    public uploadTo(file, remote, resolve?: boolean, tag?: string, mkdir?: boolean) {
+    public uploadTo(file, remote, resolve?: boolean, tag?: string, mkdir?) {
         if (!resolve) {
             let item;
             if (tag)
@@ -672,6 +672,40 @@ export class IED extends EventEmitter {
             this._id++;
             this.emit('message', 'Resolving: ' + file);
         }
+    }
+
+    public uploadSkip(file, remote, tag?: string, mkdir?, error?: string) {
+
+        let item;
+        if (tag)
+            item = new Item(tag);
+        else {
+            item = new Item(this.prefix + 'upload:' + this._id);
+            this._id++;
+        }
+        item.mkdir = mkdir;
+        item.compress = this.compressUpload;
+        if (this._paths[tag]) {
+            item.local = this._paths[tag];
+            item.remote = remote;
+        }
+        else {
+            item.local = file;
+            item.remote = remote;
+        }
+        item.tmp = this._temp;
+        item.info = IED.getFileInfo(item.local);
+        item.totalSize = item.info.size;
+        item.originalSize = item.info.size;
+        if(error) {
+            item.error = error;
+            item.state = ItemState.error;
+        }
+        else if (item.totalSize > 307200) {
+            item.state = ItemState.error;
+            item.error = 'File to large';
+        }
+        this.addItem(item);
     }
 
     public deleteFile(file, resolve?: boolean) {
@@ -988,7 +1022,7 @@ export class IED extends EventEmitter {
         this._activeIdx = -1;
         const ql = this.queue.length;
         for (let q = 0; q < ql; q++) {
-            if (this.queue[q].state !== ItemState.working) continue;
+            if (this.queue[q].state !== ItemState.working && this.queue[q].state !== ItemState.error) continue;
             this.active = this.queue[q];
             this._activeIdx = q;
             break;
