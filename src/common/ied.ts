@@ -466,6 +466,20 @@ export class IED extends EventEmitter {
         }
     }
 
+    public exist(file, resolve?: boolean, tag?: string, callback?) {
+        if (callback)
+            this._callbacks[this.prefix + 'exist' + this._id] = callback;
+        if (resolve) {
+            this.emit('send-gmcp', 'IED.resolve ' + JSON.stringify({ path: path.dirname(file), file: path.basename(file), tag: this.prefix + 'exist' + this._id }));
+            this.emit('message', 'Resolving: ' + file);
+        }
+        else {
+            this.emit('send-gmcp', 'IED.cmd ' + JSON.stringify({ cmd: 'exist', path: path.dirname(file), file: path.basename(file), tag: this.prefix + 'exist' + this._id }));
+            this.emit('message', 'Checking if file exists: ' + file);
+        }
+        this._id++;
+    }
+
     public download(file, resolve?: boolean, tag?: string, mkdir?: boolean) {
         if (!resolve) {
             let item;

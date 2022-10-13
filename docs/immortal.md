@@ -2,8 +2,6 @@
 
 Immortal tools allow wizards and other immortals to manage files. It provides a basic interface to browse, download, and upload files and common commands and features to make it easier to develop.
 
-**Note** Uploading paths will not check of remote file exists and will default to overwrite mode for all files
-
 ## Remote commands
 
 - `backup` Run the remote file backup command for selected files
@@ -30,8 +28,6 @@ Immortal tools allow wizards and other immortals to manage files. It provides a 
 You may drag files from local to queue or remote list to upload, from remote to local or queue to download. You may drop files from outside the application on local, remote, or queue. When dropping files on local list from the local system it will perform a move if file/folder does not exist otherwise it will create a copy with an appended (#).
 
 **Note:** if dropped from local system on queue it will be considered an upload to remote.
-
-**Note** Uploading paths will not check of remote file exists and will default to overwrite mode for all files
 
 ## Preferences
 
@@ -85,3 +81,4 @@ You may drag files from local to queue or remote list to upload, from remote to 
 
 - Dragging multiple files and dropping outside to other applications/windows will only drop the first file, all others ignored. This is a limitation of electron drag and drop support, until it is added it can not be supported outside of application
 - Queue pausing, The remote server only allows 2 uploads and 2 downloads at once, if you pause active upload or downloads you will receive in progress errors.
+- Uploading paths does not support rename file option for existing files

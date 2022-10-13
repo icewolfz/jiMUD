@@ -3074,10 +3074,63 @@
                 r = r.substr(0, r.length - 1);
             var p = path.dirname(file);
             p = r + p.substr(s).replace(/\\/g, '/');
-            //TODO figure out how to implement file exist, as right now no way to get remote file info easily, maybe some type of async await call
-            _ied.uploadTo(file, p + '/' + path.basename(file), false, 0, true);
-            $('#Progress progress').val(Math.ceil((pTotal - pFiles.length) * 100 / pTotal));
-            setTimeout(upNext, 0);
+            //minor optimizing if just overwrite and queue/always just skip the server round trip
+            if (options.fileExistOverwrite === 1 && (_queue === 4 || options.fileExistAlways === 2)) {
+                _ied.uploadTo(file, p + '/' + path.basename(file), false, 0, true);
+                $('#Progress progress').val(Math.ceil((pTotal - pFiles.length) * 100 / pTotal));
+                setTimeout(upNext, 0);
+            }
+            else
+                _ied.exist(p + '/' + path.basename(file), false, 'upload', async (target, data) => {
+                    //file exist if it returns an array of data, 0 is size, 1 is date
+                    if (Array.isArray(data)) {
+                        var remoteData = {
+                            name: path.basename(target),
+                            size: data[0],
+                            date: data[1],
+                            path: target,
+                        }
+                        var localData = IED.getFileInfo(file);
+                        //if not applied to queue or always ask
+                        if (_queue !== 4 && options.fileExistAlways !== 2) {
+                            const result = await fileExist(localData, remoteData);
+                            if (!result) {
+                                _progressCancel = true;
+                                pFiles = null;
+                                pTotal = 0;
+                                if ($('#Progress')[0].open)
+                                    $('#Progress')[0].close();
+                                return false;
+                            }
+                        }
+
+                        if (options.fileExistOverwrite === 2 || options.fileExistOverwrite === 6) {
+                            //source older so skip
+                            if (remoteData.date <= localData.date)
+                                return true;
+                        }
+                        if (options.fileExistOverwrite === 4 || options.fileExistOverwrite === 6) {
+                            //same size so skip
+                            if (remoteData.size === localData.size)
+                                return true;
+                        }
+                        //rename
+                        if (options.fileExistOverwrite === 8) {
+                            //TODO think on how to do rename when remote file exist, maybe implement a new remote command that will generate a new file name
+                            //const localPath = path.dirname(local);
+                            //name = getNewNamePath(path.basename(file), localPath);
+                            //_ied.uploadTo(file, p + '/' + name, false, 0, true);
+                            logMessage('Batch uploading does not support renaming if file exists, skipping file: ' + file);
+                            return true;
+                        }
+                        //skip
+                        if (options.fileExistOverwrite === 16)
+                            return true;
+                    }
+                    _ied.uploadTo(file, p + '/' + path.basename(file), false, 0, true);
+                    $('#Progress progress').val(Math.ceil((pTotal - pFiles.length) * 100 / pTotal));
+                    setTimeout(upNext, 0);
+                });
         }
 
         // eslint-disable-next-line no-unused-vars
@@ -3130,7 +3183,10 @@
                     if (options.fileExistOverwrite === 8) {
                         const localPath = path.dirname(local);
                         name = getNewNamePath(path.basename(file), localPath);
-                        _ied.downloadTo(file, path.join(localPath, name), false, 0, true);
+                        setTimeout(async () => {
+                            _ied.downloadTo(file, path.join(localPath, name), false, 0, true);
+                        }, 0);
+                        return true;
                     }
                     //skip
                     if (options.fileExistOverwrite === 16)
@@ -4036,7 +4092,8 @@
                 document.getElementById('action-Overwrite-' + (options.fileExistOverwrite || 1)).checked = true;
                 if (source) {
                     document.getElementById('FileExist-source').style.display = '';
-                    document.getElementById('FileExist-source-name').textContent = source.name || '';
+                    document.getElementById('FileExist-source-name').textContent = source.path || source.name || '';
+                    document.getElementById('FileExist-source-name').title = source.path || source.name || '';
                     document.getElementById('FileExist-source-date').textContent = source.date ? new moment(source.date).format('MM/DD/YYYY hh:mm:ss A') : '';
                     document.getElementById('FileExist-source-size').textContent = formatSize(source.size || 0);
                 }
@@ -4044,9 +4101,10 @@
                     document.getElementById('FileExist-source').style.display = 'none';
                 if (target) {
                     document.getElementById('FileExist-target').style.display = '';
-                    document.getElementById('FileExist-target-name').textContent = source.name || '';
-                    document.getElementById('FileExist-target-date').textContent = source.date ? new moment(source.date).format('MM/DD/YYYY hh:mm:ss A') : '';
-                    document.getElementById('FileExist-target-size').textContent = formatSize(source.size || 0);
+                    document.getElementById('FileExist-target-name').textContent = target.path || target.name || '';
+                    document.getElementById('FileExist-target-name').title = target.path || target.name || '';
+                    document.getElementById('FileExist-target-date').textContent = target.date ? new moment(target.date).format('MM/DD/YYYY hh:mm:ss A') : '';
+                    document.getElementById('FileExist-target-size').textContent = formatSize(target.size || 0);
                 }
                 else
                     document.getElementById('FileExist-target').style.display = 'none';
@@ -4300,13 +4358,13 @@
     </dialog>
     <dialog id="FileExist" style="z-index:1000;height:360px;width:600px;">
         <div class="dialog-body">
-            <fieldset id="FileExist-source" class="col-sm-6 form-group">
+            <fieldset id="FileExist-source" class="col-sm-6 form-group" style="overflow: hidden">
                 <legend style="margin:0">Source:</legend>
                 <div id="FileExist-source-name"></div>
                 <div id="FileExist-source-date"></div>
                 <div id="FileExist-source-size"></div>
             </fieldset>
-            <fieldset id="FileExist-target" class="col-sm-6 form-group">
+            <fieldset id="FileExist-target" class="col-sm-6 form-group" style="overflow: hidden">
                 <legend style="margin:0">Target:</legend>
                 <div id="FileExist-target-name"></div>
                 <div id="FileExist-target-date"></div>
