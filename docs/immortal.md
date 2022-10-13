@@ -2,6 +2,8 @@
 
 Immortal tools allow wizards and other immortals to manage files. It provides a basic interface to browse, download, and upload files and common commands and features to make it easier to develop.
 
+**Note** Uploading paths will not check of remote file exists and will default to overwrite mode for all files
+
 ## Remote commands
 
 - `backup` Run the remote file backup command for selected files
@@ -29,6 +31,8 @@ You may drag files from local to queue or remote list to upload, from remote to 
 
 **Note:** if dropped from local system on queue it will be considered an upload to remote.
 
+**Note** Uploading paths will not check of remote file exists and will default to overwrite mode for all files
+
 ## Preferences
 
 ### General
@@ -39,6 +43,20 @@ You may drag files from local to queue or remote list to upload, from remote to 
 - `Focus files on finish upload/download` will focus on the item in local if downloaded, or remote if uploaded
 - `Select files on finish upload/download` select item in local if downloaded, or remote if uploaded
 - `Enable compression` receive and send files compressed to try and improve upload/download speeds
+
+### File overwrite
+
+- `Action` The action to preform
+  - `Overwrite` Overwrite the exiting file
+  - `Overwrite if source newer` Only overwrite if the source file date is newer then target file date
+  - `Overwrite if different sizes` Only overwrite if source and target file sizes are different
+  - `Overwrite if source newer or different sizes` Only overwrite if the source file date is newer then target file date or file sizes are different
+  - `Rename` Auto rename the target file to a none existing file name by appending a unique # to the name
+  - `Skip` Skip the file
+- `Apply` How the actions are applied
+  - `Just this file` Will only apply action to this file and will ask for any additional existing files
+  - `Always` Always use this action and never option dialog
+  - `Just for this queue` Will apply the action to the current batch upload or download
 
 ### Editor
 

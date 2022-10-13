@@ -48,6 +48,7 @@
   - Add [client.sendToBackground](docs/scripting.md) for scripting to send command to all client windows  
   - Add [client.closeWindow](docs/scripting.md) for scripting to close an open window/tab
   - Mapper: Room editor panel is now resizable
+  - Immortal tools: File overwrite system has been added for all but uploading paths
 - **Fixed:**
   - Fixed a bug in parsing #command arguments and quotes
   - Immortal tools: Fixed issue with multiple events not correctly working

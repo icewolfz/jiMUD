@@ -116,6 +116,42 @@
             });
             $('input[type="radio"]').change(function () {
                 switch ($(this).attr('id')) {
+                    case 'action-Overwrite-1':
+                        if (this.checked)
+                            _settings.extension.fileExistOverwrite = 1;
+                        break;
+                    case 'action-Overwrite-2':
+                        if (this.checked)
+                            _settings.extension.fileExistOverwrite = 2;
+                        break;
+                    case 'action-Overwrite-4':
+                        if (this.checked)
+                            _settings.extension.fileExistOverwrite = 4;
+                        break;
+                    case 'action-Overwrite-6':
+                        if (this.checked)
+                            _settings.extension.fileExistOverwrite = 6;
+                        break;
+                    case 'action-Overwrite-8':
+                        if (this.checked)
+                            _settings.extension.fileExistOverwrite = 8;
+                        break;
+                    case 'action-Overwrite-16':
+                        if (this.checked)
+                            _settings.extension.fileExistOverwrite = 16;
+                        break;
+                    case 'always-1':
+                        if (this.checked)
+                            _settings.extension.fileExistAlways = 1;
+                        break;
+                    case 'always-2':
+                        if (this.checked)
+                            _settings.extension.fileExistAlways = 2;
+                        break;
+                    case 'always-4':
+                        if (this.checked)
+                            _settings.extension.fileExistAlways = 4;
+                        break;
                     case 'tempFile-none':
                         if (this.checked)
                             _settings.extension.tempFile = TempType.none;
@@ -187,6 +223,12 @@
             $('#tempFile-extension').prop('checked', _settings.extension.tempFile === TempType.extension);
             $('#tempFile-file').prop('checked', _settings.extension.tempFile === TempType.file);
 
+            $('#action-Overwrite').prop('checked', true);
+            document.getElementById('always-1').checked = !_settings.extension.fileExistAlways || _settings.extension.fileExistAlways === 0;
+            document.getElementById('always-2').checked = _settings.extension.fileExistAlways === 2;
+            document.getElementById('always-4').checked = _settings.extension.fileExistAlways === 4;
+            document.getElementById('action-Overwrite-' + (_settings.extension.fileExistOverwrite || 1)).checked = true;
+
             $('#debug').prop('checked', _settings.extension.debug);
             $('#compress').prop('checked', _settings.extension.compress);
             $('#logErrors').prop('checked', _settings.extension.logErrors);
@@ -231,7 +273,9 @@
                 'tempFile': TempType.extension,
                 'focusOnFinished': true,
                 'selectOnFinished': true,
-                'compress': true
+                'compress': true,
+                'fileExistAlways': 0,
+                'fileExistOverwrite': 1
             };
             if (!_settings.window || !_settings.window.options)
                 _settings.window.options = {
@@ -265,6 +309,9 @@
         <ul class="nav nav-tabs" role="tablist" style="background-color: #F5F5F5;box-shadow: inset 0 -1px 0 #fff;">
             <li role="presentation" class="active">
                 <a href="#general" aria-controls="general" role="tab" data-toggle="tab">General</a>
+            </li>
+            <li role="presentation">
+                <a href="#overwrite" aria-controls="advanced" role="tab" data-toggle="tab">File overwrite</a>
             </li>
             <li role="presentation">
                 <a href="#editorTab" aria-controls="editorTab" role="tab" data-toggle="tab">Editor</a>
@@ -310,6 +357,67 @@
                             <input type="checkbox" id="selectOnFinished" /> Select files on finish upload/download
                         </label>
                     </div>
+                </div>
+            </div>
+            <div role="tabpanel" class="container tab-pane fade" id="overwrite" style="height: 195px;overflow: auto;">
+                <div class="col-xs-8 form-group">
+                    <fieldset>
+                        <legend style="margin:0">Action</legend>
+                        <ul style="list-style-type: none; margin: 0;padding: 0;">
+                            <li>
+                                <label>
+                                    <input type="radio" name="action-Overwrite" id="action-Overwrite-1"> Overwrite
+                                </label>
+                            </li>
+                            <li>
+                                <label>
+                                    <input type="radio" name="action-Overwrite" id="action-Overwrite-2"> Overwrite if source newer
+                                </label>
+                            </li>
+                            <li>
+                                <label>
+                                    <input type="radio" name="action-Overwrite" id="action-Overwrite-4"> Overwrite if different sizes
+                                </label>
+                            </li>
+                            <li>
+                                <label>
+                                    <input type="radio" name="action-Overwrite" id="action-Overwrite-6"> Overwrite if source newer or different sizes
+                                </label>
+                            </li>
+                            <li>
+                                <label>
+                                    <input type="radio" name="action-Overwrite" id="action-Overwrite-8"> Rename
+                                </label>
+                            </li>
+                            <li>
+                                <label>
+                                    <input type="radio" name="action-Overwrite" id="action-Overwrite-16"> Skip
+                                </label>
+                            </li>
+                        </ul>
+                    </fieldset>
+                </div>
+                <div class="col-xs-4 form-group">
+                    <fieldset>
+                        <legend style="margin:0">Apply</legend>
+                        <ul style="list-style-type: none; margin: 0;padding: 0;">
+                            <li>
+                                <label>
+                                    <input type="radio" name="always" id="always-1"> Just this file
+                                </label>
+                            </li>
+                            <li>
+                                <label>
+                                    <input type="radio" name="always" id="always-2"> Always
+                                </label>
+                            </li>
+                            <li>
+                                <label>
+                                    <input type="radio" name="always" id="always-4"> Just for this queue
+                                </label>
+                            </li>
+                        </ul>
+                    </fieldset>
                 </div>
             </div>
             <div role="tabpanel" class="container tab-pane fade" id="editorTab">

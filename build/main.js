@@ -139,7 +139,7 @@ process.on('unhandledRejection', (reason, promise) => {
 
 process.on('warning', warning => {
     if (global.debug || _settings.enableDebug)
-        console.warning(warning);
+        console.warn(warning);
 });
 
 function addInputContext(window, spellcheck) {
