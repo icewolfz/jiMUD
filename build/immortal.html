@@ -4059,6 +4059,7 @@
                 feDialog.addEventListener('close', fnClose);
                 feDialog.addEventListener('cancel', fnClose);
                 document.getElementById('FileExist-cancel').addEventListener('click', fnClose);
+                document.getElementById('FileExist-header-close').addEventListener('click', fnClose);
                 document.getElementById('FileExist-ok').addEventListener('click', () => {
                     feDialog.close();
                     options.fileExistOverwrite = 1;
@@ -4356,8 +4357,12 @@
             </button>
         </div>
     </dialog>
-    <dialog id="FileExist" style="z-index:1000;height:360px;width:600px;">
-        <div class="dialog-body">
+    <dialog id="FileExist" style="z-index:1000;height:393px;width:600px;">
+        <div class="dialog-header" style="font-weight: bold">
+            <button id="FileExist-header-close" type="button" class="close" data-dismiss="modal">&times;</button>
+            <div style="padding-top: 2px;">File exists...</div>
+        </div>        
+        <div class="dialog-body" style="margin-top:23px">
             <fieldset id="FileExist-source" class="col-sm-6 form-group" style="overflow: hidden">
                 <legend style="margin:0">Source:</legend>
                 <div id="FileExist-source-name" style="width: 100%;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;"></div>
