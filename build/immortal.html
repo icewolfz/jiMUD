@@ -3082,6 +3082,10 @@
             }
             else
                 _ied.exist(p + '/' + path.basename(file), false, 'upload', async (target, data) => {
+                    if(data === -2) {
+                        logMessage('Remote name is a directory');
+                        return true;
+                    }
                     //file exist if it returns an array of data, 0 is size, 1 is date
                     if (Array.isArray(data)) {
                         var remoteData = {
@@ -3116,12 +3120,10 @@
                         }
                         //rename
                         if (options.fileExistOverwrite === 8) {
-                            //TODO think on how to do rename when remote file exist, maybe implement a new remote command that will generate a new file name
-                            //const localPath = path.dirname(local);
-                            //name = getNewNamePath(path.basename(file), localPath);
-                            //_ied.uploadTo(file, p + '/' + name, false, 0, true);
-                            _ied.uploadSkip(file, p + '/' + path.basename(file), 0, true, 'Renaming not allowed');
-                            logMessage('Batch uploading does not support renaming if file exists, skipping file: ' + file);
+                            name = getNewNameRemote(path.basename(file), p);
+                            _ied.uploadTo(file, p + '/' + name, false, 0, true);
+                            $('#Progress progress').val(Math.ceil((pTotal - pFiles.length) * 100 / pTotal));
+                            setTimeout(upNext, 0);
                             return true;
                         }
                         //skip
@@ -3134,12 +3136,47 @@
                 });
         }
 
+        async function getNewNameRemote(name, p) {
+            return new Promise(async (resolve, reject) => {
+                var ext = path.extname(name);
+                var o = path.basename(name, ext);
+                if (!p) p = options.remote;
+                resolve(await _getNewNameRemote(o + ` (1)` + ext, name, p, 1));
+            });
+        }
+
+        async function _getNewNameRemote(newName, name, p, i) {
+            i = i || 0;
+            return new Promise(async (resolve, reject) => {
+                if (window.opener && !window.opener.client.connected) {
+                    resolve();
+                    return;
+                }
+                _ied.exist(p + '/' + newName, false, 'upload', async (target, data) => {
+                    //array file exist, -2 directory
+                    if (data === -1) {
+                        resolve(newName);
+                        return;
+                    }
+                    i++;
+                    var ext = path.extname(name);
+                    var o = path.basename(name, ext);
+                    if (!p) p = options.remote;
+                    resolve(await _getNewNameRemote(o + ` (${i})` + ext, name, p, i++));
+                });
+            });
+        }
+
         function uploadAgain(item) {
             //minor optimizing if just overwrite and queue/always just skip the server round trip
             if (options.fileExistOverwrite === 1 && (_queue === 4 || options.fileExistAlways === 2))
                 _ied.startItem(item.id);
             else
                 _ied.exist(item.remote, false, 'upload', async (target, data) => {
+                    if(data === -2) {
+                        logMessage('Remote name is a directory');
+                        return true;
+                    }                    
                     //file exist if it returns an array of data, 0 is size, 1 is date
                     if (Array.isArray(data)) {
                         var remoteData = {
@@ -3165,12 +3202,13 @@
                         }
                         //rename
                         if (options.fileExistOverwrite === 8) {
-                            //TODO think on how to do rename when remote file exist, maybe implement a new remote command that will generate a new file name
-                            //const localPath = path.dirname(local);
-                            //name = getNewNamePath(path.basename(file), localPath);
-                            //_ied.uploadTo(file, p + '/' + name, false, 0, true);
-                            logMessage('Batch uploading does not support renaming if file exists, skipping file: ' + file);
-                            return true;
+                            name = getNewNameRemote(path.basename(item.remote), path.dirname(item.remote));
+                            item.remote = path.dirname(item.remote) + '/' + name;
+                            var row = queueTable.row(function (idx, data) {
+                                return data.ID === item.ID;
+                            });
+                            row.data(item);
+                            doUpdate(8);
                         }
                         //skip
                         if (options.fileExistOverwrite === 16)
@@ -3709,20 +3747,15 @@
         }
 
         function queueStart() {
-            var selected = queueTable.rows({ selected: true }).data();
+            var selected = queueTable.rows({ selected: true }).data().pluck('id');
             for (var q = 0, ql = selected.length; q < ql; q++) {
-                if (selected[q].state === ItemState.error && selected[q].error === 'Renaming not allowed')
-                    uploadAgain(selected[q]);
-                else
-                    _ied.startItem(selected[q].id);
+                _ied.startItem(selected[q]);
             }
         }
         function queuePause() {
-            var selected = queueTable.rows({ selected: true }).data();
+            var selected = queueTable.rows({ selected: true }).data().pluck('id');
             for (var q = 0, ql = selected.length; q < ql; q++) {
-                if (selected[q].state === ItemState.error && selected[q].error === 'Renaming not allowed')
-                    uploadAgain(selected[q]);
-                _ied.pauseItem(selected[q].id);
+                _ied.pauseItem(selected[q]);
             }
         }
         function queueStop() {

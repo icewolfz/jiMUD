@@ -81,4 +81,3 @@ You may drag files from local to queue or remote list to upload, from remote to 
 
 - Dragging multiple files and dropping outside to other applications/windows will only drop the first file, all others ignored. This is a limitation of electron drag and drop support, until it is added it can not be supported outside of application
 - Queue pausing, The remote server only allows 2 uploads and 2 downloads at once, if you pause active upload or downloads you will receive in progress errors.
-- Uploading paths does not support rename file option for existing files
