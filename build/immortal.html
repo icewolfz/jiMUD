@@ -3299,11 +3299,13 @@
                     true : false;
             });
             row.remove();
-            if (_local[path.basename(p)].size === -2)
-                info.localDirs--;
-            else
-                info.localFiles--;
-            delete _local[path.basename(p)];
+            if (_local[path.basename(p)]) {
+                if (_local[path.basename(p)].size === -2)
+                    info.localDirs--;
+                else
+                    info.localFiles--;
+                delete _local[path.basename(p)];
+            }
             doUpdate(3);
         }
 
