@@ -224,9 +224,9 @@
             $('#tempFile-file').prop('checked', _settings.extension.tempFile === TempType.file);
 
             $('#action-Overwrite').prop('checked', true);
-            document.getElementById('always-1').checked = !_settings.extension.fileExistAlways || _settings.extension.fileExistAlways === 0;
+            document.getElementById('always-1').checked = _settings.extension.fileExistAlways === 0;
             document.getElementById('always-2').checked = _settings.extension.fileExistAlways === 2;
-            document.getElementById('always-4').checked = _settings.extension.fileExistAlways === 4;
+            document.getElementById('always-4').checked = !('fileExistAlways' in _settings.extension) || _settings.extension.fileExistAlways === 4;
             document.getElementById('action-Overwrite-' + (_settings.extension.fileExistOverwrite || 1)).checked = true;
 
             $('#debug').prop('checked', _settings.extension.debug);
@@ -274,7 +274,7 @@
                 'focusOnFinished': true,
                 'selectOnFinished': true,
                 'compress': true,
-                'fileExistAlways': 0,
+                'fileExistAlways': 4,
                 'fileExistOverwrite': 1
             };
             if (!_settings.window || !_settings.window.options)

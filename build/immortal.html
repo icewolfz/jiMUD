@@ -4086,9 +4086,9 @@
                     saveOptions();
                     feDialog.replaceWith(feDialog.cloneNode(true));
                 });
-                document.getElementById('always-1').checked = !options.fileExistAlways || options.fileExistAlways === 0;
+                document.getElementById('always-1').checked = options.fileExistAlways === 0;
                 document.getElementById('always-2').checked = options.fileExistAlways === 2;
-                document.getElementById('always-4').checked = options.fileExistAlways === 4;
+                document.getElementById('always-4').checked = !('fileExistAlways' in options) || options.fileExistAlways === 4;
                 document.getElementById('action-Overwrite-' + (options.fileExistOverwrite || 1)).checked = true;
                 if (source) {
                     document.getElementById('FileExist-source').style.display = '';
