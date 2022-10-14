@@ -190,7 +190,7 @@ $monsters: "./../../assets/monsters";
     background-image: url(#{$monsters}/dc-mon/animals/giant_frog.png);
 }
 
-.monster-bullfrog {
+.monster-llfrog {
     background-image: url(#{$monsters}/dc-mon/animals/blink_frog.png);
 }
 
@@ -242,12 +242,10 @@ $monsters: "./../../assets/monsters";
     background-position: -544px -896px;
 }
 
-/*
 .monster-buck {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/deer.png);
 }
-*/
+
 .monster-bug {
     background-image: url(#{$monsters}/dc-mon/animals/boulder_beetle.png);
 }
@@ -319,17 +317,14 @@ $monsters: "./../../assets/monsters";
     background-position: -352px -448px;
 }
 
-/*
 .monster-deer {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/deer.png);
 }
 
 .monster-doe {
-    background-image: url(#{$monsters}/32x32-2.png);
-    background-position: -640px -32px;
+    background-image: url(#{$monsters}/doe.png);
 }
-*/
+
 .monster-dog {
     background-image: url(#{$monsters}/32x32-2.png);
     background-position: -160px -416px;
@@ -348,7 +343,7 @@ $monsters: "./../../assets/monsters";
 .monster-dragon {
     background-image: url(#{$monsters}/32x32-6.png);
     background-position: -808px -184px;
-    animation: dragon-sprite 0.8s steps(2) infinite;
+    animation: monster-dragon-sprite 0.8s steps(2) infinite;
 }
 
 @keyframes monster-dragon-sprite {
@@ -433,11 +428,11 @@ $monsters: "./../../assets/monsters";
 }
 
 .monster-human {
-    background-image: url(#{$monsters}/dc-mon/animals/human.png);
+    background-image: url(#{$monsters}/dc-mon/human.png);
 }
 
 .monster-humanoid {
-    background-image: url(#{$monsters}/dc-mon/animals/human.png);
+    background-image: url(#{$monsters}/dc-mon/human.png);
 }
 
 .monster-insect {
@@ -617,7 +612,6 @@ $monsters: "./../../assets/monsters";
 
 .monster-rodent {
     background-image: url(#{$monsters}/dc-mon/animals/rat.png);
-    background-position: -640px -32px;
 }
 
 /*
@@ -628,7 +622,6 @@ $monsters: "./../../assets/monsters";
 */
 .monster-scorpion {
     background-image: url(#{$monsters}/dc-mon/animals/giant_scorpion.png);
-    background-position: -640px -32px;
 }
 
 /*
@@ -702,7 +695,6 @@ $monsters: "./../../assets/monsters";
 
 .monster-turtle {
     background-image: url(#{$monsters}/dc-mon/animals/snapping_turtle.png);
-    background-position: -640px -32px;
 }
 
 .monster-unicorn {

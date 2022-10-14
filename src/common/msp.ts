@@ -17,17 +17,30 @@ enum ParseMode {
     strict = 2
 }
 
+interface MSPData {
+    off: boolean;
+    file?: string;
+    url?: string;
+    volume?: number;
+    repeat?: number;
+    priority?: number;
+    type?: string;
+    continue?: boolean;
+}
+
 class SoundState extends EventEmitter {
     public _file: string = '';
     private _repeats: number = 1;
     private _volume: number = 100;
     private _priority: number = 50;
+    private _retries: number = 0;
 
     public current: number = 0;
     public sound = null;
     public playing: boolean = false;
     public url: string = '';
     public continue: boolean = true;
+    public maxErrorRetries: number = 0;
 
     set file(file: string) {
         if (!this.continue)
@@ -77,61 +90,91 @@ class SoundState extends EventEmitter {
         if (this._repeats > 0 && this.current < this._repeats) {
             this.current++;
             this.close();
-            this.open();
-            this.sound.setVolume(this._volume).play();
-            if (this.current < this._repeats) {
-                this.sound.bind('ended abort', (e) => {
-                    this.play();
-                });
-            }
-            else
-                this.sound.bind('ended abort', (e) => {
+            this.open().then(() => {
+                //reset to 0 as it was successful in prep of next sound
+                this._retries = 0;
+                this.sound.setVolume(this._volume).play();
+                if (this.current < this._repeats) {
+                    this.sound.bind('ended abort', (e) => {
+                        this.play();
+                    });
+                }
+                else
+                    this.sound.bind('ended abort', (e) => {
+                        this.playing = false;
+                        this.emit('ended');
+                    });
+                if (this.sound.isEnded())
                     this.playing = false;
-                    this.emit('ended');
-                });
-            if (this.sound.isEnded())
-                this.playing = false;
+            }).catch(err => {
+                //only retry until reaches max error retries to prevent infinite looping
+                if (this._retries < this.maxErrorRetries) {
+                    //reduce current as failed to play
+                    this.current--;
+                    this.play();
+                    this._retries++;
+                }
+                //if at max retries do nothing and reset to 0
+                else
+                    this._retries = 0;
+            });
         }
         else if (this._repeats === -1) {
             this.close();
-            this.open();
-            this.sound.setVolume(this._volume).loop().play();
-            if (this.sound.isEnded())
-                this.playing = false;
+            this.open().then(() => {
+                //reset to 0 as it was successful in prep of next sound
+                this._retries = 0;
+                this.sound.setVolume(this._volume).loop().play();
+                if (this.sound.isEnded())
+                    this.playing = false;
+            }).catch(err => {
+                //only retry until reaches max error retries to prevent infinite looping
+                if (this._retries < this.maxErrorRetries) {
+                    this.play();
+                    this._retries++;
+                }
+                //if at max retries do nothing and reset to 0
+                else
+                    this._retries = 0;
+            });
         }
         else
             this.playing = false;
     }
 
-    public open() {
+    public async open() {
         this.close();
-        this.sound = new buzz.sound(this.url + this._file);
-        this.sound.bind('loadeddata', (e) => {
-            this.emit('playing', { file: this._file, sound: this.sound, state: this, duration: buzz.toTimer(this.sound.getDuration()) });
-        });
-        this.sound.bind('error', (e) => {
-            if (e && e.currentTarget && e.currentTarget.error) {
-                switch (e.currentTarget.error.code) {
-                    case 1:
-                        this.emit('error', new Error(`MSP - Aborted: ${this.url}${this._file}`));
-                        break;
-                    case 2:
-                        this.emit('error', new Error(`MSP - Network error: ${this.url}${this._file}`));
-                        break;
-                    case 3:
-                        this.emit('error', new Error(`MSP - Could not decode: ${this.url}${this._file}`));
-                        break;
-                    case 4:
-                        this.emit('error', new Error(`MSP - Source not supported: ${this.url}${this._file}`));
-                        break;
+        return new Promise((resolve, reject) => {
+            this.sound = new buzz.sound(this.url + this._file);
+            this.sound.bind('loadeddata', (e) => {
+                this.emit('playing', { file: this._file, sound: this.sound, state: this, duration: buzz.toTimer(this.sound.getDuration()) });
+                resolve(1);
+            });
+            this.sound.bind('error', (e) => {
+                if (e && e.currentTarget && e.currentTarget.error) {
+                    switch (e.currentTarget.error.code) {
+                        case 1:
+                            this.emit('error', new Error(`MSP - Aborted: ${this.url}${this._file}`));
+                            break;
+                        case 2:
+                            this.emit('error', new Error(`MSP - Network error: ${this.url}${this._file}`));
+                            break;
+                        case 3:
+                            this.emit('error', new Error(`MSP - Could not decode: ${this.url}${this._file}`));
+                            break;
+                        case 4:
+                            this.emit('error', new Error(`MSP - Source not supported: ${this.url}${this._file}`));
+                            break;
+                    }
                 }
-            }
-            else if (e && e.currentTarget && e.currentTarget.networkState === 3)
-                this.emit('error', new Error(`MSP - Source not found or unable to play: ${this.url}${this._file}`));
-            else
-                this.emit('error', new Error('MSP - Unknown error'));
+                else if (e && e.currentTarget && e.currentTarget.networkState === 3)
+                    this.emit('error', new Error(`MSP - Source not found or unable to play: ${this.url}${this._file}`));
+                else
+                    this.emit('error', new Error('MSP - Unknown error'));
+                reject();
+            });
+            this.emit('opened');
         });
-        this.emit('opened');
     }
 
     public close() {
@@ -178,6 +221,7 @@ export interface MSPOptions {
 export class MSP extends EventEmitter {
     private _enabled: boolean = true;
     private _enableSound: boolean = true;
+    private _maxErrorRetries: number = 1;
     public server: boolean = false;
     public enableDebug: boolean = false;
 
@@ -221,6 +265,21 @@ export class MSP extends EventEmitter {
     }
 
     /**
+     * the number of retries to try before stopping when an error happens MSP
+     *
+     * @type {boolean}
+     * @memberof MSP
+     */
+    get maxErrorRetries() { return this._maxErrorRetries; }
+    set maxErrorRetries(value) {
+        if (value === this._maxErrorRetries) return;
+        this._maxErrorRetries = value;
+        this.MusicState.maxErrorRetries = value;
+        this.SoundState.maxErrorRetries = value;
+    }
+
+
+    /**
      * enable or disable enableSound, allow processing of msp
      *
      * @type {boolean}
@@ -245,7 +304,7 @@ export class MSP extends EventEmitter {
      * @returns {Object} return a MUSIC or SOUND argument object
      */
     private getArguments(text: string, type: number) {
-        const e = { off: false, file: '', url: '', volume: 100, repeat: 1, priority: 50, type: '', continue: true };
+        const e: MSPData = { off: false, file: '', url: '', volume: 100, repeat: 1, priority: 50, type: '', continue: true };
         const args = [];
         let state: number = 0;
         let str = [];
@@ -394,7 +453,7 @@ export class MSP extends EventEmitter {
      *
      * @param {Object} data Music argument object, contains all settings
      */
-    public music(data) {
+    public music(data: MSPData) {
         if (!this.enabled && !this.enableSound) return false;
         if (!data.file || data.file.length === 0) {
             if (data.off && data.url && data.url.length > 0)
@@ -445,7 +504,7 @@ export class MSP extends EventEmitter {
      * @param {Object} data Sound argument object, contains all settings
      * @todo make it play/stop sound
      */
-    public sound(data) {
+    public sound(data: MSPData) {
         if (!this.enabled && !this.enableSound) return false;
         if (!data.file || data.file.length === 0) {
             if (data.off && data.url && data.url.length > 0)
@@ -532,6 +591,53 @@ export class MSP extends EventEmitter {
                 data.telnet.sendData([255, 254, 90], true);
             }
             data.handled = true;
+        }
+    }
+
+    /**
+     * processGMCP - process incoming GMCP for Client.Media events
+     * @param {string} mod Client#received-GMCP module
+     * @param {Object} data Client#received-GMCP data object
+     */
+    public async processGMCP(mod: string, data: any) {
+        switch (mod) {
+            case 'Client.Media.Default':
+                if (data.type === 'sound' || !data.type)
+                    this.sound({ off: true, url: data.url });
+                else if (data.type === 'music')
+                    this.music({ off: true, url: data.url });
+                break;
+            //as we don't support loading and caching of media ignore this
+            case 'Client.Media.Load':
+                break;
+            case 'Client.Media.Play':
+                //start off with default values
+                const sound: MSPData = { off: false, file: data.name, url: '', volume: 50, repeat: 1, priority: 50, type: '', continue: true };
+                //process incoming data and set as needed
+                if (data.hasOwnProperty('url'))
+                    sound.url = data.url;
+                if (data.hasOwnProperty('tag'))
+                    sound.type = data.tag;
+                if (data.hasOwnProperty('volume'))
+                    sound.volume = data.volume;
+                if (data.hasOwnProperty('loops'))
+                    sound.repeat = data.loops;
+                if (data.hasOwnProperty('priority'))
+                    sound.priority = data.priority;
+                if (data.type === 'sound' || !data.type)
+                    this.sound(sound);
+                else if (data.type === 'music') {
+                    if (data.hasOwnProperty('continue') && (data.continue === 'false' || !data.continue))
+                        sound.continue = false;
+                    this.music(sound);
+                }
+                break;
+            case 'Client.Media.Stop':
+                if (data.type === 'sound' || !data.type)
+                    this.sound({ off: true });
+                else if (data.type === 'music')
+                    this.music({ off: true });
+                break;
         }
     }
 }

@@ -17,27 +17,33 @@
             user-select: none;
         }
     </style>
-    <script>
+    <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js"></script>
     <script src="../lib/bootstrap.min.js"></script>
     <script src="../lib/bootstrap-select.min.js"></script>
-    <script>
-        //spell-checker:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
-        const { parseTemplate, templatePath, isFileSync, decrypt, encrypt, clone } = require('./js/library');
+    <script type="text/javascript">
+        if (window.module) module = window.module;
+        //spell-checker:ignore yazl askonload keypress rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
+        const { parseTemplate, templatePath, isFileSync, isDirSync, decrypt, encrypt, clone, walkSync } = require('./js/library');
         const Settings = require('./js/settings').Settings;
-        const { shell, remote, ipcRenderer } = require('electron');
-        const { dialog, Menu, MenuItem } = remote;
+        const { shell, ipcRenderer } = require('electron');
         const path = require('path');
         const fs = require('fs');
         const crypto = require('crypto');
+        var archiver, archive;
 
         var characters, current = '';
         var charactersFile = parseTemplate(path.join('{data}', 'characters.json'));
         var changed = 0;
+        var askonloadCharacter = true;
 
         $(window).keydown((event) => {
+            if (document.getElementById('progress-dialog').open) {
+                event.preventDefault();
+                return false;
+            }
             if (event.which === 27) {
                 if ($('#get-name')[0].open)
                     $('#get-name')[0].close();
@@ -50,44 +56,27 @@
         });
 
         $(document).ready(() => {
+            if (process.platform === 'darwin')
+                document.getElementById('btn-close').style.display = 'block';
+            var set = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
+            askonloadCharacter = set.askonloadCharacter;
             $('#characters-list').contextmenu((event) => {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
-                var c = new Menu();
+                var c = [];
                 var item = $(event.target).data('name');
-                c.append(new MenuItem({
-                    label: 'Add default', click: add
-                }));
-                c.append(new MenuItem({
-                    label: 'Add empty', click: addEmpty
-                }));
+                c.push({ label: 'Add default', click: "add()" });
+                c.push({ label: 'Add empty', click: "addEmpty()" });
                 if (item !== undefined) {
-                    c.append(new MenuItem({ type: 'separator' }));
-                    c.append(new MenuItem({
-                        label: 'Rename', click: () => {
-                            rename(item);
-                        }
-                    }));
-
-                    c.append(new MenuItem({
-                        label: 'Copy', click: () => {
-                            copy(item);
-                        }
-                    }));
-                    c.append(new MenuItem({
-                        label: 'Delete', click: () => {
-                            remove(item);
-                        }
-                    }));
-                    c.append(new MenuItem({ type: 'separator' }));
-                    c.append(new MenuItem({
-                        label: 'Load', click: () => {
-                            load(item);
-                        }
-                    }));
+                    c.push({ type: 'separator' });
+                    c.push({ label: 'Rename', click: `rename('${item}')` });
+                    c.push({ label: 'Copy', click: `copy('${item}')` });
+                    c.push({ label: 'Delete', click: `remove('${item})'` });
+                    c.push({ type: 'separator' });
+                    c.push({ label: 'Load', click: `load('${item})'` });
                 }
-                c.popup({ window: remote.getCurrentWindow() });
+                ipcRenderer.invoke('show-context', c);
             });
             loadCharacters();
 
@@ -96,20 +85,13 @@
                 var pos = $(this).offset();
                 var x = Math.floor(pos.left);
                 var y = Math.floor(pos.top + $(this).outerHeight() + 2);
-                const addMenu = new Menu();
-                addMenu.append(new MenuItem({
-                    label: 'Add default', click() {
-                        clearButton('#btn-add-dropdown');
-                        add();
-                    }
-                }));
-                addMenu.append(new MenuItem({
-                    label: 'Add empty', click() {
-                        clearButton('#btn-add-dropdown');
-                        addEmpty();
-                    }
-                }));
-                addMenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
+                const addMenu = [{
+                    label: 'Add default', click: "clearButton('#btn-add-dropdown');add();"
+                },
+                {
+                    label: 'Add empty', click: "clearButton('#btn-add-dropdown');addEmpty();"
+                }];
+                ipcRenderer.invoke('show-context', addMenu, { x: x, y: y });
             });
 
             $('#get-name-ok').click(function () {
@@ -186,6 +168,11 @@
                 characters.characters[current].dev = $('#dev').prop('checked');
             }
 
+            if ($('#disconnect').prop('checked') != characters.characters[current].disconnect) {
+                changed++;
+                characters.characters[current].disconnect = $('#disconnect').prop('checked');
+            }
+
             v = $('#password').val() || '';
             if (v && v.length > 0) {
                 var key, iv;
@@ -211,6 +198,7 @@
                 characters.characters[current].password = v;
                 changed++;
             }
+            fs.writeFileSync(path.join(parseTemplate('{data}'), 'characters', current + '.notes'), $('#notes').val());
         }
 
         function saveCharacters() {
@@ -224,14 +212,14 @@
         // eslint-disable-next-line no-unused-vars
         function refresh() {
             if (changed > 0) {
-                dialog.showMessageBox(remote.getCurrentWindow(), {
+                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                     type: 'warning',
                     title: 'Refresh characters',
                     message: 'All changes will be lost, refresh?',
                     buttons: ['Yes', 'No'],
                     defaultId: 1,
-                }, (response) => {
-                    if (response === 0)
+                }).then((result) => {
+                    if (result.response === 0)
                         loadCharacters();
                 });
             }
@@ -287,11 +275,13 @@
                 $('#btn-load-close').prop('disabled', false);
                 $('#character-editor input').prop('disabled', false);
                 $('#character-editor button').prop('disabled', false);
+                $('#character-editor textarea').prop('disabled', false);
                 $('#settings').val(characters.characters[current].settings);
                 $('#map').val(characters.characters[current].map);
                 $('#name').val(characters.characters[current].name || current);
                 $('#auto-load').prop('checked', current === characters.load);
                 $('#dev').prop('checked', characters.characters[current].dev);
+                $('#disconnect').prop('checked', characters.characters[current].disconnect);
 
                 if (characters.characters[current].password && characters.characters[current].password.length > 0) {
                     var pass = characters.characters[current].password.split(':');
@@ -301,6 +291,12 @@
                     $('#password').val('');
 
                 $('#title').text(name);
+                let notes = path.join(parseTemplate('{data}'), 'characters', current + '.notes');
+                if (isFileSync(notes))
+                    $('#notes').val(fs.readFileSync(notes, 'utf-8'));
+                else
+                    $('#notes').val('');
+                $('.nav-tabs a[href="#tab-general"]').tab('show');
             });
             item.on('dblclick', function () {
                 $(this).click();
@@ -309,7 +305,6 @@
             });
             list.append(item);
         }
-
 
         function clearButton(id) {
             $(id).removeClass('open');
@@ -327,6 +322,7 @@
             $('#character-editor input[type=text]').val('');
             $('#character-editor input[type=checkbox]').prop('checked', false);
             $('#character-editor button').prop('disabled', true);
+            $('#character-editor textarea').prop('disabled', true);
             $('#title').text('');
         }
 
@@ -366,21 +362,20 @@
 
         // eslint-disable-next-line no-unused-vars
         function openFile(field, ext, callback) {
-            dialog.showOpenDialog(remote.getCurrentWindow(), {
+            ipcRenderer.invoke('show-dialog', 'showOpenDialog', {
                 defaultPath: path.dirname(parseTemplate($(field).val())),
                 filters: [
                     { name: ext[0].substr(0, 1).toUpperCase() + ext[0].substr(1) + ' (*.' + ext.join(', *.') + ')', extensions: ext },
                     { name: 'All files (*.*)', extensions: ['*'] },
                 ],
                 properties: ['promptToCreate']
-            },
-                function (fileNames) {
-                    if (fileNames === undefined) {
-                        return;
-                    }
-                    $(field).val(templatePath(fileNames[0]));
-                    if (callback) callback();
-                });
+            }).then(result => {
+                if (result.filePaths === undefined || result.filePaths.length === 0) {
+                    return;
+                }
+                $(field).val(templatePath(result.filePaths[0]));
+                if (callback) callback();
+            });
         }
 
         function add() {
@@ -389,7 +384,7 @@
                 var sf = parseTemplate(characters.characters[name].settings);
                 var response, d;
                 if (isFileSync(sf)) {
-                    response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
                         title: 'File exists',
                         message: 'Setting file for ' + name + ' exist, replace?',
@@ -407,7 +402,7 @@
                 }
                 sf = parseTemplate(characters.characters[name].map);
                 if (isFileSync(sf)) {
-                    response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
                         title: 'File exists',
                         message: 'Map file for ' + name + ' exist, replace?',
@@ -438,7 +433,7 @@
                 var sf = parseTemplate(characters.characters[name].settings);
                 var response, d;
                 if (isFileSync(sf)) {
-                    response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
                         title: 'File exists',
                         message: 'Setting file for ' + name + ' exist, replace?',
@@ -456,7 +451,7 @@
                 }
                 sf = parseTemplate(characters.characters[name].map);
                 if (isFileSync(sf)) {
-                    response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
                         title: 'File exists',
                         message: 'Map file for ' + name + ' exist, replace?',
@@ -487,7 +482,7 @@
                 var sf = parseTemplate(characters.characters[name].settings);
                 var response;
                 if (isFileSync(sf)) {
-                    response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
                         title: 'File exists',
                         message: 'Setting file for ' + name + ' exist, replace?',
@@ -499,10 +494,26 @@
                 }
                 else
                     fs.renameSync(f, sf);
+                f = path.join(parseTemplate('{data}'), 'characters', oldName + '.notes');
+                sf = path.join(parseTemplate('{data}'), 'characters', name + '.notes');
+                if (isFileSync(sf)) {
+                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                        type: 'warning',
+                        title: 'File exists',
+                        message: 'Notes file for ' + name + ' exist, replace?',
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1,
+                    });
+                    if (response === 0) {
+                        fs.renameSync(f, sf);
+                    }
+                }
+                else
+                    fs.renameSync(f, sf);
                 f = parseTemplate(characters.characters[oldName].map);
                 sf = parseTemplate(characters.characters[name].map);
                 if (isFileSync(sf)) {
-                    response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
                         title: 'File exists',
                         message: 'Map file for ' + name + ' exist, replace?',
@@ -515,6 +526,7 @@
                 }
                 else
                     fs.renameSync(f, sf);
+
                 changed++;
                 delete characters.characters[oldName];
                 $('#character-' + sanitizeID(oldName)).remove();
@@ -551,7 +563,7 @@
                 var sf = parseTemplate(characters.characters[name].settings);
                 var response;
                 if (isFileSync(sf)) {
-                    response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
                         title: 'File exists',
                         message: 'Setting file for ' + name + ' exist, replace?',
@@ -561,12 +573,30 @@
                     if (response === 0)
                         copyFile(f, sf);
                 }
-                else
+                else if (isFileSync(f))
                     copyFile(f, sf);
+
+                f = path.join(parseTemplate('{data}'), 'characters', oldName + '.notes');
+                sf = path.join(parseTemplate('{data}'), 'characters', name + '.notes');
+                if (isFileSync(sf)) {
+                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                        type: 'warning',
+                        title: 'File exists',
+                        message: 'Notes file for ' + name + ' exist, replace?',
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1,
+                    });
+                    if (response === 0) {
+                        copyFile(f, sf);
+                    }
+                }
+                else if (isFileSync(f))
+                    copyFile(f, sf);
+
                 f = parseTemplate(characters.characters[oldName].map);
                 sf = parseTemplate(characters.characters[name].map);
                 if (isFileSync(sf)) {
-                    response = dialog.showMessageBox(remote.getCurrentWindow(), {
+                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                         type: 'warning',
                         title: 'File exists',
                         message: 'Map file for ' + name + ' exist, replace?',
@@ -594,7 +624,7 @@
         function remove(name) {
             if (name === undefined)
                 name = current;
-            var response = dialog.showMessageBox(remote.getCurrentWindow(), {
+            var response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                 type: 'warning',
                 title: 'Remove character',
                 message: 'Remove ' + name + '?',
@@ -605,10 +635,13 @@
             if (response === 0) {
                 var sf = parseTemplate(characters.characters[name].settings);
                 if (isFileSync(sf))
-                    shell.moveItemToTrash(sf);
+                    ipcRenderer.send('trash-item', sf);
                 sf = parseTemplate(characters.characters[name].map);
                 if (isFileSync(sf))
-                    shell.moveItemToTrash(sf);
+                    ipcRenderer.send('trash-item', sf);
+                sf = path.join(parseTemplate('{data}'), 'characters', name + '.notes');
+                if (isFileSync(sf))
+                    ipcRenderer.send('trash-item', sf);
                 if (characters.load === name)
                     characters.load = 0;
                 delete characters.characters[name];
@@ -623,30 +656,53 @@
         function load(name) {
             if (name === undefined)
                 name = current;
-            var response = dialog.showMessageBox(remote.getCurrentWindow(), {
+            if (!askonloadCharacter) {
+                saveCharacters();
+                ipcRenderer.send('load-char', name);
+                return;
+            }
+            var response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                 type: 'warning',
                 title: 'Load character',
                 message: 'Load ' + name + '?',
-                buttons: ['Yes', 'No'],
+                buttons: ['Yes', 'No', 'Never ask again'],
                 defaultId: 1,
             });
-            if (response === 0) {
+            if (response === 2) {
+                saveCharacters();
+                ipcRenderer.send('load-char', name);
+                ipcRenderer.send('setting-changed', { type: 'normal', name: 'askonloadCharacter', value: false });
+                askonloadCharacter = false;
+            }
+            else if (response === 0) {
                 saveCharacters();
                 ipcRenderer.send('load-char', name);
             }
             return response;
         }
 
+
         // eslint-disable-next-line no-unused-vars
         function loadDefault() {
-            var response = dialog.showMessageBox(remote.getCurrentWindow(), {
+            if (!askonloadCharacter) {
+                saveCharacters();
+                ipcRenderer.send('load-default', name);
+                return;
+            }
+            var response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
                 type: 'warning',
                 title: 'Load defaults',
                 message: 'Load defaults?',
-                buttons: ['Yes', 'No'],
+                buttons: ['Yes', 'No', 'Never ask again'],
                 defaultId: 1,
             });
-            if (response === 0) {
+            if (response === 2) {
+                saveCharacters();
+                ipcRenderer.send('load-default', name);
+                ipcRenderer.send('setting-changed', { type: 'normal', name: 'askonloadCharacter', value: false });
+                askonloadCharacter = false;
+            }
+            else if (response === 0) {
                 saveCharacters();
                 ipcRenderer.send('load-default', name);
             }
@@ -689,8 +745,144 @@
             readStream.once('end', () => { });
             readStream.pipe(fs.createWriteStream(dest));
         }
+
+        // eslint-disable-next-line no-unused-vars
+        function backup() {
+            var file = ipcRenderer.sendSync('show-dialog-sync', 'showSaveDialog', {
+                title: 'Save as...',
+                defaultPath: path.join(parseTemplate('{documents}'), 'jiMUD-characters-data.zip'),
+                filters: [
+                    { name: 'Zip files (*.zip)', extensions: ['zip'] },
+                    { name: 'All files (*.*)', extensions: ['*'] },
+                ]
+            });
+            if (file === undefined || file.length === 0)
+                return;
+
+            showProgressDialog();
+            archiver = archiver || require('yazl');
+            var data = parseTemplate('{data}');
+            archive = new archiver.ZipFile();
+
+            if (isFileSync(charactersFile))
+                archive.addFile(charactersFile, 'characters.json');
+            if (isFileSync(path.join(data, 'map.sqlite')))
+                archive.addFile(path.join(data, 'map.sqlite'), 'map.sqlite');
+            if (isFileSync(path.join(data, 'mail.sqlite')))
+                archive.addFile(path.join(data, 'mail.sqlite'), 'mail.sqlite');
+            if (isFileSync(path.join(data, 'settings.json')))
+                archive.addFile(path.join(data, 'settings.json'), 'settings.json');
+
+            var files;
+            if (isDirSync(path.join(data, 'profiles'))) {
+                files = walkSync(path.join(data, 'profiles'));
+                files.files.forEach(file => {
+                    archive.addFile(file, file.substring(data.length + 1).replace(/\\/g, '/'));
+                });
+            }
+            if (isDirSync(path.join(data, 'characters'))) {
+                files = walkSync(path.join(data, 'characters'));
+                files.files.forEach(file => {
+                    archive.addFile(file, file.substring(data.length + 1).replace(/\\/g, '/'));
+                });
+            }
+
+            archive.outputStream.pipe(fs.createWriteStream(file)).on('close', function () {
+                closeProgressDialog();
+            });
+            archive.end(() => {
+                closeProgressDialog();
+            });
+        }
+
+        function showProgressDialog() {
+            var progress = document.getElementById('progress-dialog');
+            if (progress.open) return;
+            setProgressDialogValue(0);
+            progress.showModal();
+        }
+
+        function setProgressDialogValue(value) {
+            ipcRenderer.send('set-progress', { value: value });
+            ipcRenderer.send('set-progress-window', 'code-editor', { value: value });
+            document.getElementById('progress-dialog-progressbar').value = value * 100;
+        }
+
+        function closeProgressDialog() {
+            var progress = document.getElementById('progress-dialog');
+            if (progress.open)
+                progress.close();
+            setProgressDialogValue(-1);
+            document.getElementById('progress-dialog-progressbar').removeAttribute('value');
+            archive = null;
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function cancelProgress() {
+            if (archive)
+                archive.abort();
+            closeProgressDialog();
+        }
+
+        //ipcRenderer.invoke('window', 'openDevTools');
+
+        ipcRenderer.on('add-char', (event, char, empty, data, dialog) => {
+            if (dialog)
+                showGetName(char, function (event, name) {
+                    characters.characters[name] = { name: name.replace(/[^a-zA-Z0-9]+/g, ''), settings: path.join('{characters}', name + '.json'), map: path.join('{characters}', name + '.map') };
+                    var sf = parseTemplate(characters.characters[name].settings);
+                    var response, d;
+                    if (isFileSync(sf)) {
+                        response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                            type: 'warning',
+                            title: 'File exists',
+                            message: 'Setting file for ' + name + ' exist, replace?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1,
+                        });
+                        if (response === 0) {
+                            d = empty ? new Settings() : Settings.load(parseTemplate(path.join('{data}', 'settings.json')));
+                            d.save(sf);
+                        }
+                    }
+                    else {
+                        d = empty ? new Settings() : Settings.load(parseTemplate(path.join('{data}', 'settings.json')));
+                        d.save(sf);
+                    }
+                    sf = parseTemplate(characters.characters[name].map);
+                    if (isFileSync(sf)) {
+                        response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                            type: 'warning',
+                            title: 'File exists',
+                            message: 'Map file for ' + name + ' exist, replace?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1,
+                        });
+                        if (response === 0) {
+                            if (!empty && isFileSync(parseTemplate(path.join('{data}', 'map.sqlite'))))
+                                copyFile(parseTemplate(path.join('{data}', 'map.sqlite')), sf);
+                            else
+                                fs.closeSync(fs.openSync(sf, 'w'));
+                        }
+                    }
+                    else if (!empty && isFileSync(parseTemplate(path.join('{data}', 'map.sqlite'))))
+                        copyFile(parseTemplate(path.join('{data}', 'map.sqlite')), sf);
+                    else
+                        fs.closeSync(fs.openSync(sf, 'w'));
+                    changed++;
+                    createItem(name);
+                    saveCharacters();
+                    sortList();
+                });
+            else if (data && !characters[char]) {
+                characters[char] = data;
+                createItem(char);
+                saveCharacters();
+                sortList();
+            }
+        })
     </script>
-    <style>
+    <style type="text/css">
         .form-control-feedback,
         .form-error {
             display: none;
@@ -718,6 +910,9 @@
         <div class="btn-group" role="group">
             <button id="btn-refresh" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="refresh()">
                 <i class="fa fa-refresh"></i>
+            </button>
+            <button id="btn-save" type="button" class="btn btn-default btn-xs" title="Backup to zip" onclick="backup()">
+                <i class="fa fa-upload"></i>
             </button>
             <button id="btn-save" type="button" class="btn btn-default btn-xs" title="Save" onclick="saveCharacters()">
                 <i class="fa fa-save"></i>
@@ -750,9 +945,12 @@
                 <i class="fa fa-play"></i>
             </button>
         </div>
+        <button id="btn-close" type="button" class="btn btn-default btn-xs" style="display: none;float: right" title="Close" onclick="window.close()">
+            <i class="fa fa-window-close"></i>
+        </button>
     </div>
     <div id="main">
-        <div id="characters-container" class="panel panel-default" style="position: absolute;left: 2px;top: 2px;bottom:2px;width:200px;overflow: auto;margin:0">
+        <div id="characters-container" class="panel panel-default" style="position: absolute;left: 2px;top: 2px;bottom:2px;width:200px;margin:0;overflow: auto;">
             <ul id="characters-list" class="list-group">
 
             </ul>
@@ -762,43 +960,62 @@
                 Character:
                 <span id="title"></span>
             </div>
-            <div class="panel-body" id="character-editor">
-                <label class="control-label" style="width: 100%"> Login
-                    <input disabled="disabled" class="form-control" style="width:100%" type="text" id="name">
-                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Name to login as if different from character name</span>
-                </label>
-                <label class="control-label" style="width: 100%"> Password
-                    <input disabled="disabled" class="form-control" style="width:100%" type="password" id="password">
-                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Supply at own risk, the password is stored in basic encryption</span>
-                </label>
-                <label class="control-label"> Settings
-                    <div class="input-group" style="width:100%;">
-                        <input disabled="disabled" class="form-control" style="width:100%" type="text" id="settings">
-                        <span class="input-group-btn">
-                            <button disabled="disabled" class="btn btn-default" type="button" onclick="openFile('#settings', ['json'])">
-                                &hellip;
-                            </button>
-                        </span>
+            <div class="panel-body" id="character-editor" style="padding: 0px;">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="active">
+                        <a href="#tab-general" role="tab" data-toggle="tab">General</a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#tab-notes" role="tab" data-toggle="tab">Notes</a>
+                    </li>
+                </ul>
+                <div class="tab-content" style="position: absolute;bottom: 0;top: 42px;overflow: auto;left: 0;right: 0;">
+                    <div role="tabpanel" class="container tab-pane fade in active" id="tab-general">
+                        <label class="control-label" style="width: 100%"> Login
+                            <input disabled="disabled" class="form-control" style="width:100%" type="text" id="name">
+                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Name to login as if different from character name</span>
+                        </label>
+                        <label class="control-label" style="width: 100%"> Password
+                            <input disabled="disabled" class="form-control" style="width:100%" type="password" id="password">
+                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Supply at own risk, the password is stored in basic encryption</span>
+                        </label>
+                        <label class="control-label"> Settings
+                            <div class="input-group" style="width:100%;">
+                                <input disabled="disabled" class="form-control" style="width:100%" type="text" id="settings">
+                                <span class="input-group-btn">
+                                    <button disabled="disabled" class="btn btn-default" type="button" onclick="openFile('#settings', ['json'])">
+                                        &hellip;
+                                    </button>
+                                </span>
+                            </div>
+                        </label>
+                        <label class="control-label"> Map
+                            <div class="input-group" style="width:100%;">
+                                <input disabled="disabled" class="form-control" style="width:100%" type="text" id="map">
+                                <span class="input-group-btn">
+                                    <button disabled="disabled" class="btn btn-default" type="button" onclick="openFile('#map', ['map', 'sqlite'])">
+                                        &hellip;
+                                    </button>
+                                </span>
+                            </div>
+                        </label>
+                        <label class="control-label">
+                            <input disabled="disabled" type="checkbox" id="auto-load" /> Auto load
+                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Only one character can auto load, enabling this will disable previous auto loaded character</span>
+                        </label>
+                        <label class="control-label">
+                            <input disabled="disabled" type="checkbox" id="dev" /> Development
+                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Connect to development port</span>
+                        </label>
+                        <label class="control-label" style="float: right;">
+                            <input disabled="disabled" type="checkbox" id="disconnect" /> Disconnect on load
+                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Disconnect current connection</span>
+                        </label>
                     </div>
-                </label>
-                <label class="control-label"> Map
-                    <div class="input-group" style="width:100%;">
-                        <input disabled="disabled" class="form-control" style="width:100%" type="text" id="map">
-                        <span class="input-group-btn">
-                            <button disabled="disabled" class="btn btn-default" type="button" onclick="openFile('#map', ['map', 'sqlite'])">
-                                &hellip;
-                            </button>
-                        </span>
+                    <div role="tabpanel" class="container tab-pane fade in" id="tab-notes">
+                        <textarea id="notes" wrap="off" spellcheck="true" cols="20" rows="20" class="form-control" disabled="disabled"></textarea>
                     </div>
-                </label>
-                <label class="control-label">
-                    <input disabled="disabled" type="checkbox" id="auto-load" /> Auto load
-                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Only one character can auto load, enabling this will disable previous auto loaded character</span>
-                </label>
-                <label class="control-label">
-                    <input disabled="disabled" type="checkbox" id="dev" /> Development
-                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Connect to development port</span>
-                </label>
+                </div>
             </div>
         </div>
     </div>
@@ -819,6 +1036,12 @@
             <button onclick="$('#get-name')[0].close()">
                 Cancel
             </button>
+        </div>
+    </dialog>
+    <dialog id="progress-dialog" style="z-index:1000;text-align:center">
+        <div id="progress-dialog-title">Saving&hellip;</div>
+        <div>
+            <progress max="100" id="progress-dialog-progressbar"></progress>
         </div>
     </dialog>
 </body>

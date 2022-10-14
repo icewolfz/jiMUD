@@ -174,7 +174,7 @@ Create a new monster using a wizard for easy option selection
     - `Combat` a reaction during combat
     - `Combat party` a reaction during combat that effects party members
   - `Reaction` the reaction that causes monsters to react
-    - `low health ` fired when < 10% hp
+    - `low health` fired when < 10% hp
     - `half health` fired when < 50% hp
     - `hurt` fired when hp < max hp
     - `full health` fired when 100% hp
@@ -247,7 +247,7 @@ Allows you to edit a virtual map easily with out having to know all file formats
 - View all items in a list editor easily remove, add, or copy items
 - View all external exits in a list editor to easily remove, add, or copy external exits
 - View all raw data files that exist and are related to the current map.
-- Resize map allowing you to ancher top or bottom / left or right / up or down to determine how the rooms will be shifted when resized **Warning** when resized smaller, old rooms are lost and any dangling exits are removed
+- Resize map allowing you to anchor top or bottom / left or right / up or down to determine how the rooms will be shifted when resized **Warning** when resized smaller, old rooms are lost and any dangling exits are removed
 - Show colors, create a color scale map based on terrain indexes
 - Show terrains, show terrain numbers for each room
 - Allow walk exits, allows you to create exits by walking the map using num pad
@@ -330,7 +330,7 @@ Editor preferences are stored in their own file independent of client or charact
 - `Max recent items` max number of items to store in recent list
 - `Remember opened files on reload` remember opened files when editor was last closed and reopen them
 - `Use native icons in tabs` use the native icon associated with file type set in OS
-- `Enable spellchecking when possible` detect spelling errors when possible
+- `Enable spellchecking when possible` detect spelling errors when possible **Requires restart**
 - `Enable remote caching` cache remote file names linked to local files in {data}/editor/ folder, each local file will have a file linked to it to store remote data associated with local file
 - `Enable view state` cache file view states to remember folding and other states to restore
 - `Enable debug` enable debugging output to the dev tool console
@@ -343,12 +343,14 @@ Editor preferences are stored in their own file independent of client or charact
 - `Enable folding` enable or disable code folding
 - `Enable detecting links` enable detection
 - `Enable highlighting of matching brackets` highlight the matching end bracket
+- `Enable bracket colorization` enable or disable matching bracket colorization
 - `Select line when line number clicked` select line when line number clicked
 - `Trim whitespace` trim whitespace
 - `Scroll beyond last line` allows you to scroll up to one screen past last line
 - `Line numbers` display line numbers
 - `Show Folding Controls` how to show folding controls
 - `Tab size` how many spaces equal a tab
+- `Theme` set the main editor as dark or light theme
 
 ### Editor Font
 
@@ -404,7 +406,8 @@ Editor preferences are stored in their own file independent of client or charact
 - `Show Minimap Slider` when to display minimap slider
 - `Render the actual text on a line in minimap` show text or blocks in minimap
 - `Minimap location` where minimap is placed in editor
-- `Insert spaces`
+- `Insert spaces` prefer spaces over tabs
+- `Enable Background Throttling` disable or enable throttling when a window is in the background or hidden
 
 ## Known issues
 

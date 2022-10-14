@@ -68,22 +68,23 @@
             padding-left: 0px;
         }
     </style>
-    <script>
+    <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js"></script>
     <script src="../lib/bootstrap.min.js"></script>
     <script src="../lib/bootstrap-select.min.js"></script>
-    <script>
+    <script type="text/javascript">
+        if (window.module) module = window.module;
         //spell-checker:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
         const { TempType } = require('./js/types');
         const Settings = require('./js/settings').Settings;
-        const { remote, ipcRenderer } = require('electron');
-        const { dialog } = remote;
+
+        const { ipcRenderer } = require('electron');
         const path = require('path');
 
         var _settings;
-        if (window.module) module.module;
+        if (window.module) module = window.module;
         $(window).keydown((event) => {
             if (event.which === 27)
                 window.close();
@@ -94,7 +95,7 @@
                 $('.win32').css('display', 'block');
             else
                 $('.win32').css('display', 'none');
-            _settings = Settings.load(remote.getGlobal('settingsFile'));
+            _settings = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
             loadSettings();
             $('input[type="checkbox"]').change(function () {
                 switch ($(this).attr('id')) {
@@ -137,7 +138,7 @@
                     _settings.extensions['immortal'][$(this).attr('id')] = $(this).val();
             });
             $('#btn-editor').on('click', () => {
-                dialog.showOpenDialog(remote.getCurrentWindow(), {
+                ipcRenderer.invoke('show-dialog', 'showOpenDialog', {
                     defaultPath: path.dirname($('#editor').val()),
                     filters: process.platform === 'win32' ? [
                         { name: 'Programs (*.exe, *.com)', extensions: ['exe', 'com', 'com'] },
@@ -147,14 +148,13 @@
                         [
                             { name: 'All files (*.*)', extensions: ['*'] },
                         ]
-                },
-                    function (fileNames) {
-                        if (fileNames === undefined) {
-                            return;
-                        }
-                        $('#editor').val(fileNames[0]);
-                        _settings.extensions['immortal'].editor = fileNames[0];
-                    });
+                }).then(result => {
+                    if (result.filePaths === undefined || result.filePaths.length === 0) {
+                        return;
+                    }
+                    $('#editor').val(result.filePaths[0]);
+                    _settings.extensions['immortal'].editor = result.filePaths[0];
+                });
             });
         });
 
@@ -162,9 +162,9 @@
             if (!_settings.extensions['immortal'])
                 resetSettings();
             else {
-                if (!_settings.extensions['immortal'].hasOwnProperty('focusOnFinished'))
+                if (!Object.prototype.hasOwnProperty.call(_settings.extensions['immortal'], 'focusOnFinished'))
                     _settings.extensions['immortal'].focusOnFinished = true;
-                if (!_settings.extensions['immortal'].hasOwnProperty('selectOnFinished'))
+                if (!Object.prototype.hasOwnProperty.call(_settings.extensions['immortal'], 'selectOnFinished'))
                     _settings.extensions['immortal'].selectOnFinished = true;
             }
             $('#focusOnFinished').prop('checked', _settings.extensions['immortal'].focusOnFinished);

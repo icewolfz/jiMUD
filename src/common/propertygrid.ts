@@ -24,6 +24,7 @@ export class PropertyGrid extends EventEmitter {
     private $prevEditor;
     private $editorClick;
     private _updating;
+    private _rTimeout = 0;
     private $readonly: any = false;
 
     public defaults;
@@ -520,7 +521,7 @@ export class PropertyGrid extends EventEmitter {
 
     public beginEdit(property: string, openAdvanced?: boolean) {
         if (!property) return;
-        const e = <HTMLElement>this.$el.querySelector('div.property-grid-item-value[data-prop="' + property.toLowerCase() + '"]');
+        const e = <HTMLElement>this.$el.querySelector('div.property-grid-item-value[data-prop="' + property + '"]');
         if (!e) return;
         e.focus();
         e.click();
@@ -533,13 +534,14 @@ export class PropertyGrid extends EventEmitter {
     private doUpdate(type?: UpdateType) {
         if (!type) return;
         this._updating |= type;
-        if (this._updating === UpdateType.none)
+        if (this._updating === UpdateType.none || this._rTimeout)
             return;
-        window.requestAnimationFrame(() => {
+        this._rTimeout = window.requestAnimationFrame(() => {
             if ((this._updating & UpdateType.build) === UpdateType.build) {
                 this.buildProperties();
                 this._updating &= ~UpdateType.build;
             }
+            this._rTimeout = 0;
             this.doUpdate(this._updating);
         });
     }

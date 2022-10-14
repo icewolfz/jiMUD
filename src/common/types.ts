@@ -43,7 +43,8 @@ export enum BackupSelection {
   Map = 2,
   Profiles = 4,
   Settings = 8,
-  All = 14
+  Windows = 16,
+  All = 30
 }
 
 export enum NewLineType {
@@ -77,6 +78,18 @@ export enum FormatType {
 
 export enum OnDisconnect {
   Nothing = 0, Reconnect = 1, ReconnectDialog = 2, LoadManager = 4, Close = 8
+}
+
+export enum OnProfileChange {
+  Nothing = 0, Reload = 1, Ask = 2, Warn = 4
+}
+
+export enum OnProfileDeleted {
+  Nothing = 0, Remove = 1, Ask = 2, Warn = 4
+}
+
+export enum ProfileSortOrder {
+  None = 0, Alpha = 2, Priority = 4, Index = 8
 }
 
 /**
@@ -137,6 +150,7 @@ export interface ParserLine {
   fragment: boolean;
   gagged: boolean;
   formats: LineFormat[];
+  remote: boolean;
 }
 
 export interface ParserOptions {
@@ -152,6 +166,7 @@ export interface ParserOptions {
   enableBell?: boolean;
   display?: any;
   enableLinks?: boolean;
+  showInvalidMXPTags?: boolean;
 }
 
 export class Size {
@@ -221,7 +236,7 @@ export enum IEDError {
   CMD_FILE = 38,
   UL_DENIED = 39,
   UL_FILE = 40,
-  USER_DENIED = 42
+  USER_DENIED = 41
 }
 
 export enum IEDCmdStatus {
@@ -273,4 +288,14 @@ export enum MailFolders {
   drafts = 1,
   sent = 2,
   trash = 3
+}
+
+export enum ProfileSaveType {
+  Any = 0,
+  Trigger = 1,
+  Button = 2,
+  Macro = 4,
+  Alias = 8,
+  Context = 16,
+  Variable = 32
 }

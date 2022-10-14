@@ -1,6 +1,6 @@
 //spell-checker:ignore MONTYPE ROOMTYPE datagrid propertygrid dropdown polyfill MODROOM, SUBCLASSER LOCKPICK selectall waterbreathing
 //spell-checker:ignore consolas lucida bitstream tabbable varargs crafter mgive blacksmithing glasssmithing stonemasonry doublewielding warhammer flamberge nodachi
-//spell-checker:ignore bandedmail splintmail chainmail ringmail scalemail overclothing polearm tekagi shuko tekko bardiche katana wakizashi pilum warstaff
+//spell-checker:ignore nonetrackable bandedmail splintmail chainmail ringmail scalemail overclothing polearm tekagi shuko tekko bardiche katana wakizashi pilum warstaff
 import { DebugTimer, EditorBase, EditorOptions, FileState } from './editor.base';
 import { createFunction, formatFunctionPointer, formatArgumentList, formatMapping } from './lpc';
 import { Splitter, Orientation } from '../splitter';
@@ -8,12 +8,12 @@ import { PropertyGrid } from '../propertygrid';
 import { EditorType } from '../value.editors';
 import { DataGrid } from '../datagrid';
 import { copy, formatString, isFileSync, capitalize, Cardinal, pinkfishToHTML, stripPinkfish, consolidate, parseTemplate, initEditDropdown, capitalizePinkfish, stripQuotes } from '../library';
-const { clipboard, remote } = require('electron');
-const { Menu, dialog } = remote;
+const { clipboard, ipcRenderer } = require('electron');
 const path = require('path');
 const fs = require('fs-extra');
+const { deflateSync, unzipSync } = require('zlib');
 import { Wizard, WizardPage, WizardDataGridPage } from '../wizard';
-import { MousePosition, RoomExits, shiftType, FileBrowseValueEditor, RoomExit } from './virtual.editor';
+import { MousePosition, RoomExits, shiftType, FileBrowseValueEditor, RoomExit, flipType } from './virtual.editor';
 
 declare global {
     interface Window {
@@ -122,7 +122,7 @@ export const MonsterTypes = [
     { value: 'MONTYPE_WEAPON_REPAIR', display: 'Weapon Repair', group: 'Standard' }
 ];
 
-export enum UpdateType { none = 0, drawMap = 1, buildMap = 2, resize = 4, status = 8 }
+export enum UpdateType { none = 0, drawMap = 1, buildMap = 2, resize = 4, status = 8, flip = 16 }
 
 interface ObjectInfo {
     id: number;
@@ -417,6 +417,21 @@ export class Room {
         if (this.exitsDetails[RoomExit[exit].toLowerCase()].hidden)
             this.hidden |= exit;
     }
+
+    public switchExits(exit1, exit2) {
+        let e1 = this.exitsDetails[RoomExit[exit1].toLowerCase()];
+        let e2 = this.exitsDetails[RoomExit[exit2].toLowerCase()];
+        this.removeExit(exit1);
+        this.removeExit(exit2);
+        if (e1) {
+            e1.exit = RoomExit[exit2].toLowerCase();
+            this.addExit(exit2, e1);
+        }
+        if (e2) {
+            e2.exit = RoomExit[exit1].toLowerCase();
+            this.addExit(exit1, e2);
+        }
+    }
 }
 
 enum View {
@@ -426,7 +441,7 @@ enum View {
     properties
 }
 
-enum undoType { room, monster, object, roomsAll, settings, resize, area, properties }
+enum undoType { room, monster, object, settings, resize, area, properties, flip }
 enum undoAction { add, delete, edit }
 
 const Timer = new DebugTimer();
@@ -604,7 +619,7 @@ class Monster {
 }
 
 export enum StdObjectType {
-    object, chest, material, ore, weapon, armor, sheath, material_weapon, rope, instrument, food, drink, fishing_pole, backpack, bag_of_holding
+    object, chest, material, ore, weapon, armor, sheath, material_weapon, rope, instrument, food, drink, fishing_pole, backpack, bag_of_holding, armor_of_holding
 }
 
 interface Property {
@@ -785,6 +800,9 @@ class Area {
         if (data.length === 0)
             return new Area(25, 25, 1);
         try {
+            //compressed so un-compress it
+            if(!data.startsWith('{'))
+                data = unzipSync(Buffer.from(data, 'base64')).toString();
             data = JSON.parse(data);
         }
         catch (e) {
@@ -844,8 +862,8 @@ class Area {
         return area;
     }
 
-    public save(file) {
-        fs.writeFileSync(file, this.raw);
+    public save(file) {        
+        fs.writeFileSync(file, deflateSync(this.raw).toString('base64'));
     }
 
     public get raw() {
@@ -906,6 +924,7 @@ export class AreaDesigner extends EditorBase {
 
     private $focused: boolean;
     private _updating;
+    private _rTimeout = 0;
     private _os;
     private _wMove;
     private _wUp;
@@ -1129,7 +1148,7 @@ export class AreaDesigner extends EditorBase {
     set changed(value: boolean) {
         if (value !== super.changed) {
             super.changed = value;
-            this.emit('changed', value);
+            this.emit('changed', -1, -1);
         }
     }
 
@@ -1488,17 +1507,17 @@ export class AreaDesigner extends EditorBase {
             const sel = getSelection();
             let inputMenu;
             if (!sel.isCollapsed && sel.type === 'Range' && this.$roomPreview.container.contains(sel.anchorNode)) {
-                inputMenu = Menu.buildFromTemplate([
+                inputMenu = [
                     { role: 'copy' },
                     { type: 'separator' },
-                    { role: 'selectall' }
-                ]);
+                    { role: 'selectAll' }
+                ];
             }
             else
-                inputMenu = Menu.buildFromTemplate([
-                    { role: 'selectall' }
-                ]);
-            inputMenu.popup({ window: remote.getCurrentWindow() });
+                inputMenu = [
+                    { role: 'selectAll' }
+                ];
+            ipcRenderer.invoke('show-context', inputMenu);
         });
         this.$roomPreview.short = document.createElement('div');
         this.$roomPreview.short.classList.add('room-short');
@@ -3180,8 +3199,9 @@ export class AreaDesigner extends EditorBase {
                 }
                 this.pushUndo(undoAction.edit, undoType.room, { property: prop, values: oldValues, rooms: selected.map(m => [m.x, m.y, m.z]) });
             }
-            setTimeout(() => this.UpdateEditor(this.$selectedRooms));
-            this.UpdatePreview(this.selectedFocusedRoom);
+            //this.UpdateEditor(selected);
+            this.refreshEditor();
+            this.UpdatePreview(selected[0]);
         });
         this.$roomEditor.setPropertyOptions([
             {
@@ -4797,8 +4817,7 @@ export class AreaDesigner extends EditorBase {
             this.changed = true;
         });
         this.$propertiesEditor.monsterGrid.on('delete', (e) => {
-            if (dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
                     type: 'warning',
                     title: 'Delete',
@@ -5332,8 +5351,7 @@ export class AreaDesigner extends EditorBase {
             this.changed = true;
         });
         this.$propertiesEditor.roomGrid.on('delete', (e) => {
-            if (dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
                     type: 'warning',
                     title: 'Delete',
@@ -5737,8 +5755,7 @@ export class AreaDesigner extends EditorBase {
             }
         ];
         this.$monsterGrid.on('delete', (e) => {
-            if (dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
                     type: 'warning',
                     title: 'Delete',
@@ -6482,7 +6499,7 @@ export class AreaDesigner extends EditorBase {
                                                     <button id="btn-obj-material" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                         <span class="caret" style="margin-left: -1px;"></span>
                                                     </button>
-                                                    <ul id="obj-material-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-material" data-container="body">
+                                                    <ul id="obj-material-list" style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-material" data-container="body">
                                                     </ul>
                                                 </span>
                                             </div>
@@ -6749,7 +6766,7 @@ export class AreaDesigner extends EditorBase {
                             });
                             const qualities = `<div class="col-sm-12 form-group">
                             <label class="control-label" style="width: 100%;">Quality
-                                <select id="obj-quality" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                                <select id="obj-quality" class="form-control selectpicker" data-size="8" data-style="btn-default btn-sm" data-width="100%">
                                     <option value='inferior'>Inferior</option>
                                     <option value='poor'>Poor</option>
                                     <option value='rough'>Rough</option>
@@ -6789,16 +6806,16 @@ export class AreaDesigner extends EditorBase {
                                                         <button id="btn-obj-limbs" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                             <span class="caret" style="margin-left: -1px;"></span>
                                                         </button>
-                                                        <ul id="obj-limbs-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-limbs" data-container="body">
+                                                        <ul id="obj-limbs-list" style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-limbs" data-container="body">
                                                             <li><a href="#">All limbs</a></li><li><a href="#">Overall</a></li><li><a href="#">Limb only</a></li><li><a href="#">Torso</a></li><li><a href="#">Head</a></li><li><a href="#">Left arm</a></li><li><a href="#">Right arm</a></li><li><a href="#">Left hand</a></li><li><a href="#">Right hand</a></li><li><a href="#">Left leg</a></li><li><a href="#">Right leg</a></li><li><a href="#">Left foot</a></li><li><a href="#">Right foot</a></li><li><a href="#">Right wing</a></li><li><a href="#">Left wing</a></li><li><a href="#">Left hoof</a></li><li><a href="#">Right hoof</a></li><li><a href="#">Tail</a></li><li><a href="#">Arms</a></li><li><a href="#">Legs</a></li><li><a href="#">Hands</a></li><li><a href="#">Feet</a></li><li><a href="#">Wings</a></li><li><a href="#">Hooves</a></li><li><a href="#">Lower body</a></li><li><a href="#">Core body</a></li><li><a href="#">Upper core</a></li><li><a href="#">Upper body</a></li><li><a href="#">Winged core</a></li><li><a href="#">Winged upper</a></li><li><a href="#">Upper trunk</a></li><li><a href="#">Lower trunk</a></li><li><a href="#">Trunk</a></li><li><a href="#">Winged trunk</a></li><li><a href="#">Full body</a></li><li><a href="#">Total body</a></li><li><a href="#">Winged body</a></li>
                                                         </ul>
                                                     </span>
                                                 </div>
                                             </label>
-                                        </div>${qualities.replace('col-sm-12', 'col-sm-6')}
+                                        </div>${qualities.replace('col-sm-12', 'col-sm-6').replace('data-size="8"', 'data-size="6"')}
                                         <div class="col-sm-6 form-group">
                                                 <label class="control-label" style="width: 100%;">Weapon type
-                                                    <select id="obj-wType" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                                                    <select id="obj-wType" class="form-control selectpicker" data-size="6" data-style="btn-default btn-sm" data-width="100%">
                                                     <optgroup label="Axe"><option value="axe">Axe</option><option value="battle axe">Battle axe</option><option value="great axe">Great axe</option><option value="hand axe">Hand axe</option><option value="mattock">Mattock</option><option value="wood axe">Wood axe</option></optgroup><optgroup label="Blunt"><option value="club">Club</option><option value="hammer">Hammer</option><option value="mace">Mace</option><option value="maul">Maul</option><option value="morningstar">Morningstar</option><option value="spiked club">Spiked club</option><option value="warhammer">Warhammer</option></optgroup><optgroup label="Flail"><option value="ball and chain">Ball and chain</option><option value="chain">Chain</option><option value="flail">Flail</option><option value="whip">Whip</option></optgroup><optgroup label="Knife"><option value="dagger">Dagger</option><option value="dirk">Dirk</option><option value="knife">Knife</option><option value="kris">Kris</option><option value="stiletto">Stiletto</option><option value="tanto">Tanto</option></optgroup><optgroup label="Large sword"><option value="bastard sword">Bastard sword</option><option value="claymore">Claymore</option><option value="flamberge">Flamberge</option><option value="large sword">Large sword</option><option value="nodachi">Nodachi</option></optgroup><optgroup label="Melee"><option value="brass knuckles">Brass knuckles</option><option value="melee">Melee</option><option value="tekagi-shuko">Tekagi-shuko</option><option value="tekko">Tekko</option></optgroup><optgroup label="Miscellaneous"><option value="cord">Cord</option><option value="fan">Fan</option><option value="giant fan">Giant fan</option><option value="miscellaneous">Miscellaneous</option><option value="war fan">War fan</option></optgroup><optgroup label="Polearm"><option value="bardiche">Bardiche</option><option value="glaive">Glaive</option><option value="halberd">Halberd</option><option value="poleaxe">Poleaxe</option><option value="scythe">Scythe</option></optgroup><optgroup label="Small sword"><option value="broadsword">Broadsword</option><option value="katana">Katana</option><option value="long sword">Long sword</option><option value="rapier">Rapier</option><option value="scimitar">Scimitar</option><option value="short sword">Short sword</option><option value="small sword">Small sword</option><option value="wakizashi">Wakizashi</option></optgroup><optgroup label="Spear"><option value="arrow">Arrow</option><option value="javelin">Javelin</option><option value="lance">Lance</option><option value="long spear">Long spear</option><option value="pike">Pike</option><option value="pilum">Pilum</option><option value="short spear">Short spear</option><option value="spear">Spear</option><option value="trident">Trident</option></optgroup><optgroup label="Staff"><option value="battle staff">Battle staff</option><option value="bo">Bo</option><option value="quarterstaff">Quarterstaff</option><option value="staff">Staff</option><option value="wand">Wand</option><option value="warstaff">Warstaff</option></optgroup>
                                                     </select>
                                                 </label>
@@ -6952,6 +6969,7 @@ export class AreaDesigner extends EditorBase {
                                     }), wizSkills, wizBonuses]);
                                     break;
                                 case StdObjectType.armor:
+                                case StdObjectType.armor_of_holding:
                                     wiz.defaults['obj-bonuses'] = ed.value.bonuses || [];
                                     wiz.defaults['obj-damaged'] = ed.value.damaged || [];
                                     wiz.defaults['obj-skills'] = ed.value.skills || [];
@@ -6976,13 +6994,13 @@ export class AreaDesigner extends EditorBase {
                                                     <button id="btn-obj-limbs" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                         <span class="caret" style="margin-left: -1px;"></span>
                                                     </button>
-                                                    <ul id="obj-limbs-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-limbs" data-container="body">
+                                                    <ul id="obj-limbs-list" style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-limbs" data-container="body">
                                                         <li><a href="#">All limbs</a></li><li><a href="#">Overall</a></li><li><a href="#">Limb only</a></li><li><a href="#">Torso</a></li><li><a href="#">Head</a></li><li><a href="#">Left arm</a></li><li><a href="#">Right arm</a></li><li><a href="#">Left hand</a></li><li><a href="#">Right hand</a></li><li><a href="#">Left leg</a></li><li><a href="#">Right leg</a></li><li><a href="#">Left foot</a></li><li><a href="#">Right foot</a></li><li><a href="#">Right wing</a></li><li><a href="#">Left wing</a></li><li><a href="#">Left hoof</a></li><li><a href="#">Right hoof</a></li><li><a href="#">Tail</a></li><li><a href="#">Arms</a></li><li><a href="#">Legs</a></li><li><a href="#">Hands</a></li><li><a href="#">Feet</a></li><li><a href="#">Wings</a></li><li><a href="#">Hooves</a></li><li><a href="#">Lower body</a></li><li><a href="#">Core body</a></li><li><a href="#">Upper core</a></li><li><a href="#">Upper body</a></li><li><a href="#">Winged core</a></li><li><a href="#">Winged upper</a></li><li><a href="#">Upper trunk</a></li><li><a href="#">Lower trunk</a></li><li><a href="#">Trunk</a></li><li><a href="#">Winged trunk</a></li><li><a href="#">Full body</a></li><li><a href="#">Total body</a></li><li><a href="#">Winged body</a></li>
                                                     </ul>
                                                 </span>
                                             </div>
                                         </label>
-                                    </div>${qualities}
+                                    </div>${qualities.replace('data-size="8"', 'data-size="6"')}
                                     <div class="form-group col-sm-6">
                                         <label class="control-label">
                                             Enchantment
@@ -7124,6 +7142,35 @@ export class AreaDesigner extends EditorBase {
                                         enterMoveNext: this.$enterMoveNext,
                                         enterMoveNew: this.$enterMoveNew
                                     }), wizSkills, wizBonuses]);
+                                    if (StdObjectType.armor_of_holding == ty) {
+                                        wiz.insertPages(8, new WizardPage({
+                                            id: 'obj-bag',
+                                            title: 'Armor of holding properties',
+                                            body: ` <div class="col-sm-6 form-group">
+                                            <label class="control-label">
+                                                Max encumbrance
+                                                <input type="number" id="obj-encumbrance" class="input-sm form-control" min="0" value="100000000" />
+                                            </label>
+                                        </div>
+                                        <div class="col-sm-6 form-group">
+                                            <label class="control-label">
+                                                Min encumbrance
+                                                <input type="number" id="obj-minencumbrance" class="input-sm form-control" min="0" value="100" />
+                                            </label>
+                                        </div>
+                                        <div class="col-sm-6 form-group">
+                                            <label class="control-label">
+                                                Max items
+                                                <input type="number" id="obj-maxitems" class="input-sm form-control" min="0" value="100" />
+                                            </label>
+                                        </div>`,
+                                            reset: (e) => {
+                                                e.page.querySelector('#obj-encumbrance').value = ed.value.encumbrance || '40000';
+                                                e.page.querySelector('#obj-minencumbrance').value = ed.value.minencumbranc || '500';
+                                                e.page.querySelector('#obj-maxitems').value = ed.value.maxitems || '0';
+                                            }
+                                        }));
+                                    }
                                     break;
                                 case StdObjectType.chest:
                                     wiz.defaults['obj-contents'] = ed.value.contents || [];
@@ -7300,7 +7347,7 @@ export class AreaDesigner extends EditorBase {
                                                     <button id="btn-obj-size" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                         <span class="caret" style="margin-left: -1px;"></span>
                                                     </button>
-                                                    <ul id="obj-size-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
+                                                    <ul id="obj-size-list" style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
                                                         <li><a href="#">Small</a></li>
                                                         <li><a href="#">Medium</a></li>
                                                         <li><a href="#">Large</a></li>
@@ -7341,7 +7388,7 @@ export class AreaDesigner extends EditorBase {
                                                     <button id="btn-obj-size" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                         <span class="caret" style="margin-left: -1px;"></span>
                                                     </button>
-                                                    <ul id="obj-size-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
+                                                    <ul id="obj-size-list" style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
                                                         <li><a href="#">Small</a></li>
                                                         <li><a href="#">Medium</a></li>
                                                         <li><a href="#">Large</a></li>
@@ -7384,11 +7431,11 @@ export class AreaDesigner extends EditorBase {
                                     </div>
                                     <div class="col-sm-12 form-group">
                                         <label class="control-label" style="width: 100%;">Weapon type
-                                            <select id="obj-wType" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%">
+                                            <select id="obj-wType" class="form-control selectpicker" data-size="8" data-style="btn-default btn-sm" data-width="100%">
                                             <option value="">Default</option><optgroup label="Axe"><option value="axe">Axe</option><option value="battle axe">Battle axe</option><option value="great axe">Great axe</option><option value="hand axe">Hand axe</option><option value="mattock">Mattock</option><option value="wood axe">Wood axe</option></optgroup><optgroup label="Blunt"><option value="club">Club</option><option value="hammer">Hammer</option><option value="mace">Mace</option><option value="maul">Maul</option><option value="morningstar">Morningstar</option><option value="spiked club">Spiked club</option><option value="warhammer">Warhammer</option></optgroup><optgroup label="Flail"><option value="ball and chain">Ball and chain</option><option value="chain">Chain</option><option value="flail">Flail</option><option value="whip">Whip</option></optgroup><optgroup label="Knife"><option value="dagger">Dagger</option><option value="dirk">Dirk</option><option value="knife">Knife</option><option value="kris">Kris</option><option value="stiletto">Stiletto</option><option value="tanto">Tanto</option></optgroup><optgroup label="Large sword"><option value="bastard sword">Bastard sword</option><option value="claymore">Claymore</option><option value="flamberge">Flamberge</option><option value="large sword">Large sword</option><option value="nodachi">Nodachi</option></optgroup><optgroup label="Melee"><option value="brass knuckles">Brass knuckles</option><option value="melee">Melee</option><option value="tekagi-shuko">Tekagi-shuko</option><option value="tekko">Tekko</option></optgroup><optgroup label="Miscellaneous"><option value="cord">Cord</option><option value="fan">Fan</option><option value="giant fan">Giant fan</option><option value="miscellaneous">Miscellaneous</option><option value="war fan">War fan</option></optgroup><optgroup label="Polearm"><option value="bardiche">Bardiche</option><option value="glaive">Glaive</option><option value="halberd">Halberd</option><option value="poleaxe">Poleaxe</option><option value="scythe">Scythe</option></optgroup><optgroup label="Small sword"><option value="broadsword">Broadsword</option><option value="katana">Katana</option><option value="long sword">Long sword</option><option value="rapier">Rapier</option><option value="scimitar">Scimitar</option><option value="short sword">Short sword</option><option value="small sword">Small sword</option><option value="wakizashi">Wakizashi</option></optgroup><optgroup label="Spear"><option value="javelin">Javelin</option><option value="lance">Lance</option><option value="long spear">Long spear</option><option value="pike">Pike</option><option value="pilum">Pilum</option><option value="short spear">Short spear</option><option value="spear">Spear</option><option value="trident">Trident</option></optgroup><optgroup label="Staff"><option value="battle staff">Battle staff</option><option value="bo">Bo</option><option value="quarterstaff">Quarterstaff</option><option value="staff">Staff</option><option value="wand">Wand</option><option value="warstaff">Warstaff</option></optgroup>
                                             </select>
                                         </label>
-                                    </div>${qualities}
+                                    </div>${qualities.replace('data-size="8"', 'data-size="6"')}
                                     <div class="form-group col-sm-12">
                                         <label class="control-label">
                                             Enchantment
@@ -7482,7 +7529,7 @@ export class AreaDesigner extends EditorBase {
                                                     <button id="btn-obj-size" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                         <span class="caret" style="margin-left: -1px;"></span>
                                                     </button>
-                                                    <ul id="obj-size-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
+                                                    <ul id="obj-size-list" style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
                                                         <li><a href="#">Small</a></li>
                                                         <li><a href="#">Medium</a></li>
                                                         <li><a href="#">Large</a></li>
@@ -7536,7 +7583,7 @@ export class AreaDesigner extends EditorBase {
                                                 <button id="btn-obj-size" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                     <span class="caret" style="margin-left: -1px;"></span>
                                                 </button>
-                                                <ul id="obj-preserved-list" style="max-height: 265px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
+                                                <ul id="obj-preserved-list" style="max-height: 200px;" class="dropdown-menu pull-right" aria-labelledby="btn-obj-size" data-container="body">
                                                     <li><a href="#">Cooked</a></li>
                                                     <li><a href="#">Smoked</a></li>
                                                     <li><a href="#">Salted</a></li>
@@ -7753,16 +7800,30 @@ export class AreaDesigner extends EditorBase {
                                     wiz.title = 'Edit bag of holding...';
                                     //quality, enchantment
                                     wiz.addPages(new WizardPage({
-                                        id: 'obj-weapon',
+                                        id: 'obj-bag',
                                         title: 'Bag of holding properties',
                                         body: ` <div class="col-sm-6 form-group">
                                         <label class="control-label">
                                             Max encumbrance
                                             <input type="number" id="obj-encumbrance" class="input-sm form-control" min="0" value="100000000" />
                                         </label>
+                                    </div>
+                                    <div class="col-sm-6 form-group">
+                                        <label class="control-label">
+                                            Min encumbrance
+                                            <input type="number" id="obj-minencumbrance" class="input-sm form-control" min="0" value="100" />
+                                        </label>
+                                    </div>
+                                    <div class="col-sm-6 form-group">
+                                        <label class="control-label">
+                                            Max items
+                                            <input type="number" id="obj-maxitems" class="input-sm form-control" min="0" value="100" />
+                                        </label>
                                     </div>`,
                                         reset: (e) => {
                                             e.page.querySelector('#obj-encumbrance').value = ed.value.encumbrance || '40000';
+                                            e.page.querySelector('#obj-minencumbrance').value = ed.value.minencumbranc || '500';
+                                            e.page.querySelector('#obj-maxitems').value = ed.value.maxitems || '0';
                                         }
                                     }));
                                     break;
@@ -7810,8 +7871,7 @@ export class AreaDesigner extends EditorBase {
             }
         ];
         this.$objectGrid.on('delete', (e) => {
-            if (dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
                     type: 'warning',
                     title: 'Delete',
@@ -8722,7 +8782,7 @@ export class AreaDesigner extends EditorBase {
                         this.DrawRoom(this.$mapContext, room, true, undo.data[l].at(this.$mouse.rx, this.$mouse.ry));
                         undo.data = room;
                         this.pushRedo(undo);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                 }
@@ -8787,7 +8847,7 @@ export class AreaDesigner extends EditorBase {
                             this.DrawRoom(this.$mapContext, undo.data[l], true, undo.data[l].at(mx, my));
                         }
                         this.doUpdate(UpdateType.status);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         undo.data = values;
                         this.pushRedo(undo);
@@ -8800,7 +8860,7 @@ export class AreaDesigner extends EditorBase {
                         this.doUpdate(UpdateType.buildMap);
                         this.switchView(undo.view, true);
                         this.changed = true;
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                 }
@@ -8851,13 +8911,17 @@ export class AreaDesigner extends EditorBase {
                         this.resizeMap(-undo.data.width, -undo.data.height, -undo.data.depth, undo.data.shift, true);
                         this.pushRedo(undo);
                         break;
+                    case undoType.flip:
+                        this.flipMap(undo.data.type, true);
+                        this.pushRedo(undo);
+                        break;
                     case undoType.room:
                         l = undo.data.values.length;
                         const values = [];
                         const mx = this.$mouse.rx;
                         const my = this.$mouse.ry;
                         while (l--) {
-                            room = this.getRoom(undo.data.rooms[l][0], undo.data.rooms[l][1], undo.data.rooms[2]);
+                            room = this.getRoom(undo.data.rooms[l][0], undo.data.rooms[l][1], undo.data.rooms[l][2]);
                             values[l] = room[undo.data.property];
                             room[undo.data.property] = undo.data.values[l];
                             this.RoomChanged(room);
@@ -8868,7 +8932,7 @@ export class AreaDesigner extends EditorBase {
                             this.DrawRoom(this.$mapContext, room, true, room.at(mx, my));
                         }
                         this.doUpdate(UpdateType.status);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         undo.data.values = values;
                         this.pushRedo(undo);
@@ -8939,7 +9003,7 @@ export class AreaDesigner extends EditorBase {
                         this.DrawRoom(this.$mapContext, room, true, undo.data[l].at(this.$mouse.rx, this.$mouse.ry));
                         undo.data = room;
                         this.pushUndoObject(undo);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                 }
@@ -8996,7 +9060,7 @@ export class AreaDesigner extends EditorBase {
                             this.DrawRoom(this.$mapContext, undo.data[l], true, undo.data[l].at(mx, my));
                         }
                         this.doUpdate(UpdateType.status);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         undo.data = values;
                         this.pushUndoObject(undo);
@@ -9009,7 +9073,7 @@ export class AreaDesigner extends EditorBase {
                         this.doUpdate(UpdateType.buildMap);
                         this.switchView(undo.view, true);
                         this.changed = true;
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                 }
@@ -9048,13 +9112,17 @@ export class AreaDesigner extends EditorBase {
                         this.resizeMap(undo.data.width, undo.data.height, undo.data.depth, undo.data.shift, true);
                         this.pushUndoObject(undo);
                         break;
+                    case undoType.flip:
+                        this.flipMap(undo.data.type, true);
+                        this.pushUndoObject(undo);
+                        break;
                     case undoType.room:
                         l = undo.data.values.length;
                         const values = [];
                         const mx = this.$mouse.rx;
                         const my = this.$mouse.ry;
                         while (l--) {
-                            room = this.getRoom(undo.data.rooms[l][0], undo.data.rooms[l][1], undo.data.rooms[2]);
+                            room = this.getRoom(undo.data.rooms[l][0], undo.data.rooms[l][1], undo.data.rooms[l][2]);
                             values[l] = room[undo.data.property];
                             room[undo.data.property] = undo.data.values[l];
                             this.RoomChanged(room);
@@ -9065,7 +9133,7 @@ export class AreaDesigner extends EditorBase {
                             this.DrawRoom(this.$mapContext, room, true, room.at(mx, my));
                         }
                         this.doUpdate(UpdateType.status);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         undo.data.values = values;
                         this.pushUndoObject(undo);
@@ -9203,6 +9271,22 @@ export class AreaDesigner extends EditorBase {
         frag.appendChild(this.createButton('Resize map', 'arrows', () => {
             this.emit('show-resize', this.$area.size);
         }, false, this.$view !== View.map));
+
+        group = document.createElement('div');
+        group.classList.add('btn-group');
+        group.setAttribute('role', 'group');
+        group.appendChild(this.createButton('Flip horizontally', 'shield fa-rotate-180', () => {
+            this.flipMap(flipType.horizontal);
+        }, false, this.$view !== View.map));
+        group.appendChild(this.createButton('Flip vertically', 'shield fa-rotate-90', () => {
+            this.flipMap(flipType.vertical);
+        }, false, this.$view !== View.map));
+        if (this.$area.size.depth > 1)
+            group.appendChild(this.createButton('Flip depth', 'exchange fa-rotate-90', () => {
+                this.flipMap(flipType.depth);
+            }, false, this.$view !== View.map));
+        frag.appendChild(group);
+
         frag.appendChild(this.createButton('Generate area', 'bolt', () => {
             this.emit('show-area', {
                 title: 'Generate area...', name: path.basename(this.file, '.design'), ok: (local, data) => {
@@ -9337,6 +9421,30 @@ export class AreaDesigner extends EditorBase {
                 },
                 { type: 'separator' },
                 {
+                    label: 'Flip horizontally',
+                    click: () => {
+                        this.flipMap(flipType.horizontal);
+                    }
+                },
+                {
+                    label: 'Flip vertically',
+                    click: () => {
+                        this.flipMap(flipType.vertical);
+                    }
+                }
+
+            ];
+            if (this.$area.size.depth > 1)
+                m.push(
+                    {
+                        label: 'Flip depth',
+                        click: () => {
+                            this.flipMap(flipType.depth);
+                        }
+                    }
+                )
+            m.push({ type: 'separator' },
+                {
                     label: 'Generate area',
                     click: () => {
                         this.emit('show-area', {
@@ -9345,8 +9453,7 @@ export class AreaDesigner extends EditorBase {
                             }
                         });
                     }
-                }
-            ];
+                });
         }
         return m;
     }
@@ -9462,6 +9569,8 @@ export class AreaDesigner extends EditorBase {
     public get location() { return [-1, -1]; }
 
     public get length() { return 0; }
+
+    public get lineCount() { return 0; }
 
     public activate() { /**/ }
 
@@ -9630,7 +9739,7 @@ export class AreaDesigner extends EditorBase {
         switch (this.$view) {
             case View.map:
                 this.emit('location-changed', (this.$mouse.rx), this.$mouse.ry);
-                this.emit('changed', -1);
+                this.emit('changed', -1, -1);
                 break;
             case View.properties:
                 this.emit('location-changed', -1, -1);
@@ -10199,7 +10308,10 @@ export class AreaDesigner extends EditorBase {
         let r;
         let xl;
         let yl;
-        if (!this.$mapContext) return;
+        if (!this.$mapContext) {
+            this.doUpdate(UpdateType.drawMap);
+            return;
+        }
         this.$mapContext.save();
         this.$mapContext.fillStyle = 'white';
         this.$mapContext.fillRect(0, 0, this.$area.size.right, this.$area.size.bottom);
@@ -10340,13 +10452,9 @@ export class AreaDesigner extends EditorBase {
     private doUpdate(type?: UpdateType) {
         if (!type) return;
         this._updating |= type;
-        if (this._updating === UpdateType.none)
+        if (this._updating === UpdateType.none || this._rTimeout)
             return;
-        window.requestAnimationFrame(() => {
-            if ((this._updating & UpdateType.drawMap) === UpdateType.drawMap) {
-                this.DrawMap();
-                this._updating &= ~UpdateType.drawMap;
-            }
+        this._rTimeout = window.requestAnimationFrame(() => {
             if ((this._updating & UpdateType.buildMap) === UpdateType.buildMap) {
                 this.BuildMap();
                 this._updating &= ~UpdateType.buildMap;
@@ -10359,6 +10467,11 @@ export class AreaDesigner extends EditorBase {
                 this.updateStatus();
                 this._updating &= ~UpdateType.status;
             }
+            if ((this._updating & UpdateType.drawMap) === UpdateType.drawMap) {
+                this._updating &= ~UpdateType.drawMap;
+                this.DrawMap();
+            }
+            this._rTimeout = 0;
             this.doUpdate(this._updating);
         });
     }
@@ -10498,6 +10611,22 @@ export class AreaDesigner extends EditorBase {
         this.$roomEditor.objects = objects;
     }
 
+    private refreshEditor() {
+        if (this.selectedFocusedRoom)
+            this.$depthToolbar.value = '' + this.selectedFocusedRoom.z;
+        const objects = [];
+        let type;
+        const rooms = this.$roomEditor.objects;
+        if (rooms && rooms.length !== 0 && rooms[0])
+            type = rooms[0].type || 'base';
+        else
+            type = this.$area.defaultRoom || 'base';
+        this.$roomEditor.defaults = this.$area.baseRooms[type] ? this.$area.baseRooms[type].clone() : new Room(0, 0, 0);
+        this.$roomEditor.defaults.type = 'base';
+        this.$roomEditor.defaults.exitsDetails = Object.values(this.$roomEditor.defaults.exitsDetails);
+        this.$roomEditor.refresh();
+    }
+
     private UpdatePreview(room) {
         let ex;
         let e;
@@ -10552,8 +10681,10 @@ export class AreaDesigner extends EditorBase {
 
             if (items.length > 0) {
                 items = items.sort((a, b) => { return b.item.length - a.item.length; });
-                for (c = 0, cl = items.length; c < cl; c++)
+                for (c = 0, cl = items.length; c < cl; c++) {
+                    if (items[c].item.length === 0) continue;
                     str = str.replace(new RegExp('\\b(?!room-preview)(' + items[c].item + ')\\b', 'gi'), m => '<span data-id="' + this.parent.id + '-room-preview' + c + '">' + m + '</span>');
+                }
             }
             else
                 items = null;
@@ -10691,8 +10822,10 @@ export class AreaDesigner extends EditorBase {
                 this.$roomPreview.living.style.display = '';
                 this.$roomPreview.living.innerHTML = '<br>' + stripPinkfish(items.map(v => capitalize(consolidate(counts[v], v), true)).join('<br>'));
             }
-            else
+            else {
                 this.$roomPreview.living.style.display = 'none';
+                this.$roomPreview.living.innerHTML = '';
+            }
 
             counts = {};
             room.objects.forEach(i => {
@@ -10721,6 +10854,10 @@ export class AreaDesigner extends EditorBase {
                     this.$roomPreview.objects.innerHTML = '<br>' + pinkfishToHTML(capitalizePinkfish(items[0])) + ' is here.';
                 else if (counts[items[0]] > 1)
                     this.$roomPreview.objects.innerHTML = '<br>' + pinkfishToHTML(capitalizePinkfish(consolidate(counts[items[0]], items[0]))) + ' are here.';
+                else {
+                    this.$roomPreview.objects.style.display = 'none';
+                    this.$roomPreview.objects.innerHTML = '';
+                }
             }
             else if (items.length > 0) {
                 this.$roomPreview.objects.style.display = '';
@@ -10729,8 +10866,10 @@ export class AreaDesigner extends EditorBase {
                 str += ' and ' + items.pop();
                 this.$roomPreview.objects.innerHTML = '<br>' + pinkfishToHTML(capitalizePinkfish(str)) + ' are here.';
             }
-            else
+            else {
                 this.$roomPreview.objects.style.display = 'none';
+                this.$roomPreview.objects.innerHTML = '';
+            }
         }
     }
 
@@ -10764,7 +10903,6 @@ export class AreaDesigner extends EditorBase {
                 this.DrawMap();
             }, 500);
         }
-        this.DrawMap();
         this.doUpdate(UpdateType.drawMap);
         if (this.$area.size.depth < 2) {
             this.$depth = 0;
@@ -11043,9 +11181,32 @@ export class AreaDesigner extends EditorBase {
                         files[`${x},${y},${z}`] = name + counts[name];
                         Object.values<Exit>(r.exitsDetails).forEach(e => {
                             if (!e.dest || e.dest.length === 0 || files[e.dest]) return;
-                            if (e.dest.match(/^\d+\s*,\s*\d+\s*,\s*\d+$/) || e.dest.match(/^\d+\s*,\s*\d+$/))
+                            if (e.dest.match(/^\d+\s*,\s*\d+\s*,\s*\d+$/) || e.dest.match(/^\d+\s*,\s*\d+$/) || e.dest.match(/^\$\{(rms|mon|std|cmds|obj)\}/i))
                                 return;
                             ec++;
+                            //if path exist see if any match to avoid more redefines
+                            if (data.path) {
+                                if (e.dest.startsWith(data.path + '/mon/')) {
+                                    files[e.dest] = `MON + "${e.dest.substring(data.path.length + 5)}"`;
+                                    return;
+                                }
+                                if (e.dest.startsWith(data.path + '/std/')) {
+                                    files[e.dest] = `STD + "${e.dest.substring(data.path.length + 5)}"`;
+                                    return;
+                                }
+                                if (e.dest.startsWith(data.path + '/obj/')) {
+                                    files[e.dest] = `OBJ + "${e.dest.substring(data.path.length + 5)}"`;
+                                    return;
+                                }
+                                if (e.dest.startsWith(data.path + '/cmds/')) {
+                                    files[e.dest] = `CMDS + "${e.dest.substring(data.path.length + 6)}"`;
+                                    return;
+                                }
+                                if (e.dest.startsWith(data.path + '/')) {
+                                    files[e.dest] = `RMS + "${e.dest.substring(data.path.length + 1)}"`;
+                                    return;
+                                }
+                            }
                             const parts = path.dirname(e.dest).split('/');
                             let dest;
                             if (parts.length === 1)
@@ -11730,7 +11891,7 @@ export class AreaDesigner extends EditorBase {
                 else if (files[i.dest])
                     tmp2 = `${files[i.dest]}`;
                 else
-                    tmp2 = `"${i.dest}"`;
+                    tmp2 = this.parseFilePath(i.dest);
             }
             else {
                 tmp3 = this.getExitId(i.exit, room.x, room.y, room.z);
@@ -11769,7 +11930,7 @@ export class AreaDesigner extends EditorBase {
                 else if (files[i.dest])
                     tmp2.push(`"dest" : ${files[i.dest]}`);
                 else
-                    tmp2.push(`"dest" : "${i.dest}"`);
+                    tmp2.push(`"dest" : "${this.parseFilePath(i.dest)}"`);
             }
             else {
                 tmp3 = this.getExitId(i.exit, room.x, room.y, room.z);
@@ -11801,7 +11962,7 @@ export class AreaDesigner extends EditorBase {
                 else if (files[tmp])
                     tmp = `${files[tmp]}`;
                 else
-                    tmp = `"${tmp}"`;
+                    tmp = this.parseFilePath(tmp);
             }
             else {
                 tmp3 = this.getExitId(d.exit, room.x, room.y, room.z);
@@ -12772,11 +12933,15 @@ export class AreaDesigner extends EditorBase {
         data.help.push('mattypes');
         const limbs = ['ALLLIMBS', 'OVERALL', 'LIMBONLY', 'TORSO', 'HEAD', 'LEFTARM', 'RIGHTARM', 'LEFTHAND', 'RIGHTHAND', 'LEFTLEG', 'RIGHTLEG', 'LEFTFOOT', 'RIGHTFOOT', 'RIGHTWING', 'LEFTWING', 'LEFTHOOF', 'RIGHTHOOF', 'TAIL', 'ARMS', 'LEGS', 'HANDS', 'FEET', 'WINGS', 'HOOVES', 'LOWERBODY', 'COREBODY', 'UPPERCORE', 'UPPERBODY', 'WINGEDCORE', 'WINGEDUPPER', 'UPPERTRUNK', 'LOWERTRUNK', 'TRUNK', 'WINGEDTRUNK', 'FULLBODY', 'TOTALBODY', 'WINGEDBODY'];
         switch (obj.type) {
+            case StdObjectType.armor_of_holding:
             case StdObjectType.armor:
                 //#region Armor
                 bonuses = true;
                 skills = true;
-                data.inherit = 'OBJ_ARMOUR';
+                if (obj.type === StdObjectType.armor_of_holding)
+                    data.inherit = 'OBJ_ARMOR_OF_HOLDING';
+                else
+                    data.inherit = 'OBJ_ARMOUR';
                 data['doc'].push('/doc/build/armours/tutorial');
                 data.help.push('atypes');
                 data.includes += '\n#include <limbs.h>';
@@ -12803,6 +12968,33 @@ export class AreaDesigner extends EditorBase {
                     data['create arguments'] += `, ${obj.enchantment}`;
                     data['create arguments comment'] += ', Natural enchantment';
                 }
+                if (obj.type === StdObjectType.armor_of_holding) {
+                    if (obj.enchantment === 0) {
+                        data['create arguments'] += `, 0`;
+                        data['create arguments comment'] += ', Natural enchantment';
+                    }
+                    if (obj.encumbrance !== 40000) {
+                        data['create arguments'] += `, ${obj.encumbrance}`;
+                        data['create arguments comment'] += ', Max encumbrance'
+                    }
+                    else if (obj.maxitems !== 0 || obj.minencumbrance !== 500) {
+                        data['create arguments'] += ', 40000';
+                        data['create arguments comment'] += ', Max encumbrance'
+                    }
+                    if (obj.maxitems !== 0) {
+                        data['create arguments'] += `, ${obj.maxitems}`;
+                        data['create arguments comment'] += ', Max items'
+                    }
+                    else if (obj.minencumbrance !== 500) {
+                        data['create arguments'] += `, 0`;
+                        data['create arguments comment'] += ', Max items'
+                    }
+                    if (obj.minencumbrance !== 500) {
+                        data['create arguments'] += `, ${obj.minencumbrance}`;
+                        data['create arguments comment'] += ', Min encumbrance'
+                    }
+                }
+
                 if (obj.maxWearable !== 0)
                     tempProps['max_wearable'] = `"${obj.maxWearable}"`;
                 if (obj.limbsOptional)
@@ -13340,8 +13532,27 @@ export class AreaDesigner extends EditorBase {
             case StdObjectType.bag_of_holding:
                 //#region bag_of_holding
                 data.inherit = 'OBJ_BAGOFHOLDING';
-                if (obj.encumbrance !== 40000)
-                    data['create body'] += `   set_max_encumbrance(${obj.encumbrance});\n`;
+                data['create arguments comment'] = '';
+                if (obj.encumbrance !== 40000) {
+                    data['create arguments'] = `${obj.encumbrance}`;
+                    data['create arguments comment'] = '// Max encumbrance'
+                }
+                else if (obj.maxitems !== 0 || obj.minencumbrance !== 500) {
+                    data['create arguments'] = '40000';
+                    data['create arguments comment'] = '// Max encumbrance'
+                }
+                if (obj.maxitems !== 0) {
+                    data['create arguments'] += `, ${obj.maxitems}`;
+                    data['create arguments comment'] += ', Max items'
+                }
+                else if (obj.minencumbrance !== 500) {
+                    data['create arguments'] += `, 0`;
+                    data['create arguments comment'] += ', Max items'
+                }
+                if (obj.minencumbrance !== 500) {
+                    data['create arguments'] += `, ${obj.minencumbrance}`;
+                    data['create arguments comment'] += ', Min encumbrance'
+                }
                 //#endregion
                 break;
             default:
@@ -13826,6 +14037,20 @@ export class AreaDesigner extends EditorBase {
         return template;
     }
 
+    private parseFilePath(path: string) {
+        if (path.toLowerCase().startsWith('${rms}'))
+            return `RMS + "${path.substring(6)}"`;
+        if (path.toLowerCase().startsWith('${mon}'))
+            return `MON + "${path.substring(6)}"`;
+        if (path.toLowerCase().startsWith('${std}'))
+            return `STD + "${path.substring(6)}"`;
+        if (path.toLowerCase().startsWith('${obj}'))
+            return `OBJ + "${path.substring(6)}"`;
+        if (path.toLowerCase().startsWith('${cmds}'))
+            return `CMDS + "${path.substring(7)}"`;
+        return `"${path}"`;
+    }
+
     public resizeMap(width, height, depth, shift: shiftType, noUndo?) {
         Timer.start();
         width = width || 0;
@@ -13847,24 +14072,25 @@ export class AreaDesigner extends EditorBase {
             ));
 
         this.$roomCount = 0;
+        const dRooms = [];
         for (let z = 0; z < zl; z++) {
             for (let y = 0; y < yl; y++) {
                 for (let x = 0; x < xl; x++) {
-                    const room = this.$area.rooms[z][y][x];
+                    const room = this.$area.rooms[z][y][x].clone();
                     let idx;
                     if (!room) continue;
                     if ((shift & shiftType.right) === shiftType.right)
                         room.x += width;
                     else if ((shift & shiftType.left) !== shiftType.left)
-                        room.x += Math.floor(width / 2);
+                        room.x += width < 0 ? Math.floor(width / 2) : Math.ceil(width / 2);
                     if ((shift & shiftType.bottom) === shiftType.bottom)
                         room.y += height;
                     else if ((shift & shiftType.top) !== shiftType.top)
-                        room.y += Math.floor(height / 2);
+                        room.y += height < 0 ? Math.floor(height / 2) : Math.ceil(height / 2);
                     if ((shift & shiftType.up) === shiftType.up)
                         room.z += depth;
                     else if ((shift & shiftType.down) !== shiftType.down)
-                        room.z += Math.floor(depth / 2);
+                        room.z += depth < 0 ? Math.floor(depth / 2) : Math.ceil(depth / 2);
                     if (room.z >= 0 && room.z < zl2 && room.x >= 0 && room.x < xl2 && room.y >= 0 && room.y < yl2) {
                         rooms[room.z][room.y][room.x] = room;
                         idx = this.$selectedRooms.indexOf(this.$area.rooms[z][y][x]);
@@ -13876,11 +14102,11 @@ export class AreaDesigner extends EditorBase {
                         if (!room.empty && !room.equals(base, true)) this.$roomCount++;
                     }
                     else {
-                        if (room.exits) {
+                        if (!room.empty) {
                             room.x = x;
                             room.y = y;
                             room.z = z;
-                            this.deleteRoom(room, true);
+                            dRooms.push(room);
                         }
                         idx = this.$selectedRooms.indexOf(this.$area.rooms[z][y][x]);
                         if (idx !== -1)
@@ -13891,6 +14117,14 @@ export class AreaDesigner extends EditorBase {
                 }
             }
         }
+        if (!noUndo) {
+            this.startUndoGroup();            
+            this.pushUndo(undoAction.delete, undoType.room, dRooms);
+        }
+        let dl = dRooms.length;
+        while(dl--)
+            if (dRooms[dl].exits)
+                this.deleteRoom(dRooms[dl], noUndo);     
         this.$area.rooms = rooms;
         this.UpdateEditor(this.$selectedRooms);
         this.UpdatePreview(this.selectedFocusedRoom);
@@ -13920,11 +14154,72 @@ export class AreaDesigner extends EditorBase {
             });
         }
         this.emit('rebuild-buttons');
+        this.emit('rebuild-menu', 'edit');
         this.emit('resize-map');
         Timer.end('Resize time');
         this.doUpdate(UpdateType.drawMap);
-        if (!noUndo)
+        this.changed = true;
+        if (!noUndo) {           
             this.pushUndo(undoAction.edit, undoType.resize, { width: width, height: height, depth: depth, shift: shift });
+            this.stopUndoGroup();
+        }
+    }
+
+    public flipMap(type: flipType, noUndo?) {
+        Timer.start();
+        const zl = this.$area.size.depth;
+        const xl = this.$area.size.width;
+        const yl = this.$area.size.height;
+        const rooms = Array.from(Array(zl),
+            (v, z) => Array.from(Array(xl),
+                (v2, y) => Array.from(Array(yl),
+                    (v3, x) => new Room(x, y, z, this.$area.baseRooms[this.$area.defaultRoom], this.$area.defaultRoom))
+            ));
+
+        this.$roomCount = 0;
+        for (let z = 0; z < zl; z++) {
+            for (let y = 0; y < yl; y++) {
+                for (let x = 0; x < xl; x++) {
+                    const room = this.$area.rooms[z][y][x];
+                    let idx;
+                    if (!room) continue;
+                    if ((type & flipType.horizontal) === flipType.horizontal) {
+                        room.x = xl - room.x - 1;
+                        room.switchExits(RoomExit.West, RoomExit.East);
+                        room.switchExits(RoomExit.NorthWest, RoomExit.NorthEast);
+                        room.switchExits(RoomExit.SouthWest, RoomExit.SouthEast);
+                    }
+                    if ((type & flipType.vertical) === flipType.vertical) {
+                        room.y = yl - room.y - 1;
+                        room.switchExits(RoomExit.North, RoomExit.South);
+                        room.switchExits(RoomExit.NorthWest, RoomExit.SouthWest);
+                        room.switchExits(RoomExit.NorthEast, RoomExit.SouthEast);
+                    }
+                    if ((type & flipType.depth) === flipType.depth) {
+                        room.z = zl - room.z - 1;
+                        room.switchExits(RoomExit.Down, RoomExit.Up);
+                    }
+                    rooms[room.z][room.y][room.x] = room;
+                    idx = this.$selectedRooms.indexOf(this.$area.rooms[z][y][x]);
+                    if (idx !== -1)
+                        this.$selectedRooms[idx] = rooms[room.z][room.y][room.x];
+                    if (this.$focusedRoom && this.$focusedRoom.at(x, y, z))
+                        this.$focusedRoom = rooms[room.z][room.y][room.x];
+                    const base = this.$area.baseRooms[room.type] || this.$area.baseRooms[this.$area.defaultRoom];
+                    if (!room.empty && !room.equals(base, true)) this.$roomCount++;
+                }
+            }
+        }
+        this.$area.rooms = rooms;
+        this.UpdateEditor(this.$selectedRooms);
+        this.UpdatePreview(this.selectedFocusedRoom);
+        this.BuildAxises();
+        this.emit('flip-map');
+        Timer.end('Flip time');
+        this.doUpdate(UpdateType.drawMap);
+        this.changed = true;
+        if (!noUndo)
+            this.pushUndo(undoAction.edit, undoType.flip, { type: type });
     }
 
     private loadTypes() {

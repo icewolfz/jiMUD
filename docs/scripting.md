@@ -14,19 +14,58 @@ To use scripting you just have to select script as the type from the type dropdo
 - `$selword` same as $selectedword
 - `$selline` sane as $selline
 - `$selurl` same as $selected url
+- `$contextMenu` access to the context menu item array, manipulating this will effect the displayed context menu, **WARNING** this could break the context menu, if broken you can refresh by causing a profile to be re-saved
+
+## User variables
+
+You can access them scripting using client.variables['NAME'], client.variables.NAME, this.variables['NAME'], or this.variables.NAME. Some variables may not be accessible to the parser: i and repeatnum are special variables and are used i loops and are not accessible in parse style, named arguments in parse style will be used instead of any user defined of the same name, **variables lost when client is closed**
+
+Example:
+```javascript
+this.variables.test = 5;
+this.variables['test'] = 5;
+client.variables.test = 5;
+client.variables['test'] = 5;
+```
+
+Set or created variables can be access in the expression system by name eg ${test + 5} would be 10 based from example
+
+## Named arguments
+
+Naming convention use javascript identifier rules, which are must be at least 1 character of a-z,A-Z,$, or _ followed by a-z,A-Z,$,_, or 0 - 9, and not a javascript keyword
+
+Aliases allow named arguments set using a command delimited list which are converted into local scoped javascript variables,
+Example:
+Alias with named arguments: name,message
+```javascript
+this.print(name + ' says ' + message);
+```
+
+Triggers allow named capturing which are converted into local scoped javascript variables
+Example:
+Trigger pattern: (?\<name>.\*) says (?\<message>.*)
+```javascript
+this.print(name + ' says ' + message);
+```
 
 ## Basic function list
 
 - `client.beep()` play system beep sound
 - `client.readClipboard()` read text from clipboard, can also access from window.readClipboard()
-- `client.writeClipboard(text, html)` write text to clipboard, can also access from window.writeClipboard(text), html argument is optional, allows formated html markup of text for applications that support pasting html
+- `client.writeClipboard(text, html)` write text to clipboard, can also access from window.writeClipboard(text), html argument is optional, allows formatted html markup of text for applications that support pasting html
 - `client.readClipboardHTML()` read HTML from clipboard, can also access from window.readClipboardHTML()
 - `client.send(text, echo?)` send text directly to the mud, telnet code IAC is escaped, note you should always try and append a new line as most muds require it to process any text.
   - `text` the text to send
   - `echo` echo text to display
 - `client.sendRaw(text)` sends raw text directly to the mud as is
-- `client.sendCommand(text)` sends a command as if sent from the command line
-- `client.sendBackground(text)` sends a command as if sent from the command line with out modifying the current command line
+- `client.sendCommand(text, noEcho?, comments?)` sends a command as if sent from the command line
+  - `text` the text to send
+  - `noEcho` do not echo text to screen
+  - `comments` parse inline and block comments
+- `client.sendBackground(text, noEcho?, comments?)` sends a command as if sent from the command line with out modifying the current command line
+  - `text` the text to send
+  - `noEcho` do not echo text to screen
+  - `comments` parse inline and block comments
 - `client.print(text, newline)` print text to screen, newline argument is optional and controls weather to start a newline if last line was a fragment/prompt
 - `client.echo(text, fore, back, newline, forceline)` echo text to the screen
   - `test` the text to echo
@@ -52,6 +91,7 @@ To use scripting you just have to select script as the type from the type dropdo
 - `client.hide()` hide client
 - `client.toggle()` toggle hide and show
 - `client.sendChat(text)` send text to chat window
+- `client.indices` return the current indices for trigger or an empty array same as [%x1..$x99](functions.md)
 
 ### **WARNING**: you can effect the client if you access the wrong function, so any function used other then this list may caused unknown results and could cause the client to stop working
 
@@ -140,4 +180,113 @@ for(var c = 0; c < oldStr.length;c++)
 }
 this.sendCommand(line + ' ' + str);
 //End mono grayscale example
+```
+
+### Rainbow 256 color say alias
+
+```javascript
+/*
+Start Rainbow 256 example
+
+syntax: rs [text]
+
+to use this alias, create a new alias named rs, set the style to Script
+and ensure append arguments is checked and paste this in the value
+*/
+//the string to send to the mud
+var out = '';
+//counter variable for looping
+var i;
+//build table once and store to speed up
+if(!window.forecolors256)
+{
+  //initialize color table
+   window.forecolors256 = [];
+   for(i=0; i<30; i++)
+      window.forecolors256.push([0,0,0]); //set each color to [R,G,B] array for manipulation
+   //build rainbow colors
+   for(i=0; i<5; i++)
+   {
+      /*0-4*/ window.forecolors256[i][0]+=5; window.forecolors256[i][1]+=i+1;
+      /*5-9*/ window.forecolors256[i+5][0]+=4-i; window.forecolors256[i+5][1]+=5;
+      /*10-14*/ window.forecolors256[i+10][1]+=5; window.forecolors256[i+10][2]+=i+1;
+      /*15-19*/ window.forecolors256[i+15][1]+=4-i; window.forecolors256[i+15][2]+=5;
+      /*20-24*/ window.forecolors256[i+20][2]+=5; window.forecolors256[i+20][0]+=i+1;
+      /*25-29*/ window.forecolors256[i+25][0]+=5; window.forecolors256[i+25][2]+=4-i;
+   }
+   //Build final color codes using the R,G,B array
+   window.forecolors256 = window.forecolors256.map(c => `%^RGB${c[0]}${c[1]}${c[2]}%^`);
+}
+//random color offset
+var offset=Math.ceil(Math.random()*1000);
+//build the string, this ensures all arguments are gotten
+var args = Array.prototype.slice.call(arguments);
+//start at the first argument as 0 is the alias + arguments, and convert to an array
+var str = [...args.slice(1).join(' ')];
+//store length for a little extra speed
+var l = str.length;
+//loop array and build new string inserting color codes
+for(i=0; i<l; i++)
+{
+   var i2= (i+offset) % window.forecolors256.length;
+   out += window.forecolors256[i2]+str[i];
+}
+client.sendCommand("'%^RESET%^"+out+"%^DEFAULT%^");
+```
+
+### Status display dots
+
+```javascript
+/*
+Status display dots
+
+syntax:
+  statuschange id color - change a status dot color
+  statuschange reset - reset all dots to default
+  statuschange remove - remove all dots
+
+to use this alias, create a new alias named statuschange, set the style to Script
+and ensure append arguments is checked and paste this in the value
+*/
+//add a reset option
+if(arguments.length === 2 && arguments[1] === 'reset')
+   $('#dot-status').remove();
+//remove dots
+if(arguments.length === 2 && arguments[1] === 'remove') {
+   $('#dot-status').remove();
+   return;
+}
+//create status display
+if($('#dot-status').length === 0){
+   //first try web client
+   var body = $('#phil');
+   //# of columns, change this if you add more then 6 dots to allow better formatting
+   var columns = 1;
+   //if not found use jimud
+   if(body.length === 0) {
+      body = $('#limbs');
+	  body.append('<span id="dot-status" class="dot-container" style="display: inline-block;bottom: 70px;position: absolute;left: 0;width:'+(columns * 20)+'px;">');
+   } //position based on phill
+   else
+      body.append('<span id="dot-status" class="dot-container" style="display: inline-block;bottom: 0;position: absolute;width:'+(columns * 20)+'px;left: -25px;">');
+   //get container
+   body = $('#dot-status');
+   //easy build of status
+   var cStatus = function(id) {
+      return '<span class="dot" id="'+id+'" style="height: 10px;width: 10px;background-color: white;border-radius: 50%;display: inline-block;margin-left: 5px;"></span>';
+   }
+   //create status dots
+   //create a dot named stat, use statuschange stat [color] to change its color
+   body.append(cStatus('stat')); //copy this line and change stat to a unique name, then use statuschange [name] [color]
+   //create as many other dots with unique ids as you want, if you add more then 6 add more columns above, remove // from below to add these dots
+   //body.append(cStatus('buffer'));
+   //body.append(cStatus('mantle'));
+   //body.append(cStatus('quicken'));
+   //body.append(cStatus('poison'));
+   //body.append(cStatus('wbreathing'));
+}
+if(arguments.length === 3)
+   $('#' + (arguments[1] || 'stat')).css('background', arguments[2] || 'white');
+else
+   $('#' + ('stat')).css('background', arguments[1] || 'white');
 ```

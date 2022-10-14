@@ -6,8 +6,9 @@ import { PropertyGrid } from '../propertygrid';
 import { EditorType, ValueEditor } from '../value.editors';
 import { DataGrid } from '../datagrid';
 import { copy, formatString, isFileSync, capitalize, leadingZeros, Cardinal, resetCursor, enumToString, pinkfishToHTML } from '../library';
-const { clipboard, remote } = require('electron');
-const { Menu, MenuItem, dialog } = remote;
+const { clipboard, ipcRenderer } = require('electron');
+const remote = require('@electron/remote');
+const { Menu, MenuItem } = remote;
 const path = require('path');
 const fs = require('fs');
 
@@ -37,6 +38,12 @@ export enum shiftType {
     bottom = 16,
     up = 32,
     down = 64
+}
+
+export enum flipType {
+    horizontal = 1,
+    vertical = 2,
+    depth = 4,
 }
 
 export enum UpdateType { none = 0, drawMap = 1, buildRooms = 2, buildMap = 4, resize = 8, status = 16, refreshItems = 32, refreshDescriptions = 64, refreshExits = 128 }
@@ -163,6 +170,18 @@ export class Room {
         if (this.z !== z) return false;
         return true;
     }
+
+    get empty() {
+        if (this.exits !== 0) return true;
+        if (this.exits !== 0) return true;
+        if (this.exits !== 0) return true;
+        if (this.exits !== 0) return true;
+        if (this.exits !== 0) return true;
+        if (this.ef) return true;
+        if (this.climbs !== 0) return true;
+        if (this.external) return true;
+        return false;
+    }
 }
 
 enum View {
@@ -188,7 +207,7 @@ export interface MousePosition {
 
 const Timer = new DebugTimer();
 
-enum undoType { room, description, item, resize, reduce, raw, rawText, exits, revert, maxTerrain }
+enum undoType { room, description, item, resize, reduce, raw, rawText, exits, exit, revert, maxTerrain, flip }
 enum undoAction { add, delete, edit }
 enum undoReduce { items = 1, descriptions = 2, all = items | descriptions }
 
@@ -242,6 +261,7 @@ export class VirtualEditor extends EditorBase {
 
     private $focused: boolean;
     private _updating;
+    private _rTimeout = 0;
     private _os;
     private _wMove;
     private _wUp;
@@ -547,7 +567,7 @@ export class VirtualEditor extends EditorBase {
     set changed(value: boolean) {
         if (value !== super.changed) {
             super.changed = value;
-            this.emit('changed', value);
+            this.emit('changed', -1, -1);
         }
     }
 
@@ -782,8 +802,7 @@ export class VirtualEditor extends EditorBase {
             }
         ];
         this.$descriptionGrid.on('delete', (e) => {
-            if (dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
                     type: 'warning',
                     title: 'Delete',
@@ -939,8 +958,7 @@ export class VirtualEditor extends EditorBase {
                 e.data[d].data.idx = idx;
                 e.data[d].items.idx = idx;
                 if (!all && idx < this.$items.length) {
-                    choice = dialog.showMessageBox(
-                        remote.getCurrentWindow(),
+                    choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                         {
                             type: 'warning',
                             title: 'Replace items',
@@ -1112,8 +1130,7 @@ export class VirtualEditor extends EditorBase {
             }
         ];
         this.$itemGrid.on('delete', (e) => {
-            if (dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
                     type: 'warning',
                     title: 'Delete',
@@ -1547,8 +1564,7 @@ export class VirtualEditor extends EditorBase {
             }
         });
         this.$exitGrid.on('delete', (e) => {
-            if (dialog.showMessageBox(
-                remote.getCurrentWindow(),
+            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                 {
                     type: 'warning',
                     title: 'Delete',
@@ -1632,7 +1648,7 @@ export class VirtualEditor extends EditorBase {
         });
         this.$exitGrid.on('value-changed', (newValue, oldValue, dataIndex) => {
             this.startUndoGroup();
-            this.pushUndo(undoAction.edit, undoType.exits, { index: dataIndex, value: oldValue });
+            this.pushUndo(undoAction.edit, undoType.exit, { index: dataIndex, value: oldValue });
             if (this.$mapSize.depth > 1)
                 this.updateRaw(this.$externalRaw, dataIndex, [(newValue.enabled ? '' : '#') + newValue.x + ',' + newValue.y + ',' + newValue.z + ':' + newValue.exit + ':' + newValue.dest]);
             else
@@ -2009,15 +2025,15 @@ export class VirtualEditor extends EditorBase {
             const sel = getSelection();
             let inputMenu;
             if (!sel.isCollapsed && sel.type === 'Range' && this.$roomPreview.container.contains(sel.anchorNode)) {
-                inputMenu = Menu.buildFromTemplate([
+                inputMenu = Menu.buildFromTemplate(<Electron.MenuItemConstructorOptions[]>[
                     { role: 'copy' },
                     { type: 'separator' },
-                    { role: 'selectall' }
+                    { role: 'selectAll' }
                 ]);
             }
             else
-                inputMenu = Menu.buildFromTemplate([
-                    { role: 'selectall' }
+                inputMenu = Menu.buildFromTemplate(<Electron.MenuItemConstructorOptions[]>[
+                    { role: 'selectAll' }
                 ]);
             inputMenu.popup({ window: remote.getCurrentWindow() });
         });
@@ -3598,6 +3614,7 @@ export class VirtualEditor extends EditorBase {
             let sl = selected.length;
             const first = selected[0];
             let oldValues = [];
+            let i = 0;
             const mx = this.$mouse.rx;
             const my = this.$mouse.ry;
             this.startUndoGroup();
@@ -3659,8 +3676,10 @@ export class VirtualEditor extends EditorBase {
                         selected.forEach((r, i) => {
                             oldValues[i] = r.terrain;
                             const o = this.getRoom(r.x, r.y, r.z);
-                            if (first.terrain === first.item)
+                            if (first.terrain === first.item) {
                                 r.item = first.item;
+                                i++;
+                            }
                             r.terrain = first.terrain;
                             this.RoomChanged(r, o, true);
                             if (first.terrain === first.item)
@@ -3668,6 +3687,8 @@ export class VirtualEditor extends EditorBase {
                             o.terrain = first.terrain;
                         });
                         this.pushUndo(undoAction.edit, undoType.room, { property: 'terrain', values: oldValues, rooms: selected.map(m => [m.x, m.y, m.z]) });
+                        if (i)
+                            this.pushUndo(undoAction.edit, undoType.room, { property: 'item', values: oldValues, rooms: selected.map(m => [m.x, m.y, m.z]) });
                         oldValues = [];
                         break items;
                     case 'terrainType':
@@ -3681,8 +3702,10 @@ export class VirtualEditor extends EditorBase {
                         selected.forEach((r, i) => {
                             oldValues.push(r.terrain);
                             const o = this.getRoom(r.x, r.y, r.z);
-                            if (first.terrain === first.item)
+                            if (first.terrain === first.item) {
                                 r.item = first.item;
+                                i++;
+                            }
                             r.terrain = first.terrain;
                             this.RoomChanged(r, o, true);
                             if (first.terrain === first.item)
@@ -3690,6 +3713,8 @@ export class VirtualEditor extends EditorBase {
                             o.terrain = first.terrain;
                         });
                         this.pushUndo(undoAction.edit, undoType.room, { property: 'terrain', values: oldValues, rooms: selected.map(m => [m.x, m.y, m.z]) });
+                        if (i)
+                            this.pushUndo(undoAction.edit, undoType.room, { property: 'item', values: oldValues, rooms: selected.map(m => [m.x, m.y, m.z]) });
                         oldValues = [];
                         //invalid index
                         if (first.terrain < 0) break items;
@@ -3719,14 +3744,16 @@ export class VirtualEditor extends EditorBase {
                         resetCursor(this.$descriptionRaw);
                         break items;
                     case 'terrain':
-                        if (first.item === oldValue)
+                        if (first.item === oldValue) {
                             curr.item = newValue;
+                            i++;
+                        }
                         curr[prop] = newValue;
                         //new high terrain, clear cache and redraw whole map as colors should have shifted
                         if (newValue > this.$maxTerrain)
                             this.updateMaxTerrain(newValue);
-                        else //else just redraw the current room
-                            this.DrawRoom(this.$mapContext, curr, true, curr.at(mx, my));
+                        //else //else just redraw the current room
+                        // this.DrawRoom(this.$mapContext, curr, true, curr.at(mx, my));
                         this.RoomChanged(curr, old, true);
                         if (curr.item === newValue)
                             old.item = newValue;
@@ -3736,16 +3763,20 @@ export class VirtualEditor extends EditorBase {
                     default:
                         oldValues[sl] = old[prop];
                         curr[prop] = newValue;
-                        this.DrawRoom(this.$mapContext, curr, true, curr.at(mx, my));
+                        //this.DrawRoom(this.$mapContext, curr, true, curr.at(mx, my));
                         this.RoomChanged(curr, old, true);
                         old[prop] = newValue;
                         break;
                 }
+                this.setRoom(curr, true);
             }
-            if (oldValues.length > 0)
+            if (oldValues.length > 0) {
                 this.pushUndo(undoAction.edit, undoType.room, { property: prop === 'external' ? 'ee' : prop, values: oldValues, rooms: selected.map(m => [m.x, m.y, m.z]) });
+                if (i)
+                    this.pushUndo(undoAction.edit, undoType.room, { property: 'item', values: oldValues, rooms: selected.map(m => [m.x, m.y, m.z]) });
+            }
             this.stopUndoGroup();
-            setTimeout(() => this.UpdateEditor(this.$selectedRooms));
+            this.UpdateEditor(selected);
             this.UpdatePreview(this.selectedFocusedRoom);
         });
         this.$roomEditor.setPropertyOptions([
@@ -4055,7 +4086,7 @@ export class VirtualEditor extends EditorBase {
             (<HTMLElement>e.currentTarget).dataset.dirty = 'true';
             (<HTMLElement>e.currentTarget).dataset.changed = 'true';
             if (this.$view === view)
-                this.emit('changed', el.value.length);
+                this.emit('changed', el.value.length, -1);
         });
         el.addEventListener('input', (e) => {
             if (this.$rawUndo.el && this.$rawUndo.el !== el) {
@@ -4075,7 +4106,7 @@ export class VirtualEditor extends EditorBase {
             (<HTMLElement>e.currentTarget).dataset.dirty = 'true';
             (<HTMLElement>e.currentTarget).dataset.changed = 'true';
             if (this.$view === view)
-                this.emit('changed', el.value.length);
+                this.emit('changed', el.value.length, -1);
         });
         el.addEventListener('paste', (e) => {
             this.pushUndo(undoAction.edit, undoType.rawText, { el: el, value: el.value });
@@ -4083,7 +4114,7 @@ export class VirtualEditor extends EditorBase {
             (<HTMLElement>e.currentTarget).dataset.dirty = 'true';
             (<HTMLElement>e.currentTarget).dataset.changed = 'true';
             if (this.$view === view)
-                this.emit('changed', el.value.length);
+                this.emit('changed', el.value.length, -1);
         });
         el.addEventListener('cut', (e) => {
             this.pushUndo(undoAction.edit, undoType.rawText, { el: el, value: el.value });
@@ -4091,7 +4122,7 @@ export class VirtualEditor extends EditorBase {
             (<HTMLElement>e.currentTarget).dataset.dirty = 'true';
             (<HTMLElement>e.currentTarget).dataset.changed = 'true';
             if (this.$view === view)
-                this.emit('changed', el.value.length);
+                this.emit('changed', el.value.length, -1);
         });
 
         el.addEventListener('keydown', (e) => {
@@ -4120,14 +4151,14 @@ export class VirtualEditor extends EditorBase {
                     { role: 'copy' },
                     { role: 'paste' },
                     { type: 'separator' },
-                    { role: 'selectall' }
+                    { role: 'selectAll' }
                 ];
             }
             else
                 tmp = [
                     { role: 'paste' },
                     { type: 'separator' },
-                    { role: 'selectall' }
+                    { role: 'selectAll' }
                 ];
             if (this.$undo.length > 0 || this.$redo.length > 0)
                 tmp.unshift({ type: 'separator' });
@@ -4373,8 +4404,7 @@ export class VirtualEditor extends EditorBase {
         if (!this.$files[file] || !isFileSync(path.join(path.dirname(this.file), file)))
             return 0;
         //ask and return answer
-        return dialog.showMessageBox(
-            remote.getCurrentWindow(),
+        return ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
             {
                 type: 'warning',
                 title: 'Confirm Save As',
@@ -5140,7 +5170,7 @@ export class VirtualEditor extends EditorBase {
                         this.DrawRoom(this.$mapContext, room, true, undo.data[l].at(this.$mouse.rx, this.$mouse.ry));
                         undo.data = room;
                         this.pushRedo(undo);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.exits:
@@ -5148,7 +5178,7 @@ export class VirtualEditor extends EditorBase {
                         this.$exits.splice(undo.data.oldLength, undo.data.exits.length);
                         this.pushRedo(undo);
                         this.doUpdate(UpdateType.refreshExits);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.raw:
@@ -5162,7 +5192,7 @@ export class VirtualEditor extends EditorBase {
                         this.$descriptions.splice(undo.data.index, 1);
                         this.pushRedo(undo);
                         this.doUpdate(UpdateType.refreshDescriptions);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.item:
@@ -5172,7 +5202,7 @@ export class VirtualEditor extends EditorBase {
                         this.$items.splice(undo.data.index, 1);
                         this.pushRedo(undo);
                         this.doUpdate(UpdateType.refreshItems);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                 }
@@ -5203,7 +5233,7 @@ export class VirtualEditor extends EditorBase {
                             this.DrawRoom(this.$mapContext, undo.data[l], true, undo.data[l].at(mx, my));
                         }
                         this.doUpdate(UpdateType.status);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         undo.data = values;
                         this.pushRedo(undo);
@@ -5215,7 +5245,7 @@ export class VirtualEditor extends EditorBase {
                             this.$exits.splice(undo.data.index[l], 0, undo.data.exits[l]);
                         this.doUpdate(UpdateType.refreshExits);
                         this.pushRedo(undo);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.raw:
@@ -5261,7 +5291,7 @@ export class VirtualEditor extends EditorBase {
                         this.$descriptions.splice(undo.data.index, 0, undo.data.data);
                         this.pushRedo(undo);
                         this.doUpdate(UpdateType.refreshDescriptions);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.item:
@@ -5269,7 +5299,7 @@ export class VirtualEditor extends EditorBase {
                         this.$items.splice(undo.data.index, 0, undo.data.items);
                         this.pushRedo(undo);
                         this.doUpdate(UpdateType.refreshItems);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                 }
@@ -5287,13 +5317,17 @@ export class VirtualEditor extends EditorBase {
                         this._resizeMap(-undo.data.width, -undo.data.height, -undo.data.depth, undo.data.shift, true);
                         this.pushRedo(undo);
                         break;
+                    case undoType.flip:
+                        this._flipMap(undo.data.type, true);
+                        this.pushRedo(undo);
+                        break;
                     case undoType.room:
                         l = undo.data.values.length;
                         values = [];
                         const mx = this.$mouse.rx;
                         const my = this.$mouse.ry;
                         while (l--) {
-                            room = this.getRoom(undo.data.rooms[l][0], undo.data.rooms[l][1], undo.data.rooms[2]);
+                            room = this.getRoom(undo.data.rooms[l][0], undo.data.rooms[l][1], undo.data.rooms[l][2]);
                             values[l] = room[undo.data.property];
                             room[undo.data.property] = undo.data.values[l];
                             this.RoomChanged(room);
@@ -5304,19 +5338,30 @@ export class VirtualEditor extends EditorBase {
                             this.DrawRoom(this.$mapContext, room, true, room.at(mx, my));
                         }
                         this.doUpdate(UpdateType.status);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         undo.data.values = values;
                         this.pushRedo(undo);
                         break;
-                    case undoType.exits:
-                        //this.pushUndo(undoAction.edit, undoType.exits, { index: dataIndex, value: oldValue });
+                    case undoType.exit:
+                        //this.pushUndo(undoAction.edit, undoType.exit, { index: dataIndex, value: oldValue });
                         value = this.$exits[undo.data.index];
                         this.$exits[undo.data.index] = undo.data.value;
                         undo.data.value = value;
                         this.pushRedo(undo);
                         this.doUpdate(UpdateType.refreshExits);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                    case undoType.exits:
+                        //this.pushUndo(undoAction.edit, undoType.exits, { exits: exits, room: [x,y,z] });
+                        value = this.$exits.filter(ex => ex.x === undo.data.room[0] && ex.y === undo.data.room[1] && ex.z === undo.data.room[2])
+                        this.$exits = this.$exits.filter(ex => ex.x !== undo.data.room[0] || ex.y !== undo.data.room[1] || ex.z !== undo.data.room[2]);
+                        this.$exits.push(...undo.data.exits);
+                        undo.data.exits = value;
+                        this.pushRedo(undo);
+                        this.doUpdate(UpdateType.refreshExits);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.raw:
@@ -5331,7 +5376,7 @@ export class VirtualEditor extends EditorBase {
                         if ((undo.data.what & undoReduce.descriptions) === undoReduce.descriptions)
                             this.increaseIdx(this.$descriptions, undo.data.index);
                         this.pushRedo(undo);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.maxTerrain:
@@ -5347,7 +5392,7 @@ export class VirtualEditor extends EditorBase {
                         undo.data.value = value;
                         this.pushRedo(undo);
                         this.doUpdate(UpdateType.refreshDescriptions);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.item:
@@ -5359,7 +5404,7 @@ export class VirtualEditor extends EditorBase {
                         undo.data.items = value;
                         this.pushRedo(undo);
                         this.doUpdate(UpdateType.refreshItems);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                 }
@@ -5399,7 +5444,7 @@ export class VirtualEditor extends EditorBase {
                         this.DrawRoom(this.$mapContext, room, true, undo.data[l].at(this.$mouse.rx, this.$mouse.ry));
                         undo.data = room;
                         this.pushUndoObject(undo);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.exits:
@@ -5407,7 +5452,7 @@ export class VirtualEditor extends EditorBase {
                         this.$exits.push(...undo.data.exits);
                         this.pushUndoObject(undo);
                         this.doUpdate(UpdateType.refreshExits);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.raw:
@@ -5420,7 +5465,7 @@ export class VirtualEditor extends EditorBase {
                         this.$descriptions.splice(undo.data.index, 0, undo.data.value);
                         this.pushUndoObject(undo);
                         this.doUpdate(UpdateType.refreshDescriptions);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.item:
@@ -5428,7 +5473,7 @@ export class VirtualEditor extends EditorBase {
                         this.$items.splice(undo.data.index, 0, this.$items[undo.data.index]);
                         this.pushUndoObject(undo);
                         this.doUpdate(UpdateType.refreshItems);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                 }
@@ -5459,7 +5504,7 @@ export class VirtualEditor extends EditorBase {
                             this.DrawRoom(this.$mapContext, undo.data[l], true, undo.data[l].at(mx, my));
                         }
                         this.doUpdate(UpdateType.status);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         undo.data = values;
                         this.pushUndoObject(undo);
@@ -5471,7 +5516,7 @@ export class VirtualEditor extends EditorBase {
                             this.$exits.splice(undo.data.index[l], 1);
                         this.doUpdate(UpdateType.refreshExits);
                         this.pushUndoObject(undo);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.raw:
@@ -5517,7 +5562,7 @@ export class VirtualEditor extends EditorBase {
                         this.$descriptions.splice(undo.data.index, 1);
                         this.pushRedo(undo);
                         this.doUpdate(UpdateType.refreshDescriptions);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.item:
@@ -5525,7 +5570,7 @@ export class VirtualEditor extends EditorBase {
                         this.$items.splice(undo.data.index, 1);
                         this.pushRedo(undo);
                         this.doUpdate(UpdateType.refreshItems);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                 }
@@ -5543,13 +5588,17 @@ export class VirtualEditor extends EditorBase {
                         this._resizeMap(undo.data.width, undo.data.height, undo.data.depth, undo.data.shift, true);
                         this.pushUndoObject(undo);
                         break;
+                    case undoType.flip:
+                        this._flipMap(undo.data.type, true);
+                        this.pushUndoObject(undo);
+                        break;
                     case undoType.room:
                         l = undo.data.values.length;
                         const values = [];
                         const mx = this.$mouse.rx;
                         const my = this.$mouse.ry;
                         while (l--) {
-                            room = this.getRoom(undo.data.rooms[l][0], undo.data.rooms[l][1], undo.data.rooms[2]);
+                            room = this.getRoom(undo.data.rooms[l][0], undo.data.rooms[l][1], undo.data.rooms[l][2]);
                             values[l] = room[undo.data.property];
                             room[undo.data.property] = undo.data.values[l];
                             this.RoomChanged(room);
@@ -5560,19 +5609,30 @@ export class VirtualEditor extends EditorBase {
                             this.DrawRoom(this.$mapContext, room, true, room.at(mx, my));
                         }
                         this.doUpdate(UpdateType.status);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         undo.data.values = values;
                         this.pushUndoObject(undo);
                         break;
-                    case undoType.exits:
-                        //this.pushUndo(undoAction.edit, undoType.exits, { index: dataIndex, value: oldValue });
+                    case undoType.exit:
+                        //this.pushUndo(undoAction.edit, undoType.exit, { index: dataIndex, value: oldValue });
                         value = this.$exits[undo.data.index];
                         this.$exits[undo.data.index] = undo.data.value;
                         undo.data.value = value;
                         this.pushUndoObject(undo);
                         this.doUpdate(UpdateType.refreshExits);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
+                        this.setFocusedRoom(undo.focused);
+                        break;
+                    case undoType.exits:
+                        //this.pushUndo(undoAction.edit, undoType.exits, { exits: exits, room: [x,y,z] });
+                        value = this.$exits.filter(ex => ex.x === undo.data.room[0] && ex.y === undo.data.room[1] && ex.z === undo.data.room[2])
+                        this.$exits = this.$exits.filter(ex => ex.x !== undo.data.room[0] || ex.y !== undo.data.room[1] || ex.z !== undo.data.room[2]);
+                        this.$exits.push(...undo.data.exits);
+                        undo.data.exits = value;
+                        this.pushUndoObject(undo);
+                        this.doUpdate(UpdateType.refreshExits);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.raw:
@@ -5587,7 +5647,7 @@ export class VirtualEditor extends EditorBase {
                         if ((undo.data.what & undoReduce.descriptions) === undoReduce.descriptions)
                             this.reduceIdx(this.$descriptions, undo.data.index);
                         this.pushUndoObject(undo);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.maxTerrain:
@@ -5603,7 +5663,7 @@ export class VirtualEditor extends EditorBase {
                         undo.data.value = value;
                         this.pushUndoObject(undo);
                         this.doUpdate(UpdateType.refreshDescriptions);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                     case undoType.item:
@@ -5615,7 +5675,7 @@ export class VirtualEditor extends EditorBase {
                         undo.data.items = value;
                         this.pushUndoObject(undo);
                         this.doUpdate(UpdateType.refreshItems);
-                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[3])));
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         break;
                 }
@@ -5714,6 +5774,7 @@ export class VirtualEditor extends EditorBase {
                 return this.$view === View.map || this.$view === View.terrains || this.$view === View.items || this.$view === View.exits;
             case 'buttons':
             case 'menu|view':
+            case 'menu|edit':
             case 'upload':
             case 'upload-as':
             case 'selectall':
@@ -5906,6 +5967,22 @@ export class VirtualEditor extends EditorBase {
         frag.appendChild(this.createButton('Resize map', 'arrows', () => {
             this.emit('show-resize', this.$mapSize);
         }, false, this.$view !== View.map));
+
+        group = document.createElement('div');
+        group.classList.add('btn-group');
+        group.setAttribute('role', 'group');
+        group.appendChild(this.createButton('Flip horizontally', 'shield fa-rotate-180', () => {
+            this.flipMap(flipType.horizontal);
+        }, false, this.$view !== View.map));
+        group.appendChild(this.createButton('Flip vertically', 'shield fa-rotate-90', () => {
+            this.flipMap(flipType.vertical);
+        }, false, this.$view !== View.map));
+        if (this.$mapSize.depth > 1)
+            group.appendChild(this.createButton('Flip depth', 'exchange fa-rotate-90', () => {
+                this.flipMap(flipType.depth);
+            }, false, this.$view !== View.map));
+        frag.appendChild(group);
+
         if (this.$mapSize.depth > 1) {
             el = document.createElement('label');
             el.setAttribute('for', this.parent.id + '-level');
@@ -6098,8 +6175,31 @@ export class VirtualEditor extends EditorBase {
                     click: () => {
                         this.emit('show-resize', this.$mapSize);
                     }
+                },
+                { type: 'separator' },
+                {
+                    label: 'Flip horizontally',
+                    click: () => {
+                        this.flipMap(flipType.horizontal);
+                    }
+                },
+                {
+                    label: 'Flip vertically',
+                    click: () => {
+                        this.flipMap(flipType.vertical);
+                    }
                 }
+
             ];
+            if (this.$mapSize.depth > 1)
+                m.push(
+                    {
+                        label: 'Flip depth',
+                        click: () => {
+                            this.flipMap(flipType.depth);
+                        }
+                    }
+                )
         }
         return m;
     }
@@ -6280,6 +6380,7 @@ export class VirtualEditor extends EditorBase {
     public insert(text) { /**/ }
     public get location() { return [-1, -1]; }
     public get length() { return 0; }
+    public get lineCount() { return 0; }
 
     public activate() { /**/ }
     public deactivate() { /**/ }
@@ -6663,8 +6764,14 @@ export class VirtualEditor extends EditorBase {
         this.emit('menu-update', 'view|show colors', { enabled: view === View.map });
         this.emit('menu-update', 'edit|allow resize walk', { enabled: view === View.map });
         this.emit('menu-update', 'edit|resize map', { enabled: view === View.map });
+        this.emit('menu-update', 'edit|flip horizontally', { enabled: view === View.map });
+        this.emit('menu-update', 'edit|flip vertically', { enabled: view === View.map });
+        this.emit('menu-update', 'edit|flip depth', { enabled: view === View.map });
         this.setButtonDisabled('allow resize walk', view !== View.map);
         this.setButtonDisabled('resize map', view !== View.map);
+        this.setButtonDisabled('flip horizontally', view !== View.map);
+        this.setButtonDisabled('flip vertically', view !== View.map);
+        this.setButtonDisabled('flip depth', view !== View.map);
         this.setButtonDisabled('room editor', view !== View.map);
         this.setButtonDisabled('room preview', view !== View.map);
         this.setButtonDisabled('terrain', view !== View.map);
@@ -6683,43 +6790,43 @@ export class VirtualEditor extends EditorBase {
         switch (this.$view) {
             case View.map:
                 this.emit('location-changed', (this.$mouse.rx), this.$mouse.ry);
-                this.emit('changed', -1);
+                this.emit('changed', -1, -1);
                 break;
             case View.terrains:
                 this.emit('location-changed', -1, -1);
-                this.emit('changed', this.$descriptions.length);
+                this.emit('changed', this.$descriptions.length, -1);
                 break;
             case View.items:
                 this.emit('location-changed', -1, -1);
-                this.emit('changed', this.$items.length);
+                this.emit('changed', this.$items.length, -1);
                 break;
             case View.exits:
                 this.emit('location-changed', -1, -1);
-                this.emit('changed', this.$exits.length);
+                this.emit('changed', this.$exits.length, -1);
                 break;
             case View.mapRaw:
                 this.emit('location-changed', -1, -1);
-                this.emit('changed', this.$mapRaw.value.length);
+                this.emit('changed', this.$mapRaw.value.length, -1);
                 break;
             case View.terrainsRaw:
                 this.emit('location-changed', -1, -1);
-                this.emit('changed', this.$terrainRaw.value.length);
+                this.emit('changed', this.$terrainRaw.value.length, -1);
                 break;
             case View.descriptionsRaw:
                 this.emit('location-changed', -1, -1);
-                this.emit('changed', this.$descriptionRaw.value.length);
+                this.emit('changed', this.$descriptionRaw.value.length, -1);
                 break;
             case View.itemsRaw:
                 this.emit('location-changed', -1, -1);
-                this.emit('changed', this.$itemRaw.value.length);
+                this.emit('changed', this.$itemRaw.value.length, -1);
                 break;
             case View.stateRaw:
                 this.emit('location-changed', -1, -1);
-                this.emit('changed', this.$stateRaw.value.length);
+                this.emit('changed', this.$stateRaw.value.length, -1);
                 break;
             case View.exitsRaw:
                 this.emit('location-changed', -1, -1);
-                this.emit('changed', this.$externalRaw.value.length);
+                this.emit('changed', this.$externalRaw.value.length, -1);
                 break;
         }
         this.doUpdate(UpdateType.status);
@@ -6793,7 +6900,7 @@ export class VirtualEditor extends EditorBase {
         return this.$rooms[z][y][x];
     }
 
-    private setRoom(r) {
+    private setRoom(r, silentUpdate?) {
         if (!r)
             return;
         if (r.x < 0 || r.y < 0)
@@ -6810,8 +6917,10 @@ export class VirtualEditor extends EditorBase {
         //if selected update the selected system to point to new room object
         if (idx !== -1) {
             this.$selectedRooms[idx] = this.$rooms[r.z][r.y][r.x];
-            this.UpdateEditor(this.$selectedRooms);
-            this.UpdatePreview(r);
+            if (!silentUpdate) {
+                this.UpdateEditor(this.$selectedRooms);
+                this.UpdatePreview(r);
+            }
         }
         //was the old room focused? if so point ot new room object
         if (this.$focusedRoom && this.$focusedRoom.at(r.x, r.y, r.z))
@@ -7138,7 +7247,10 @@ export class VirtualEditor extends EditorBase {
         let r;
         let xl;
         let yl;
-        if (!this.$mapContext) return;
+        if (!this.$mapContext) {
+            this.doUpdate(UpdateType.drawMap);
+            return;
+        }
         this.$mapContext.save();
         this.$mapContext.fillStyle = 'white';
         this.$mapContext.fillRect(0, 0, this.$mapSize.right, this.$mapSize.bottom);
@@ -7284,13 +7396,9 @@ export class VirtualEditor extends EditorBase {
     private doUpdate(type?: UpdateType) {
         if (!type) return;
         this._updating |= type;
-        if (this._updating === UpdateType.none)
+        if (this._updating === UpdateType.none || this._rTimeout)
             return;
-        window.requestAnimationFrame(() => {
-            if ((this._updating & UpdateType.drawMap) === UpdateType.drawMap) {
-                this.DrawMap();
-                this._updating &= ~UpdateType.drawMap;
-            }
+        this._rTimeout = window.requestAnimationFrame(() => {
             if ((this._updating & UpdateType.buildRooms) === UpdateType.buildRooms) {
                 this.BuildRooms();
                 this._updating &= ~UpdateType.buildRooms;
@@ -7319,6 +7427,11 @@ export class VirtualEditor extends EditorBase {
                 this.$exitGrid.refresh();
                 this._updating &= ~UpdateType.refreshExits;
             }
+            if ((this._updating & UpdateType.drawMap) === UpdateType.drawMap) {
+                this._updating &= ~UpdateType.drawMap;
+                this.DrawMap();
+            }
+            this._rTimeout = 0;
             this.doUpdate(this._updating);
         });
     }
@@ -8233,7 +8346,7 @@ export class VirtualEditor extends EditorBase {
                 if (y < 1 || y >= lines.length) return;
                 line = lines[y].split(' ');
                 while (line.length < this.$mapSize.width)
-                    lines.push('');
+                    line.push('');
                 if (x < 0 || x >= line.length) return;
                 line[x] = leadingZeros(room.state, 3, '0');
                 lines[y] = line.join(' ');
@@ -8256,7 +8369,7 @@ export class VirtualEditor extends EditorBase {
                 if (y < 1 || y >= lines.length) return;
                 line = lines[y].split(' ');
                 while (line.length < this.$mapSize.width)
-                    lines.push('');
+                    line.push('');
                 if (x < 0 || x >= line.length) return;
                 line[x] = leadingZeros(room.terrain, 2, '0');
                 if (s || nl.length > 0) {
@@ -8287,7 +8400,7 @@ export class VirtualEditor extends EditorBase {
             if (y < 1 || y >= lines.length) return;
             line = lines[y].split(' ');
             while (line.length < this.$mapSize.width)
-                lines.push('');
+                line.push('');
             if (x < 0 || x >= line.length) return;
             line[x] = leadingZeros(room.exits, 3, '0');
             if (s || nl.length > 0)
@@ -8331,7 +8444,7 @@ export class VirtualEditor extends EditorBase {
                 sLines.push('');
         }
         if (this.$files['virtual.terrain']) {
-            tLines = this.$stateRaw.value.split('\n');
+            tLines = this.$terrainRaw.value.split('\n');
             while (tLines.length < maxLines)
                 tLines.push('');
         }
@@ -8606,8 +8719,10 @@ export class VirtualEditor extends EditorBase {
 
                 if (items.length > 0 && room.item >= 0 && room.item < items.length && items[room.item] && items[room.item].children && items[room.item].children.length > 0) {
                     items = items[room.item].children.slice().sort((a, b) => { return b.item.length - a.item.length; });
-                    for (c = 0, cl = items.length; c < cl; c++)
-                        str = str.replace(new RegExp('\\b(' + items[c].item + ')\\b', 'gi'), (m) => '<span class="room-item" id="' + this.parent.id + '-room-preview' + c + '" title="">' + m + '</span>');
+                    for (c = 0, cl = items.length; c < cl; c++) {
+                        if (items[c].item.length === 0) continue;
+                        str = str.replace(new RegExp('\\b(?!room-preview)(' + items[c].item + ')\\b', 'gi'), (m) => '<span data-id="' + this.parent.id + '-room-preview' + c + '">' + m + '</span>');
+                    }
                 }
                 else
                     items = null;
@@ -8615,9 +8730,11 @@ export class VirtualEditor extends EditorBase {
                 this.$roomPreview.long.innerHTML = pinkfishToHTML(str);
                 if (items && items.length > 0) {
                     for (c = 0, cl = items.length; c < cl; c++) {
-                        item = document.getElementById(this.parent.id + '-room-preview' + c);
-                        if (item)
-                            item.title = items[c].description;
+                        item = document.querySelectorAll(`[data-id=${this.parent.id}-room-preview${c}]`);
+                        item.forEach(el => {
+                            el.title = items[c].description;
+                            el.classList.add('room-item');
+                        });
                     }
                 }
                 if (data.smell.length > 0 && data.smell !== '0' && data.sound.length > 0 && data.sound !== '0') {
@@ -8919,8 +9036,6 @@ export class VirtualEditor extends EditorBase {
                 this.DrawMap();
             }, 250);
         }
-        this.doUpdate(UpdateType.drawMap);
-        this.DrawMap();
         this.doUpdate(UpdateType.drawMap);
         const cols = this.$exitGrid.columns;
         if (this.$mapSize.depth < 2) {
@@ -9361,7 +9476,8 @@ export class VirtualEditor extends EditorBase {
         const zl = this.$mapSize.depth;
         const xl = this.$mapSize.width;
         const yl = this.$mapSize.height;
-        const exits = [];
+        let exits = [];
+        let ee = false;
         let nExits = this.$exits;
         const exl = nExits.length;
         this.$mapSize.width += width;
@@ -9377,26 +9493,26 @@ export class VirtualEditor extends EditorBase {
                 (v2, y) => Array.from(Array(this.$mapSize.width),
                     (v3, x) => new Room(x, y, z, 0, 0, 0))
             ));
-
+        const dRooms = [];
         this.$roomCount = 0;
         for (let z = 0; z < zl; z++) {
             for (let y = 0; y < yl; y++) {
                 for (let x = 0; x < xl; x++) {
-                    const room = this.$rooms[z][y][x];
+                    const room = this.$rooms[z][y][x].clone();
                     let idx;
                     if (!room) continue;
                     if ((shift & shiftType.right) === shiftType.right)
                         room.x += width;
                     else if ((shift & shiftType.left) !== shiftType.left)
-                        room.x += Math.floor(width / 2);
+                        room.x += width < 0 ? Math.floor(width / 2) : Math.ceil(width / 2);
                     if ((shift & shiftType.bottom) === shiftType.bottom)
                         room.y += height;
                     else if ((shift & shiftType.top) !== shiftType.top)
-                        room.y += Math.floor(height / 2);
+                        room.y += height < 0 ? Math.floor(height / 2) : Math.ceil(height / 2);
                     if ((shift & shiftType.up) === shiftType.up)
                         room.z += depth;
                     else if ((shift & shiftType.down) !== shiftType.down)
-                        room.z += Math.floor(depth / 2);
+                        room.z += depth < 0 ? Math.floor(depth / 2) : Math.ceil(depth / 2);
                     if (room.z >= 0 && room.z < zl2 && room.x >= 0 && room.x < xl2 && room.y >= 0 && room.y < yl2) {
                         rooms[room.z][room.y][room.x] = room;
                         idx = this.$selectedRooms.indexOf(this.$rooms[z][y][x]);
@@ -9405,17 +9521,32 @@ export class VirtualEditor extends EditorBase {
                         if (this.$focusedRoom && this.$focusedRoom.at(x, y, z))
                             this.$focusedRoom = rooms[room.z][room.y][room.x];
                         if (room.exits) this.$roomCount++;
+                        if (room.ee) {
+                            let ex = this.$exits.filter(ex => ex.x === x && ex.y === y && ex.z === z);
+                            nExits = nExits.filter(ex => ex.x !== x || ex.y !== y || ex.z !== z);
+                            if (!noUndo)
+                                this.pushUndo(undoAction.edit, undoType.exits, { exits: ex, room: [x, y, z] });
+                            ex = ex.map(d => {
+                                d.x = room.x;
+                                d.y = room.y;
+                                d.z = room.z;
+                                return d;
+                            });
+                            nExits.push(...ex);
+                            ee = true;
+                        }
                     }
                     else {
-                        if (room.exits) {
+                        if (!room.empty) {
                             room.x = x;
                             room.y = y;
                             room.z = z;
-                            this.deleteRoom(room, true);
+                            dRooms.push(room);
                         }
                         if (room.ee) {
-                            exits.push(...this.$exits.filter(ex => ex.x === room.x && ex.y === room.y && ex.z === room.z));
-                            nExits = nExits.filter(ex => ex.x !== room.x || ex.y !== room.y || ex.z !== room.z);
+                            exits.push(...this.$exits.filter(ex => ex.x === x && ex.y === y && ex.z === z));
+                            nExits = nExits.filter(ex => ex.x !== x || ex.y !== y || ex.z !== z);
+                            ee = true;
                         }
                         idx = this.$selectedRooms.indexOf(this.$rooms[z][y][x]);
                         if (idx !== -1)
@@ -9426,7 +9557,12 @@ export class VirtualEditor extends EditorBase {
                 }
             }
         }
-
+        if (!noUndo)
+            this.pushUndo(undoAction.delete, undoType.room, dRooms);
+        let dl = dRooms.length;
+        while(dl--)
+            if (dRooms[dl].exits)
+                this.deleteRoom(dRooms[dl], noUndo);     
         this.$rooms = rooms;
         this.UpdateEditor(this.$selectedRooms);
         this.UpdatePreview(this.selectedFocusedRoom);
@@ -9458,6 +9594,7 @@ export class VirtualEditor extends EditorBase {
                 visible: true
             });
         }
+        this.emit('rebuild-menu', 'edit');
         this.emit('rebuild-buttons');
         this.emit('resize-map');
         Timer.end('Resize time');
@@ -9465,10 +9602,12 @@ export class VirtualEditor extends EditorBase {
         this.doUpdate(UpdateType.drawMap);
         if (!noUndo) {
             this.pushUndo(undoAction.edit, undoType.resize, { width: width, height: height, depth: depth, shift: shift });
-            if (nExits.length !== exl) {
-                this.pushUndo(undoAction.delete, undoType.exits, { index: exits.map(x => this.$exits.indexOf(x)), exits: exits });
+            //exits changed update
+            if (ee) {
+                if (nExits.length !== exl)
+                    this.pushUndo(undoAction.delete, undoType.exits, { index: exits.map(x => this.$exits.indexOf(x)), exits: exits });
                 this.$exits = nExits;
-                this.$exitGrid = this.$exits;
+                this.$exitGrid.rows = this.$exits;
                 if (this.$mapSize.depth > 1)
                     nExits = nExits.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest);
                 else
@@ -9477,6 +9616,196 @@ export class VirtualEditor extends EditorBase {
                 this.updateRaw(this.$externalRaw, 0, nExits);
                 resetCursor(this.$externalRaw);
             }
+        }
+    }
+
+    public flipMap(type: flipType) {
+        this.startUndoGroup();
+        this._flipMap(type);
+        this.stopUndoGroup();
+    }
+
+    private _flipMap(type: flipType, noUndo?) {
+        Timer.start();
+        //flip x: map.width - x - 1 = new x
+        //flip y: map.height - y - 1 = new y     
+        Timer.start();
+        const zl = this.$mapSize.depth;
+        const xl = this.$mapSize.width;
+        const yl = this.$mapSize.height;
+        let ee = false;
+        const exits = [];
+        let nExits = this.$exits;
+        const exl = nExits.length;
+        const rooms = Array.from(Array(this.$mapSize.depth),
+            (v, z) => Array.from(Array(this.$mapSize.height),
+                (v2, y) => Array.from(Array(this.$mapSize.width),
+                    (v3, x) => new Room(x, y, z, 0, 0, 0))
+            ));
+
+        this.$roomCount = 0;
+        for (let z = 0; z < zl; z++) {
+            for (let y = 0; y < yl; y++) {
+                for (let x = 0; x < xl; x++) {
+                    const room = this.$rooms[z][y][x];
+                    let idx;
+                    let ex = [];
+                    if (!room) continue;
+                    if ((type & flipType.horizontal) === flipType.horizontal) {
+                        room.x = xl - room.x - 1;
+                        if ((room.exits & RoomExit.West) == RoomExit.West && (room.exits & RoomExit.East) != RoomExit.East) {
+                            room.exits |= RoomExit.East;
+                            room.exits &= ~RoomExit.West;
+                        }
+                        else if ((room.exits & RoomExit.East) == RoomExit.East && (room.exits & RoomExit.West) != RoomExit.West) {
+                            room.exits |= RoomExit.West;
+                            room.exits &= ~RoomExit.East;
+                        }
+
+                        if ((room.exits & RoomExit.NorthWest) == RoomExit.NorthWest && (room.exits & RoomExit.NorthEast) != RoomExit.NorthEast) {
+                            room.exits |= RoomExit.NorthEast;
+                            room.exits &= ~RoomExit.NorthWest;
+                        }
+                        else if ((room.exits & RoomExit.NorthEast) == RoomExit.NorthEast && (room.exits & RoomExit.NorthWest) != RoomExit.NorthWest) {
+                            room.exits |= RoomExit.NorthWest;
+                            room.exits &= ~RoomExit.NorthEast;
+                        }
+                        if ((room.exits & RoomExit.SouthWest) == RoomExit.SouthWest && (room.exits & RoomExit.SouthEast) != RoomExit.SouthEast) {
+                            room.exits |= RoomExit.SouthEast;
+                            room.exits &= ~RoomExit.SouthWest;
+                        }
+                        else if ((room.exits & RoomExit.SouthEast) == RoomExit.SouthEast && (room.exits & RoomExit.SouthWest) != RoomExit.SouthWest) {
+                            room.exits |= RoomExit.SouthWest;
+                            room.exits &= ~RoomExit.SouthEast;
+                        }
+                    }
+                    if ((type & flipType.vertical) === flipType.vertical) {
+                        room.y = yl - room.y - 1;
+                        if ((room.exits & RoomExit.North) == RoomExit.North && (room.exits & RoomExit.South) != RoomExit.South) {
+                            room.exits |= RoomExit.South;
+                            room.exits &= ~RoomExit.North;
+                        }
+                        else if ((room.exits & RoomExit.South) == RoomExit.South && (room.exits & RoomExit.North) != RoomExit.North) {
+                            room.exits |= RoomExit.North;
+                            room.exits &= ~RoomExit.South;
+                        }
+
+                        if ((room.exits & RoomExit.NorthWest) == RoomExit.NorthWest && (room.exits & RoomExit.SouthWest) != RoomExit.SouthWest) {
+                            room.exits |= RoomExit.SouthWest;
+                            room.exits &= ~RoomExit.NorthWest;
+                        }
+                        else if ((room.exits & RoomExit.SouthWest) == RoomExit.SouthWest && (room.exits & RoomExit.NorthWest) != RoomExit.NorthWest) {
+                            room.exits |= RoomExit.NorthWest;
+                            room.exits &= ~RoomExit.SouthWest;
+                        }
+                        if ((room.exits & RoomExit.NorthEast) == RoomExit.NorthEast && (room.exits & RoomExit.SouthEast) != RoomExit.SouthEast) {
+                            room.exits |= RoomExit.SouthEast;
+                            room.exits &= ~RoomExit.NorthEast;
+                        }
+                        else if ((room.exits & RoomExit.SouthEast) == RoomExit.SouthEast && (room.exits & RoomExit.NorthEast) != RoomExit.NorthEast) {
+                            room.exits |= RoomExit.NorthEast;
+                            room.exits &= ~RoomExit.SouthEast;
+                        }
+                    }
+                    if ((type & flipType.depth) === flipType.depth) {
+                        room.z = zl - room.z - 1;
+                        if ((room.exits & RoomExit.Up) == RoomExit.Up && (room.exits & RoomExit.Down) != RoomExit.Down) {
+                            room.exits |= RoomExit.Down;
+                            room.exits &= ~RoomExit.Up;
+                        }
+                        else if ((room.exits & RoomExit.Down) == RoomExit.Down && (room.exits & RoomExit.Up) != RoomExit.Up) {
+                            room.exits |= RoomExit.Up;
+                            room.exits &= ~RoomExit.Down;
+                        }
+                    }
+                    if (room.ee) {
+                        let ex = this.$exits.filter(ex => ex.x === x && ex.y === y && ex.z === z);
+                        nExits = nExits.filter(ex => ex.x !== x || ex.y !== y || ex.z !== z);
+                        //if (!noUndo)
+                        //this.pushUndo(undoAction.edit, undoType.exits, { exits: ex, room: [x, y, z] });
+                        ex = ex.map(d => {
+                            d.x = room.x;
+                            d.y = room.y;
+                            d.z = room.z;
+                            if ((type & flipType.horizontal) === flipType.horizontal) {
+                                if (d.exit == 'east')
+                                    d.exit = 'west';
+                                else if (d.exit == 'west')
+                                    d.exit = 'east';
+                                else if (d.exit == 'northwest')
+                                    d.exit = 'northeast';
+                                else if (d.exit == 'northeast')
+                                    d.exit = 'northwest';
+                                else if (d.exit == 'southwest')
+                                    d.exit = 'southeast';
+                                else if (d.exit == 'southeast')
+                                    d.exit = 'southwest';
+                            }
+                            if ((type & flipType.vertical) === flipType.vertical) {
+                                if (d.exit == 'south')
+                                    d.exit = 'north';
+                                else if (d.exit == 'north')
+                                    d.exit = 'south';
+                                else if (d.exit == 'northwest')
+                                    d.exit = 'southwest';
+                                else if (d.exit == 'northeast')
+                                    d.exit = 'southeast';
+                                else if (d.exit == 'southwest')
+                                    d.exit = 'northwest';
+                                else if (d.exit == 'southeast')
+                                    d.exit = 'northeast';
+                            }
+                            if ((type & flipType.depth) === flipType.depth) {
+                                if (d.exit == 'down')
+                                    d.exit = 'up';
+                                else if (d.exit == 'up')
+                                    d.exit = 'down';
+                            }
+                            return d;
+                        });
+                        nExits.push(...ex);
+                        ee = true;
+                        ex = ex.map(e => e.enabled ? RoomExits[e.exit.toLowerCase()] : 0);
+                        if (ex.length > 0)
+                            room.ee = ex.reduce((a, c) => a | c);
+                        else
+                            room.ee = 0;
+                    }
+                    rooms[room.z][room.y][room.x] = room;
+                    idx = this.$selectedRooms.indexOf(this.$rooms[z][y][x]);
+                    if (idx !== -1)
+                        this.$selectedRooms[idx] = rooms[room.z][room.y][room.x];
+                    if (this.$focusedRoom && this.$focusedRoom.at(x, y, z))
+                        this.$focusedRoom = rooms[room.z][room.y][room.x];
+                    if (room.exits) this.$roomCount++;
+                }
+            }
+        }
+
+        this.$rooms = rooms;
+        this.UpdateEditor(this.$selectedRooms);
+        this.UpdatePreview(this.selectedFocusedRoom);
+        if (this.$depth >= this.$mapSize.depth)
+            this.$depth = this.$mapSize.depth - 1;
+        this.$map.width = this.$mapSize.right;
+        this.$map.height = this.$mapSize.bottom;
+        this.BuildAxises();
+        this.emit('flip-map');
+        Timer.end('Flip time');
+        this.roomsChanged(this.$mapSize.width, this.$mapSize.height, this.$mapSize.depth);
+        this.doUpdate(UpdateType.drawMap);
+        if (!noUndo)
+            this.pushUndo(undoAction.edit, undoType.flip, { type: type });
+        if (ee) {
+            this.$exits = nExits;
+            this.$exitGrid.rows = this.$exits;
+            if (this.$mapSize.depth > 1)
+                nExits = nExits.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ',' + d.z + ':' + d.exit + ':' + d.dest);
+            else
+                nExits = nExits.map(d => (d.enabled ? '' : '#') + d.x + ',' + d.y + ':' + d.exit + ':' + d.dest);
+            this.$externalRaw.value = '';
+            this.updateRaw(this.$externalRaw, 0, nExits, false, false, noUndo);
+            resetCursor(this.$externalRaw);
         }
     }
 }
@@ -9868,8 +10197,7 @@ export class ExternalExitValueEditor extends ValueEditor {
                 }
             });
             dg.on('delete', (e2) => {
-                if (dialog.showMessageBox(
-                    remote.getCurrentWindow(),
+                if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                     {
                         type: 'warning',
                         title: 'Delete',
@@ -10209,8 +10537,7 @@ export class ItemsValueEditor extends ValueEditor {
                 }
             });
             dg.on('delete', (e2) => {
-                if (dialog.showMessageBox(
-                    remote.getCurrentWindow(),
+                if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                     {
                         type: 'warning',
                         title: 'Delete',

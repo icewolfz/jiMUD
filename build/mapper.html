@@ -10,17 +10,19 @@
     <link href="../lib/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
     <link href="css/mapper.css" rel="stylesheet" type="text/css" />
-    <script>
+    <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js"></script>
     <script src="../lib/bootstrap.min.js"></script>
     <script src="../lib/bootstrap-select.min.js"></script>
-    <script>
+    <script type="text/javascript">
+        if (window.module) module = window.module;
         //spell-checker:ignore hellip vscroll hscroll ungroup crosshairs haspopup tablist tabpanel labelledby
         const { RoomDetails, Mapper, ImportType } = require('./js/mapper');
-        const { remote, ipcRenderer } = require('electron');
-        const { nativeImage, dialog, Menu, MenuItem } = remote;
+        const { nativeImage, ipcRenderer } = require('electron');
+        const remote = require('@electron/remote');
+        const { Menu, MenuItem } = remote;
         const { Settings } = require('./js/settings');
         const { Menubar } = require('./js/menubar');
         const fs = require('fs');
@@ -75,6 +77,8 @@
                     { label: 'Remove all', click: removeAll },
                     { type: 'separator' },
                     { label: 'Compact map', click: compact },
+                    { type: 'separator' },
+                    { label: 'Reset map', click: resetMap },
                 ]
             },
             {
@@ -93,10 +97,7 @@
                     {
                         label: '&Toggle Developer Tools',
                         click: () => {
-                            if (remote.getCurrentWindow().isDevToolsOpened())
-                                remote.getCurrentWindow().closeDevTools();
-                            else
-                                remote.getCurrentWindow().openDevTools();
+                            ipcRenderer.invoke('window', 'toggleDevTools');
                         }
                     },
                     {
@@ -222,7 +223,7 @@
                     setTimeout(() => closeWindow(), 10);
                     return;
                 }
-                remote.getCurrentWindow().close();
+                ipcRenderer.invoke('window', 'close');
             });
         }
 
@@ -230,7 +231,7 @@
             if (!mapper.ready) {
                 evt.returnValue = false;
                 setTimeout(() => {
-                    remote.getCurrentWindow().close();
+                    ipcRenderer.invoke('window', 'close');
                 }, 10);
                 return 'no';
             }
@@ -239,20 +240,20 @@
                 setTimeout(() => {
                     if (mapper) save(() => {
                         $closeWindow = true;
-                        remote.getCurrentWindow().close();
+                        ipcRenderer.invoke('window', 'close');
                     });
                 });
                 return 'no';
             }
             $closeWindow = true;
-            remote.getCurrentWindow().close();
+            ipcRenderer.invoke('window', 'close');
             return;
         };
 
         $(document).ready(() => {
             try {
-                if (remote.getGlobal('character') && remote.getGlobal('character').length > 0)
-                    document.title = 'Mapper - ' + remote.getGlobal('character');
+                if (ipcRenderer.sendSync('get-global', 'character') && ipcRenderer.sendSync('get-global', 'character').length > 0)
+                    document.title = 'Mapper - ' + ipcRenderer.sendSync('get-global', 'character');
                 else
                     document.title = 'Mapper';
                 $('#mapper-room input').prop('disabled', true);
@@ -260,15 +261,15 @@
                 $('#mapper-room select').prop('disabled', true);
                 $('#mapper-room button').prop('disabled', true);
 
-                var options = Settings.load(remote.getGlobal('settingsFile'));
-                mapper = new Mapper(document.getElementById('MapperCanvas'), options.mapper.memory, options.mapper.memorySavePeriod, remote.getGlobal('mapFile'));
+                var options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
+                mapper = new Mapper(document.getElementById('MapperCanvas'), options.mapper.memory, options.mapper.memorySavePeriod, ipcRenderer.sendSync('get-global', 'mapFile'));
 
                 document.getElementById('MapperCanvas').addEventListener('wheel', (e) => {
                     if (e.deltaY >= 0)
                         zoomMap(mapper.scale - 5);
                     else
                         zoomMap(mapper.scale + 5);
-                });
+                }, { passive: true });
 
                 mapper.active = options.mapper.active;
                 mapper.commandDelay = options.commandDelay;
@@ -452,14 +453,20 @@
 
                 mapper.on('import-progress', (value) => {
                     if (value != -1) {
-                        ipcRenderer.send('progress', { percent: value });
+                        if (_progress.action === 1 || _progress.action === 2)
+                            $('#mapProgressbar progress').val(value);
+                        else
+                            ipcRenderer.send('progress', { percent: value });
                         ipcRenderer.send('set-progress-window', 'mapper', { value: value / 100.0 });
                     }
                 });
 
-                mapper.on('import-complete', (value) => {
+                mapper.on('import-complete', () => {
                     updateAreas();
-                    ipcRenderer.send('progress-close');
+                    if (_progress.action === 1 || _progress.action === 2)
+                        closeProgress();
+                    else
+                        ipcRenderer.send('progress-close');
                     ipcRenderer.send('set-progress-window', 'mapper', { value: -1 });
                     ipcRenderer.send('send-gmcp', 'Room.Info');
                 });
@@ -580,7 +587,7 @@
                     else
                         MapperNavClicked(parseInt($(e.target).data('x'), 10), parseInt($(e.target).data('y'), 10));
                     MapperNavDown = false;
-                }));
+                }, { passive: true }));
 
                 $(window).trigger('resize');
 
@@ -595,16 +602,22 @@
                     mapper.enabled = false;
                     toggleEnabled();
                 }
-                if (mapper.showLegend)
+                if (options.mapper.legend) {
+                    mapper.showLegend = false;
                     toggleLegend();
+                }
                 if (options.mapper.follow) {
                     mapper.follow = false;
                     toggleFollow();
                 }
-                if (mapper.splitArea)
+                if (options.mapper.split) {
+                    mapper.splitArea = false;
                     toggleSplitArea();
-                if (mapper.fillWalls)
+                }
+                if (options.mapper.fill) {
+                    mapper.fillWalls = false;
                     toggleFillWalls();
+                }
                 if (mapper.follow)
                     mapper.focusCurrentRoom();
 
@@ -690,12 +703,19 @@
             processGMCP(data);
         });
 
-        ipcRenderer.on('progress-canceled', () => {
-            mapper.cancelImport();
-        });
+        ipcRenderer.on('progress-canceled', progressCanceled);
+
+        function progressCanceled() {
+            if (_progress.action < 3) {
+                mapper.cancelImport();
+                ipcRenderer.send('progress-close');
+                ipcRenderer.send('set-progress-window', 'mapper', { value: -1 });
+            }
+        }
 
         ipcRenderer.on('progress-closed', () => {
-            mapper.cancelImport();
+            if (_progress.action < 3)
+                mapper.cancelImport();
         });
 
         ipcRenderer.on('progress-loaded', () => {
@@ -708,6 +728,10 @@
                 mapper.exportArea(_progress.file);
             else if (_progress.action === 2)
                 mapper.exportAll(_progress.file);
+            else if (_progress.action === 3)
+                _exportImage(_progress.file);
+            else if (_progress.action === 4)
+                _exportCurrentImage(_progress.file);
         });
 
         function processGMCP(data) {
@@ -725,7 +749,7 @@
             else
                 document.title = 'Mapper';
             try {
-                mapper.mapFile = remote.getGlobal('mapFile');
+                mapper.mapFile = ipcRenderer.sendSync('get-global', 'mapFile');
             }
             catch (err) {
                 if (typeof err === 'string')
@@ -736,8 +760,8 @@
         });
 
         ipcRenderer.on('load-default', () => {
-            if (remote.getGlobal('character') && remote.getGlobal('character').length > 0)
-                document.title = 'Mapper - ' + remote.getGlobal('character');
+            if (ipcRenderer.sendSync('get-global', 'character') && ipcRenderer.sendSync('get-global', 'character').length > 0)
+                document.title = 'Mapper - ' + ipcRenderer.sendSync('get-global', 'character');
             else
                 document.title = 'Mapper';
         });
@@ -752,10 +776,10 @@
         ipcRenderer.on('reload-options', () => {
             save(function () {
                 try {
-                    var options = Settings.load(remote.getGlobal('settingsFile'));
+                    var options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
                     mapper.memorySavePeriod = options.mapper.memorySavePeriod;
                     mapper.memory = options.mapper.memory;
-                    mapper.mapFile = remote.getGlobal('mapFile');
+                    mapper.mapFile = ipcRenderer.sendSync('get-global', 'mapFile');
 
                     mapper.commandDelay = options.commandDelay;
                     mapper.commandDelayCount = options.commandDelayCount;
@@ -768,7 +792,7 @@
                     else
                         ipcRenderer.send('error', err.stack || err.message);
                 }
-                //remote.getCurrentWindow().reload();
+                //ipcRenderer.invoke('window', 'reload');
             });
         });
 
@@ -776,7 +800,7 @@
             ipcRenderer.send('show-window', 'mapper');
             ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
             _progress = { action: 0, data: data, type: importType, room: true };
-            ipcRenderer.send('progress-show', 'Importing map data&hellip;');
+            ipcRenderer.send('progress-show', { title: 'Importing map data&hellip;', percent: 0, noClose: true });
         });
 
         ipcRenderer.on('flush', (event, sender) => {
@@ -887,7 +911,7 @@
 
         function exportImage() {
             clearButton('#export');
-            dialog.showSaveDialog(remote.getCurrentWindow(), {
+            ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
                 title: 'Export image',
                 defaultPath: 'jiMUD' + (!mapper.SplitArea ? '' : '.' + mapper.active.area) + '.png',
                 filters: [
@@ -895,109 +919,123 @@
                     { name: 'Images (*.png)', extensions: ['png'] },
                     { name: 'All files (*.*)', extensions: ['*'] },
                 ]
-            },
-                function (fileName) {
-                    if (fileName === undefined) {
-                        return;
-                    }
-                    showProgress('Exporting image&hellip;');
-                    mapper.getRooms(mapper.active.area, mapper.active.z, mapper.active.zone, (rooms) => {
-                        if (!rooms || rooms.length === 0) {
-                            closeProgress();
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
-                                type: 'error',
-                                title: 'Error generating',
-                                message: 'Could not generate map'
-                            });
-                            return;
-                        }
-                        var x = null, y = 0, w = 0, h = 0, room, cx, cy, rms;
-                        var t = mapper.active.area == null ? '' : mapper.active.area;
-                        if (!mapper.SplitArea)
-                            t = '';
-                        for (rms in rooms) {
-                            if (!rooms.hasOwnProperty(rms)) continue;
-                            room = rooms[rms];
-                            if (room == null) continue;
-                            if (x == null) {
-                                x = room.x;
-                                w = room.x + 1;
-                                y = room.y;
-                                h = room.y + 1;
-                                continue;
-                            }
-                            if (room.x < x) x = room.x; else if (room.x > w) w = room.x;
-                            if (room.y < y) y = room.y; else if (room.y > h) h = room.y;
-                        }
-                        mapper._context.font = 'italic bold 16pt Georgia';
-                        var fx = mapper._context.measureText(t).width;
-                        var rw = 32 * mapper.scale / 100;
-                        var rectWidth = Math.sqrt(Math.pow(w - x, 2)) * rw + 60 + 32;
-                        var rectHeight = Math.sqrt(Math.pow(y - h, 2)) * rw + 60 + 32;
-                        if (rectWidth < fx) rectWidth = fx + 60;
-                        if (mapper.ShowLegend) {
-                            rectWidth += 155;
-                            if (rectHeight < 200) rectHeight = 200;
-                        }
-                        var canvas = document.createElement('canvas');
-                        canvas.width = rectWidth;
-                        canvas.height = rectHeight;
+            }).then((results) => {
+                if (results.filePath === undefined || results.filePath.length === 0) {
+                    return;
+                }
+                ipcRenderer.send('show-window', 'mapper');
+                ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
+                _progress = { action: 3, file: results.filePath };
+                ipcRenderer.send('progress-show', { title: 'Exporting image&hellip;', percent: -1, cancelable: false });
+            });
 
-                        var ctx;
-                        if (canvas && canvas.getContext)
-                            ctx = canvas.getContext('2d');
-                        else {
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
-                                type: 'error',
-                                title: 'Error generating',
-                                message: 'Could not generate map'
-                            });
-                            return;
-                        }
-                        ctx.strokeStyle = 'black';
+        }
 
-                        ctx.fillStyle = '#eae4d6';
-                        ctx.fillRect(0, 0, canvas.width, canvas.height);
-                        ctx.font = '8pt Arial';
-                        for (rms in rooms) {
-                            if (!rooms.hasOwnProperty(rms)) continue;
-                            room = rooms[rms];
-                            //no room
-                            if (room == null) continue;
-                            cx = (room.x - x) * rw + 30.5;
-                            cy = (room.y - y) * rw + 30.5;
-                            mapper.DrawNormalizedRoom(ctx, cx, cy, room, true);
-                        }
-                        ctx.save();
-                        ctx.strokeStyle = 'black';
-                        ctx.fillStyle = 'black';
-                        ctx.font = 'italic bold 16pt Georgia';
-                        fx = rectWidth / 2 - fx / 2;
-                        ctx.fillText(t, fx, 20);
-                        ctx.translate(rectWidth - 25, rectHeight - 25);
-                        ctx.font = 'italic bold 12pt Georgia';
-                        ctx.fillText('N', 3, -5);
-                        ctx.beginPath();
-                        ctx.moveTo(10, 0);
-                        ctx.lineTo(5, 15);
-                        ctx.lineTo(10, 20);
-                        ctx.lineTo(15, 15);
-                        ctx.lineTo(10, 0);
-                        ctx.closePath();
-                        ctx.fill();
-                        ctx.stroke();
-                        ctx.restore();
-                        mapper.DrawLegend(ctx, rectWidth - 185, -10, 1);
-                        fs.writeFileSync(fileName, nativeImage.createFromDataURL(canvas.toDataURL('image/png')).toPNG());
-                        closeProgress();
+        function _exportImage(file) {
+            mapper.getRooms(mapper.active.area, mapper.active.z, mapper.active.zone, (rooms) => {
+                if (!rooms || rooms.length === 0) {
+                    ipcRenderer.send('progress-close');
+                    ipcRenderer.send('set-progress-window', 'mapper', { value: -1 });
+                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        type: 'error',
+                        title: 'Error generating',
+                        message: 'Could not generate map'
                     });
-                });
+                    return;
+                }
+                var x = null, y = 0, w = 0, h = 0, room, cx, cy, rms;
+                var t = mapper.active.area == null ? '' : mapper.active.area;
+                if (!mapper.SplitArea)
+                    t = '';
+                for (rms in rooms) {
+                    if (!Object.prototype.hasOwnProperty.call(rooms, rms)) continue;
+                    room = rooms[rms];
+                    if (room == null) continue;
+                    if (x == null) {
+                        x = room.x;
+                        w = room.x + 1;
+                        y = room.y;
+                        h = room.y + 1;
+                        continue;
+                    }
+                    if (room.x < x) x = room.x; else if (room.x > w) w = room.x;
+                    if (room.y < y) y = room.y; else if (room.y > h) h = room.y;
+                }
+                mapper._context.font = 'italic bold 16pt Georgia';
+                var fx = mapper._context.measureText(t).width;
+                var rw = 32 * mapper.scale / 100;
+                var rectWidth = Math.sqrt(Math.pow(w - x, 2)) * rw + 60 + 32;
+                var rectHeight = Math.sqrt(Math.pow(y - h, 2)) * rw + 60 + 32;
+                if (rectWidth < fx) rectWidth = fx + 60;
+                if (mapper.ShowLegend) {
+                    rectWidth += 155;
+                    if (rectHeight < 200) rectHeight = 200;
+                }
+                var canvas = document.createElement('canvas');
+                canvas.width = rectWidth;
+                canvas.height = rectHeight;
 
+                var ctx;
+                if (canvas && canvas.getContext)
+                    ctx = canvas.getContext('2d');
+                else {
+                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        type: 'error',
+                        title: 'Error generating',
+                        message: 'Could not generate map'
+                    });
+                    return;
+                }
+                ctx.strokeStyle = 'black';
+
+                ctx.fillStyle = '#eae4d6';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.font = '8pt Arial';
+                for (rms in rooms) {
+                    if (!Object.prototype.hasOwnProperty.call(rooms, rms)) continue;
+                    room = rooms[rms];
+                    //no room
+                    if (room == null) continue;
+                    cx = (room.x - x) * rw + 30.5;
+                    cy = (room.y - y) * rw + 30.5;
+                    mapper.DrawNormalizedRoom(ctx, cx, cy, room, true);
+                }
+                ctx.save();
+                ctx.strokeStyle = 'black';
+                ctx.fillStyle = 'black';
+                ctx.font = 'italic bold 16pt Georgia';
+                fx = rectWidth / 2 - fx / 2;
+                ctx.fillText(t, fx, 20);
+                ctx.translate(rectWidth - 25, rectHeight - 25);
+                ctx.font = 'italic bold 12pt Georgia';
+                ctx.fillText('N', 3, -5);
+                ctx.beginPath();
+                ctx.moveTo(10, 0);
+                ctx.lineTo(5, 15);
+                ctx.lineTo(10, 20);
+                ctx.lineTo(15, 15);
+                ctx.lineTo(10, 0);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+                mapper.DrawLegend(ctx, rectWidth - 185, -10, 1);
+                fs.writeFile(file, nativeImage.createFromDataURL(canvas.toDataURL('image/png')).toPNG(), err => {
+                    if (err)
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                            type: 'error',
+                            title: 'Error generating',
+                            message: 'Could not save map'
+                        });
+                    ipcRenderer.send('progress-close');
+                    ipcRenderer.send('set-progress-window', 'mapper', { value: -1 });
+                });
+            });
         }
 
         function exportCurrentImage() {
             clearButton('#export');
-            dialog.showSaveDialog(remote.getCurrentWindow(), {
+            ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
                 title: 'Export clipped view',
                 defaultPath: 'jiMUD.clipped.png',
                 filters: [
@@ -1005,85 +1043,97 @@
                     { name: 'Images (*.png)', extensions: ['png'] },
                     { name: 'All files (*.*)', extensions: ['*'] },
                 ]
-            },
-                function (fileName) {
-                    if (fileName === undefined) {
-                        return;
-                    }
-                    showProgress('Exporting image&hellip;');
-                    var oldCanvas = document.getElementById('MapperCanvas');
-                    var newCanvas = document.createElement('canvas');
-                    var context = newCanvas.getContext('2d');
-                    newCanvas.width = oldCanvas.width;
-                    newCanvas.height = oldCanvas.height;
-                    mapper.draw(newCanvas, context, true, () => {
-                        fs.writeFileSync(fileName, nativeImage.createFromDataURL(newCanvas.toDataURL('image/png')).toPNG());
-                        closeProgress();
-                    });
+            }).then(results => {
+                if (results.filePath === undefined || results.filePath.length === 0) {
+                    return;
+                }
+                ipcRenderer.send('show-window', 'mapper');
+                ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
+                _progress = { action: 4, file: results.filePath };
+                ipcRenderer.send('progress-show', { title: 'Exporting image&hellip;', percent: -1, cancelable: false });
+            });
+        }
+
+        function _exportCurrentImage(file) {
+            var oldCanvas = document.getElementById('MapperCanvas');
+            var newCanvas = document.createElement('canvas');
+            var context = newCanvas.getContext('2d');
+            newCanvas.width = oldCanvas.width;
+            newCanvas.height = oldCanvas.height;
+            mapper.draw(newCanvas, context, true, () => {
+                fs.writeFile(file, nativeImage.createFromDataURL(newCanvas.toDataURL('image/png')).toPNG(), err => {
+                    if (err)
+                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                            type: 'error',
+                            title: 'Error generating',
+                            message: 'Could not save map'
+                        });
+                    ipcRenderer.send('progress-close');
+                    ipcRenderer.send('set-progress-window', 'mapper', { value: -1 });
                 });
+            });
         }
 
         function exportCurrentArea() {
             clearButton('#export');
-            dialog.showSaveDialog(remote.getCurrentWindow(), {
+            ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
                 title: 'Export current area',
                 defaultPath: 'jiMUD.' + mapper.active.area + '.txt',
                 filters: [
                     { name: 'Text files (*.txt)', extensions: ['txt'] },
                     { name: 'All files (*.*)', extensions: ['*'] },
                 ]
-            },
-                function (fileName) {
-                    if (fileName === undefined) {
-                        return;
-                    }
-                    ipcRenderer.send('set-progress', { value: 0 });
-                    ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
-                    _progress = { action: 1, file: fileName };
-                    ipcRenderer.send('progress-show', 'Exporting area data&hellip;');
-                });
+            }).then(results => {
+                if (results.filePath === undefined || results.filePath.length === 0) {
+                    return;
+                }
+                ipcRenderer.send('set-progress', { value: 0 });
+                ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
+                _progress = { action: 1, file: results.filePath };
+                showProgress('Exporting area data&hellip;', true);
+                mapper.exportArea(_progress.file);
+            });
         }
 
         function exportAll() {
             clearButton('#export');
-            dialog.showSaveDialog(remote.getCurrentWindow(), {
+            ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
                 title: 'Export all',
                 defaultPath: 'jiMUD.txt',
                 filters: [
                     { name: 'Text files (*.txt)', extensions: ['txt'] },
                     { name: 'All files (*.*)', extensions: ['*'] },
                 ]
-            },
-                function (fileName) {
-                    if (fileName === undefined) {
-                        return;
-                    }
-                    ipcRenderer.send('set-progress', { value: 0 });
-                    ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
-                    _progress = { action: 2, file: fileName };
-                    ipcRenderer.send('progress-show', 'Exporting map data&hellip;');
-                });
+            }).then(results => {
+                if (results.filePath === undefined || results.filePath.length === 0) {
+                    return;
+                }
+                ipcRenderer.send('set-progress', { value: 0 });
+                ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
+                _progress = { action: 2, file: results.filePath };
+                showProgress('Exporting map data&hellip;', true);
+                mapper.exportAll(_progress.file);
+            });
         }
 
         function importMerge() {
             clearButton('#export');
-            dialog.showOpenDialog(remote.getCurrentWindow(),
+            ipcRenderer.invoke('show-dialog', 'showOpenDialog',
                 {
                     filters: [
                         { name: 'Text files (*.txt)', extensions: ['txt'] },
                         { name: 'All files (*.*)', extensions: ['*'] },
                     ]
-                },
-                function (fileNames) {
-                    if (fileNames === undefined) {
+                }).then(result => {
+                    if (result.filePaths === undefined || result.filePaths.length === 0) {
                         return;
                     }
-                    for (var f = 0, fl = fileNames.length; f < fl; f++)
-                        fs.readFile(fileNames[f], (err, data) => {
+                    for (var f = 0, fl = result.filePaths.length; f < fl; f++)
+                        fs.readFile(result.filePaths[f], (err, data) => {
                             if (err) throw err;
                             data = JSON.parse(data);
                             if (!data) {
-                                dialog.showMessageBox(remote.getCurrentWindow(), {
+                                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                     type: 'error',
                                     title: 'Invalid map data',
                                     message: 'Invalid map data unable to process.'
@@ -1092,30 +1142,29 @@
                             }
                             ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
                             _progress = { action: 0, data: data, type: ImportType.Merge };
-                            ipcRenderer.send('progress-show', 'Importing map data&hellip;');
+                            ipcRenderer.send('progress-show', { title: 'Importing map data&hellip;', percent: 0, noClose: true });
                         });
                 });
         }
 
         function importReplace() {
             clearButton('#export');
-            dialog.showOpenDialog(remote.getCurrentWindow(),
+            ipcRenderer.invoke('show-dialog', 'showOpenDialog',
                 {
                     filters: [
                         { name: 'Text files (*.txt)', extensions: ['txt'] },
                         { name: 'All files (*.*)', extensions: ['*'] },
                     ]
-                },
-                function (fileNames) {
-                    if (fileNames === undefined) {
+                }).then(result => {
+                    if (result.filePaths === undefined || result.filePaths.length === 0) {
                         return;
                     }
-                    for (var f = 0, fl = fileNames.length; f < fl; f++)
-                        fs.readFile(fileNames[f], (err, data) => {
+                    for (var f = 0, fl = result.filePaths.length; f < fl; f++)
+                        fs.readFile(result.filePaths[f], (err, data) => {
                             if (err) throw err;
                             data = JSON.parse(data);
                             if (!data) {
-                                dialog.showMessageBox(remote.getCurrentWindow(), {
+                                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                     type: 'error',
                                     title: 'Invalid map data',
                                     message: 'Invalid map data unable to process.'
@@ -1123,7 +1172,7 @@
                                 return;
                             }
                             ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
-                            ipcRenderer.send('progress-show', 'Importing map data&hellip;');
+                            ipcRenderer.send('progress-show', { title: 'Importing map data&hellip;', percent: 0, noClose: true });
                             _progress = { action: 0, data: data, type: ImportType.Replace };
                         });
                 });
@@ -1131,69 +1180,89 @@
 
         function removeSelectedRoom() {
             clearButton('#remove');
-            dialog.showMessageBox(remote.getCurrentWindow(), {
+            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                 type: 'question',
                 title: 'Remove selected room',
                 message: 'Are you sure you want to remove selected room?',
                 buttons: ['Yes', 'No'],
                 defaultId: 1,
-            }, (response) => {
-                if (response === 0)
+            }).then(result => {
+                if (result.response === 0)
                     mapper.clearSelectedRoom();
             });
         }
 
         function removeCurrentRoom() {
             clearButton('#remove');
-            dialog.showMessageBox(remote.getCurrentWindow(), {
+            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                 type: 'question',
                 title: 'Remove current room',
                 message: 'Are you sure you want to remove current room?',
                 buttons: ['Yes', 'No'],
                 defaultId: 1,
-            }, (response) => {
-                if (response === 0)
+            }).then(result => {
+                if (result.response === 0)
                     mapper.clearRoom();
             });
         }
 
         function removeCurrentArea() {
             clearButton('#remove');
-            dialog.showMessageBox(remote.getCurrentWindow(), {
+            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                 type: 'question',
                 title: 'Remove ' + mapper.active.area,
                 message: 'Are you sure you want to remove all rooms from ' + mapper.active.area + '?',
                 buttons: ['Yes', 'No'],
                 defaultId: 1,
-            }, (response) => {
-                if (response === 0)
+            }).then(result => {
+                if (result.response === 0)
                     mapper.clearArea();
             });
         }
 
         function removeAll() {
             clearButton('#remove');
-            dialog.showMessageBox(remote.getCurrentWindow(), {
+            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                 type: 'question',
                 title: 'Remove all',
                 message: 'Are you sure you want to remove all rooms?',
                 buttons: ['Yes', 'No'],
                 defaultId: 1,
-            }, (response) => {
-                if (response === 0)
+            }).then(result => {
+                if (result.response === 0)
                     mapper.clearAll();
             });
         }
 
-        function showProgress(title) {
+        function resetMap() {
+            clearButton('#remove');
+            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                type: 'question',
+                title: 'Reset map',
+                message: 'This will delete your map data file and recreate a fresh new one, do you want do delete your file?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+            }).then(result => {
+                if (result.response === 0)
+                    mapper.resetMap();
+            });
+        }
+
+        function showProgress(title, cancel) {
+            menubar.enabled = false;
             ipcRenderer.send('set-progress', { value: 0 });
             ipcRenderer.send('set-progress-window', 'mapper', { value: 0 });
             $('#mapProgressbar').html('<progress max="100"></progress>');
             $('#mapProgressTitle').html(title);
+            if (cancel)
+                $('#mapProgressCancel').css('display', '');
+            else
+                $('#mapProgressCancel').css('display', 'none');
             $('#mapProgress')[0].showModal();
         }
 
         function closeProgress() {
+            menubar.enabled = true;
             if ($('#mapProgress')[0].open)
                 $('#mapProgress')[0].close();
             ipcRenderer.send('set-progress', { value: -1 });
@@ -1475,18 +1544,16 @@
                 <i class="fa fa-save"></i> Save</button>
         </div>
     </div>
-    <dialog id="mapProgress" style="z-index:1000;text-align:center">
+    <dialog id="mapProgress" style="z-index:1000;text-align:center" onclose="menubar.enabled = true;" oncancel="menubar.enabled = true;">
         <div id="mapProgressTitle">Importing data&hellip;</div>
         <div id="mapProgressbar">
             <progress max="100"></progress>
         </div>
-        <!--
-    <div>
-      <button onclick="mapper.cancelImport();">
-        Cancel
-      </button>
-    </div>
-    -->
+        <div id="mapProgressCancel">
+            <button onclick="mapper.cancelExport();">
+                Cancel
+            </button>
+        </div>
     </dialog>
 </body>
 

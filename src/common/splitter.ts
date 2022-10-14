@@ -15,7 +15,7 @@ export enum Orientation {
 }
 
 /**
- * Spliiter display control
+ * Splitter display control
  *
  * @export
  * @class Splitter
@@ -196,7 +196,7 @@ export class Splitter extends EventEmitter {
             this.$dragBar.style.top = '';
             this.$dragBar.style.bottom = (this.$splitterDistance - this.$splitterWidth) + 'px';
             this.$dragBar.style.height = this.$splitterWidth + 'px';
-            this.$dragBar.style.cursor = 'row-resize';
+            this.$dragBar.style.cursor = 'ns-resize';
 
             if (this.$collapsed === 1) {
                 this.$panel1.style.display = 'none';
@@ -239,7 +239,7 @@ export class Splitter extends EventEmitter {
             this.$dragBar.style.top = '0';
             this.$dragBar.style.bottom = '0';
             this.$dragBar.style.width = this.$splitterWidth + 'px';
-            this.$dragBar.style.cursor = 'col-resize';
+            this.$dragBar.style.cursor = 'ew-resize';
 
             if (this.$collapsed === 1) {
                 this.$panel1.style.display = 'none';
@@ -304,7 +304,7 @@ export class Splitter extends EventEmitter {
                 this.$ghostBar.style.bottom = '';
                 this.$ghostBar.style.width = '';
                 this.$ghostBar.style.height = this.$splitterWidth + 'px';
-                this.$ghostBar.style.cursor = 'row-resize';
+                this.$ghostBar.style.cursor = 'ns-resize';
             }
             else {
                 this.$ghostBar.style.left = (bnd.left - this.$elBounds.left - this.$splitterWidth) + 'px';
@@ -313,7 +313,7 @@ export class Splitter extends EventEmitter {
                 this.$ghostBar.style.right = '';
                 this.$ghostBar.style.height = '';
                 this.$ghostBar.style.width = this.$splitterWidth + 'px';
-                this.$ghostBar.style.cursor = 'col-resize';
+                this.$ghostBar.style.cursor = 'ew-resize';
             }
             (<any>this.$ghostBar).move = (ge) => {
                 let l;

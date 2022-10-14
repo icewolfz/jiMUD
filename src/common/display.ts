@@ -42,7 +42,7 @@ interface ScrollState {
 }
 
 export enum ScrollType { vertical = 0, horizontal = 1 }
-export enum UpdateType { none = 0, view = 1, overlays = 2, selection = 4, scrollbars = 8, update = 16, scroll = 32, scrollEnd = 64, scrollView = 128, display = 256, selectionChanged = 512, scrollViewOverlays = 1024, layout = 2048 }
+export enum UpdateType { none = 0, view = 1, overlays = 2, selection = 4, scrollbars = 8, update = 16, scroll = 32, scrollEnd = 64, scrollView = 128, display = 256, selectionChanged = 512, scrollViewOverlays = 1024, layout = 2048, scrollReset = 4096 }
 
 enum CornerType {
     Flat = 0,
@@ -70,6 +70,7 @@ interface Line {
  * @class Display
  * @extends {EventEmitter}
  * @todo fix RTL unicode selection display
+ * @todo Add MXP image height - requires variable line height support
  * @todo Add/fix MXP image selection highlighting
  */
 export class Display extends EventEmitter {
@@ -86,6 +87,7 @@ export class Display extends EventEmitter {
     private _height: number = 0;
     private _maxWidth: number = 0;
     private _maxView: number = 0;
+    private _aTimer = 0;
 
     private _maxLineLength: number = 0;
     private _currentSelection: Selection = {
@@ -128,7 +130,18 @@ export class Display extends EventEmitter {
 
     public split = null;
     public splitLive: boolean = false;
-    public scrollLock: boolean = false;
+    private _scrollLock: boolean = false;
+
+    get scrollLock(): boolean {
+        return this._scrollLock;
+    }
+    set scrollLock(locked: boolean) {
+        if (locked !== this._scrollLock) {
+            this._scrollLock = locked;
+            this._VScroll.autoScroll = !locked;
+        }
+    }
+
 
     private _linkFunction;
     private _mxpLinkFunction;
@@ -306,7 +319,6 @@ export class Display extends EventEmitter {
                 this.split.ghostBar.style.top = (this.offset(this.split).top - this.split.bar.offsetHeight) + 'px';
                 this.split.ghostBar.style.display = this.splitLive ? 'none' : 'block';
                 this._el.appendChild(this.split.ghostBar);
-
                 this._el.addEventListener('mousemove', this.split.mouseMove);
                 this._el.addEventListener('mouseup', this.split.moveDone);
                 this._el.addEventListener('mouseleave', this.split.moveDone);
@@ -317,23 +329,23 @@ export class Display extends EventEmitter {
                 e.cancelBubble = true;
                 if (e.pageY < 20)
                     this.split.ghostBar.style.top = '20px';
-                else if (e.pageY > this._innerHeight - 150 - this._HScroll.size)
-                    this.split.ghostBar.style.top = (this._innerHeight - 150 - this.split.bar.offsetHeight - this._HScroll.size) + 'px';
+                else if (e.pageY > this._innerHeight - 150)
+                    this.split.ghostBar.style.top = (this._innerHeight - 150 - this.split.bar.offsetHeight) + 'px';
                 else
                     this.split.ghostBar.style.top = (e.pageY - this.split.bar.offsetHeight) + 'px';
                 let h;
                 if (this.splitLive) {
                     if (e.pageY < 20)
-                        h = this._innerHeight - 20 + this.split.bar.offsetHeight;
+                        h = this._innerHeight - 20 + this.split.bar.offsetHeight - this._HScroll.size;
                     else if (e.pageY > this._innerHeight - 150)
                         h = 150;
                     else
-                        h = this._innerHeight - e.pageY + this.split.bar.offsetHeight;
+                        h = this._innerHeight - e.pageY + this.split.bar.offsetHeight - this._HScroll.size;
 
                     h = (h / this._innerHeight * 100);
                     this.split.style.height = h + '%';
                     this.split._innerHeight = this.split.clientHeight;
-                    this.doUpdate(UpdateType.scrollView | UpdateType.view);
+                    this.doUpdate(UpdateType.scrollView | UpdateType.view | UpdateType.scroll);
                 }
                 this.emit('split-move', h);
             };
@@ -343,10 +355,10 @@ export class Display extends EventEmitter {
                     let h;
                     if (e.pageY < 20)
                         h = this._innerHeight - 20 + this.split.bar.offsetHeight - this._HScroll.size;
-                    else if (e.pageY > this._innerHeight - 150 - this._HScroll.size)
+                    else if (e.pageY > this._innerHeight - 150)
                         h = 150;
                     else
-                        h = this._innerHeight - e.pageY + this.split.bar.offsetHeight;
+                        h = this._innerHeight - e.pageY + this.split.bar.offsetHeight - this._HScroll.size;
                     h = (h / this._innerHeight * 100);
                     this.split.style.height = h + '%';
                     this.split._innerHeight = this.split.clientHeight;
@@ -490,12 +502,16 @@ export class Display extends EventEmitter {
         this.buildStyleSheet();
 
         this._VScroll = new ScrollBar({ parent: this._el, content: this._view, autoScroll: true, type: ScrollType.vertical });
-        this._VScroll.on('scroll', () => {
-            this.doUpdate(UpdateType.scroll | UpdateType.view);
+        this._VScroll.on('scroll', (pos, changed) => {
+            if (!changed)
+                this.doUpdate(UpdateType.view);
+            else
+                this.doUpdate(UpdateType.scroll | UpdateType.view);
         });
         this._HScroll = new ScrollBar({ parent: this._el, content: this._view, type: ScrollType.horizontal, autoScroll: false });
-        this._HScroll.on('scroll', () => {
-            this.doUpdate(UpdateType.scroll);
+        this._HScroll.on('scroll', (pos, changed) => {
+            if (changed)
+                this.doUpdate(UpdateType.scroll);
         });
         //this.update();
 
@@ -695,7 +711,9 @@ export class Display extends EventEmitter {
                     else if (y >= this._innerHeight && this._VScroll.position < this._VScroll.scrollSize) {
                         y = this._charHeight;
                         this._currentSelection.end.y++;
-                        if (this._currentSelection.end.y >= this.lines.length)
+                        if (this.lines.length === 0)
+                            this._currentSelection.end.x = 0;
+                        else if (this._currentSelection.end.y >= this.lines.length)
                             this._currentSelection.end.x = this.lines[this.lines.length - 1].length;
                     }
                     else
@@ -711,7 +729,10 @@ export class Display extends EventEmitter {
                     }
                     else if (x > 0 && this._currentSelection.end.y >= this.lines.length) {
                         x = 0;
-                        this._currentSelection.end.x = this.lines[this.lines.length - 1].length;
+                        if (this.lines.length === 0)
+                            this._currentSelection.end.x = 0;
+                        else
+                            this._currentSelection.end.x = this.lines[this.lines.length - 1].length;
                     }
                     else {
                         x = 0;
@@ -819,6 +840,7 @@ export class Display extends EventEmitter {
                 this.$resizeObserverCache = { width: entries[0].contentRect.width, height: entries[0].contentRect.height };
                 if (this.split) this.split.dirty = true;
                 this.doUpdate(UpdateType.view);
+                this.emit('resize');
             }
         });
         this.$resizeObserver.observe(this._el);
@@ -828,6 +850,7 @@ export class Display extends EventEmitter {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
                     if (this.split) this.split.dirty = true;
                     this.doUpdate(UpdateType.scrollbars | UpdateType.update | UpdateType.view | UpdateType.layout);
+                    this.emit('resize');
                 }
             }
         });
@@ -909,10 +932,14 @@ export class Display extends EventEmitter {
                     else
                         this.split.updatePosition();
                 }
+                this._updating |= UpdateType.scrollReset;
+                this._updating &= ~UpdateType.scroll;
+            }
+            if ((this._updating & UpdateType.scrollReset) === UpdateType.scrollReset) {
                 this._view.style.transform = `translate(${-this._HScroll.position}px, ${-this._VScroll.position}px)`;
                 this._background.style.transform = `translate(${-this._HScroll.position}px, ${-this._VScroll.position}px)`;
                 this._overlay.style.transform = `translate(${-this._HScroll.position}px, ${-this._VScroll.position}px)`;
-                this._updating &= ~UpdateType.scroll;
+                this._updating &= ~UpdateType.scrollReset;
             }
             if ((this._updating & UpdateType.view) === UpdateType.view) {
                 this.updateView();
@@ -989,6 +1016,14 @@ export class Display extends EventEmitter {
         return this._parser.EndOfLine;
     }
 
+    get parseQueueLength(): number {
+        return this._parser.parseQueueLength;
+    }
+
+    get parseQueueEndOfLine(): boolean {
+        return this._parser.parseQueueEndOfLine;
+    }
+
     get EndOfLineLength(): number {
         if (this.lines.length === 0)
             return 0;
@@ -1007,6 +1042,13 @@ export class Display extends EventEmitter {
     }
     get enableMXP(): boolean {
         return this._parser.enableMXP;
+    }
+
+    set showInvalidMXPTags(value: boolean) {
+        this._parser.showInvalidMXPTags = value;
+    }
+    get showInvalidMXPTags(): boolean {
+        return this._parser.showInvalidMXPTags;
     }
 
     set enableBell(value: boolean) {
@@ -1055,8 +1097,8 @@ export class Display extends EventEmitter {
         this.emit('debug', msg);
     }
 
-    public append(txt: string, remote?: boolean, force?: boolean) {
-        this._parser.parse(txt, remote || false, force || false);
+    public append(txt: string, remote?: boolean, force?: boolean, prependSplit?: boolean) {
+        this._parser.parse(txt, remote || false, force || false, prependSplit || false);
     }
 
     public CurrentAnsiCode() {
@@ -1083,15 +1125,6 @@ export class Display extends EventEmitter {
             selection: []
         };
         this._viewCache = {};
-        if (this.split) {
-            this.split.viewCache = {};
-            this.split.dirty = true;
-            if (this.split.shown) {
-                this.split.style.display = '';
-                this.split.shown = false;
-                if (this._scrollCorner) this._scrollCorner.classList.remove('active');
-            }
-        }
         this.lineIDs = [];
         this._lines = [];
         this._lineID = 0;
@@ -1111,7 +1144,17 @@ export class Display extends EventEmitter {
         this._parser.Clear();
         this._VScroll.reset();
         this._HScroll.reset();
-        this.doUpdate(UpdateType.scrollbars);
+        if (this.split) {
+            this.split.viewCache = {};
+            this.split.dirty = true;
+            if (this.split.shown) {
+                this.split.style.display = '';
+                this.split.shown = false;
+                if (this._scrollCorner) this._scrollCorner.classList.remove('active');
+            }
+        }
+        this._updating &= ~UpdateType.scroll;
+        this.doUpdate(UpdateType.scrollbars | UpdateType.scrollReset);
     }
 
     public updateFont(font?: string, size?: string) {
@@ -1456,6 +1499,485 @@ export class Display extends EventEmitter {
         this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.overlays | UpdateType.selection);
     }
 
+    //color like javascript.substr using 0 index and length
+    public colorSubStrByLine(idx: number, fore, back?, start?: number, len?: number, style?: FontStyle) {
+        this.colorSubStringByLine(idx, fore, back, start, start + len, style);
+    }
+
+    //color like javascript.substring using 0 index for start and end
+    public colorSubStringByLine(idx: number, fore, back?, start?: number, end?: number, style?: FontStyle) {
+        //invalid line bail
+        if (idx < 0 || idx >= this.lines.length) return;
+        const lineLength = this.lines[idx].length;
+        //passed line skip
+        if (start >= lineLength) return;
+        if (!start || start < 0) start = 0;
+        if (!end || end > lineLength)
+            end = lineLength;
+        if (start === end)
+            return;
+        //clear cache
+        if (this._viewCache[idx])
+            delete this._viewCache[idx];
+        const formats = this.lineFormats[idx];
+        let len = formats.length;
+        let found: boolean = false;
+        //whole line so just do everything
+        if (start === 0 && end >= lineLength) {
+            for (let f = 0; f < len; f++) {
+                const format = formats[f];
+                //only worry about normal types
+                if (format.formatType !== FormatType.Normal)
+                    continue;
+                found = true;
+                if (format.bStyle) {
+                    format.bStyle = 0;
+                    format.fStyle = 0;
+                    format.fCls = 0;
+                }
+                format.color = fore || format.color;
+                format.background = back || format.background;
+                format.style |= style || FontStyle.None;
+            }
+            //found no text block must create one
+            if (!found) {
+                formats.unshift({
+                    formatType: FormatType.Normal,
+                    offset: 0,
+                    color: fore || 0,
+                    background: back || 0,
+                    size: 0,
+                    font: 0,
+                    style: style || FontStyle.None,
+                    unicode: false
+                });
+            }
+        }
+        else {
+            let nFormat;
+            let formatEnd;
+            for (let f = 0; f < len; f++) {
+                const format = formats[f];
+                //only worry about normal types
+                if (format.formatType !== FormatType.Normal)
+                    continue;
+                //find the end of he format
+                if (f < len - 1) {
+                    let nF = f + 1;
+                    nFormat = formats[nF];
+                    //skip empty blocks
+                    if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
+                        continue;
+                    //find next block that is not same offset
+                    while (format.offset === nFormat.offset && nFormat.formatType === format.formatType && nF < len - 1)
+                        nFormat = formats[++nF];
+                    //last block same offset use total length
+                    if (nF === len && format.offset === nFormat.offset)
+                        formatEnd = lineLength;
+                    else
+                        formatEnd = nFormat.offset;
+                }
+                else
+                    formatEnd = lineLength;
+                if (start < format.offset) continue;
+                //passed end so try next block
+                if (start >= formatEnd) continue;
+                //after this block move on.
+                //not offset so need to insert a new block
+                found = true;
+                if (format.bStyle) {
+                    format.bStyle = 0;
+                    format.fStyle = 0;
+                    format.fCls = 0;
+                }
+                //if end middle of block, add new block with old info to split
+                if (end < formatEnd) {
+                    format.width = 0;
+                    formats.splice(f + 1, 0, {
+                        formatType: format.formatType,
+                        offset: end,
+                        color: format.color,
+                        background: format.background,
+                        size: format.size,
+                        font: format.font,
+                        style: format.style,
+                        unicode: format.unicode
+                    });
+                    len++;
+                }
+                if (start != format.offset) {
+                    //clean old width
+                    format.width = 0;
+                    //insert new block with new colors
+                    formats.splice(f + 1, 0, {
+                        formatType: format.formatType,
+                        offset: start,
+                        color: fore || format.color,
+                        background: back || format.background,
+                        size: format.size,
+                        font: format.font,
+                        style: format.style | (style || FontStyle.None),
+                        unicode: format.unicode
+                    });
+                    len++;
+                }
+                else {
+                    format.color = fore || format.color;
+                    format.background = back || format.background;
+                    format.style |= (style || FontStyle.None);
+                }
+                //not end so shift start to next block
+                if (end > formatEnd)
+                    start = formatEnd;
+            }
+            //clean out duplicates and other no longer needed blocks
+            this.lineFormats[idx] = this.pruneFormats(formats, this.textLength);
+            //rebuild widths for new blocks/old blocks as needed
+            this.calculateSize(idx);
+            //const t = this.calculateSize(idx);
+            //this._lines[idx].width = t.width;
+        }
+        this.doUpdate(UpdateType.view);
+    }
+
+    public removeStyleSubStrByLine(idx: number, style: FontStyle, start?: number, len?: number) {
+        this.removeStyleSubStringByLine(idx, style, start, start + len);
+    }
+
+    //color like javascript.substring using 0 index for start and end
+    public removeStyleSubStringByLine(idx: number, style: FontStyle, start?: number, end?: number) {
+        //invalid line bail
+        if (idx < 0 || idx >= this.lines.length) return;
+        const lineLength = this.lines[idx].length;
+        //passed line skip
+        if (start >= lineLength) return;
+        if (!start || start < 0) start = 0;
+        if (!end || end > lineLength)
+            end = lineLength;
+        //clear cache
+        if (this._viewCache[idx])
+            delete this._viewCache[idx];
+        const formats = this.lineFormats[idx];
+        let len = formats.length;
+        let found: boolean = false;
+        //whole line so just do everything
+        if (start === 0 && end >= lineLength) {
+            for (let f = 0; f < len; f++) {
+                const format = formats[f];
+                //only worry about normal types
+                if (format.formatType !== FormatType.Normal)
+                    continue;
+                found = true;
+                if (format.bStyle) {
+                    format.bStyle = 0;
+                    format.fStyle = 0;
+                    format.fCls = 0;
+                }
+                format.style &= ~(style || FontStyle.None);
+            }
+            //found no text block must create one
+            if (!found) {
+                formats.unshift({
+                    formatType: FormatType.Normal,
+                    offset: 0,
+                    color: 0,
+                    background: 0,
+                    size: 0,
+                    font: 0,
+                    style: FontStyle.None,
+                    unicode: false
+                });
+            }
+        }
+        else {
+            let nFormat;
+            let formatEnd;
+            for (let f = 0; f < len; f++) {
+                const format = formats[f];
+                //only worry about normal types
+                if (format.formatType !== FormatType.Normal)
+                    continue;
+                //find the end of he format
+                if (f < len - 1) {
+                    let nF = f + 1;
+                    nFormat = formats[nF];
+                    //skip empty blocks
+                    if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
+                        continue;
+                    //find next block that is not same offset
+                    while (format.offset === nFormat.offset && nFormat.formatType === format.formatType && nF < len - 1)
+                        nFormat = formats[++nF];
+                    //last block same offset use total length
+                    if (nF === len && format.offset === nFormat.offset)
+                        formatEnd = lineLength;
+                    else
+                        formatEnd = nFormat.offset;
+                }
+                else
+                    formatEnd = lineLength;
+                if (start < format.offset) continue;
+                //passed end so try next block
+                if (start >= formatEnd) continue;
+                //after this block move on.
+                //not offset so need to insert a new block
+                found = true;
+                if (format.bStyle) {
+                    format.bStyle = 0;
+                    format.fStyle = 0;
+                    format.fCls = 0;
+                }
+                //if end middle of block, add new block with old info to split
+                if (end < formatEnd) {
+                    format.width = 0;
+                    formats.splice(f + 1, 0, {
+                        formatType: format.formatType,
+                        offset: end,
+                        color: format.color,
+                        background: format.background,
+                        size: format.size,
+                        font: format.font,
+                        style: format.style,
+                        unicode: format.unicode
+                    });
+                    len++;
+                }
+                if (start != format.offset) {
+                    //clean old width
+                    format.width = 0;
+                    //insert new block with new colors
+                    formats.splice(f + 1, 0, {
+                        formatType: format.formatType,
+                        offset: start,
+                        color: format.color,
+                        background: format.background,
+                        size: format.size,
+                        font: format.font,
+                        style: format.style & ~(style || FontStyle.None),
+                        unicode: format.unicode
+                    });
+                    len++;
+                }
+                else {
+                    format.style &= ~(style || FontStyle.None);
+                }
+                //not end so shift start to next block
+                if (end > formatEnd)
+                    start = formatEnd;
+            }
+            //clean out duplicates and other no longer needed blocks
+            this.lineFormats[idx] = this.pruneFormats(formats, this.textLength);
+            //rebuild widths for new blocks/old blocks as needed
+            this.calculateSize(idx);
+            //const t = this.calculateSize(idx);
+            //this._lines[idx].width = t.width;
+        }
+        this.doUpdate(UpdateType.view);
+    }
+
+    public highlightSubStrByLine(idx: number, start?: number, len?: number) {
+        this.highlightStyleSubStringByLine(idx, start, start + len);
+    }
+
+    //color like javascript.substring using 0 index for start and end
+    public highlightStyleSubStringByLine(idx: number, start?: number, end?: number, color?: boolean) {
+        //invalid line bail
+        if (idx < 0 || idx >= this.lines.length) return;
+        const lineLength = this.lines[idx].length;
+        //passed line skip
+        if (start >= lineLength) return;
+        if (!start || start < 0) start = 0;
+        if (!end || end > lineLength)
+            end = lineLength;
+        //clear cache
+        if (this._viewCache[idx])
+            delete this._viewCache[idx];
+        const formats = this.lineFormats[idx];
+        let len = formats.length;
+        let found: boolean = false;
+        //whole line so just do everything
+        if (start === 0 && end >= lineLength) {
+            for (let f = 0; f < len; f++) {
+                const format = formats[f];
+                //only worry about normal types
+                if (format.formatType !== FormatType.Normal)
+                    continue;
+                found = true;
+                if (format.bStyle) {
+                    format.bStyle = 0;
+                    format.fStyle = 0;
+                    format.fCls = 0;
+                }
+                if (color || (format.style & FontStyle.Bold) === FontStyle.Bold) {
+                    if (typeof format.color === 'number')
+                        format.color = this._parser.IncreaseColor(this._parser.GetColor(format.color), 0.25);
+                    else
+                        format.color = this._parser.IncreaseColor(format.color, 0.25);
+                }
+                else
+                    format.style |= FontStyle.Bold;
+            }
+            //found no text block must create one
+            if (!found) {
+                formats.unshift({
+                    formatType: FormatType.Normal,
+                    offset: 0,
+                    color: color ? 370 : 0,
+                    background: 0,
+                    size: 0,
+                    font: 0,
+                    style: color ? FontStyle.None : FontStyle.Bold,
+                    unicode: false
+                });
+            }
+        }
+        else {
+            let nFormat;
+            let formatEnd;
+            for (let f = 0; f < len; f++) {
+                const format = formats[f];
+                //only worry about normal types
+                if (format.formatType !== FormatType.Normal)
+                    continue;
+                //find the end of he format
+                if (f < len - 1) {
+                    let nF = f + 1;
+                    nFormat = formats[nF];
+                    //skip empty blocks
+                    if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
+                        continue;
+                    //find next block that is not same offset
+                    while (format.offset === nFormat.offset && nFormat.formatType === format.formatType && nF < len - 1)
+                        nFormat = formats[++nF];
+                    //last block same offset use total length
+                    if (nF === len && format.offset === nFormat.offset)
+                        formatEnd = lineLength;
+                    else
+                        formatEnd = nFormat.offset;
+                }
+                else
+                    formatEnd = lineLength;
+                if (start < format.offset) continue;
+                //passed end so try next block
+                if (start >= formatEnd) continue;
+                //after this block move on.
+                //not offset so need to insert a new block
+                found = true;
+                if (format.bStyle) {
+                    format.bStyle = 0;
+                    format.fStyle = 0;
+                    format.fCls = 0;
+                }
+                //if end middle of block, add new block with old info to split
+                if (end < formatEnd) {
+                    format.width = 0;
+                    formats.splice(f + 1, 0, {
+                        formatType: format.formatType,
+                        offset: end,
+                        color: format.color,
+                        background: format.background,
+                        size: format.size,
+                        font: format.font,
+                        style: format.style,
+                        unicode: format.unicode
+                    });
+                    len++;
+                }
+                if (start != format.offset) {
+                    //clean old width
+                    format.width = 0;
+                    //insert new block with new colors
+                    nFormat = {
+                        formatType: format.formatType,
+                        offset: start,
+                        color: format.color,
+                        background: format.background,
+                        size: format.size,
+                        font: format.font,
+                        style: format.style,
+                        unicode: format.unicode
+                    }
+                    if (color || (format.style & FontStyle.Bold) === FontStyle.Bold) {
+                        if (typeof format.color === 'number')
+                            nFormat.color = this._parser.IncreaseColor(this._parser.GetColor(format.color), 0.25);
+                        else
+                            nFormat.color = this._parser.IncreaseColor(format.color, 0.25);
+                    }
+                    else
+                        nFormat.style |= FontStyle.Bold;
+                    formats.splice(f + 1, 0, nFormat);
+                    len++;
+                }
+                else if (color || (format.style & FontStyle.Bold) === FontStyle.Bold) {
+                    if (typeof format.color === 'number')
+                        format.color = this._parser.IncreaseColor(this._parser.GetColor(format.color), 0.25);
+                    else
+                        format.color = this._parser.IncreaseColor(format.color, 0.25);
+                }
+                else
+                    format.style |= FontStyle.Bold;
+
+                //not end so shift start to next block
+                if (end > formatEnd)
+                    start = formatEnd;
+            }
+            //clean out duplicates and other no longer needed blocks
+            this.lineFormats[idx] = this.pruneFormats(formats, this.textLength);
+            //rebuild widths for new blocks/old blocks as needed
+            this.calculateSize(idx);
+            //const t = this.calculateSize(idx);
+            //this._lines[idx].width = t.width;
+        }
+        this.doUpdate(UpdateType.view);
+    }
+
+    private pruneFormats(formats, textLen) {
+        //no formats or only 1 format
+        if (!formats || formats.length < 2) return formats;
+        const l = formats.length;
+        const nF = [];
+        for (let f = 0; f < l; f++) {
+            const format = formats[f];
+            let end;
+            if (f < l - 1) {
+                const nFormat = formats[f + 1];
+                //old links that have expired so no longer needed clean
+                //if (format.formatType === FormatType.MXPSkip) continue;
+                //skip format until find one that has different offset
+                if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
+                    continue;
+                end = nFormat.offset;
+                //empty link
+                if (format.formatType === FormatType.Link && end - format.offset === 0 && nFormat.formatType === FormatType.LinkEnd)
+                    continue;
+                //empty send
+                if (format.formatType === FormatType.MXPSend && end - format.offset === 0 && nFormat.formatType === FormatType.MXPSendEnd)
+                    continue;
+                //empty link
+                if (format.formatType === FormatType.MXPLink && end - format.offset === 0 && nFormat.formatType === FormatType.MXPLinkEnd)
+                    continue;
+                //same data but offset is higher, set next block current offset, clear width and continue;
+                if (
+                    format.formatType === nFormat.formatType &&
+                    format.color === nFormat.color &&
+                    format.background === nFormat.background &&
+                    format.size === nFormat.size &&
+                    format.font === nFormat.font &&
+                    format.style === nFormat.style &&
+                    format.unicode === nFormat.unicode
+                ) {
+                    nFormat.offset = format.offset;
+                    nFormat.width = 0;
+                    continue;
+                }
+            }
+            //trailing link with no text or empty format block and not fragment
+            else if (format.offset === textLen && textLen !== 0 && ((format.formatType === FormatType.Normal && !format.hr) || format.formatType === FormatType.Link || format.formatType === FormatType.MXPSend || format.formatType === FormatType.MXPLink))
+                continue;
+            nF.push(format);
+        }
+        return nF;
+    }
+
     public SetColor(code: number, color) {
         this._parser.SetColor(code, color);
     }
@@ -1565,6 +2087,7 @@ export class Display extends EventEmitter {
         }
     }
 
+    //TODO add font support, as different blocks of text could have different font formats, need to not just measure with but measure based on format block data
     public getLineOffset(pageX, pageY) {
         if (this.lines.length === 0)
             return { x: 0, y: 0 };
@@ -1628,34 +2151,61 @@ export class Display extends EventEmitter {
             }
             /*
             let text;
+            let line = y;
             if (y < this.lines.length)
                 text = this.lines[y].replace(/ /g, '\u00A0');
-            else
+            else {
                 text = this.lines[this.lines.length - 1].replace(/ /g, '\u00A0');
+                line = this.lines.length - 1;
+            }
             const tl = text.length;
-            let w = Math.ceil(this.textWidth(text.substr(0, x)));
+            let w = Math.ceil(this.lineWidth(line, 0, x));
+            //let w = Math.ceil(this.textWidth(text.substr(0, x)));
             if (w > xPos && xPos > 0) {
                 while (w > xPos && x > 0) {
                     x--;
-                    w = Math.ceil(this.textWidth(text.substr(0, x)));
+                    //unicode surrogate pair check
+                    while (x > 0 && text.charCodeAt(x) >= 0xD800 && text.charCodeAt(x) <= 0xDBFF)
+                        x--;
+                    w = Math.ceil(this.lineWidth(line, 0, x));
                 }
                 x++;
+                //unicode modifier check
+                while (x > 0 && this.isUnicodeModifierCode(text.charCodeAt(x)))
+                    x--;
             }
             else if (w > 0 && w < xPos) {
                 while (w < xPos && x < tl) {
                     x++;
-                    w = Math.ceil(this.textWidth(text.substr(0, x)));
+                    //unicode modifier check
+                    while (tl > x + 1 && this.isUnicodeModifierCode(text.charCodeAt(x)))
+                        x++;
+                    w = Math.ceil(this.lineWidth(line, 0, x));
                 }
-                if (w > xPos)
+                if (w > xPos) {
+                    x--;
+                    //unicode modifier check
+                    while (x > 0 && this.isUnicodeModifierCode(text.charCodeAt(x)))
+                        x--;
+                }
+                else if (x > 0 && this.isUnicodeModifierCode(text.charCodeAt(x)))
                     x--;
             }
             else if (w === 0 && x > 0 && xPos >= 0) {
                 while (w <= 0 && x < tl) {
                     x++;
-                    w = Math.ceil(this.textWidth(text.substr(0, x)));
+                    //unicode modifier check
+                    while (tl > x + 1 && this.isUnicodeModifierCode(text.charCodeAt(x)))
+                        x++;
+                    w = Math.ceil(this.lineWidth(line, 0, x));
                 }
             }
-            */
+            //unicode modifier check
+            else {
+                while (x > 0 && this.isUnicodeModifierCode(text.charCodeAt(x)))
+                    x--;
+            }            
+            */            
         }
         return { x: x, y: y };
     }
@@ -1721,6 +2271,52 @@ export class Display extends EventEmitter {
         return '';
     }
 
+    private isUnicodeModifierCode(code: number) {
+        //test if surrogate
+        if (code >= 0xDC00 && code <= 0xDFFF)
+            return true;
+        //test if variant
+        if (code >= 0xFE00 && code <= 0xFE0F)
+            return true;
+        //https://en.wikipedia.org/wiki/Combining_character
+        //Combining Diacritical Marks
+        if (code >= 0x0300 && code <= 0x036F)
+            return true;
+        //Combining Diacritical Marks Extended
+        if (code >= 0x1AB0 && code <= 0x1AFF)
+            return true;
+        //Combining Diacritical Marks Supplement
+        if (code >= 0x1DC0 && code <= 0x1DFF)
+            return true;
+        //Combining Diacritical Marks for Symbols
+        if (code >= 0xFE20 && code <= 0xFE2F)
+            return true;
+        //Combining Half Marks
+        if (code >= 0x20D0 && code <= 0x20FF)
+            return true;
+        //COMBINING CYRILLIC    
+        if (code >= 0x0484 && code <= 0x0489)
+            return true;
+        //Nko Combining        
+        if (code >= 0x07EB && code <= 0x07F3)
+            return true;
+        switch (code) {
+            //COMBINING KATAKANA-HIRAGANA
+            case 0x3099:
+            case 0x309A:
+            //Devanagari 
+            case 0x0901:
+            case 0x0953:
+            case 0x0953:
+            //Ethiopic Combining                
+            case 0x135D:
+            case 0x135E:
+            case 0x135F:
+                return true;
+        }
+        return false;
+    }
+
     private offset(elt) {
         const rect = elt.getBoundingClientRect();
         const bodyElt = document.body;
@@ -1754,11 +2350,15 @@ export class Display extends EventEmitter {
         return idx;
     }
 
-    private textWidth(txt, font?) {
+    private textWidth(txt, font?, style?) {
         if (!txt || txt.length === 0) return 0;
         font = font || this._contextFont;
         const canvas = this._canvas || (this._canvas = document.createElement('canvas'));
         const context = this._context || (this._context = canvas.getContext('2d', { alpha: false }));
+        if ((style & FontStyle.Bold) === FontStyle.Bold)
+            font = "bold " + font;
+        if ((style & FontStyle.Italic) === FontStyle.Italic)
+            font = "italic " + font;
         context.font = font;
         const metrics = context.measureText(txt);
         return metrics.width;
@@ -1794,6 +2394,9 @@ export class Display extends EventEmitter {
             //no width so ignore these blocks
             if (!formats[f].width || formats[f].formatType === FormatType.LinkEnd || formats[f].formatType === FormatType.MXPLinkEnd || formats[f].formatType === FormatType.MXPSendEnd)
                 continue;
+            //TODO not supported in width calculations at the moment
+            if (formats[f].align === 'right')
+                continue;
             //find end
             if (f < fLen - 1)
                 end = formats[f + 1].offset;
@@ -1819,7 +2422,7 @@ export class Display extends EventEmitter {
                 end = len;
             //if unicode or non standard font calculate width
             if (formats[f].unicode || font)
-                width += this.textWidth(text.substring(start, end), font);
+                width += this.textWidth(text.substring(start, end), font, formats[f].style);
             else
                 width += text.substring(start, end).length * this._charWidth;
             //len is in block so quit
@@ -1868,35 +2471,35 @@ export class Display extends EventEmitter {
                     format.width = format.width || this.textWidth(eText, font = `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`);
                 }
                 else if (format.unicode)
-                    format.width = format.width || this.textWidth(eText);
+                    format.width = format.width || this.textWidth(eText, 0, format.style);
                 else
                     format.width = format.width || eText.length * cw;
             }
             else if (format.formatType === FormatType.Link && end - offset !== 0) {
                 eText = text.substring(offset, end);
                 if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font);
+                    format.width = format.width || this.textWidth(eText, font, format.style);
                 else
                     format.width = format.width || eText.length * cw;
             }
             else if (format.formatType === FormatType.MXPLink && end - offset !== 0) {
                 eText = text.substring(offset, end);
                 if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font);
+                    format.width = format.width || this.textWidth(eText, font, format.style);
                 else
                     format.width = format.width || eText.length * cw;
             }
             else if (format.formatType === FormatType.MXPSend && end - offset !== 0) {
                 eText = text.substring(offset, end);
                 if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font);
+                    format.width = format.width || this.textWidth(eText, font, format.style);
                 else
                     format.width = format.width || eText.length * cw;
             }
             else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
                 eText = text.substring(offset, end);
                 if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font);
+                    format.width = format.width || this.textWidth(eText, font, format.style);
                 else
                     format.width = format.width || eText.length * cw;
             }
@@ -1927,8 +2530,8 @@ export class Display extends EventEmitter {
                     this._el.appendChild(img);
                     img.onload = () => {
                         const lIdx = this.lineIDs.indexOf(+img.dataset.id);
-                        this._lines[lIdx].images--;
                         if (lIdx === -1 || lIdx >= this.lines.length) return;
+                        this._lines[lIdx].images--;
                         const fIdx = +img.dataset.f;
                         const fmt = this.lineFormats[lIdx][fIdx];
                         if (fmt.w.length > 0 && fmt.h.length > 0) {
@@ -2290,7 +2893,7 @@ export class Display extends EventEmitter {
                  w += eL;
              }
              this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
- */
+    */
             if (this.lineFormats[sL][0].hr) {
                 s = 0;
                 e = Math.max(this._maxWidth, this._maxView);
@@ -3210,6 +3813,10 @@ export class Display extends EventEmitter {
         this._VScroll.scrollToEnd();
     }
 
+    public get scrollAtBottom() {
+        return this._VScroll.atBottom;
+    }
+
     private expireLineLinkFormat(formats, idx: number) {
         let f;
         let fs;
@@ -3233,7 +3840,7 @@ export class Display extends EventEmitter {
             for (; f < fl; f++) {
                 if (this.lineFormats[idx][f] === eType) {
                     if (n === 0) {
-                        format.formatType = FormatType.MXPSkip;
+                        this.lineFormats[idx][f].formatType = FormatType.MXPSkip;
                         break;
                     }
                     else
@@ -3418,6 +4025,7 @@ export class ScrollBar extends EventEmitter {
     set type(value: ScrollType) {
         if (this._type !== value) {
             this._type = value;
+            this.trackOffsetSize = { width: 0, height: 0 };
             this.track.className = 'scroll-track scroll-' + (this._type === ScrollType.horizontal ? 'horizontal' : 'vertical');
             this.updateLocation();
             this.resize();
@@ -3558,7 +4166,7 @@ export class ScrollBar extends EventEmitter {
         });
         this._parent.addEventListener('wheel', (event) => {
             this.scrollBy(this._type === ScrollType.horizontal ? event.deltaX : event.deltaY);
-        });
+        }, { passive: true });
         this._wMove = (e) => {
             this._lastMouse = e;
             if (this.state.dragging) {
@@ -3616,7 +4224,7 @@ export class ScrollBar extends EventEmitter {
             position: 0
         };
         this.maxPosition = 0;
-        this.updatePosition(0);
+        this.updatePosition(0, true);
         this.update();
     }
 
@@ -3781,19 +4389,19 @@ export class ScrollBar extends EventEmitter {
      * @memberof ScrollBar
      * @fires ScrollBar#scroll
      */
-    private updatePosition(p) {
+    private updatePosition(p, force?) {
         if (p < 0 || this._maxDrag < 0)
             p = 0;
         else if (p > this._maxDrag)
             p = this._maxDrag;
-
+        const prv = this.position;
         this.thumb.style[this._type === ScrollType.horizontal ? 'left' : 'top'] = p + 'px';
         this.state.dragPosition = p;
         this._position = p * this._ratio;
         if (this._position < 0)
             this._position = 0;
         this.update();
-        this.emit('scroll', this.position);
+        this.emit('scroll', this.position, prv !== this.position || force);
     }
 
     /**

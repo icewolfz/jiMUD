@@ -13,64 +13,20 @@
     <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
 
     <link id="theme" rel="stylesheet" href="themes/default.css" type="text/css" />
-    <script>
+    <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js"></script>
     <script src="../lib/bootstrap.min.js"></script>
-    <script>
+    <script type="text/javascript">
         //spell-checker:ignore ismap hellip selectall lagmeter repeatnum buttonvisible statusvisible limbsmenu partyhealth combathealth limb armor limbhealth
-        if (window.module) module.module;
+        if (window.module) module = window.module;
 
-        ['repeatnum'].forEach((a) => {
+        ['repeatnum', 'i'].forEach((a) => {
             Object.defineProperty(window, a, {
                 get: function () {
-                    if (!client || !client.variables) return undefined;
-                    return client.variables[a];
-                },
-                set: function (val) {
-                    if (!client) return;
-                    if (!client.variables)
-                        client.variables = {};
-                    client.variables[a] = val;
-                },
-                configurable: true
-            });
-        });
-
-        ['$selectedword', '$selword'].forEach((a) => {
-            Object.defineProperty(window, a, {
-                get: function () {
-                    if (!lastMouse) return '';
-                    return client.display.getWordFromPosition(client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY));
-                },
-                configurable: true
-            });
-        });
-
-        ['$selectedurl', '$selurl'].forEach((a) => {
-            Object.defineProperty(window, a, {
-                get: function () {
-                    if (!lastMouse) return '';
-                    var parent = $(lastMouse.srcElement.parentNode);
-                    if (parent && parent.hasClass('URLLink'))
-                        return parent.title;
-                    else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0)
-                        return parent.data('href');
-                    return '';
-                },
-                configurable: true
-            });
-        });
-
-        ['$selectedline', '$selline'].forEach((a) => {
-            Object.defineProperty(window, a, {
-                get: function () {
-                    if (!lastMouse) return '';
-                    var pos = client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY);
-                    if (pos.y < 0 || pos.y >= client.display.lines.length)
-                        return '';
-                    return client.display.lines[pos.y];
+                    if (!client) return undefined;
+                    return client.repeatnum;
                 },
                 configurable: true
             });
@@ -84,16 +40,11 @@
             configurable: true
         });
 
-        Object.defineProperty(window, 'i', {
+        Object.defineProperty(window, '$character', {
             get: function () {
-                if (!client || !client.variables) return undefined;
-                return client.variables.repeatnum;
-            },
-            set: function (val) {
-                if (!client) return;
-                if (!client.variables)
-                    client.variables = {};
-                client.variables.repeatnum = val;
+                if (_status)
+                    return _status.name || _charName || ipcRenderer.sendSync('get-global', 'characterLogin') || '';
+                return _charName || ipcRenderer.sendSync('get-global', 'characterLogin') || '';
             },
             configurable: true
         });
@@ -101,6 +52,77 @@
         Object.defineProperty(window, '$copied', {
             get: function () {
                 return clipboard.readText('selection') || '';
+            },
+            configurable: true
+        });
+
+        Object.defineProperty(window, '$selword', {
+            get: function () {
+                if (!client) return '';
+                return client._input.vStack['$selword'] || _selword || (lastMouse ? client.display.getWordFromPosition(client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY)) : '');
+            },
+            configurable: true
+        });
+        Object.defineProperty(window, '$selurl', {
+            get: function () {
+                if (!client) return '';
+                let value = client._input.vStack['$selurl'] || _selurl || '';
+                if (value) return value;
+                if (!lastMouse) return '';
+                var parent = $(lastMouse.srcElement.parentNode);
+                if (parent && parent.hasClass('URLLink'))
+                    return parent.title;
+                else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0)
+                    return parent.data('href');
+                return '';
+            },
+            configurable: true
+        });
+        Object.defineProperty(window, '$selline', {
+            get: function () {
+                if (!client) return '';
+                let value = client._input.vStack['$selline'] || _selline || '';
+                if (value) return value;
+                if (!lastMouse) return '';
+                var pos = client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY);
+                if (pos.y < 0 || pos.y >= client.display.lines.length)
+                    return '';
+                return client.display.lines[pos.y];
+            },
+            configurable: true
+        });
+        Object.defineProperty(window, '$selectedword', {
+            get: function () {
+                if (!client) return '';
+                return client._input.vStack['$selectedword'] || _selword || (lastMouse ? client.display.getWordFromPosition(client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY)) : '');
+            },
+            configurable: true
+        });
+        Object.defineProperty(window, '$selectedurl', {
+            get: function () {
+                if (!client) return '';
+                let value = client._input.vStack['$selectedurl'] || _selurl || '';
+                if (value) return value;
+                if (!lastMouse) return '';
+                var parent = $(lastMouse.srcElement.parentNode);
+                if (parent && parent.hasClass('URLLink'))
+                    return parent.title;
+                else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0)
+                    return parent.data('href');
+                return '';
+            },
+            configurable: true
+        });
+        Object.defineProperty(window, '$selectedline', {
+            get: function () {
+                if (!client) return '';
+                let value = client._input.vStack['$selectedline'] || _selline || '';
+                if (value) return value;
+                if (!lastMouse) return '';
+                var pos = client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY);
+                if (pos.y < 0 || pos.y >= client.display.lines.length)
+                    return '';
+                return client.display.lines[pos.y];
             },
             configurable: true
         });
@@ -160,21 +182,20 @@
         const Status = require('./js/status.js').Status;
         const Backup = require('./js/backup.js').Backup;
         const { Settings } = require('./js/settings');
-        const { shell, clipboard, ipcRenderer, remote, webFrame } = require('electron');
-        const { dialog, Menu, MenuItem, nativeImage } = remote;
+        const { shell, clipboard, ipcRenderer, webFrame, nativeImage } = require('electron');
+        const remote = require('@electron/remote');
+        const { Menu, MenuItem } = remote;
         const { parseTemplate, setSelectionRange, isFileSync, decrypt } = require('./js/library.js');
+        const { ProfileSaveType } = require('./js/types.js');
         //    const fs = require('fs');
         const path = require('path');
         const { version } = require('../package.json');
-        var spellchecker;
         var autoConnectID;
         var autoLoginCounter = 0;
         var lastMouse;
         var chatWin;
         var _nextClear = Date.now() + 3600000;
-        var set = Settings.load(remote.getGlobal('settingsFile'));
-        if (set.spellchecking)
-            loadSpellchecker();
+        var set = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
         loadTheme(set.theme);
         delete set;
 
@@ -188,12 +209,16 @@
         var _noCaptureStore = 0;
         var _cLoading = false;
         var _context;
+        var $contextMenu;
         var _selword = '';
         var _selurl = '';
         var _selline = '';
         var _disconnectTimerID;
         var _disconnectTimer = 0;
         var _disconnectCounter = 0;
+        var _charName = 0;
+        var _skipDisconnect = 0;
+        var _watcher = null;
 
         window.onerror = function (msg, url, line, col, error) {
             if (client) {
@@ -224,40 +249,39 @@
             lastMouse = e;
         };
 
-        webFrame.setSpellCheckProvider('en-US', true, {
-            spellCheck: function (text) {
-                if (!spellchecker || !client.options.spellchecking)
-                    return true;
-                return !(spellchecker.isMisspelled(text));
-            }
-        });
-
-        function loadSpellchecker() {
-            try {
-                spellchecker = require('spellchecker');
-            }
-            catch (ex) {
-                if (!client)
-                    setTimeout(() => {
-                        if (!client)
-                            console.error(ex);
-                        else
-                            client.error(ex);
-                    }, 1000);
-            }
-        }
-
         function doLink(url) {
-            if (confirm('Open \'' + url + '\'?') === true)
-                shell.openExternal(url);
+            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                {
+                    type: 'warning',
+                    title: 'Open?',
+                    message: 'Open \'' + url + '\'?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1
+                }) === 0)
+                shell.openExternal(encodeURI(url));
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
         }
 
         // eslint-disable-next-line no-unused-vars
         function doMXPLink(el, url) {
             if (url.startsWith('OoMUD://') || url.startsWith('jiMUD://') || url.startsWith('client://'))
                 doMXPSend(0, el, url.substring(8));
-            else if (confirm('Open \'' + url + '\'?') === true)
-                shell.openExternal(url.replace('&text;', $(el).text()));
+            else if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                {
+                    type: 'warning',
+                    title: 'Open?',
+                    message: 'Open \'' + url + '\'?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1
+                }) === 0)
+                shell.openExternal(encodeURI(url.replace('&text;', $(el).text())));
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
         }
 
         function doMXPSend(e, el, url, pmt, tt) {
@@ -302,6 +326,10 @@
             }
             else
                 client.send(url.replace('&text;', $(el).text()) + extra + '\n', true);
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
         }
 
         function MXPMenuHandler(cmd, pmt) {
@@ -311,6 +339,10 @@
             }
             else
                 client.send(cmd, true);
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
         }
 
         // eslint-disable-next-line no-unused-vars
@@ -321,6 +353,10 @@
 
         function selectAll() {
             client.display.selectAll();
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
         }
 
         function toggleView(view) {
@@ -395,18 +431,19 @@
             }
         }
 
-        function loadTheme(theme) {
+        function loadTheme(theme, force) {
             theme = parseTemplate(theme) + '.css';
             if (!isFileSync(theme))
                 theme = parseTemplate(path.join('{themes}', 'default')) + '.css';
             var el = document.getElementById('theme');
-            if (el.getAttribute('href') !== theme)
+            if (el.getAttribute('href') !== theme || force)
                 el.setAttribute('href', theme);
             if (client && client.display)
                 client.display.updateLayout();
         }
 
-        function updateInterface() {
+        async function updateInterface() {
+            if(!client || !client.options) return;
             loadTheme(client.options.theme);
             $('#display').css('left', '');
             $('#display-border').css('left', '');
@@ -457,11 +494,27 @@
             $('#mail').css('display', client.options.buttons.mail ? '' : 'none');
             $('#compose').css('display', client.options.buttons.compose ? '' : 'none');
             $('#codeEditor').css('display', client.options.buttons.codeEditor ? '' : 'none');
-            _status.updateInterface();
+            if (client.enableParsing)
+                $('#btnParsing').addClass('on');
+            else
+                $('#btnParsing').removeClass('on');
+            if (client.enableTriggers)
+                $('#btnTriggers').addClass('on');
+            else
+                $('#btnTriggers').removeClass('on');
             buildButtons();
+            /*
             client.display.update();
             client.display.updateScrollbars();
             client.UpdateWindow();
+            */
+            setTimeout(() => {
+                _status.resize();
+                _status.updateInterface();
+                client.display.update();
+                client.display.updateScrollbars();
+                client.UpdateWindow();
+            }, 1);
             updateMenu();
         }
 
@@ -477,9 +530,15 @@
                 else {
                     menu = {};
                     menu.label = context[x].caption;
+                    if (context[x].parse)
+                        menu.caption = context[x].caption;
                     menu.item = context[x];
                     menu.click = (item) => {
                         executeContext(item.item);
+                        setTimeout(() => {
+                            if (client.options.CommandonClick)
+                                client.commandInput[0].focus();
+                        }, 0);
                     };
                     var sub = buildMenu(context[x].name || x, context);
                     if (sub.length > 0)
@@ -521,8 +580,9 @@
               return menuItems;
             }
         */
-        function buildContextMenu() {
+        async function buildContextMenu() {
             _context = [];
+            $contextMenu = _context;
             var context = client.contexts;
             if (context.length > 0) {
                 var xl = context.length;
@@ -535,9 +595,15 @@
                     else {
                         menu = {};
                         menu.label = context[x].caption;
+                        if (context[x].parse)
+                            menu.caption = context[x].caption;
                         menu.item = context[x];
                         menu.click = (item) => {
                             executeContext(item.item);
+                            setTimeout(() => {
+                                if (client.options.CommandonClick)
+                                    client.commandInput[0].focus();
+                            }, 0);
                         };
                         var sub = buildMenu(context[x].name || x, context);
                         //if (context[x].items)
@@ -553,13 +619,63 @@
             }
         }
 
+        async function updateButtonBar() {
+            const $bar = document.getElementById('buttonbar');
+            const $scrollUp = document.getElementById('bb-scroll-up');
+            const $scrollDown = document.getElementById('bb-scroll-down');
+            if ($bar.scrollHeight > $bar.clientHeight) {
+                $bar.classList.add('scroll');
+                $scrollUp.classList.remove('hidden');
+                $scrollDown.classList.remove('hidden');
+                if ($bar.scrollTop === 0) {
+                    $scrollUp.classList.add('disabled');
+                    $scrollUp.classList.add('hidden');
+                }
+                else {
+                    $scrollUp.classList.remove('disabled');
+                    $scrollUp.classList.remove('hidden');
+                }
+                if ($bar.scrollTop >= $bar.scrollHeight - $bar.clientHeight) {
+                    $scrollDown.classList.add('disabled');
+                    $scrollDown.classList.add('hidden');
+                }
+                else {
+                    $scrollDown.classList.remove('disabled');
+                    $scrollDown.classList.remove('hidden');
+                }
+            }
+            else {
+                $bar.classList.remove('scroll');
+                $scrollUp.classList.add('hidden');
+                $scrollDown.classList.add('hidden');
+            }
+        }
+
+        var _buttonTimer;
+        function scrollButtonBar(amt) {
+            _buttonTimer = setTimeout(() => {
+                const $bar = document.getElementById('buttonbar');
+                var _scroll = $bar.scrollTop + amt;
+                if (_scroll < 0)
+                    $bar.scrollTop = 0;
+                else if (_scroll > $bar.scrollHeight - $bar.clientHeight)
+                    $bar.scrollTop = $bar.scrollHeight - $bar.clientHeight;
+                else {
+                    $bar.scrollTop = _scroll;
+                    scrollButtonBar(amt);
+                }
+                doUpdate(128);
+            }, 100);
+        }
+
         function init() {
             $('.dropdown').on('show.bs.dropdown', () => {
                 $('.command-history ul').css('max-height', $('#display').outerHeight() + 'px');
+                $('.command-history ul').css('max-width', ($('#command').outerWidth() - 100) + 'px');
                 var lst = '';
                 var l = client.commandHistory.length;
                 for (var i = 0; i < l; i++) {
-                    lst += `<li><a href="#" data-index="${i}" onclick="var cmd = client.commandHistory[parseInt(this.dataset.index, 10)];client.AddCommandToHistory(cmd);client.sendCommand(cmd);">${client.commandHistory[i]}</a></li>`;
+                    lst += `<li><a class="truncate" href="#" data-index="${i}" onclick="var cmd = client.commandHistory[parseInt(this.dataset.index, 10)];client.AddCommandToHistory(cmd,);client.sendCommand(cmd, null, client.options.allowCommentsFromCommand);" title="${client.commandHistory[i]}">${client.commandHistory[i]}</a></li>`;
                 }
                 if (l === 0)
                     lst = '<li><a href="#">No history</a></li><li role="separator" class="divider"></li>';
@@ -569,12 +685,17 @@
                 $('.command-history ul').html(lst);
             });
             remote.getCurrentWindow().on('restore', () => {
-                client.display.updateScrollbars();
-                client.display.updateView();
+                doUpdate(256);
             });
             remote.getCurrentWindow().on('maximize', () => {
-                client.display.updateScrollbars();
-                client.display.updateView();
+                doUpdate(256);
+            });
+            remote.getCurrentWindow().on('unmaximize', () => {
+                doUpdate(256);
+            });
+
+            remote.getCurrentWindow().on('resized', () => {
+                doUpdate(384);
             });
 
             ipcRenderer.send('set-overlay', 0);
@@ -592,8 +713,48 @@
                 $('#commandinput').focus();
             });
             window.addEventListener('resize', function () {
-                client.UpdateWindow();
+                //client.UpdateWindow();
+                doUpdate(384);
             });
+            document.getElementById('buttonbar').addEventListener('wheel', (e) => {
+                if (e.deltaY >= 0)
+                    document.getElementById('buttonbar').scrollTop += document.getElementById('buttonbar').clientWidth;
+                else
+                    document.getElementById('buttonbar').scrollTop -= document.getElementById('buttonbar').clientWidth;
+                doUpdate(128);
+            }, { passive: true });
+
+            document.getElementById('bb-scroll-up').onmousedown = (e) => {
+                if (e.button !== 0)
+                    return;
+                if (document.getElementById('buttonbar').scrollTop > 0)
+                    scrollButtonBar(-document.getElementById('buttonbar').clientWidth);
+                e.preventDefault();
+                e.cancelBubble = true;
+            };
+            document.getElementById('bb-scroll-up').onmouseup = () => {
+                clearTimeout(_buttonTimer);
+            };
+            document.getElementById('bb-scroll-up').onmouseleave = () => {
+                clearTimeout(_buttonTimer);
+            };
+
+            document.getElementById('bb-scroll-down').onmousedown = (e) => {
+                if (e.button !== 0)
+                    return;
+                const $bar = document.getElementById('buttonbar');
+                if ($bar.scrollTop < $bar.scrollHeight - $bar.clientHeight)
+                    scrollButtonBar(32);
+                e.preventDefault();
+                e.cancelBubble = true;
+            };
+            document.getElementById('bb-scroll-down').onmouseup = () => {
+                clearTimeout(_buttonTimer);
+            };
+            document.getElementById('bb-scroll-down').onmouseleave = () => {
+                clearTimeout(_buttonTimer);
+            };
+
             _logger = new Worker('./js/logging.js');
             _logger.onmessage = (e) => {
                 switch (e.data.event) {
@@ -635,18 +796,22 @@
                 else
                     client.error(e);
             };
-            client = new Client($('#display'), $('#commandinput'), remote.getGlobal('settingsFile'));
+            client = new Client($('#display'), $('#commandinput'), ipcRenderer.sendSync('get-global', 'settingsFile'));
 
-            client.sendChat = (text) => ipcRenderer.send('chat', text);
+            client.sendChat = updateChat;
 
-            window.$selectedurl = '';
-            window.$selectedline = '';
+            //window.$selectedurl = '';
+            //window.$selectedline = '';
 
-            if (remote.getGlobal('profiles') && remote.getGlobal('profiles').length > 0)
-                client.enabledProfiles = remote.getGlobal('profiles');
+            if (ipcRenderer.sendSync('get-global', 'profiles') && ipcRenderer.sendSync('get-global', 'profiles').length > 0)
+                client.enabledProfiles = ipcRenderer.sendSync('get-global', 'profiles');
             client.display.enableBell = false;
             client.display.on('bell', () => {
                 shell.beep();
+            });
+
+            client.display.on('resize', () => {
+                doUpdate(256);
             });
 
             client.display.on('selection-done', () => {
@@ -669,37 +834,161 @@
                 var c = new Menu();
                 if (!_context)
                     buildContextMenu();
+                var iUrl = 0;
+                if (parent && (parent.hasClass('URLLink') || (parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0)))
+                    iUrl = 1;
+                else if (parent && parent.hasClass('MXPLink'))
+                    iUrl = 2;
+                client.raise('context-pre-build', [iUrl]);
                 _context.forEach((item) => {
+                    if (item.caption && item.caption.length)
+                        item.label = client.parseInline(item.caption);
                     c.append(item);
                 });
 
                 if (client.defaultContext) {
                     if (c.items.length > 0)
                         c.append(new MenuItem({ type: 'separator' }));
-
+                    if (e.srcElement.nodeName === 'IMG') {
+                        c.append(new MenuItem({
+                            label: 'Save image as...', click: () => {
+                                ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
+                                    title: 'Save image as...',
+                                    defaultPath: path.basename(e.srcElement.src),
+                                    filters: [
+                                        { name: 'Images (*.png)', extensions: ['png'] },
+                                        { name: 'All files (*.*)', extensions: ['*'] },
+                                    ]
+                                }).then(results => {
+                                    if (results.filePath === undefined || results.filePath.length === 0) {
+                                        return;
+                                    }
+                                    var canvas = document.createElement("canvas");
+                                    context = canvas.getContext('2d');
+                                    var base_image = new Image();
+                                    base_image.src = e.srcElement.src;
+                                    base_image.onload = function () {
+                                        canvas.width = base_image.width;
+                                        canvas.height = base_image.height;
+                                        context.globalCompositeOperation = "screen";
+                                        context.clearRect(0, 0, canvas.width, canvas.height);
+                                        context.drawImage(base_image, 0, 0);
+                                        require('fs').writeFile(results.filePath, nativeImage.createFromDataURL(canvas.toDataURL('image/png')).toPNG(), err => {
+                                            if (err)
+                                                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                                                    type: 'error',
+                                                    title: 'Error generating',
+                                                    message: 'Could not save image'
+                                                });
+                                            setTimeout(() => {
+                                                if (client.options.CommandonClick)
+                                                    client.commandInput[0].focus();
+                                            }, 0);
+                                        });
+                                    };
+                                });
+                            }
+                        }));
+                        c.append(new MenuItem({
+                            label: 'Copy image', click: () => {
+                                var canvas = document.createElement("canvas");
+                                context = canvas.getContext('2d');
+                                var base_image = new Image();
+                                base_image.src = e.srcElement.src;
+                                base_image.onload = function () {
+                                    canvas.width = base_image.width;
+                                    canvas.height = base_image.height;
+                                    context.globalCompositeOperation = "screen";
+                                    context.clearRect(0, 0, canvas.width, canvas.height);
+                                    context.drawImage(base_image, 0, 0);
+                                    clipboard.writeImage(nativeImage.createFromDataURL(canvas.toDataURL()));
+                                    setTimeout(() => {
+                                        if (client.options.CommandonClick)
+                                            client.commandInput[0].focus();
+                                    }, 0);
+                                };
+                            }
+                        }));
+                        c.append(new MenuItem({
+                            label: 'Copy image link', click: () => {
+                                window.writeClipboard(e.srcElement.src);
+                                setTimeout(() => {
+                                    if (client.options.CommandonClick)
+                                        client.commandInput[0].focus();
+                                }, 0);
+                            }
+                        }));
+                        c.append(new MenuItem({ type: 'separator' }));
+                    }
                     if (parent && parent.hasClass('URLLink')) {
                         c.append(new MenuItem({ label: 'Open url', click: () => { doLink(parent.attr('title')); } }));
-                        c.append(new MenuItem({ label: 'Copy url', click: () => { window.writeClipboard(parent.attr('title')); } }));
+                        c.append(new MenuItem({
+                            label: 'Copy url', click: () => {
+                                window.writeClipboard(encodeURI(parent.attr('title'))); setTimeout(() => {
+                                    if (client.options.CommandonClick)
+                                        client.commandInput[0].focus();
+                                }, 0);
+                            }
+                        }));
                         if (parent.text() !== parent.attr('title'))
-                            c.append(new MenuItem({ label: 'Copy url text', click: () => { window.writeClipboard(parent.text()); } }));
+                            c.append(new MenuItem({
+                                label: 'Copy url text', click: () => {
+                                    window.writeClipboard(parent.text()); setTimeout(() => {
+                                        if (client.options.CommandonClick)
+                                            client.commandInput[0].focus();
+                                    }, 0);
+                                }
+                            }));
                         c.append(new MenuItem({ type: 'separator' }));
+                        iUrl = 1;
                     }
                     else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0) {
                         c.append(new MenuItem({ label: 'Open url', click: () => { parent.trigger('click'); } }));
-                        c.append(new MenuItem({ label: 'Copy url', click: () => { window.writeClipboard(parent.data('href')); } }));
+                        c.append(new MenuItem({
+                            label: 'Copy url', click: () => {
+                                window.writeClipboard(encodeURI(parent.data('href'))); setTimeout(() => {
+                                    if (client.options.CommandonClick)
+                                        client.commandInput[0].focus();
+                                }, 0);
+                            }
+                        }));
                         if (parent.text() !== parent.attr('href'))
-                            c.append(new MenuItem({ label: 'Copy url text', click: () => { window.writeClipboard(parent.text()); } }));
+                            c.append(new MenuItem({
+                                label: 'Copy url text', click: () => {
+                                    window.writeClipboard(parent.text()); setTimeout(() => {
+                                        if (client.options.CommandonClick)
+                                            client.commandInput[0].focus();
+                                    }, 0);
+                                }
+                            }));
                         c.append(new MenuItem({ type: 'separator' }));
+                        iUrl = 1;
                     }
                     else if (parent && parent.hasClass('MXPLink')) {
                         c.append(new MenuItem({ label: 'Open mxp url', click: () => { parent.trigger('click'); } }));
-                        c.append(new MenuItem({ label: 'Copy mxp url text', click: () => { window.writeClipboard(parent.text()); } }));
+                        c.append(new MenuItem({
+                            label: 'Copy mxp url text', click: () => {
+                                window.writeClipboard(parent.text()); setTimeout(() => {
+                                    if (client.options.CommandonClick)
+                                        client.commandInput[0].focus();
+                                }, 0);
+                            }
+                        }));
                         c.append(new MenuItem({ type: 'separator' }));
+                        iUrl = 2;
                     }
 
                     if (client.display.hasSelection) {
                         c.append(new MenuItem({ role: 'copy' }));
-                        c.append(new MenuItem({ label: 'Copy as HTML', accelerator: 'CmdOrCtrl+Alt+C', click: () => { copyAsHTML(); } }));
+                        c.append(new MenuItem({
+                            label: 'Copy as HTML', accelerator: 'CmdOrCtrl+Alt+C', click: () => {
+                                copyAsHTML();
+                                setTimeout(() => {
+                                    if (client.options.CommandonClick)
+                                        client.commandInput[0].focus();
+                                }, 0);
+                            }
+                        }));
                     }
                     if (window.$copied.length) {
                         c.append(new MenuItem({ label: 'Paste', click: paste, accelerator: 'CmdOrCtrl+V' }));
@@ -710,19 +999,29 @@
                     c.append(new MenuItem({
                         label: 'Clear', click: () => {
                             client.clear();
+                            setTimeout(() => {
+                                if (client.options.CommandonClick)
+                                    client.commandInput[0].focus();
+                            }, 0);
                         }
                     }));
-                    if (client.options.enableDebug || remote.getGlobal('debug')) {
+                    if (client.options.enableDebug || ipcRenderer.sendSync('get-global', 'debug')) {
                         c.append(new MenuItem({ type: 'separator' }));
                         c.append(new MenuItem({
                             label: 'Inspect', click: () => {
-                                remote.getCurrentWindow().webContents.inspectElement(e.pageX, e.pageY);
+                                ipcRenderer.send('inspect', e.pageX, e.pageY);
                             }
                         }));
                     }
                 }
-                if (c.items.length > 0)
-                    c.popup({ window: remote.getCurrentWindow() });
+                if (c.items.length > 0) {
+                    client.raise('context-opened', [iUrl]);
+                    c.popup({
+                        window: remote.getCurrentWindow(), callback: () => {
+                            client.raise('context-closed', [iUrl]);
+                        }
+                    });
+                }
             });
 
             ['cut', 'copy'].forEach(function (event) {
@@ -734,6 +1033,10 @@
                         e.preventDefault();
                         e.stopPropagation();
                     }
+                    setTimeout(() => {
+                        if (client.options.CommandonClick)
+                            client.commandInput[0].focus();
+                    }, 0);
                 });
             });
             window.client = client;
@@ -763,18 +1066,26 @@
 
             client.version = version;
             client.host = 'www.shadowmud.com';
-            client.port = (client.options.dev || remote.getGlobal('dev')) ? 1035 : 1030;
+            client.port = (client.options.dev || ipcRenderer.sendSync('get-global', 'dev')) ? 1035 : 1030;
             client.telnet.GMCPSupports.push('Room 1');
             client.telnet.GMCPSupports.push('IED 1');
+            client.telnet.GMCPSupports.push('Client.Media 1');
             //client.telnet.GMCPSupports.push("Post 1");
             //client.telnet.GMCPSupports.push('Comm 1');
             client.on('initialized', () => {
                 autoConnect();
             });
-            client.on('profile-updated', (profile) => {
-                ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: client.enabledProfiles.indexOf(profile) != -1 });
-                doUpdate(24);
-                ipcRenderer.send('profile-updated', profile);
+            client.on('profile-updated', (profile, noChanges, type) => {
+                if (!noChanges) {
+                    ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: client.enabledProfiles.indexOf(profile) != -1 });
+                    //only update if buttons changed
+                    if (!type || (type & ProfileSaveType.Button) === ProfileSaveType.Button)
+                        doUpdate(8);
+                    //update if context or variables have changed
+                    if (!type || (type & ProfileSaveType.Context) === ProfileSaveType.Context || (type & ProfileSaveType.Variable) === ProfileSaveType.Variable)
+                        doUpdate(16);
+                }
+                ipcRenderer.send('profile-updated', profile, noChanges, type);
             });
 
             client.on('profile-toggled', (profile, enabled) => {
@@ -783,33 +1094,50 @@
                 ipcRenderer.send('profile-toggled', profile, enabled);
             });
 
-            client.on('profiles-updated', () => {
+            client.on('profiles-updated', (noChanges) => {
+                //nothing important changed so ignore
+                if (noChanges) return;
                 doUpdate(76);
             });
+
+            client.on('profile-loaded', (profile, noChanges) => {
+                //nothing important changed so ignore
+                if (noChanges) return;
+                doUpdate(76);
+            });
+
+            client.on('profile-removed', profile => {
+                doUpdate(76);
+            });
+
             client.on('command-history-changed', history => ipcRenderer.send('command-history', history));
             client.on('add-line', (data) => {
-                var res, re, c, cl;
+                var res, c, cl;
                 //no more then 3 tries
-                if (autoLoginCounter < 3 && client.options.autoLogin && remote.getGlobal('character') && remote.getGlobal('character').length > 0) {
+                if (autoLoginCounter < 3 && client.options.autoLogin && _charName && _charName.length > 0) {
                     //testchar doesn't exist here. To create a new character, please type <new> at the name prompt.
-                    if (data.line === remote.getGlobal('character') + ' doesn\'t exist here. To create a new character, please type <new> at the name prompt.')
+                    if (data.line === _charName + ' doesn\'t exist here. To create a new character, please type <new> at the name prompt.')
                         autoLoginCounter = 4;
                     if (data.fragment && data.line === 'Enter your character\'s name (or \'new\' for a new character): ') {
-                        setTimeout(() => client.sendCommand(remote.getGlobal('characterLogin')), 100);
+                        setTimeout(() => client.sendCommand(_charName), 100);
                         autoLoginCounter++;
                     }
                     else if (data.fragment && data.line === 'Password: ') {
-                        var pass = remote.getGlobal('characterPass');
+                        var pass = ipcRenderer.sendSync('get-global', 'characterPass');
                         if (pass && pass.length > 0) {
                             pass = pass.split(':');
                             pass = decrypt(pass[0], pass[1], pass[2]);
                             client.send(pass + '\n');
                         }
+                        //sent password skip future auto login checks
+                        autoLoginCounter = 4;
                     }
                 }
+                if (client.options.autoTakeoverLogin && data.line === 'Do you want to take over this login? (y/n)' && data.fragment)
+                    client.send('y\n');
                 /*
                 if (_captureComm) {
-                  ipcRenderer.send('chat', data);
+                  updateChat(data);
                   data.gagged = client.options.chat.gag;
                   return;
                 }
@@ -842,10 +1170,12 @@
                     _noCapture = true;
                     return;
                 }
-                if (_noCapture && (data.line.match(/^Current name: .*$/) ||
-                    data.line.match(/^Enter up to 2 nouns, [#] to remove, 'f' to finish, 'q' to quit:.*$/) ||
-                    data.line.match(/^Enter up to 3 adjectives, 'f' to finish, 'q' to quit:.*$/) ||
-                    data.line.match(/^Enter selection .*$/)
+
+                if (_noCapture && (
+                    data.line.indexOf('Current name: ') === 0 ||
+                    data.line.indexOf('Enter up to 2 nouns, [#] to remove, \'f\' to finish, \'q\' to quit:') === 0 ||
+                    data.line.indexOf('Enter up to 3 adjectives, \'f\' to finish, \'q\' to quit:') === 0 ||
+                    data.line.indexOf('Enter selection ') === 0
                 )) {
                     capture = 0;
                     _noCapture = false;
@@ -872,42 +1202,48 @@
 
                 if (_noCapture || _noCaptureStore > 0) return;
 
-                if (!chatWin || chatWin.isDestroyed()) {
-                    chatWin = remote.BrowserWindow.getAllWindows().filter(w => w.getTitle() === 'Chat');
-                    chatWin = chatWin.length !== 0 ? chatWin[0] : null;
+                if (client.options.chat.CaptureOnlyOpen) {
+                    if (!chatWin || chatWin.isDestroyed()) {
+                        chatWin = remote.BrowserWindow.getAllWindows().filter(w => w.getTitle() === 'Chat');
+                        chatWin = chatWin.length !== 0 ? chatWin[0] : null;
+                    }
+                    if (!chatWin || !chatWin.isVisible() || chatWin.isMinimized())
+                        return;
                 }
-                var shown = chatWin ? chatWin.isVisible() && !chatWin.isMinimized() : false;
-                if (!shown && client.options.chat.CaptureOnlyOpen) return;
 
                 //capture indented text
                 if (capture > 0 && data.line.startsWith('    ')) {
-                    ipcRenderer.send('chat', data);
+                    updateChat(data);
                     data.gagged = client.options.chat.gag;
                     return;
                 }
                 //search capture review blocks
                 for (c = 0, cl = _captureReviews.length; c < cl; c++) {
-                    re = new RegExp(_captureReviews[c], 'g');
-                    res = re.exec(data.line);
+                    //re = new RegExp(_captureReviews[c], 'g');
+                    res = _captureReviews[c].exec(data.line);
                     if (!res || res.length === 0)
                         continue;
                     captureReview = 1;
-                    ipcRenderer.send('chat', data);
+                    updateChat(data);
                     data.gagged = client.options.chat.gag;
                     return;
                 }
                 //if in a review capture until end review
                 if (captureReview > 0) {
-                    ipcRenderer.send('chat', data);
+                    updateChat(data);
                     data.gagged = client.options.chat.gag;
+                    if (data.line == '-=-=- End Review -=-=-')
+                        captureReview = -1;
+                    /*
                     res = /^-=-=- End Review -=-=-$/.exec(data.line);
                     if (res && res.length > 0)
                         captureReview = -1;
+                    */
                     return;
                 }
                 //review requires 1 extra capture to get the current date/time
                 if (captureReview === -1) {
-                    ipcRenderer.send('chat', data);
+                    updateChat(data);
                     data.gagged = client.options.chat.gag;
                     captureReview = 0;
                     return;
@@ -915,14 +1251,14 @@
 
                 //capture lines based on matching regex's
                 for (c = 0, cl = _captures.length; c < cl; c++) {
-                    re = new RegExp(_captures[c], 'g');
-                    res = re.exec(data.line);
+                    //re = new RegExp(_captures[c], 'g');
+                    res = _captures[c].exec(data.line);
                     if (!res || res.length === 0)
                         continue;
                     if (capture > 0)
                         capture--;
                     capture++;
-                    ipcRenderer.send('chat', data);
+                    updateChat(data);
                     data.gagged = client.options.chat.gag;
                     return;
                 }
@@ -933,10 +1269,10 @@
 
             /*
             client.on('MXP-tag-reply', (e) => {
-                if (client.options.autoLogin && e.tag === 'USER' && remote.getGlobal('character') && remote.getGlobal('character').length > 0)
-                    client.send(remote.getGlobal('character') + '\r\n');
+                if (client.options.autoLogin && e.tag === 'USER' && _charName && _charName.length > 0)
+                    client.send(_charName + '\r\n');
                 else if (client.options.autoLogin && e.tag === 'PASSWORD') {
-                    var pass = remote.getGlobal('characterPass');
+                    var pass = ipcRenderer.sendSync('get-global', 'characterPass');
                     if (pass && pass.length > 0) {
                     pass = pass.split(':');
                     pass = decrypt(pass[0], pass[1], pass[2]);
@@ -956,26 +1292,18 @@
 
             client.on('hide', () => {
                 if (client.options.hideOnMinimize)
-                    remote.getCurrentWindow().hide();
+                    ipcRenderer.invoke('window', 'hide');
                 else
-                    remote.getCurrentWindow().minimize();
+                    ipcRenderer.invoke('window', 'minimize');
             });
 
             client.on('toggle', () => {
-                var win = remote.getCurrentWindow();
-                if (win.isVisible()) {
-                    if (client.options.hideOnMinimize)
-                        win.hide();
-                    else
-                        win.minimize();
-                }
-                else
-                    ipcRenderer.send('show-window');
+                ipcRenderer.invoke('window', 'toggle', 'main');
             });
 
             client.on('notify', (title, message, options) => {
                 options = options || { silent: true };
-                if (!options.hasOwnProperty('silent'))
+                if (!Object.prototype.hasOwnProperty.call(options, 'silent'))
                     options.silent = true;
                 if (options.icon)
                     options.icon = parseTemplate(options.icon);
@@ -1004,10 +1332,10 @@
             client.on('options-loaded', () => {
                 _backup.loadSelection = client.options.backupLoad;
                 _backup.saveSelection = client.options.backupSave;
+                _status.spitterDistance = client.options.statusWidth;
                 doUpdate(3);
-                if (client.options.spellchecking)
-                    loadSpellchecker();
-                client.port = (client.options.dev || remote.getGlobal('dev')) ? 1035 : 1030;
+                client.port = (client.options.dev || ipcRenderer.sendSync('get-global', 'dev')) ? 1035 : 1030;
+                createWatcher();
                 if (_logger)
                     _logger.postMessage({
                         action: 'options', args: {
@@ -1044,6 +1372,7 @@
             });
 
             client.on('connecting', () => {
+                autoLoginCounter = 0;
                 if (client.options.buttons.connect) {
                     $('#connect').css('display', 'none');
                     $('#disconnect').css('display', '');
@@ -1076,6 +1405,7 @@
                 ipcRenderer.send('closed');
                 _logger.postMessage({ action: 'connected', args: client.connected });
                 _logger.postMessage({ action: 'stop' });
+                if (_skipDisconnect) return;
                 switch (client.options.onDisconnect) {
                     case 1: //reconnect
                         autoConnect();
@@ -1090,6 +1420,8 @@
                             _disconnectTimer = 10;
                         else if (_disconnectCounter === 10)
                             _disconnectTimer = 30;
+                        else if (client.options.maxReconnectDelay > 0 && _disconnectCounter >= client.options.maxReconnectDelay)
+                            _disconnectTimer = client.options.maxReconnectDelay;
                         else
                             _disconnectTimer = _disconnectCounter * 2;
                         _disconnectCounter = _disconnectTimer;
@@ -1212,10 +1544,10 @@
                 ipcRenderer.send('profile-item-added', type, profile, item);
             });
 
-            client.on('item-updated', (type, profile, item) => {
+            client.on('item-updated', (type, profile, idx, item) => {
                 if (type === 'button')
                     doUpdate(8);
-                ipcRenderer.send('profile-item-updated', type, profile, item);
+                ipcRenderer.send('profile-item-updated', type, profile, idx, item);
             });
 
             client.on('item-removed', (type, profile, idx) => {
@@ -1225,10 +1557,66 @@
             });
 
             client.on('options-saved', () => {
+                if (client.enableParsing)
+                    $('#btnParsing').addClass('on');
+                else
+                    $('#btnParsing').removeClass('on');
+                if (client.enableTriggers)
+                    $('#btnTriggers').addClass('on');
+                else
+                    $('#btnTriggers').removeClass('on');
                 ipcRenderer.send('options-changed');
             });
 
-            _backup = new Backup(client, remote.getGlobal('mapFile'));
+            client.on('window', (window, args) => {
+                switch (window) {
+                    case 'mapper':
+                    case 'editor':
+                    case 'profiles':
+                    case 'chat':
+                    case 'about':
+                    case 'code-editor':
+                        ipcRenderer.send('show-window', window);
+                        break;
+                    case 'profiles-manager':
+                    case 'profile-manager':
+                    case 'manager':
+                        ipcRenderer.send('show-window', 'profiles');
+                        break;
+                    case 'prefs':
+                    case 'options':
+                    case 'preferences':
+                        ipcRenderer.send('show-window', 'prefs');
+                        break;
+                    case 'help':
+                        showHelp();
+                        break;
+                    case 'smhelp':
+                        showSMHelp();
+                        break;
+                    case 'immortals':
+                        showImmortalTools();
+                        break;
+                    case 'history':
+                    case 'command-history':
+                        showCommandHistory()
+                        break;
+                    case 'log-viewer':
+                    case 'logs':
+                        showLogViewer();
+                        break;
+                    case 'skills':
+                        showSkills();
+                        break;
+                    case 'who':
+                        showWho();
+                        break;
+                    default:
+                        throw new Error('Invalid window name must be: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills');
+                }
+            });
+
+            _backup = new Backup(client, ipcRenderer.sendSync('get-global', 'mapFile'));
             _backup.loadSelection = client.options.backupLoad;
             _backup.saveSelection = client.options.backupSave;
 
@@ -1246,11 +1634,14 @@
                     $('#Progress')[0].close();
                 ipcRenderer.send('set-progress', { value: -1 });
                 client.error(err);
-                dialog.showMessageBox(remote.getCurrentWindow(), {
+                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                     type: 'error',
                     title: 'Import error',
                     message: err || 'Error importing or exporting data.'
                 });
+                setTimeout(() => {
+                    ipcRenderer.invoke('window', 'focus');
+                }, 500);
                 $('#commandinput').focus();
             });
 
@@ -1258,11 +1649,14 @@
                 if ($('#Progress')[0].open)
                     $('#Progress')[0].close();
                 ipcRenderer.send('set-progress', { value: -1 });
-                dialog.showMessageBox(remote.getCurrentWindow(), {
+                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                     type: 'error',
                     title: 'Aborted',
                     message: err || 'Aborted importing or exporting data.'
                 });
+                setTimeout(() => {
+                    ipcRenderer.invoke('window', 'focus');
+                }, 500);
                 $('#commandinput').focus();
             });
 
@@ -1270,6 +1664,9 @@
                 if ($('#Progress')[0].open)
                     $('#Progress')[0].close();
                 $('#commandinput').focus();
+                setTimeout(() => {
+                    ipcRenderer.invoke('window', 'focus');
+                }, 500);
                 ipcRenderer.send('set-progress', { value: -1 });
             });
 
@@ -1299,6 +1696,7 @@
             });
 
             _status = new Status(client);
+            _status.spitterDistance = client.options.statusWidth;
             _status.on('display-changed', () => {
                 if (_status.ac) {
                     $('#health').removeClass('on');
@@ -1315,6 +1713,11 @@
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbarmor'], checked: client.options.showArmor });
                 }
             });
+            _status.on('split-moved', value => {
+                if (value === client.options.statusWidth) return;
+                client.options.statusWidth = value;
+                doUpdate(32 | 256);
+            });
             _status.on('leave combat', () => {
                 if (_nextClear <= Date.now()) {
                     doUpdate(64);
@@ -1322,16 +1725,25 @@
                     _nextClear = Date.now() + 3600000;
                 }
             });
+            _status.on('skill updated', (skill, data) => {
+                ipcRenderer.send('skill-updated', skill, data);
+            });
+            _status.on('skill init', (skill, data) => {
+                ipcRenderer.send('skills-reset');
+            });
+
             _status.ac = client.options.showArmor;
             _status.on('set-title', (title) => {
+                //TODO Add setting to control empty/defaults
                 if (client.options.autoCreateCharacter)
-                    ipcRenderer.send('change-char', title);
+                    ipcRenderer.send('change-char', title, true);
                 _logger.postMessage({ action: 'name', args: title });
                 ipcRenderer.send('set-title', title);
             });
-            if (remote.getGlobal('character') && remote.getGlobal('character').length > 0) {
-                _logger.postMessage({ action: 'name', args: remote.getGlobal('character') });
-                $('#character-name').text(remote.getGlobal('character'));
+            _charName = ipcRenderer.sendSync('get-global', 'characterLogin');
+            if (_charName && _charName.length > 0) {
+                _logger.postMessage({ action: 'name', args: _charName });
+                $('#character-name').text(_charName);
             }
             updateInterface();
             doUpdate(7);
@@ -1355,25 +1767,14 @@
                 var choice, count = 0;
                 var windows;
                 var current;
+                if (ipcRenderer.sendSync('get-global', 'updating'))
+                    closeWindow = true;
                 if (!closeWindow && client.options.askonclose && client.connected) {
                     evt.returnValue = false;
-
                     setTimeout(() => {
                         if (client.options.askonchildren) {
-                            windows = remote.BrowserWindow.getAllWindows();
-                            current = remote.getCurrentWindow();
-                            for (var w = 0, wl = windows.length; w < wl; w++) {
-                                if (windows[w] === current || !windows[w].isVisible())
-                                    continue;
-                                if (!windows[w].getTitle().startsWith('Code Editor'))
-                                    continue;
-                                if (windows[w].getParentWindow() !== current)
-                                    continue;
-                                count++;
-                            }
-                            if (count > 0) {
-                                choice = dialog.showMessageBox(
-                                    remote.getCurrentWindow(),
+                            if (ipcRenderer.sendSync('window-info', 'child-open', 'Code Editor')) {
+                                choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                                     {
                                         type: 'warning',
                                         title: 'Code editor open',
@@ -1391,8 +1792,7 @@
                                 }
                             }
                         }
-                        choice = dialog.showMessageBox(
-                            remote.getCurrentWindow(),
+                        choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                             {
                                 type: 'warning',
                                 title: 'Connected',
@@ -1406,7 +1806,9 @@
                             client.options.askonclose = false;
                             client.saveOptions();
                             closeWindow = true;
-                            remote.getCurrentWindow().close();
+                            clearWatcher();
+                            ipcRenderer.invoke('window', 'closeWindows');
+                            ipcRenderer.invoke('window', 'close');
                             return;
                         }
                         if (choice !== 0) {
@@ -1416,29 +1818,17 @@
                         client.raise('closed');
                         _logger.postMessage({ action: 'flush' });
                         closeWindow = true;
-                        remote.getCurrentWindow().close();
+                        clearWatcher();
+                        ipcRenderer.invoke('window', 'closeWindows');
+                        ipcRenderer.invoke('window', 'close');
                     });
                     return;
                 }
                 else if (!closeWindow && client.options.askonchildren) {
                     evt.returnValue = false;
                     setTimeout(() => {
-                        windows = remote.BrowserWindow.getAllWindows();
-                        current = remote.getCurrentWindow();
-                        for (var w = 0, wl = windows.length; w < wl; w++) {
-                            if (windows[w] === current || !windows[w].isVisible())
-                                continue;
-                            if (!windows[w].getTitle().startsWith('Code Editor')) {
-                                windows[w].close();
-                                continue;
-                            }
-                            if (windows[w].getParentWindow() !== current)
-                                continue;
-                            count++;
-                        }
-                        if (count > 0) {
-                            choice = dialog.showMessageBox(
-                                remote.getCurrentWindow(),
+                        if (ipcRenderer.sendSync('window-info', 'child-close', 'Code Editor')) {
+                            choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                                 {
                                     type: 'warning',
                                     title: 'Code editor open',
@@ -1458,7 +1848,9 @@
                         client.raise('closed');
                         _logger.postMessage({ action: 'flush' });
                         closeWindow = true;
-                        remote.getCurrentWindow().close();
+                        clearWatcher();
+                        ipcRenderer.invoke('window', 'closeWindows');
+                        ipcRenderer.invoke('window', 'close');
                     });
                     return;
                 }
@@ -1474,13 +1866,17 @@
                         client.raise('closed');
                         _logger.postMessage({ action: 'flush' });
                         closeWindow = true;
-                        remote.getCurrentWindow().close();
+                        clearWatcher();
+                        ipcRenderer.invoke('window', 'closeWindows');
+                        ipcRenderer.invoke('window', 'close');
                     });
                 }
                 client.raise('closed');
                 _logger.postMessage({ action: 'flush' });
                 closeWindow = true;
-                remote.getCurrentWindow().close();
+                clearWatcher();
+                ipcRenderer.invoke('window', 'closeWindows');
+                ipcRenderer.invoke('window', 'close');
                 return;
             };
             $('#status').on('contextmenu', (e) => {
@@ -1580,11 +1976,11 @@
                         toggleView('lagmeter');
                     }
                 }));
-                if (client.options.enableDebug || remote.getGlobal('debug')) {
+                if (client.options.enableDebug || ipcRenderer.sendSync('get-global', 'debug')) {
                     c.append(new MenuItem({ type: 'separator' }));
                     c.append(new MenuItem({
                         label: 'Inspect', click: () => {
-                            remote.getCurrentWindow().webContents.inspectElement(e.pageX, e.pageY);
+                            ipcRenderer.send('inspect', e.pageX, e.pageY);
                         }
                     }));
                 }
@@ -1709,78 +2105,99 @@
                         }
                     }));
                 }
-                if (client.options.enableDebug || remote.getGlobal('debug')) {
+                if (client.options.enableDebug || ipcRenderer.sendSync('get-global', 'debug')) {
                     c.append(new MenuItem({ type: 'separator' }));
                     c.append(new MenuItem({
                         label: 'Inspect', click: () => {
-                            remote.getCurrentWindow().webContents.inspectElement(e.pageX, e.pageY);
+                            ipcRenderer.send('inspect', e.pageX, e.pageY);
                         }
                     }));
                 }
                 c.popup({ window: remote.getCurrentWindow() });
             });
 
-            $('#commandinput').on('contextmenu', (e) => {
-                e.preventDefault();
-                $('#commandinput').data('selStart', client.commandInput[0].selectionStart);
-                $('#commandinput').data('selEnd', client.commandInput[0].selectionEnd);
-                var inputMenu = Menu.buildFromTemplate([
-                    { role: 'undo', accelerator: 'CmdOrCtrl+Z' },
-                    { role: 'redo', accelerator: 'CmdOrCtrl+Y' },
-                    { type: 'separator' },
-                    { role: 'cut', accelerator: 'CmdOrCtrl+C' },
-                    { role: 'copy', accelerator: 'CmdOrCtrl+X' },
-                    { label: 'Paste', accelerator: 'CmdOrCtrl+V', click: paste },
-                    { label: 'Paste special', accelerator: 'CmdOrCtrL+Shift+V', click: () => { pasteSpecial(); } },
-                    { type: 'separator' },
-                    { role: 'selectall', accelerator: 'CmdOrCtrl+A' },
-                ]);
-                inputMenu.on('menu-will-show', () => {
-                    $('#commandinput').data('context', true);
-                });
-                inputMenu.on('menu-will-close', () => {
-                    setTimeout(() => $('#commandinput').data('context', false), 200);
-                });
-                if (client.options.enableDebug || remote.getGlobal('debug')) {
-                    inputMenu.append(new MenuItem({ type: 'separator' }));
-                    inputMenu.append(new MenuItem({
-                        label: 'Inspect', click: () => {
-                            remote.getCurrentWindow().webContents.inspectElement(e.pageX, e.pageY);
-                        }
-                    }));
-                }
-                var word = e.currentTarget.value.substring(e.currentTarget.selectionStart, e.currentTarget.selectionEnd);
-                var ol = word.length;
-                word = word.trimRight();
-                var ll = ol - word.length;
-                if (ll > 0)
-                    e.currentTarget.selectionEnd = e.currentTarget.selectionEnd - ll;
-
-                if (client.options.spellchecking && spellchecker && spellchecker.isMisspelled(word)) {
-                    var words = spellchecker.getCorrectionsForMisspelling(word);
-                    if (words.length > 0)
-                        inputMenu.insert(0, new MenuItem({ type: 'separator' }));
-                    var start = e.currentTarget.selectionStart;
-                    var end = e.currentTarget.selectionEnd;
-                    for (var w = words.length - 1; w >= 0; w--) {
-                        inputMenu.insert(0, new MenuItem({
-                            label: words[w],
-                            start: start,
-                            end: end,
-                            click: function (item) {
-                                var value = $('#commandinput').val();
-                                value = value.substring(0, item.start) + item.label + value.substring(item.end);
-                                $('#commandinput').val(value);
-                                $('#commandinput')[0].selectionStart = value.length;
-                                $('#commandinput')[0].selectionEnd = value.length;
-                                $('#commandinput').blur();
-                                $('#commandinput').focus();
+            remote.getCurrentWindow().webContents.on('context-menu', (e, params) => {
+                var inputMenu, start, end, w, input;
+                const { selectionText, isEditable } = params;
+                if (isEditable) {
+                    input = document.elementFromPoint(params.x, params.y);
+                    if (input && input.id === 'commandinput') {
+                        //e.preventDefault();
+                        $('#commandinput').data('selStart', client.commandInput[0].selectionStart);
+                        $('#commandinput').data('selEnd', client.commandInput[0].selectionEnd);
+                        inputMenu = Menu.buildFromTemplate([
+                            { role: 'undo', accelerator: 'CmdOrCtrl+Z' },
+                            { role: 'redo', accelerator: 'CmdOrCtrl+Y' },
+                            { type: 'separator' },
+                            { role: 'cut', accelerator: 'CmdOrCtrl+X' },
+                            { role: 'copy', accelerator: 'CmdOrCtrl+C' },
+                            { label: 'Paste', accelerator: 'CmdOrCtrl+V', click: paste },
+                            { label: 'Paste special', accelerator: 'CmdOrCtrL+Shift+V', click: () => { pasteSpecial(); } },
+                            { type: 'separator' },
+                            { role: 'selectAll', accelerator: 'CmdOrCtrl+A' },
+                        ]);
+                        inputMenu.on('menu-will-show', () => {
+                            $('#commandinput').data('context', true);
+                        });
+                        inputMenu.on('menu-will-close', () => {
+                            setTimeout(() => $('#commandinput').data('context', false), 200);
+                        });
+                    }
+                    else
+                        inputMenu = Menu.buildFromTemplate([
+                            { role: 'undo' },
+                            { role: 'redo' },
+                            { type: 'separator' },
+                            { role: 'cut' },
+                            { role: 'copy' },
+                            { role: 'paste' },
+                            { type: 'separator' },
+                            { role: 'selectAll' },
+                        ]);
+                    if (client.options.enableDebug || ipcRenderer.sendSync('get-global', 'debug')) {
+                        inputMenu.append(new MenuItem({ type: 'separator' }));
+                        inputMenu.append(new MenuItem({
+                            label: 'Inspect', click: () => {
+                                ipcRenderer.send('inspect', params.x, params.y);
                             }
                         }));
                     }
+                    if (client.options.spellchecking && params.dictionarySuggestions.length) {
+                        inputMenu.insert(0, new MenuItem({ type: 'separator' }));
+                        start = input.selectionStart + params.selectionText.indexOf(params.misspelledWord);
+                        end = start + params.misspelledWord.length;
+                        for (w = params.dictionarySuggestions.length - 1; w >= 0; w--) {
+                            inputMenu.insert(0, new MenuItem({
+                                label: params.dictionarySuggestions[w],
+                                start: start,
+                                end: end,
+                                sel: params.selectionText.length - params.misspelledWord.length,
+                                x: params.x,
+                                y: params.y,
+                                click: function (item) {
+                                    var el = $(document.elementFromPoint(item.x, item.y));
+                                    var value = el.val();
+                                    var start = el[0].selectionStart;
+                                    value = value.substring(0, item.start) + item.label + value.substring(item.end);
+                                    el.val(value);
+                                    el[0].selectionStart = start;
+                                    el[0].selectionEnd = start + item.label.length + item.sel;
+                                    el.blur();
+                                    el.focus();
+                                }
+                            }));
+                        }
+                    }
+                    inputMenu.popup({ window: remote.getCurrentWindow() });
+                } else if (selectionText && selectionText.trim() !== '') {
+                    Menu.buildFromTemplate([
+                        { role: 'copy' },
+                        { type: 'separator' },
+                        { role: 'selectAll' },
+                    ]).popup({ window: remote.getCurrentWindow() });
                 }
-                inputMenu.popup({ window: remote.getCurrentWindow() });
             });
+
             client.display.on('word', () => {
                 client.options.find.word = client.display.MatchWord;
                 doUpdate(32);
@@ -1816,6 +2233,7 @@
                 client.display.showFind();
             if (client.options.showCharacterManager)
                 showCharacters();
+            createWatcher();
             autoConnect();
             doUpdate(64);
             client.raise('opened');
@@ -1834,30 +2252,53 @@
                 $selectedurl: _selurl,
                 $selectedline: _selline
             });
-            switch (item.style) {
-                case 1:
-                    ret = client.parseOutgoing(item.value);
-                    break;
-                case 2:
-                    /*jslint evil: true */
-                    var f = new Function('try { ' + item.value + '} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                    ret = f.apply(client);
-                    if (ret)
-                        ret = client.parseOutgoing(ret);
-                    break;
-                default:
-                    ret = item.value;
-                    break;
-            }
-            client._input.vStackPop();
+            if (item.value.length)
+                switch (item.style) {
+                    case 1:
+                        try {
+                            ret = client.parseOutgoing(item.value);
+                        }
+                        catch (e) {
+                            throw e;
+                        }
+                        finally {
+                            client._input._stack.pop();
+                            client._input.vStackPop();
+                        }
+                        break;
+                    case 2:
+                        /*jslint evil: true */
+                        var f = new Function('try { ' + item.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                        try {
+                            ret = f.apply(client);
+                        }
+                        catch (e) {
+                            throw e;
+                        }
+                        finally {
+                            client._input._stack.pop();
+                            client._input.vStackPop();
+                        }
+                        if (ret)
+                            ret = client.parseOutgoing(ret);
+                        break;
+                    default:
+                        ret = item.value;
+                        client._input.vStackPop();
+                        break;
+                }
             if (ret == null)
+                return true;
+            if (typeof ret !== 'string')
+                ret = ret.toString();
+            if (ret.length === 0 && !client.options.returnNewlineOnEmptyValue)
                 return true;
             if (item.send) {
                 if (!ret.endsWith('\n'))
                     ret += '\n';
                 if (item.chain && client.commandInput.val().endsWith(' ')) {
                     client.commandInput.val(client.commandInput.val() + ret);
-                    client.sendCommand();
+                    client.sendCommand(null, null, client.options.allowCommentsFromCommand);
                 }
                 else
                     client.send(ret, true);
@@ -1874,39 +2315,76 @@
             button = client.buttons[idx];
             if (!button.enabled) return false;
             var ret;// = '';
-            switch (button.style) {
-                case 1:
-                    ret = client.parseOutgoing(button.value);
-                    break;
-                case 2:
-                    /*jslint evil: true */
-                    var f = new Function('try { ' + button.value + '} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                    ret = f.apply(client);
-                    if (typeof ret === 'string')
-                        ret = client.parseOutgoing(ret);
-                    break;
-                default:
-                    ret = button.value;
-                    break;
-            }
-            if (ret == null)
+            if (button.value.length)
+                switch (button.style) {
+                    case 1:
+                        client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
+                        try {
+                            ret = client.parseOutgoing(button.value);
+                        }
+                        catch (e) {
+                            throw e;
+                        }
+                        finally {
+                            client._input._stack.pop();
+                        }
+                        break;
+                    case 2:
+                        /*jslint evil: true */
+                        var f = new Function('try { ' + button.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                        client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
+                        try {
+                            ret = f.apply(client);
+                        }
+                        catch (e) {
+                            throw e;
+                        }
+                        finally {
+                            client._input._stack.pop();
+                        }
+                        if (typeof ret === 'string')
+                            ret = client.parseOutgoing(ret);
+                        break;
+                    default:
+                        ret = button.value;
+                        break;
+                }
+            if (ret == null) {
+                setTimeout(() => {
+                    if (client.options.CommandonClick)
+                        client.commandInput[0].focus();
+                }, 0);
                 return true;
+            }
+            if (typeof ret !== 'string')
+                ret = ret.toString();
+            if (ret.length === 0 && !client.options.returnNewlineOnEmptyValue) {
+                setTimeout(() => {
+                    if (client.options.CommandonClick)
+                        client.commandInput[0].focus();
+                }, 0);
+                return true;
+            }
             if (button.send) {
                 if (!ret.endsWith('\n'))
                     ret += '\n';
                 if (button.chain && client.commandInput.val().endsWith(' ')) {
                     client.commandInput.val(client.commandInput.val() + ret);
-                    client.sendCommand();
+                    client.sendCommand(null, null, client.options.allowCommentsFromCommand);
                 }
                 else
                     client.send(ret, true);
             }
             else if (button.append)
                 client.commandInput.val(client.commandInput.val() + ret);
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
             return true;
         }
 
-        function buildButtons() {
+        async function buildButtons() {
             var buttons = $('#user-buttons');
             buttons.empty();
             if (!client.options.buttons.user)
@@ -1930,7 +2408,10 @@
                         button = $('<a href="javascript:void(0)" class="button" onclick="executeButton(' + b + ')"' + p + '></a>');
                     if (item.stretch)
                         button.addClass('button-stretch');
-                    button.prop('title', item.caption);
+                    if (item.parse)
+                        button.prop('title', item.caption);
+                    else
+                        button.prop('title', client.parseInline(item.caption));
                     if (item.icon.startsWith('fa-'))
                         button.html('<i class="fa ' + item.icon + '"></i>');
                     else if (item.icon.startsWith('gi-'))
@@ -1940,13 +2421,13 @@
                     else if (item.icon.startsWith('.'))
                         button.html('<i class="fa button-icon ' + item.icon.substring(1) + '"></i>');
                     else if (item.icon.length > 0)
-                        button.html('<img src="' + parseTemplate(item.icon) + '" />');
+                        button.html('<img src="' + parseTemplate(item.icon) + '" /><div class="overlay"></div>');
                     else
                         button.html('<i class="fa fa-question"></i>');
                     buttons.append(button);
                 }
             }
-            doUpdate(64);
+            doUpdate(192);
         }
 
         function updateMenu() {
@@ -1969,6 +2450,8 @@
             ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'mailbutton'], checked: client.options.buttons.mail });
             ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'composebutton'], checked: client.options.buttons.compose });
             ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'userbutton'], checked: client.options.buttons.user });
+            ipcRenderer.send('update-menuitem', { menu: ['file', 'enableParsing'], checked: client.enableParsing });
+            ipcRenderer.send('update-menuitem', { menu: ['file', 'enableTriggers'], checked: client.enableTriggers });
             _logger.postMessage({ action: 'logging' });
         }
 
@@ -1982,44 +2465,44 @@
             _captures = [];
             _captureReviews = [];
             if (client.options.chat.captureTells) {
-                _captures.push('^([a-zA-Z\'\\s_-]*) tells you:(.*)$',
-                    '^You tell ([a-zA-Z\'\\s_-]*):(.*)$',
-                    '^\\*([a-zA-Z\'\\s_-]*)(\\s?)(.*?)$',
-                    '^([a-zA-Z\'\\s_-]*) is idle, and may not have been paying attention.$',
-                    '^([a-zA-Z\'\\s_-]*) is in combat and may not have heard you.$',
-                    '^([a-zA-Z\'\\s_-]*) is in edit and may not be in a position to respond.$',
-                    '^([a-zA-Z\'\\s_-]*) is arrested and can not respond.$',
-                    '^\\*You emote to ([a-zA-Z\'\\s_-]*):(.*)$',
-                    '^([a-zA-Z\'\\s_-]*) shouts in ([a-zA-Z\'\\s_-]*):(.*)$',
-                    '^You shout in ([a-zA-Z\'\\s_-]*):(.*)$'
+                _captures.push(new RegExp('^([a-zA-Z\'\\s_-]*) tells you:(.*)$'),
+                    new RegExp('^You tell ([a-zA-Z\'\\s_-]*):(.*)$'),
+                    new RegExp('^\\*([a-zA-Z\'\\s_-]*)(\\s?)(.*?)$'),
+                    new RegExp('^([a-zA-Z\'\\s_-]*) is idle, and may not have been paying attention.$'),
+                    new RegExp('^([a-zA-Z\'\\s_-]*) is in combat and may not have heard you.$'),
+                    new RegExp('^([a-zA-Z\'\\s_-]*) is in edit and may not be in a position to respond.$'),
+                    new RegExp('^([a-zA-Z\'\\s_-]*) is arrested and can not respond.$'),
+                    new RegExp('^\\*You emote to ([a-zA-Z\'\\s_-]*):(.*)$'),
+                    new RegExp('^([a-zA-Z\'\\s_-]*) shouts in ([a-zA-Z\'\\s_-]*):(.*)$'),
+                    new RegExp('^You shout in ([a-zA-Z\'\\s_-]*):(.*)$')
                 );
                 if (client.options.chat.captureReviews)
-                    _captureReviews.push('^-=-=- Tell Review -=-=-$');
+                    _captureReviews.push(new RegExp('^-=-=- Tell Review -=-=-$'));
             }
             if (client.options.chat.captureTalk) {
-                _captures.push('^([a-zA-Z\'\\s_-]*) says:(.*)$',
-                    '^You say:(.*)$',
-                    '^([a-zA-Z\'\\s_-]*) whispers to you:(.*)$',
-                    'You whisper to ([a-zA-Z\'\\s_-]*):(.*)',
-                    '^([a-zA-Z\'\\s_-]*) yells:(.*)$',
-                    '^You yell:(.*)$',
-                    'You say in (.*):(.*)',
-                    '([a-zA-Z\'\\s_-]*) says something in (.*).',
-                    '([a-zA-Z\'\\s_-]*) says in (.*):(.*)');
+                _captures.push(new RegExp('^([a-zA-Z\'\\s_-]*) says:(.*)$'),
+                    new RegExp('^You say:(.*)$'),
+                    new RegExp('^([a-zA-Z\'\\s_-]*) whispers to you:(.*)$'),
+                    new RegExp('You whisper to ([a-zA-Z\'\\s_-]*):(.*)'),
+                    new RegExp('^([a-zA-Z\'\\s_-]*) yells:(.*)$'),
+                    new RegExp('^You yell:(.*)$'),
+                    new RegExp('You say in (.*):(.*)'),
+                    new RegExp('([a-zA-Z\'\\s_-]*) says something in (.*).'),
+                    new RegExp('([a-zA-Z\'\\s_-]*) says in (.*):(.*)'));
                 if (client.options.chat.captureReviews)
-                    _captureReviews.push('^-=-=- Say Review -=-=-$');
+                    _captureReviews.push(new RegExp('^-=-=- Say Review -=-=-$'));
             }
             if (client.options.chat.captureLines) {
                 if (client.options.chat.captureAllLines) {
-                    _captures.push('^\\[(.*)\\](.*)$');
+                    _captures.push(new RegExp('^\\[(.*)\\](.*)$'));
                     if (client.options.chat.captureReviews)
-                        _captureReviews.push('^-=-=- ((?:(?!\\b(Say|Tell|End)\\b).)+) Review -=-=-$');
+                        _captureReviews.push(new RegExp('^-=-=- ((?:(?!\\b(Say|Tell|End)\\b).)+) Review -=-=-$'));
                 }
                 else
                     for (var l = 0, ll = client.options.chat.lines.length; l < ll; l++) {
-                        _captures.push('\\[' + client.options.chat.lines[l].trim() + '\\](.*)');
+                        _captures.push(new RegExp('\\[' + client.options.chat.lines[l].trim() + '\\](.*)'));
                         if (client.options.chat.captureReviews)
-                            _captureReviews.push('^-=-=- ' + client.options.chat.lines[l].trim() + ' Review -=-=-$');
+                            _captureReviews.push(new RegExp('^-=-=- ' + client.options.chat.lines[l].trim() + ' Review -=-=-$'));
                     }
             }
         }
@@ -2028,6 +2511,7 @@
             if (!$('#update-progress')[0].open) {
                 $('#update-progress-title').html('Downloading update&hellip;');
                 $('#update-progress')[0].show();
+                client.commandInput[0].focus();
             }
             $('#update-progressbar').val(progressObj.percent);
         });
@@ -2062,26 +2546,38 @@
                 _backup.getChunk();
         });
 
-        ipcRenderer.on('load-char', (event, char) => {
+        ipcRenderer.on('load-char', (event, char, same) => {
+            _charName = ipcRenderer.sendSync('get-global', 'characterLogin');
             if (!client.connected) {
-                _logger.postMessage({ action: 'name', args: char });
-                $('#character-name').text(char);
+                _logger.postMessage({ action: 'name', args: _charName });
+                $('#character-name').text(_charName);
             }
-            _backup.mapFile = remote.getGlobal('mapFile');
-            client.port = (client.options.dev || remote.getGlobal('dev')) ? 1035 : 1030;
-            //autoConnect();
+            _backup.mapFile = ipcRenderer.sendSync('get-global', 'mapFile');
+            client.port = (client.options.dev || ipcRenderer.sendSync('get-global', 'dev')) ? 1035 : 1030;
+            if (client.connected && ipcRenderer.sendSync('get-global', 'disconnect')) {
+                _skipDisconnect = 1;
+                client.close();
+            }
+            if (same)
+                autoConnect();
         });
 
-        ipcRenderer.on('load-default', () => {
+        ipcRenderer.on('load-default', (same) => {
+            _charName = 0;
             if (!client.connected) {
                 _logger.postMessage({ action: 'name', args: '' });
                 $('#character-name').text('&nbsp;');
             }
-            _backup.mapFile = remote.getGlobal('mapFile');
+            _backup.mapFile = ipcRenderer.sendSync('get-global', 'mapFile');
+            if (client.connected && ipcRenderer.sendSync('get-global', 'disconnect'))
+                client.close();
+            if (same)
+                autoConnect();
         });
 
         ipcRenderer.on('change-options', () => {
-            client.settingsFile = remote.getGlobal('settingsFile');
+            _skipDisconnect = 0;
+            client.settingsFile = ipcRenderer.sendSync('get-global', 'settingsFile');
             autoConnect();
         });
 
@@ -2138,12 +2634,12 @@
             }
         });
 
-        ipcRenderer.on('send-background', (event, command) => {
-            client.sendBackground(command);
+        ipcRenderer.on('send-background', (event, command, noEcho, comments) => {
+            client.sendBackground(command, noEcho, comments);
         });
 
-        ipcRenderer.on('send-command', (event, command) => {
-            client.sendCommand(command);
+        ipcRenderer.on('send-command', (event, command, noEcho, comments) => {
+            client.sendCommand(command, noEcho, comments);
         });
 
         ipcRenderer.on('send-gmcp', (event, data) => {
@@ -2212,6 +2708,10 @@
             client.error(err);
         });
 
+        ipcRenderer.on('get-skills', (event, window) => {
+            ipcRenderer.send('skills', _status.skills, window);
+        });
+
         // eslint-disable-next-line no-unused-vars
         function childClosed(url, name) {
             if (path.basename(url) === 'characters.html')
@@ -2221,7 +2721,7 @@
         function showCharacters() {
             if (_cLoading) return;
             _cLoading = true;
-            window.open('characters.html', 'modal', 'backgroundColor=#fff,height=480,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
+            window.open('characters.html', 'modal', 'backgroundColor=#fff,height=555,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
         }
 
         // eslint-disable-next-line no-unused-vars
@@ -2255,6 +2755,41 @@
         }
 
         // eslint-disable-next-line no-unused-vars
+        function showSMHelp() {
+            if (client.options.externalHelp)
+                shell.openExternal('http://www.shadowmud.com/help.php', '_blank');
+            else {
+                if (client.options.windows['smhelp'] && client.options.windows['smhelp'].options) {
+                    client.options.windows['smhelp'].options.show = true;
+                    ipcRenderer.send('show-window', 'smhelp', client.options.windows['smhelp'].options);
+                }
+                else
+                    ipcRenderer.send('show-window', 'smhelp', { show: true, file: 'smhelp.html', icon: 'help', alwaysOnTopClient: true, width: 800, height: 600, x: window.screenTop + 100, y: window.screenLeft + 100 });
+            }
+            setTimeout(() => {
+                client.commandInput[0].blur();
+                client.commandInput[0].focus();
+            }, 0);
+        }
+
+        function showWho() {
+            if (client.options.externalWho)
+                shell.openExternal('http://www.shadowmud.com/who.php', '_blank');
+            else {
+                if (client.options.windows['who'] && client.options.windows['who'].options) {
+                    client.options.windows['who'].options.show = true;
+                    ipcRenderer.send('show-window', 'who', client.options.windows['who'].options);
+                }
+                else
+                    ipcRenderer.send('show-window', 'who', { show: true, file: 'who.html', icon: 'user', alwaysOnTopClient: true, width: 800, height: 600, x: window.screenTop + 100, y: window.screenLeft + 100 });
+            }
+            setTimeout(() => {
+                client.commandInput[0].blur();
+                client.commandInput[0].focus();
+            }, 0);
+        }
+
+        // eslint-disable-next-line no-unused-vars
         function showLogViewer() {
             if (client.options.windows['log-viewer'] && client.options.windows['log-viewer'].options) {
                 client.options.windows['log-viewer'].options.show = true;
@@ -2284,15 +2819,37 @@
             if (client.options.windows['composer'] && client.options.windows['composer'].options) {
                 client.options.windows['composer'].options.show = true;
                 client.options.windows['composer'].options.persistent = false;
+                client.options.windows['composer'].options.noInput = true;
                 ipcRenderer.send('show-window', 'composer', client.options.windows['composer'].options);
             }
             else
-                ipcRenderer.send('show-window', 'composer', { show: true, file: 'composer.html', icon: 'composer', alwaysOnTopClient: true, persistent: false });
+                ipcRenderer.send('show-window', 'composer', { show: true, file: 'composer.html', icon: 'composer', alwaysOnTopClient: true, persistent: false, noInput: true });
+        }
+
+        function showSkills() {
+            if (client.options.windows['skills'] && client.options.windows['skills'].options) {
+                client.options.windows['skills'].options.show = true;
+                ipcRenderer.send('show-window', 'skills', client.options.windows['skills'].options);
+            }
+            else
+                ipcRenderer.send('show-window', 'skills', { show: true, file: 'skills.html', icon: 'skills', alwaysOnTopClient: true });
         }
 
         // eslint-disable-next-line no-unused-vars
         function toggleLogging() {
             _logger.postMessage({ action: 'toggle' });
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function toggleParsing() {
+            client.enableParsing = !client.enableParsing;
+            ipcRenderer.send('update-menuitem', { menu: ['file', 'enableParsing'], checked: client.enableParsing });
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function toggleTriggers() {
+            client.enableTriggers = !client.enableTriggers;
+            ipcRenderer.send('update-menuitem', { menu: ['file', 'enableTriggers'], checked: client.enableTriggers });
         }
 
         function copyAsHTML() {
@@ -2368,7 +2925,10 @@
                 + client.commandInput[0].value.substring(endPos, client.commandInput[0].value.length);
             client.commandInput[0].selectionStart = startPos;
             client.commandInput[0].selectionEnd = startPos + txt.length;
-            client.commandInput[0].focus();
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
         }
 
         function paste() {
@@ -2381,6 +2941,10 @@
                 + client.commandInput[0].value.substring(endPos, client.commandInput[0].value.length);
             client.commandInput[0].selectionStart = startPos;
             client.commandInput[0].selectionEnd = startPos + clipboard.readText().length;
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
         }
 
         function autoConnect() {
@@ -2401,15 +2965,32 @@
             $('#commandinput').focus();
         }
 
+        function updateChat(data) {
+            ipcRenderer.send('chat', data);
+            /*
+            if (typeof data === 'string') {
+                display.append(data);
+                data = {
+                    line: data,
+                    formats: [{ formatType: 0 }],
+                    raw: data
+                };
+            }
+            else
+                display.addParserLine(data);
+            */
+        }
+
         $(document).ready(init);
 
         document.addEventListener('load', () => doUpdate(1));
 
         var $updating = 0;
+        var _rTimeout = 0;
         function doUpdate(type) {
             $updating |= type;
-            if ($updating == 0) return;
-            window.requestAnimationFrame(() => {
+            if ($updating == 0 || _rTimeout) return;
+            _rTimeout = window.requestAnimationFrame(() => {
                 if (($updating & 1) === 1) {
                     updateInterface();
                     $updating &= ~1;
@@ -2436,12 +3017,134 @@
                 }
                 if (($updating & 64) === 64) {
                     client.saveOptions();
-                    remote.getCurrentWindow().webContents.session.clearCache(() => { if (client.options.enableDebug) console.log('Cache cleared'); });
+                    ipcRenderer.invoke('window', 'clearCache').then(() => { if (client.options.enableDebug) console.log('Cache cleared'); });
                     webFrame.clearCache();
                     $updating &= ~64;
                 }
+                if (($updating & 128) === 128) {
+                    updateButtonBar();
+                    $updating &= ~128;
+                }
+                if (($updating & 256) === 256) {
+                    setTimeout(() => {
+                        client.display.updateScrollbars();
+                        client.display.updateView();
+                        client.UpdateWindow();
+                    }, 1);
+                    $updating &= ~256;
+                }
+                _rTimeout = 0;
                 this.doUpdate($updating);
             });
+        }
+
+        function clearWatcher() {
+            if (_watcher)
+                _watcher.close();
+            _watcher = null;
+        }
+
+        function createWatcher() {
+            clearWatcher();
+            if (!client.options.watchForProfilesChanges)
+                return;
+            _watcher = require('chokidar').watch(path.join(parseTemplate('{data}'), 'profiles'), {
+                persistent: true,
+                depth: 0,
+                ignoreInitial: true
+            });
+            _watcher.on('change', file => {
+                if (path.extname(file) !== '.json')
+                    return;
+                const profile = path.basename(file, '.json');
+                switch (client.options.onProfileChange) {
+                    case 1: //reload
+                        client.loadProfile(profile);
+                        break;
+                    case 2: //ask
+                        choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                            {
+                                type: 'question',
+                                title: `Profile '${profile}' changed`,
+                                message: `Profile '${profile}' changed, what do you want to do?`,
+                                buttons: ['Nothing', 'Reload'],
+                                defaultId: 1
+                            });
+                        if (choice === 1)
+                            client.loadProfile(profile);
+                        break;
+                    case 4: //warn
+                        client.echo(`Profile '${profile}' changed`, -7, -8, true, true);
+                        break;
+                }
+            })
+                .on('add', file => {
+                    if (path.extname(file) !== '.json')
+                        return;
+                    const profile = path.basename(file, '.json');
+                    switch (client.options.onProfileChange) {
+                        case 1: //reload
+                            client.loadProfile(profile);
+                            break;
+                        case 2: //ask
+                            choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                                {
+                                    type: 'question',
+                                    title: `Profile '${profile}' added`,
+                                    message: `Profile '${profile}' added, what do you want to do?`,
+                                    buttons: ['Nothing', 'Load'],
+                                    defaultId: 1
+                                });
+                            if (choice === 1)
+                                client.loadProfile(profile);
+                            break;
+                        case 4: //warn
+                            client.echo(`Profile '${profile}' added`, -7, -8, true, true);
+                            break;
+                    }
+                })
+                .on('unlink', p => {
+                    if (path.extname(file) !== '.json')
+                        return;
+                    const profile = path.basename(file, '.json');
+                    switch (client.options.onProfileDeleted) {
+                        case 1:
+                            client.removeProfile(profile);
+                            break;
+                        case 2: //ask
+                            choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
+                                {
+                                    type: 'question',
+                                    title: `Profile '${profile}' deleted`,
+                                    message: `Profile '${profile}' deleted, what do you want to do?`,
+                                    buttons: ['Nothing', 'Remove'],
+                                    defaultId: 1
+                                });
+                            if (choice === 1)
+                                client.removeProfile(profile);
+                            break;
+                        case 4: //warn
+                            client.echo(`Profile '${profile}' deleted`, -7, -8, true, true);
+                            break;
+                    }
+                });
+        }
+
+        function createDialog(title, width, height, doOk, doReturn, doClose, body, footer) {
+            var dlg = window.open('dialog.html', 'modal', `width=${width || 800},height=${height || 600}`);
+            dlg.document.title = title;
+            dlg.doReturn = doReturn;
+            dlg.doClose = doClose;
+            dlg.doOk = doOk;
+            if (typeof footer === 'string')
+                dlg.document.getElementsByClassName('dialog-footer')[0].innerHTML = footer;
+            else if (footer && footer.nodeType)
+                dlg.document.getElementsByClassName('dialog-footer')[0].appendChild(footer);
+            if (typeof body === 'string')
+                dlg.document.getElementsByClassName('dialog-footer')[0].innerHTML = footer;
+            else if (body && body.nodeType)
+                dlg.document.getElementsByClassName('dialog-body')[0].appendChild(body);
+            return dlg;
         }
     </script>
 </head>
@@ -2456,15 +3159,23 @@
             <textarea type="text" id="commandinput" aria-live="polite" spellcheck="true" wrap="off" cols="20" rows="20"></textarea>
         </div>
         <div class="dropdown dropup command-history">
-            <a id="history-dropup" style="width:32px" title="Show command history" class="button button-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" area-expanded="true">
+            <a id="history-dropup" title="Show command history" class="button button-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" area-expanded="true">
                 <i class="fa fa-history"></i><span class="caret" style="margin: 0"></span>
             </a>
             <ul class="dropdown-menu pull-right dropdown-menu-right" data-container="body" aria-labelledby="history-dropdown"></ul>
         </div>
+        <a href="javascript:void(0)" title="Toggle parsing" class="button button-sm" id="btnParsing" onclick="toggleParsing()">
+            <i class="fa fa-terminal"></i>
+        </a>
+        <a href="javascript:void(0)" title="Toggle triggers" class="button button-sm" id="btnTriggers" onclick="toggleTriggers()">
+            <i class="fa fa-bolt"></i>
+        </a>
         <a href="javascript:void(0)" title="Show advanced editor" class="button button-sm" id="advedit" onclick="ipcRenderer.send('show-window', 'editor');">
             <i class="fa fa-edit"></i>
         </a>
     </div>
+    <a href="javascript:void(0)" id="bb-scroll-up" class="hidden button"><i class="fa fa-chevron-up"></i></a>
+    <a href="javascript:void(0)" id="bb-scroll-down" class="hidden button"><i class="fa fa-chevron-down"></i></a>
     <div id="buttonbar">
         <a href="javascript:void(0)" title="Connect" id="connect" class="button" onclick="client.connect();">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="-0.6 -0.6 17 16">
@@ -2520,6 +3231,7 @@
     </div>
     <div id="status-border"></div>
     <div id="status">
+        <div id="status-drag-bar"></div>
         <div id="environment" class="day">
             <div id="environmentleft"></div>
             <div id="environmentcenter"></div>
@@ -2588,8 +3300,8 @@
             <div>
                 <span>Needed:</span>
                 <span id="need-value">0</span>
-                <div class="progressbar" id="need-percent" style="display:none;width:100px;background: rgb(252, 238, 42);">
-                    <div class="progressbar-text" style="text-align:right;right: 5px;color:black;">0</div>
+                <div class="progressbar" id="need-percent">
+                    <div class="progressbar-text" style="text-align:right;right: 2px;color:black;">0</div>
                     <div class="progressbar-value"></div>
                 </div>
             </div>
@@ -2678,21 +3390,21 @@
         </div>
         <div class="dialog-body" style="padding-top:25px">
 
-            <div class="col-sm-7 form-group">
+            <div class="col-xs-7 form-group">
                 <p>You have been Disconnected.</p>
                 <p>
                     The reason for this may vary:
-                    <p style="padding-left: 20px;background-color:#F5F5F5">
-                        You quit.
-                        <br> Mud crashed.
-                        <br> Lost network connection.
-                    </p>
+                <p style="padding-left: 20px;background-color:#F5F5F5">
+                    You quit.
+                    <br> Mud crashed.
+                    <br> Lost network connection.
+                </p>
                 </p>
                 <p style="font-weight: bold">Reconnecting in ...
                     <span id="disconnectTimer"></span>
                 </p>
             </div>
-            <div class="col-sm-5 form-group">
+            <div class="col-xs-5 form-group">
                 <button id="disconnectDialogReconnect" style="float: right" type="button" class="btn btn-primary btn-block" onclick="closeDisconnectDialog();client.connect();" accesskey="r">
                     <i class="fa fa-refresh"></i>
                     <u>R</u>econnect</button>

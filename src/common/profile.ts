@@ -1,5 +1,5 @@
 //spell-checker:ignore displaytype, submenu, triggernewline, triggerprompt
-import { clone, keyCodeToChar, isFileSync, SortItemArrayByPriority } from './library';
+import { clone, keyCodeToChar, isFileSync, SortItemArrayByPriority, splitQuoted, isValidIdentifier } from './library';
 const path = require('path');
 const fs = require('fs');
 
@@ -27,7 +27,46 @@ export enum TriggerType {
     Regular = 0,
     CommandInputRegular = 1,
     Event = 2,
-    Alarm = 3
+    Alarm = 3,
+    Pattern = 8,
+    CommandInputPattern = 16,
+    Expression = 1 << 6,
+    LoopExpression = 1 << 7
+}
+
+export enum TriggerTypes {
+    None = 0,
+    CommandInputRegular = 1,
+    Event = 2,
+    Regular = 4,
+    Pattern = 8,
+    CommandInputPattern = 16,
+    Alarm = 32,
+    Expression = 1 << 6,
+    LoopExpression = 1 << 7
+}
+
+export enum SubTriggerTypes {
+    Skip = 1 << 9,
+    Wait = 1 << 10,
+    LoopPattern = 1 << 12,
+    LoopLines = 1 << 13,
+    Duration = 1 << 14,
+    WithinLines = 1 << 15,
+    Manual = 1 << 16,
+    ReParse = 1 << 17,
+    ReParsePattern = 1 << 18
+}
+
+export enum VariableType {
+    Auto = 1,
+    Integer = 2,
+    StringExpanded = 3,
+    StringLiteral = 4,
+    StringList = 5,
+    Record = 6,
+    Float = 7,
+    Array = 8
 }
 
 export function MacroDisplay(item: Macro) {
@@ -85,6 +124,9 @@ export class Alarm {
     public minutesWildcard: boolean = true;
     public startTime: number;
     public suspended: number = 0;
+    public restart: number = 0;
+    public tempTime: number;
+    public prevTime: number;
 
     constructor(data?, pattern?) {
         if (typeof data === 'string') {
@@ -94,6 +136,7 @@ export class Alarm {
         this.parent = data;
         this.pattern = pattern;
         this.startTime = Date.now();
+        this.prevTime = this.startTime;
     }
 
     public static parse(parent, pattern?: string, readOnly?: boolean): Alarm {
@@ -121,85 +164,132 @@ export class Alarm {
             if (parts.length === 0)
                 throw new Error('Invalid format: ' + pattern);
             if (parts.length === 1) {
-                if (parts[0][0] === '*') {
+                if (parts[0] === '*') {
                     t.secondsWildcard = true;
-                    parts[0] = parts[0].substr(1);
+                    t.seconds = -1;
                 }
-                tmp = parseInt(parts[0], 10);
-                if (isNaN(tmp))
-                    throw new Error('Invalid Format: ' + parts[0]);
-                if (tmp < 0)
-                    throw new Error('Seconds must be greater than or equal to 0.');
-                else if (tmp > 59)
-                    t.secondsWildcard = true;
-                t.seconds = tmp;
+                else {
+                    if (parts[0][0] === '*') {
+                        t.secondsWildcard = true;
+                        parts[0] = parts[0].substr(1);
+                    }
+                    else
+                        t.secondsWildcard = false;
+                    tmp = parseInt(parts[0], 10);
+                    if (isNaN(tmp))
+                        throw new Error('Invalid Format: ' + parts[0]);
+                    if (tmp < 0)
+                        throw new Error('Seconds must be greater than or equal to 0.');
+                    else if (tmp > 59)
+                        t.secondsWildcard = true;
+                    t.seconds = tmp;
+                }
             }
             else if (parts.length === 2) {
-                if (parts[0][0] === '*') {
+                if (parts[0] === '*') {
                     t.minutesWildcard = true;
-                    parts[0] = parts[0].substr(1);
+                    t.minutes = -1;
                 }
-                tmp = parseInt(parts[0], 10);
-                if (isNaN(tmp))
-                    throw new Error('Invalid Format: ' + parts[0]);
-                if (tmp < 0 || tmp > 59)
-                    throw new Error('Minutes can only be 0 to 59');
-                t.minutes = tmp;
-
-                if (parts[1][0] === '*') {
+                else {
+                    if (parts[0][0] === '*') {
+                        t.minutesWildcard = true;
+                        parts[0] = parts[0].substr(1);
+                    }
+                    else
+                        t.minutesWildcard = false;
+                    tmp = parseInt(parts[0], 10);
+                    if (isNaN(tmp))
+                        throw new Error('Invalid Format: ' + parts[0]);
+                    if (tmp < 0 || tmp > 59)
+                        throw new Error('Minutes can only be 0 to 59');
+                    t.minutes = tmp;
+                }
+                if (parts[1] === '*') {
                     t.secondsWildcard = true;
-                    parts[1] = parts[1].substr(1);
+                    t.seconds = -1;
                 }
-                else
-                    t.secondsWildcard = false;
-                tmp = parseInt(parts[1], 10);
-                if (isNaN(tmp))
-                    throw new Error('Invalid Format: ' + parts[1]);
-                if (tmp < 0 || tmp > 59)
-                    throw new Error('Seconds can only be 0 to 59');
-                t.seconds = tmp;
-
+                else {
+                    if (parts[1][0] === '*') {
+                        t.secondsWildcard = true;
+                        parts[1] = parts[1].substr(1);
+                    }
+                    else
+                        t.secondsWildcard = false;
+                    tmp = parseInt(parts[1], 10);
+                    if (isNaN(tmp))
+                        throw new Error('Invalid Format: ' + parts[1]);
+                    if (tmp < 0 || tmp > 59)
+                        throw new Error('Seconds can only be 0 to 59');
+                    t.seconds = tmp;
+                }
             }
             else {
-                if (parts[0][0] === '*') {
+                if (parts[0] === '*') {
                     t.hoursWildcard = true;
-                    parts[0] = parts[0].substr(1);
+                    t.hours = -1;
                 }
-                tmp = parseInt(parts[0], 10);
-                if (isNaN(tmp))
-                    throw new Error('Invalid Format: ' + parts[0]);
-                if (tmp < 0 || tmp > 23)
-                    throw new Error('Hours can only be 0 to 23');
-                t.hours = tmp;
-
-                if (parts[1][0] === '*') {
+                else {
+                    if (parts[0][0] === '*') {
+                        t.hoursWildcard = true;
+                        parts[0] = parts[0].substr(1);
+                    }
+                    else
+                        t.hoursWildcard = false;
+                    tmp = parseInt(parts[0], 10);
+                    if (isNaN(tmp))
+                        throw new Error('Invalid Format: ' + parts[0]);
+                    if (tmp < 0 || tmp > 23)
+                        throw new Error('Hours can only be 0 to 23');
+                    t.hours = tmp;
+                }
+                if (parts[1] === '*') {
                     t.minutesWildcard = true;
-                    parts[1] = parts[1].substr(1);
+                    t.seconds = -1;
                 }
-                tmp = parseInt(parts[1], 10);
-                if (isNaN(tmp))
-                    throw new Error('Invalid Format: ' + parts[1]);
-                if (tmp < 0 || tmp > 59)
-                    throw new Error('Minutes can only be 0 to 59');
-                t.minutes = tmp;
-
-                if (parts[2][0] === '*') {
+                else {
+                    if (parts[1][0] === '*') {
+                        t.minutesWildcard = true;
+                        parts[1] = parts[1].substr(1);
+                    }
+                    else
+                        t.minutesWildcard = false;
+                    tmp = parseInt(parts[1], 10);
+                    if (isNaN(tmp))
+                        throw new Error('Invalid Format: ' + parts[1]);
+                    if (tmp < 0 || tmp > 59)
+                        throw new Error('Minutes can only be 0 to 59');
+                    t.minutes = tmp;
+                }
+                if (parts[2] === '*') {
                     t.secondsWildcard = true;
-                    parts[2] = parts[2].substr(2);
+                    t.seconds = -1;
                 }
-                else
-                    t.secondsWildcard = false;
-                tmp = parseInt(parts[2], 10);
-                if (isNaN(tmp))
-                    throw new Error('Invalid Format: ' + parts[2]);
-                if (tmp < 0 || tmp > 59)
-                    throw new Error('Seconds can only be 0 to 59');
-                t.seconds = tmp;
+                else {
+                    if (parts[2][0] === '*') {
+                        t.secondsWildcard = true;
+                        parts[2] = parts[2].substr(2);
+                    }
+                    else
+                        t.secondsWildcard = false;
+                    tmp = parseInt(parts[2], 10);
+                    if (isNaN(tmp))
+                        throw new Error('Invalid Format: ' + parts[2]);
+                    if (tmp < 0 || tmp > 59)
+                        throw new Error('Seconds can only be 0 to 59');
+                    t.seconds = tmp;
+                }
             }
         }
         if (readOnly)
             t.temp = false;
         return t;
+    }
+
+    public setTempTime(value: number) {
+        if (!value)
+            this.tempTime = 0;
+        else
+            this.tempTime = Date.now() + value;
     }
 }
 
@@ -240,6 +330,7 @@ export class Button extends Item {
     public send: boolean = true;
     public chain: boolean = false;
     public stretch: boolean = false;
+    public parse: boolean = false;
     constructor(data?, profile?) {
         super(data);
         this.caption = 'NewButton';
@@ -327,9 +418,14 @@ export class Trigger extends Item {
     public verbatim: boolean = false;
     public triggerNewline: boolean = true;
     public triggerPrompt: boolean = false;
-    public type: TriggerType = TriggerType.Regular;
+    public type: TriggerType | SubTriggerTypes = TriggerType.Regular;
     public temp: boolean = false;
     public caseSensitive: boolean = false;
+    public raw: boolean = false;
+    public state: number = 0;
+    public params: string = '';
+    public triggers: Trigger[] = [];
+    public fired: boolean = false;
 
     constructor(data?, profile?) {
         super(data);
@@ -340,7 +436,15 @@ export class Trigger extends Item {
                 if (!data.hasOwnProperty(prop)) {
                     continue;
                 }
-                this[prop] = data[prop];
+                if (prop === 'triggers') {
+                    this.triggers = [];
+                    const il = data.triggers.length;
+                    for (let i = 0; i < il; i++) {
+                        this.triggers.push(new Trigger(data.triggers[i]));
+                    }
+                }
+                else
+                    this[prop] = data[prop];
             }
         }
         this.profile = profile;
@@ -359,6 +463,7 @@ export class Context extends Item {
     public chain: boolean = false;
     public parent: string = '';
     public items: Context[] = [];
+    public parse: boolean = false;
     constructor(data?, profile?) {
         super(data);
         this.caption = 'NewContext';
@@ -384,6 +489,99 @@ export class Context extends Item {
 
     public clone() {
         return new Context(this);
+    }
+}
+
+export class Variable extends Item {
+    private _type: string = 'string';
+
+    public type: VariableType = VariableType.Auto;
+    public defaultValue: string = '';
+    public useDefault: boolean = false;
+    public params: string = '';
+
+    public set setValue(value: any) {
+        switch (this.type) {
+            case VariableType.Integer:
+                if (typeof value === 'string') {
+                    value = parseInt(value, 10);
+                    if (isNaN(value))
+                        value = 0;
+                }
+                else if (typeof value === 'boolean')
+                    value = value ? 1 : 0;
+                break;
+            case VariableType.Float:
+                if (typeof value === 'string') {
+                    value = parseFloat(value);
+                    if (isNaN(value))
+                        value = 0.0;
+                }
+                else if (typeof value === 'boolean')
+                    value = value ? 1.0 : 0.0;
+                break;
+        }
+        super.value = value;
+        this._type = typeof value;
+    }
+    public get getValue(): any {
+        switch (this.type) {
+            case VariableType.Auto:
+                if (typeof this.value !== this._type) {
+                    switch (this._type) {
+                        case 'number':
+                            return Number(this.value);
+                        case 'string':
+                            return this.value.toString();
+                        case 'boolean':
+                            return Boolean(this.value);
+                    }
+                }
+                return this.value;
+            case VariableType.Float:
+                return parseFloat(this.value);
+            case VariableType.Integer:
+                return parseInt(this.value, 10);
+            case VariableType.Record:
+                if (typeof this.value === 'string')
+                    try {
+                        return JSON.parse(this.value);
+                    }
+                    catch {
+                        return this.value;
+                    }
+                return this.value;
+            case VariableType.StringList:
+                if (typeof this.value === 'string')
+                    return splitQuoted(this.value, '|');
+                return this.value;
+        }
+        return this.value;
+    }
+
+    constructor(data?, profile?) {
+        super(data);
+        this.profile = profile;
+        if (this.useDefault)
+            this.setValue(this.defaultValue);
+    }
+
+    public clone() {
+        return new Variable(this);
+    }
+
+    public toString() {
+        switch (this.type) {
+            case VariableType.Record:
+                if (typeof this.value === 'string')
+                    return this.value;
+                return JSON.stringify(this.value);
+            case VariableType.StringList:
+                if (typeof this.value === 'string')
+                    return this.value;
+                return '"' + (<any[]>this.value).join('"|"') + '"';
+        }
+        return this.value?.toString();
     }
 }
 
@@ -577,26 +775,33 @@ export class Profile {
         return m;
     }
 
-    public static load(file: string) {
-        if (!isFileSync(file))
-            return null;
+    public static load(file) {
         let profile;
-        let data = fs.readFileSync(file, 'utf-8');
-        if (data.length === 0)
-            return new Profile(path.basename(file, '.json'));
-        try {
-            data = JSON.parse(data);
+        let data;
+        if (typeof file === 'string') {
+            if (!isFileSync(file))
+                return null;
+            data = fs.readFileSync(file, 'utf-8');
+            if (data.length === 0)
+                return new Profile(path.basename(file, '.json'));
+            try {
+                data = JSON.parse(data);
+            }
+            catch (e) {
+                return new Profile(path.basename(file, '.json'));
+            }
         }
-        catch (e) {
-            return new Profile(path.basename(file, '.json'));
-        }
-        profile = new Profile();
+        else if (typeof file === 'object')
+            data = file;
+        else
+            return new Profile();
+        profile = new Profile(false);
         let prop;
         for (prop in data) {
             if (!data.hasOwnProperty(prop)) {
                 continue;
             }
-            if (prop === 'aliases' || prop === 'triggers' || prop === 'macros' || prop === 'buttons' || prop === 'contexts')
+            if (prop === 'aliases' || prop === 'triggers' || prop === 'macros' || prop === 'buttons' || prop === 'contexts' || prop === 'variables')
                 continue;
             profile[prop] = data[prop];
         }
@@ -695,7 +900,7 @@ export class Profile {
             if (this.triggers.length > 0) {
                 il = this.triggers.length;
                 for (i = 0; i < il; i++) {
-                    data.triggers.push({
+                    const t = {
                         pattern: this.triggers[i].pattern,
                         value: this.triggers[i].value,
                         priority: this.triggers[i].priority,
@@ -708,9 +913,39 @@ export class Profile {
                         triggernewline: this.triggers[i].triggerNewline,
                         caseSensitive: this.triggers[i].caseSensitive,
                         triggerprompt: this.triggers[i].triggerPrompt,
+                        raw: this.triggers[i].raw,
                         type: this.triggers[i].type,
-                        notes: this.triggers[i].notes || ''
-                    });
+                        notes: this.triggers[i].notes || '',
+                        state: this.triggers[i].state || 0,
+                        params: this.triggers[i].params || '',
+                        triggers: []
+                    }
+                    if (this.triggers[i].triggers && this.triggers[i].triggers.length) {
+                        const sl = this.triggers[i].triggers.length;
+                        for (let s = 0; s < sl; s++) {
+                            t.triggers.push({
+                                pattern: this.triggers[i].triggers[s].pattern,
+                                value: this.triggers[i].triggers[s].value,
+                                priority: this.triggers[i].triggers[s].priority,
+                                verbatim: this.triggers[i].triggers[s].verbatim,
+                                style: this.triggers[i].triggers[s].style,
+                                name: this.triggers[i].triggers[s].name,
+                                group: this.triggers[i].triggers[s].group,
+                                enabled: this.triggers[i].triggers[s].enabled,
+                                display: this.triggers[i].triggers[s].display,
+                                triggernewline: this.triggers[i].triggers[s].triggerNewline,
+                                caseSensitive: this.triggers[i].triggers[s].caseSensitive,
+                                triggerprompt: this.triggers[i].triggers[s].triggerPrompt,
+                                raw: this.triggers[i].triggers[s].raw,
+                                type: this.triggers[i].triggers[s].type,
+                                notes: this.triggers[i].triggers[s].notes || '',
+                                state: this.triggers[i].triggers[s].state || 0,
+                                params: this.triggers[i].triggers[s].params || '',
+                                triggers: []
+                            });
+                        }
+                    }
+                    data.triggers.push(t);
                 }
             }
             if (this.macros.length > 0) {
@@ -760,7 +995,7 @@ export class Profile {
             if (!data.hasOwnProperty(prop)) {
                 continue;
             }
-            if (prop === 'aliases' || prop === 'triggers' || prop === 'macros' || prop === 'buttons' || prop === 'contexts')
+            if (prop === 'aliases' || prop === 'triggers' || prop === 'macros' || prop === 'buttons' || prop === 'contexts' || prop === 'variables')
                 continue;
             profile[prop] = data[prop];
         }
@@ -814,7 +1049,7 @@ export class Profile {
         return null;
     }
 
-    public findAny(type, field, value) {
+    public findAny(type, field, value?) {
         let tmp;
         if (!type || type.length === 0 || !this[type] || this[type].length === 0)
             return null;
@@ -1233,4 +1468,317 @@ export class ProfileCollection {
         }
         return true;
     }
+}
+
+/*
+*            match any number (even none) of characters or white space
+   .*
+?            match a single character
+   .
+%d            match any number of digits (0-9)
+   \d*
+%n            match a number that starts with a + or - sign
+   [+|-]?\d*
+%w            match any number of alpha characters (a-z) (a word)
+   \w
+%a            match any number of alphanumeric characters (a-z,0-9)
+   [a-zA-Z0-9]*
+%s            match any amount of white space (spaces, tabs)
+   \s*
+%x            match any amount of non-white space
+   \S*
+%y            match any amount of non-white space (same as %x but matches start and end of line)
+   \S*
+%p            match any punctuation
+   \p{P}
+%q            match any punctuation (same as %p but matches start and end of line)
+   \p{P}
+%t            match a direction command
+   ignore for now as i dont know what it does             
+%e            match ESC character for ansi patterns
+   \e
+[range]      match any amount of characters listed in range
+   as is in .net
+^            force pattern to match starting at the beginning of the line
+   as is in .net
+$            force pattern to match ending at the end of the line
+   as is in .net
+(pattern)      save the matched pattern in a parameter %1 though %99
+   as is in .net
+~            quote the next character to prevent it to be interpreted as a wild card, required to match special characters
+   replace with \                 
+~~            match a quote character verbatim
+   replace with \\ (not needed as ~ by itself is replaced with a \
+{val1|val2|val3|...} match any of the specified strings can not use other wildcard inside this
+   remove {}
+@variable match any of the specified strings or keys
+    parsed and replaced with the variable value
+{^string}      do not match the specified string
+   [^string] replace {} with []
+&nn      matches exactly nn characters (fixed width pattern)
+   {nn} remove & and wrap in {}
+&VarName      assigns the matched string to the given variable (see below for more info)
+   (?<VarName>pattern ) research more, prob is varname can contain patterns so have to parse out name and patterns
+   probably best to pre-parse and get name / pattern then parse pattern separately in a recursive call
+%/regex/% matches the given Regular Expression
+%%function() runs any function
+http://forums.zuggsoft.com/modules/mx_kb/kb.php?mode=doc&page=3&refpage=3&a=cmud_Pattern_Match
+           */
+export function convertPattern(pattern: string, client?) {
+    if (!pattern || !pattern.length) return '';
+    enum convertPatternState {
+        None = 0,
+        Ampersand = 1,
+        Percent = 2,
+        StringMatch = 3,
+        SubPattern = 4,
+        AmpersandPercent = 5,
+        AmpersandPattern = 6,
+        AmpersandRange = 7,
+        PercentRegex = 8,
+        Escape = 9,
+        Variable = 10
+    }
+    let state: convertPatternState = convertPatternState.None;
+    let stringBuilder = [];
+    let idx = 0;
+    let tl = pattern.length;
+    let c;
+    let i;
+    let arg;
+    let pat;
+    let nest = 0;
+    for (idx = 0; idx < tl; idx++) {
+        c = pattern.charAt(idx);
+        i = pattern.charCodeAt(idx);
+        switch (state) {
+            case convertPatternState.Ampersand:
+                if (arg.length === 0 && (c === '*' || c === '?' || c === '^' || c === '$'))
+                    pat = c;
+                else if (arg.length === 0 && c === '%')
+                    state = convertPatternState.AmpersandPercent;
+                else if (pat.length === 0 && c === '(') {
+                    pat = c;
+                    state = convertPatternState.AmpersandPattern;
+                }
+                else if (pat.length === 0 && c === '[') {
+                    pat = c;
+                    state = convertPatternState.AmpersandRange;
+                }
+                else if (c === '{')
+                    continue;
+                //end block or no longer valid varname character
+                else if (c === '}' || !((i >= 48 && i <= 57) || (i >= 65 && i <= 90) || (i >= 97 && i <= 122) || i === 95 || i === 36)) {
+                    if (!isValidIdentifier(arg))
+                        throw new Error('Invalid variable name');
+                    if (!pat.length && /^\d+$/.exec(arg))
+                        stringBuilder.push('{', arg, '}');
+                    else if (!pat.length)
+                        stringBuilder.push('(?<', arg, '>.*)');
+                    else
+                        stringBuilder.push('(?<', arg, '>', convertPattern(pat), ')');
+                    if (c !== '}')
+                        idx--;
+                    state = convertPatternState.None;
+                }
+                else
+                    arg += c;
+                break;
+            case convertPatternState.AmpersandPercent:
+                pat += '%' + c;
+                state = convertPatternState.Ampersand;
+                break;
+            case convertPatternState.AmpersandPattern:
+                pat += c;
+                if (c === ')')
+                    state = convertPatternState.Ampersand;
+                break;
+            case convertPatternState.AmpersandRange:
+                pat += c;
+                if (c === ']')
+                    state = convertPatternState.Ampersand;
+                break;
+            case convertPatternState.Percent:
+                switch (c) {
+                    case 'd':
+                        stringBuilder.push("\\d+");
+                        state = convertPatternState.None;
+                        break;
+                    case 'n':
+                        stringBuilder.push("[+-]?\\d+");
+                        state = convertPatternState.None;
+                        break;
+                    case 'w':
+                        stringBuilder.push("\\w");
+                        state = convertPatternState.None;
+                        break;
+                    case 'a':
+                        stringBuilder.push("[a-zA-Z0-9]*");
+                        state = convertPatternState.None;
+                        break;
+                    case 's':
+                        stringBuilder.push("\\s*");
+                        state = convertPatternState.None;
+                        break;
+                    case 'x':
+                        stringBuilder.push("\\S*");
+                        state = convertPatternState.None;
+                        break;
+                    case 'y':
+                        stringBuilder.push("\\S*");
+                        state = convertPatternState.None;
+                        break;
+                    case 'p':
+                        stringBuilder.push("[\\.\\?\\!\\:\\;\\-\\—\\(\\)\\[\\]\\'\\\"\\\\/\\,]{1}");
+                        state = convertPatternState.None;
+                        break;
+                    case 'q':
+                        stringBuilder.push("[\\.\\?\\!\\:\\;\\-\\—\\(\\)\\[\\]\\'\\\"\\\\/\\,]{1}");
+                        state = convertPatternState.None;
+                        break;
+                    case 't': //TODO not sure what a direction command is
+                        state = convertPatternState.None;
+                        break;
+                    case 'e':
+                        stringBuilder.push("\x1b");
+                        state = convertPatternState.None;
+                        break;
+                    case '/': // %/pattern/%
+                        state = convertPatternState.PercentRegex;
+                        arg = '';
+                        break;
+                }
+                break;
+            case convertPatternState.PercentRegex:
+                if (c === '%') {
+                    if (!arg.endsWith('/'))
+                        throw new Error('Invalid %/regex/% pattern');
+                    stringBuilder.push(arg.substr(0, arg.length - 1));
+                }
+                else
+                    arg += c;
+                break;
+            case convertPatternState.StringMatch:
+                if (c === '^' && arg.length === 0)
+                    pat = true;
+                else if (c === '}') {
+                    if (pat)
+                        stringBuilder.push('[^', arg, ']');
+                    else
+                        stringBuilder.push(arg);
+                    state = convertPatternState.None;
+                }
+                else
+                    arg += c;
+                break;
+            case convertPatternState.SubPattern:
+                if (c === ':') {
+                    stringBuilder.push('(?<', arg, '>');
+                    state = convertPatternState.None;
+                }
+                else if (c === ')') {
+                    stringBuilder.push('(', convertPattern(arg), ')');
+                    state = convertPatternState.None;
+                    nest--;
+                }
+                else
+                    arg += c;
+                break;
+            case convertPatternState.Escape:
+                stringBuilder.push('\\', c);
+                state = convertPatternState.None;
+                break;
+            case convertPatternState.Variable:
+                if (c === '{' && arg.length === 0)
+                    continue;
+                else if (c === '}' || !((i >= 48 && i <= 57) || (i >= 65 && i <= 90) || (i >= 97 && i <= 122) || i === 95 || i === 36)) {
+                    if (!isValidIdentifier(arg))
+                        throw new Error('Invalid variable name')
+                    if (client) {
+                        if (client.variables[arg] instanceof Variable)
+                            stringBuilder.push(client.variables[arg].value || '');
+                        else
+                            stringBuilder.push(client.variables[arg] || '');
+                    }
+                    if (c !== '}')
+                        idx--;
+                    state = convertPatternState.None;
+                }
+                else
+                    arg += c;
+                break;
+            default:
+                if (c === '*')
+                    stringBuilder.push('.*');
+                else if (c === '?')
+                    stringBuilder.push('.');
+                else if (c === '~')
+                    state = convertPatternState.Escape;
+                else if (c === '@') {
+                    state = convertPatternState.Variable;
+                    arg = '';
+                }
+                else if (c === '&') {
+                    arg = '';
+                    pat = '';
+                    state = convertPatternState.Ampersand;
+                }
+                else if (c === '%')
+                    state = convertPatternState.Percent;
+                else if (c === '{') {
+                    state = convertPatternState.StringMatch;
+                    arg = '';
+                }
+                else if (c === '(') {
+                    state = convertPatternState.SubPattern;
+                    arg = '';
+                    nest++;
+                }
+                else {
+                    if (c === ')')
+                        nest--;
+                    stringBuilder.push(c);
+                }
+                break;
+        }
+    }
+    switch (state) {
+        case convertPatternState.Ampersand:
+            if (!isValidIdentifier(arg))
+                throw new Error('Invalid variable name');
+            if (!pat.length && /^\d+$/.exec(arg))
+                stringBuilder.push('{', arg, '}');
+            else if (!pat.length)
+                stringBuilder.push('(?<', arg, '>.*)');
+            else
+                stringBuilder.push('(?<', arg, '>', convertPattern(pat), ')');
+            break;
+        case convertPatternState.AmpersandPercent:
+        case convertPatternState.AmpersandPattern:
+        case convertPatternState.AmpersandRange:
+            throw new Error('Invalid &VarName pattern');
+        case convertPatternState.Percent:
+            throw new Error('Invalid % pattern');
+        case convertPatternState.PercentRegex:
+            throw new Error('Invalid %/regex/% pattern');
+        case convertPatternState.StringMatch:
+            throw new Error('Invalid string match pattern');
+        case convertPatternState.SubPattern:
+            throw new Error('Invalid (sub:pattern) pattern');
+        case convertPatternState.Escape:
+            throw new Error('Invalid escape pattern');
+        case convertPatternState.Variable:
+            if (!isValidIdentifier(arg))
+                throw new Error('Invalid variable name');
+            if (client) {
+                if (client.variables[arg] instanceof Variable)
+                    stringBuilder.push(client.variables[arg].getValue() || '');
+                else
+                    stringBuilder.push(client.variables[arg] || '');
+            }
+            break;
+    }
+    if (nest)
+        throw new Error('Invalid save matched pattern');
+    return stringBuilder.join('');
 }

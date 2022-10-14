@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link href="css/main.css" rel="stylesheet" type="text/css" />
+    <link href="css/ansi.css" rel="stylesheet" type="text/css" />
+    <link href="css/monsters.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/theme.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript">
+        if (typeof module === 'object') { window.module = module; module = undefined; }
+    </script>
+    <script src="../lib/jquery.min.js"></script>
+    <script src="../lib/bootstrap.min.js"></script>
+    <style>
+        .dialog-body {
+            padding: 14px;
+        }
+    </style>
+    <script>
+        var doReturn, doClose, doOk;
+
+        window.addEventListener('keydown', (event) => {
+            if (event.which == 27)
+                closeWindow();
+            else if (event.which == 13) {
+                if (doReturn && !doReturn())
+                    return;
+                const footer = document.getElementsByClassName('dialog-footer');
+                if (!footer.length) return;
+                const defaultButton = footer[0].getElementsByClassName('btn-primary');
+                if (defaultButton.length)
+                    defaultButton[0].click();
+            }
+        });
+
+        window.addEventListener('close', e => {
+            if (doClose && !doClose())
+                e.preventDefault();
+        });
+
+        function closeWindow() {
+            if (doClose && !doClose())
+                return;
+            window.close();
+        }
+
+        function executeOk() {
+            if (doOk && !doOk())
+                return;                
+            closeWindow();
+        }
+    </script>
+</head>
+
+<body>
+    <div class="dialog-body" id="body">
+    </div>
+    <div class="dialog-footer" id="footer">
+        <button id="btn-cancel" style="float: right" type="button" class="btn btn-default" onclick="closeWindow();">Cancel</button>
+        <button id="btn-ok" style="float: right" type="button" class="btn btn-primary" onclick="executeOk()">Ok</button>
+    </div>
+</body>
+
+</html>

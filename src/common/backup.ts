@@ -223,8 +223,17 @@ export class Backup extends EventEmitter {
             delete data.profiles;
             this.client.debug('Setting for no profiles enabled.');
         }
+        if ((this.saveSelection & BackupSelection.Windows) !== BackupSelection.Windows) {
+            delete data.settings['windows'];
+            this.client.debug('Setting for no window data enabled.');
+        }
         if ((this.saveSelection & BackupSelection.Settings) !== BackupSelection.Settings) {
+            let windows;
+            if ((this.saveSelection & BackupSelection.Windows) === BackupSelection.Windows)
+                windows = data.settings['windows'];
             delete data.settings;
+            if ((this.saveSelection & BackupSelection.Windows) === BackupSelection.Windows)
+                data.settings = <any>{ windows: windows };
             this.client.debug('Setting for no settings data enabled.');
         }
         let jData = JSON.stringify(data);
@@ -423,9 +432,19 @@ export class Backup extends EventEmitter {
                             item.triggerNewline = data.profiles[keys[k]].triggers[m].triggernewline ? true : false;
                             item.caseSensitive = data.profiles[keys[k]].triggers[m].caseSensitive ? true : false;
                             item.triggerPrompt = data.profiles[keys[k]].triggers[m].triggerprompt ? true : false;
+                            item.raw = data.profiles[keys[k]].triggers[m].raw ? true : false;
                             item.temp = data.profiles[keys[k]].triggers[m].temp ? true : false;
                             item.type = data.profiles[keys[k]].triggers[m].type;
                             item.notes = data.profiles[keys[k]].triggers[m].notes || '';
+                            item.state = data.profiles[keys[k]].triggers[m].state || 0;
+                            item.params = data.profiles[keys[k]].triggers[m].params || '';
+                            item.fired = data.profiles[keys[k]].triggers[m].fired ? true : false;
+                            if (data.profiles[keys[k]].triggers[m].triggers && data.profiles[keys[k]].triggers[m].triggers.length) {
+                                const il = data.profiles[keys[k]].triggers[m].triggers.length;
+                                for (let i = 0; i < il; i++) {
+                                    item.triggers.push(new Trigger(data.profiles[keys[k]].triggers[m].triggers[i]));
+                                }
+                            }                            
                             p.triggers.push(item);
                         }
                     }
@@ -522,7 +541,9 @@ export class Backup extends EventEmitter {
                 this.client.options.showMapper = data.settings.MapperOpen ? true : false;
                 this.client.options.showCharacterManager = data.settings.showCharacterManager ? true : false;
                 this.client.options.logErrors = data.settings.logErrors ? true : false;
-                this.client.options.showErrorsExtended = data.settings.showCharacterManager ? true : false;
+                this.client.options.showErrorsExtended = data.settings.showErrorsExtended ? true : false;
+                this.client.options.prependTriggeredLine = data.settings.prependTriggeredLine ? true : false;
+                this.client.options.disableTriggerOnError = data.settings.disableTriggerOnError ? true : false;
 
                 let prop;
                 let prop2;
@@ -531,7 +552,11 @@ export class Backup extends EventEmitter {
                     if (!this.client.options.hasOwnProperty(prop) || !data.settings.hasOwnProperty(prop)) {
                         continue;
                     }
-                    if (prop === 'extensions' || prop === 'mapper' || prop === 'profiles' || prop === 'buttons' || prop === 'chat' || prop === 'find' || prop === 'display') {
+                    if (prop === 'windows') {
+                        if ((this.loadSelection & BackupSelection.Windows) === BackupSelection.Windows)
+                            this.client.options[prop] = data.settings[prop];
+                    }
+                    else if (prop === 'extensions' || prop === 'mapper' || prop === 'profiles' || prop === 'buttons' || prop === 'chat' || prop === 'find' || prop === 'display') {
                         for (prop2 in this.client.options[prop]) {
                             if (!this.client.options[prop].hasOwnProperty(prop2)) {
                                 continue;
@@ -566,6 +591,8 @@ export class Backup extends EventEmitter {
                 this.client.loadOptions();
                 this.emit('imported-settings');
             }
+            else if (data.settings && data.settings['windows'] && (this.loadSelection & BackupSelection.Windows) === BackupSelection.Windows)
+                this.client.options['windows'] = data.settings['windows'];
         }
         this.emit('finish-load');
         this.close();

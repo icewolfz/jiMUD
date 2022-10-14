@@ -152,7 +152,7 @@ body {
     height: 100%;
     float: right;
     width: 3px;
-    cursor: col-resize;
+    cursor: ew-resize;
 }
 
 #ghost-bar {
@@ -160,7 +160,7 @@ body {
     background-color: #000;
     opacity: 0.5;
     position: absolute;
-    cursor: col-resize;
+    cursor: ew-resize;
     z-index: 999
 }
 
@@ -374,4 +374,38 @@ table tr:last-child td {
     height: 16px;
     font-size: 16px;
     vertical-align: baseline;
+}
+
+.form-control-feedback,
+.form-error {
+    display: none;
+}
+
+.has-error .form-control-feedback {
+    display: inline;
+    top: 30px;
+}
+
+.has-error .form-error {
+    display: block;
+    position: absolute;
+}
+
+.aura-error,
+.form-error,
+.has-error a {
+    color: #A94442;
+}
+
+#trigger-states-dropdown.dropdown-menu>li>a>span {
+    background: white;
+}
+
+#trigger-states-dropdown.dropdown-menu>.active>a>span {
+    background: inherit;
+}
+
+#trigger-states-dropdown.dropdown-menu>.active>a>span,
+#trigger-states-dropdown.dropdown-menu>li>a:hover>span {
+    background: inherit;
 }

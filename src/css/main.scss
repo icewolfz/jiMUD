@@ -107,7 +107,7 @@ body {
 #display-split-bar {
     background-color: menu;
     height: 4px;
-    cursor: row-resize;
+    cursor: ns-resize;
     position: absolute;
     background-color: menu;
     z-index: 1000;
@@ -123,7 +123,7 @@ body {
     background-color: transparent;
     opacity: 0.5;
     position: absolute;
-    cursor: row-resize;
+    cursor: ns-resize;
     z-index: 9991;
     box-sizing: border-box;
 }
@@ -203,16 +203,65 @@ body {
     z-index: 5;
     width: 32px;
     position: absolute;
+    overflow: hidden;
+}
+
+#buttonbar.scroll {
+    /*
+    padding-top: 18px;
+    padding-bottom: 18px;
+    */
+}
+
+#bb-scroll-up, #bb-scroll-down {
+    left: 2px;
+    position: absolute;
+    text-align: center;
+    width: 32px;
+    z-index: 100000;
+    height: 16px;
+    margin-top: 0;
+}
+
+#bb-scroll-up:focus, #bb-scroll-down:focus {
+    /*
+    color: inherit !important;
+    background-color: inherit !important;
+    */
+}
+
+#bb-scroll-up .fa, #bb-scroll-down .fa {
+    margin-top: 0;
+    font-size: 16px;
+}
+
+#bb-scroll-up {
+    top: 2px;
+}
+
+#bb-scroll-down {
+    bottom: 2px;
 }
 
 .command-history {
     position: absolute !important;
-    top: 3px;
-    right:23px;
+    top: 2px;
+    right: 64px;
 }
 
-#advedit {
+#btnParsing {
+    top: 2px;
+    right: 42px;
+}
+
+#btnTriggers {
+    top: 2px;
+    right: 22px;
+}
+
+#advedit, #btnTriggers, #btnParsing {
     position: absolute;
+    border-radius: 4px;
 }
 
 .find {
@@ -280,42 +329,51 @@ body {
     position: absolute;
     overflow: hidden;
     box-sizing: border-box;
+    background-repeat: no-repeat;
+    background-size: cover;    
 }
 
 #environmentleft {
-    position: relative;
+    position: absolute;
     top: 15px;
-    left: 0px;
+    left: calc(50% - 75px);
     float: left;
     width: 50px;
     height: 50px;
+    background-repeat: no-repeat;
+    background-size: cover;       
 }
 
 #environmentcenter {
-    position: relative;
+    position: absolute;
     top: 5px;
-    left: 0px;
-    float: left;
+    left: calc(50% - 25px);
     width: 50px;
     height: 50px;
+    background-repeat: no-repeat;
+    background-size: cover;       
 }
 
 #environmentright {
-    position: relative;
+    position: absolute;
     top: 15px;
-    left: 0px;
-    float: left;
+    right: calc(50% - 75px);
     width: 50px;
     height: 50px;
+    background-repeat: no-repeat;
+    background-size: cover;       
 }
 
 #environmentweather {
-    position: relative;
+    position: absolute;
     top: 0px;
     left: 0px;
-    width: 150px;
-    height: 50px;
+    right: 0px;
+    bottom: 0px;
     z-index: 100;
+    background-repeat: no-repeat;
+    background-size: cover;    
+    height: 100%;
 }
 
 #character-name {
@@ -364,6 +422,7 @@ body {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+    font-size: 1em;
 }
 
 .combat-bar .progressbar {
@@ -392,6 +451,28 @@ body {
 #leftwing,
 #rightwing {
     display: none;
+}
+
+#hp-status > div {
+    position: relative;
+}
+
+#hp-status > div > .progressbar, #need-percent {
+    width: initial;
+    position: absolute;
+    left: 30px;
+    right: 0;
+    top: 0;
+}
+
+#need-percent {
+    left: 50px;
+    display:none;
+    background: rgb(252, 238, 42);
+}
+
+#experience > div {
+    position: relative;
 }
 
 .progressbar {
@@ -510,4 +591,44 @@ dialog {
 
 .command-history ul {
     overflow: auto;
+}
+
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#status-drag-bar {
+    background-color: transparent;
+    height: 100%;
+    width: 3px;
+    cursor: ew-resize;
+    position: absolute;
+    left: -3px;    
+}
+
+#status-ghost-bar {
+    width: 3px;
+    background-color: #000;
+    opacity: 0.75;
+    position: absolute;
+    cursor: ew-resize;
+    z-index: 999
+}
+
+.dot {
+    height: 10px;
+    width: 10px;
+    background-color: red;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+.dot-container {
+    display: inline-block;
+    bottom: 70px;
+    position: absolute;
+    left: 5px;
+    width:15px;
 }

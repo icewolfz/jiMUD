@@ -47,6 +47,9 @@
         <button id="btn-refresh" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Refresh" onclick="doRefresh()">
             <i class="fa fa-refresh"></i>
         </button>
+        <button id="btn-backup" type="button" class="btn btn-default btn-xs" title="Backup" onclick="backup()">
+            <i class="fa fa-upload"></i>
+        </button>
     </div>
     <div id="statusbar" class="statusbar">
         <span id="statusbar-file" class="left"></span>
@@ -54,28 +57,37 @@
         <span id="statusbar-size" class="right"></span>
     </div>
     <div id="display" style="display: none"></div>
+    <dialog id="progress-dialog" style="z-index:1000;text-align:center">
+        <div id="progress-dialog-title">Saving&hellip;</div>
+        <div>
+            <progress max="100" id="progress-dialog-progressbar"></progress>
+        </div>
+    </dialog>
 </body>
-<script>
+<script type="text/javascript">
     if (typeof module === 'object') { window.module = module; module = undefined; }
 </script>
 <script src="../lib/jquery.min.js" type="text/javascript"></script>
 <script src="../lib/bootstrap.min.js" type="text/javascript"></script>
 <script src="../lib/bootstrap-select.min.js" type="text/javascript"></script>
-<script>
+<script type="text/javascript">
+    if (window.module) module = window.module;
+    //spellchecker:ignore dockmanager prefs ismap yazl
     const { DockManager } = require('./js/dockmanager');
-    const { remote, ipcRenderer, clipboard } = require('electron');
-    const { dialog, Menu, app } = remote;
+    const { ipcRenderer, clipboard } = require('electron');
+    const remote = require('@electron/remote');
+    const { Menu } = remote;
     const { Menubar } = require('./js/menubar');
     const { Settings } = require('./js/settings');
     const { Display } = require('./js/display');
     const { Search } = require('./js/search');
     const { FormatType, FontStyle } = require('./js/types');
     // eslint-disable-next-line no-unused-vars
-    const { parseTemplate, existsSync, isDirSync, walkSync, formatUnit } = require('./js/library');
+    const { parseTemplate, existsSync, isDirSync, walkSync, formatUnit, isFileSync } = require('./js/library');
 
     const path = require('path');
     const fs = require('fs');
-    remote.getCurrentWindow().setEnabled(false);
+    ipcRenderer.invoke('window', 'setEnabled', false);
 
     var menubar, options;
     let $closeWindow = false;
@@ -89,6 +101,7 @@
     var font, fontSize;
     var display;
     var $search;
+    var archiver, archive;
 
     var $fileFilters = [
         { name: 'Supported files (*.txt, *.htm, *.html)', extensions: ['txt', 'htm', 'html'] },
@@ -116,6 +129,12 @@
                     click: () => {
                         ipcRenderer.send('show-window', 'prefs');
                     }
+                },
+                { type: 'separator' },
+                {
+                    label: '&Backup...',
+                    accelerator: 'CmdOrCtrl+B',
+                    click: () => { backup(); }
                 },
                 { type: 'separator' },
                 {
@@ -179,10 +198,7 @@
                 {
                     label: '&Toggle Developer Tools',
                     click: () => {
-                        if (remote.getCurrentWindow().isDevToolsOpened())
-                            remote.getCurrentWindow().closeDevTools();
-                        else
-                            remote.getCurrentWindow().openDevTools();
+                        ipcRenderer.invoke('window', 'toggleDevTools');
                     },
                     enabled: true
                 },
@@ -190,15 +206,15 @@
                     type: 'separator'
                 },
                 {
-                    role: 'resetzoom',
+                    role: 'resetZoom',
                     enabled: true
                 },
                 {
-                    role: 'zoomin',
+                    role: 'zoomIn',
                     enabled: true
                 },
                 {
-                    role: 'zoomout',
+                    role: 'zoomOut',
                     enabled: true
                 },
             ]
@@ -385,7 +401,7 @@
     }
 
     function loadOptions(data) {
-        var set = Settings.load(remote.getGlobal('settingsFile'));
+        var set = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
         if (!data)
             options = set.extensions['log-viewer'];
         else
@@ -443,17 +459,16 @@
 
     function openFile(file, dock) {
         if (!file || file.length === 0) {
-            dialog.showOpenDialog(remote.getCurrentWindow(),
+            ipcRenderer.invoke('show-dialog', 'showOpenDialog',
                 {
                     filters: $fileFilters,
                     properties: ['multiSelections', 'openFile'],
                     defaultPath: (manager.active && manager.active.file) ? path.dirname(manager.active.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0]) : logPath)
-                },
-                function (fileNames) {
-                    if (fileNames === undefined) {
+                }).then(result => {
+                    if (result.filePaths === undefined || result.filePaths.length === 0) {
                         return;
                     }
-                    openFiles(fileNames, true, dock);
+                    openFiles(result.filePaths, true, dock);
                 });
         }
         else {
@@ -469,7 +484,7 @@
         for (var f = 0, fl = files.length; f < fl; f++) {
             if (!existsSync(files[f])) {
                 if (exists)
-                    dialog.showMessageBox(remote.getCurrentWindow(), {
+                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                         type: 'info',
                         title: 'Path does not exist',
                         message: 'The path \'' + files[f] + '\' does not seem to exist anymore on disk.'
@@ -499,7 +514,7 @@
             options.recent = recent.slice(0, options.maxRecent);
         else
             options.recent = recent;
-        app.addRecentDocument(file);
+        ipcRenderer.invoke('get-app', 'addRecentDocument', file);
         doUpdate(20);
     }
 
@@ -522,7 +537,7 @@
                     idx: r,
                     click: (item) => {
                         if (!existsSync(options.recent[item.idx])) {
-                            dialog.showMessageBox(remote.getCurrentWindow(), {
+                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                                 type: 'info',
                                 title: 'Path does not exist',
                                 message: 'The path \'' + options.recent[item.idx] + '\' does not seem to exist anymore on disk.'
@@ -544,7 +559,6 @@
                 label: 'Clear Recently Opened',
                 click: () => {
                     options.recent = [];
-                    app.clearRecentDocuments();
                     doUpdate(20);
                 }
             });
@@ -607,7 +621,7 @@
                     selected = !sel.isCollapsed && sel.type === 'Range' && manager.active.viewer.contains(sel.anchorNode);
                 }
                 let inputMenu;
-                if (remote.getGlobal('debug')) {
+                if (ipcRenderer.sendSync('get-global', 'debug')) {
                     if (selected) {
                         inputMenu = Menu.buildFromTemplate([
                             {
@@ -711,7 +725,6 @@
         }
         else {
             p.viewer.classList.add('text-viewer');
-            var contents = '';
             p.displayFunction = () => {
                 display.removeListener('parse-done', p.displayFunction);
                 p.viewer.innerHTML = display.html;
@@ -722,6 +735,7 @@
         }
     }
 
+    // eslint-disable-next-line no-unused-vars
     function createLine(text, formats) {
         const parts = [];
         let offset = 0;
@@ -939,12 +953,13 @@
         if (manager.active && manager.active.viewer) manager.active.viewer.focus();
     }
 
+    var _rTimeout = 0;
     function doUpdate(type) {
         if (!type) return;
         _updating |= type;
-        if (_updating === 0)
+        if (_updating === 0 || _rTimeout)
             return;
-        window.requestAnimationFrame(() => {
+        _rTimeout = window.requestAnimationFrame(() => {
             if ((_updating & 1) === 1) {
                 updateUI();
                 _updating &= ~1;
@@ -965,6 +980,7 @@
                 saveOptions();
                 _updating &= ~16;
             }
+            _rTimeout = 0;
             doUpdate(_updating);
         });
     }
@@ -997,8 +1013,7 @@
         var e = 0, el = dialogs.length;
         for (; e < el; e++) {
             if (dialogs[e].open) {
-                if (dialog.showMessageBox(
-                    remote.getCurrentWindow(),
+                if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                     {
                         type: 'question',
                         title: 'Open dialog',
@@ -1011,12 +1026,12 @@
         }
         if (!savedOpened())
             return;
-        remote.getCurrentWindow().hide();
+        ipcRenderer.invoke('window', 'hide');
     }
 
     // eslint-disable-next-line no-unused-vars
     function closeWindow() {
-        remote.getCurrentWindow().close();
+        ipcRenderer.invoke('window', 'clearCache')
     }
 
     window.onbeforeunload = function (evt) {
@@ -1029,8 +1044,7 @@
                 var e = 0, el = dialogs.length;
                 for (; e < el; e++) {
                     if (dialogs[e].open) {
-                        if (dialog.showMessageBox(
-                            remote.getCurrentWindow(),
+                        if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
                             {
                                 type: 'question',
                                 title: 'Open dialog',
@@ -1049,12 +1063,12 @@
                 while (p--)
                     closeViewer(_viewers[keys[p]]);
                 $closeWindow = true;
-                remote.getCurrentWindow().close();
+                ipcRenderer.invoke('window', 'close');
             });
             return 'no';
         }
         $closeWindow = true;
-        remote.getCurrentWindow().close();
+        ipcRenderer.invoke('window', 'close');
         return;
     };
 
@@ -1076,13 +1090,95 @@
         else
             openFiles(options.opened);
         doUpdate(4);
-        remote.getCurrentWindow().setEnabled(true);
+        ipcRenderer.invoke('window', 'setEnabled', true);
         //menubar.enabled = true;
     });
 
     ipcRenderer.on('reload-options', () => {
         loadOptions();
     });
+
+    $(window).keydown((event) => {
+        if (document.getElementById('progress-dialog').open) {
+            event.preventDefault();
+            return false;
+        }
+    });
+
+    // eslint-disable-next-line no-unused-vars
+    function backup() {
+        var file = ipcRenderer.sendSync('show-dialog-sync', 'showSaveDialog', {
+            title: 'Save as...',
+            defaultPath: path.join(parseTemplate('{documents}'), 'jiMUD-logs.zip'),
+            filters: [
+                { name: 'Zip files (*.zip)', extensions: ['zip'] },
+                { name: 'All files (*.*)', extensions: ['*'] },
+            ]
+        });
+        if (file === undefined || file.length === 0)
+            return;
+
+        showProgressDialog();
+        archiver = archiver || require('yazl');
+        var data = parseTemplate('{data}');
+        archive = new archiver.ZipFile();
+
+        var files;
+        if (isDirSync(path.join(data, 'logs'))) {
+            files = walkSync(path.join(data, 'logs'));
+            if (files.length === 0) {
+                ipcRenderer.invoke('show-dialog', 'showMessageBox',
+                    {
+                        type: 'error',
+                        title: 'No logs found',
+                        message: 'No logs to backup',
+                        defaultId: 1
+                    });
+                return;
+            }
+            files.files.forEach(file => {
+                archive.addFile(file, file.substring(data.length + 1).replace(/\\/g, '/'));
+            });
+        }
+
+        archive.outputStream.pipe(fs.createWriteStream(file)).on('close', function () {
+            closeProgressDialog();
+        });
+        archive.end(() => {
+            closeProgressDialog();
+        });
+    }
+
+    function showProgressDialog() {
+        var progress = document.getElementById('progress-dialog');
+        if (progress.open) return;
+        setProgressDialogValue(0);
+        menubar.enabled = false;
+        progress.showModal();
+    }
+
+    function setProgressDialogValue(value) {
+        ipcRenderer.send('set-progress', { value: value });
+        ipcRenderer.send('set-progress-window', 'code-editor', { value: value });
+        document.getElementById('progress-dialog-progressbar').value = value * 100;
+    }
+
+    function closeProgressDialog() {
+        var progress = document.getElementById('progress-dialog');
+        if (progress.open)
+            progress.close();
+        setProgressDialogValue(-1);
+        document.getElementById('progress-dialog-progressbar').removeAttribute('value');
+        archive = null;
+        menubar.enabled = true;
+    }
+
+    // eslint-disable-next-line no-unused-vars
+    function cancelProgress() {
+        if (archive)
+            archive.abort();
+        closeProgressDialog();
+    }
 </script>
 
 </html>

@@ -11,7 +11,7 @@ body {
     right: 181px;
     top: 3px;
     bottom: 29px;
-    border: 1px solid #{$borderColor}#{$borderColor};
+    border: 1px solid transparent;
 }
 
 #display-border {
@@ -27,14 +27,29 @@ body {
     border-style: solid;
 }
 
-#display-split-bar,
-#display-split-ghost-bar {
+#display-split-bar {
     -webkit-border-radius: 10px;
     border-radius: 10px;
     background: #33302b;
     -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
     box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
     border: 1px solid #{$borderColor};
+}
+
+#display-split-ghost-bar {
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background: #d70000;
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+    border: 1px solid #{$borderColor};
+}
+
+#display-split-bar:hover,
+#display-split-bar:active,
+#display-split-bar:focus {
+    background-color: #d70000;
+    transition-delay: 1s;
 }
 
 #command {
@@ -48,7 +63,7 @@ body {
 
 #commandbox {
     left: 5px;
-    right: 64px;
+    right: 96px;
     height: 18px;
     bottom: 5px;
 }
@@ -82,6 +97,18 @@ body {
     bottom: 0;
 }
 
+#bb-scroll-up {
+    left: 0;
+    top: 0;
+    background-size: contain;
+}
+
+#bb-scroll-down {
+    left: 0;
+    bottom: 0;
+    background-size: contain;
+}
+
 /* Let's get this party started */
 
 .scroll-track {
@@ -108,15 +135,14 @@ body {
 }
 
 .scroll-corner {
-    background-color: black;
-    display: none;
+    background-color: #191814;
 }
 
 .scroll-split-button {
     display: block !important;
     color: wheat;
     background-color: maroon !important;
-    border: 1px solid #{$borderColor} !important;    
+    border: 1px solid #{$borderColor} !important;
 }
 
 .scroll-split-button.active {
@@ -148,7 +174,10 @@ body {
     color: wheat;
 }
 
-.scroll-split-button.disabled, .scroll-split-button.disabled:hover, .scroll-split-button.disabled:active, .scroll-split-button.disabled:focus {
+.scroll-split-button.disabled,
+.scroll-split-button.disabled:hover,
+.scroll-split-button.disabled:active,
+.scroll-split-button.disabled:focus {
     background-color: maroon !important;
     color: #A88749;
 }
@@ -161,7 +190,9 @@ body {
     border-left: 1px solid #494238;
 }
 
-.scroll-disabled .scroll-thumb, .scroll-disabled .scroll-thumb:hover, .scroll-disabled .scroll-thumb:active {
+.scroll-disabled .scroll-thumb,
+.scroll-disabled .scroll-thumb:hover,
+.scroll-disabled .scroll-thumb:active {
     background: rgba(51, 48, 43, 0.4);
     border: 0px;
     color: #A88749;
@@ -417,11 +448,13 @@ body {
     background-image: url("#{$images}/status/weatherhailhard.png");
 }
 
-.weather-rain #environmentweather {
+.weather-rain #environmentweather,
+.weather-zombie_rain #environmentweather {
     background-image: url("#{$images}/status/weatherrain.png");
 }
 
-.weather-rain.intensity-hard #environmentweather {
+.weather-rain.intensity-hard #environmentweather,
+.weather-zombie_rain.intensity-hard #environmentweather {
     background-image: url("#{$images}/status/weatherrainhard.png");
 }
 
@@ -439,6 +472,14 @@ body {
 
 .weather-sleet.intensity-hard #environmentweather {
     background-image: url("#{$images}/status/weathersleethard.png");
+}
+
+.weather-blood_rain #environmentweather {
+    background-image: url("#{$images}/status/weatherblood_rain.png");
+}
+
+.weather-blood_rain.intensity-hard #environmentweather {
+    background-image: url("#{$images}/status/weatherblood_rainhard.png");
 }
 
 #environment {
@@ -572,7 +613,6 @@ body {
 .combat-name {
     right: 1px;
     left: 38px;
-    font-size: 0.75em;
 }
 
 .combat-name:first-letter {
@@ -730,14 +770,12 @@ body {
 }
 
 .progressbar {
-    height: 13px;
-    font-size: 0.75em;
+    height: 14px;
+    font-size: 1em;
     border: 1px solid #{$borderColor};
-    height: 13px;
     width: 118px;
     -webkit-border-radius: 6px;
     border-radius: 6px;
-
     /* future proofing */
     background: -webkit-linear-gradient(left, rgba(255, 50, 50, 1) 0%, rgba(255, 157, 0, 1) 25%, rgba(255, 255, 0, 1) 50%, rgba(189, 252, 0, 1) 75%, rgba(0, 255, 0, 1) 100%);
     background: linear-gradient(to right, rgba(255, 50, 50, 1) 0%, rgba(255, 157, 0, 1) 25%, rgba(255, 255, 0, 1) 50%, rgba(189, 252, 0, 1) 75%, rgba(0, 255, 0, 1) 100%);
@@ -746,6 +784,11 @@ body {
 #hp-status {
     text-align: left;
     color: #{$color};
+}
+
+#hp-status span {
+    overflow: hidden;
+    display: inline-block;
 }
 
 .progressbar .progressbar-text {
@@ -766,6 +809,7 @@ body {
     bottom: 3px;
     right: 3px;
     left: 3px;
+    font-size: 0.75em;
 }
 
 #lagMeter.progressbar .progressbar-text {
@@ -785,9 +829,8 @@ body {
     text-align: center;
     border-radius: 4px;
     border: 0px;
-    background-color: transparent;  
+    background-color: transparent;
 }
-
 
 #history-dropup .fa {
     margin-top: 1px;
@@ -798,6 +841,49 @@ body {
 }
 
 #history-dropup:active {
+    background-color: #790000;
+}
+
+.command-history {
+    right: 60px;
+    top: 4px;
+}
+
+#btnTriggers {
+    right: 24px;
+}
+
+#btnParsing {
+    right: 42px;
+}
+
+#btnTriggers,
+#btnParsing {
+    top: 5px;
+    text-align: center;
+    border-radius: 4px;
+    border: 0px;
+    height: 16px;
+    width: 16px;
+    background-color: transparent;
+}
+
+#btnTriggers.on,
+#btnParsing.on {
+    background-color: #d70000;
+}
+
+#btnTriggers:hover,
+#btnParsing:hover,
+#btnTriggers.on:active,
+#btnParsing.on:active {
+    background-color: #d70000;
+}
+
+#btnTriggers:active,
+#btnParsing:active,
+#btnTriggers.on:hover,
+#btnParsing.on:hover {
     background-color: #790000;
 }
 
@@ -859,9 +945,31 @@ body {
     color: #{$color};
 }
 
+.button:hover .overlay,
+.button.on:hover {
+    background-color: rgba(215, 0, 0, 0.40);
+}
+
 .button-sm {
     background-image: none;
     border: 1px solid #{$color};
 }
 
 /** button end */
+
+#status-drag-bar {
+    left: -3px;
+    top: -7px;
+    height: initial;
+    bottom: -14px;
+    transition: 0s background-color;
+}
+
+#status-ghost-bar {
+    background-color: #d70000;
+}
+
+#status-drag-bar:hover {
+    background-color: #d70000;
+    transition-delay: 1s;
+}

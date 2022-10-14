@@ -13,14 +13,15 @@
     <link href="css/ansi.css" rel="stylesheet" type="text/css" />
     <link href="css/chat.css" rel="stylesheet" type="text/css" />
     <link href="css/theme.css" rel="stylesheet" type="text/css" />
-    <script>
+    <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js"></script>
     <script src="../lib/bootstrap.min.js"></script>
     <script src="../lib/bootstrap-select.min.js"></script>
-    <script>
-        const { clipboard, ipcRenderer, remote, webFrame } = require('electron');
+    <script type="text/javascript">
+        if (window.module) module = window.module;
+        const { clipboard, ipcRenderer, webFrame } = require('electron');
         const { parseTemplate } = require('./js/library.js');
         const { Settings } = require('./js/settings');
         const { Display } = require('./js/display');
@@ -30,7 +31,7 @@
         var display, _logger, _zoom = 1.0;
 
         function loadOptions() {
-            options = Settings.load(remote.getGlobal('settingsFile'));
+            options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
             if (display) {
                 display.updateFont(options.chat.font, options.chat.fontSize);
                 display.maxLines = options.chat.bufferSize;
@@ -41,6 +42,7 @@
                 display.enableFlashing = options.chat.flashing;
                 display.enableMXP = options.enableMXP;
                 display.enableURLDetection = options.enableURLDetection;
+                display.showInvalidMXPTags = options.display.showInvalidMXPTags;
                 display.hideTrailingEmptyLine = options.display.hideTrailingEmptyLine;
                 display.enableColors = options.display.enableColors;
                 display.enableBackgroundColors = options.display.enableBackgroundColors;
@@ -265,7 +267,7 @@
 
         // eslint-disable-next-line no-unused-vars
         function closeHidden() {
-            remote.getCurrentWindow().hide();
+            ipcRenderer.invoke('window', 'hide');
         }
     </script>
 </head>

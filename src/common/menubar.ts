@@ -1,4 +1,4 @@
-import { remote } from 'electron';
+const remote = require('@electron/remote');
 const { Menu } = remote;
 
 export enum ItemType {
@@ -21,6 +21,7 @@ export class Menubar {
     private _menubar;
     private $cache = {};
     private $updating;
+    private _rTimeout = 0;
     private $enabled = true;
     private $busy = false;
 
@@ -187,13 +188,14 @@ export class Menubar {
     private doUpdate(type) {
         if (!type) return;
         this.$updating |= type;
-        if (this.$updating === 0)
+        if (this.$updating === 0 || this._rTimeout)
             return;
-        window.requestAnimationFrame(() => {
+        this._rTimeout = window.requestAnimationFrame(() => {
             if ((this.$updating & 1) === 1) {
                 this.rebuild();
                 this.$updating &= ~1;
             }
+            this._rTimeout = 0
             this.doUpdate(this.$updating);
         });
     }

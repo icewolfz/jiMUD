@@ -7,16 +7,1122 @@
     - Add MXP image height and better width support
     - Add MXP font size and family support
 
-## v0.7.1
+## 0.19.6 2022-10-2
+
+- **Fixed:**
+  - Fixed disconnect dialog when window size is small
+  - Immortal tools: Fixed error when navigating by using keyboard
+  - Code editor: Fixed bugs in tabstrip
+  - Command line arguments:
+    - Fixed --profiles/-pf not loading new profiles and only setting already loaded profiles as enabled
+  - Remove `Hide On Minimize` hack as electron fixed minimize event and hack now breaks linux when option enabled
+  - Display: revert a performance fix that added flicker
+- **Changed:**
+  - Update electron 19.0.16 to 19.1.1
+  - Code editor:
+    - Virtual area editor: When creating a new virtual area will create a separate terrain and state file to reduce file size instead of one large map file
+    - Area designer: Compress design files using gzip to save space
+
+## 0.19.5 2022-09-14
+
+- **Fixed:**
+  - Immortal tools: Fixed a bug introduced in 19.4 performance updates
+- **Changed:**
+  - About: rename memory tab to resources
+  - Exclude a bundled module to make packaged size smaller
+  - Update mathjs 11.2.0 to 11.2.1
+
+## 0.19.4 2022-09-12
+
+- **New:**
+  - Profile Manager: Add a break out editor for trigger pattern to allow easier editing of more complex patterns
+- **Fixed:**
+  - Auto update: close download dialog when error happens
+  - Fixed an issue that caused window to now close correctly, causing the main window to hang and requiring a second close
+  - Code editor: Fixed bugs in tabstrip
+  - Command line arguments:
+    - Fixed --map/-mf not correctly setting the map file and breaking settings
+    - Fixed --profiles/-pf not correctly setting the profile list and breaking settings
+    - Fixed --character/-c when more then one is set, now if more then one, only first is used
+    - Fixed --editor/-e to work and load new files in code editor while opening default client
+  - Fixed issues with display scrollbar corner in several themes
+- **Changed:**
+  - Update electron 19.0.14 to 19.0.16
+  - Switch mathjs from module to script to speed up load times
+  - Update mathjs 11.1.0 to 11.2.0
+  - Convert several internal functions into async to speed up load times
+
+## 0.19.3 2022-08-27
+
+- **New:**
+  - [Preferences](docs/preferences.md):
+    - Add `MSP: max retries on error`, Amount of retries to attempt play a file before stopping
+- **Fixed:**
+  - Fixed alarm wildcard patterns that have no # eg *:*:30 would fire every 30 seconds but errors as it fails to parse the *:*: right, *:*:30 should be the same as just 30
+  - Fixed alarm error invalid formats to use disableTriggerOnError when enabled
+  - Profile manager: Fix trigger tester failing on multi group optional triggers
+  - Fixed %x# variables when multi group optional trigger pattern used
+  - Fixed #show and #showprompt breaking telnet ops when split buffer happens
+  - Fixed Linux icon not being correctly set in built packages, use mac icns file instead to generate all the correct files, fixes AppImage icons and others
+  - Fixed ansi parsing when remote data is split and appending local text to prevent split ansi codes
+  - Added an error check to context menu if unable to determine focused control to fall back to default context menu
+  - [Preferences](docs/preferences.md):
+    - Fixed reset not working
+    - Fixed log viewer window options not being saved always
+  - MSP: Fixed rare instant where volume or playing status would be wrong due to loading taking awhile from async loading of data
+- **Changed:**
+  - Update electron 19.0.13 to 19.0.14
+  - Update mathjs 11.0.1 to 11.1.0
+
+## 0.19.2 2022-08-17
+
+- **New:**
+  - Code editor: 
+    - Line count is now displayed in the status bar after file length
+    - Area designer: Add \${rms}, \${mon}, \${std}, \${obj}, \${cmds} variables for exit destinations
+    - New code overlay icon for editor only when used on windows
+- **Fixed:**
+  - Code editor:
+    - Fixed text color for select dropdowns for selected items being hard to read 
+    - Monster wizard: Fixed not correctly clearing out monster type list
+    - Datagrid: Fix some editor width issues being cut off by buttons
+    - Fixed issue when closing resize dialog caused focus to be lost
+    - Virtual area editor:
+      - Used state data instead of terrain data when updating terrain data
+      - Fixed room editor not updating after changing terrain or item indexes
+      - Fixed undo/redo when multiple rooms are changed at one time
+      - Fixed undo/redo not changing synced item index with terrain index
+      - Fixed undo/redo when map is shrunk and rooms deleted
+      - Fixed resize map issues when odd numbered dimensions and center
+    - Area designer:
+      - Fixed undo/redo when multiple rooms are changed at one time
+      - Fixed exit paths when using the area path, std, mon, cmds, obj paths to reduce duplicate defines
+      - Fixed room editor not updating after changes
+      - Fixed room preview not updating when some items changed
+      - Fixed room preview object line not clearing when 1 item and set to 0 after being set to 1
+      - Fixed undo/redo when map is shrunk and rooms deleted
+      - Fixed resize map issues when odd numbered dimensions and center
+  - Fix Auto create character system
+  - Fix sub windows not getting load-char event when loading a new character
+  - Fix issue with about dialog and memory display for non window systems
+- **Changed:**
+  - Code editor:
+    - Find will now update to current selection when using shortcut or menu items
+    - Editor only mode window icon will now have a code icon overlay on windows, and set the icon to code icon on linux
+  - Update electron 19.0.8 to 19.0.13
+  - Update mathjs 10.6.4 to 11.0.1
+  - Update electron-updater 5.0.5 to 5.2.1
+  - Update monaco-editor 0.33.0 to 0.34.0
+  - Update yargs-parser 21.0.1 to 21.1.1
+
+## 0.19.1 2022-07-20
+
+- **New:**
+  - Code editor:
+    - Virtual area editor:
+      - Add flip area horizontally, vertically, or by depth
+    - Area designer:
+      - Add flip area horizontally, vertically, or by depth
+- **Fixed:**
+  - Character manager: Fix context menu items not working
+  - Code editor:
+    - Virtual area editor:
+      - Resize did not correctly shift external exit coordinates based on anchor settings
+      - Fix edit menu items not being added
+      - Fix resizing breaking external exit table editor
+      - Fix undo for external exits set by room editor
+    - Area designer:
+      - Fix edit exit context menu item not opening exit editor dialog
+      - Fix not marking map as changed when resized
+  - Fixed a minor error when trying to update interface before client has finished loading
+- **Changed:**
+  - Update better-sqlite3 7.5.3 to 7.6.2
+  - Update moment 2.29.3 to 2.29.4
+  - Update electron 19.0.7 to 19.0.8
+
+## 0.19.0 2022-07-04
+
+- **Fixed:**
+  - Code editor: Virtual area editor:
+      - Fixed infinite loop when building terrain and state data
+- **Changed:**
+  - Linux 32bit is no longer supported
+  - Update electron 17.3.1 to 19.0.7
+  - Update electron-updater 4.6.5 to 5.0.5
+  - Update better-sqlite3 7.5.0 to 7.5.3
+  - Update moment 2.29.2 to 2.29.3
+  - Update mathjs 10.4.2 to 10.6.4
+  - Update markdown-it 12.3.2 to 13.0.1
+  - Update fs-extra 10.0.1 to 10.1.0
+
+## v0.18.1 2022-04-04
+
+- **Fixed:**
+  - Character manager: Fix name list not scrolling
+- **Changed:**
+  - Update electron 17.0.1 to 17.3.1
+  - Update @electron/remote 2.0.4 to 2.0.8
+  - Update fs-extra 10.0.0 to 10.0.1
+  - Update yargs-parser 21.0.0 to 21.0.1
+  - Update mathjs 10.1.1 to 10.4.2
+  - Update monaco-editor 0.32.1 to 0.33.0
+  - Update moment 2.29.1 to 2.29.2
+
+## v0.18.0 2022-02-16
+
+- **New:**
+  - New speed path system, adds option to group by amount of commands, and the delay between each group
+  - [Preferences](docs/preferences.md):
+    - [Delay between path commands](docs/preferences.md#scripting) The amount of milliseconds between sending of path commands for speed paths.
+    - [Amount of path commands to send](docs/preferences.md#scripting) the # of commands to send between speed path delay
+    - Speedpaths:
+      - [Echo](docs/preferences.md#scripting-characters) echo each command to the screen as they are sent
+      - Parsing of speed paths now allows you to use ( ) or { } to group a command, eg !2(n;w) would send n;w twice
+  - Character manager: Notes field has been added to allow you to add notes that can be edited, they are saved directly to a file in character folder named character.notes, by saving directly to file it avoids keeping large amounts of text loaded into memory 
+  - Add [%charcomment(text)](docs/functions.md#miscellaneous) to allow appending comments to character notes or getting notes field
+  - Add [%charnotes](docs/functions.md#miscellaneous) to allow setting notes or getting notes field
+  - Profile manager: double clicking an item in treeview will now toggle expand or collapse state
+- **Fixed:**
+  - Try to make sure window size is sent to the mud more accurately
+  - Optimize debounce systems so it is cleaner and runs less
+  - Mapper: Default to 1 if [Directions to send](docs/preferences.md#mapper) is ever less then 1 so auto walk path sent always
+  - Remove extra `Enable Double Parameter Escaping` from preferences dialog.
+  - Immortal tools: fix minor bug in remote drag and drop download
+  - Profile manager: Fixed issue when sub item group was selected and profile option changed that would cause treeview to replace sub item with profile
+- **Changed:**
+  - Profile manager: sort profiles by priority sort if set, then alpha always, ignore index as profiles are stored by name
+  - Update electron 16.0.8 to 17.0.1
+  - Update monaco-editor 0.31.1 to 0.32.1  
+  - Update fswin 2.21.1015 to 3.22.106
+  - Update electron-updater 4.6.1 to 4.6.5
+
+## v0.17.7 2022-02-02
+
+- **New:**
+  - Add [#COMMENT](docs/commands.md#miscellaneous) does nothing, used to create quick comments in scripts
+  - Add [#NOOP](docs/commands.md#miscellaneous) does nothing, will expand arguments and execute any functions but return nothing to the screen
+  - Add [#UNACTION](docs/commands.md#triggers) same as [#UNTRIGGER](docs/commands.md#triggers)
+  - Add [#TEMP](docs/commands.md#triggers) create a temporary trigger
+  - Add [%clip(string)](docs/functions.md#miscellaneous) return or set text on clipboard
+  - [Preferences](docs/preferences.md):
+    - Add [Ignore Eval Undefined](docs/preferences.md#scripting) Will cause undefined results to be ignored if enabled, else it will be converted to a string and the word undefined displayed
+    - Add [Allow Comments From Command](docs/preferences.md#scripting) Allow inline and block comments from the command input
+    - Add [Inline Comment String](docs/preferences.md#scripting--special-characters) The 1 or 2 character string for inline comments
+    - Add [Enable Inline Comment](docs/preferences.md#scripting--special-characters) disable inline comment support
+    - Add [Block Comment String](docs/preferences.md#scripting--special-characters) The 1 or 2 character string for block comments, ending block comment is string reversed
+    - Add [Block Inline Comment](docs/preferences.md#scripting--special-characters) disable block comment support    
+    - Add [Save Trigger State Changes](docs/preferences.md#advanced--profiles) Add option to control if state changes are saved every time they change
+    - New Advanced sub page for all profile related preferences.
+    - Add [Group profile saves](docs/preferences.md#advanced--profiles) and [Group profile save delay](docs/preferences.md#advanced--profiles) to allow grouping of profile saves
+    - Add [Return newline on empty value](docs/preferences.md#advanced--profiles) Return new line if processed item value is empty
+  - [Triggers](docs/profiles.md#triggers)
+    - Add `Loop Expression` trigger type
+    - Add `ReParse` and `ReParse Pattern` sub type triggers
+    - Add `Manual` sub type, can only be fired using [#SET](docs/commands.md#triggers) command
+    - Add `Wait` sub type trigger
+    - Add `Duration` sub type trigger
+    - Add `Skip` sub type trigger
+    - Add `Loop Lines` sub type trigger
+    - Add `Loop Pattern` sub type trigger
+    - Add `Within Lines` sub type trigger
+  - Add [#TRIGGER](docs/commands.md#triggers) and [#CONDITION](docs/commands.md#triggers) short options for type=value
+- **Fixed:**
+  - Added type checks to [#ADD](docs/commands.md#miscellaneous) and [#MATH](docs/commands.md#miscellaneous) to ensure the resulting value is a number
+  - Added type check to [#CASE](docs/commands.md#conditionals) and [#REPEAT](docs/commands.md#repeating-and-loops) to ensure the value is a number
+  - Fixed bug in multi state triggers when sub trigger is disabled
+  - Fixed issue where temp triggers or re-parse type triggers would be double executed if the pattern was in trigger value
+  - Fixed issue with temp alarms and re-parse issues with [#SET](docs/commands.md#triggers) fire state setting
+  - Fixed [Disable trigger on error](docs/preferences.md#scripting) when a sub trigger errors
+  - Only update button bar is buttons have been changed
+  - Only update context menus when menus have been changed
+  - Fixed bugs in [#GAG](docs/commands.md#display)
+  - When context menu item, button from bar, or url is clicked focus on command input if [Focus to command input on click](docs/preferences.md#display) enabled
+  - Profile manager: Add new functions and commands to editor highlight and documents
+- **Changed:**
+  - [Triggers](docs/profiles.md#triggers), [Buttons](docs/profiles.md#buttons), [Macros](docs/profiles.md#macros), [Context](docs/profiles.md#context), and [Aliases](docs/profiles.md#aliases) values will now be ignored if empty, thus not creating blank lines, you can use a value of ${cr} to send a blank line
+  - [#ADD](docs/commands.md#miscellaneous) will default to 0 if variable is not defined and define variable
+  - Update electron 16.0.7 to 16.0.8
+  - Update @electron/remote 2.0.1 to 2.0.4
+  - Update mathjs 10.1.0 to 10.1.1
+
+## v0.17.6 2022-01-24
+
+- **New:**
+  - Add [%alarm("name|pattern", setTime, "profile")](docs/functions.md#miscellaneous) return or set the time for alarm with name or matching pattern
+  - Add [#FIRE text](docs/commands.md#triggers) Send text to trigger system as if received from the mud, triggering matching triggers with out displaying to screen and effecting current last line
+  - Add [#STATE name|pattern state profile](docs/commands.md#triggers) Set the state of a trigger
+  - Add [#SET name|pattern state value profile](docs/commands.md#triggers) Set the fired state of a trigger
+  - Add [#CONDITION name|pattern {pattern} {commands} options profile](docs/commands.md#triggers) create a new trigger sub state, if name or pattern is omitted state will be added to last created trigger
+  - Add [#CR](docs/commands.md#miscellaneous) Send a blank line to the mud
+  - Add [#SEND](docs/commands.md#miscellaneous) Send file to mud line by line pre-pending and appending supplied prefix and suffix to each line as if sent from command input, if not a valid file sent as text if from command input
+  - Add [#SENDRAW](docs/commands.md#miscellaneous) Send raw text or file directly to mud with out parsing or echoing to the screen appending a newline if needed
+  - Add [#SENDPROMPT](docs/commands.md#miscellaneous) Send raw text directly to mud with out parsing or echoing to the screen with no appended newline
+  - Add [#UNVAR name](docs/commands.md#createmodify-profile-or-items) Delete variable
+  - Add [#ACTION](docs/commands.md#triggers) same as [#TRIGGER](docs/commands.md#triggers)
+  - Add [#CHARACTER](docs/commands.md#miscellaneous) send current character to the mud, without echoing to the screen
+  - Add [#SPEAK text](docs/commands.md#sounds) speak text using text to speech systems
+  - Add [#SPEAKSTOP](docs/commands.md#sounds) stop speak and clear all queued
+  - Add [#SPEAKPAUSE](docs/commands.md#sounds) pause speaking
+  - Add [#SPEAKRESUME](docs/commands.md#sounds) resume speaking
+  - Add [%state("name|pattern", "profile")](docs/functions.md#miscellaneous) Returns the current trigger state of the trigger given by the name or pattern, if no profile it will search all enabled profiles until match found
+  - Add [%defined(name,type)](docs/functions.md#miscellaneous) is item defined, similar to isdefined
+  - Add [%isnull(value)](docs/functions.md#string) return if value is null or not if value omitted returns null
+  - Add [%stripansi(string)](docs/functions.md#string) Strip all ansi codes from strip
+  - Mapper: Add `Edit > Reset map` to allow users to delete and create a fresh map file
+  - Profile Manager: Parse style now has basic code folding
+  - Multi State triggers - Allows you to create multi line or conditional triggers
+    - Full profile manger support to add, edit, reorder, delete each state
+- **Fixed:**
+  - Profile manager:
+    - Profiles are now sorted according to the [Profile manager sort order](docs/preferences.md#advanced--profile-manager) and [Profile manager sort direction](docs/preferences.md#advanced--profile-manager) settings like items
+    - Fixed context menu editor icon sample width
+  - Fixed [#TRIGGER](docs/commands.md#triggers) name syntax not working
+  - Fixed [#UNTRIGGER](docs/commands.md#triggers) failing when trying to remove when only 1 profile exist
+  - Fixed extra new lines being added when parsing text in the middle of triggers
+  - Fixed temporary triggers and [#UNTRIGGER](docs/commands.md#triggers) some times removing trigger from wrong profile
+  - Fixed issue with client.echo, client.sendCommand, and client.sendBackground when used in script type and passing non string values
+  - Fixed Trigger alarms to be more accurate and not double fire some times
+  - Fixed Trigger alarms always being stuck in wildcard mode, should require * explicit to execute wildcards
+  - Fixed auto connect when loading same character again
+  - Fix profile loading issues for [#TRIGGER](docs/commands.md#triggers), [#UNTRIGGER](docs/commands.md#triggers), [#EVENT](docs/commands.md#triggers), [#UNEVENT](docs/commands.md#triggers), [#BUTTON](docs/commands.md#createmodify-profile-or-items), [#UNBUTTON](docs/commands.md#createmodify-profile-or-items), [#ALARM](docs/commands.md#riggers), [#ALIAS](docs/commands.md#createmodify-profile-or-items), [#UNALIAS](docs/commands.md#createmodify-profile-or-items)
+  - Fix parsing of some arguments for [#TRIGGER](docs/commands.md#triggers), [#UNTRIGGER](docs/commands.md#triggers), [#EVENT](docs/commands.md#triggers), [#BUTTON](docs/commands.md#createmodify-profile-or-items)
+  - Fixed [%ansi(style,fore,back)](docs/functions.md#miscellaneous) for bold,color making it backgroound instead of bold fore color
+  - Fixed [%time(format)](docs/functions.md#miscellaneous) not being parsed
+- **Changed:**
+  - Display: split bar highlights when mouse over and when being moved
+  - [#TRIGGER](docs/commands.md#triggers) add/update message no longer contains name or pattern to prevent trigger from accidentally triggering
+  - Reformat [functions](docs/functions.md) doc layout
+  - Update electron 16.0.6 to 16.0.7
+  - Update font-list 1.4.3 to 1.4.5
+  - Update mathjs 10.0.2 to 10.1.0
+  - Update better-sqlite3 7.4.6 to 7.5.0
+  - Update chokidar 3.5.2 to 3.5.3
+
+## v0.17.5 2022-01-10
+
+- **New:**
+  - Add [%escape(string)](docs/functions.md#string)  escape all characters in string if escaping is allowed and if those characters need escaping
+  - Add [%unescape(string)](docs/functions.md#string) strip escape characters from string if escaping is allowed and those characters are enabled
+  - Add $selectedword, $selword, $selectedurl, $selurl, $selectedline, $selline, $selected, $character, $copied for direct access in expressions
+  - Add versions of most predefined functions to the expression system to allow for inline usage using [%eval](docs/functions.md#math) or in math, note this is not always the same as full expanded form of ${function(args)} as that will process in the command parsing system while when used with eval or math expressions it will be parsed with the expression engine instead
+  - [Preferences](docs/preferences.md):
+    - Add [Profile to select on load](docs/preferences.md#advanced--profile-manager) pick which profile is auto selected when profile manager opened
+    - Add [Expand selected profile on load](docs/preferences.md#advanced--profile-manager) auto expand selected profile when profile manager opened
+- **Fixed:**
+  - Input parser:
+    - Correctly escape function arguments when quoting arguments with respect to scripting quote settings
+    - Use custom escape character when splitting function arguments with quotes
+    - Fix escaping of command stack when used in a path, after a function, or alias
+    - Fix issue when parsing command arguments ending with a newline
+  - Fix dice when using fudge dice
+  - Fix dice when using #d% returning 1d100 instead of a % of 0 to 1
+  - Fix parsing of sub context menus
+  - Fix $selectedword, $selword, $selectedurl, $selurl, $selectedline, $selline, when used from command line to use mouse position to correctly get the selected word,line, or url
+  - Fix [#CW](docs/commands.md#display), [#COLOR](docs/commands.md#display), [#HIGHLIGHT](docs/commands.md#display) trigger creation syntax to use set command character instead of hard coded #
+  - All #command error messages now correctly use the set command character when displaying syntax
+  - Make [#VARIABLE](docs/commands.md#createmodify-profile-or-items) respect strip quote settings when storing value
+  - Display: issues with overlays and Unicode background selection sizes
+  - Fixed code editor not being correctly restored if already open
+  - Help: Fixed command page links
+- **Changed:**
+  - Error messages for commands and functions will add name to better understand where the error is
+  - Update markdown-it 12.3.1 to 12.3.2
+
+## v0.17.4 2022-01-07
+ 
+- **New:**
+  - Add [#FREEZE](docs/commands.md#display) Scroll lock the display, if state is omitted it will toggle the scroll lock, if state is 0 or false it will disable scroll lock, if state is anything else it will lock the scroll back
+  - Add [#CLR](docs/commands.md#display) Add blank lines to clear the screen ignoring any current trailing blank lines
+  - Add [%begins(string1,string2](docs/functions.md#string) return true if string 1 starts with string 2
+  - Add [%ends(string1, string2)](docs/functions.md#string) returns true if string 1 ends with string 2
+  - Add [%len(string)](docs/functions.md#string) returns the length of string
+  - Add [%pos(pattern,string)](docs/functions.md#string) returns the position of pattern in string on 1 index scale, 0 if not found  
+  - Add [%ipos(pattern,string)](docs/functions.md#string) returns the position of pattern in string on 1 index scale, 0 if not found ignoring case
+  - Add [%regex(string,regex,var1,...,varN,varN+1)](docs/functions.md#string) test if string matches the regex pattern, if found returns the position of the match, starting at 1 else returns 0, var1 ... varN are optional variable names to store any sub pattern matches, varN+1 is the length of matched string]
+  - Add [%trim(string)](docs/functions.md#string) Returns the string without any spaces at the beginning or end
+  - Add [%trimleft(string)](docs/functions.md#string)` Returns the string without any spaces at the beginning
+  - Add [%trimright(string)](docs/functions.md#string) Returns the string without any spaces at the end
+  - Add [%bitand(number1,number2)](docs/functions.md#math) returns the bitwise AND of the two numbers. 
+  - Add [%bitnot(number)](docs/functions.md#math) returns the bitwise inverse of the given number.
+  - Add [%bitor(number1,number2)](docs/functions.md#math) returns the bitwise OR of the two numbers. 
+  - Add [%bitset(i,bitnum,value)](docs/functions.md#math) Set or reset a bit within a numeric value and return the new numeric value. If value is omitted, 1 (true) is used to set the bit. To reset a bit, the value must be zero. 
+  - Add [%bitshift(value,number)](docs/functions.md#math) shifts the value the num bits to the left. If num is negative, then the value is shifted to the right. 
+  - Add [%bittest(i,bitnum)](docs/functions.md#math) Test a bit within a numeric value and return true if it is set, false if it is not set. bitnum starts at 1. 
+  - Add [%bitxor(number1,number2)](docs/functions.md#math) returns the bitwise XOR of the two numbers.  
+  - Add [%number(s))](docs/functions.md#math) convert a numeric string to a number. 
+  - Add [%isfloat(value))](docs/functions.md#math) Returns true if value is a valid floating point number
+  - Add [%isnumber(s))](docs/functions.md#math) true if s represents a valid number. 
+  - Add [%string(value))](docs/functions.md#math) converts value to a string. Quotes are added around the value.
+  - Add [%float(value))](docs/functions.md#math) Returns value as a floating point number.
+  - Add [%isdefined(name)](docs/functions.md#miscellaneous) Returns 1 if a variable is defined, 0 if undefined
+  - Add noEcho argument for [client.sendBackground](docs/functions.md) and [client.sendCommand](docs/functions.md) to allow hiding from display
+  - Add [$character](docs/functions#predefined-variables) to return current name from GMCP status info if possible and falls back to character manager login name or empty string
+  - [Triggers](docs/profiles.md):
+    - Add support for regex name capture that work similar to alias named params
+    - Add `Pattern` and `Command Input Pattern` types to support zMUD/TinTin type pattern matching
+  - Help: Add more known issue for advanced editor
+  - Add save image as, copy image, copy image link to MXP image context menu
+  - Input parser: Add $var user variable style support
+  - Profile Manager:
+    - Alias params are now highlighted with an error if invalid
+    - Parse style is now syntax highlighted using special characters defined from options
+  - [Preferences](docs/preferences.md):
+    - Add [Enable Double Parameter Escaping](docs/preferences.md#scripting) to enable/disable doubling up of the parameter character `%` to escape as well as using escape character, default to off as there is an escape system
+    - [Parameters character](docs/preferences.md#scripting--special-characters) allows you to change the % character for parameters
+    - [Enable Parameters](docs/preferences.md#scripting--special-characters) disable parameter system
+    - [N Parameters character](docs/preferences.md#scripting--special-characters) allows you to change the $ character for named parameters
+    - [Enable N Parameters](docs/preferences.md#scripting--special-characters) disable N parameter system
+    - [Show lag in title](docs/preferences.md#status) Display lag in title bar
+  - Add [Parse caption](docs/profiles.md#context) to parse context menu captions using the command parser to allow predefined variables or expressions
+- **Fixed:**
+  - Updated README to update build requirements
+  - Display:
+    - Fixed bug with scroll lock auto scrolling when at bottom of display
+    - Fixed bug with scroll lock being lost when screen is empty
+    - Fixed bug with scroll lock being lost when split view is enabled
+  - Advanced editor:
+    - Fixed `Formatted as commands (No echo)` and `Text as commands (No echo)` echoing to the display
+    - Fixed context menu
+    - Fixed background color codes being wrapped in extra %^
+    - Clean up extra codes between 2 resets blocks
+    - Fixed Bold white background color to use RGB555 color code correctly
+  - Profile Manager:
+    - Trigger tester still did not correctly apply [Prepend triggered line](docs/preferences.md#scripting) preference
+    - Fix trigger type select width
+    - Focus on value editor on select
+    - Fix out of sync closing when asking to save/apply over changed file
+    - Fix erroring when trying to delete a profile that did not exist
+  - Fixed alias named arguments not being directly accessible in scripting type
+  - Fixed full screen not always being restored on load
+  - Fixed maximized state not being correctly restored on load if window was closed minimized
+  - Input parser:
+    - Detect newlines when using {} block formatting for multi line blocks when possible
+    - Skip alias invalid named params
+    - Fixed number parsing in places not accepting +#, as +# is a valid positive number and converted to simple #
+    - Fixed ignore spaces around number arguments for functions and commands
+    - Fixed escape characters following parameters, eg $\ or %\ where not correctly parsing escape characters
+    - Fixed not escaping command special character
+    - Fixed do not escape disabled special characters
+    - Fixed command character not being correctly replaced with custom character in some places
+    - Fixed saving nested loop variables as user variables
+    - Fixed bug when splitting quoted strings
+  - Fixed [%dice(xdy+n)](docs/functions.md#math) not correctly parsings argument format
+  - Fixed [%if(expression,true,false)](docs/functions.md#conditionals) not erroring if missing false argument
+  - Fixed [#variable](docs/commands.md) should not evaluate the value to allow use of raw strings as needed, eg #va test {3+5} should store 3+5 not 8, if you want the evaluated value use #var test \${3+5} or #va test \{${3+5}}
+  - Fixed [#variable](docs/commands.md) throws an error now when invalid variable names are used
+  - Fixed Select control selected color text
+  - Fixed [Watch for profile changes](docs/preferences.md#advanced) not always being cleared when client closed
+  - Docs: Fixed [i..z](docs/functions.md#predefined-variables) description
+- **Changed:**
+  - Revert 0.17.1 hack for child windows as electron seems to have fixed the bug
+  - Update tinymce 4.8.3 to 5.10.1
+  - Update electron 16.0.4 to 16.0.6
+  - Update font-list 1.4.2 to 1.4.3
+  - Update mathjs 10.0.0 to 10.0.2
+  - Update better-sqlite3 7.4.5 to 7.4.6
+  - Rearrange [General](docs/preferences.md#general) to reduce scrolling
+  - Increase character manager dialog height to remove scrolling when possible
+  - Update markdown-it 12.3.0 to 12.3.1
+
+## v0.17.3 2021-12-14
+
+- **New:**
+  - Add [#CW](docs/commands.md#display) colors all words matching current trigger pattern
+  - Add [#PCOL](docs/commands.md#display) color text based on start and end positions
+  - Add [#HIGHLIGHT](docs/commands.md#display) make text bold or brighter color if already bold
+  - Add [#COLOR {pattern} fore,back,bold profile](docs/commands.md#display) pattern and profile arguments to allow for quick trigger creation 
+  - Add [%x1..%x99](docs/functions.md) predefined variable support, this variable will be replaced the matching groups start and end indexes, use this.indices or client.indices in script type to access
+  - Add [%ansi(style,fore,back)](docs/functions.md) function to return ansi formatted string
+  - Add [%i](docs/functions.md) predefined variable
+  - Add [%j..%z](docs/functions.md) predefined variables for nested looping support
+  - Add [%random](docs/functions.md) predefined variable and function
+  - Add [%char(i)](docs/functions.md) return ASCII character for i
+  - Add [%ascii(string)](docs/functions.md) return the ascii value for first letter in string
+  - Add [%case(n,value1,value2,value3...)](docs/functions.md) return the nth value of arguments, from 1 to last argument
+  - Add [%switch(expression1,value1,...expressionN,valueN)](docs/functions.md) return value of the first expression that evaluates to true
+  - Add [%if(expression,true-value,false-value)](docs/functions.md) evaluate expression and return true or false value
+  - Add [#break](docs/commands.md#repeating-and-loops) break loop
+  - Add [#continue](docs/commands.md#repeating-and-loops) skips to the next loop iteration
+  - Add {} grouping support to [#nnn](docs/commands.md#repeating-and-loops) argument
+  - Add [#-nnn](docs/commands.md#repeating-and-loops) repeat commands NNN number of times but with a reverse counter
+  - Add [#IF](docs/commands.md#conditionals) if expression is true execute true command, if false and false commands supplied execute them
+  - Add [#CASE](docs/commands.md#conditionals) return command from list based on the value of index
+  - Add [#SWITCH](docs/commands.md#conditionals) execute each expression until one returns true, if none are true and an else command supplied it is executed instead
+  - Add [#LOOP](docs/commands.md#repeating-and-loops) Execute the commands a number of times given by the range
+  - Add [#REPEAT](docs/commands.md#repeating-and-loops) repeat commands number of times returned by expression
+  - Add [#BE](docs/commands.md#sounds) short version of [#BEEP](docs/commands.md)
+  - Add [#ADD](docs/commands.md#miscellaneous) Add value to variable named name, if current value is non numeric an error will be displayed
+  - Add [#MATH](docs/commands.md#miscellaneous) Set value to variable named name
+  - Add [#VARIABLE](docs/commands.md) Set, get, or display all user set variables
+  - Add [#UNTIL](docs/commands.md#repeating-and-loops) Execute commands until the expression evaluates to TRUE
+  - Add [#WHILE](docs/commands.md#repeating-and-loops) Execute commands as long as expression evaluates to TRUE
+  - Add [#FORALL](docs/commands.md#repeating-and-loops loop stringlist, in the format of a | delimited string and set %i as each word)
+  - Add [#EVALUATE](docs/commands.md#miscellaneous) Evaluate expression and display to screen like show
+  - Add [#PRINT](docs/commands.md#display) Display text to the screen and append newline, and the display text will not fire triggers
+  - Add [#PRINTPROMPT](docs/commands.md#display) Display text to the screen, and the display text will not fire triggers
+  - Input parser:  
+    - Add support to expression system for string comparison
+    - Add support to expression system for string concat using + not just concat function
+    - Add user variable support to expression system, can access in scripting using client.variables['NAME'] or client.variables.NAME
+    - Add proper loop nesting using %i..%z variables for nested loops
+  - [Preferences](docs/preferences.md)
+    - Add [Watch for profile changes](docs/preferences.md#advanced) when enabled will watch for profile changes
+    - Add [On profile change do](docs/preferences.md#advanced) what to do when a profile is changed when `Watch for profile changes` enabled
+    - Add [On profile deleted do](docs/preferences.md#advanced) what to do when a profile is deleted when `Watch for profile changes` enabled
+    - Add [Open ShadowMUD help in web browser](docs/preferences.md#advanced) to open ShadowMUD in child window or web browser
+  - Help: Add left navigation tree to allow easier navigation besides the top navigation drop down, due to new command help pages to prevent large scroll when wanted
+- **Fixed:**
+  - [#nnn](docs/commands.md)
+    - Fixed being double parsed
+    - Fixed issues with trailing newlines with nested loops
+    - Fixed format error checking to accept only numbers
+  - Fixed window size being sent to the mud when status display is hidden/shown
+  - Fixed bug in [#TRIGGER](docs/commands.md#triggers) command and adding to profile not correctly finding if one exist already
+  - Fixed bug in [#EVENT](docs/commands.md#triggers) command and adding to profile not correctly finding if one exist already
+  - Fixed bug in [#WAIT](docs/commands.md#miscellaneous) to allow parsing of argument to allow for %i and expressions
+  - Profile Manager: trigger tester did not correctly apply [Prepend triggered line](docs/preferences.md#scripting) preference
+  - Fixed bug with File > Exit when profile manager open and should not close
+  - Fixed bug in [#COLOR](docs/commands.md#display) and [#CW](docs/commands.md#display) not correctly parsing profile argument
+  - Input parser:
+    - Fixed - being lost after %
+    - Fixed # being lose if %# had a -, * or % following it
+    - Fixed corrupted stack after trigger errors
+    - Fixed issue with $named argument format
+    - Fixed named arguments not working
+    - Fixed bugs in [repeatnum](docs/functions.md) not having correct name in all places
+    - Fixed how alias unused arguments are appended
+    - Fixed alias arguments values not correctly parsing before being used
+    - No longer parse #commands if in a command/function argument as it would break inline parsing in most cases
+  - Fixed execution of buttons and context items with broken parsing stacks
+  - Fixed buttons and context not having error trapping code that broke cleanup
+  - Status Display: Fixed resize bar conflicting with profile manger resize bar due to theming
+  - Help:
+    - Fixed crashing issue when opening external links
+    - Fixed changelog links not working
+  - Fixed issue with modal child windows not being set to correct parent window
+  - Immortal tools: 
+    - Fixed rename editor to close when right clicking outside of editor
+    - Fixed rename editor context menu to show standard edit menu
+- **Changed:**
+  - Remove %named argument support from docs as it never was supported and easier to just remove it
+  - [#nnn](docs/commands.md#repeating-and-loops) counter is now 1 based when using %i..%z instead of 0 based
+  - Allow group by ( and ) in command argument parsing
+  - Update markdown-it 12.2.0 to 12.3.0
+  - Update monaco-editor 0.30.1 to 0.31.1  
+  - Update bootstrap 3.3.7 to 3.4.1
+  - Update datatables from 1.10.18 to 1.11.3
+  - Update bootstrap select 1.13.17 to 1.13.18
+  - Help: Command help has been redesigned and commands will slowly have individual help pages
+
+## v0.17.2 2021-12-06
+
+- **New:**
+  - Add [#COLOR](docs/commands.md) color last added line
+  - Add [#WINDOW](docs/commands.md) to open/show supported windows
+  - Add [#TESTUNICODEEMOJI](docs/commands.md) to display Unicode emoji symbols
+  - [Preferences](docs/preferences.md)
+    - Add [Open 'Who is on' in web browser](docs/preferences.md#advanced) to open who in child window or browser
+    - Add [Disable trigger on error](docs/preferences.md#scripting) to disable a trigger if an error happens, either from pattern or scripting, enabled by default to prevent spamming of broken trigger
+    - Add [Prepend triggered line](docs/preferences.md#scripting) disable the fix to prepend the triggered line as %0,$0, or %{0} to return to previous usage
+  - Add [%color(fore,back,bold)](docs/functions.md) function to return color codes
+  - Add [%zcolor(fore,back,effect)](docs/functions.md) function to convert zmud/cmud style color codes into supported jiMUD codes
+  - Status Display: Add ability to resize
+  - Triggers: Add [Trigger on raw](docs/profiles.md) option to match on raw line including any ansi escape codes
+  - Themes: Add two new themes, updated [preference](docs/preferences.md) docs to mention custom theme folders and [customizing](docs/customizing.md) docs to explain themes
+    - Clean-large: scaled version of clean theme, 150% larger
+    - Clean-extra-large: scaled version of clean theme, 200% larger
+- **Fixed:**
+  - Mac: Fix window menu item on main bar
+  - Display:
+    - Fixed Unicode combining character selection issues
+    - Fixed Unicode selection width when font style is italic
+    - Fixed mouse cursor to use standard text cursor
+    - Fixed more Unicode surrogate/variant pair selection issues
+    - Fixed bug in MXP expire not clearing send/link end tag
+    - Fixed split view resize when horizontal scroll bar visible
+  - Ansi Parser: Fixed bug in MXP expire tag not correctly expiring links on same line that come before the tag
+  - Fixed bug with [#GAG](docs/commands.md) not working from command line
+  - Fixed bug with [#GAG](docs/commands.md) and number argument not correctly working
+  - Triggers:
+    - Fixed bug with regex trigger caching
+    - Fixed bug with %0, ${0}, $0 not always return full raw line of text **Warning:** this may break some triggers
+    - Fixed bug with verbatim not error catching
+  - Fixed bug when client was maximized then minimized and not correctly sending the new size to the mud
+  - Focus on main window when profile manager, advanced editor, or child windows closed
+  - Fixed bug that would not correctly clean up when window closed by close button
+  - Fixed bug where window would not correctly save open state when main window closed
+  - Advanced Editor: Fixed bug with context menu and colorizing selected text
+  - Status Display: Fixed some monster icon positions
+  - Backup: Fixed importing of [Show Script Errors](docs/preferences.md#scripting) setting
+- **Changed:**
+  - Expand [#TESTMXPEXPIRE](docs/commands.md) to test same line expiring
+  - Use resize cursors instead of column resize cursors for resizable areas
+  - Update electron 16.0.1 to 16.0.4
+
+## v0.17.1 2021-11-23
+
+- **Fixed:**
+  - Fixed issue with electron and child windows open using window.open and invalid module paths
+
+## v0.17.0 2021-11-23
+
+- **New:**
+  - Add context-pre-build, context-open, context-closed trigger events for when the context menu is open or closed
+  - Add $contextMenu scripting variable to allow access to the context menu item array, **WARNING** changing this can break your context menu
+- **Fixed:**
+  - Fix scripting predefined variables $selectedword, $selectedline, $selectedurl, $selword, $selline, $selurl so they are correctly set for use in javascript
+  - Display:
+    - Fix to Unicode width when italic font style
+    - Fix to Unicode surrogate/variant pair selection
+  - Code editor: change how ([ ]) and ({ }) are handled in bracket detection for better matching and coloring support
+  - Preferences: Fixed color scheme selection not working
+- **Changed:**
+  - Update electron 13.5.1 to 16.0.1
+  - Update fswin 2.21.929 to 2.21.1015
+  - Update monaco-editor 0.28.1 to 0.30.1
+  - Update mathjs 9.5.0 to 10.0.0
+  - Update better-sqlite3 7.4.3 to 7.4.5
+  - Update font-list 1.4.0 to 1.4.2
+  - Update yargs-parser 20.2.9 to 21.0.0
+  - Update electron-updater 4.3.9 to 4.6.1
+
+## v0.16.5 2021-10-03
+
+- **New:**
+  - Code editor:
+    - Add bracket colorization matching
+    - Add dark theme support for editors
+- **Fixed:**
+  - Auto update: when error happens correctly re-enable menu item
+  - Code editor: fix Enable Background Throttling preference not being set
+- **Changed:**
+  - Update electron 13.3.0 to 13.5.1
+  - Update fswin 2.21.905 to 2.21.929
+  - Update monaco-editor 0.27.0 to 0.28.1
+  - Update mathjs 9.4.4 to 9.5.0
+  - Update font-list 1.3.1 to 1.4.0
+
+## v0.16.4 2021-09-06
+
+- **New:**
+  - Add skills window
+  - Added [#testspeedfiler](docs/commands.md) to load a file and run timed test as if it was sent from a mud
+- **Fixed:**
+  - Fixed error with linux on hide minimize hack when first loading
+- **Changed:**
+  - Replace more remote context menus
+  - Replace all remote module dialogs
+  - Update electron 13.2.2 to 13.3.0
+  - Update fswin 3.21.107 to 2.21.905
+
+## v0.16.3 2021-08-25
+
+- **New:**
+  - Preferences:
+    - Add showInTaskBar option for main window
+    - Add help blocks for tray click events when using linux
+  - Tray icon: Add known issues when using linux to readme
+- **Fixed:**
+  - Code editor:
+    - Fix issue using old promises
+    - Fix issue with recent open list not being updated fast enough
+  - Add hack for linux not firing minimize event
+  - Auto update: Add message box for linux non Appimage installs as they are not supported
+  - Use setIcon for linux to try and change icon based on connected, active, or disconnected state
+  - Backup: refocus on main client window after backup has completed
+- **Changed:**
+  - Update monaco-editor 0.25.1 to 0.27.0
+  - Update electron 13.1.2 to 13.2.2
+  - Update yargs-parser 20.2.7 to 20.2.9
+  - Update markdown-it 12.0.6 to 12.2.0
+  - Update mathjs 9.4.3 to 9.4.4
+  - Update better-sqlite3 7.4.1 to 7.4.3
+
+## v0.16.2 2021-06-16
+
+- **New:**
+  - Character manager: Added `Disconnect on load` for each character allowing you to force the current connection to disconnect and using the new characters auto connect settings
+  - Code Editor: add armour of holding support to area designer and code template
+- **Fixed:**
+  - Code Editor:
+    - Select drop downs cutoff or causing scrolling when used in dialogs
+    - Fix native tab icons when opening multiple files at once
+- **Changed:**
+  - Update electron 13.1.1 to 13.1.2
+  - Update font-list 1.2.14 to 1.3.1
+  - Update monaco-editor 0.24.0 to 0.25.1
+  - Update chokidar 3.5.1 to 3.5.2
+
+## v0.16.1 2021-06-07
+
+- **Fixed:**
+  - Fixed debug inspect content menu item
+- **Changed:**
+  - Update electron 13.0.1 to 13.1.1
+  - Update better-sqlite3 7.4.0 to 7.4.1
+  - Update mathjs 9.4.1 to 9.4.2
+
+## v0.16.0 2021-05-26
+
+- **Fixed:**
+  - Fix opening child windows
+- **Changed:**
+  - Update electron 12.0.9 to 13.0.1
+
+## v0.15.2 2021-05-26
+
+- **New:**
+  - Preferences:
+    - Add `Max reconnect delay` to set the maximum time before reconnecting when using reconnect dialog.
+    - Add `Enable Background Throttling` to allow disabling of throttling when a window is in the background or hidden
+- **Fixed:**
+  - Filled in some missing docs for preference settings
+- **Changed:**
+  - Separated backups, connection, and profile manager preferences into sub advanced pages to make advanced page easier to read
+  - Update electron 12.0.7 to 12.0.9
+  - Update mathjs 9.4.0 to 9.4.1
+  - Re-code window.open systems as old systems have been deprecated and replaced
+
+## v0.15.1 2021-05-16
+
+- **Fixed:**
+  - Files not correctly moved to trash
+  - Code Editor:
+    - Fix undo, redo, cut, copy, and paste did not work from menus/context after upgrading to 0.21.x monaco-editor
+    - Fix custom actions when using diff system
+    - Fix issue with advanced editor in editor only mode
+    - Only clear the menu recent documents, not the os recent documents
+    - Fix native icon support
+  - Log viewer:
+    - Only clear the menu recent documents, not the os recent documents
+  - Advanced editor: Fix due to typo added by mistake
+- **Changed:**
+  - Recode internal path parser to remove remote reliance and simplify code base by having only one function
+  - Moved all app calls to main process using IPC
+  - Moved all window operations into main process using IPC
+  - Update better-sqlite3 7.1.2 to 7.4.0
+  - Update electron 12.0.1 to 12.0.7
+  - Update node-disk-info 1.1.0 to 1.3.0
+  - Update markdown-it 12.0.4 to 12.0.6
+  - Update fs-extra 9.1.0 to 10.0.0
+  - Update font-list 1.2.13 to 1.2.14
+  - Update monaco-editor 0.21.3 to 0.24.0
+  - Replace mathjs-expression-parser with mathjs 9.4.0 due to mathjs-expression-parser not being updated
+  - Update electron-updater 4.3.5 to 4.3.9
+  
+
+## v0.15.0 2021-03-15
+
+- **New**
+  - Enable allow Half Open sockets - Indicates whether half-opened TCP connections are allowed
+- **Changed:**
+  - Update electron 11.3.0 to 12.0.1
+  - Updated crash logging to newer more detailed version
+  - Update font-list 1.2.12 to 1.2.13
+  - Update yargs-parser 20.2.6 to 20.2.7
+
+## v0.14.1 2021-02-24
+
+- **Fixed:**
+  - Code Editor:
+    - Fix remote diff/editing systems, broken in v0.11.3 due to tmp changing how temp directories worked
+    - Fix new area dialog title and default name being [Object object]
+    - Fix ([]) and ({}) from adding an extra )
+- **Changed:**
+  - Update electron 11.0.3 to 11.3.0
+  - Update markdown-it 12.0.2 to 12.0.4
+  - Update better-sqlite3 7.1.1 to 7.1.2
+  - Update chokidar 3.4.3 to 3.5.1
+  - Update fswin 3.19.908 to 3.21.107
+  - Update monaco-editor 0.21.2 to 0.21.3
+  - Update fs-extra 9.0.1 to 9.1.0
+  - Update yargs-parser 20.2.4 to 20.2.6
+  - Update font-list 1.2.11 to 1.2.12
+
+## v0.14.0 2020-12-05
+
+- **Fixed:**
+  - Chat capture: fixed issue introduced in v0.13.2
+- **Changed:**
+  - Update electron 10.1.5 to 11.0.3
+
+## v0.13.2 2020-11-16
+
+- **New:**
+  - Preferences: Add `Auto takeover login` to automatically issue yes to takeover character after login
+- **Fixed:**
+  - Chat Capture:
+    - Cache regex objects to improve performance
+    - Optimize `Capture only when open` preference when not enabled
+    - Fixed issue when reloading settings and chat window open
+  - Auto login:
+    - Improve performance checks
+    - Use login name not character manager name when auto logging in
+    - Cache login name to improve performance checks
+  - Display: Fixed Split scroll live update when enabled
+  - Code Editor:
+    - Add better error logging when editor breaks
+    - Fix random hang issue
+- **Changed:**
+  - Update yargs-parser 20.2.3 to 20.2.4
+
+## v0.13.1 2020-10-26
+
+- **New:**
+  - Preferences: Add Show invalid MXP tags to display any MXP tags as normal text if they are not standard or custom elements
+- **Fixed:**
+  - Parser:
+    - MXP:
+      - Fixed issue with fragmented line parsing and disappearing text
+      - Fixed issue when malformed tag processed
+      - Fixed issue with malformed entities
+      - Fixed bug when applying formats and not found entities
+      - Fixed issue with custom tags and elements causing double display
+  - Hopefully fix issue where menu bar is default menu instead of proper menu
+  - Fix command history window list delay update on first command
+  - Code Editor:
+    - Fixed issue where editor would randomly hang
+    - Fixed issue where virtual/area designer maps would not be drawn on first load
+    - Fixed issue when virtual/area designer property editor would fail to create an editor on click
+- **Changed:**
+  - Update electron 10.1.2 to 10.1.5
+  - Update electron-updater 4.3.4 to 4.3.5
+  - Update yargs-parser 20.0.0 to 20.2.3
+  - Update moment 2.28.0 to 2.29.1
+  - Update monaco-editor 0.20.0 to 0.21.2
+  - Update chokidar 3.4.2 to 3.4.3
+  - Update markdown-it 11.0.1 to 12.0.2
+
+## v0.13.0 2020-09-15
+
+- **New:**
+  - Add GMCP Client.Media support
+  - Preferences:
+    - Fix hidden windows, move any hidden windows to main screen when they are opened
+    - Add show in taskbar option for chat and mapper windows
+- **Fixed:**
+  - Color picker: Fixed tooltip color names
+  - MXP: Remove version style attribute if not set when replying to mud
+  - Fixed script type aliases, triggers, macros, buttons, context menus would error when last line was a //comment
+- **Changed:**
+  - Update electron 9.1.0 to 10.1.2
+  - Update chokidar 3.4.0 to 3.4.2
+  - Update yargs-parser 18.1.3 to 20.0.0
+  - Update better-sqlite3 7.1.0 to 7.1.1
+  - Update markdown-it 11.0.0 to 11.0.1
+  - Update moment 2.27.0 to 2.28.0
+
+## v0.12.2 2020-07-10
+
+- **Fixed:**
+  - Mapper:
+    - Fixed export image/data dialogs
+    - Fixed export data cancel system, prevents crash and works
+  - Fixed file save dialogs not correctly canceling
+- **Changed:**
+  - Update electron 9.0.5 to 9.1.0
+
+## v0.12.1 2020-07-02
+
+- **Fixed:**
+  - Fixed #profilelist not working
+  - Fixed #profile not working
+- **Changed:**
+  - Update electron 9.0.4 to 9.0.5
+  - Update moment 2.26.0 to 2.27.0
+
+## v0.12.0 2020-06-15
+
+- **Fixed:**
+  - Set the theme sooner to have a smoother loading feel
+  - Resize interface before showing window to remove status bar resize flickering
+  - Buttons with image icons now have a colored overlay to better show they are the button to be clicked
+  - Fix open file dialogs not correctly canceling
+  - Immortal tools: fix remote delete
+- **Changed:**
+  - Update electron 8.3.0 to 9.0.4
+  - Update markdown-it 10.0.0 to 11.0.0
+  - Replace drivelist 8.0.10 with node-disk-info 1.1.0
+  - Replace fontmanager-redux 0.4.0 with font-list 1.2.11
+  - Update bootstrap select 1.12.4 to 1.13.2
+  - Update moment 2.25.3 to 2.26.0
+  - Update fs-extra 9.0.0 to 9.0.1
+
+## v0.11.3 2020-05-18
+
+- **New:**
+  - Add button to reset window locations in preference dialog
+  - New backup/restore option to save/ignore window states
+- **Fixed:**
+  - Preference reset would not correctly reset window states for open windows
+  - Fix rare chance of phantom window objects being created
+- **Changed:**
+  - Update electron 8.2.0 to 8.3.0
+  - Update yargs-parser 18.1.2 to 18.1.3
+  - Update tmp 0.1.0 to 0.2.1
+  - Update better-sqlite3 6.0.1 to 7.0.1
+  - Update chokidar 3.3.1 to 3.4.0
+  - Update electron-updater 4.2.5 to 4.3.1
+  - Update moment 2.24.0 to 2.25.3
+
+## v0.11.2 2020-03-31
+
+- **Changed:**
+  - Update electron 8.1.1 to 8.2.0
+  - Update yargs-parser 18.1.1 to 18.1.2
+
+## v0.11.1 2020-03-23
+
+- **New:**
+  - Triggers: Cache regular expression objects so they are only created first time a trigger is ran
+  - Use native built in spellchecker systems, add support for most editable fields
+- **Fixed:**
+  - Fix command input lost when canceling open link confirm box
+- **Changed:**
+  - Update monaco-editor 0.19.3 to 0.20.0
+  - Update electron 8.0.1 to 8.1.1
+  - Update drivelist 8.0.9 to 8.0.10
+  - Update electron-updater 4.2.0 to 4.2.5
+  - Update better-sqlite3 5.4.3 to 6.0.1
+  - Update yargs-parser 17.0.0 to 18.1.1
+  - Update fs-extra from 8.1.0 to 9.0.0
+  - Remove spellchecker 3.7.0
+
+## v0.11.0 2020-02-10
+
+- **New:**
+  - Add button bar overflow support to allow scrolling of buttons
+- **Fixed:**
+  - Profile manager: Fix issue when using capital letters and renaming a profile
+- **Changed:**
+  - Update electron 7.1.10 to 8.0.0
+  - Update yargs-parser 16.1.0 to 17.0.0
+  - Make wheel mouse events passive to allow better optimizing of scrolling for mapper and main display
+  - Code editor: revert a quick hack to menu issues
+
+## v0.10.2 2020-01-27
+
+- **New:**
+  - Optimize macro execution
+- **Changed:**
+  - Update monaco-editor 0.19.2 to 0.19.3
+  - Update electron 7.1.9 to 7.1.10
+
+## v0.10.1 2020-01-13
+
+- **New:**
+  - Profile manager:
+    - Preference to change how items are sorted: Alpha, index, or priority
+    - Preference to change sort direction from ascending or descending
+- **Changed:**
+  - Update electron 7.1.1 to 7.1.9
+  - Update chokidar 3.3.0 to 3.3.1
+  - Update monaco-editor 0.18.1 to 0.19.2
+
+## v0.10.0 2019-11-11
+
+- **Fixed:**
+  - Immortal tools: fix upload fail not being correctly registered
+  - Code editor: Ignore formatting for inline comments
+  - About: update process memory info display using new built in api's
+  - Character manager: Add close button if mac
+- **Changed:**
+  - Refactor hasOwnProperty checks to use proper calls for more security when running dynamic scripts
+  - Update electron 6.0.9 to 7.1.1
+  - Update monaco-editor 0.18.0 to 0.18.1
+  - Update chokidar 3.1.0 to 3.3.0
+  - Update drivelist 8.0.6 to 8.0.9
+  - Update yargs-parser 13.1.1 to 16.1.0
+  - Replace font-manager 0.3.0 with fontmanager-redux 0.4.0
+  - Update electron-updater 4.1.2 to 4.2.0
+
+## v0.9.4 2019-09-16
+
+- **Fixed:**
+  - Auto updater: fix now/later being reversed function
+  - Immortal tools: Add upload/download to folder context menus
+  - Remove some menu hacks as electron 6.0.8 seems to have fixed menu issues
+- **Changed:**
+  - Update electron 6.0.7 to 6.0.9
+  - Update better-sqlite3 5.4.2 to 5.4.3
+  - Update monaco-editor 0.17.1 to 0.18.0
+  - Update yargs-parser 13.1.1 to 14.0.0
+  - Update fswin 3.18.918 to 3.19.908
+  - Update markdown-it 9.1.0 to 10.0.0
+  - Update chokidar 3.0.2 to 3.1.0
+
+## v0.9.3 2019-09-02
+
+- **New:**
+  - About: re-add memory display using 3rd party module until electron 7 is released
+- **Changed:**
+  - Update electron 6.0.4 to 6.0.7
+  - Convert all open file dialogs to use newer syntaxes
+- **Fixed:**
+  - Fixed save dialogs not working due to electron 6 dialog changes
+
+## v0.9.2 2019-08-26
+
+- **New:**
+  - Auto updater: Option to install update later next time the client is started
+- **Changed:**
+  - About:
+    - Update copyright date
+    - No longer a modal dialog and movable
+  - Auto updater: Force close even if connected or sub windows open
+  - Update electron 6.0.3 to 6.0.4
+- **Fixed:**
+  - Fixed progress dialog titles not being correctly set in places
+  - Display: Fixed incorrect vertical scrollbar height
+  - Fixed dialogs boxes broken in electron 6 update
+  - Code editor: do not add a newline if throw is a function for a object
+
+## v0.9.1 2019-08-21
+
+- **Fixed:**
+  - Help: Fixed character manager help topic not being listed
+  - Code editor: a quick fix to crash due to menu issues in electron 6
+  - Profile manager: Fix issue when trying to update a profile that contained a non Alpha numeric character, :, ., or -
+- **Changed:**
+  - Update electron 6.0.2 to 6.0.3
+
+## v0.9.0 2019-08-19
+
+- **New:**
+  - Added character manager doc
+- **Fixed:**
+  - Fixed check for updates open website dialog button
+  - Fixed issues when reloading preferences and closing child windows
+  - Themes: tweaks to health bars to better handle zooming
+- **Changed:**
+  - Update electron 5.0.8 to 6.0.2
+  - Update better-sqlite3 5.4.1 to 5.4.2
+  - Update markdown-it 9.0.1 to 9.1.0
+
+## v0.8.4 2019-07-29
+
+- **New:**
+  - Character manager: Add Never ask again when warning on loading default or character
+  - Preferences: Allow toggling never ask again check when closing client option
+- **Fixed:**
+  - Main menu hacks in an attempt to fix some menu issues.
+  - Mapper: Fixed fill walls, split area, and show legend not correctly restoring on load
+  - Display: MXP Image caching was not correctly handled when old lines where trimmed at buffer max
+- **Changed:**
+  - Update electron 5.0.7 to 5.0.8
+  - Update spellchecker 3.6.1 to 3.7.0
+
+## v0.8.3 2019-07-22
+
+- **New:**
+  - Status: add tooltip to combat/party bars with full names
+- **Fixed:**
+  - Command history: Fixed selection of commands while browsing
+  - Paste special: losing text when clicking ok or return key
+  - Preferences: Fixed dialog height to prevent theme drop down not correctly showing
+- **Changed:**
+  - Themes:
+    - Bump combat/party names to be larger and easier to read
+    - Increase all progressbar heights a little and increase fonts for easier reading
+  - Update chokidar 3.0.1 to 3.0.2
+  - Update markdown-it 8.4.2 to 9.0.1
+  - Update better-sqlite3 5.4.0 to 5.4.1
+  - Update electron 5.0.6 to 5.0.7
+  - Update electron-updater 4.0.14 to 4.1.2
+  - Preferences: Backup all profiles is now default true to mimic web client behavior
+
+## v0.8.2 2019-07-01
+
+- **Fixed:**
+  - Mapper: Fixed get new zone system
+  - Immortal tools: Fix drive dropdown explorer
+- **Changed:**
+  - Update electron 5.0.3 to 5.0.6
+  - Update fs-extra from 8.0.1 to 8.1.0
+  - Update spellchecker 3.6.0 to 3.6.1
+  - Update monaco-editor 0.17.0 to 0.17.1
+
+## v0.8.1 2019-06-10
+
+- **Fixed:**
+  - Fixed spell checker, electron 5.0 changed api
+  - Fixed issue not resetting telnet prompt flag when doing local text display
+  - Fixed URL detection and valid Unicode characters
+  - Fixed Copy and open url to properly URL encode characters
+- **Changed:**
+  - Update fs-extra from 7.0.1 to 8.0.1
+  - Update electron 5.0.1 to 5.0.3
+  - Update chokidar 3.0.0 to 3.0.1
+  - Update spellchecker 3.5.3 to 3.6.0
+  - Update yargs-parser 13.1.0 to 13.1.1
+
+## v0.8.0 2019-05-06
+
+- **Changed:**
+  - Update electron 4.1.3 to 5.0.1
+  - Update spellchecker 3.5.2 to 3.5.3
+  - Update chokidar 2.1.5 to 3.0.0
+  - Update monaco-editor 0.16.2 to 0.17.0
+
+## v0.7.5 2019-04-01
+
+- **Changed:**
+  - Update electron 4.0.5 to 4.1.3
+  - Update drivelist 7.0.3 to 8.0.6
+  - Update monaco-editor 0.15.6 to 0.16.2
+  - Update chokidar from 2.1.2 to 2.1.5
+  - Update tmp from 0.0.33 to 0.1.0
+
+## v0.7.4 2019-02-25
+
+- **Fixed:**
+  - Command history: Add text ... overflow systems for long commands to prevent drop up display from being hidden off screen
+  - Code editor:
+    - Virtual/area editor: Fix issue with room preview and item formatting when item text is empty
+- **Changed:**
+  - Update drivelist 7.0.0 to 7.0.3
+  - Update electron 4.0.2 to 4.0.5
+  - Update yargs-parser 11.1.1 to 13.0.0
+  - Update chokidar 2.0.4 to 2.1.2
+
+## v0.7.3 2019-01-28
+
+- **Fixed:**
+  - Fixed #gets/#sets commands
+
+## v0.7.2 2019-01-28
+
+- **New:**
+  - Global enable parsing toggle system to allow disabling of command paring with a simple on / off button or menu click
+  - Global enable trigger toggle system to allow disabling of trigger with a simple on / off button or menu click
+- **Changed:**
+  - Update moment 2.23.0 to 2.24.0
+  - Update electron 4.0.1 to 4.0.2
+  - Update better-sqlite3 5.3.0 to 5.4.0
+  - Update spellchecker 3.5.0 to 3.5.1
+  - Update drivelist 6.4.3 to 7.0.0
+- **Fixed:**
+  - ANSI Parser: Line feeds (\r) are now ignored when parsing text to fix MXP state management
+  - Fixed copy/paste short cut display in command input context menu
+
+## v0.7.1 2019-01-14
 
 - **New:**
   - Add command history window
+  - Character manager: Backup to zip with all related files as a zip file
+  - Preferences: Backup up all settings and related files as a zip file
+  - Logs: Backup up all logs as a zip file
+  - Profile manager: Add export and import as zip file
 - **Changed:**
   - Remove memory info from about, no longer supported in electron 4
   - Update electron 4.0.0 to 4.0.1
+  - Update better-sqlite3 5.2.1 to 5.3.0
+  - Update drivelist 6.4.3 to 6.4.6
 - **Fixed:**
   - Advanced editor: Fixed unable to add new lines
-  - Code editor: Fixed formatting of else single line to newline/indent like single line if
+  - Code editor:
+    - Fixed formatting of else single line to newline/indent like single line if
+    - Fixed formatting of an inline comment following if/else
 
 ## v0.7.0 2018-12-31
 
@@ -132,7 +1238,7 @@
     - Add advanced properties to object editor
   - About: do live updates of CPU/memory usage
 - **Changed:**
-  - ANSI Parser: use unicode zero space character instead of wbr tag to reduce memory
+  - ANSI Parser: use Unicode zero space character instead of wbr tag to reduce memory
   - Update monaco-editor from 0.15.0 to 0.15.5
   - Update electron-updater 3.2.3 to 4.0.4
   - Update electron 3.0.9 to 3.0.10
@@ -317,7 +1423,7 @@
       - Fixed closing of custom defined tags
       - Fixed MXP send tags
     - Fixed HTML property to return correct HTML markup
-    - Match whole unicode words on context or double click
+    - Match whole Unicode words on context or double click
     - Debounce selection mouse dragging to improve performance
     - Fixed split view selection performance issues
     - Fixed split position on resize
@@ -395,9 +1501,9 @@
     - Fixed add button to create new item based on currently selected item
     - Fixed add button tool tip shows type of new item to be created
   - Display:
-    - Fixed overlay and selection highlighting for unicode half and full width characters
+    - Fixed overlay and selection highlighting for Unicode half and full width characters
     - Fixed pasting or cutting text into find search box
-    - Fixed unicode spacing issues when different colors or font styles are used
+    - Fixed Unicode spacing issues when different colors or font styles are used
     - Fixed split section not firing click event
   - Preferences dialog:
     - Fixed drop down font selection height not being correct
@@ -548,7 +1654,7 @@
       - Add visible doors to up/down exits on map
   - Mapper: Can scroll with mouse wheel when hovering a scroll icon.
 - **Changed:**
-  - Mapper: switch image-rendering to crisp-edges instead of pixelated
+  - Mapper: switch image-rendering to crisp-edges instead of pixilated
 - **Fixed:**
   - Auto updater was updated to latest in attempt to fix auto update bugs.
   - Mapper:
@@ -1233,7 +2339,7 @@
     - When profile toggled from menu and profile manager is open update the enabled state
     - Enabled check state was not correctly set when profile is selected, causing the profile to be set based on previous selected item
   - Mapper: fix minor issue when trying to process data before the mapper window is ready
-  - Dont attempt to show disconnect dialog if already open
+  - Don't attempt to show disconnect dialog if already open
 
 ## v0.4.34 2017-12-14
 
@@ -1837,7 +2943,7 @@
     - `-s=[file], --setting=[file]` override default setting file
     - `-mf=[file], --map=[file]` override default map file
     - `-c=[name], --character=[name]` allows you to load/create a character from character database
-    - `-pf=[list], --profiles[]` set which profiles will be enabled, if not found will default
+    - `-pf=[list], --profiles=[list]` set which profiles will be enabled, if not found will default
   - About memory tab now includes process type, cpu usage and idle wakeups as of when the dialog was opened.
 - **Changed:**
   - Profiles: enabled systems are no longer linked to profiles but will instead be saved with the setting systems, this allows per setting file enabled profile list, allow better multiple instances of the client to not clash
@@ -1921,7 +3027,7 @@
     - Mapper: default import type, allows you to determine how map data will be imported when using default import systems
     - Backup load/save selections, determine what is saved or loaded when using the remote client backup system
 - **Changed:**
-  - Default button icons have been converted to font-awesome or svg icons for easy themeing and crisper look
+  - Default button icons have been converted to font-awesome or svg icons for easy theming and crisper look
   - Upgrade electron to 1.7.1, fixes a few crashers with --debug
   - New application icons, should be cleaner and support Linux, windows and mac
 - **Fixed:**
@@ -2055,7 +3161,7 @@
   - Can no longer close client until profile manager has been closed
   - Changed how deleted profiles where moved to trash, now uses framework instead of extra node module
   - Upgraded to electron 1.6.8
-  - All css/js files are ran into minifiers to gain some speed
+  - All css/js files are ran into minimizers to gain some speed
   - Help > jiMUD now opens up to the github docs
   - Changed how options are reloaded for main client, instead of a direct call, fire event
   - Rearranged the profile manager interface to simply and condense code

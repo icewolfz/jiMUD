@@ -7,6 +7,7 @@ npm-debug.log
 typings/
 .idea/
 .vscode/
+!launch.json
 src/js/*
 out/*
 dist/*
@@ -41,3 +42,4 @@ dist/*
 /build/css/characters.css
 /build/css/immortal.css
 /build/css/cm.css
+data/

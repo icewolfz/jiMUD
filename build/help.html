@@ -8,19 +8,24 @@
     <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-treeview.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
     <link href="css/help.css" rel="stylesheet" type="text/css" />
     <link href="css/form.css" rel="stylesheet" type="text/css" />
-    <script>
+    <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js" type="text/javascript"></script>
     <script src="../lib/bootstrap.min.js" type="text/javascript"></script>
     <script src="../lib/bootstrap-select.min.js" type="text/javascript"></script>
-    <script>
-        const { remote } = require('electron');
-        const { Menu } = remote;
+    <script src="../lib/bootstrap-treeview.min.js"></script>
+    <script type="text/javascript">
+        if (window.module) module = window.module;
+        //spellchecker:ignore codeeditor
+        const { ipcRenderer } = require('electron');
         const { Search } = require('./js/search');
+        const { isFileSync } = require('./js/library.js');
+        const { Settings } = require('./js/settings');
         const path = require('path');
         const fs = require('fs');
         const md = require('markdown-it')({ html: true, typographer: true });
@@ -35,7 +40,7 @@
                     tokens[idx].attrPush(['target', '_blank']);
                 else {
                     tokens[idx].attrs[tokens[idx].attrIndex('href')][1] = '#';
-                    tokens[idx].attrPush(['onclick', `event.preventDefault();openLink('${ref}');return false;`]);
+                    tokens[idx].attrPush(['onclick', `event.preventDefault();openLink('${ref}', 1);return false;`]);
                 }
             }
             return old_render(tokens, idx, options, env, self);
@@ -43,16 +48,98 @@
 
         var container;
         var contents;
+        var tree;
         var _history = [];
         var _current = 0;
         var $search;
+        var dragging = false;
+        var lastSel = $("#contents option:selected");
+        var _options;
+        var _path = '';
+        var _data = [
+            {
+                text: 'Home',
+                id: 'README'
+            },
+            {
+                text: 'Changelog',
+                id: '../changelog'
+            },
+            {
+                text: 'Frequently asked questions',
+                id: 'faq'
+            },
+            {
+                text: 'Profiles',
+                id: 'profiles'
+            },
+            {
+                text: 'Speedpaths',
+                id: 'speedpaths'
+            },
+            {
+                text: 'Commands',
+                id: 'commands',
+                nodes: [{
+                    text: '#nnn',
+                    id: 'commands/nnn'
+                }]
+            },
+            {
+                text: 'Functions',
+                id: 'functions',
+                nodes:[]
+            },
+            {
+                text: 'Preferences',
+                id: 'preferences'
+            },
+            {
+                text: 'Scripting',
+                id: 'scripting'
+            },
+            {
+                text: 'Customizing',
+                id: 'customizing'
+            },
+            {
+                text: 'Assets',
+                id: 'assets'
+            },
+            {
+                text: 'Mapper',
+                id: 'mapper'
+            },
+            {
+                text: 'Character manager',
+                id: 'character.manager'
+            },
+            {
+                text: 'Immortal Tools',
+                id: 'immortal'
+            },
+            {
+                text: 'Code editor',
+                id: 'codeeditor',
+                nodes: [
+                    {
+                        text: 'Area designer',
+                        id: 'codeeditor.designer'
+                    }
+                ]
+            }
+        ]
 
         // eslint-disable-next-line no-unused-vars
-        function openLink(url) {
+        function openLink(url, p) {
+            lastSel = $("#contents option:selected");
+            if (url.startsWith('docs/'))
+                url = url.substr(5);
+            else if (p)
+                url = _path + url;
             url = url.split('#');
             contents.val(url[0].substr(0, url[0].length - 3)).selectpicker('render');
             contents.change();
-
         }
 
         // eslint-disable-next-line no-unused-vars
@@ -81,8 +168,29 @@
 
         function loadContents(url) {
             container[0].scrollTop = 0;
-            var data = fs.readFileSync(path.join(__dirname, '..', 'docs', url.replace('///g', path.sep) + '.md'), 'utf8');
-            container.html(md.render(data));
+            if (url) {
+                if (url.lastIndexOf('/') === -1)
+                    _path = '';
+                else
+                    _path = url.substring(0, url.lastIndexOf('/') + 1);
+                var file = path.join(__dirname, '..', 'docs', url.replace('///g', path.sep) + '.md');
+                if (isFileSync(file)) {
+                    var data = fs.readFileSync(file, 'utf8');
+                    container.html(md.render(data));
+                }
+                else
+                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        type: 'error',
+                        title: 'Help error',
+                        message: 'Help file not found'
+                    });
+            }
+            else
+                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    type: 'error',
+                    title: 'Help error',
+                    message: 'Help file not found'
+                });
             $search.find();
         }
 
@@ -112,6 +220,45 @@
             $search.show(sel);
         }
 
+        function isElementInView(element, fullyInView, container) {
+            if (!element) return true;
+            if (!container) container = window;
+            var pageTop = $(container).scrollTop();
+            var pageBottom = pageTop + $(container).height();
+            var elementTop = $(element).offset().top;
+            var elementBottom = elementTop + $(element).outerHeight();
+
+            if (fullyInView === true) {
+                return ((pageTop < elementTop) && (pageBottom > elementBottom));
+            } else {
+                return ((elementTop <= pageBottom) && (elementBottom >= pageTop));
+            }
+        }
+
+        function loadOptions(data) {
+            if (!data) {
+                var set = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
+                options = set.extensions['help'];
+            }
+            else
+                options = data;
+            if (!options) {
+                options = {
+                    'navSize': 202,
+                };
+                saveOptions();
+            }
+            if (options.navSize < 202)
+                options.navSize = 202;
+            $('#sidebar').css('width', options.navSize);
+            $('#container').css('left', options.navSize);
+        }
+
+        function saveOptions() {
+            ipcRenderer.send('setting-changed', { type: 'extensions', name: 'help', value: options });
+        }
+
+
         $(document).keydown((event) => {
             if (event.key === 'f' && !event.altKey && event.ctrlKey && !event.shiftKey && !event.metaKey) {
                 doFind();
@@ -120,6 +267,31 @@
         });
 
         $(document).ready(() => {
+            loadOptions();
+            var p = path.join(__dirname, '..', 'docs', 'commands');
+            var files = fs.readdirSync(p);
+            for (var i = 0; i < files.length; i++) {
+                if (path.basename(files[i], '.md') === 'nnn') continue;
+                if (path.extname(files[i]) === '.md') {
+                    _data[5].nodes.push({
+                        text: '#' + path.basename(files[i], '.md'),
+                        id: 'commands/' + path.basename(files[i], '.md')
+                    });
+                }
+            }
+
+            p = path.join(__dirname, '..', 'docs', 'functions');
+            files = fs.readdirSync(p);
+            for (var i = 0; i < files.length; i++) {
+                if (path.basename(files[i], '.md') === 'nnn') continue;
+                if (path.extname(files[i]) === '.md') {
+                    _data[6].nodes.push({
+                        text: path.basename(files[i], '.md'),
+                        id: 'functions/' + path.basename(files[i], '.md')
+                    });
+                }
+            }
+
             container = $('#container-frame');
             container[0].onload = () => {
                 var oDoc = (document.all) ? container[0].contentWindow.document : container[0].contentDocument;
@@ -128,36 +300,84 @@
                 oDoc.body.appendChild(container);
                 container = $(container);
                 loadUrl('README');
+                container[0].addEventListener('contextmenu', e => {
+                    e.preventDefault();
+                    const sel = oDoc.getSelection();
+                    let inputMenu;
+                    if (!sel.isCollapsed && sel.type === 'Range' && container[0].contains(sel.anchorNode)) {
+                        inputMenu = [
+                            { role: 'copy' },
+                            { type: 'separator' },
+                            { role: 'selectAll' }
+                        ];
+                    }
+                    else
+                        inputMenu = [
+                            { role: 'selectAll' }
+                        ];
+                    ipcRenderer.invoke('show-context', inputMenu);
+                });
             };
             contents = $('#contents');
             $search = new Search(document.body);
-            contents.on('change', () => {
+            contents.on('change', (e) => {
+                if (!contents.val()) {
+                    lastSel.prop("selected", true);
+                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        type: 'error',
+                        title: 'Help error',
+                        message: 'Help file not found'
+                    });
+                    return;
+                }
                 loadContents(contents.val());
                 if (_history.length !== 0)
                     _history.length = _current + 1;
                 _history.push(contents.val());
                 _current = _history.length - 1;
                 updateButtons();
-            });
-
-            container[0].addEventListener('contextmenu', e => {
-                e.preventDefault();
-                const sel = getSelection();
-                let inputMenu;
-                if (!sel.isCollapsed && sel.type === 'Range' && container[0].contains(sel.anchorNode)) {
-                    inputMenu = Menu.buildFromTemplate([
-                        { role: 'copy' },
-                        { type: 'separator' },
-                        { role: 'selectall' }
-                    ]);
+                if (contents.val().startsWith('commands/')) {
+                    n = tree.treeview('findNodes', ['^commands$', 'id']);
+                    tree.treeview('expandNode', [n, { levels: 1, silent: false }]);
                 }
-                else
-                    inputMenu = Menu.buildFromTemplate([
-                        { role: 'selectall' }
-                    ]);
-                inputMenu.popup({ window: remote.getCurrentWindow() });
-            });
+                else if (contents.val() === 'codeeditor.designer') {
+                    n = tree.treeview('findNodes', ['^codeeditor$', 'id']);
+                    tree.treeview('expandNode', [n, { levels: 1, silent: false }]);
+                }
+                n = tree.treeview('findNodes', ['^' + contents.val() + '$', 'id']);
+                tree.treeview('selectNode', [n, { silent: true }]);
+                if (!isElementInView(document.getElementById(contents.val()), true, tree[0]))
+                    document.getElementById(contents.val()).scrollIntoView();
 
+            });
+            tree = $('#tree');
+            tree.treeview({
+                showBorder: false,
+                showImage: true,
+                showTags: true,
+                showCheckbox: false,
+                preventUnselect: false,
+                levels: 1,
+                checkedIcon: 'fa fa-check-square-o',
+                uncheckedIcon: 'fa fa-square-o',
+                expandIcon: 'fa fa-chevron-right',
+                collapseIcon: 'fa fa-chevron-down',
+                onNodeRendered: (event, node) => {
+                    node.$el.prop('title', node.text);
+                },
+                onNodeSelected: (event, node) => {
+                    openLink(node.id + '.md');
+                },
+                data: _data
+            });
+            var ops = [];
+            for (var i = 0; i < _data.length; i++) {
+                ops.push('<option value="', _data[i].id, '">', _data[i].text, '</option>');
+                if (_data[i].nodes && _data[i].nodes.length)
+                    for (var c = 0; c < _data[i].nodes.length; c++)
+                        ops.push('<option value="', _data[i].nodes[c].id, '" style="padding-left: 40px">', _data[i].nodes[c].text, '</option>');
+            }
+            contents.append(ops.join(''));
             $('#btn-history-dropdown').click(function () {
                 $(this).addClass('open');
                 const pos = $(this).offset();
@@ -171,18 +391,89 @@
                         index: i,
                         type: i === _current ? 'radio' : 'normal',
                         checked: i === _current,
-                        click: (item) => {
-                            _current = i;
-                            contents.val(item.url).selectpicker('render');
-                            loadContents(item.url);
-                            updateButtons();
-                        }
                     });
                 });
-                Menu.buildFromTemplate(addMenu).popup({ window: remote.getCurrentWindow(), x: x, y: y });
+                ipcRenderer.invoke('show-context', addMenu, { x: x, y: y });
             });
 
+            $('#help-drag-bar').mousedown((e) => {
+                e.preventDefault();
+
+                dragging = true;
+                $("#container-frame").css('pointer-events', 'none');
+                const main = $('#help-drag-bar');
+                const ghostBar = $('<div>',
+                    {
+                        id: 'help-ghost-bar',
+                        css: {
+                            height: main.outerHeight(),
+                            top: main.offset().top,
+                            left: main.offset().left - 3
+                        }
+                    }).appendTo('body');
+
+                $(document).mousemove((event) => {
+                    if (event.pageX < 199)
+                        ghostBar.css('left', 199);
+                    else if (event.pageX > document.body.clientWidth - 300)
+                        ghostBar.css('left', document.body.clientWidth - 300);
+                    else
+                        ghostBar.css('left', event.pageX);
+                });
+            });
+
+            $(window).on('resize', () => {
+                if ($('#container').outerWidth() < 300 && $('#sidebar').outerWidth() > 202) {
+                    $('#sidebar').css('width', document.body.clientWidth - 300);
+                    $('#container').css('left', document.body.clientWidth - 300);
+                    options.navSize = document.body.clientWidth - 300;
+                    saveOptions();
+                }
+            });
+
+            $(document).mouseup((e) => {
+                if (dragging) {
+                    $("#container-frame").css('pointer-events', '');
+                    if (e.pageX < 200) {
+                        $('#sidebar').css('width', 202);
+                        $('#container').css('left', 202);
+                        options.navSize = 202;
+                    }
+                    else if (e.pageX > document.body.clientWidth - 200) {
+                        $('#sidebar').css('width', document.body.clientWidth - 300);
+                        $('#container').css('left', document.body.clientWidth - 300);
+                        options.navSize = document.body.clientWidth - 300;
+                    }
+                    else {
+                        $('#sidebar').css('width', e.pageX + 2);
+                        $('#container').css('left', e.pageX + 2);
+                        options.navSize = e.pageX + 2;
+                    }
+                    saveOptions();
+
+                    $('#help-ghost-bar').remove();
+                    $(document).unbind('mousemove');
+                    dragging = false;
+                }
+            });
         });
+
+        function executeContextItem(idx, id, label, role) {
+            _current = idx;
+            contents.val(_history[idx]).selectpicker('render');
+            loadContents(_history[idx]);
+            updateButtons();
+        }
+
+        ipcRenderer.on('reload-options', () => {
+            loadOptions();
+        });
+
+        ipcRenderer.on('setting-changed', (event, data) => {
+            if (data.type === 'extensions' && data.name === 'help') {
+                loadOptions(data.value);
+            }
+        });        
     </script>
 </head>
 
@@ -204,29 +495,40 @@
             </span>
             <span class="path-container">
                 <select id="contents" class="form-control selectpicker" data-container="body" data-style="btn-default btn-xs" data-width="100%">
+                    <!--
                     <option value="README">Home</option>
                     <option value="../changelog">Changelog</option>
                     <option value="faq">Frequently asked questions</option>
                     <option value="profiles">Profiles</option>
                     <option value="speedpaths">Speedpaths</option>
                     <option value="commands">Commands</option>
+                    <option value="commands/nnn" style="padding-left: 40px">#nnn</option>
+                    <option value="commands/beep" style="padding-left: 40px">#beep</option>
                     <option value="functions">Functions</option>
                     <option value="preferences">Preferences</option>
                     <option value="scripting">Scripting</option>
                     <option value="customizing">Customizing</option>
                     <option value="assets">Assets</option>
                     <option value="mapper">Mapper</option>
+                    <option value="character.manager">Character manager</option>
                     <option value="immortal">Immortal Tools</option>
                     <option value="codeeditor">Code editor</option>
                     <option value="codeeditor.designer" style="padding-left: 40px">Area designer</option>
+                    -->
                 </select>
             </span>
             <button id="btn-find" type="button" class="btn btn-default btn-xs" title="Find" onclick="doFind()" style="position: absolute;top: 4px;right: 4px;">
                 <i class="fa fa-search"></i>
             </button>
         </div>
-        <div id="container">
-            <iframe id="container-frame" class="panel-body" src="help.display.html"></iframe>
+        <div id="main">
+            <div id="sidebar">
+                <div id="tree" class="panel panel-default"></div>
+                <div id="help-drag-bar"></div>
+            </div>
+            <div id="container">
+                <iframe id="container-frame" class="panel-body" src="help.display.html"></iframe>
+            </div>
         </div>
     </div>
 </body>

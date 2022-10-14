@@ -58,18 +58,24 @@ export function SetupEditor() {
                 monaco.languages.setLanguageConfiguration('lpc', conf);
                 monaco.languages.registerCompletionItemProvider('lpc', {
                     provideCompletionItems: (model, position, item, token) => {
-                        /*
-                        let word: any = model.getWordAtPosition(position);
+                        const word: any = model.getWordAtPosition(position);
                         if (!word) return { suggestions: [] };
-                        word = word.word;
-                        */
                         if (!$lpcCompletionCache)
                             $lpcCompletionCache = loadCompletion();
-                        return {
+                        const s = {
                             suggestions: copy($lpcCompletionCache)
                         };
+                        s.suggestions.forEach(c => {
+                            c.range = {
+                                startLineNumber: position.lineNumber,
+                                startColumn: word.startColumn,
+                                endLineNumber: position.lineNumber,
+                                endColumn: word.endColumn
+                            };
+                        });
+                        return s;
                     },
-                    resolveCompletionItem(model, position, item, token) {
+                    resolveCompletionItem(item, token) {
                         return item;
                     }
                 });
@@ -173,7 +179,7 @@ export function SetupEditor() {
             //https://github.com/Microsoft/monaco-editor/issues/852
             //https://github.com/Microsoft/monaco-editor/issues/935
             monaco.languages.registerDefinitionProvider('lpc', {
-                async provideDefinition(model: monaco.editor.ITextModel, position: monaco.Position, token: monaco.CancellationToken): Promise<monaco.languages.DefinitionLink[] | monaco.languages.Definition | undefined> {
+                async provideDefinition(model: monaco.editor.ITextModel, position: monaco.Position, token: monaco.CancellationToken): Promise<monaco.languages.LocationLink[] | monaco.languages.Location | undefined> {
                     if (!model) return undefined;
                     if (!$lpcDefineCache) $lpcDefineCache = {};
                     const defines = [];
@@ -659,7 +665,9 @@ export class MonacoCodeEditor extends EditorBase {
     private $options = {
         tabSize: 3,
         insertSpaces: true,
-        trimAutoWhitespace: true
+        trimAutoWhitespace: true,
+        bracketColorization: true,
+        independentColorPoolPerBracketType: false
     };
 
     public decorations;
@@ -678,7 +686,9 @@ export class MonacoCodeEditor extends EditorBase {
             this.options = {
                 tabSize: 3,
                 insertSpaces: true,
-                trimAutoWhitespace: true
+                trimAutoWhitespace: true,
+                bracketColorization: true,
+                independentColorPoolPerBracketType: false
             };
     }
 
@@ -699,21 +709,29 @@ export class MonacoCodeEditor extends EditorBase {
         if (this.$options)
             this.$model.updateOptions({
                 tabSize: this.$options.hasOwnProperty('tabSize') ? this.$options.tabSize : 3,
-                insertSpaces: this.$options.hasOwnProperty('tabSize') ? this.$options.insertSpaces : true,
-                trimAutoWhitespace: this.$options.hasOwnProperty('tabSize') ? this.$options.trimAutoWhitespace : true
+                insertSpaces: this.$options.hasOwnProperty('insertSpaces') ? this.$options.insertSpaces : true,
+                trimAutoWhitespace: this.$options.hasOwnProperty('trimAutoWhitespace') ? this.$options.trimAutoWhitespace : true,
+                bracketColorizationOptions: {
+                    enabled: this.$options.hasOwnProperty('bracketColorization') ? this.$options.bracketColorization : true,
+                    independentColorPoolPerBracketType: value.hasOwnProperty('independentColorPoolPerBracketType') ? this.$options.independentColorPoolPerBracketType : false
+                }
             });
         else
             this.$model.updateOptions({
                 tabSize: 3,
                 insertSpaces: true,
-                trimAutoWhitespace: true
+                trimAutoWhitespace: true,
+                bracketColorizationOptions: {
+                    enabled: true,
+                    independentColorPoolPerBracketType: false
+                }
             });
         if (this.rawDecorations && this.rawDecorations.length !== 0) {
             this.$model.deltaDecorations([], this.rawDecorations);
         }
         this.$model.onDidChangeContent((e) => {
             this.changed = true;
-            this.emit('changed', this.$model.getValueLength());
+            this.emit('changed', this.$model.getValueLength(), this.$model.getLineCount());
             if (this.decorations && this.decorations.length) {
                 this.$model.deltaDecorations(this.decorations, []);
                 this.decorations = null;
@@ -765,7 +783,9 @@ export class MonacoCodeEditor extends EditorBase {
                     //monaco.editor.setModelLanguage(this.$model, 'lpc');
                     break;
                 default:
-                    const found = monaco.languages.getLanguages().filter(l => { return l.extensions.indexOf(ext) !== -1; });
+                    const found = monaco.languages.getLanguages().filter(l => {
+                        return l.extensions ? l.extensions.indexOf(ext) !== -1 : false;
+                    });
                     if (found.length > 0)
                         monaco.editor.setModelLanguage(this.$model, found.slice(-1)[0].id);
                     else
@@ -830,7 +850,7 @@ export class MonacoCodeEditor extends EditorBase {
             const old = this.changed;
             this.changed = keep;
             if (keep && !old)
-                this.emit('changed', this.$model.getValueLength());
+                this.emit('changed', this.$model.getValueLength(), this.$model.getLineCount());
         }
     }
 
@@ -921,16 +941,31 @@ export class MonacoCodeEditor extends EditorBase {
     }
     public set spellcheck(value: boolean) { /**/ }
     public find() {
-        if (this.$oEditor && this.$oEditor.hasTextFocus())
-            this.$oEditor.getAction('actions.find').run();
-        else if (this.$editor)
-            this.$editor.getAction('actions.find').run();
+        if (this.$oEditor && this.$oEditor.hasTextFocus()) {
+            if (this.selected.length > 0)
+                this.$oEditor.getAction('actions.findWithSelection').run();
+            else
+                this.$oEditor.getAction('actions.find').run();
+        }
+        else if (this.$editor) {
+            if (this.selected.length > 0)
+                this.$editor.getAction('actions.findWithSelection').run();
+            else
+                this.$editor.getAction('actions.find').run();
+        }
     }
     public replace() {
-        if (this.$oEditor && this.$oEditor.hasTextFocus())
-            this.$oEditor.getAction('editor.action.find').run();
-        else if (this.$editor)
+        if (this.$oEditor && this.$oEditor.hasTextFocus()) {
+            if (this.selected.length > 0)
+                this.$oEditor.getAction('actions.findWithSelection').run();
+            else
+                this.$oEditor.getAction('actions.find').run();
+        }
+        else if (this.$editor) {
+            if (this.selected.length > 0)
+                this.$editor.getAction('actions.findWithSelection').run();
             this.$editor.getAction('editor.action.startFindReplaceAction').run();
+        }
     }
     public supports(what) {
         switch (what) {
@@ -981,8 +1016,12 @@ export class MonacoCodeEditor extends EditorBase {
         this.$options = value;
         this.$model.updateOptions({
             tabSize: value.hasOwnProperty('tabSize') ? value.tabSize : 3,
-            insertSpaces: value.hasOwnProperty('tabSize') ? value.insertSpaces : true,
-            trimAutoWhitespace: value.hasOwnProperty('tabSize') ? value.trimAutoWhitespace : true
+            insertSpaces: value.hasOwnProperty('insertSpaces') ? value.insertSpaces : true,
+            trimAutoWhitespace: value.hasOwnProperty('trimAutoWhitespace') ? value.trimAutoWhitespace : true,
+            bracketColorizationOptions: {
+                enabled: value.hasOwnProperty('bracketColorization') ? value.bracketColorization : true,
+                independentColorPoolPerBracketType: value.hasOwnProperty('independentColorPoolPerBracketType') ? value.independentColorPoolPerBracketType : false
+            }
         });
     }
     public get options() { return this.$options; }
@@ -1267,7 +1306,7 @@ export class MonacoCodeEditor extends EditorBase {
                     label: 'Toggle &Word Wrap',
                     accelerator: 'Alt+Z',
                     click: () => {
-                        this.$editor.updateOptions({ wordWrap: (this.$editor.getConfiguration().wrappingInfo.isViewportWrapping ? 'off' : 'on') });
+                        this.$editor.updateOptions({ wordWrap: (this.$editor.getRawOptions().wordWrap ? 'off' : 'on') });
                     }
                 },
                 { type: 'separator' },
@@ -1361,6 +1400,8 @@ export class MonacoCodeEditor extends EditorBase {
         return [this.$editor.getPosition().column, this.$editor.getPosition().lineNumber];
     }
     public get length() { return this.$model.getValueLength(); }
+
+    public get lineCount() { return this.$model.getLineCount(); }
 
     public get model() { return this.model; }
 

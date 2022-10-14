@@ -15,7 +15,7 @@
     <link href="css/ansi.css" rel="stylesheet" type="text/css" />
     <link href="css/theme.css" rel="stylesheet" type="text/css" />
     <link href="../lib/datatables.min.css" rel="stylesheet" type="text/css" />
-    <script>
+    <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js" type="text/javascript"></script>
@@ -23,12 +23,14 @@
     <script src="../lib/bootstrap-select.min.js" type="text/javascript"></script>
     <script src="../lib/datatables.min.js" type="text/javascript"></script>
     <script src="../lib/datatables.scrollresize.min.js" type="text/javascript"></script>
-    <script>
-        //spell-checker:ignore hellip datatable, datatables, scrollresize, drivelist, prefs, unref, toggledevtools, readdir, mountpoints, estart, showhidden, extname, prepend, mkdir
+    <script type="text/javascript">
+        if (window.module) module = window.module;
+        //spell-checker:ignore hellip datatable, datatables, scrollresize, prefs, unref, toggledevtools, readdir, mountpoints, estart, showhidden, extname, prepend, mkdir
         //spell-checker:ignore keypress, haspopup, labelledby, tabindex, tablist, tabpanel
         const { MailStatus, MailAction, MailFolders, MailReadFormat } = require('./js/types');
-        const { remote, ipcRenderer, shell, clipboard } = require('electron');
-        const { app, dialog, Menu, MenuItem } = remote;
+        const { ipcRenderer, shell, clipboard } = require('electron');
+        const remote = require('@electron/remote');
+        const { Menu, MenuItem } = remote;
         const { parseTemplate, existsSync } = require('./js/library');
         const { Settings } = require('./js/settings');
         const { Display } = require('./js/display');
@@ -37,7 +39,6 @@
         const fs = require('fs-extra');
         const child_process = require('child_process');
         const path = require('path');
-        const drivelist = require('drivelist');
         const moment = require('moment');
 
         var options;
@@ -263,23 +264,20 @@
                     {
                         label: '&Toggle Developer Tools',
                         click: () => {
-                            if (remote.getCurrentWindow().isDevToolsOpened())
-                                remote.getCurrentWindow().closeDevTools();
-                            else
-                                remote.getCurrentWindow().openDevTools();
+                            ipcRenderer.invoke('window', 'toggleDevtools');
                         }
                     },
                     {
                         type: 'separator'
                     },
                     {
-                        role: 'resetzoom'
+                        role: 'resetZoom'
                     },
                     {
-                        role: 'zoomin'
+                        role: 'zoomIn'
                     },
                     {
-                        role: 'zoomout'
+                        role: 'zoomOut'
                     },
                 ]
             },
@@ -417,7 +415,7 @@
 
         function loadOptions(data) {
             if (!data) {
-                var set = Settings.load(remote.getGlobal('settingsFile'));
+                var set = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
                 options = set.extensions['mail'];
             }
             else
@@ -445,7 +443,7 @@
                 options.folderSize = 202;
             if (options.viewSize < 202)
                 options.viewSize = 202;
-            //min of 15 mins as dont want to check to fast, defaults to 48 hrs
+            //min of 15 mins as don't want to check to fast, defaults to 48 hrs
             //if (options.checkPeriod < 900)
             //options.checkPeriod = 900;
             $('#folders').css('width', options.folderSize);
@@ -478,9 +476,9 @@
             if (error.stack && options.showErrorsExtended)
                 msg = error.stack;
             else if (error instanceof TypeError)
-                msg = error.name + ' - ' + error.message;
+                msg = error.name + ': ' + error.message;
             else if (error instanceof Error)
-                msg = error.name + ' - ' + error.message;
+                msg = error.name + ': ' + error.message;
             else if (error.message)
                 msg = error.message;
             else
@@ -496,7 +494,7 @@
         }
 
         $(document).ready(() => {
-            var file = remote.getGlobal('character');
+            var file = ipcRenderer.sendSync('get-global', 'character');
             if (!file || file.length === 0)
                 file = parseTemplate(path.join('{data}', 'mail.sqlite'));
             else
@@ -821,12 +819,13 @@
             $('#messages-list_wrapper .dataTables_scrollBody')[0].scrollTop = 0;
         }
 
+        var _rTimeout = 0;
         function doUpdate(type) {
             if (!type) return;
             _updating |= type;
             if (_updating === 0)
                 return;
-            window.requestAnimationFrame(() => {
+            _rTimeout = window.requestAnimationFrame(() => {
                 if ((this._updating & 1) === 1) {
                     //updateStatus();
                     _updating &= ~1;
@@ -844,6 +843,7 @@
                     logView[0].scrollTop = logView[0].scrollHeight;
                     _updating &= ~32;
                 }
+                _rTimeout = 0;
                 doUpdate(_updating);
             });
         }
@@ -933,7 +933,7 @@
             $('#bottom-loading').css('display', 'none');
             if (!_currentLetter) return;
             if (!letter) {
-                dialog.showMessageBox(remote.getCurrentWindow(), {
+                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
                     type: 'error',
                     title: 'Letter not found',
                     message: 'Letter could not be found.'
@@ -1004,7 +1004,7 @@
 
         // eslint-disable-next-line no-unused-vars
         function closeHidden() {
-            remote.getCurrentWindow().hide();
+            ipcRenderer.invoke('window', 'hide');
         }
     </script>
 </head>
