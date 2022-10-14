@@ -18,7 +18,8 @@
     <script type="text/javascript">
         if (window.module) module = window.module;
         const { ipcRenderer } = require('electron');
-        var _curr;
+        var _history = [];
+        var _current = 0;
         $(document).ready(function () {
             document.getElementById('body').addEventListener('contextmenu', e => {
                 e.preventDefault();
@@ -39,12 +40,49 @@
             });
             window.addEventListener('hashchange', e => {
                 loadHelp(window.location.hash);
-            }, false);
+            }, false);         
             loadHelp();
+            updateButtons();
         });
 
+        // eslint-disable-next-line no-unused-vars
+        function navigate(direction) {
+            _current += direction;
+            if (_current < 0)
+                _current = 0;
+            if (_current >= _history.length)
+                _current = _history.length;
+            updateButtons();
+            loadHelp(_history[_current]);
+        }
+
+        function updateButtons() {
+            if (_current === 0 || _history.length === 0)
+                $('#btn-back').prop('disabled', true);
+            else
+                $('#btn-back').prop('disabled', false);
+            if (_current === _history.length - 1 || _history.length === 0)
+                $('#btn-forward').prop('disabled', true);
+            else
+                $('#btn-forward').prop('disabled', false);
+        }
+
+        function executeContextItem(idx, id, label, role) {
+            _current = idx;
+            contents.val(_history[idx]).selectpicker('render');
+            loadHelp(_history[idx]);
+            updateButtons();
+        }
+
         function loadHelp(url) {
-            _curr = url || '';
+            url = url || '';
+            if (!_history.length || _history[_current] !== url) {
+                if (_history.length !== 0)
+                    _history.length = _current + 1;
+                _history.push(url);
+                _current = _history.length - 1;
+                updateButtons();
+            }
             var body = document.getElementById('body');
             var i = body.childNodes.length;
             while (i--) {
@@ -52,7 +90,10 @@
             }
             const xhttp = new XMLHttpRequest();
             xhttp.addEventListener('load', function (e) {
-                $('#body').append(this.responseText.replace(/href=\"\?/g, 'href="#'));
+                //$('#body').append(this.responseText.replace(/href=\"\?/g, 'href="#'));
+                //ref="javascript:void(0)" onclick="closeOutput()"
+                const re = new RegExp('<a([^>]* )href="([^"]+)"', 'g');
+                $('#body').append(this.responseText.replace(re, '<a$1href="javascript:void(0)" onClick="loadHelp(\'$2\')"'));
             });
             xhttp.addEventListener('error', function (e) {
                 $('#body').textContent = $('#body').textContent + `${e.type}: ${e.loaded} bytes transferred\n`;
@@ -60,7 +101,7 @@
             xhttp.addEventListener('abort', function (e) {
                 $('#body').textContent = $('#body').textContent + `${e.type}: ${e.loaded} bytes transferred\n`;
             });
-            xhttp.open("GET", "http://shadowmud.com:1130/help?" + _curr.substr(1));
+            xhttp.open("GET", "http://shadowmud.com:1130/help" + url);
             xhttp.send();
         }
     </script>
@@ -322,6 +363,10 @@
             -webkit-animation-timing-function: cubic-bezier(1, 0, 0, 1);
             -webkit-animation-duration: 1s;
         }
+
+        .btn-group {
+            height: auto;
+        }
     </style>
 </head>
 
@@ -330,12 +375,14 @@
         <button id="btn-refresh" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="loadHelp(_curr)">
             <i class="fa fa-refresh"></i>
         </button>
-        <button id="btn-back" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="history.back()">
+        <div class="btn-group" role="group">
+        <button id="btn-back" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="navigate(-1)">
             <i class="fa fa-arrow-left"></i>
         </button>
-        <button id="btn-forward" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="history.forward()">
+        <button id="btn-forward" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="navigate(1)">
             <i class="fa fa-arrow-right"></i>
         </button>
+        </div>
     </div>
     <div id="body">
     </div>

@@ -186,6 +186,7 @@
                         nodes: [
                             { text: 'Backup' },
                             { text: 'Connection' },
+                            { text: 'Profiles' },
                             { text: 'Profile manager' },
                             { text: 'Tray' }
                         ]
@@ -244,6 +245,24 @@
                     ipcRenderer.send('error', err);
                 });
 
+            var p = path.join(parseTemplate('{data}'), 'profiles');
+            if (isDirSync(p)) {
+                var files = fs.readdirSync(p);
+                var ops = [];
+                for (var i = 0; i < files.length; i++) {
+                    if (path.extname(files[i]) === '.json') {
+                        if (files[i].toLowerCase() === 'default.json')
+                            continue;
+                        ops.push('<option value="', path.basename(files[i], '.json').toLowerCase(), '">', path.basename(files[i], '.json'), '</option>');
+                    }
+                }
+
+                el = $('#profiles-profileSelected');
+                el.append(ops.join(''));
+                el.selectpicker('refresh');
+                el.selectpicker('render');
+            }
+
             $('#font').change(() => {
                 $('#font-sample').css('font-family', $('#font').val() + ', monospace');
                 $('#font-sample').css('font-size', $('#fontSize').val());
@@ -294,7 +313,9 @@
                     case 'logging-viewer-alwaysOnTopClient':
                     case 'logging-viewer-alwaysOnTop':
                     case 'logging-viewer-persistent':
-                        if (!_settings.windows['log-viewer'] || !_settings.windows['log-viewer'].options)
+                        if (!_settings.windows['log-viewer'])
+                            _settings.windows['log-viewer'] = {};
+                        if (!_settings.windows['log-viewer'].options)
                             _settings.windows['log-viewer'].options = {
                                 persistent: false,
                                 alwaysOnTopClient: true,
@@ -583,6 +604,9 @@
                     case 'profiles-sortDirection':
                         _settings.profiles.sortDirection = parseInt($(this).val(), 10);
                         break;
+                    case 'profiles-profileSelected':
+                        _settings.profiles.profileSelected = $(this).val();
+                        break;
                     default:
                         _settings[$(this).attr('id')] = $(this).val();
                         break;
@@ -696,6 +720,10 @@
             $('#profiles-sortDirection').selectpicker('render');
             $('#profiles-sortDirection').change();
 
+            $('#profiles-profileSelected').val(_settings.profiles.profileSelected);
+            $('#profiles-profileSelected').selectpicker('render');
+            $('#profiles-profileSelected').change();
+
             LoadColors();
 
             $('#MapperSplitArea').prop('checked', _settings.mapper.split);
@@ -793,7 +821,6 @@
                 $('#logging-viewer-alwaysOnTopClient').prop('checked', true);
                 $('#logging-viewer-alwaysOnTop').prop('checked', false);
                 $('#logging-viewer-persistent').prop('checked', true);
-
             }
             else {
                 $('#logging-viewer-alwaysOnTopClient').prop('checked', _settings.windows['log-viewer'].options.alwaysOnTopClient);
@@ -821,7 +848,9 @@
         // eslint-disable-next-line no-unused-vars
         function resetSettings() {
             _settings = new Settings();
-            if (!_settings.windows['log-viewer'] || !_settings.windows['log-viewer'].options)
+            if (!_settings.windows['log-viewer'])
+                _settings.windows['log-viewer'] = {};
+            if (!_settings.windows['log-viewer'].options)
                 _settings.windows['log-viewer'].options = {
                     persistent: false,
                     alwaysOnTopClient: true,
@@ -843,6 +872,7 @@
         }
 
         function resetWindows() {
+            if (!_settings.windows) return;
             for (var name in _settings.windows) {
                 _settings.windows[name].x = 0;
                 _settings.windows[name].y = 0;
@@ -1286,15 +1316,6 @@
                     </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
-                            Auto connect delay
-                            <div class="input-group">
-                                <input type="number" id="autoConnectDelay" class="input-sm form-control" min="0" max="10000" />
-                                <div class="input-group-addon">ms</div>
-                            </div>
-                        </label>
-                    </div>
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">
                             <input type="checkbox" id="autoCreateCharacter" /> Auto create character
                         </label>
                     </div>
@@ -1350,6 +1371,15 @@
                     </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
+                            Auto connect delay
+                            <div class="input-group">
+                                <input type="number" id="autoConnectDelay" class="input-sm form-control" min="0" max="10000" />
+                                <div class="input-group-addon">ms</div>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
                             Max reconnect delay
                             <div class="input-group">
                                 <input type="number" id="maxReconnectDelay" class="input-sm form-control" min="0" max="10000" />
@@ -1395,7 +1425,7 @@
 
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
-                            <input type="checkbox" id="CommandonClick" /> Focus command input on click
+                            <input type="checkbox" id="CommandonClick" /> Focus to command input on click
                         </label>
                     </div>
                     <div class="col-sm-6 form-group">
@@ -1904,7 +1934,7 @@
                             <label class="control-label">
                                 Delay between directions
                                 <div class="input-group">
-                                    <input type="number" id="commandDelay" class="input-sm form-control" />
+                                    <input type="number" id="commandDelay" class="input-sm form-control" min="0" />
                                     <div class="input-group-addon">ms</div>
                                 </div>
                             </label>
@@ -1912,7 +1942,7 @@
                         <div class="col-sm-6 form-group">
                             <label class="control-label">
                                 Directions to send
-                                <input type="number" id="commandDelayCount" class="input-sm form-control" />
+                                <input type="number" id="commandDelayCount" class="input-sm form-control" min="1" />
                             </label>
                         </div>
                     </div>
@@ -2131,12 +2161,23 @@
                         <label class="control-label">
                             <input type="checkbox" id="notifyMSPPlay" /> Display Notification on MSP Play
                         </label>
-                    </div>
+                    </div>                  
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            MSP: max retries on error
+                            <input type="number" id="mspMaxRetriesOnError" class="input-sm form-control" min="0" max="100" />
+                        </label>
+                    </div>                    
                 </div>
                 <div role="tabpanel" class="pref-pane" id="status">
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="lagMeter" /> Show lag meter
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="showLagInTitle" /> Show lag in title
                         </label>
                     </div>
                     <div class="col-sm-6 form-group">
@@ -2186,6 +2227,38 @@
                         <label class="control-label">
                             <input type="checkbox" id="prependTriggeredLine" /> Prepend triggered line
                         </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="enableDoubleParameterEscaping" /> Enable Double Parameter Escaping
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="ignoreEvalUndefined" /> Ignore Eval Undefined
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="allowCommentsFromCommand" /> Allow Comments From Command
+                        </label>
+                    </div>
+                    <div class="col-sm-12 form-group" style="margin:0;padding:0">
+                        <div class="col-sm-6 form-group">
+                            <label class="control-label">
+                                Delay between path commands
+                                <div class="input-group">
+                                    <input type="number" id="pathDelay" class="input-sm form-control" min="0" />
+                                    <div class="input-group-addon">ms</div>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-sm-6 form-group">
+                            <label class="control-label">
+                                Amount of path commands to send
+                                <input type="number" id="pathDelayCount" class="input-sm form-control" min="1" />
+                            </label>
+                        </div>
                     </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="advanced">
@@ -2254,48 +2327,8 @@
                         <label class="control-label">
                             <input type="checkbox" id="externalHelp" /> Open ShadowMUD help in web browser
                         </label>
-                    </div>                    
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">
-                            <input type="checkbox" id="watchForProfilesChanges" /> Watch for profile changes
-                        </label>
                     </div>
-                    <div class="col-sm-12 form-group">
-                        <div class="col-sm-6 form-group">
-                            <label class="control-label">On profile change do:</label>
-                            <div class="btn-group" data-toggle="buttons">
-                                <label class="btn btn-default btn-xs">
-                                    <input type="radio" name="onProfileChange" id="onProfileChange-0"> Nothing
-                                </label>
-                                <label class="btn btn-default btn-xs">
-                                    <input type="radio" name="onProfileChange" id="onProfileChange-1"> Reload
-                                </label>
-                                <label class="btn btn-default btn-xs">
-                                    <input type="radio" name="onProfileChange" id="onProfileChange-2"> Ask
-                                </label>
-                                <label class="btn btn-default btn-xs">
-                                    <input type="radio" name="onProfileChange" id="onProfileChange-4"> Warn
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-sm-6 form-group">
-                            <label class="control-label">On profile deleted do:</label>
-                            <div class="btn-group" data-toggle="buttons">
-                                <label class="btn btn-default btn-xs">
-                                    <input type="radio" name="onProfileDeleted" id="onProfileDeleted-0"> Nothing
-                                </label>
-                                <label class="btn btn-default btn-xs">
-                                    <input type="radio" name="onProfileDeleted" id="onProfileDeleted-1"> Remove
-                                </label>
-                                <label class="btn btn-default btn-xs">
-                                    <input type="radio" name="onProfileDeleted" id="onProfileDeleted-2"> Ask
-                                </label>
-                                <label class="btn btn-default btn-xs">
-                                    <input type="radio" name="onProfileDeleted" id="onProfileDeleted-4"> Warn
-                                </label>
-                            </div>
-                        </div>          
-                    </div>          
+
                 </div>
                 <div role="tabpanel" class="pref-pane" id="backup">
                     <div class="col-sm-12 form-group" style="padding: 0px;">
@@ -2398,10 +2431,22 @@
                     </div>
                     <div class="col-sm-6 form-group">
                         <label>Profile manager sort direction
-                            <select id="profiles-sortDirection" style="width:100%" name="colorScheme" class="form-control selectpicker" data-container="body" data-width="100%">
+                            <select id="profiles-sortDirection" style="width:100%" class="form-control selectpicker" data-container="body" data-width="100%">
                                 <option value="1">Ascending</option>
                                 <option value="-1">Descending</option>
                             </select>
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label>Profile to select on load
+                            <select id="profiles-profileSelected" style="width:100%" class="form-control selectpicker" data-container="body" data-width="100%">
+                                <option value="default">Default</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="profiles-profileExpandSelected" /> Expand selected profile on load
                         </label>
                     </div>
                 </div>
@@ -2459,7 +2504,7 @@
                     </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="special-characters">
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-4 form-group">
                         <label class="control-label">
                             Command stacking
                             <div class="input-group" style="width: 40px">
@@ -2472,7 +2517,7 @@
                         </label>
                     </div>
 
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-7 form-group">
                         <label class="control-label">
                             Speedpaths
                             <div class="input-group" style="width: 40px">
@@ -2485,11 +2530,15 @@
                                     <label>
                                         <input type="checkbox" id="parseSpeedpaths" /> Parse</label>
                                 </div>
+                                <div class="input-group-addon">
+                                    <label>
+                                        <input type="checkbox" id="echoSpeedpaths" /> Echo</label>
+                                </div>
                             </div>
                         </label>
                     </div>
 
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-4 form-group">
                         <label class="control-label">
                             Command
                             <div class="input-group" style="width: 40px">
@@ -2502,7 +2551,7 @@
                         </label>
                     </div>
 
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-4 form-group">
                         <label class="control-label">
                             Escape
                             <div class="input-group" style="width: 40px">
@@ -2514,7 +2563,7 @@
                             </div>
                         </label>
                     </div>
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-4 form-group">
                         <label class="control-label">
                             Verbatim
                             <div class="input-group" style="width: 40px">
@@ -2524,6 +2573,127 @@
                                         <input type="checkbox" id="enableVerbatim" /> Enable</label>
                                 </div>
                             </div>
+                        </label>
+                    </div>
+                    <div class="col-sm-12 form-group" style="padding: 0px;">
+                        <div class="col-sm-4 form-group">
+                            <label class="control-label">
+                                Parameters
+                                <div class="input-group" style="width: 40px">
+                                    <input type="text" id="parametersChar" class="input-sm form-control" style="width: 40px" size="1" maxlength="1" />
+                                    <div class="input-group-addon">
+                                        <label>
+                                            <input type="checkbox" id="enableParameters" /> Enable</label>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="col-sm-4 form-group">
+                            <label class="control-label">
+                                N Parameters
+                                <div class="input-group" style="width: 40px">
+                                    <input type="text" id="nParametersChar" class="input-sm form-control" style="width: 40px" size="1" maxlength="1" />
+                                    <div class="input-group-addon">
+                                        <label>
+                                            <input type="checkbox" id="enableNParameters" /> Enable</label>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                        <span class="help-block" style="float:left;font-size: 0.8em;margin:0;padding:0;padding-left:15px;">WARNING: Disabling parameters or n parameters could break triggers, aliases, and other items that uses argument access</span>
+                    </div>
+                    <div class="col-sm-4 form-group">
+                        <label class="control-label">
+                            Inline Comment
+                            <div class="input-group" style="width: 40px">
+                                <input type="text" id="inlineCommentString" class="input-sm form-control" style="width: 40px" size="1" maxlength="2" />
+                                <div class="input-group-addon">
+                                    <label>
+                                        <input type="checkbox" id="enableInlineComments" /> Enable</label>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="col-sm-4 form-group">
+                        <label class="control-label">
+                            Block Comment
+                            <div class="input-group" style="width: 40px">
+                                <input type="text" id="blockCommentString" class="input-sm form-control" style="width: 40px" size="1" maxlength="2" />
+                                <div class="input-group-addon">
+                                    <label>
+                                        <input type="checkbox" id="enableBlockComments" /> Enable</label>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <div role="tabpanel" class="pref-pane" id="profiles">
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="saveTriggerStateChanges" /> Save trigger state changes
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="watchForProfilesChanges" /> Watch for profile changes
+                        </label>
+                    </div>
+                    <div class="col-sm-12 form-group" style="padding: 0px;">
+                        <div class="col-sm-6 form-group">
+                            <label class="control-label">On profile change do:</label>
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileChange" id="onProfileChange-0"> Nothing
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileChange" id="onProfileChange-1"> Reload
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileChange" id="onProfileChange-2"> Ask
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileChange" id="onProfileChange-4"> Warn
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 form-group">
+                            <label class="control-label">On profile deleted do:</label>
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileDeleted" id="onProfileDeleted-0"> Nothing
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileDeleted" id="onProfileDeleted-1"> Remove
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileDeleted" id="onProfileDeleted-2"> Ask
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="onProfileDeleted" id="onProfileDeleted-4"> Warn
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 form-group" style="padding: 0px;">
+                        <div class="col-sm-6 form-group">
+                            <label class="control-label">
+                                <input type="checkbox" id="groupProfileSaves" /> Group profile saves
+                            </label>
+                        </div>
+                        <div class="col-sm-6 form-group">
+                            <label class="control-label">
+                                Group profile save delay
+                                <div class="input-group">
+                                    <input type="number" id="groupProfileSaveDelay" class="input-sm form-control" min="500" />
+                                    <div class="input-group-addon">ms</div>
+                                </div>
+                            </label>
+                        </div>
+                        <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;padding-left:15px;">WARNING: Enabling profile group saving could cause sync issues and loss of data when saving preferences or profiles</span>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="returnNewlineOnEmptyValue" /> Return newline on empty value
                         </label>
                     </div>
                 </div>

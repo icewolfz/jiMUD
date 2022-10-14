@@ -4,7 +4,7 @@ A mud client using electron for [ShadowMUD](http://www.shadowmud.com) based on i
 
 ## Build
 
-  To build jiMUD you must have node, npm, node-sass, typescript 2.3+, cPython 2.7.x installed
+  To build jiMUD you must have node, npm, typescript 2.3+, cPython installed
   Steps to build:
 
 ### Windows
@@ -27,11 +27,14 @@ Build and package files are all saved to dist folder
 ## Run
 
 1. npm install - install node modules
+1. npm run rebuild - this rebuilds modules to work with electron if needed
 1. npm run compile - compile typescript into javascript files
 1. npm run start - start jiMUD
 
 This will allow you to run jiMUD directly from this folder with out the need to
 package into a self contained folder or building an installer.
+**Note** you only need to run the install, rebuild, and compile steps the first 
+time or any time you update the packages.
 
 ## Standalone application
 
@@ -53,10 +56,10 @@ Basic questions answered about jiMUD
 
 - `-h, --help`                                Print console help
 - `-d, --debug`                               Enable dev tools for all windows
-- `-s=[file], --settings=[file]`               Override default setting file
+- `-s=[file], --settings=[file]`              Override default setting file
 - `-mf=[file], --map=[file]`                  Override default map file
 - `-c=[name], --character=[name]`             Allows you to load/create a character from character database
-- `-pf=[list], --profiles[]`                  Set which profiles will be enabled, if not found will default
+- `-pf=[list], --profiles=[list]`             Set which profiles will be enabled, if not found will default
 - `-v, --version`                             Print current version
 - `-e, --editor, -e=[file], --editor=[file]`  Open code editor
 - `-eo, --eo, -eo=[file], --eo=[file]`        Open only the code editor
@@ -98,10 +101,11 @@ Basic questions answered about jiMUD
   - Dragging multiple files and dropping outside to other applications will only drop the first file, all others ignored. This is a limitation of electron drag and drop support, until it is added it can not be supported outside of application
 - Advanced editor
   - Paste may lose some colors/background colors on pasted, this is a bug in TinyMCE editor
-  - When apply styles to all text some styles may get stuck
+  - When applying styles to all text some styles may get stuck
   - Some styles will not flash when flashing is enabled depending on order of styles applied
   - Reverse style has weird results with heavy nesting of reverse tags and colors, suggest to just use normal background colors.
   - Correction from context menu may remove applied styles depending on if they are just that word
+  - Complex color codes may be returned due to nesting and other complex style choices
 - General slow performance, do not use --disable-gpu it can impact overall performance
 - [Mapper](docs/mapper.md#know-issues)
 - [Code editor](docs/codeeditor.md#know-issues)

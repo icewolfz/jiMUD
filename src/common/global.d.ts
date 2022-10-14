@@ -22,6 +22,7 @@ interface Event {
 }
 
 declare let $selected: string;
+declare let $character: string;
 declare let $selectedurl: string;
 declare let $selectedline: string;
 declare let $selectedword: string;
@@ -39,6 +40,7 @@ interface Window {
 	i: any;
 	repeatnum: any;
 	$copied: string;
+	$character: string;
 	ResizeObserver: ResizeObserver;
 }
 

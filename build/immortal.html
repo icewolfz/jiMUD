@@ -839,9 +839,9 @@
             if (error.stack && options.showErrorsExtended)
                 msg = error.stack;
             else if (error instanceof TypeError)
-                msg = error.name + ' - ' + error.message;
+                msg = error.name + ': ' + error.message;
             else if (error instanceof Error)
-                msg = error.name + ' - ' + error.message;
+                msg = error.name + ': ' + error.message;
             else if (error.message)
                 msg = error.message;
             else
@@ -1332,9 +1332,9 @@
                 if (error.stack)
                     msg = error.stack;
                 else if (error instanceof TypeError)
-                    msg = error.name + ' - ' + error.message;
+                    msg = error.name + ': ' + error.message;
                 else if (error instanceof Error)
-                    msg = error.name + ' - ' + error.message;
+                    msg = error.name + ': ' + error.message;
                 else if (error.message)
                     msg = error.message;
                 else if (error.msg)
@@ -1831,7 +1831,10 @@
                 //$("body")[0].scrollTop = 0
                 row.select();
                 //hack, seems this gets set wrong and causes shift click selection to act wonky, setting to current item index seems to fix it
-                localTable.context[0]._select_lastCell.row = row.index();
+                if (localTable.context[0]._select_lastCell)
+                    localTable.context[0]._select_lastCell.row = row.index();
+                else
+                    localTable.context[0]._select_lastCell = { row: row.index(), column: 0, columnVisible: 0 };
                 clearTimeout(keyClearID);
                 keyClearID = setTimeout(() => {
                     key = '';
@@ -1880,7 +1883,10 @@
                 //$("body")[0].scrollTop = 0
                 row.select();
                 //hack, seems this gets set wrong and causes shift click selection to act wonky, setting to current item index seems to fix it
-                remoteTable.context[0]._select_lastCell.row = row.index();
+                if (remoteTable.context[0]._select_lastCell)
+                    remoteTable.context[0]._select_lastCell.row = row.index();
+                else
+                    remoteTable.context[0]._select_lastCell = { row: row.index(), column: 0, columnVisible: 0 };
                 clearTimeout(keyClearID);
                 keyClearID = setTimeout(() => {
                     key = '';
@@ -2318,7 +2324,7 @@
                         if (_remote[path.basename(_remoteDrag[f])].size === -2)
                             downloadPath(_remoteDrag[f], options.local);
                         else
-                            _ied.download(_remoteDrag[f], options.local);
+                            _ied.download(_remoteDrag[f]);
                     }
                     _ied.end();
                     _remoteDrag = 0;
@@ -3322,6 +3328,7 @@
 
         function rename(rows, list, callback) {
             var el = $(rows.nodes()[0].children[0]);
+            var list = $(el.closest('tbody'));
             el.css('position', 'relative');
             var editor = $('<input class="form-control" style="position: absolute;top:0;left:0;right:0;bottom:0;width:auto;margin:0;height: auto;"/>');
             editor.path = rows.data()[0].path;
@@ -3349,6 +3356,7 @@
                 if (e && e.target === editor[0])
                     return;
                 $(window).off('click', editor.update);
+                list.off('contextmenu', 'tr', editor.context);
                 editor.remove();
                 editor = null;
             };
@@ -3371,6 +3379,37 @@
             });
 
             $(window).on('click', editor.update);
+            editor.context = e => {
+                if (e && e.target === editor[0]) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    event.cancelBubble = true;
+                    return;
+                }
+                editor.close();
+            };
+            editor.on('contextmenu', e => {
+                event.preventDefault();
+                event.stopPropagation();
+                event.cancelBubble = true;
+
+                let menu = [
+                    { role: 'undo' },
+                    { role: 'redo' },
+                    { type: 'separator' },
+                    { role: 'cut' },
+                    { role: 'copy' },
+                    { role: 'paste' },
+                    { type: 'separator' },
+                    { role: 'selectAll' },
+                ];
+                if (ipcRenderer.sendSync('get-global', 'debug')) {
+                    menu.push({ type: 'separator' });
+                    menu.push({ label: 'Inspect', click: `ipcRenderer.send('inspect', ${e.pageX}, ${e.pageY})` });
+                }
+                ipcRenderer.invoke('show-context', menu);
+            })
+            list.on('contextmenu', 'tr', editor.context);
             el.append(editor);
             editor.val(editor.original);
             editor.focus();
@@ -3685,12 +3724,13 @@
             _qUpdateID = null;
         }
 
+        var _rTimeout = 0;
         function doUpdate(type) {
             if (!type) return;
             _updating |= type;
-            if (_updating === 0)
+            if (_updating === 0 || _rTimeout)
                 return;
-            window.requestAnimationFrame(() => {
+            _rTimeout = window.requestAnimationFrame(() => {
                 if ((this._updating & 1) === 1) {
                     updateStatus();
                     _updating &= ~1;
@@ -3738,6 +3778,7 @@
                     queueTable.rows().invalidate('data').draw();
                     _updating &= ~256;
                 }
+                _rTimeout = 0;
                 doUpdate(_updating);
             });
         }

@@ -5,15 +5,15 @@
 ### **Syntax:** #ALA *name* {time pattern} {commands} *profile*
 > Create or alter an alarm trigger
 
-### **Related:** [#SUSPEND](SUSPEND.md), [#RESUME](RESUME.md), [#TRIGGER](TRIGGER.md), [$UNTRIGGER](UNTRIGGER.md)
-
-#### **Arguments:**
+### **Arguments:**
 - name - optional name of alarm to alter
 - {time pattern} - The time pattern to trigger on
 - {command} - The commands to execute when alarm triggers
 - *profile* - The optional profile to create or update in, if not supplied defaults to current active profile
 
-#### **Alarm time pattern**
+### **Related:** [#SUSPEND](SUSPEND.md), [#RESUME](RESUME.md), [#TRIGGER](TRIGGER.md), [#UNTRIGGER](UNTRIGGER.md)
+
+### **Alarm time pattern**
 ```
     When using alarm type pattern is in the format of hours:minutes:seconds, where hours and minutes are optional. A asterisk (*) is a wildcard to match any value for that place, if minutes or hours are missing a * is assumed. If pattern is preceded with a minus (-) the connection time is used instead of current time.
 
@@ -28,5 +28,8 @@
 `#ALARM {-30:00} {save}`
 > Executes the save command every 30 minutes 
 
-`#ALARM {+5} {save}`
+`#ALARM {*5} {save}`
 > Executes the save command every 5 seconds
+
+`#ALARM {+5} {save}`
+> Executes the save command once in 5 seconds

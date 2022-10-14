@@ -61,6 +61,7 @@ The basic properties used to describe the room
   - `Exit` the exit to create
   - `Destination` the path to where the exit leads to, if blank use default destinations
     - **Note** You can link to any room in the are by  using x,y,z as the file name, eg 0,0,0 is the very first room and what ever file it ends up named as will replace it
+    - You may use ${rms}, ${mon}, ${std}, ${obj}, ${cmds} at the start of a path and it will be replaced with the DEFINE + "remaining path", eg ${rms}room.c will be set as RMS + "room.c" when generating code
   - `Door` door name if this exit should be a door to open or close
   - `Key ID` a unique key id to link a key object so door can be locked or unlocked
   - `Hidden` is the room visible to players
@@ -270,7 +271,7 @@ Create objects for your area
           - `Long` the long description of the armor
           - `Nouns` a comma delimited list of nouns
           - `Adjectives` a comma delimited list of adjectives
-          - `ID` a comma delimitied list of ids, not needed of nouns/adjectives are enough
+          - `ID` a comma delimited list of ids, not needed of nouns/adjectives are enough
         - `Limbs` the missing limbs, can be from a predefined list, or a comma delimited list of limbs to match
         - `Description` the description to use for the type and if the missing limbs match
         - `Max wearable` the maximum amount of this armor that can be worn at one time
@@ -282,7 +283,7 @@ Create objects for your area
       - `Blockers` a comma delimited list of monster names that will attack when trying to open, get or unlock the chest
       - `Lock strength` how strong a lock is when being picked
       - `Max encumbrance` the max mass the chest can hold
-      - `Reduce mass` adjust the mass of an item put in a chest, mass * reduct = final mass
+      - `Reduce mass` adjust the mass of an item put in a chest, mass * reduce = final mass
       - `Contents` the contents of the chest that if empty will be restored every room reset
         - `Item` the item to add, can be an object, money, or type of gem
         - `Min amount` the minimum amount to add
@@ -313,7 +314,7 @@ Create objects for your area
       - `Pole class` how good the pole is
     - `Backpack` same as armor but for limbs
       - `Max encumbrance` the max mass the pack can hold
-      - `Reduce mass` adjust the mass of an item put in a pack, mass * reduct = final mass
+      - `Reduce mass` adjust the mass of an item put in a pack, mass * reduce = final mass
     - `Bag of holding`
       - `Max encumbrance` the max mass the bag can hold
       - `Min encumbrance` the min mass the bag can hold when using % based encumbrance

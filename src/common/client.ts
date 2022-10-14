@@ -1,17 +1,16 @@
-// spell-checker:words cmdfont
+// spell-checker:words cmdfont repeatnum
 // spell-checker:ignore endof, Commandon errored
 
 import EventEmitter = require('events');
 import { Telnet, TelnetOption } from './telnet';
-import { ParserLine } from './types';
+import { ParserLine, ProfileSaveType } from './types';
 import { AnsiColorCode } from './ansi';
 import { parseTemplate, SortItemArrayByPriority, existsSync } from './library';
 import { Settings } from './settings';
 import { Input } from './input';
-import { ProfileCollection, Alias, Trigger, Alarm, Macro, Profile, Button, Context, TriggerType } from './profile';
+import { ProfileCollection, Alias, Trigger, Alarm, Macro, Profile, Button, Context, TriggerType, SubTriggerTypes } from './profile';
 import { MSP } from './msp';
 import { Display } from './display';
-import { exec } from 'child_process';
 const { version } = require('../../package.json');
 const path = require('path');
 const fs = require('fs');
@@ -51,6 +50,8 @@ export class Client extends EventEmitter {
         alarmPatterns: []
     };
     private _alarm: NodeJS.Timer;
+    private _profileSaves = {}; //store profile to save/change flag
+    private _profileSaveTimeout: NodeJS.Timer = null; //track timeout
 
     public MSP: MSP;
 
@@ -67,16 +68,24 @@ export class Client extends EventEmitter {
     public lastSendTime: number = 0;
     public defaultTitle = 'jiMUD';
 
-    public variables:any = {};
+    public variables: any = {};
 
     set enabledProfiles(value: string[]) {
         const a = [];
         let v;
         let vl;
+        const p = path.join(parseTemplate('{data}'), 'profiles')
         //can only enable profiles that exist, so scan the array for valid profiles
         for (v = 0, vl = value.length; v < vl; v++) {
+            //found so already loaded just save it
             if (this.profiles.contains(value[v]))
                 a.push(value[v]);
+            else {
+                //if not loaded, attempt to load it
+                this.profiles.load(value[v], p);
+                if (this.profiles.contains(value[v]))
+                    a.push(value[v]);
+            }
         }
         if (a.length === 0)
             a.push('default');
@@ -216,19 +225,24 @@ export class Client extends EventEmitter {
                 if (this.enabledProfiles.indexOf(keys[k]) === -1 || !this.profiles.items[keys[k]].enableTriggers || this.profiles.items[keys[k]].triggers.length === 0)
                     continue;
                 idx = this.profiles.items[keys[k]].triggers.indexOf(trigger);
+                //found trigger bail, or it will keep looking and k index will be wrong profile
+                if (idx !== -1)
+                    break;
             }
+        //check to be sure trigger found
         if (idx === -1)
             return;
         this.profiles.items[keys[k]].triggers.splice(idx, 1);
         this._itemCache.triggers = null;
-        if (trigger.type === TriggerType.Alarm && this._itemCache.alarms) {
+        //an alarm or has sub types see if cached
+        if ((trigger.triggers.length || trigger.type === TriggerType.Alarm) && this._itemCache.alarms) {
             idx = this._itemCache.alarms.indexOf(trigger);
             if (idx !== -1) {
                 this._itemCache.alarms.splice(idx, 1);
                 this._itemCache.alarmPatterns.splice(idx, 1);
             }
         }
-        this.saveProfile(keys[k]);
+        this.saveProfile(keys[k], false, ProfileSaveType.Trigger);
         this.emit('item-removed', 'trigger', keys[k], idx);
     }
 
@@ -244,7 +258,16 @@ export class Client extends EventEmitter {
             if (this.enabledProfiles.indexOf(keys[0]) === -1 || !this.profiles.items[keys[0]].enableTriggers)
                 this._itemCache.alarms = [];
             else
-                this._itemCache.alarms = $.grep(SortItemArrayByPriority(this.profiles.items[keys[k]].triggers), (a) => {
+                this._itemCache.alarms = $.grep(SortItemArrayByPriority(this.profiles.items[keys[k]].triggers), (a: Trigger) => {
+                    //has sub triggers of type alarm so cache them for future use as well
+                    if (a && a.enabled && a.triggers.length) {
+                        if (a.type === TriggerType.Alarm) return true;
+                        //loop sub states if one is alarm cache it for future
+                        for (let s = 0, sl = a.triggers.length; s < sl; s++)
+                            if (a.triggers[s].enabled && a.triggers[s].type === TriggerType.Alarm)
+                                return true;
+                        return false;
+                    }
                     return a && a.enabled && a.type === TriggerType.Alarm;
                 });
             this._itemCache.alarms.reverse();
@@ -256,6 +279,15 @@ export class Client extends EventEmitter {
             tmp.push.apply(tmp, SortItemArrayByPriority(this.profiles.items[keys[k]].triggers));
         }
         this._itemCache.alarms = $.grep(tmp, (a) => {
+            //has sub triggers of type alarm so cache them for future use as well
+            if (a && a.enabled && a.triggers.length) {
+                if (a.type === TriggerType.Alarm) return true;
+                //loop sub states if one is alarm cache it for future
+                for (let s = 0, sl = a.triggers.length; s < sl; s++)
+                    if (a.triggers[s].enabled && a.triggers[s].type === TriggerType.Alarm)
+                        return true;
+                return false;
+            }
             return a && a.enabled && a.type === TriggerType.Alarm;
         });
         this._itemCache.alarms.reverse();
@@ -331,7 +363,7 @@ export class Client extends EventEmitter {
     public get commandHistory() {
         return this._input.commandHistory;
     }
-    
+
     public get indices() {
         return this._input.indices;
     }
@@ -353,6 +385,8 @@ export class Client extends EventEmitter {
     }
 
     public loadProfiles() {
+        //reloaded before save done, clear state
+        this.clearProfileSaves();
         const p = path.join(parseTemplate('{data}'), 'profiles');
         //clear out all current profiles
         this.profiles = new ProfileCollection();
@@ -383,36 +417,42 @@ export class Client extends EventEmitter {
     }
 
     public loadProfile(profile) {
-        if(!profile) return;
+        if (!profile) return;
+        //profile was marked ot be save but reload so remove save
+        if (this._profileSaves[profile.toLowerCase()])
+            delete this._profileSaves[profile.toLowerCase()];
         const p = path.join(parseTemplate('{data}'), 'profiles');
-        if (!existsSync(p)) 
+        if (!existsSync(p))
             return;
         this.profiles.remove(profile);
         this.profiles.load(profile, p);
         this.clearCache();
         this.startAlarms();
-        this.emit('profile-loaded', profile);   
+        this.emit('profile-loaded', profile);
     }
 
     public removeProfile(profile) {
-        if(!profile) return;
+        if (!profile) return;
         this.profiles.remove(profile);
         this.clearCache();
         this.startAlarms();
-        this.emit('profile-removed', profile);   
-    }    
+        this.emit('profile-removed', profile);
+    }
 
-    public saveProfiles() {
+    public saveProfiles(noChanges?: boolean) {
+        this.clearProfileSaves();
         const p = path.join(parseTemplate('{data}'), 'profiles');
         if (!existsSync(p))
             fs.mkdirSync(p);
         this.profiles.save(p);
-        this.clearCache();
-        this.startAlarms();
-        this.emit('profiles-updated');
+        if (!noChanges) {
+            this.clearCache();
+            this.startAlarms();
+        }
+        this.emit('profiles-updated', noChanges);
     }
 
-    public saveProfile(profile: string) {
+    public saveProfile(profile: string, noChanges?: boolean, type?: ProfileSaveType) {
         profile = profile.toLowerCase();
         //is not loaded so no reason to even save it
         if (!this.profiles.contains(profile))
@@ -420,10 +460,49 @@ export class Client extends EventEmitter {
         const p = path.join(parseTemplate('{data}'), 'profiles');
         if (!existsSync(p))
             fs.mkdirSync(p);
-        this.profiles.items[profile].save(p);
-        this.clearCache();
-        this.startAlarms();
-        this.emit('profile-updated', profile);
+        //if group add to  save tracker and store change flag
+        if (this.options.groupProfileSaves) {
+            //minor update that does not effect caching
+            if (!noChanges) {
+                this.clearCache();
+                this.startAlarms();
+            }
+            if (this._profileSaves[profile.toLowerCase()]) {
+                this._profileSaves[profile.toLowerCase()].noChanges = this._profileSaves[profile.toLowerCase()].nochanges || noChanges;
+                this._profileSaves[profile.toLowerCase()].type |= type;
+            }
+            else
+                this._profileSaves[profile.toLowerCase()] = { noChanges: noChanges, type: type }
+            this.doProfileSave();
+        }
+        else {
+            this.profiles.items[profile].save(p);
+            //minor update that does not effect caching
+            if (!noChanges) {
+                this.clearCache();
+                this.startAlarms();
+            }
+            this.emit('profile-updated', profile, noChanges, type);
+        }
+    }
+
+    private doProfileSave() {
+        if (this._profileSaveTimeout) return;
+        this._profileSaveTimeout = setTimeout(() => {
+            for (const profile in this._profileSaves) {
+                this.profiles.items[profile].save(profile);
+                this.emit('profile-updated', profile, this._profileSaves[profile].noChanges, this._profileSaves[profile].type);
+            }
+            this._profileSaves = {};
+            this._profileSaveTimeout = null;
+        }, this.options.groupProfileSaveDelay);
+    }
+
+    public clearProfileSaves() {
+        if (this._profileSaveTimeout) {
+            clearInterval(this._profileSaveTimeout);
+            this._profileSaveTimeout = null;
+        }
     }
 
     public toggleProfile(profile: string) {
@@ -463,18 +542,131 @@ export class Client extends EventEmitter {
         if (typeof idx === 'object')
             idx = this.alarms.indexOf(idx);
         if (idx === -1 || idx >= this.alarms.length)
+            return;
+        let pattern = this._itemCache.alarmPatterns[idx];
+        if (!pattern) {
+            //use an object to store to prevent having to loop over large array
+            pattern = {};
+            if (this.alarms[idx].type === TriggerType.Alarm)
+                pattern[0] = Alarm.parse(this.alarms[idx]);
+            for (let s = 0, sl = this.alarms[idx].triggers.length; s < sl; s++) {
+                //enabled and is alarm
+                if (this.alarms[idx].triggers[s].enabled && this.alarms[idx].triggers[s].type === TriggerType.Alarm)
+                    pattern[s] = Alarm.parse(this.alarms[idx].triggers[s]);
+            }
+            this._itemCache.alarmPatterns[idx] = pattern;
+        }
+        for (const p in pattern) {
+            if (!pattern.hasOwnProperty(p)) continue;
+            if (state) {
+                pattern[p].startTime += Date.now() - pattern[p].suspended;
+                pattern[p].prevTime += Date.now() - pattern[p].suspended;
+                if (pattern[p].tempTime)
+                    pattern[p].tempTime += Date.now() - pattern[p].suspended;
+                pattern[p].suspended = 0;
+            }
+            else
+                pattern[p].suspended = Date.now();
+        }
+    }
+
+    public setAlarmTempTime(idx, temp: number) {
+        if (typeof idx === 'object')
+            idx = this.alarms.indexOf(idx);
+        if (idx === -1 || idx >= this.alarms.length)
+            return;
+        let pattern = this._itemCache.alarmPatterns[idx];
+        if (!pattern) {
+            //use an object to store to prevent having to loop over large array
+            pattern = {};
+            if (this.alarms[idx].type === TriggerType.Alarm)
+                pattern[0] = Alarm.parse(this.alarms[idx]);
+            for (let s = 0, sl = this.alarms[idx].triggers.length; s < sl; s++) {
+                //enabled and is alarm
+                if (this.alarms[idx].triggers[s].enabled && this.alarms[idx].triggers[s].type === TriggerType.Alarm)
+                    pattern[s] = Alarm.parse(this.alarms[idx].triggers[s]);
+            }
+            this._itemCache.alarmPatterns[idx] = pattern;
+        }
+        if (pattern[0])
+            pattern[0].setTempTime(temp);
+    }
+
+    public restartAlarmState(idx, oldState, newState) {
+        if (oldState === newState)
+            return;
+        if (typeof idx === 'object')
+            idx = this.alarms.indexOf(idx);
+        if (idx === -1 || idx >= this.alarms.length)
+            return;
+        let pattern = this._itemCache.alarmPatterns[idx];
+        if (!pattern) {
+            //use an object to store to prevent having to loop over large array
+            pattern = {};
+            if (this.alarms[idx].type === TriggerType.Alarm)
+                pattern[0] = Alarm.parse(this.alarms[idx]);
+            for (let s = 0, sl = this.alarms[idx].triggers.length; s < sl; s++) {
+                //enabled and is alarm
+                if (this.alarms[idx].triggers[s].enabled && this.alarms[idx].triggers[s].type === TriggerType.Alarm)
+                    pattern[s] = Alarm.parse(this.alarms[idx].triggers[s]);
+            }
+            this._itemCache.alarmPatterns[idx] = pattern;
+        }
+        if (pattern[oldState])
+            pattern[oldState].restart = Date.now();
+        if (pattern[newState])
+            pattern[newState].restart = Date.now();
+    }
+
+    public getRemainingAlarmTime(idx) {
+        if (typeof idx === 'object')
+            idx = this.alarms.indexOf(idx);
+        if (idx === -1 || idx >= this.alarms.length)
+            return 0;
+        if (!this.alarms[idx].enabled)
             return 0;
         let pattern = this._itemCache.alarmPatterns[idx];
         if (!pattern) {
-            pattern = Alarm.parse(this.alarms[idx]);
+            //use an object to store to prevent having to loop over large array
+            pattern = {};
+            if (this.alarms[idx].type === TriggerType.Alarm)
+                pattern[0] = Alarm.parse(this.alarms[idx]);
+            for (let s = 0, sl = this.alarms[idx].triggers.length; s < sl; s++) {
+                //enabled and is alarm
+                if (this.alarms[idx].triggers[s].enabled && this.alarms[idx].triggers[s].type === TriggerType.Alarm)
+                    pattern[s] = Alarm.parse(this.alarms[idx].triggers[s]);
+            }
             this._itemCache.alarmPatterns[idx] = pattern;
         }
-        if (state) {
-            pattern.startTime += Date.now() - pattern.suspended;
-            pattern.suspended = 0;
+        if (pattern[0]) {
+            const alarm = pattern[0];
+            const now = Date.now();
+            const dNow = new Date();
+            let future = now;
+            let fend = future + 90000000;
+            let mod = 1000;
+            if (alarm.seconds !== -1)
+                mod = 1000;
+            else if (alarm.minutes !== -1)
+                mod = 60000;
+            else if (alarm.hours !== -1)
+                mod = 3600000;
+            if (alarm.tempTime) {
+                if (alarm.tempTime - now > 0)
+                    return alarm.tempTime - now;
+                return 0;
+            }
+            else {
+                while (future < fend) {
+                    if (this.alarm_match(alarm, future, dNow))
+                        return future - now;
+                    future += mod;
+                    dNow.setTime(dNow.getTime() + mod);
+                }
+                return -1;
+            }
         }
-        else
-            pattern.suspended = Date.now();
+        return 0;
     }
 
     public updateAlarms() {
@@ -498,6 +690,7 @@ export class Client extends EventEmitter {
         if (!this.options.enableTriggers)
             return;
         let a = 0;
+        let changed = false;
         const al = this.alarms.length;
         if (al === 0 && this._alarm) {
             clearInterval(this._alarm);
@@ -507,54 +700,190 @@ export class Client extends EventEmitter {
         const patterns = this._itemCache.alarmPatterns;
         const now = Date.now();
         const alarms = this.alarms;
+        const dNow = new Date();
         for (a = al - 1; a >= 0; a--) {
+            let trigger = alarms[a];
+            const parent = trigger;
+            //not enabled skip
+            if (!trigger.enabled) continue;
+            //safety check in case a state was deleted
+            if (trigger.state > trigger.triggers.length)
+                trigger.state = 0;
+            //get sub state
+            if (trigger.state !== 0 && trigger.triggers && trigger.triggers.length) {
+                //trigger states are 1 based as 0 is parent trigger
+                trigger = trigger.triggers[trigger.state - 1];
+                //skip disabled states
+                while (!trigger.enabled && parent.state !== 0) {
+                    //advance state
+                    parent.state++;
+                    //if no more states start over and stop
+                    if (parent.state > parent.triggers.length) {
+                        parent.state = 0;
+                        //reset to first state
+                        trigger = trigger.triggers[parent.state - 1];
+                        //stop checking
+                        break;
+                    }
+                    if (parent.state)
+                        trigger = trigger.triggers[parent.state - 1];
+                    else
+                        trigger = parent;
+                    changed = true;
+                }
+                if (changed) {
+                    if (this.options.saveTriggerStateChanges)
+                        this.saveProfile(parent.profile.name, true, ProfileSaveType.Trigger);
+                    this.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent));
+                }
+                //last check to be 100% sure enabled
+                if (!trigger.enabled) continue;
+            }
+            //reparse type
+            if (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) {
+                const val = this._input.adjustLastLine(this.display.lines.length, true);
+                const line = this.display.lines[val];
+                a = this._input.TestTrigger(trigger, parent, a, line, this.display.rawLines[val] || line, val === this.display.lines.length - 1);
+                continue;
+            }
+            //not an alarm either has sub alarms or was updated
+            if (trigger.type !== TriggerType.Alarm) continue;
             let alarm = patterns[a];
+            //not found build cache
             if (!alarm) {
-                alarm = Alarm.parse(alarms[a]);
-                patterns[a] = alarm;
+                try {
+                    patterns[a] = {};
+                    if (trigger.type === TriggerType.Alarm)
+                        patterns[a][0] = Alarm.parse(trigger);
+                    for (let s = 0, sl = trigger.triggers.length; s < sl; s++) {
+                        if (trigger.triggers[s].type === TriggerType.Alarm)
+                            patterns[a][s] = Alarm.parse(trigger.triggers[s]);
+                    }
+                }
+                catch (e) {
+                    patterns[a] = null;
+                    if (this.options.disableTriggerOnError) {
+                        trigger.enabled = false;
+                        setTimeout(() => {
+                            this.saveProfile(parent.profile.name, false, ProfileSaveType.Trigger);
+                            this.emit('item-updated', 'trigger', parent.profile, parent.profile.triggers.indexOf(parent), parent);
+                        });
+                    }
+                    throw e;
+                }
+                alarm = patterns[a];
+                //what ever reason the alarm failed to create so move on to next alarm
+                if (!alarm) continue;
+            }
+            //we want to sub state pattern
+            alarm = alarm[trigger.state];
+            if (alarm.restart) {
+                alarm.startTime = Date.now();
+                alarm.prevTime = alarm.startTime;
+                if (alarm.tempTime)
+                    alarm.tempTime += Date.now() - alarm.restart;
+                alarm.restart = 0;
             }
             let match: boolean = true;
-            let ts;
-            if (alarm.start)
-                ts = moment.duration(now - this.connectTime);
+            //a temp time was set so it overrides all matches as once the temp time has been reached end
+            if (alarm.tempTime) {
+                match = now >= alarm.tempTime;
+                if (match)
+                    alarm.tempTime = 0;
+            }
             else
-                ts = moment.duration(now - alarm.startTime);
-            if (ts.asMilliseconds() < 1000)
-                continue;
-            const sec = Math.floor(ts.asMilliseconds() / 1000);
-            const min = Math.floor(sec / 60);
-            const hr = Math.floor(min / 60);
-            if (alarm.hoursWildCard) {
-                if (alarm.hours === 0)
-                    match = match && ts.hours() === 0;
-                else if (alarm.hours !== -1)
-                    match = match && hr % alarm.hours === 0;
-            }
-            else if (alarm.hours !== -1)
-                match = match && alarm.hours === ts.hours();
-            if (alarm.minutesWildcard) {
-                if (alarm.minutes === 0)
-                    match = match && ts.minutes() === 0;
-                else if (alarm.minutes !== -1)
-                    match = match && min % alarm.minutes === 0;
-            }
-            else if (alarm.minutes !== -1)
-                match = match && alarm.minutes === ts.minutes();
-            if (alarm.secondsWildcard) {
-                if (alarm.seconds === 0)
-                    match = match && ts.seconds() === 0;
-                else if (alarm.seconds !== -1)
-                    match = match && sec % alarm.seconds === 0;
-            }
-            else if (alarm.seconds !== -1)
-                match = match && alarm.seconds === ts.seconds();
-
+                match = this.alarm_match(alarm, now, dNow);
             if (match && !alarm.suspended) {
-                this._input.ExecuteTrigger(alarms[a], [alarm.pattern], false, -a);
-                if (alarm.temp)
-                    this.removeTrigger(alarms[a]);
+                alarm.prevTime = now;
+                //save as if temp alarm as execute trigger advances state and temp alarms will need different state shifts
+                const state = parent.state;
+                this._input.ExecuteTrigger(trigger, [alarm.pattern], false, -a, null, null, parent);
+                if (state !== parent.state)
+                    alarm.restart = Date.now();
+                if (alarm.temp) {
+                    //has sub state so only remove the temp alarm state
+                    if (parent.triggers.length) {
+                        if (state === 0) {
+                            const item = parent.triggers.shift();
+                            //restore previous state as shifted state may have skipped next state
+                            item.state = state;
+                            item.priority = parent.priority;
+                            item.name = parent.name;
+                            item.profile = parent.profile;
+                            //if removed temp shift state adjust
+                            if (item.state > item.triggers.length)
+                                item.state = 0;
+                            item.triggers = parent.triggers;
+                            alarms[a] = item;
+                            patterns[a] = null;
+                            this.saveProfile(parent.profile.name, false, ProfileSaveType.Trigger);
+                            const idx = parent.profile.triggers.indexOf(parent)
+                            parent.profile.triggers[idx] = item;
+                            this.emit('item-updated', 'trigger', parent.profile.name, idx, item);
+                        }
+                        else {
+                            parent.triggers.splice(state - 1, 1);
+                            patterns[a].splice(state - 1, 1);
+                            //restore previous state as shifted state may have skipped next state
+                            parent.state = state;
+                            //if removed temp shift state adjust
+                            if (parent.state > parent.triggers.length)
+                                parent.state = 0;
+                            this.saveProfile(parent.profile.name, false, ProfileSaveType.Trigger);
+                            const idx = parent.profile.triggers.indexOf(parent);
+                            this.emit('item-updated', 'trigger', parent.profile.name, idx, parent);
+                        }
+                    }
+                    else {
+                        this._input.clearTriggerState(a);
+                        this.removeTrigger(parent);
+                    }
+                }
+                //remove after temp as temp requires old index
+                a = -this._input.cleanUpTriggerState(-a);
             }
         }
+    }
+
+    private alarm_match(alarm, now, dNow) {
+        if (!alarm || alarm.suspended) return false;
+        let match: boolean = true;
+        let ts;
+        if (alarm.start)
+            ts = moment.duration(now - this.connectTime);
+        else
+            ts = moment.duration(now - alarm.startTime);
+        if (ts.asMilliseconds() < 1000)
+            return false;
+        const sec = Math.round(ts.asMilliseconds() / 1000);
+        const min = Math.floor(sec / 60);
+        const hr = Math.floor(min / 60);
+        if (alarm.hoursWildCard) {
+            if (alarm.hours === 0)
+                match = match && ts.hours() === 0;
+            else if (alarm.hours !== -1)
+                match = match && hr !== 0 && hr % alarm.hours === 0;
+        }
+        else if (alarm.hours !== -1)
+            match = match && alarm.hours === (alarm.start ? ts.hours() : dNow.getHours());
+        if (alarm.minutesWildcard) {
+            if (alarm.minutes === 0)
+                match = match && ts.minutes() === 0;
+            else if (alarm.minutes !== -1)
+                match = match && min !== 0 && min % alarm.minutes === 0;
+        }
+        else if (alarm.minutes !== -1)
+            match = match && alarm.minutes === (alarm.start ? ts.minutes() : dNow.getMinutes());
+        if (alarm.secondsWildcard) {
+            if (alarm.seconds === 0)
+                match = match && ts.seconds() === 0;
+            else if (alarm.seconds !== -1)
+                match = match && sec % alarm.seconds === 0;
+        }
+        else if (alarm.seconds !== -1)
+            match = match && alarm.seconds === (alarm.start ? ts.seconds() : dNow.getSeconds());
+
+        return match;
     }
 
     constructor(display, command, settings?: string) {
@@ -639,7 +968,7 @@ export class Client extends EventEmitter {
                 if (err.code === 'ECONNREFUSED')
                     this.errored = true;
                 if (err.code)
-                    this.error(err.code + ' - ' + msg.join(', '));
+                    this.error(err.code + ': ' + msg.join(', '));
                 else
                     this.error(msg.join(', '));
                 if (err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET')
@@ -869,6 +1198,7 @@ export class Client extends EventEmitter {
         this.MSP.enabled = this.options.enableMSP;
         this.MSP.enableSound = this.options.enableSound;
         this.MSP.savePath = parseTemplate(this.options.soundPath);
+        this.MSP.maxErrorRetries = this.options.mspMaxRetriesOnError;
 
         this._input.scrollLock = this.options.scrollLocked;
         this._input.enableParsing = this.options.enableParsing;
@@ -925,11 +1255,11 @@ export class Client extends EventEmitter {
     }
 
     public parse(txt: string) {
-        this.parseInternal(txt, false);
+        this.parseInternal(txt, false, false, true);
     }
 
-    private parseInternal(txt: string, remote: boolean, force?: boolean) {
-        this.display.append(txt, remote, force);
+    private parseInternal(txt: string, remote: boolean, force?: boolean, prependSplit?: boolean) {
+        this.display.append(txt, remote, force, prependSplit);
     }
 
     public error(err: any) {
@@ -942,7 +1272,7 @@ export class Client extends EventEmitter {
         else if (err.stack && this.options.showErrorsExtended)
             msg = err.stack;
         else if (err instanceof Error || err instanceof TypeError)
-            msg = err.name + ' - ' + err.message;
+            msg = err.name + ': ' + err.message;
         else if (err.message)
             msg = err.message;
         else
@@ -974,6 +1304,8 @@ export class Client extends EventEmitter {
         if (fore == null) fore = AnsiColorCode.LocalEcho;
         if (back == null) back = AnsiColorCode.LocalEchoBack;
         const codes = '\x1b[0,' + this.display.CurrentAnsiCode() + '\n';
+        //make its a string in case raw js passes number or something else
+        str = '' + str;
         if (str.endsWith('\n'))
             str = str.substr(0, str.length - 1);
         if (this.telnet.prompt && forceLine) {
@@ -985,16 +1317,16 @@ export class Client extends EventEmitter {
     }
 
     public print(txt: string, newline?: boolean) {
-        this.printInternal(txt, newline, false);
+        this.printInternal(txt, newline, false, true);
     }
 
-    private printInternal(txt: string, newline?: boolean, remote?: boolean) {
+    private printInternal(txt: string, newline?: boolean, remote?: boolean, prependSplit?: boolean) {
         if (txt == null || typeof txt === 'undefined') return;
         if (newline == null) newline = false;
         if (remote == null) remote = false;
-        if (newline && this.display.textLength > 0 && !this.display.EndOfLine && this.display.EndOfLineLength !== 0 && !this.telnet.prompt)
+        if (newline && this.display.textLength > 0 && !this.display.EndOfLine && this.display.EndOfLineLength !== 0 && !this.telnet.prompt && !this.display.parseQueueEndOfLine)
             txt = '\n' + txt;
-        this.parseInternal(txt, remote);
+        this.parseInternal(txt, remote, false, prependSplit);
     }
 
     public send(data, echo?: boolean) {
@@ -1029,7 +1361,7 @@ export class Client extends EventEmitter {
         }
     }
 
-    public sendCommand(txt?: string) {
+    public sendCommand(txt?: string, noEcho?: boolean, comments?: boolean) {
         if (txt == null) {
             txt = this.commandInput.val();
             if (!this.telnet.echo)
@@ -1037,21 +1369,23 @@ export class Client extends EventEmitter {
             else
                 this._input.AddCommandToHistory(txt);
         }
+        //make its a string in case raw js passes number or something else
+        txt = '' + txt;
         if (!txt.endsWith('\n'))
             txt = txt + '\n';
-        const data = { value: txt, handled: false };
+        const data = { value: txt, handled: false, comments: comments };
         this.emit('parse-command', data);
         if (data == null || typeof data === 'undefined') return;
         if (data.handled || data.value == null || typeof data.value === 'undefined') return;
         if (data.value.length > 0)
-            this.send(data.value, true);
+            this.send(data.value, !noEcho);
         if (this.options.keepLastCommand)
             this.commandInput.select();
         else
             this.commandInput.val('');
     }
 
-    public sendBackground(txt: string) {
+    public sendBackground(txt: string, noEcho?: boolean, comments?: boolean) {
         if (txt == null) {
             txt = this.commandInput.val();
             if (!this.telnet.echo)
@@ -1059,14 +1393,16 @@ export class Client extends EventEmitter {
             else
                 this._input.AddCommandToHistory(txt);
         }
+        //make its a string in case raw js passes number or something else
+        txt = '' + txt;
         if (!txt.endsWith('\n'))
             txt = txt + '\n';
-        const data = { value: txt, handled: false };
+        const data = { value: txt, handled: false, comments: comments };
         this.emit('parse-command', data);
         if (data == null || typeof data === 'undefined') return;
         if (data.value == null || typeof data.value === 'undefined') return;
         if (!data.handled && data.value.length > 0)
-            this.send(data.value, true);
+            this.send(data.value, !noEcho);
     }
 
     get scrollLock(): boolean {

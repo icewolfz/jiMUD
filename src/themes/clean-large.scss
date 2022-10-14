@@ -3,7 +3,7 @@ $borderColor: "#908271";
 $color: "wheat";
 
 body {
-    background-color:black;
+    background-color: black;
 }
 
 #display {
@@ -19,7 +19,16 @@ body {
     right: 168px;
 }
 
-#display-split-bar,
+#display-split-bar {
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    background: #33302b;
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.5);
+    border: 1px solid #{$borderColor};
+    height: 6px;
+}
+
 #display-split-ghost-bar {
     -webkit-border-radius: 10px;
     border-radius: 10px;
@@ -30,8 +39,14 @@ body {
     height: 6px;
 }
 
-#display-split-frame
-{
+#display-split-bar:hover,
+#display-split-bar:active,
+#display-split-bar:focus {
+    background-color: #d70000;
+    transition-delay: 1s;
+}
+
+#display-split-frame {
     right: 18px;
 }
 
@@ -74,7 +89,8 @@ body {
     width: 48px;
 }
 
-#bb-scroll-down, #bb-scroll-up {
+#bb-scroll-down,
+#bb-scroll-up {
     width: 48px;
 }
 
@@ -108,8 +124,7 @@ body {
 }
 
 .scroll-corner {
-    background-color: black;
-    display:none;
+    background-color: 191814;
     width: 18px;
     height: 18px;
 }
@@ -118,7 +133,7 @@ body {
     display: block !important;
     color: wheat;
     background-color: maroon !important;
-    border: 1px solid #{$borderColor} !important;    
+    border: 1px solid #{$borderColor} !important;
     font-size: 14px;
 }
 
@@ -151,7 +166,10 @@ body {
     color: wheat;
 }
 
-.scroll-split-button.disabled, .scroll-split-button.disabled:hover, .scroll-split-button.disabled:active, .scroll-split-button.disabled:focus {
+.scroll-split-button.disabled,
+.scroll-split-button.disabled:hover,
+.scroll-split-button.disabled:active,
+.scroll-split-button.disabled:focus {
     background-color: maroon !important;
     color: #A88749;
 }
@@ -164,7 +182,9 @@ body {
     border-left: 1px solid #494238;
 }
 
-.scroll-disabled .scroll-thumb, .scroll-disabled .scroll-thumb:hover, .scroll-disabled .scroll-thumb:active {
+.scroll-disabled .scroll-thumb,
+.scroll-disabled .scroll-thumb:hover,
+.scroll-disabled .scroll-thumb:active {
     background: rgba(51, 48, 43, 0.4);
     border: 0px;
     color: #A88749;
@@ -412,11 +432,13 @@ body {
     background-image: url("#{$images}/status/weatherhailhard.png");
 }
 
-.weather-rain #environmentweather, .weather-zombie_rain #environmentweather {
+.weather-rain #environmentweather,
+.weather-zombie_rain #environmentweather {
     background-image: url("#{$images}/status/weatherrain.png");
 }
 
-.weather-rain.intensity-hard #environmentweather,.weather-zombie_rain.intensity-hard #environmentweather {
+.weather-rain.intensity-hard #environmentweather,
+.weather-zombie_rain.intensity-hard #environmentweather {
     background-image: url("#{$images}/status/weatherrainhard.png");
 }
 
@@ -440,7 +462,7 @@ body {
     background-image: url("#{$images}/status/weatherblood_rain.png");
 }
 
-.weather-blood_rain.intensity-hard #environmentweather{
+.weather-blood_rain.intensity-hard #environmentweather {
     background-image: url("#{$images}/status/weatherblood_rainhard.png");
 }
 
@@ -552,7 +574,7 @@ body {
     height: 48px;
     left: 5px;
     background-repeat: no-repeat;
-    background-size: cover;       
+    background-size: cover;
 }
 
 #righthandweapon {
@@ -614,7 +636,7 @@ body {
     float: left;
     background-color: black;
     border: 1px solid #{$borderColor};
-    zoom: 1.5;    
+    zoom: 1.5;
 }
 
 .combat-bar .progressbar {
@@ -640,7 +662,7 @@ body {
 
 #fullbody {
     width: 192px;
-    height: 300px;    
+    height: 300px;
 }
 
 #health {
@@ -777,7 +799,7 @@ body {
     background: linear-gradient(to right, rgba(255, 50, 50, 1) 0%, rgba(255, 157, 0, 1) 25%, rgba(255, 255, 0, 1) 50%, rgba(189, 252, 0, 1) 75%, rgba(0, 255, 0, 1) 100%);
 }
 
-#hp-status>div {    
+#hp-status>div {
     height: 22px;
 }
 
@@ -840,7 +862,7 @@ body {
     text-align: center;
     border-radius: 4px;
     border: 0px;
-    background-color: transparent;  
+    background-color: transparent;
 }
 
 #history-dropup .fa {
@@ -870,12 +892,13 @@ body {
 #btnTriggers {
     right: 35px;
 }
- 
+
 #btnParsing {
     right: 67px;
 }
 
-#btnTriggers, #btnParsing {
+#btnTriggers,
+#btnParsing {
     top: 3px;
     text-align: center;
     border-radius: 4px;
@@ -885,15 +908,22 @@ body {
     background-color: transparent;
 }
 
-#btnTriggers.on, #btnParsing.on {
+#btnTriggers.on,
+#btnParsing.on {
     background-color: #d70000;
 }
 
-#btnTriggers:hover, #btnParsing:hover, #btnTriggers.on:active, #btnParsing.on:active {
+#btnTriggers:hover,
+#btnParsing:hover,
+#btnTriggers.on:active,
+#btnParsing.on:active {
     background-color: #d70000;
 }
 
-#btnTriggers:active, #btnParsing:active, #btnTriggers.on:hover, #btnParsing.on:hover {
+#btnTriggers:active,
+#btnParsing:active,
+#btnTriggers.on:hover,
+#btnParsing.on:hover {
     background-color: #790000;
 }
 
@@ -943,10 +973,11 @@ body {
     margin-left: 9px;
     width: 30px;
     height: 30px;
-    font-size: 30px;   
+    font-size: 30px;
 }
 
-.button .fa, .button-icon {
+.button .fa,
+.button-icon {
     width: 30px;
     height: 30px;
     font-size: 30px;
@@ -969,7 +1000,8 @@ body {
     color: wheat;
 }
 
-.button.on:active, .button.on:focus {
+.button.on:active,
+.button.on:focus {
     background-color: maroon;
     color: wheat;
 }
@@ -979,8 +1011,9 @@ body {
     color: wheat;
 }
 
-.button:hover .overlay, .button.on:hover {
-    background-color: rgba(215,0,0, 0.40);
+.button:hover .overlay,
+.button.on:hover {
+    background-color: rgba(215, 0, 0, 0.40);
 }
 
 .button:active {
@@ -1019,7 +1052,7 @@ body {
 .button-sm.on svg {
     top: 0px;
     width: 30px;
-    height: 30px;    
+    height: 30px;
     position: relative;
 }
 
@@ -1029,12 +1062,12 @@ body {
     left: -2px;
     top: -7px;
     height: initial;
-    bottom: -14px;    
+    bottom: -14px;
     transition: 0s background-color;
 }
 
-#status-drag-bar:hover{
-    background-color: #d70000;    
+#status-drag-bar:hover {
+    background-color: #d70000;
     transition-delay: 1s;
 }
 

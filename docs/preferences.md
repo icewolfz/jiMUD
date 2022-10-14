@@ -5,8 +5,7 @@ Reset - Resetting will revert all settings back to default values
 ## General
 
 - `Auto connect onload` This will cause the client to try and connect as soon as the client has finished loading.
-- `Auto connect delay` This determines the delay before an auto connect happens
-- `Auto create character` When connecting to mud and if it returns a character name, create/load character
+- `Auto create character` When connecting to mud and if it returns a character name, create/load character, if character manager open will open add dialog instead of creating data
 - `Auto login` Attempt to auto login using character and supplied password from character manager
 - `Auto takeover login` Automatically issue yes to takeover character after login
 - `Show character manager onload` open the character manager when the client first loads.
@@ -19,6 +18,7 @@ Reset - Resetting will revert all settings back to default values
   - `Reconnect dialog` show the reconnect dialog with options and delayed reconnect timer
   - `Character manager` show character manager
   - `Close` close the client
+- `Auto connect delay` This determines the delay before an auto connect happens
 - `Max reconnect delay` set the maximum time in seconds, for reconnecting when using reconnect dialog, setting to 0 will revert to classic unlimited behavior.
 - `Check for updates on load` check for new version every time you load the client
 - `Enable sound` disable or enable sound globally
@@ -95,6 +95,7 @@ Settings to control how to handle telnet options and emulation
 - `Echo` Disable or enables Echo option to display/hide text when server requests
 - `MUD Sound Protocol (MSP)` Disable or enable MSP
 - `Display Notification on MSP Play` Display a message when a file has started to play
+- `MSP: max retries on error` Amount of retries to attempt play a file before stopping, 0 disables
 
 ## Mapper
 
@@ -154,7 +155,9 @@ Controls what is captured into the chat window
 ## Status
 
 - `Show Lagmeter` Whether to enable the lag meter, **note** this is not 100% correct always due to overhead variables that cant be controlled.
+- `Show lag in title` Display lag in title bar, **note** this is not 100% correct always due to overhead variables that cant be controlled.
 - `Show Experience Needed as Progressbar` display the experience needed value as a progress bar
+- `Allow negative number for experience needed` causes the needed xp value in status display to allow to display negative when you have xp over required amt.
 
 ## Scripting
 
@@ -164,27 +167,46 @@ Controls what is captured into the chat window
 - `Parse double quotes as strings` Treat double quotes as string encasing, meaning all text found inside double quotes are treated as is and not parsed.
 - `Disable trigger on error` Disable a trigger if an error happens when executing a trigger
 - `Prepend triggered line` Disable the fix to prepend the triggered line as %0,$0, or %{0} to return to previous usage
+- `Enable Double Parameter Escaping` Enable doubling up of the parameter character `%` to escape as well as using escape character
+- `Ignore Eval Undefined` When enabled will make undefined results blank, else it will display the word undefined
+- `Allow Comments From Command` Allow inline and block comments from the command input
+- `Save Trigger State Changes` When a trigger state changes save profile
+- `Delay between path commands` The amount of milliseconds between sending of path commands for speed paths.
+- `Amount of path commands to send` the # of commands to send between speed path delay
 
 ## Scripting > Special characters
 
 - `Command Stacking`
-  - `Character` The character to use when repeating command into multiple commands.
+  - `Character` The character to use when repeating command into multiple commands, Default: `;`
   - `Enable` This will enable command stacking systems and use the command stacking character to know where to break a command into a list commands.
 - `Speedpaths`
-  - `Character` The character that is used to determine if the command is a speedpath to expand, default is !
+  - `Character` The character that is used to determine if the command is a speedpath to expand, Default: `!`
   - `Enable` Whether or not to expand speedpaths, if disabled the line is parsed as normal command
   - `Parse` Parse each command as if it was sent from the command line, if disabled each command is sent to the mud as is.
+  - `Echo` Echo each command to the screen as they are sent
 - `Command`
-  - `Character` The character to use with build in client commands
+  - `Character` The character to use with build in client commands, Default: `#`
   - `Enable` This will enable or disable command systems
 - `Escape`
-  - `Character` The character to use when escaping $%"'{ or special characters
+  - `Character` The character to use when escaping $%"'{ or special characters, Default: `\`
   - `Enable` Enable escaping of characters
 - `Verbatim`
-  - `Character` The character used at the start of a line to signify the line should be sent as is starting after the verbatim character
+  - `Character` The character used at the start of a line to signify the line should be sent as is starting after the verbatim character, Default: `
   - `Enabled` Enable or disable verbatim system
+- `Parameter`
+  - `Character` The character used for inline variables and functions and trigger/alias parameters %#, see [functions](functions.md) for more details, Default: `%`
+  - `Enabled` Enable or disable parameters
+- `N Parameter`
+  - `Character` Similar to Parameter but allows full name symbols when possible for user variables and named parameters, eg $name, see [functions](functions.md) for more details, Default: `\$`
+  - `Enabled` Enable or disable N Parameter system
+- `Inline Comment`
+  - `String` The 1 or 2 character string for inline comments, Default: `//`
+  - `Enabled` Enable or disable inline comments
+- `Block Comment`
+  - `String` The 1 or 2 character string for block comments, closing block comment is the string reversed, Default: `/*`
+  - `Enabled` Enable or disable block comments
 
-## Advanced
+  ## Advanced
 
 - `Enable gamepads` Enable gamepad support to allow creating macros using gamepad axes or buttons. **Experimental**
 - `Enable GMCP Ping for lag meter` When text received from mud send back a GMCP ping if enabled to get a better time for the lag meter.
@@ -192,7 +214,6 @@ Controls what is captured into the chat window
 - `Log errors` Log errors to {data}/jimud.error.log [FAQ - Predefined path variables](faq.md#what-predefined-variables-can-be-use-for-paths)
 - `Show extended error messages` Display extended stack information for errors
 - `Fix hidden windows` Move windows that have been hidden off screen to on onscreen
-- `Allow negative number for experience needed` causes the needed xp value in status display to allow to display negative when you have xp over required amt.
 - `Hide when minimized` will hide the main window and any window set as a child **note** due to bugs in linux this feature may not work
 - `Show in taskbar` will show or hide the main window from the system's taskbar
 - `Enable Background Throttling` disable or enable throttling when a window is in the background or hidden
@@ -200,17 +221,7 @@ Controls what is captured into the chat window
 - `Enable warning dialog when closing client and child windows are open` disable or enable warning dialog when closing and child windows are open
 - `Enable warning dialog when loading a character from manager` disable or enable warning dialog when loading a character
 - `Open 'Who is on' in web browser` Open the 'Who is on?' in a web browser, if disabled will open in a child window of jiMUD
-- `Watch for profile changes` when enabled will watch for profile changes
-- `On profile change do` what to do when a profile is changed when `Watch for profile changes` enabled
-  - `Nothing` Do nothing
-  - `Reload` Force reload of profiles, this may cause profile changes to be lost
-  - `Ask` Ask you if you want to reload or do nothing
-  - `Warn` Display a warning to the mud window
-- `On profile deleted do` what to do when a profile is deleted when `Watch for profile changes` enabled
-  - `Nothing` Do nothing
-  - `Remove` Force remove of profiles, this may cause profile changes to be lost
-  - `Ask` Ask you if you want to remove or do nothing
-  - `Warn` Display a warning to the mud window  
+- `Open ShadowMUD help in web browser` Open the ShadowMUD help in a web browser, if disabled will open in a child window of jiMUD
 
 ## Advanced > Backup
 
@@ -225,6 +236,25 @@ Controls what is captured into the chat window
 - `Keep alive delay` The number of seconds for initial keep alive delay
 - `Enable allow Half Open sockets` Indicates whether half-opened TCP connections are allowed
 
+## Advanced > Profiles
+
+- `Save trigger state changes` Save profile every time a trigger state changes
+- `Watch for profile changes` when enabled will watch for profile changes
+- `On profile change do` what to do when a profile is changed when `Watch for profile changes` enabled
+  - `Nothing` Do nothing
+  - `Reload` Force reload of profiles, this may cause profile changes to be lost
+  - `Ask` Ask you if you want to reload or do nothing
+  - `Warn` Display a warning to the mud window
+- `On profile deleted do` what to do when a profile is deleted when `Watch for profile changes` enabled
+  - `Nothing` Do nothing
+  - `Remove` Force remove of profiles, this may cause profile changes to be lost
+  - `Ask` Ask you if you want to remove or do nothing
+  - `Warn` Display a warning to the mud window  
+- `Group profile saves` Group profile saves
+  - **WARNING:** Enabling profile group saving could cause sync issues and loss of data when preferences saved or profile manager saves, as when saved it will flush all in memory changes and reload
+- `Group profile save delay` How often between save profiles when group saves are enabled
+- `Return newline on empty value` Return new line if processed item value is empty
+
 ## Advanced > Profile manager
 
 - `Enable profile manager code editor` disable or enable the code editor for the profile manager
@@ -234,6 +264,8 @@ Controls what is captured into the chat window
   - `Index` sort by index
   - `Priority` sort by item priority
 - `Profile manager sort direction` select to display items in ascending or descending order  **note** Changing this setting while profile manager is open will not resort the displayed items
+- `Profile to select on load` select which profile to pick when profile manager is first opened, falls back to Default if profile not found
+- `Expand selected profile on load` auto expand selected profile when profile manager is first opened
 
 ## Advanced > Tray
 

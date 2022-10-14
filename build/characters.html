@@ -70,11 +70,11 @@
                 c.push({ label: 'Add empty', click: "addEmpty()" });
                 if (item !== undefined) {
                     c.push({ type: 'separator' });
-                    c.push({ label: 'Rename', click: `rename(${item})` });
-                    c.push({ label: 'Copy', click: `copy(${item})` });
-                    c.push({ label: 'Delete', click: `remove(${item})` });
+                    c.push({ label: 'Rename', click: `rename('${item}')` });
+                    c.push({ label: 'Copy', click: `copy('${item}')` });
+                    c.push({ label: 'Delete', click: `remove('${item})'` });
                     c.push({ type: 'separator' });
-                    c.push({ label: 'Load', click: `load(${item})` });
+                    c.push({ label: 'Load', click: `load('${item})'` });
                 }
                 ipcRenderer.invoke('show-context', c);
             });
@@ -198,6 +198,7 @@
                 characters.characters[current].password = v;
                 changed++;
             }
+            fs.writeFileSync(path.join(parseTemplate('{data}'), 'characters', current + '.notes'), $('#notes').val());
         }
 
         function saveCharacters() {
@@ -274,6 +275,7 @@
                 $('#btn-load-close').prop('disabled', false);
                 $('#character-editor input').prop('disabled', false);
                 $('#character-editor button').prop('disabled', false);
+                $('#character-editor textarea').prop('disabled', false);
                 $('#settings').val(characters.characters[current].settings);
                 $('#map').val(characters.characters[current].map);
                 $('#name').val(characters.characters[current].name || current);
@@ -289,6 +291,12 @@
                     $('#password').val('');
 
                 $('#title').text(name);
+                let notes = path.join(parseTemplate('{data}'), 'characters', current + '.notes');
+                if (isFileSync(notes))
+                    $('#notes').val(fs.readFileSync(notes, 'utf-8'));
+                else
+                    $('#notes').val('');
+                $('.nav-tabs a[href="#tab-general"]').tab('show');
             });
             item.on('dblclick', function () {
                 $(this).click();
@@ -314,6 +322,7 @@
             $('#character-editor input[type=text]').val('');
             $('#character-editor input[type=checkbox]').prop('checked', false);
             $('#character-editor button').prop('disabled', true);
+            $('#character-editor textarea').prop('disabled', true);
             $('#title').text('');
         }
 
@@ -485,6 +494,22 @@
                 }
                 else
                     fs.renameSync(f, sf);
+                f = path.join(parseTemplate('{data}'), 'characters', oldName + '.notes');
+                sf = path.join(parseTemplate('{data}'), 'characters', name + '.notes');
+                if (isFileSync(sf)) {
+                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                        type: 'warning',
+                        title: 'File exists',
+                        message: 'Notes file for ' + name + ' exist, replace?',
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1,
+                    });
+                    if (response === 0) {
+                        fs.renameSync(f, sf);
+                    }
+                }
+                else
+                    fs.renameSync(f, sf);
                 f = parseTemplate(characters.characters[oldName].map);
                 sf = parseTemplate(characters.characters[name].map);
                 if (isFileSync(sf)) {
@@ -501,6 +526,7 @@
                 }
                 else
                     fs.renameSync(f, sf);
+
                 changed++;
                 delete characters.characters[oldName];
                 $('#character-' + sanitizeID(oldName)).remove();
@@ -547,8 +573,26 @@
                     if (response === 0)
                         copyFile(f, sf);
                 }
-                else
+                else if (isFileSync(f))
                     copyFile(f, sf);
+
+                f = path.join(parseTemplate('{data}'), 'characters', oldName + '.notes');
+                sf = path.join(parseTemplate('{data}'), 'characters', name + '.notes');
+                if (isFileSync(sf)) {
+                    response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                        type: 'warning',
+                        title: 'File exists',
+                        message: 'Notes file for ' + name + ' exist, replace?',
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1,
+                    });
+                    if (response === 0) {
+                        copyFile(f, sf);
+                    }
+                }
+                else if (isFileSync(f))
+                    copyFile(f, sf);
+
                 f = parseTemplate(characters.characters[oldName].map);
                 sf = parseTemplate(characters.characters[name].map);
                 if (isFileSync(sf)) {
@@ -593,6 +637,9 @@
                 if (isFileSync(sf))
                     ipcRenderer.send('trash-item', sf);
                 sf = parseTemplate(characters.characters[name].map);
+                if (isFileSync(sf))
+                    ipcRenderer.send('trash-item', sf);
+                sf = path.join(parseTemplate('{data}'), 'characters', name + '.notes');
                 if (isFileSync(sf))
                     ipcRenderer.send('trash-item', sf);
                 if (characters.load === name)
@@ -778,6 +825,62 @@
         }
 
         //ipcRenderer.invoke('window', 'openDevTools');
+
+        ipcRenderer.on('add-char', (event, char, empty, data, dialog) => {
+            if (dialog)
+                showGetName(char, function (event, name) {
+                    characters.characters[name] = { name: name.replace(/[^a-zA-Z0-9]+/g, ''), settings: path.join('{characters}', name + '.json'), map: path.join('{characters}', name + '.map') };
+                    var sf = parseTemplate(characters.characters[name].settings);
+                    var response, d;
+                    if (isFileSync(sf)) {
+                        response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                            type: 'warning',
+                            title: 'File exists',
+                            message: 'Setting file for ' + name + ' exist, replace?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1,
+                        });
+                        if (response === 0) {
+                            d = empty ? new Settings() : Settings.load(parseTemplate(path.join('{data}', 'settings.json')));
+                            d.save(sf);
+                        }
+                    }
+                    else {
+                        d = empty ? new Settings() : Settings.load(parseTemplate(path.join('{data}', 'settings.json')));
+                        d.save(sf);
+                    }
+                    sf = parseTemplate(characters.characters[name].map);
+                    if (isFileSync(sf)) {
+                        response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                            type: 'warning',
+                            title: 'File exists',
+                            message: 'Map file for ' + name + ' exist, replace?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1,
+                        });
+                        if (response === 0) {
+                            if (!empty && isFileSync(parseTemplate(path.join('{data}', 'map.sqlite'))))
+                                copyFile(parseTemplate(path.join('{data}', 'map.sqlite')), sf);
+                            else
+                                fs.closeSync(fs.openSync(sf, 'w'));
+                        }
+                    }
+                    else if (!empty && isFileSync(parseTemplate(path.join('{data}', 'map.sqlite'))))
+                        copyFile(parseTemplate(path.join('{data}', 'map.sqlite')), sf);
+                    else
+                        fs.closeSync(fs.openSync(sf, 'w'));
+                    changed++;
+                    createItem(name);
+                    saveCharacters();
+                    sortList();
+                });
+            else if (data && !characters[char]) {
+                characters[char] = data;
+                createItem(char);
+                saveCharacters();
+                sortList();
+            }
+        })
     </script>
     <style type="text/css">
         .form-control-feedback,
@@ -847,7 +950,7 @@
         </button>
     </div>
     <div id="main">
-        <div id="characters-container" class="panel panel-default" style="position: absolute;left: 2px;top: 2px;bottom:2px;width:200px;overflow: auto;margin:0">
+        <div id="characters-container" class="panel panel-default" style="position: absolute;left: 2px;top: 2px;bottom:2px;width:200px;margin:0;overflow: auto;">
             <ul id="characters-list" class="list-group">
 
             </ul>
@@ -857,47 +960,62 @@
                 Character:
                 <span id="title"></span>
             </div>
-            <div class="panel-body" id="character-editor">
-                <label class="control-label" style="width: 100%"> Login
-                    <input disabled="disabled" class="form-control" style="width:100%" type="text" id="name">
-                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Name to login as if different from character name</span>
-                </label>
-                <label class="control-label" style="width: 100%"> Password
-                    <input disabled="disabled" class="form-control" style="width:100%" type="password" id="password">
-                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Supply at own risk, the password is stored in basic encryption</span>
-                </label>
-                <label class="control-label"> Settings
-                    <div class="input-group" style="width:100%;">
-                        <input disabled="disabled" class="form-control" style="width:100%" type="text" id="settings">
-                        <span class="input-group-btn">
-                            <button disabled="disabled" class="btn btn-default" type="button" onclick="openFile('#settings', ['json'])">
-                                &hellip;
-                            </button>
-                        </span>
+            <div class="panel-body" id="character-editor" style="padding: 0px;">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="active">
+                        <a href="#tab-general" role="tab" data-toggle="tab">General</a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#tab-notes" role="tab" data-toggle="tab">Notes</a>
+                    </li>
+                </ul>
+                <div class="tab-content" style="position: absolute;bottom: 0;top: 42px;overflow: auto;left: 0;right: 0;">
+                    <div role="tabpanel" class="container tab-pane fade in active" id="tab-general">
+                        <label class="control-label" style="width: 100%"> Login
+                            <input disabled="disabled" class="form-control" style="width:100%" type="text" id="name">
+                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Name to login as if different from character name</span>
+                        </label>
+                        <label class="control-label" style="width: 100%"> Password
+                            <input disabled="disabled" class="form-control" style="width:100%" type="password" id="password">
+                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Supply at own risk, the password is stored in basic encryption</span>
+                        </label>
+                        <label class="control-label"> Settings
+                            <div class="input-group" style="width:100%;">
+                                <input disabled="disabled" class="form-control" style="width:100%" type="text" id="settings">
+                                <span class="input-group-btn">
+                                    <button disabled="disabled" class="btn btn-default" type="button" onclick="openFile('#settings', ['json'])">
+                                        &hellip;
+                                    </button>
+                                </span>
+                            </div>
+                        </label>
+                        <label class="control-label"> Map
+                            <div class="input-group" style="width:100%;">
+                                <input disabled="disabled" class="form-control" style="width:100%" type="text" id="map">
+                                <span class="input-group-btn">
+                                    <button disabled="disabled" class="btn btn-default" type="button" onclick="openFile('#map', ['map', 'sqlite'])">
+                                        &hellip;
+                                    </button>
+                                </span>
+                            </div>
+                        </label>
+                        <label class="control-label">
+                            <input disabled="disabled" type="checkbox" id="auto-load" /> Auto load
+                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Only one character can auto load, enabling this will disable previous auto loaded character</span>
+                        </label>
+                        <label class="control-label">
+                            <input disabled="disabled" type="checkbox" id="dev" /> Development
+                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Connect to development port</span>
+                        </label>
+                        <label class="control-label" style="float: right;">
+                            <input disabled="disabled" type="checkbox" id="disconnect" /> Disconnect on load
+                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Disconnect current connection</span>
+                        </label>
                     </div>
-                </label>
-                <label class="control-label"> Map
-                    <div class="input-group" style="width:100%;">
-                        <input disabled="disabled" class="form-control" style="width:100%" type="text" id="map">
-                        <span class="input-group-btn">
-                            <button disabled="disabled" class="btn btn-default" type="button" onclick="openFile('#map', ['map', 'sqlite'])">
-                                &hellip;
-                            </button>
-                        </span>
+                    <div role="tabpanel" class="container tab-pane fade in" id="tab-notes">
+                        <textarea id="notes" wrap="off" spellcheck="true" cols="20" rows="20" class="form-control" disabled="disabled"></textarea>
                     </div>
-                </label>
-                <label class="control-label">
-                    <input disabled="disabled" type="checkbox" id="auto-load" /> Auto load
-                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Only one character can auto load, enabling this will disable previous auto loaded character</span>
-                </label>
-                <label class="control-label">
-                    <input disabled="disabled" type="checkbox" id="dev" /> Development
-                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Connect to development port</span>
-                </label>
-                <label class="control-label">
-                    <input disabled="disabled" type="checkbox" id="disconnect" /> Disconnect on load
-                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Disconnect current connection</span>
-                </label>
+                </div>
             </div>
         </div>
     </div>

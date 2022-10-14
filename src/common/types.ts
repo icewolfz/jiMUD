@@ -150,6 +150,7 @@ export interface ParserLine {
   fragment: boolean;
   gagged: boolean;
   formats: LineFormat[];
+  remote: boolean;
 }
 
 export interface ParserOptions {
@@ -287,4 +288,14 @@ export enum MailFolders {
   drafts = 1,
   sent = 2,
   trash = 3
+}
+
+export enum ProfileSaveType {
+  Any = 0,
+  Trigger = 1,
+  Button = 2,
+  Macro = 4,
+  Alias = 8,
+  Context = 16,
+  Variable = 32
 }

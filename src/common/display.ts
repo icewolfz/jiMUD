@@ -42,7 +42,7 @@ interface ScrollState {
 }
 
 export enum ScrollType { vertical = 0, horizontal = 1 }
-export enum UpdateType { none = 0, view = 1, overlays = 2, selection = 4, scrollbars = 8, update = 16, scroll = 32, scrollEnd = 64, scrollView = 128, display = 256, selectionChanged = 512, scrollViewOverlays = 1024, layout = 2048 }
+export enum UpdateType { none = 0, view = 1, overlays = 2, selection = 4, scrollbars = 8, update = 16, scroll = 32, scrollEnd = 64, scrollView = 128, display = 256, selectionChanged = 512, scrollViewOverlays = 1024, layout = 2048, scrollReset = 4096 }
 
 enum CornerType {
     Flat = 0,
@@ -93,6 +93,7 @@ export class Display extends EventEmitter {
     private _height: number = 0;
     private _maxWidth: number = 0;
     private _maxView: number = 0;
+    private _aTimer = 0;
 
     private _maxLineLength: number = 0;
     private _currentSelection: Selection = {
@@ -135,7 +136,18 @@ export class Display extends EventEmitter {
 
     public split = null;
     public splitLive: boolean = false;
-    public scrollLock: boolean = false;
+    private _scrollLock: boolean = false;
+
+    get scrollLock(): boolean {
+        return this._scrollLock;
+    }
+    set scrollLock(locked: boolean) {
+        if (locked !== this._scrollLock) {
+            this._scrollLock = locked;
+            this._VScroll.autoScroll = !locked;
+        }
+    }
+
 
     private _linkFunction;
     private _mxpLinkFunction;
@@ -498,12 +510,16 @@ export class Display extends EventEmitter {
         this.buildStyleSheet();
 
         this._VScroll = new ScrollBar({ parent: this._el, content: this._view, autoScroll: true, type: ScrollType.vertical });
-        this._VScroll.on('scroll', () => {
-            this.doUpdate(UpdateType.scroll | UpdateType.view);
+        this._VScroll.on('scroll', (pos, changed) => {
+            if (!changed)
+                this.doUpdate(UpdateType.view);
+            else
+                this.doUpdate(UpdateType.scroll | UpdateType.view);
         });
         this._HScroll = new ScrollBar({ parent: this._el, content: this._view, type: ScrollType.horizontal, autoScroll: false });
-        this._HScroll.on('scroll', () => {
-            this.doUpdate(UpdateType.scroll);
+        this._HScroll.on('scroll', (pos, changed) => {
+            if (changed)
+                this.doUpdate(UpdateType.scroll);
         });
         //this.update();
 
@@ -832,6 +848,7 @@ export class Display extends EventEmitter {
                 this.$resizeObserverCache = { width: entries[0].contentRect.width, height: entries[0].contentRect.height };
                 if (this.split) this.split.dirty = true;
                 this.doUpdate(UpdateType.view);
+                this.emit('resize');
             }
         });
         this.$resizeObserver.observe(this._el);
@@ -841,6 +858,7 @@ export class Display extends EventEmitter {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
                     if (this.split) this.split.dirty = true;
                     this.doUpdate(UpdateType.scrollbars | UpdateType.update | UpdateType.view | UpdateType.layout);
+                    this.emit('resize');
                 }
             }
         });
@@ -922,10 +940,14 @@ export class Display extends EventEmitter {
                     else
                         this.split.updatePosition();
                 }
+                this._updating |= UpdateType.scrollReset;
+                this._updating &= ~UpdateType.scroll;
+            }
+            if ((this._updating & UpdateType.scrollReset) === UpdateType.scrollReset) {
                 this._view.style.transform = `translate(${-this._HScroll.position}px, ${-this._VScroll.position}px)`;
                 this._background.style.transform = `translate(${-this._HScroll.position}px, ${-this._VScroll.position}px)`;
                 this._overlay.style.transform = `translate(${-this._HScroll.position}px, ${-this._VScroll.position}px)`;
-                this._updating &= ~UpdateType.scroll;
+                this._updating &= ~UpdateType.scrollReset;
             }
             if ((this._updating & UpdateType.view) === UpdateType.view) {
                 this.updateView();
@@ -1002,6 +1024,14 @@ export class Display extends EventEmitter {
         return this._parser.EndOfLine;
     }
 
+    get parseQueueLength(): number {
+        return this._parser.parseQueueLength;
+    }
+
+    get parseQueueEndOfLine(): boolean {
+        return this._parser.parseQueueEndOfLine;
+    }
+
     get EndOfLineLength(): number {
         if (this.lines.length === 0)
             return 0;
@@ -1075,8 +1105,8 @@ export class Display extends EventEmitter {
         this.emit('debug', msg);
     }
 
-    public append(txt: string, remote?: boolean, force?: boolean) {
-        this._parser.parse(txt, remote || false, force || false);
+    public append(txt: string, remote?: boolean, force?: boolean, prependSplit?: boolean) {
+        this._parser.parse(txt, remote || false, force || false, prependSplit || false);
     }
 
     public CurrentAnsiCode() {
@@ -1103,15 +1133,6 @@ export class Display extends EventEmitter {
             selection: []
         };
         this._viewCache = {};
-        if (this.split) {
-            this.split.viewCache = {};
-            this.split.dirty = true;
-            if (this.split.shown) {
-                this.split.style.display = '';
-                this.split.shown = false;
-                if (this._scrollCorner) this._scrollCorner.classList.remove('active');
-            }
-        }
         this.lineIDs = [];
         this._lines = [];
         this._lineID = 0;
@@ -1131,7 +1152,17 @@ export class Display extends EventEmitter {
         this._parser.Clear();
         this._VScroll.reset();
         this._HScroll.reset();
-        this.doUpdate(UpdateType.scrollbars);
+        if (this.split) {
+            this.split.viewCache = {};
+            this.split.dirty = true;
+            if (this.split.shown) {
+                this.split.style.display = '';
+                this.split.shown = false;
+                if (this._scrollCorner) this._scrollCorner.classList.remove('active');
+            }
+        }
+        this._updating &= ~UpdateType.scroll;
+        this.doUpdate(UpdateType.scrollbars | UpdateType.scrollReset);
     }
 
     public updateFont(font?: string, size?: string) {
@@ -1490,8 +1521,8 @@ export class Display extends EventEmitter {
         if (start >= lineLength) return;
         if (!start || start < 0) start = 0;
         if (!end || end > lineLength)
-            end = lineLength;        
-       if(start === end)
+            end = lineLength;
+        if (start === end)
             return;
         //clear cache
         if (this._viewCache[idx])
@@ -4061,6 +4092,10 @@ export class Display extends EventEmitter {
         this._VScroll.scrollToEnd();
     }
 
+    public get scrollAtBottom() {
+        return this._VScroll.atBottom;
+    }
+
     private expireLineLinkFormat(formats, idx: number) {
         let f;
         let fs;
@@ -4468,7 +4503,7 @@ export class ScrollBar extends EventEmitter {
             position: 0
         };
         this.maxPosition = 0;
-        this.updatePosition(0);
+        this.updatePosition(0, true);
         this.update();
     }
 
@@ -4633,19 +4668,19 @@ export class ScrollBar extends EventEmitter {
      * @memberof ScrollBar
      * @fires ScrollBar#scroll
      */
-    private updatePosition(p) {
+    private updatePosition(p, force?) {
         if (p < 0 || this._maxDrag < 0)
             p = 0;
         else if (p > this._maxDrag)
             p = this._maxDrag;
-
+        const prv = this.position;
         this.thumb.style[this._type === ScrollType.horizontal ? 'left' : 'top'] = p + 'px';
         this.state.dragPosition = p;
         this._position = p * this._ratio;
         if (this._position < 0)
             this._position = 0;
         this.update();
-        this.emit('scroll', this.position);
+        this.emit('scroll', this.position, prv !== this.position || force);
     }
 
     /**

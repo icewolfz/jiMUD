@@ -20,6 +20,7 @@ export class Status extends EventEmitter {
     private _ac: boolean = false;
     private lagMeter: HTMLElement;
     private _updating: UpdateType;
+    private _rTimeout = 0;
     private dragging = false;
     private _spitterDistance;
 
@@ -182,7 +183,7 @@ export class Status extends EventEmitter {
             const main = $('#status-drag-bar');
             const ghostBar = $('<div>',
                 {
-                    id: '#status-ghost-bar',
+                    id: 'status-ghost-bar',
                     css: {
                         height: main.outerHeight(),
                         top: main.offset().top,
@@ -251,11 +252,15 @@ export class Status extends EventEmitter {
             const b = Math.abs(parseInt($('#status-drag-bar').css('left'), 10)) + $('#status-drag-bar').outerWidth();
             this._spitterDistance = parseInt($('#status-border').css('width'), 10) || parseInt($('#status').css('width'), 10) - b;
         }
-        $('#display').css('right', this._spitterDistance);
-        $('#status').css('width', this._spitterDistance - p);
-        $('#status-border').css('width', this._spitterDistance);
-        $('#display-border').css('right', this._spitterDistance);
-        $('#command').css('right', this._spitterDistance);
+        if (!this.client.options.showStatus)
+            this.updateInterface();
+        else {
+            $('#display').css('right', this._spitterDistance);
+            $('#status').css('width', this._spitterDistance - p);
+            $('#status-border').css('width', this._spitterDistance);
+            $('#display-border').css('right', this._spitterDistance);
+            $('#command').css('right', this._spitterDistance);
+        }
         this.emit('split-moved', this._spitterDistance);
     }
 
@@ -285,6 +290,10 @@ export class Status extends EventEmitter {
     public getSkill(skill: string) {
         if (!skill) return 0;
         return this.info['skills'][skill] || 0;
+    }
+
+    get name() {
+        return this.info['name'];
     }
 
     get ac(): boolean {
@@ -375,7 +384,7 @@ export class Status extends EventEmitter {
         this.infoLimb[limb] = health;
     }
 
-    public setTitle(title: string) {
+    public setTitle(title: string, lag?: string) {
         if (!title || title.length === 0) {
             window.document.title = 'jiMUD';
             $('#character-name').html('&nbsp;');
@@ -384,6 +393,8 @@ export class Status extends EventEmitter {
             window.document.title = 'jiMUD - ' + title;
             $('#character-name').text(title);
         }
+        if (lag && lag.length)
+            window.document.title += ' - ' + lag;
         this.emit('set-title', title || '');
     }
 
@@ -682,6 +693,8 @@ export class Status extends EventEmitter {
 
     public updateLagMeter(lag: number, force?: boolean) {
         if (!this.lagMeter) return;
+        if (this.client.options.showLagInTitle)
+            this.setTitle(this.info['name'] || '', `${lag / 1000}s`);
         if (!this.client.options.lagMeter && !force) return;
         let p = 100;
         p = lag / 200 * 100;
@@ -690,7 +703,7 @@ export class Status extends EventEmitter {
         this.lagMeter.firstElementChild.textContent = (lag / 1000) + 's';
     }
 
-    public updateInterface(noSpliter?) {
+    public updateInterface(noSplitter?) {
         const display = $('#display');
         const displayBorder = $('#display-border');
         const command = $('#command');
@@ -730,6 +743,7 @@ export class Status extends EventEmitter {
                 r = 2;
             if (r < 0) r = t;
             command.css('right', r + 'px');
+            this.emit('updated-interface');
             return;
         }
 
@@ -812,7 +826,7 @@ export class Status extends EventEmitter {
                 this.lagMeter.style.display = 'none';
             }
         }
-        if (!noSpliter)
+        if (!noSplitter)
             this.updateSplitter();
         this.emit('updated-interface');
     }
@@ -820,9 +834,9 @@ export class Status extends EventEmitter {
     private doUpdate(type?: UpdateType) {
         if (!type) return;
         this._updating |= type;
-        if (this._updating === UpdateType.none)
+        if (this._updating === UpdateType.none || this._rTimeout)
             return;
-        window.requestAnimationFrame(() => {
+        this._rTimeout = window.requestAnimationFrame(() => {
             if ((this._updating & UpdateType.status) === UpdateType.status) {
                 this.updateStatus();
                 this._updating &= ~UpdateType.status;
@@ -843,6 +857,7 @@ export class Status extends EventEmitter {
                 this.updateXP();
                 this._updating &= ~UpdateType.xp;
             }
+            this._rTimeout = 0;
             this.doUpdate(this._updating);
         });
     }

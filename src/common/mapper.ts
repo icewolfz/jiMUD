@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const sqlite3 = require('better-sqlite3');
 const PF = require('./../../lib/pathfinding.js');
+import { isFileSync } from './library';
 
 export enum RoomDetails {
     None = 0,
@@ -84,6 +85,7 @@ export class Mapper extends EventEmitter {
     private _cancelImport: boolean = false;
     private _mapFile = path.join(parseTemplate('{data}'), 'map.sqlite');
     private _updating: UpdateType = UpdateType.none;
+    private _rTimeout = 0;
     private $drawCache;
     private $focused = false;
     private _worker;
@@ -2281,7 +2283,8 @@ export class Mapper extends EventEmitter {
 
     public SendCommands(cmds) {
         let tmp;
-        const cnt = this.commandDelayCount;
+        let cnt = this.commandDelayCount;
+        if(cnt < 0) cnt = 1;
         if (cmds.length > cnt) {
             tmp = cmds.slice(cnt);
             cmds = cmds.slice(0, cnt);
@@ -2671,13 +2674,14 @@ export class Mapper extends EventEmitter {
     private doUpdate(type?: UpdateType) {
         if (!type) return;
         this._updating |= type;
-        if (this._updating === UpdateType.none)
+        if (this._updating === UpdateType.none || this._rTimeout)
             return;
-        window.requestAnimationFrame(() => {
+        this._rTimeout = window.requestAnimationFrame(() => {
             if ((this._updating & UpdateType.draw) === UpdateType.draw) {
                 this.draw();
                 this._updating &= ~UpdateType.draw;
             }
+            this._rTimeout = 0;
             this.doUpdate(this._updating);
         });
     }
@@ -2719,5 +2723,24 @@ export class Mapper extends EventEmitter {
         if (this.$focused === value) return;
         this.$focused = value;
         this.doUpdate(UpdateType.draw);
+    }
+
+    public resetMap() {
+        this.save(() => {
+            this._db.close();
+            if(ipcRenderer.sendSync('trash-item-sync', this.mapFile)) {
+                this.initializeDatabase();
+            }
+            /*
+            fs.unlink(this.mapFile, (err) => {
+                if (err) {
+                    console.log(this.mapFile, err);
+                } else {
+                    console.log(this.mapFile, 'deleted');
+                }
+                this.initializeDatabase();
+            });           
+            */
+        });
     }
 }

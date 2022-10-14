@@ -106,9 +106,9 @@ The x, y, z, zone are generated when a room is first added to the map based on t
 
 ## Known Issues
 
-- `Blurred or spacing between rooms` this is mostly caused by different zoom levels due to how the mapper handles anti alias rooms map blur or shift just a inor 0.5 pixel to throw it off just a tad, it mostly happens in zoom levels that are not 25% intervals
+- `Blurred or spacing between rooms` this is mostly caused by different zoom levels due to how the mapper handles anti alias rooms map blur or shift just a minor 0.5 pixel to throw it off just a tad, it mostly happens in zoom levels that are not 25% intervals
 - `Laggy map` when speed walking or moving quickly the map may lag or slow, you can attempt to mitigate this by using [Load in memory](preferences.md#mapper) preference, compacting the map, or reloading the client
-- `Jumpy rooms or rooms in wierd locations/only room displayed` This is mostly caused by the mapper losing track of internal coordinates or a non-standard exit, this is caused by multiple start locations when using multiple characters.
+- `Jumpy rooms or rooms in weird locations/only room displayed` This is mostly caused by the mapper losing track of internal coordinates or a non-standard exit, this is caused by multiple start locations when using multiple characters.
   - `The most common causes`
     - `Multiple characters` Each new start location is started as internal coordinates of 0,0,0 as it is a new "room" and does not know how it links to original map.
     - `Teleportation` When teleported to new locations may cause mapping coordinates to be thrown off.

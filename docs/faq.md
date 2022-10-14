@@ -237,7 +237,7 @@ Value | Results
 Value | Results
 ------|------------------------
 0     | Do nothing
-1     | Attenmpt to reconnect
+1     | Attempt to reconnect
 2     | Open reconnect dialog
 4     | Open character manager
 8     | Close client

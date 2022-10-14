@@ -953,12 +953,13 @@
         if (manager.active && manager.active.viewer) manager.active.viewer.focus();
     }
 
+    var _rTimeout = 0;
     function doUpdate(type) {
         if (!type) return;
         _updating |= type;
-        if (_updating === 0)
+        if (_updating === 0 || _rTimeout)
             return;
-        window.requestAnimationFrame(() => {
+        _rTimeout = window.requestAnimationFrame(() => {
             if ((_updating & 1) === 1) {
                 updateUI();
                 _updating &= ~1;
@@ -979,6 +980,7 @@
                 saveOptions();
                 _updating &= ~16;
             }
+            _rTimeout = 0;
             doUpdate(_updating);
         });
     }

@@ -58,6 +58,8 @@ export class Profiles {
     public sortOrder: ProfileSortOrder = ProfileSortOrder.Priority | ProfileSortOrder.Index;
     public sortDirection: number = 1;
     public showInTaskBar: boolean = false;
+    public profileSelected: string = 'default';
+    public profileExpandSelected: boolean = true;
 }
 
 /**
@@ -390,6 +392,9 @@ export class Settings {
     public maxReconnectDelay: number = 3600;
     public enableBackgroundThrottling: boolean = true;
     public showInTaskBar: boolean = true;
+    public showLagInTitle: boolean = false;
+
+    public mspMaxRetriesOnError: number = 0;
 
     public enableKeepAlive: boolean = false;
     public keepAliveDelay: number = 0;
@@ -437,6 +442,12 @@ export class Settings {
     public enableVerbatim: boolean = true;
     public verbatimChar: string = '`';
 
+    public enableParameters: boolean = true;
+    public parametersChar: string = '%';
+
+    public enableNParameters: boolean = true;
+    public nParametersChar: string = '$';
+
     public commandDelay: number = 500;
     public commandDelayCount: number = 5;
 
@@ -457,6 +468,24 @@ export class Settings {
     public watchForProfilesChanges = false;
     public onProfileChange: OnProfileChange = OnProfileChange.Nothing;
     public onProfileDeleted: OnProfileDeleted = OnProfileDeleted.Nothing;
+    public enableDoubleParameterEscaping = false;
+
+    public ignoreEvalUndefined: boolean = true;
+    public enableInlineComments: boolean = true;
+    public enableBlockComments: boolean = true;
+    public inlineCommentString: string = '//';
+    public blockCommentString: string = '/*';
+
+    public allowCommentsFromCommand: boolean = false;
+    public saveTriggerStateChanges: boolean = true;
+    public groupProfileSaves: boolean = false;
+    public groupProfileSaveDelay: number = 20000;
+    public returnNewlineOnEmptyValue: boolean = false;
+
+    public pathDelay: number = 0;
+    public pathDelayCount: number = 1;
+    public echoSpeedpaths: boolean = false;
+    
 
     public windows = {};
     public buttons = {

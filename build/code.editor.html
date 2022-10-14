@@ -117,6 +117,9 @@
                     if (manager.active && manager.active.editor)
                         setViewState(manager.active.editor, editor);
                 });
+                editor._standaloneKeybindingService.addDynamicKeybinding(`-actions.findWithSelection`, undefined, () => { });
+                editor._standaloneKeybindingService.addDynamicKeybinding(`-actions.find`, undefined, () => { });
+                editor._standaloneKeybindingService.addDynamicKeybinding(`-editor.action.startFindReplaceAction`, undefined, () => { });
             }
             else {
                 let m = monaco.editor.createModel('', 'lpc');
@@ -157,6 +160,14 @@
                 editor.getModifiedEditor().onDidChangeModelDecorations(() => {
 
                 });
+
+                editor.getOriginalEditor()._standaloneKeybindingService.addDynamicKeybinding(`-actions.findWithSelection`, undefined, () => { });
+                editor.getOriginalEditor()._standaloneKeybindingService.addDynamicKeybinding(`-actions.find`, undefined, () => { });
+                editor.getOriginalEditor()._standaloneKeybindingService.addDynamicKeybinding(`-editor.action.startFindReplaceAction`, undefined, () => { });
+
+                editor.getModifiedEditor()._standaloneKeybindingService.addDynamicKeybinding(`-actions.findWithSelection`, undefined, () => { });
+                editor.getModifiedEditor()._standaloneKeybindingService.addDynamicKeybinding(`-actions.find`, undefined, () => { });
+                editor.getModifiedEditor()._standaloneKeybindingService.addDynamicKeybinding(`-editor.action.startFindReplaceAction`, undefined, () => { });
             }
 
             if (options && options.editorOptions)
@@ -300,7 +311,7 @@
                 autoIndent: true,
                 rulers: [80],
                 contextmenu: false,
-                theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme' ) : 'lpcTheme'),
+                theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme') : 'lpcTheme'),
                 model: null,
             }, {
                 /*
@@ -370,7 +381,7 @@
                 autoIndent: true,
                 rulers: [80],
                 contextmenu: false,
-                theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme' ) : 'lpcTheme'),
+                theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme') : 'lpcTheme'),
                 model: null,
             })];
             window.$dNavs = [
@@ -2440,7 +2451,7 @@
             autoIndent: true,
             rulers: [80],
             contextmenu: false,
-            theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme' ) : 'lpcTheme'),
+            theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme') : 'lpcTheme'),
             model: null
         });
         initEditor(editor);
@@ -2453,7 +2464,7 @@
             autoIndent: true,
             rulers: [80],
             contextmenu: false,
-            theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme' ) : 'lpcTheme'),
+            theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme') : 'lpcTheme'),
             model: null
         });
         initEditor(editor, 1);
@@ -2770,7 +2781,7 @@
             buttons.append(...manager.active.editor.buttons);
         updateMenu('edit', 12);
         updateMenu('view', 9);
-        sbSize.textContent = enabled ? ('Length: ' + manager.active.editor.length.toLocaleString()) : '';
+        sbSize.textContent = enabled ? (`Length: ${manager.active.editor.length.toLocaleString()}, Lines ${manager.active.editor.lineCount.toLocaleString()}`) : '';
         sbMessage.textContent = '';
         sbName.textContent = enabled ? (manager.active.editor.source === Source.local ? manager.active.editor.file : manager.active.editor.remote) : '';
         sbName.title = enabled ? (manager.active.editor.source === Source.local ? manager.active.editor.file : manager.active.editor.remote) : '';
@@ -3685,6 +3696,7 @@
             manager.active.editor.resizeMap(w, h, d, sf);
         }
         document.getElementById('map-resize').close();
+        setTimeout(() => { if (manager.active && manager.active.editor) manager.active.editor.focus(); }, 10);
     }
 
     // eslint-disable-next-line no-unused-vars
@@ -3851,9 +3863,9 @@
             if (error.stack)
                 msg = error.stack;
             else if (error instanceof TypeError)
-                msg = error.name + ' - ' + error.message;
+                msg = error.name + ': ' + error.message;
             else if (error instanceof Error)
-                msg = error.name + ' - ' + error.message;
+                msg = error.name + ': ' + error.message;
             else if (error.message)
                 msg = error.message;
             else if (error.msg)
@@ -4961,6 +4973,10 @@
             }
             else if (template.files[c].endsWith('virtual.map'))
                 data.wizard = buildNewVirtualMap(+$('#new-virtual-area-width').val(), +$('#new-virtual-area-height').val(), +$('#new-virtual-area-depth').val(), Array.from(document.querySelectorAll('#new-virtual-area-default-exits input:checked')).map(f => +f.value).reduce((a, c) => a | c), Array.from(document.querySelectorAll('#new-virtual-area-default-states input:checked')).map(f => +f.value).reduce((a, c) => a | c));
+            else if (template.files[c].endsWith('virtual.state'))
+                data.wizard = buildNewVirtualMapStates(+$('#new-virtual-area-width').val(), +$('#new-virtual-area-height').val(), +$('#new-virtual-area-depth').val(), Array.from(document.querySelectorAll('#new-virtual-area-default-states input:checked')).map(f => +f.value).reduce((a, c) => a | c));
+            else if (template.files[c].endsWith('virtual.terrain'))
+                data.wizard = buildNewVirtualMapStates(+$('#new-virtual-area-width').val(), +$('#new-virtual-area-height').val(), +$('#new-virtual-area-depth').val(), '00');
             value = parseFileTemplate(value, data);
             file = template.files[c].replace(templateRegex, aPath);
             writeFile(file, value);
@@ -5023,6 +5039,27 @@
         m += (be & ~2 & ~1) + states + ' ';
         if (width > 2) m += Array(width - 1).join(be + states + ' ');
         m += (be & ~64 & ~32 & ~16) + states;
+        m += '\n';
+        for (var z = 0; z < depth; z++) f += m + '\n';
+        return f;
+    }
+
+    function buildNewVirtualMapStates(width, height, depth, states) {
+        var f = width + ' ' + height;
+        if (depth > 1) f += ' ' + depth;
+        f += '\n';
+        if (width > 2) m += Array(width - 1).join(states + ' ');
+        m += states;
+        m += '\n';
+        for (var y = 1; y < height - 1; y++) {
+            m += states + ' ';
+            if (width > 2) m += Array(width - 1).join(states + ' ');
+            m += states;
+            m += '\n';
+        }
+        m += states + ' ';
+        if (width > 2) m += Array(width - 1).join(states + ' ');
+        m += states;
         m += '\n';
         for (var z = 0; z < depth; z++) f += m + '\n';
         return f;
@@ -6532,10 +6569,14 @@
 
                             if ($dialogs.monster.options && $dialogs.monster.options.groups) {
                                 var groups = Object.keys($dialogs.monster.options.groups);
+                                Array.prototype.forEach.call(e.page.querySelectorAll('optgroup[data-types=moncustom]'), function (node) {
+                                    node.parentNode.removeChild(node);
+                                });
                                 groups.forEach(g => {
                                     var el = document.createElement('optgroup');
                                     el.label = g;
                                     el.id = g.replace(/ /g, '');
+                                    el.dataset.types = 'moncustom'
                                     el.innerHTML = $dialogs.monster.options.groups[g].map(r => `<option value="${r.value || r.display}">${r.display || r.value}</option>`).join('');
                                     aTypes.parentNode.insertBefore(el, aTypes.nextSibling);
                                 });
@@ -8772,7 +8813,9 @@
                         if (!icon) return;
                         manager.setPanelIcon(icon, p);
                     });
-                p.editor.options = options.modelOptions;
+                //check in case errored above
+                if (p.editor)
+                    p.editor.options = options.modelOptions;
             }
             /*
             if (!_watched[data.file]) {
@@ -8882,14 +8925,16 @@
                 if (p !== manager.active) return;
                 doUpdate(2);
             });
-            p.editor.on('changed', (length) => {
+            p.editor.on('changed', (length, lines) => {
                 updatePanel(p);
                 if (p !== manager.active) return;
                 doUpdate(2);
                 if (length === -1)
                     sbSize.textContent = '';
+                else if (lines === -1)
+                    sbSize.textContent = `Length: ${length.toLocaleString()}`;
                 else
-                    sbSize.textContent = 'Length: ' + length.toLocaleString();
+                    sbSize.textContent = `Length: ${length.toLocaleString()}, Lines: ${lines.toLocaleString()}`;
             });
             p.editor.on('saved', () => {
                 updatePanel(p);
@@ -8929,6 +8974,13 @@
             p.editor.on('menu-update', (menu, options) => {
                 if (p !== manager.active) return;
                 menubar.updateItem(menu, options);
+            });
+            p.editor.on('rebuild-menu', (menu) => {
+                if (p !== manager.active) return;
+                if (menu === 'edit')
+                    updateMenu('edit', 12);
+                else if (menu === 'view')
+                    updateMenu('view', 9);
             });
             p.editor.on('rebuild-buttons', () => {
                 if (p !== manager.active) return;
@@ -8980,12 +9032,14 @@
                 if (p.editor.supports('find'))
                     temp.push({
                         label: 'Find',
-                        click: doFind
+                        click: doFind,
+                        accelerator: 'CmdOrCtrl+F'
                     });
                 if (p.editor.supports('replace'))
                     temp.push({
                         label: 'Replace',
-                        click: doReplace
+                        click: doReplace,
+                        accelerator: 'CmdOrCtrl+H'
                     });
 
                 if (p.editor.supports('menu|context')) {
@@ -9076,12 +9130,14 @@
                 if (p.editor.supports('find'))
                     temp.push({
                         label: 'Find',
-                        click: doFind
+                        click: doFind,
+                        accelerator: 'CmdOrCtrl+F'
                     });
                 if (p.editor.supports('replace'))
                     temp.push({
                         label: 'Replace',
-                        click: doReplace
+                        click: doReplace,
+                        accelerator: 'CmdOrCtrl+H'
                     });
 
                 if (p.editor.supports('menu|context')) {
@@ -9189,12 +9245,13 @@
         return p;
     }
 
+    var _rTimeout = 0;
     function doUpdate(type) {
         if (!type) return;
         _updating |= type;
-        if (_updating === 0)
+        if (_updating === 0 || _rTimeout)
             return;
-        window.requestAnimationFrame(() => {
+        _rTimeout = window.requestAnimationFrame(() => {
             if ((_updating & 1) === 1) {
                 updateUI();
                 _updating &= ~1;
@@ -9236,6 +9293,7 @@
                 }
                 _updating &= ~128;
             }
+            _rTimeout = 0;
             doUpdate(_updating);
         });
     }

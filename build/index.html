@@ -32,48 +32,19 @@
             });
         });
 
-        ['$selectedword', '$selword'].forEach((a) => {
-            Object.defineProperty(window, a, {
-                get: function () {
-                    if (!lastMouse) return '';
-                    return client.display.getWordFromPosition(client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY));
-                },
-                configurable: true
-            });
-        });
-
-        ['$selectedurl', '$selurl'].forEach((a) => {
-            Object.defineProperty(window, a, {
-                get: function () {
-                    if (!lastMouse) return '';
-                    var parent = $(lastMouse.srcElement.parentNode);
-                    if (parent && parent.hasClass('URLLink'))
-                        return parent.title;
-                    else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0)
-                        return parent.data('href');
-                    return '';
-                },
-                configurable: true
-            });
-        });
-
-        ['$selectedline', '$selline'].forEach((a) => {
-            Object.defineProperty(window, a, {
-                get: function () {
-                    if (!lastMouse) return '';
-                    var pos = client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY);
-                    if (pos.y < 0 || pos.y >= client.display.lines.length)
-                        return '';
-                    return client.display.lines[pos.y];
-                },
-                configurable: true
-            });
-        });
-
         Object.defineProperty(window, '$selected', {
             get: function () {
                 if (!client) return '';
                 return client.display.selection;
+            },
+            configurable: true
+        });
+
+        Object.defineProperty(window, '$character', {
+            get: function () {
+                if (_status)
+                    return _status.name || _charName || ipcRenderer.sendSync('get-global', 'characterLogin') || '';
+                return _charName || ipcRenderer.sendSync('get-global', 'characterLogin') || '';
             },
             configurable: true
         });
@@ -88,42 +59,70 @@
         Object.defineProperty(window, '$selword', {
             get: function () {
                 if (!client) return '';
-                return client._input.vStack['$selword'] || _selword || '';
+                return client._input.vStack['$selword'] || _selword || (lastMouse ? client.display.getWordFromPosition(client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY)) : '');
             },
             configurable: true
         });
         Object.defineProperty(window, '$selurl', {
             get: function () {
                 if (!client) return '';
-                return client._input.vStack['$selurl'] || _selurl || '';
+                let value = client._input.vStack['$selurl'] || _selurl || '';
+                if (value) return value;
+                if (!lastMouse) return '';
+                var parent = $(lastMouse.srcElement.parentNode);
+                if (parent && parent.hasClass('URLLink'))
+                    return parent.title;
+                else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0)
+                    return parent.data('href');
+                return '';
             },
             configurable: true
         });
         Object.defineProperty(window, '$selline', {
             get: function () {
                 if (!client) return '';
-                return client._input.vStack['$selline'] || _selline || '';
+                let value = client._input.vStack['$selline'] || _selline || '';
+                if (value) return value;
+                if (!lastMouse) return '';
+                var pos = client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY);
+                if (pos.y < 0 || pos.y >= client.display.lines.length)
+                    return '';
+                return client.display.lines[pos.y];
             },
             configurable: true
         });
         Object.defineProperty(window, '$selectedword', {
             get: function () {
                 if (!client) return '';
-                return client._input.vStack['$selectedword'] || _selword || '';
+                return client._input.vStack['$selectedword'] || _selword || (lastMouse ? client.display.getWordFromPosition(client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY)) : '');
             },
             configurable: true
         });
         Object.defineProperty(window, '$selectedurl', {
             get: function () {
                 if (!client) return '';
-                return client._input.vStack['$selectedurl'] || _selurl || '';
+                let value = client._input.vStack['$selectedurl'] || _selurl || '';
+                if (value) return value;
+                if (!lastMouse) return '';
+                var parent = $(lastMouse.srcElement.parentNode);
+                if (parent && parent.hasClass('URLLink'))
+                    return parent.title;
+                else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0)
+                    return parent.data('href');
+                return '';
             },
             configurable: true
         });
         Object.defineProperty(window, '$selectedline', {
             get: function () {
                 if (!client) return '';
-                return client._input.vStack['$selectedline'] || _selline || '';
+                let value = client._input.vStack['$selectedline'] || _selline || '';
+                if (value) return value;
+                if (!lastMouse) return '';
+                var pos = client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY);
+                if (pos.y < 0 || pos.y >= client.display.lines.length)
+                    return '';
+                return client.display.lines[pos.y];
             },
             configurable: true
         });
@@ -187,6 +186,7 @@
         const remote = require('@electron/remote');
         const { Menu, MenuItem } = remote;
         const { parseTemplate, setSelectionRange, isFileSync, decrypt } = require('./js/library.js');
+        const { ProfileSaveType } = require('./js/types.js');
         //    const fs = require('fs');
         const path = require('path');
         const { version } = require('../package.json');
@@ -259,6 +259,10 @@
                     defaultId: 1
                 }) === 0)
                 shell.openExternal(encodeURI(url));
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
         }
 
         // eslint-disable-next-line no-unused-vars
@@ -274,6 +278,10 @@
                     defaultId: 1
                 }) === 0)
                 shell.openExternal(encodeURI(url.replace('&text;', $(el).text())));
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
         }
 
         function doMXPSend(e, el, url, pmt, tt) {
@@ -318,6 +326,10 @@
             }
             else
                 client.send(url.replace('&text;', $(el).text()) + extra + '\n', true);
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
         }
 
         function MXPMenuHandler(cmd, pmt) {
@@ -327,6 +339,10 @@
             }
             else
                 client.send(cmd, true);
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
         }
 
         // eslint-disable-next-line no-unused-vars
@@ -337,6 +353,10 @@
 
         function selectAll() {
             client.display.selectAll();
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
         }
 
         function toggleView(view) {
@@ -422,7 +442,8 @@
                 client.display.updateLayout();
         }
 
-        function updateInterface() {
+        async function updateInterface() {
+            if(!client || !client.options) return;
             loadTheme(client.options.theme);
             $('#display').css('left', '');
             $('#display-border').css('left', '');
@@ -509,9 +530,15 @@
                 else {
                     menu = {};
                     menu.label = context[x].caption;
+                    if (context[x].parse)
+                        menu.caption = context[x].caption;
                     menu.item = context[x];
                     menu.click = (item) => {
                         executeContext(item.item);
+                        setTimeout(() => {
+                            if (client.options.CommandonClick)
+                                client.commandInput[0].focus();
+                        }, 0);
                     };
                     var sub = buildMenu(context[x].name || x, context);
                     if (sub.length > 0)
@@ -553,7 +580,7 @@
               return menuItems;
             }
         */
-        function buildContextMenu() {
+        async function buildContextMenu() {
             _context = [];
             $contextMenu = _context;
             var context = client.contexts;
@@ -568,9 +595,15 @@
                     else {
                         menu = {};
                         menu.label = context[x].caption;
+                        if (context[x].parse)
+                            menu.caption = context[x].caption;
                         menu.item = context[x];
                         menu.click = (item) => {
                             executeContext(item.item);
+                            setTimeout(() => {
+                                if (client.options.CommandonClick)
+                                    client.commandInput[0].focus();
+                            }, 0);
                         };
                         var sub = buildMenu(context[x].name || x, context);
                         //if (context[x].items)
@@ -586,7 +619,7 @@
             }
         }
 
-        function updateButtonBar() {
+        async function updateButtonBar() {
             const $bar = document.getElementById('buttonbar');
             const $scrollUp = document.getElementById('bb-scroll-up');
             const $scrollDown = document.getElementById('bb-scroll-down');
@@ -642,7 +675,7 @@
                 var lst = '';
                 var l = client.commandHistory.length;
                 for (var i = 0; i < l; i++) {
-                    lst += `<li><a class="truncate" href="#" data-index="${i}" onclick="var cmd = client.commandHistory[parseInt(this.dataset.index, 10)];client.AddCommandToHistory(cmd);client.sendCommand(cmd);" title="${client.commandHistory[i]}">${client.commandHistory[i]}</a></li>`;
+                    lst += `<li><a class="truncate" href="#" data-index="${i}" onclick="var cmd = client.commandHistory[parseInt(this.dataset.index, 10)];client.AddCommandToHistory(cmd,);client.sendCommand(cmd, null, client.options.allowCommentsFromCommand);" title="${client.commandHistory[i]}">${client.commandHistory[i]}</a></li>`;
                 }
                 if (l === 0)
                     lst = '<li><a href="#">No history</a></li><li role="separator" class="divider"></li>';
@@ -652,19 +685,17 @@
                 $('.command-history ul').html(lst);
             });
             remote.getCurrentWindow().on('restore', () => {
-                client.display.updateScrollbars();
-                client.display.updateView();
-                client.UpdateWindow();
+                doUpdate(256);
             });
             remote.getCurrentWindow().on('maximize', () => {
-                client.display.updateScrollbars();
-                client.display.updateView();
-                client.UpdateWindow();
+                doUpdate(256);
             });
             remote.getCurrentWindow().on('unmaximize', () => {
-                client.display.updateScrollbars();
-                client.display.updateView();
-                client.UpdateWindow();
+                doUpdate(256);
+            });
+
+            remote.getCurrentWindow().on('resized', () => {
+                doUpdate(384);
             });
 
             ipcRenderer.send('set-overlay', 0);
@@ -682,8 +713,8 @@
                 $('#commandinput').focus();
             });
             window.addEventListener('resize', function () {
-                client.UpdateWindow();
-                doUpdate(128);
+                //client.UpdateWindow();
+                doUpdate(384);
             });
             document.getElementById('buttonbar').addEventListener('wheel', (e) => {
                 if (e.deltaY >= 0)
@@ -779,6 +810,10 @@
                 shell.beep();
             });
 
+            client.display.on('resize', () => {
+                doUpdate(256);
+            });
+
             client.display.on('selection-done', () => {
                 if (client.options.AutoCopySelectedToClipboard && client.display.hasSelection) {
                     window.writeClipboard(client.display.selection, client.display.selectionAsHTML);
@@ -806,39 +841,154 @@
                     iUrl = 2;
                 client.raise('context-pre-build', [iUrl]);
                 _context.forEach((item) => {
+                    if (item.caption && item.caption.length)
+                        item.label = client.parseInline(item.caption);
                     c.append(item);
                 });
 
                 if (client.defaultContext) {
                     if (c.items.length > 0)
                         c.append(new MenuItem({ type: 'separator' }));
-
+                    if (e.srcElement.nodeName === 'IMG') {
+                        c.append(new MenuItem({
+                            label: 'Save image as...', click: () => {
+                                ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
+                                    title: 'Save image as...',
+                                    defaultPath: path.basename(e.srcElement.src),
+                                    filters: [
+                                        { name: 'Images (*.png)', extensions: ['png'] },
+                                        { name: 'All files (*.*)', extensions: ['*'] },
+                                    ]
+                                }).then(results => {
+                                    if (results.filePath === undefined || results.filePath.length === 0) {
+                                        return;
+                                    }
+                                    var canvas = document.createElement("canvas");
+                                    context = canvas.getContext('2d');
+                                    var base_image = new Image();
+                                    base_image.src = e.srcElement.src;
+                                    base_image.onload = function () {
+                                        canvas.width = base_image.width;
+                                        canvas.height = base_image.height;
+                                        context.globalCompositeOperation = "screen";
+                                        context.clearRect(0, 0, canvas.width, canvas.height);
+                                        context.drawImage(base_image, 0, 0);
+                                        require('fs').writeFile(results.filePath, nativeImage.createFromDataURL(canvas.toDataURL('image/png')).toPNG(), err => {
+                                            if (err)
+                                                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                                                    type: 'error',
+                                                    title: 'Error generating',
+                                                    message: 'Could not save image'
+                                                });
+                                            setTimeout(() => {
+                                                if (client.options.CommandonClick)
+                                                    client.commandInput[0].focus();
+                                            }, 0);
+                                        });
+                                    };
+                                });
+                            }
+                        }));
+                        c.append(new MenuItem({
+                            label: 'Copy image', click: () => {
+                                var canvas = document.createElement("canvas");
+                                context = canvas.getContext('2d');
+                                var base_image = new Image();
+                                base_image.src = e.srcElement.src;
+                                base_image.onload = function () {
+                                    canvas.width = base_image.width;
+                                    canvas.height = base_image.height;
+                                    context.globalCompositeOperation = "screen";
+                                    context.clearRect(0, 0, canvas.width, canvas.height);
+                                    context.drawImage(base_image, 0, 0);
+                                    clipboard.writeImage(nativeImage.createFromDataURL(canvas.toDataURL()));
+                                    setTimeout(() => {
+                                        if (client.options.CommandonClick)
+                                            client.commandInput[0].focus();
+                                    }, 0);
+                                };
+                            }
+                        }));
+                        c.append(new MenuItem({
+                            label: 'Copy image link', click: () => {
+                                window.writeClipboard(e.srcElement.src);
+                                setTimeout(() => {
+                                    if (client.options.CommandonClick)
+                                        client.commandInput[0].focus();
+                                }, 0);
+                            }
+                        }));
+                        c.append(new MenuItem({ type: 'separator' }));
+                    }
                     if (parent && parent.hasClass('URLLink')) {
                         c.append(new MenuItem({ label: 'Open url', click: () => { doLink(parent.attr('title')); } }));
-                        c.append(new MenuItem({ label: 'Copy url', click: () => { window.writeClipboard(encodeURI(parent.attr('title'))); } }));
+                        c.append(new MenuItem({
+                            label: 'Copy url', click: () => {
+                                window.writeClipboard(encodeURI(parent.attr('title'))); setTimeout(() => {
+                                    if (client.options.CommandonClick)
+                                        client.commandInput[0].focus();
+                                }, 0);
+                            }
+                        }));
                         if (parent.text() !== parent.attr('title'))
-                            c.append(new MenuItem({ label: 'Copy url text', click: () => { window.writeClipboard(parent.text()); } }));
+                            c.append(new MenuItem({
+                                label: 'Copy url text', click: () => {
+                                    window.writeClipboard(parent.text()); setTimeout(() => {
+                                        if (client.options.CommandonClick)
+                                            client.commandInput[0].focus();
+                                    }, 0);
+                                }
+                            }));
                         c.append(new MenuItem({ type: 'separator' }));
                         iUrl = 1;
                     }
                     else if (parent && parent.hasClass('MXPLink') && parent.data('href') && parent.data('href').length > 0) {
                         c.append(new MenuItem({ label: 'Open url', click: () => { parent.trigger('click'); } }));
-                        c.append(new MenuItem({ label: 'Copy url', click: () => { window.writeClipboard(encodeURI(parent.data('href'))); } }));
+                        c.append(new MenuItem({
+                            label: 'Copy url', click: () => {
+                                window.writeClipboard(encodeURI(parent.data('href'))); setTimeout(() => {
+                                    if (client.options.CommandonClick)
+                                        client.commandInput[0].focus();
+                                }, 0);
+                            }
+                        }));
                         if (parent.text() !== parent.attr('href'))
-                            c.append(new MenuItem({ label: 'Copy url text', click: () => { window.writeClipboard(parent.text()); } }));
+                            c.append(new MenuItem({
+                                label: 'Copy url text', click: () => {
+                                    window.writeClipboard(parent.text()); setTimeout(() => {
+                                        if (client.options.CommandonClick)
+                                            client.commandInput[0].focus();
+                                    }, 0);
+                                }
+                            }));
                         c.append(new MenuItem({ type: 'separator' }));
                         iUrl = 1;
                     }
                     else if (parent && parent.hasClass('MXPLink')) {
                         c.append(new MenuItem({ label: 'Open mxp url', click: () => { parent.trigger('click'); } }));
-                        c.append(new MenuItem({ label: 'Copy mxp url text', click: () => { window.writeClipboard(parent.text()); } }));
+                        c.append(new MenuItem({
+                            label: 'Copy mxp url text', click: () => {
+                                window.writeClipboard(parent.text()); setTimeout(() => {
+                                    if (client.options.CommandonClick)
+                                        client.commandInput[0].focus();
+                                }, 0);
+                            }
+                        }));
                         c.append(new MenuItem({ type: 'separator' }));
                         iUrl = 2;
                     }
 
                     if (client.display.hasSelection) {
                         c.append(new MenuItem({ role: 'copy' }));
-                        c.append(new MenuItem({ label: 'Copy as HTML', accelerator: 'CmdOrCtrl+Alt+C', click: () => { copyAsHTML(); } }));
+                        c.append(new MenuItem({
+                            label: 'Copy as HTML', accelerator: 'CmdOrCtrl+Alt+C', click: () => {
+                                copyAsHTML();
+                                setTimeout(() => {
+                                    if (client.options.CommandonClick)
+                                        client.commandInput[0].focus();
+                                }, 0);
+                            }
+                        }));
                     }
                     if (window.$copied.length) {
                         c.append(new MenuItem({ label: 'Paste', click: paste, accelerator: 'CmdOrCtrl+V' }));
@@ -849,6 +999,10 @@
                     c.append(new MenuItem({
                         label: 'Clear', click: () => {
                             client.clear();
+                            setTimeout(() => {
+                                if (client.options.CommandonClick)
+                                    client.commandInput[0].focus();
+                            }, 0);
                         }
                     }));
                     if (client.options.enableDebug || ipcRenderer.sendSync('get-global', 'debug')) {
@@ -879,6 +1033,10 @@
                         e.preventDefault();
                         e.stopPropagation();
                     }
+                    setTimeout(() => {
+                        if (client.options.CommandonClick)
+                            client.commandInput[0].focus();
+                    }, 0);
                 });
             });
             window.client = client;
@@ -917,10 +1075,17 @@
             client.on('initialized', () => {
                 autoConnect();
             });
-            client.on('profile-updated', (profile) => {
-                ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: client.enabledProfiles.indexOf(profile) != -1 });
-                doUpdate(24);
-                ipcRenderer.send('profile-updated', profile);
+            client.on('profile-updated', (profile, noChanges, type) => {
+                if (!noChanges) {
+                    ipcRenderer.send('update-menuitem', { menu: ['profiles', profile], checked: client.enabledProfiles.indexOf(profile) != -1 });
+                    //only update if buttons changed
+                    if (!type || (type & ProfileSaveType.Button) === ProfileSaveType.Button)
+                        doUpdate(8);
+                    //update if context or variables have changed
+                    if (!type || (type & ProfileSaveType.Context) === ProfileSaveType.Context || (type & ProfileSaveType.Variable) === ProfileSaveType.Variable)
+                        doUpdate(16);
+                }
+                ipcRenderer.send('profile-updated', profile, noChanges, type);
             });
 
             client.on('profile-toggled', (profile, enabled) => {
@@ -929,11 +1094,15 @@
                 ipcRenderer.send('profile-toggled', profile, enabled);
             });
 
-            client.on('profiles-updated', () => {
+            client.on('profiles-updated', (noChanges) => {
+                //nothing important changed so ignore
+                if (noChanges) return;
                 doUpdate(76);
             });
 
-            client.on('profile-loaded', profile => {
+            client.on('profile-loaded', (profile, noChanges) => {
+                //nothing important changed so ignore
+                if (noChanges) return;
                 doUpdate(76);
             });
 
@@ -1375,10 +1544,10 @@
                 ipcRenderer.send('profile-item-added', type, profile, item);
             });
 
-            client.on('item-updated', (type, profile, item) => {
+            client.on('item-updated', (type, profile, idx, item) => {
                 if (type === 'button')
                     doUpdate(8);
-                ipcRenderer.send('profile-item-updated', type, profile, item);
+                ipcRenderer.send('profile-item-updated', type, profile, idx, item);
             });
 
             client.on('item-removed', (type, profile, idx) => {
@@ -1547,12 +1716,7 @@
             _status.on('split-moved', value => {
                 if (value === client.options.statusWidth) return;
                 client.options.statusWidth = value;
-                setTimeout(() => {
-                    client.display.updateScrollbars();
-                    client.display.updateView();
-                    client.UpdateWindow();
-                }, 1);
-                doUpdate(32);
+                doUpdate(32 | 256);
             });
             _status.on('leave combat', () => {
                 if (_nextClear <= Date.now()) {
@@ -1570,8 +1734,9 @@
 
             _status.ac = client.options.showArmor;
             _status.on('set-title', (title) => {
+                //TODO Add setting to control empty/defaults
                 if (client.options.autoCreateCharacter)
-                    ipcRenderer.send('change-char', title);
+                    ipcRenderer.send('change-char', title, true);
                 _logger.postMessage({ action: 'name', args: title });
                 ipcRenderer.send('set-title', title);
             });
@@ -1683,6 +1848,7 @@
                         client.raise('closed');
                         _logger.postMessage({ action: 'flush' });
                         closeWindow = true;
+                        clearWatcher();
                         ipcRenderer.invoke('window', 'closeWindows');
                         ipcRenderer.invoke('window', 'close');
                     });
@@ -1955,7 +2121,7 @@
                 const { selectionText, isEditable } = params;
                 if (isEditable) {
                     input = document.elementFromPoint(params.x, params.y);
-                    if (input.id === 'commandinput') {
+                    if (input && input.id === 'commandinput') {
                         //e.preventDefault();
                         $('#commandinput').data('selStart', client.commandInput[0].selectionStart);
                         $('#commandinput').data('selEnd', client.commandInput[0].selectionEnd);
@@ -2086,48 +2252,53 @@
                 $selectedurl: _selurl,
                 $selectedline: _selline
             });
-            switch (item.style) {
-                case 1:
-                    try {
-                        ret = client.parseOutgoing(item.value);
-                    }
-                    catch (e) {
-                        throw e;
-                    }
-                    finally {
-                        client._input._stack.pop();
+            if (item.value.length)
+                switch (item.style) {
+                    case 1:
+                        try {
+                            ret = client.parseOutgoing(item.value);
+                        }
+                        catch (e) {
+                            throw e;
+                        }
+                        finally {
+                            client._input._stack.pop();
+                            client._input.vStackPop();
+                        }
+                        break;
+                    case 2:
+                        /*jslint evil: true */
+                        var f = new Function('try { ' + item.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                        try {
+                            ret = f.apply(client);
+                        }
+                        catch (e) {
+                            throw e;
+                        }
+                        finally {
+                            client._input._stack.pop();
+                            client._input.vStackPop();
+                        }
+                        if (ret)
+                            ret = client.parseOutgoing(ret);
+                        break;
+                    default:
+                        ret = item.value;
                         client._input.vStackPop();
-                    }
-                    break;
-                case 2:
-                    /*jslint evil: true */
-                    var f = new Function('try { ' + item.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                    try {
-                        ret = f.apply(client);
-                    }
-                    catch (e) {
-                        throw e;
-                    }
-                    finally {
-                        client._input._stack.pop();
-                        client._input.vStackPop();
-                    }
-                    if (ret)
-                        ret = client.parseOutgoing(ret);
-                    break;
-                default:
-                    ret = item.value;
-                    client._input.vStackPop();
-                    break;
-            }
+                        break;
+                }
             if (ret == null)
+                return true;
+            if (typeof ret !== 'string')
+                ret = ret.toString();
+            if (ret.length === 0 && !client.options.returnNewlineOnEmptyValue)
                 return true;
             if (item.send) {
                 if (!ret.endsWith('\n'))
                     ret += '\n';
                 if (item.chain && client.commandInput.val().endsWith(' ')) {
                     client.commandInput.val(client.commandInput.val() + ret);
-                    client.sendCommand();
+                    client.sendCommand(null, null, client.options.allowCommentsFromCommand);
                 }
                 else
                     client.send(ret, true);
@@ -2144,57 +2315,76 @@
             button = client.buttons[idx];
             if (!button.enabled) return false;
             var ret;// = '';
-            switch (button.style) {
-                case 1:
-                    client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
-                    try {
-                        ret = client.parseOutgoing(button.value);
-                    }
-                    catch (e) {
-                        throw e;
-                    }
-                    finally {
-                        client._input._stack.pop();
-                    }
-                    break;
-                case 2:
-                    /*jslint evil: true */
-                    var f = new Function('try { ' + button.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
-                    client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
-                    try {
-                        ret = f.apply(client);
-                    }
-                    catch (e) {
-                        throw e;
-                    }
-                    finally {
-                        client._input._stack.pop();
-                    }
-                    if (typeof ret === 'string')
-                        ret = client.parseOutgoing(ret);
-                    break;
-                default:
-                    ret = button.value;
-                    break;
-            }
-            if (ret == null)
+            if (button.value.length)
+                switch (button.style) {
+                    case 1:
+                        client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
+                        try {
+                            ret = client.parseOutgoing(button.value);
+                        }
+                        catch (e) {
+                            throw e;
+                        }
+                        finally {
+                            client._input._stack.pop();
+                        }
+                        break;
+                    case 2:
+                        /*jslint evil: true */
+                        var f = new Function('try { ' + button.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                        client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
+                        try {
+                            ret = f.apply(client);
+                        }
+                        catch (e) {
+                            throw e;
+                        }
+                        finally {
+                            client._input._stack.pop();
+                        }
+                        if (typeof ret === 'string')
+                            ret = client.parseOutgoing(ret);
+                        break;
+                    default:
+                        ret = button.value;
+                        break;
+                }
+            if (ret == null) {
+                setTimeout(() => {
+                    if (client.options.CommandonClick)
+                        client.commandInput[0].focus();
+                }, 0);
                 return true;
+            }
+            if (typeof ret !== 'string')
+                ret = ret.toString();
+            if (ret.length === 0 && !client.options.returnNewlineOnEmptyValue) {
+                setTimeout(() => {
+                    if (client.options.CommandonClick)
+                        client.commandInput[0].focus();
+                }, 0);
+                return true;
+            }
             if (button.send) {
                 if (!ret.endsWith('\n'))
                     ret += '\n';
                 if (button.chain && client.commandInput.val().endsWith(' ')) {
                     client.commandInput.val(client.commandInput.val() + ret);
-                    client.sendCommand();
+                    client.sendCommand(null, null, client.options.allowCommentsFromCommand);
                 }
                 else
                     client.send(ret, true);
             }
             else if (button.append)
                 client.commandInput.val(client.commandInput.val() + ret);
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
             return true;
         }
 
-        function buildButtons() {
+        async function buildButtons() {
             var buttons = $('#user-buttons');
             buttons.empty();
             if (!client.options.buttons.user)
@@ -2218,7 +2408,10 @@
                         button = $('<a href="javascript:void(0)" class="button" onclick="executeButton(' + b + ')"' + p + '></a>');
                     if (item.stretch)
                         button.addClass('button-stretch');
-                    button.prop('title', item.caption);
+                    if (item.parse)
+                        button.prop('title', item.caption);
+                    else
+                        button.prop('title', client.parseInline(item.caption));
                     if (item.icon.startsWith('fa-'))
                         button.html('<i class="fa ' + item.icon + '"></i>');
                     else if (item.icon.startsWith('gi-'))
@@ -2353,7 +2546,7 @@
                 _backup.getChunk();
         });
 
-        ipcRenderer.on('load-char', (event, char) => {
+        ipcRenderer.on('load-char', (event, char, same) => {
             _charName = ipcRenderer.sendSync('get-global', 'characterLogin');
             if (!client.connected) {
                 _logger.postMessage({ action: 'name', args: _charName });
@@ -2365,10 +2558,11 @@
                 _skipDisconnect = 1;
                 client.close();
             }
-            //autoConnect();
+            if (same)
+                autoConnect();
         });
 
-        ipcRenderer.on('load-default', () => {
+        ipcRenderer.on('load-default', (same) => {
             _charName = 0;
             if (!client.connected) {
                 _logger.postMessage({ action: 'name', args: '' });
@@ -2377,7 +2571,8 @@
             _backup.mapFile = ipcRenderer.sendSync('get-global', 'mapFile');
             if (client.connected && ipcRenderer.sendSync('get-global', 'disconnect'))
                 client.close();
-
+            if (same)
+                autoConnect();
         });
 
         ipcRenderer.on('change-options', () => {
@@ -2439,12 +2634,12 @@
             }
         });
 
-        ipcRenderer.on('send-background', (event, command) => {
-            client.sendBackground(command);
+        ipcRenderer.on('send-background', (event, command, noEcho, comments) => {
+            client.sendBackground(command, noEcho, comments);
         });
 
-        ipcRenderer.on('send-command', (event, command) => {
-            client.sendCommand(command);
+        ipcRenderer.on('send-command', (event, command, noEcho, comments) => {
+            client.sendCommand(command, noEcho, comments);
         });
 
         ipcRenderer.on('send-gmcp', (event, data) => {
@@ -2526,7 +2721,7 @@
         function showCharacters() {
             if (_cLoading) return;
             _cLoading = true;
-            window.open('characters.html', 'modal', 'backgroundColor=#fff,height=480,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
+            window.open('characters.html', 'modal', 'backgroundColor=#fff,height=555,width=600,icon=' + path.join(__dirname, '../assets/icons/png/user.png'));
         }
 
         // eslint-disable-next-line no-unused-vars
@@ -2731,8 +2926,8 @@
             client.commandInput[0].selectionStart = startPos;
             client.commandInput[0].selectionEnd = startPos + txt.length;
             setTimeout(() => {
-                client.commandInput[0].blur();
-                client.commandInput[0].focus();
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
             }, 0);
         }
 
@@ -2746,6 +2941,10 @@
                 + client.commandInput[0].value.substring(endPos, client.commandInput[0].value.length);
             client.commandInput[0].selectionStart = startPos;
             client.commandInput[0].selectionEnd = startPos + clipboard.readText().length;
+            setTimeout(() => {
+                if (client.options.CommandonClick)
+                    client.commandInput[0].focus();
+            }, 0);
         }
 
         function autoConnect() {
@@ -2786,17 +2985,12 @@
 
         document.addEventListener('load', () => doUpdate(1));
 
-        document.addEventListener('visibilitychange', () => {
-            //fake minimize due ot bug in linux not supporting minimize event
-            if (document.visibilityState === 'hidden' && client && client.options && client.options.hideOnMinimize && process.platform === 'linux' && ipcRenderer.sendSync('window-info', 'isMinimized'))
-                ipcRenderer.invoke('window', 'hide');
-        });
-
         var $updating = 0;
+        var _rTimeout = 0;
         function doUpdate(type) {
             $updating |= type;
-            if ($updating == 0) return;
-            window.requestAnimationFrame(() => {
+            if ($updating == 0 || _rTimeout) return;
+            _rTimeout = window.requestAnimationFrame(() => {
                 if (($updating & 1) === 1) {
                     updateInterface();
                     $updating &= ~1;
@@ -2831,6 +3025,15 @@
                     updateButtonBar();
                     $updating &= ~128;
                 }
+                if (($updating & 256) === 256) {
+                    setTimeout(() => {
+                        client.display.updateScrollbars();
+                        client.display.updateView();
+                        client.UpdateWindow();
+                    }, 1);
+                    $updating &= ~256;
+                }
+                _rTimeout = 0;
                 this.doUpdate($updating);
             });
         }
@@ -2925,6 +3128,23 @@
                             break;
                     }
                 });
+        }
+
+        function createDialog(title, width, height, doOk, doReturn, doClose, body, footer) {
+            var dlg = window.open('dialog.html', 'modal', `width=${width || 800},height=${height || 600}`);
+            dlg.document.title = title;
+            dlg.doReturn = doReturn;
+            dlg.doClose = doClose;
+            dlg.doOk = doOk;
+            if (typeof footer === 'string')
+                dlg.document.getElementsByClassName('dialog-footer')[0].innerHTML = footer;
+            else if (footer && footer.nodeType)
+                dlg.document.getElementsByClassName('dialog-footer')[0].appendChild(footer);
+            if (typeof body === 'string')
+                dlg.document.getElementsByClassName('dialog-footer')[0].innerHTML = footer;
+            else if (body && body.nodeType)
+                dlg.document.getElementsByClassName('dialog-body')[0].appendChild(body);
+            return dlg;
         }
     </script>
 </head>
@@ -3170,7 +3390,7 @@
         </div>
         <div class="dialog-body" style="padding-top:25px">
 
-            <div class="col-sm-7 form-group">
+            <div class="col-xs-7 form-group">
                 <p>You have been Disconnected.</p>
                 <p>
                     The reason for this may vary:
@@ -3184,7 +3404,7 @@
                     <span id="disconnectTimer"></span>
                 </p>
             </div>
-            <div class="col-sm-5 form-group">
+            <div class="col-xs-5 form-group">
                 <button id="disconnectDialogReconnect" style="float: right" type="button" class="btn btn-primary btn-block" onclick="closeDisconnectDialog();client.connect();" accesskey="r">
                     <i class="fa fa-refresh"></i>
                     <u>R</u>econnect</button>

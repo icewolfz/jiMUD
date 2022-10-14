@@ -3,8 +3,8 @@
 import { ipcRenderer, nativeImage } from 'electron';
 const remote = require('@electron/remote');
 const { Menu, MenuItem } = remote;
-import { FilterArrayByKeyValue, parseTemplate, keyCodeToChar, clone, isFileSync, isDirSync, existsSync, htmlEncode, walkSync } from './library';
-import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, Context, MacroModifiers, ItemStyle } from './profile';
+import { FilterArrayByKeyValue, parseTemplate, keyCodeToChar, clone, isFileSync, isDirSync, existsSync, htmlEncode, walkSync, isValidIdentifier } from './library';
+import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, Context, MacroModifiers, ItemStyle, convertPattern } from './profile';
 export { MacroDisplay } from './profile';
 import { Settings } from './settings';
 import { Menubar } from './menubar';
@@ -39,6 +39,19 @@ let unarchiver;
 let archive;
 let _spellchecker = true;
 let _prependTrigger = true;
+let _parameter = '%';
+let _nParameter = '$';
+let _command = '#';
+let _stacking = ';';
+let _speed = '!';
+let _verbatim = '`';
+let _profileLoadExpand = true;
+let _profileLoadSelect = 'default';
+let _iComments = true;
+let _bComments = true;
+let _iCommentsStr = ['/', '/'];
+let _bCommentsStr = ['/', '*'];
+
 
 const _controllers = {};
 let _controllersCount = 0;
@@ -352,7 +365,8 @@ function AddNewProfile(d?: Boolean) {
         },
         dataAttr: {
             type: 'profile',
-            profile: n
+            profile: n,
+            priority: p.priority,
         },
         nodes: [
             {
@@ -436,28 +450,42 @@ export function RunTester() {
             else if ($('#trigger-caseSensitive').prop('checked') && $('#trigger-pattern').val() !== $('#trigger-test-text').val())
                 $('#trigger-test-results').val('Pattern doesn\'t Match!');
             else
-                $('#trigger-test-results').val('%0 : ' + $('#trigger-test-text').val() + '\n');
+                $('#trigger-test-results').val(_parameter + '0 : ' + $('#trigger-test-text').val() + '\n');
         }
         else {
             let re;
+            let pattern;
+            pattern = <string>$('#trigger-pattern').val();
+            if ($('#trigger-type').val() === '8' || $('#trigger-type').val() === '16' || $('#trigger-type').val() === 8 || $('#trigger-type').val() === 16)
+                pattern = convertPattern(pattern);
+
             if ($('#trigger-caseSensitive').prop('checked'))
-                re = new RegExp((<string>$('#trigger-pattern').val()), 'gd');
+                re = new RegExp(pattern, 'gd');
             else
-                re = new RegExp((<string>$('#trigger-pattern').val()), 'gid');
+                re = new RegExp(pattern, 'gid');
             const res = re.exec($('#trigger-test-text').val());
             if (res == null || res.length === 0)
                 $('#trigger-test-results').val('Pattern doesn\'t Match!');
             else {
                 let r = '';
                 let m = 0;
-                if (res[0] !== $('#trigger-test-text').val() || _prependTrigger) {
-                    r += '%0 : ' + $('#trigger-test-text').val() + '\n';
-                    r += '%x0 : 0 ' + (<string>$('#trigger-test-text').val()).length + '\n';
+                if (res[0] !== $('#trigger-test-text').val() && _prependTrigger) {
+                    r += _parameter + '0 : ' + $('#trigger-test-text').val() + '\n';
+                    r += _parameter + 'x0 : 0 ' + (<string>$('#trigger-test-text').val()).length + '\n';
                     m = 1;
                 }
-                for (let i = 0; i < res.length; i++) {
-                    r += '%' + (i + m) + ' : ' + res[i] + '\n';
-                    r += `%x${i+m} : ${res.indices[i][0]} ${res.indices[i][1]}\n`;
+                let i;
+                for (i = 0; i < res.length; i++) {
+                    r += _parameter + (i + m) + ' : ' + res[i] + '\n';
+                    if(!res[i])
+                        r += `${_parameter}x${i + m} : 0 0\n`;
+                    else
+                        r += `${_parameter}x${i + m} : ${res.indices[i][0]} ${res.indices[i][1]}\n`;
+                }
+                if (res.groups) {
+                    let g = Object.keys(res.groups);
+                    for (i = 0; i < g.length; i++)
+                        r += `${_nParameter}${g[i]} : ${res.groups[g[i]]}\n`;
                 }
                 $('#trigger-test-results').val(r);
             }
@@ -469,10 +497,253 @@ export function RunTester() {
     }
 }
 
+function addTriggerStateDropdown(item, state, contentOnly?) {
+    var content = `<a href="#" style="padding-right: 62px;" onclick="profileUI.SelectTriggerState(${state});">${state}: ${htmlEncode(GetDisplay(item))}
+    <span class="btn-group" style="right: 0px;position: absolute;padding-right: 15px;">    
+    <button title="Move state up" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="profileUI.moveTriggerState(${state}, -1);event.cancelBubble = true;">
+    <i class="fa fa-angle-double-up"></i></button>
+    <button title="Move state down" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="profileUI.moveTriggerState(${state}, 1);event.cancelBubble = true;"><i class="fa fa-angle-double-down"></i></button></span></a>`;
+    if (contentOnly)
+        return content;
+    return `<li>${content}</li>`;
+}
+
+function initTriggerEditor(item) {
+    setState(0);
+    if (item.triggers && item.triggers.length) {
+        $($('#trigger-states').parent()).css('display', '');
+        let items = [];
+        const tl = item.triggers.length;
+        items.push(addTriggerStateDropdown(item, 0));
+        for (let t = 0; t < tl; t++) {
+            items.push(addTriggerStateDropdown(item.triggers[t], t + 1));
+        }
+        $('#trigger-states-dropdown').html(items.join(''));
+        $('#trigger-states-dropdown li:last-child button:nth-child(2)').prop('disabled', true);
+        $('#trigger-states-dropdown li:first-child button:nth-child(1)').prop('disabled', true);
+    }
+    else {
+        $('#trigger-states-dropdown').html(addTriggerStateDropdown(item, 0));
+        $('#trigger-states-dropdown li:first-child button:nth-child(1)').prop('disabled', true);
+        $($('#trigger-states').parent()).css('display', 'none');
+    }
+    $('#trigger-states-dropdown li')[0].classList.add('selected', 'active');
+    $('#trigger-states-delete').prop('disabled', !(item.triggers && item.triggers.length));
+    $('#trigger-priority').parent().css('display', '');
+    $('#trigger-priority').parent().prev().css('display', '');
+    $('#trigger-state').parent().css('display', item.triggers && item.triggers.length ? '' : 'none');
+    $('#trigger-state').parent().prev().css('display', item.triggers && item.triggers.length ? '' : 'none');
+    $('#triggers-name').css('display', '');
+    $('option[data-type="sub"]').prop('hidden', true);
+    $('#trigger-type').selectpicker('refresh').selectpicker('render');
+    $(window).trigger('resize');
+}
+
 function clearTriggerTester() {
     $('#trigger-test-text').val('');
     $('#trigger-test-results').val('');
     $('.nav-tabs a[href="#tab-trigger-value"]').tab('show');
+    $('#trigger-type').trigger('change');
+}
+
+export function AddTriggerState() {
+    const item = new Trigger();
+    currentProfile.triggers[currentNode.dataAttr.index].triggers.push(item);
+    $('#trigger-states-dropdown li:last-child button:nth-child(2)').prop('disabled', false);
+    $('#trigger-states-dropdown').append((addTriggerStateDropdown(item, currentProfile.triggers[currentNode.dataAttr.index].triggers.length)));
+    $('#trigger-states-dropdown li:last-child button:nth-child(2)').prop('disabled', true);
+    $('#trigger-states-delete').prop('disabled', false);
+    $($('#trigger-states').parent()).css('display', '');
+    if (currentProfile.triggers[currentNode.dataAttr.index].triggers.length === 1)
+        $(window).trigger('resize');
+    SelectTriggerState(currentProfile.triggers[currentNode.dataAttr.index].triggers.length);
+}
+
+export function SelectTriggerState(state, noUpdate?) {
+    if (!noUpdate)
+        UpdateTrigger();
+    setState(state);
+    if (state === 0)
+        UpdateEditor('trigger', currentProfile.triggers[currentNode.dataAttr.index], { post: clearTriggerTester });
+    else
+        UpdateEditor('trigger', currentProfile.triggers[currentNode.dataAttr.index].triggers[state - 1], { post: clearTriggerTester });
+    focusEditor('trigger-value');
+    if (!currentProfile.triggers[currentNode.dataAttr.index].triggers || currentProfile.triggers[currentNode.dataAttr.index].triggers.length === 0)
+        return;
+    $('#trigger-states-dropdown li').removeClass('selected');
+    $('#trigger-states-dropdown li').removeClass('active');
+    $('#trigger-states-dropdown li')[state].classList.add('selected', 'active');
+    $('#trigger-priority').parent().css('display', state === 0 ? '' : 'none');
+    $('#trigger-priority').parent().prev().css('display', state === 0 ? '' : 'none');
+    $('#trigger-state').parent().css('display', state === 0 ? '' : 'none');
+    $('#trigger-state').parent().prev().css('display', state === 0 ? '' : 'none');
+    $('#triggers-name').css('display', state === 0 ? '' : 'none');
+    $('option[data-type="sub"]').prop('hidden', state === 0);
+    $('#trigger-type').selectpicker('refresh').selectpicker('render');
+}
+
+export function DeleteTriggerState() {
+    const state = getState();
+    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+        type: 'question',
+        title: 'Delete current trigger state?',
+        message: 'Are you sure you want to delete this trigger state?',
+        buttons: ['Yes', 'No'],
+        defaultId: 1
+    }).then(result => {
+        if (result.response === 0) {
+            removeTriggerState(state, currentProfile, currentNode.dataAttr.index, true);
+        }
+    });
+}
+
+function removeTriggerState(state, profile, idx, update, customUndo?) {
+    let item = profile.triggers[idx];
+    if (!customUndo)
+        pushUndo({ action: 'deletestate', type: 'trigger', data: { key: 'triggers', idx: idx, profile: profile.name.toLowerCase() }, item: item.clone(), subitem: state });
+    if (state === 0) {
+        sortNodeChildren('Profile' + profileID(profile.name) + 'triggers');
+        const items = item.triggers;
+        item = items.shift();
+        item.state = profile.triggers[idx].state;
+        item.priority = profile.triggers[idx].priority;
+        item.name = profile.triggers[idx].name;
+        item.triggers = items;
+        if (item.type === 262144)
+            item.type = 8;
+        else if (item.type > 16)
+            item.type = 0;
+        profile.triggers[idx] = item;
+        UpdateItemNode(profile.triggers[idx]);
+        if (update)
+            $('#editor-title').text('Trigger: ' + GetDisplay(profile.triggers[idx]));
+    }
+    else {
+        item.triggers.splice(state - 1, 1);
+        if (state > item.triggers.length)
+            state = item.triggers.length;
+        if (update) {
+            if (state === 0)
+                $('#editor-title').text('Trigger: ' + GetDisplay(profile.triggers[idx]));
+            else
+                $('#editor-title').text('Trigger: ' + GetDisplay(profile.triggers[idx].triggers[state - 1]));
+        }
+    }
+    if (!update)
+        return;
+    if (item.triggers && item.triggers.length) {
+        $($('#trigger-states').parent()).css('display', '');
+        let items = [];
+        const tl = item.triggers.length;
+        items.push(addTriggerStateDropdown(item, 0));
+        for (let t = 0; t < tl; t++) {
+            items.push(addTriggerStateDropdown(item.triggers[t], t + 1));
+        }
+        $('#trigger-states-dropdown').html(items.join(''));
+        $('#trigger-states-dropdown li:last-child button:nth-child(2)').prop('disabled', true);
+        $('#trigger-states-dropdown li:first-child button:nth-child(1)').prop('disabled', true);
+    }
+    else {
+        $('#trigger-states-dropdown').html(addTriggerStateDropdown(item, 0));
+        $('#trigger-states-dropdown li:first-child button:nth-child(1)').prop('disabled', true);
+        $($('#trigger-states').parent()).css('display', 'none');
+    }
+    $('#trigger-states-delete').prop('disabled', !(item.triggers && item.triggers.length));
+    $('#trigger-priority').parent().css('display', !(item.triggers && item.triggers.length) || state === 0 ? '' : 'none');
+    $('#trigger-priority').parent().prev().css('display', !(item.triggers && item.triggers.length) || state === 0 ? '' : 'none');
+    $('#trigger-state').parent().css('display', item.triggers && item.triggers.length ? (state === 0 ? '' : 'none') : 'none');
+    $('#trigger-state').parent().prev().css('display', item.triggers && item.triggers.length ? (state === 0 ? '' : 'none') : 'none');
+    $('#triggers-name').css('display', !(item.triggers && item.triggers.length) || state === 0 ? '' : 'none');
+    if (state === 0) {
+        $('#trigger-type').val(item.type);
+        $('#trigger-type').selectpicker('val', item.type);
+    }
+    SelectTriggerState(state, true);
+}
+
+export function moveTriggerState(state, direction) {
+    swapTriggerState(state, state + direction, currentProfile, currentNode.dataAttr.index, true);
+}
+
+function swapTriggerState(oldState, newState, profile, idx, update, customUndo?) {
+    let item = profile.triggers[idx];
+    if (newState < 0 || newState > item.triggers.length)
+        return;
+    if (!customUndo)
+        pushUndo({ action: 'swapstate', type: 'trigger', data: { key: 'triggers', idx: idx, profile: profile.name.toLowerCase() }, item: item.clone(), prevItem: oldState, newItem: newState });
+    const items = item.triggers;
+    let o;
+    let n;
+    //new one becomes main trigger
+    if (newState == 0) {
+        o = items.shift();
+        o.triggers = items;
+        if (o.type === 262144)
+            o.type = 8;
+        else if (o.type > 16)
+            o.type = 0;
+        n = item;
+        n.triggers = [];
+        o.state = n.state;
+        o.priority = n.priority;
+        o.name = n.name;
+        items.unshift(n);
+        profile.triggers[idx] = o;
+        UpdateItemNode(profile.triggers[idx]);
+        if (update) {
+            $('#trigger-states-dropdown li:nth-child(1)').html(addTriggerStateDropdown(o, 0, true));
+            $('#trigger-states-dropdown li:nth-child(2)').html(addTriggerStateDropdown(n, 1, true));
+            $('#trigger-priority').parent().css('display', '');
+            $('#trigger-priority').parent().prev().css('display', '');
+            $('#trigger-state').parent().css('display', '');
+            $('#trigger-state').parent().prev().css('display', '');
+            $('#triggers-name').css('display', '');
+            $('#trigger-type').val(n.type);
+            $('#trigger-type').selectpicker('val', n.type);
+        }
+    }
+    //main trigger becomes first state
+    else if (oldState === 0) {
+        n = items.shift();
+        n.triggers = items;
+        if (n.type === 262144)
+            n.type = 8;
+        else if (n.type > 16)
+            n.type = 0;
+        o = item;
+        o.triggers = [];
+        n.state = o.state;
+        n.priority = o.priority;
+        n.name = o.name;
+        items.unshift(o);
+        profile.triggers[idx] = n;
+        UpdateItemNode(profile.triggers[idx]);
+        if (update) {
+            $('#trigger-states-dropdown li:nth-child(1)').html(addTriggerStateDropdown(n, 0, true));
+            $('#trigger-states-dropdown li:nth-child(2)').html(addTriggerStateDropdown(o, 1, true));
+            $('#trigger-priority').parent().css('display', 'none');
+            $('#trigger-priority').parent().prev().css('display', 'none');
+            $('#trigger-state').parent().css('display', 'none');
+            $('#trigger-state').parent().prev().css('display', 'none');
+            $('#triggers-name').css('display', 'none');
+        }
+    }
+    else {
+        n = items[newState - 1];
+        items[newState - 1] = items[oldState - 1];
+        items[oldState - 1] = n;
+        if (update) {
+            $('#trigger-states-dropdown li:nth-child(' + (newState + 1) + ')').html(addTriggerStateDropdown(items[newState - 1], newState, true));
+            $('#trigger-states-dropdown li:nth-child(' + (oldState + 1) + ')').html(addTriggerStateDropdown(items[oldState - 1], oldState, true));
+        }
+    }
+    $('#trigger-states-dropdown li:first-child button:nth-child(1)').prop('disabled', true);
+    $('#trigger-states-dropdown li:last-child button:nth-child(2)').prop('disabled', true);
+    if (oldState === getState()) {
+        setState(newState);
+        $('#trigger-states-dropdown li')[oldState].classList.remove('selected', 'active');
+        $('#trigger-states-dropdown li')[newState].classList.add('selected', 'active');
+    }
 }
 
 export function UpdateButtonSample() {
@@ -649,12 +920,19 @@ export function UpdateEnabled() {
             currentProfile.macros[currentNode.dataAttr.index].enabled = $('#editor-enabled').prop('checked');
             break;
         case 'trigger':
-            if ($('#editor-enabled').prop('checked'))
-                $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^' + currentNode.id + '$', 'id']), { silent: true }]);
-            else
-                $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^' + currentNode.id + '$', 'id']), { silent: true }]);
-            pushUndo({ action: 'update', type: t, item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: { enabled: currentProfile.triggers[currentNode.dataAttr.index].enabled } });
-            currentProfile.triggers[currentNode.dataAttr.index].enabled = $('#editor-enabled').prop('checked');
+            const state = getState();
+            if (state === 0) {
+                if ($('#editor-enabled').prop('checked'))
+                    $('#profile-tree').treeview('checkNode', [$('#profile-tree').treeview('findNodes', ['^' + currentNode.id + '$', 'id']), { silent: true }]);
+                else
+                    $('#profile-tree').treeview('uncheckNode', [$('#profile-tree').treeview('findNodes', ['^' + currentNode.id + '$', 'id']), { silent: true }]);
+                pushUndo({ action: 'update', type: t, item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: { enabled: currentProfile.triggers[currentNode.dataAttr.index].enabled } });
+                currentProfile.triggers[currentNode.dataAttr.index].enabled = $('#editor-enabled').prop('checked');
+            }
+            else {
+                pushUndo({ action: 'update', type: t, item: currentNode.dataAttr.index, subitem: state, profile: currentProfile.name.toLowerCase(), data: { enabled: currentProfile.triggers[currentNode.dataAttr.index].triggers[state - 1].enabled } });
+                currentProfile.triggers[currentNode.dataAttr.index].triggers[state - 1].enabled = $('#editor-enabled').prop('checked');
+            }
             break;
         case 'button':
             if ($('#editor-enabled').prop('checked'))
@@ -757,6 +1035,8 @@ function getEditorValue(editor, style: ItemStyle) {
     if (editors[editor]) {
         if (style === ItemStyle.Script)
             editors[editor].getSession().setMode('ace/mode/javascript');
+        else if (style === ItemStyle.Parse)
+            setParseSyntax(editor);
         else
             editors[editor].getSession().setMode('ace/mode/text');
         return editors[editor].getSession().getValue();
@@ -771,11 +1051,22 @@ function setEditorValue(editor, value) {
         $('#' + editor).val(value);
 }
 
+function focusEditor(editor) {
+    if (editors[editor])
+        editors[editor].focus();
+    else
+        $('#' + editor).focus();
+}
+
 export function UpdateEditorMode(type) {
     if (editors[type + '-value']) {
         if ($('#' + type + '-style').val() === '2' || $('#' + type + '-style').val() === ItemStyle.Script) {
             editors[type + '-value'].getSession().setMode('ace/mode/javascript');
             setTimeout(() => editors[type + '-value'].getSession().setMode('ace/mode/javascript'), 100);
+        }
+        else if ($('#' + type + '-style').val() === '1' || $('#' + type + '-style').val() === ItemStyle.Parse) {
+            setParseSyntax(type + '-value');
+            setTimeout(() => setParseSyntax(type + '-value'), 100);
         }
         else {
             editors[type + '-value'].getSession().setMode('ace/mode/text');
@@ -817,6 +1108,14 @@ function UpdateMacro(customUndo?: boolean): UpdateState {
 }
 
 function UpdateAlias(customUndo?: boolean): UpdateState {
+    /*
+    if (!validateIdentifiers(<HTMLInputElement>document.getElementById('alias-params'), true)) {
+        if (!$('#alias-editor .btn-adv').data('open'))
+            $('#alias-editor .btn-adv').trigger('click');
+        document.getElementById('alias-params').focus();
+        return UpdateState.Error;
+    }
+    */
     const data: any = UpdateItem(currentProfile.aliases[currentNode.dataAttr.index]);
     if (data) {
         UpdateItemNode(currentProfile.aliases[currentNode.dataAttr.index], 0, data);
@@ -828,13 +1127,35 @@ function UpdateAlias(customUndo?: boolean): UpdateState {
     return UpdateState.NoChange;
 }
 
+function getState() {
+    return parseInt((<HTMLInputElement>document.getElementById('state')).value, 10);
+}
+
+function setState(state) {
+    (<HTMLInputElement>document.getElementById('state')).value = state;
+}
+
 function UpdateTrigger(customUndo?: boolean): UpdateState {
-    const data: any = UpdateItem(currentProfile.triggers[currentNode.dataAttr.index]);
+    const state = getState();
+    let data: any;
+    if (state === 0)
+        data = UpdateItem(currentProfile.triggers[currentNode.dataAttr.index]);
+    else
+        data = UpdateItem(currentProfile.triggers[currentNode.dataAttr.index].triggers[state - 1]);
     if (data) {
-        UpdateItemNode(currentProfile.triggers[currentNode.dataAttr.index], 0, data);
-        $('#editor-title').text('Trigger: ' + GetDisplay(currentProfile.triggers[currentNode.dataAttr.index]));
-        if (!customUndo)
-            pushUndo({ action: 'update', type: 'trigger', item: currentNode.dataAttr.index, profile: currentProfile.name.toLowerCase(), data: data });
+        if (state === 0) {
+            $('#trigger-states-dropdown li:nth-child(' + (state + 1) + ') a').contents().first().replaceWith(`${state}: ${htmlEncode(GetDisplay(currentProfile.triggers[currentNode.dataAttr.index]))}`);
+            UpdateItemNode(currentProfile.triggers[currentNode.dataAttr.index], 0, data);
+            $('#editor-title').text('Trigger: ' + GetDisplay(currentProfile.triggers[currentNode.dataAttr.index]));
+            if (!customUndo)
+                pushUndo({ action: 'update', type: 'trigger', item: currentNode.dataAttr.index, subitem: 0, profile: currentProfile.name.toLowerCase(), data: data });
+        }
+        else {
+            $('#trigger-states-dropdown li:nth-child(' + (state + 1) + ') a').contents().first().replaceWith(`${state}: ${htmlEncode(GetDisplay(currentProfile.triggers[currentNode.dataAttr.index].triggers[state - 1]))}`);
+            $('#editor-title').text('Trigger: ' + GetDisplay(currentProfile.triggers[currentNode.dataAttr.index].triggers[state - 1]));
+            if (!customUndo)
+                pushUndo({ action: 'update', type: 'trigger', item: currentNode.dataAttr.index, subitem: state, profile: currentProfile.name.toLowerCase(), data: data });
+        }
         return UpdateState.Changed;
     }
     return UpdateState.NoChange;
@@ -994,6 +1315,16 @@ function sortNodes(a, b) {
     return 0;
 }
 
+function sortProfileNodes(a, b) {
+    if ((_sort & 4) === 4) {
+        if (a.dataAttr.priority > b.dataAttr.priority)
+            return -1 * _sortDir;
+        if (a.dataAttr.priority < b.dataAttr.priority)
+            return 1 * _sortDir;
+    }
+    return a.text.localeCompare(b.text) * _sortDir;
+}
+
 function sortNodeChildren(node) {
     if (!node)
         return;
@@ -1074,7 +1405,8 @@ function newProfileNode(profile?) {
         id: id,
         dataAttr: {
             type: 'profile',
-            profile: key
+            profile: key,
+            priority: profile.priority,
         },
         state: {
             checked: _enabled.indexOf(key) !== -1
@@ -1180,6 +1512,15 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
     let val = <string>$('#profile-name').val();
     const e = _enabled.indexOf(currentProfile.name.toLowerCase()) !== -1;
     let p;
+    const selected = currentNode.state.selected;
+    const expanded = currentNode.state.expanded;
+    const currentID = currentNode.id;
+    const type = currentNode.dataAttr.type;
+    if (currentProfile.priority !== parseInt(<string>$('#profile-priority').val(), 10)) {
+        data.priority = currentProfile.priority;
+        changed++;
+        currentProfile.priority = parseInt(<string>$('#profile-priority').val(), 10);
+    }
     if (val !== currentProfile.name) {
         data.name = val;
         changed++;
@@ -1198,22 +1539,58 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
             _enabled = _enabled.filter((a) => { return a !== currentProfile.name.toLowerCase(); });
             _enabled.push(val.toLowerCase());
         }
+        let node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(currentProfile.name) + '$', 'id'])[0];
         currentProfile.name = val;
         profiles.add(currentProfile);
         $('#editor-title').text('Profile: ' + currentProfile.name);
-
-        const selected = currentNode.state.selected;
-        const expanded = currentNode.state.expanded;
-
-        let node = $('#profile-tree').treeview('findNodes', ['^' + currentNode.id + '$', 'id'])[0];
         $('#profile-tree').treeview('updateNode', [node, newProfileNode()]);
-        node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(val) + '$', 'id'])[0];
-        if (selected) {
-            $('#profile-tree').treeview('selectNode', [node, { silent: true }]);
-            currentNode = node;
+        if (type !== 'profile') {
+            const parent = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(val) + '$', 'id'])[0];
+            node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(val) + type + '$', 'id']);
+            if (expanded || selected)
+                $('#profile-tree').treeview('expandNode', [parent]);
+            if (expanded)
+                $('#profile-tree').treeview('expandNode', [node]);
+            if (selected) {
+                $('#profile-tree').treeview('selectNode', [node, { silent: true }]);
+                currentNode = node;
+            }
         }
-        if (expanded)
-            $('#profile-tree').treeview('expandNode', [node]);
+        else {
+            node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(val) + '$', 'id'])[0];
+            if (selected) {
+                $('#profile-tree').treeview('selectNode', [node, { silent: true }]);
+                currentNode = node;
+            }
+            if (expanded)
+                $('#profile-tree').treeview('expandNode', [node]);
+        }
+        p = sortTree();
+    }
+    else if (changed) {
+        let node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(val) + '$', 'id'])[0];
+        $('#profile-tree').treeview('updateNode', [node, newProfileNode()]);
+        if (type !== 'profile') {
+            const parent = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(val) + '$', 'id'])[0];
+            node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(val) + type + '$', 'id']);
+            if (expanded || selected)
+                $('#profile-tree').treeview('expandNode', [parent]);
+            if (expanded)
+                $('#profile-tree').treeview('expandNode', [node]);
+            if (selected) {
+                $('#profile-tree').treeview('selectNode', [node, { silent: true }]);
+                currentNode = node;
+            }
+        }
+        else {
+            node = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(val) + '$', 'id'])[0];
+            if (selected) {
+                $('#profile-tree').treeview('selectNode', [node, { silent: true }]);
+                currentNode = node;
+            }
+            if (expanded)
+                $('#profile-tree').treeview('expandNode', [node]);
+        }
         p = sortTree();
     }
 
@@ -1269,12 +1646,6 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
                 changed++;
             }
         }
-    }
-
-    if (currentProfile.priority !== parseInt(<string>$('#profile-priority').val(), 10)) {
-        data.priority = currentProfile.priority;
-        changed++;
-        currentProfile.priority = parseInt(<string>$('#profile-priority').val(), 10);
     }
     if (p)
         p.then(() => {
@@ -1441,7 +1812,7 @@ function nodeCheckChanged(event, node) {
         case 'trigger':
             profile.triggers[node.dataAttr.index].enabled = node.state.checked;
             data.enabled = node.state.checked;
-            if (node.id === currentNode.id)
+            if (node.id === currentNode.id && getState() === 0)
                 $('#editor-enabled').prop('checked', node.state.checked);
             break;
         case 'button':
@@ -1570,6 +1941,39 @@ export function doUndo() {
             else
                 insertItem(action.type, action.data.key, action.item, action.data.idx, profiles.items[action.data.profile], true);
             break;
+        case 'deletestate':
+            profiles.items[action.data.profile].triggers[action.data.idx] = action.item.clone();
+            sortNodeChildren('Profile' + profileID(profiles.items[action.data.profile].name) + 'triggers');
+            //current node that is being modified is the selected one
+            if (currentProfile === profiles.items[action.data.profile] && currentNode.dataAttr.index === action.data.idx && currentNode.dataAttr.type == action.type) {
+                const item = profiles.items[action.data.profile].triggers[action.data.idx];
+                if (item.triggers && item.triggers.length) {
+                    $($('#trigger-states').parent()).css('display', '');
+                    let items = [];
+                    const tl = item.triggers.length;
+                    items.push(addTriggerStateDropdown(item, 0));
+                    for (let t = 0; t < tl; t++) {
+                        items.push(addTriggerStateDropdown(item.triggers[t], t + 1));
+                    }
+                    $('#trigger-states-dropdown').html(items.join(''));
+                }
+                else {
+                    $('#trigger-states-dropdown').html(addTriggerStateDropdown(item, 0));
+                    $('#trigger-states-dropdown li:first-child button:nth-child(1)').prop('disabled', true);
+                    $($('#trigger-states').parent()).css('display', 'none');
+                }
+                $('#trigger-states-delete').prop('disabled', !(item.triggers && item.triggers.length));
+                $('#trigger-priority').parent().css('display', !(item.triggers && item.triggers.length) || action.subitem === 0 ? '' : 'none');
+                $('#trigger-priority').parent().prev().css('display', !(item.triggers && item.triggers.length) || action.subitem === 0 ? '' : 'none');
+                $('#trigger-state').parent().css('display', item.triggers && item.triggers.length ? (action.subitem === 0 ? '' : 'none') : 'none');
+                $('#trigger-state').parent().prev().css('display', item.triggers && item.triggers.length ? (action.subitem === 0 ? '' : 'none') : 'none');
+                $('#triggers-name').css('display', !(item.triggers && item.triggers.length) || action.subitem === 0 ? '' : 'none');
+                SelectTriggerState(action.subitem, true);
+            }
+            break;
+        case 'swapstate':
+            swapTriggerState(action.newItem, action.prevItem, profiles.items[action.data.profile], action.data.idx, currentProfile === profiles.items[action.data.profile] && currentNode.dataAttr.index === action.data.idx && currentNode.dataAttr.type == action.type, true);
+            break;
         case 'update':
             const current = {};
             if (action.type === 'profile') {
@@ -1640,7 +2044,10 @@ export function doUndo() {
                             UpdateEditor('macro', profiles.items[action.profile][key][action.item], { key: MacroValue });
                             break;
                         case 'trigger':
-                            UpdateEditor('trigger', profiles.items[action.profile][key][action.item], { post: clearTriggerTester });
+                            if (action.subitem)
+                                UpdateEditor('trigger', profiles.items[action.profile][key][action.item].triggers[action.subitem - 1], { pre: initTriggerEditor, post: clearTriggerTester });
+                            else
+                                UpdateEditor('trigger', profiles.items[action.profile][key][action.item], { pre: initTriggerEditor, post: clearTriggerTester });
                             break;
                         case 'button':
                             UpdateEditor('button', profiles.items[action.profile][key][action.item], { post: UpdateButtonSample });
@@ -1744,6 +2151,12 @@ export function doRedo() {
             else
                 DeleteItem(action.type, action.data.key, action.data.idx, profiles.items[action.data.profile], true);
             break;
+        case 'deletestate':
+            removeTriggerState(action.subitem, profiles.items[action.data.profile], action.data.idx, currentProfile === profiles.items[action.data.profile] && currentNode.dataAttr.index === action.data.idx && currentNode.dataAttr.type == action.type, true);
+            break;
+        case 'swapstate':
+            swapTriggerState(action.prevItem, action.newItem, profiles.items[action.data.profile], action.data.idx, currentProfile === profiles.items[action.data.profile] && currentNode.dataAttr.index === action.data.idx && currentNode.dataAttr.type == action.type, true);
+            break;
         case 'update':
             const current = {};
             if (action.type === 'profile') {
@@ -1814,7 +2227,10 @@ export function doRedo() {
                             UpdateEditor('macro', profiles.items[action.profile][key][action.item], { key: MacroValue });
                             break;
                         case 'trigger':
-                            UpdateEditor('trigger', profiles.items[action.profile][key][action.item], { post: clearTriggerTester });
+                            if (action.subitem)
+                                UpdateEditor('trigger', profiles.items[action.profile][key][action.item].triggers[action.subitem - 1], { pre: initTriggerEditor, post: clearTriggerTester });
+                            else
+                                UpdateEditor('trigger', profiles.items[action.profile][key][action.item], { pre: initTriggerEditor, post: clearTriggerTester });
                             break;
                         case 'button':
                             UpdateEditor('button', profiles.items[action.profile][key][action.item], { post: UpdateButtonSample });
@@ -2252,18 +2668,27 @@ function buildTreeview(data, skipInit?) {
                         break;
                     case 'alias':
                         UpdateEditor('alias', currentProfile.aliases[node.dataAttr.index]);
+                        if (!validateIdentifiers(<HTMLInputElement>document.getElementById('alias-params'))) {
+                            if (!$('#alias-editor .btn-adv').data('open'))
+                                $('#alias-editor .btn-adv').trigger('click');
+                        }
+                        focusEditor('alias-value');
                         break;
                     case 'macro':
                         UpdateEditor('macro', currentProfile.macros[node.dataAttr.index], { key: MacroValue });
+                        focusEditor('macro-value');
                         break;
                     case 'trigger':
-                        UpdateEditor('trigger', currentProfile.triggers[node.dataAttr.index], { post: clearTriggerTester });
+                        UpdateEditor('trigger', currentProfile.triggers[node.dataAttr.index], { pre: initTriggerEditor, post: clearTriggerTester });
+                        focusEditor('trigger-value');
                         break;
                     case 'button':
                         UpdateEditor('button', currentProfile.buttons[node.dataAttr.index], { post: UpdateButtonSample });
+                        focusEditor('button-value');
                         break;
                     case 'context':
                         UpdateEditor('context', currentProfile.contexts[node.dataAttr.index], { post: UpdateContextSample });
+                        focusEditor('context-value');
                         break;
                 }
                 document.getElementById('btn-new').title = 'New ' + ((t === 'alias' || t === 'aliases') ? 'alias' : (t.endsWith('s') ? t.substr(0, t.length - 1) : t));
@@ -2301,8 +2726,11 @@ function buildTreeview(data, skipInit?) {
             data: data,
             onInitialized: (event, nodes) => {
                 if (!skipInit && !currentNode) {
-                    const n = $('#profile-tree').treeview('findNodes', ['^Profiledefault$', 'id']);
-                    $('#profile-tree').treeview('expandNode', [n]);
+                    if (!profiles.contains(_profileLoadSelect))
+                        _profileLoadSelect = 'default';
+                    const n = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(_profileLoadSelect) + '$', 'id']);
+                    if (_profileLoadExpand)
+                        $('#profile-tree').treeview('expandNode', [n]);
                     $('#profile-tree').treeview('selectNode', [n]);
                 }
                 else if (!currentNode)
@@ -2318,12 +2746,11 @@ function getProfileData() {
     let profile;
 
     for (profile in profiles.items) {
-        if (!profiles.items.hasOwnProperty(profile) || profile === 'default') continue;
+        if (!profiles.items.hasOwnProperty(profile)) continue;
         data.push(newProfileNode(profile));
     }
-
-    data.sort((a, b) => { return a.text.localeCompare(b.text); });
-    data.unshift(newProfileNode('default'));
+    //data.sort((a, b) => { return a.text.localeCompare(b.text); });
+    data.sort(sortProfileNodes);
     return data;
 }
 
@@ -2338,6 +2765,20 @@ function loadOptions() {
     _sortDir = options.profiles.sortDirection || 1;
     _spellchecker = options.spellchecking || true;
     _prependTrigger = options.prependTriggeredLine;
+    _parameter = options.parametersChar;
+    _nParameter = options.nParametersChar;
+    _command = options.commandChar;
+    _stacking = options.commandStackingChar;
+    _speed = options.speedpathsChar;
+    _verbatim = options.verbatimChar;
+    _iComments = options.enableInlineComments;
+    _bComments = options.enableBlockComments;
+    _iCommentsStr = options.inlineCommentString.split('');
+    _bCommentsStr = options.blockCommentString.split('');
+    _profileLoadExpand = options.profiles.profileExpandSelected;
+    _profileLoadSelect = options.profiles.profileSelected;
+    if (!profiles.contains(_profileLoadSelect))
+        _profileLoadSelect = 'default';
     updatePads();
 
     let theme = parseTemplate(options.theme) + '.css';
@@ -2406,6 +2847,8 @@ export function init() {
             $('#content').css('left', document.body.clientWidth - 300);
             ipcRenderer.send('setting-changed', { type: 'profiles', name: 'split', value: document.body.clientWidth - 300 });
         }
+        $('#trigger-states-dropdown').css('width', $('#trigger-pattern').outerWidth() + 17 + 'px');
+        $('#trigger-states-dropdown').css('left', (-$('#trigger-pattern').outerWidth()) + 'px');
     });
 
     $(document).mouseup((e) => {
@@ -2541,6 +2984,29 @@ export function init() {
         _macro = false;
     });
 
+    $('#trigger-type').on('change', function () {
+        switch ($(this).val()) {
+            case '1024': //wait
+            case '16384': //Duration
+                $('td[data-row="triggers-params"]').css('display', '');
+                $('#triggers-params-suffix').parent().addClass('input-group');
+                $('#triggers-params-suffix').css('display', '');
+                break;
+            case '128':
+            case '512': //skip            
+            case '4096': //LoopPattern
+            case '8192': //LoopLines
+            case '32768': //WithinLines            
+                $('td[data-row="triggers-params"]').css('display', '');
+                $('#triggers-params-suffix').css('display', 'none');
+                $('#triggers-params-suffix').parent().removeClass('input-group');
+                break;
+            default:
+                $('td[data-row="triggers-params"]').css('display', 'none');
+                break;
+        }
+    });
+
     $('.btn-adv').on('click', function () {
         const editor = $(this).closest('.panel-body').attr('id');
         let state = $(this).data('open') || false;
@@ -2605,9 +3071,8 @@ export function init() {
                 ipcRenderer.invoke('window', 'close');
                 return;
             }
-            evt.returnValue = false;
-            return 'no';
         });
+        return 'no';
     };
 
     document.onkeydown = undoKeydown;
@@ -2998,6 +3463,11 @@ export function init() {
         }
         c.popup({ window: remote.getCurrentWindow() });
     });
+    $('#profile-tree').on('dblclick', (event: JQueryEventObject) => {
+        if (!event.target || event.target.nodeName !== 'LI' || !event.target.classList.contains('list-group-item')) return;
+        let n = $('#profile-tree').treeview('findNodes', ['^' + event.target.id + '$', 'id']);
+        $('#profile-tree').treeview('toggleNodeExpanded', [n, { levels: 1, silent: false }]);
+    });
 }
 
 function startWatcher(p: string) {
@@ -3043,7 +3513,7 @@ export function sortTree(s?: boolean) {
     let cl;
 
     for (profile in profiles.items) {
-        if (!profiles.items.hasOwnProperty(profile) || profile === 'default') continue;
+        if (!profiles.items.hasOwnProperty(profile)) continue;
         n = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile) + '$', 'id']);
         n = cleanNode(n[0]);
         if (s) {
@@ -3051,12 +3521,13 @@ export function sortTree(s?: boolean) {
             for (c = 0; c < cl; c++) {
                 if (!n.nodes[c].nodes || n.nodes[c].nodes.length === 0)
                     continue;
-                n.nodes[c].nodes = n.nodes[c].nodes.sort(sortNodes);
+                n.nodes[c].nodes = n.nodes[c].nodes.sort(sortProfileNodes);
             }
         }
         data.push(n);
     }
-    data.sort((a, b) => { return a.text.localeCompare(b.text); });
+    data.sort(sortProfileNodes);
+    /*
     n = $('#profile-tree').treeview('findNodes', ['^Profiledefault$', 'id']);
     if (n.length > 0) {
         n = cleanNode(n[0]);
@@ -3070,6 +3541,7 @@ export function sortTree(s?: boolean) {
         }
         data.unshift(n);
     }
+    */
     return buildTreeview(data, true);
 }
 
@@ -3338,6 +3810,15 @@ function importProfiles() {
                                     item.temp = data.profiles[keys[k]].triggers[m].temp;
                                     item.type = data.profiles[keys[k]].triggers[m].type;
                                     item.notes = data.profiles[keys[k]].triggers[m].notes || '';
+                                    item.state = data.profiles[keys[k]].triggers[m].state || 0;
+                                    item.params = data.profiles[keys[k]].triggers[m].params || '';
+                                    item.fired = data.profiles[keys[k]].triggers[m].fired;
+                                    if (data.profiles[keys[k]].triggers[m].triggers && data.profiles[keys[k]].triggers[m].triggers.length) {
+                                        const il = data.profiles[keys[k]].triggers[m].triggers.length;
+                                        for (let i = 0; i < il; i++) {
+                                            item.triggers.push(new Trigger(data.profiles[keys[k]].triggers[m].triggers[i]));
+                                        }
+                                    }
                                     p.triggers.push(item);
                                 }
                             }
@@ -3437,7 +3918,9 @@ function trashProfiles(p) {
     if (_remove.length > 0) {
         const rl = _remove.length;
         for (let r = 0; r < rl; r++) {
-            ipcRenderer.send('trash-item', path.join(p, _remove[r].file.toLowerCase() + '.json'));
+            const file = path.join(p, _remove[r].file.toLowerCase() + '.json');
+            if (!isFileSync(file)) continue;
+            ipcRenderer.send('trash-item', file);
         }
     }
 }
@@ -3445,31 +3928,31 @@ function trashProfiles(p) {
 export function saveProfiles(clearNow?: boolean) {
     if (updateCurrent() !== UpdateState.NoChange)
         return false;
-    if (filesChanged)
-        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+    if (filesChanged) {
+        let response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
             type: 'question',
             title: 'Profiles updated',
             message: 'Profiles have been updated outside of manager, save anyways?',
             buttons: ['Yes', 'No'],
             defaultId: 1
-        }).then(result => {
-            if (result.response === 0) {
-                const p = path.join(parseTemplate('{data}'), 'profiles');
-                if (!existsSync(p))
-                    fs.mkdirSync(p);
-                profiles.save(p);
-                trashProfiles(p);
-                const options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
-                options.profiles.enabled = _enabled;
-                options.save(ipcRenderer.sendSync('get-global', 'settingsFile'));
-                ipcRenderer.send('setting-changed', { type: 'profiles', name: 'enabled', value: options.profiles.enabled });
-                ipcRenderer.send('reload-profiles');
-                if (clearNow)
-                    clearChanges();
-                else
-                    setTimeout(clearChanges, 500);
-            }
         });
+        if (response === 0) {
+            const p = path.join(parseTemplate('{data}'), 'profiles');
+            if (!existsSync(p))
+                fs.mkdirSync(p);
+            profiles.save(p);
+            trashProfiles(p);
+            const options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
+            options.profiles.enabled = _enabled;
+            options.save(ipcRenderer.sendSync('get-global', 'settingsFile'));
+            ipcRenderer.send('setting-changed', { type: 'profiles', name: 'enabled', value: options.profiles.enabled });
+            ipcRenderer.send('reload-profiles');
+            if (clearNow)
+                clearChanges();
+            else
+                setTimeout(clearChanges, 500);
+        }
+    }
     else {
         const p = path.join(parseTemplate('{data}'), 'profiles');
         if (!existsSync(p))
@@ -3610,6 +4093,138 @@ function initEditor(id) {
 }
 
 let dragging = false;
+
+function setParseSyntax(editor) {
+    editors[editor].getSession().setMode('ace/mode/jimud', () => {
+        var session = editors[editor].getSession();
+        var rules = session.$mode.$highlightRules.getRules();
+        //console.log(rules);
+        if (Object.prototype.hasOwnProperty.call(rules, 'start')) {
+            var b = rules['start'].pop();
+            if (!_iComments) {
+                rules['start'].pop();
+                rules['start'].pop();
+            }
+            else {
+                if (_iCommentsStr.length === 1) {
+                    rules['start'][rules['start'].length - 2].regex = `\\${_iCommentsStr[0]}$`;
+                    rules['start'][rules['start'].length - 1].regex = `\\${_iCommentsStr[0]}`;
+                }
+                else {
+                    rules['start'][rules['start'].length - 2].regex = `\\${_iCommentsStr[0]}\\${_iCommentsStr[1]}$`;
+                    rules['start'][rules['start'].length - 1].regex = `\\${_iCommentsStr[0]}\\${_iCommentsStr[1]}`;
+                }
+            }
+            if (_bComments) {
+                if (_iCommentsStr.length === 1)
+                    b.regex = `\\${_bCommentsStr[0]}`;
+                else
+                    b.regex = `\\${_bCommentsStr[0]}\\${_bCommentsStr[1]}`;
+                rules['start'].push(b);
+            }
+            rules['start'][3].token = _stacking;
+            rules['start'][3].regex = _stacking;
+            rules['start'][5].regex = _parameter + rules['start'][5].regex.substr(1);
+            rules['start'][6].regex = _parameter + rules['start'][6].regex.substr(1);
+            rules['start'][7].regex = _parameter + rules['start'][7].regex.substr(1);
+            rules['start'][8].regex = '\\' + _nParameter + rules['start'][8].regex.substr(2);
+            rules['start'][9].regex = '[' + _parameter + _nParameter + ']\\*';
+            rules['start'][10].regex = '[' + _parameter + _nParameter + ']{\\*}';
+            rules['start'][11].regex = _command + rules['start'][11].regex.substr(1);
+            rules['start'][12].regex = '^' + _command + rules['start'][12].regex.substr(2);
+            rules['start'][12].splitRegex = new RegExp(rules['start'][12].regex);
+            rules['start'][13].regex = '^' + _verbatim + '.*$';
+            rules['start'][14].regex = '^' + _speed + '.*$';
+            rules['start'][15].regex = '[' + _parameter + _nParameter + rules['start'][15].regex.substr(3);
+            rules['start'][15].splitRegex = new RegExp(rules['start'][15].regex);
+            rules['start'][16].regex = '[' + _parameter + _nParameter + rules['start'][16].regex.substr(3);
+            rules['start'][16].splitRegex = new RegExp(rules['start'][16].regex);
+            rules['start'][17].regex = '[' + _parameter + _nParameter + rules['start'][17].regex.substr(3);
+            rules['start'][17].splitRegex = new RegExp(rules['start'][17].regex);
+            /*
+0: {token: 'string', regex: '".*?"', onMatch: null}
+1: {token: 'string', regex: "'.*?'", onMatch: null}
+2: {token: 'string', regex: '`.*?`', onMatch: null}
+3: {token: ';', regex: ';', next: 'stacking', onMatch: null}
+4: {token: 'constant.numeric', regex: '[+-]?\\d+(?:(?:\\.\\d*)?(?:[eE][+-]?\\d+)?)?\\b', onMatch: null}
+5: {token: 'storage.modifier', regex: '%x?[1-9]?\\d\\b', onMatch: null}
+6: {token: 'storage.modifier', regex: '%\\{x?[1-9]?\\d\\}', onMatch: null}
+7: {token: 'storage.modifier', regex: '%[i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z]\\b', onMatch: null}
+8: {token: 'storage.modifier', regex: '\\$\\{x?[1-9]?\\d\\}', onMatch: null}
+9: {token: 'storage.modifier', regex: '[%$]\\*', onMatch: null}
+10: {token: 'storage.modifier', regex: '[%$]{\\*}', onMatch: null}
+11: {token: 'keyword', regex: '#\\d+\\s', onMatch: null}
+12: {regex: '^#([a-zA-Z_$][a-zA-Z0-9_$]*)\\b', splitRegex: /^#([a-zA-Z_$][a-zA-Z0-9_$]*)\b$/, token: ƒ, onMatch: ƒ}
+13: {token: 'constant.language', regex: '^`.*$', onMatch: null}
+14: {token: 'comment', regex: '^!.*$', onMatch: null}
+15: {regex: '[%$]{(\\w*)}', splitRegex: /^[%$]{(\w*)}$/, token: ƒ, onMatch: ƒ}
+16: {regex: '[%$]{(\\w*)\\(.*\\)}', splitRegex: /^[%$]{(\w*)\(.*\)}$/, token: ƒ, onMatch: ƒ}
+17: {token: '{', regex: '\\{', next: 'bracket', onMatch: null}
+18: {token: 'paren.lparen', regex: '[\\{}]', onMatch: null}
+19: {token: 'paren.rparen', regex: '[\\}]', onMatch: null}
+20: {token: 'text', regex: '\\s+', onMatch: null}         
+            */
+        }
+        if (Object.prototype.hasOwnProperty.call(rules, 'stacking')) {
+            rules['stacking'][0].regex = _command + rules['stacking'][0].regex.substr(1);
+            rules['stacking'][0].splitRegex = new RegExp(rules['stacking'][0].regex);
+            rules['stacking'][1].regex = _command + rules['stacking'][1].regex.substr(1);
+            rules['stacking'][2].regex = _verbatim + '.*$';
+            rules['stacking'][3].regex = _speed + '.*$';
+            /*
+0: {regex: '#([a-zA-Z_$][a-zA-Z0-9_$]*)\\b', next: 'start', splitRegex: /^#([a-zA-Z_$][a-zA-Z0-9_$]*)\b$/, token: ƒ, onMatch: ƒ}
+1: {token: 'keyword', regex: '#\\d+\\s', next: 'start', onMatch: null}
+2: {token: 'constant.language', regex: '`.*$', next: 'start', onMatch: null}
+3: {token: 'comment', regex: '!.*$', next: 'start', onMatch: null}
+4: {token: 'text', regex: '\\s+', next: 'start', onMatch: null}
+            */
+        }
+        if (Object.prototype.hasOwnProperty.call(rules, 'bracket')) {
+            rules['bracket'][0].regex = '\\s*?' + _command + rules['bracket'][0].regex.substr(5);
+            rules['bracket'][0].splitRegex = new RegExp(rules['bracket'][0].regex);
+            rules['bracket'][3].regex = _verbatim + '.*$';
+            rules['bracket'][4].regex = _speed + '.*$';
+            rules['bracket'][6].regex = _command + rules['bracket'][6].regex.substr(1);
+            /*
+0: {regex: '\\s*?#([a-zA-Z_$][a-zA-Z0-9_$]*)\\b', next: 'start', splitRegex: /^\s*?#([a-zA-Z_$][a-zA-Z0-9_$]*)\b$/, token: ƒ, onMatch: ƒ}
+1: {token: 'string', regex: '".*?"', onMatch: null}
+2: {token: 'string', regex: "'.*?'", onMatch: null}
+3: {token: 'constant.language', regex: '`.*$', next: 'start', onMatch: null}
+4: {token: 'comment', regex: '!.*$', next: 'start', onMatch: null}
+5: {token: ';', regex: ';', next: 'stacking', onMatch: null}
+6: {token: 'keyword', regex: '#\\d+\\s', onMatch: null}
+7: {token: 'constant.numeric', regex: '[+-]?\\d+(?:(?:\\.\\d*)?(?:[eE][+-]?\\d+)?)?\\b', onMatch: null}
+8: {token: 'text', regex: '\\s+', next: 'start', onMatch: null}      
+            */
+        }
+        if (_bComments && Object.prototype.hasOwnProperty.call(rules, 'comment')) {
+            if (_bCommentsStr.length === 1)
+                rules['comment'][0].regex = `\\${_bCommentsStr[0]}`;
+            else
+                rules['comment'][0].regex = `\\${_bCommentsStr[1]}\\${_bCommentsStr[0]}`;
+        }
+        //console.log(rules);
+        // force recreation of tokenizer
+        session.$mode.$tokenizer = null;
+        session.bgTokenizer.setTokenizer(session.$mode.getTokenizer());
+        // force re-highlight whole document
+        session.bgTokenizer.start(0);
+    });
+}
+
+function resetParseSyutax() {
+    if (!editors) return;
+    if (editors['trigger-value'] && editors['trigger-value'].getSession().getMode() === "ace/mode/jimud")
+        setParseSyntax('trigger-value');
+    if (editors['macro-value'] && editors['macro-value'].getSession().getMode() === "ace/mode/jimud")
+        setParseSyntax('macro-value');
+    if (editors['alias-value'] && editors['alias-value'].getSession().getMode() === "ace/mode/jimud")
+        setParseSyntax('alias-value');
+    if (editors['button-value'] && editors['button-value'].getSession().getMode() === "ace/mode/jimud")
+        setParseSyntax('button-value');
+    if (editors['context-value'] && editors['context-value'].getSession().getMode() === "ace/mode/jimud")
+        setParseSyntax('context-value');
+}
 
 function resetUndo() {
     _undo = [];
@@ -3925,7 +4540,7 @@ function UpdateEditor(editor, item, options?) {
     else
         $('#editor-enabled').prop('checked', item.enabled);
     if (typeof options['pre'] === 'function')
-        options['pre']();
+        options['pre'](item);
     let prop;
     for (prop in item) {
         if (!item.hasOwnProperty(prop)) {
@@ -3948,6 +4563,8 @@ function UpdateEditor(editor, item, options?) {
                 editors[editor + '-' + prop].getSession().setValue(item[prop]);
                 if (item.style === ItemStyle.Script)
                     editors[editor + '-' + prop].getSession().setMode('ace/mode/javascript');
+                else if (item.style === ItemStyle.Parse)
+                    setParseSyntax(editor + '-' + prop);
                 else
                     editors[editor + '-' + prop].getSession().setMode('ace/mode/text');
             }
@@ -3959,7 +4576,7 @@ function UpdateEditor(editor, item, options?) {
         $(id).data('previous-value', item[prop]);
     }
     if (typeof options['post'] === 'function')
-        options['post']();
+        options['post'](item);
     _pUndo = false;
     _loading--;
 }
@@ -4032,6 +4649,7 @@ ipcRenderer.on('reload-options', (event) => {
     const so = _sort;
     const sd = _sortDir;
     loadOptions();
+    resetParseSyutax();
     if (so !== _sort || sd !== _sortDir)
         sortTree(true);
 });
@@ -4040,6 +4658,7 @@ ipcRenderer.on('change-options', (event, file) => {
     const so = _sort;
     const sd = _sortDir;
     loadOptions();
+    resetParseSyutax();
     if (so !== _sort || sd !== _sortDir)
         sortTree(true);
     filesChanged = true;
@@ -4059,6 +4678,11 @@ ipcRenderer.on('profile-item-updated', (event, type, profile, idx, item) => {
 ipcRenderer.on('profile-item-removed', (event, type, profile, idx) => {
     filesChanged = true;
     $('#btn-refresh').addClass('btn-warning');
+});
+
+ipcRenderer.on('profile-updated', (event, profile, noChanges, type) => {
+    //filesChanged = true;
+    //$('#btn-refresh').addClass('btn-warning');
 });
 
 ipcRenderer.on('profile-toggled', (event, profile, enabled) => {
@@ -4199,4 +4823,26 @@ function exportCurrent() {
         fs.writeFileSync(result.filePath, JSON.stringify(data));
     });
 
+}
+
+export function validateIdentifiers(el: HTMLInputElement, focus?) {
+    if (!el) return;
+    if (el.value.length === 0) {
+        el.parentElement.classList.remove('has-error');
+        el.parentElement.classList.remove('has-feedback');
+        return true;
+    }
+    const ids = el.value.split(',').filter(v => v.length && !isValidIdentifier(v.trim()))
+    if (ids.length === 0) {
+        el.parentElement.classList.remove('has-error');
+        el.parentElement.classList.remove('has-feedback');
+    }
+    else {
+        el.parentElement.classList.add('has-error');
+        el.parentElement.classList.add('has-feedback');
+        el.nextElementSibling.innerHTML = '<small class="aura-error">Invalid names:' + ids.join(',') + '</small>';
+        if (focus)
+            el.focus();
+    }
+    return ids.length === 0;
 }

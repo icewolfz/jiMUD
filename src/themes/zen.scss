@@ -37,12 +37,27 @@ body {
     right: 168px;
 }
 
-#display-split-bar,
-#display-split-ghost-bar {
+#display-split-bar {
     background: #{$background};
     border-top: 1px solid #{$borderColor};
     border-bottom: 1px solid #{$borderColor};
 }
+
+#display-split-ghost-bar {
+    background: #{$buttonHoverColor};
+    border-top: 1px solid #{$buttonTextHoverColor};
+    border-bottom: 1px solid #{$buttonTextHoverColor};
+}
+
+#display-split-bar:hover,
+#display-split-bar:active,
+#display-split-bar:focus {
+    background-color: #{$buttonHoverColor};
+    border-top: 1px solid #{$buttonTextHoverColor};
+    border-bottom: 1px solid #{$buttonTextHoverColor};
+    transition-delay:1s;
+}
+
 
 #command {
     height: 24px;
@@ -109,7 +124,7 @@ body {
 
 .scroll-corner {
     background-color: #{$panelBack};
-    display:none;
+    box-shadow: inset 0 0 6px rgb(0 0 0 / 30%);
 }
 
 .scroll-split-button {
@@ -943,8 +958,8 @@ body {
 /** button end */
 
 #status-ghost-bar {
-    background-color: #{$panelBack};
-    border: 1px solid #{$panelInsetBorder};
+    background-color: #{$buttonHoverColor};
+    border: 1px solid #{$buttonHoverColor};
 }
 
 #status-drag-bar {
@@ -956,7 +971,7 @@ body {
 }
 
 #status-drag-bar:hover{
-    background-color: #{$panelBack};
-    border: 1px solid #{$panelInsetBorder};  
+    background-color: #{$buttonHoverColor};
+    border: 1px solid #{$buttonHoverColor};  
     transition-delay:1s;
 }

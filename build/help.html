@@ -25,6 +25,7 @@
         const { ipcRenderer } = require('electron');
         const { Search } = require('./js/search');
         const { isFileSync } = require('./js/library.js');
+        const { Settings } = require('./js/settings');
         const path = require('path');
         const fs = require('fs');
         const md = require('markdown-it')({ html: true, typographer: true });
@@ -39,7 +40,7 @@
                     tokens[idx].attrPush(['target', '_blank']);
                 else {
                     tokens[idx].attrs[tokens[idx].attrIndex('href')][1] = '#';
-                    tokens[idx].attrPush(['onclick', `event.preventDefault();openLink('${ref}');return false;`]);
+                    tokens[idx].attrPush(['onclick', `event.preventDefault();openLink('${ref}', 1);return false;`]);
                 }
             }
             return old_render(tokens, idx, options, env, self);
@@ -51,7 +52,10 @@
         var _history = [];
         var _current = 0;
         var $search;
+        var dragging = false;
         var lastSel = $("#contents option:selected");
+        var _options;
+        var _path = '';
         var _data = [
             {
                 text: 'Home',
@@ -83,7 +87,8 @@
             },
             {
                 text: 'Functions',
-                id: 'functions'
+                id: 'functions',
+                nodes:[]
             },
             {
                 text: 'Preferences',
@@ -126,14 +131,15 @@
         ]
 
         // eslint-disable-next-line no-unused-vars
-        function openLink(url) {
+        function openLink(url, p) {
             lastSel = $("#contents option:selected");
             if (url.startsWith('docs/'))
                 url = url.substr(5);
+            else if (p)
+                url = _path + url;
             url = url.split('#');
             contents.val(url[0].substr(0, url[0].length - 3)).selectpicker('render');
             contents.change();
-
         }
 
         // eslint-disable-next-line no-unused-vars
@@ -163,6 +169,10 @@
         function loadContents(url) {
             container[0].scrollTop = 0;
             if (url) {
+                if (url.lastIndexOf('/') === -1)
+                    _path = '';
+                else
+                    _path = url.substring(0, url.lastIndexOf('/') + 1);
                 var file = path.join(__dirname, '..', 'docs', url.replace('///g', path.sep) + '.md');
                 if (isFileSync(file)) {
                     var data = fs.readFileSync(file, 'utf8');
@@ -225,6 +235,30 @@
             }
         }
 
+        function loadOptions(data) {
+            if (!data) {
+                var set = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
+                options = set.extensions['help'];
+            }
+            else
+                options = data;
+            if (!options) {
+                options = {
+                    'navSize': 202,
+                };
+                saveOptions();
+            }
+            if (options.navSize < 202)
+                options.navSize = 202;
+            $('#sidebar').css('width', options.navSize);
+            $('#container').css('left', options.navSize);
+        }
+
+        function saveOptions() {
+            ipcRenderer.send('setting-changed', { type: 'extensions', name: 'help', value: options });
+        }
+
+
         $(document).keydown((event) => {
             if (event.key === 'f' && !event.altKey && event.ctrlKey && !event.shiftKey && !event.metaKey) {
                 doFind();
@@ -233,6 +267,7 @@
         });
 
         $(document).ready(() => {
+            loadOptions();
             var p = path.join(__dirname, '..', 'docs', 'commands');
             var files = fs.readdirSync(p);
             for (var i = 0; i < files.length; i++) {
@@ -241,6 +276,18 @@
                     _data[5].nodes.push({
                         text: '#' + path.basename(files[i], '.md'),
                         id: 'commands/' + path.basename(files[i], '.md')
+                    });
+                }
+            }
+
+            p = path.join(__dirname, '..', 'docs', 'functions');
+            files = fs.readdirSync(p);
+            for (var i = 0; i < files.length; i++) {
+                if (path.basename(files[i], '.md') === 'nnn') continue;
+                if (path.extname(files[i]) === '.md') {
+                    _data[6].nodes.push({
+                        text: path.basename(files[i], '.md'),
+                        id: 'functions/' + path.basename(files[i], '.md')
                     });
                 }
             }
@@ -348,6 +395,67 @@
                 });
                 ipcRenderer.invoke('show-context', addMenu, { x: x, y: y });
             });
+
+            $('#help-drag-bar').mousedown((e) => {
+                e.preventDefault();
+
+                dragging = true;
+                $("#container-frame").css('pointer-events', 'none');
+                const main = $('#help-drag-bar');
+                const ghostBar = $('<div>',
+                    {
+                        id: 'help-ghost-bar',
+                        css: {
+                            height: main.outerHeight(),
+                            top: main.offset().top,
+                            left: main.offset().left - 3
+                        }
+                    }).appendTo('body');
+
+                $(document).mousemove((event) => {
+                    if (event.pageX < 199)
+                        ghostBar.css('left', 199);
+                    else if (event.pageX > document.body.clientWidth - 300)
+                        ghostBar.css('left', document.body.clientWidth - 300);
+                    else
+                        ghostBar.css('left', event.pageX);
+                });
+            });
+
+            $(window).on('resize', () => {
+                if ($('#container').outerWidth() < 300 && $('#sidebar').outerWidth() > 202) {
+                    $('#sidebar').css('width', document.body.clientWidth - 300);
+                    $('#container').css('left', document.body.clientWidth - 300);
+                    options.navSize = document.body.clientWidth - 300;
+                    saveOptions();
+                }
+            });
+
+            $(document).mouseup((e) => {
+                if (dragging) {
+                    $("#container-frame").css('pointer-events', '');
+                    if (e.pageX < 200) {
+                        $('#sidebar').css('width', 202);
+                        $('#container').css('left', 202);
+                        options.navSize = 202;
+                    }
+                    else if (e.pageX > document.body.clientWidth - 200) {
+                        $('#sidebar').css('width', document.body.clientWidth - 300);
+                        $('#container').css('left', document.body.clientWidth - 300);
+                        options.navSize = document.body.clientWidth - 300;
+                    }
+                    else {
+                        $('#sidebar').css('width', e.pageX + 2);
+                        $('#container').css('left', e.pageX + 2);
+                        options.navSize = e.pageX + 2;
+                    }
+                    saveOptions();
+
+                    $('#help-ghost-bar').remove();
+                    $(document).unbind('mousemove');
+                    dragging = false;
+                }
+            });
         });
 
         function executeContextItem(idx, id, label, role) {
@@ -356,6 +464,16 @@
             loadContents(_history[idx]);
             updateButtons();
         }
+
+        ipcRenderer.on('reload-options', () => {
+            loadOptions();
+        });
+
+        ipcRenderer.on('setting-changed', (event, data) => {
+            if (data.type === 'extensions' && data.name === 'help') {
+                loadOptions(data.value);
+            }
+        });        
     </script>
 </head>
 
@@ -406,7 +524,7 @@
         <div id="main">
             <div id="sidebar">
                 <div id="tree" class="panel panel-default"></div>
-                <div id="drag-bar"></div>
+                <div id="help-drag-bar"></div>
             </div>
             <div id="container">
                 <iframe id="container-frame" class="panel-body" src="help.display.html"></iframe>

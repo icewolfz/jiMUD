@@ -705,11 +705,12 @@ if (typeof String.prototype.trimStart !== 'function') {
 }
 */
 
-String.prototype.splitQuote = function (this: string, sep: string, type?, escape?) {
+String.prototype.splitQuote = function (this: string, sep: string, type?, escape?, escapeChar?) {
     if (this.length === 0)
         return [this];
     if (!type) type = 1 | 2;
     if (!escape) escape = 1 | 2;
+    if (!escapeChar) escapeChar = '\\';
     let quote: boolean = false;
     let sQuote: boolean = false;
     const str = [];
@@ -725,7 +726,7 @@ String.prototype.splitQuote = function (this: string, sep: string, type?, escape
         c = this.charAt(s);
         if (c === '"' && (type & 2) === 2) {
             if ((escape & 2) === 2) {
-                if (s === 0 || pC !== '\\')
+                if (s === 0 || pC !== escapeChar)
                     quote = !quote;
             }
             else
@@ -733,7 +734,7 @@ String.prototype.splitQuote = function (this: string, sep: string, type?, escape
         }
         else if (c === '\'' && (type & 1) === 1) {
             if ((escape & 1) === 1) {
-                if (s === 0 || pC !== '\\')
+                if (s === 0 || pC !== escapeChar)
                     sQuote = !sQuote;
             }
             else
@@ -746,6 +747,12 @@ String.prototype.splitQuote = function (this: string, sep: string, type?, escape
                     if (s > pS || s === 0) {
                         str.push(this.substr(pS, s - pS));
                         pS = s + 1;
+                        break;
+                    }
+                    else if (s === pS) {
+                        str.push('');
+                        pS = s + 1;
+                        break;
                     }
                     else if (s === tl - 1)
                         str.push('');
@@ -948,6 +955,18 @@ export function isFileSync(aPath) {
     } catch (e) {
         if (e.code === 'ENOENT') {
             return false;
+        } else {
+            throw e;
+        }
+    }
+}
+
+export function fileSizeSync(file) {
+    try {
+        return fs.statSync(file).size;
+    } catch (e) {
+        if (e.code === 'ENOENT') {
+            return 0;
         } else {
             throw e;
         }
@@ -1324,9 +1343,10 @@ function testWhite(x) {
     return /^\s$/.test(x.charAt(0));
 }
 
-export function splitQuoted(str, sep, t?, e?) {
+export function splitQuoted(str, sep, t?, e?, ec?) {
     if (typeof (t) === 'undefined') t = 1 | 2;
     if (typeof (e) === 'undefined') e = 0;
+    if (typeof (ec) === 'undefined') ec = '\\';
     if (!str || str.length === 0 || !sep || sep.length === 0)
         return [str];
     sep = sep.split('');
@@ -1341,7 +1361,7 @@ export function splitQuoted(str, sep, t?, e?) {
         c = str.charAt(s);
         if (c === '"' && (t & 2) === 2) {
             if ((e & 2) === 2 && s > 0) {
-                if (s - 1 > 0 && str.charAt(s - 1) !== '\\')
+                if (s - 1 > 0 && str.charAt(s - 1) !== ec)
                     q = !q;
             }
             else
@@ -1349,7 +1369,7 @@ export function splitQuoted(str, sep, t?, e?) {
         }
         else if (c === '\'' && (t & 1) === 1) {
             if ((e & 1) === 1 && s > 0) {
-                if (s - 1 > 0 && str.charAt(s - 1) !== '\\')
+                if (s - 1 > 0 && str.charAt(s - 1) !== ec)
                     sq = !sq;
             }
             else
@@ -1361,6 +1381,11 @@ export function splitQuoted(str, sep, t?, e?) {
                 if (c === sep[sp]) {
                     if (s > ps || s === 0) {
                         strings.push(str.substring(ps, s));
+                        ps = s + 1;
+                        break;
+                    }
+                    else if (s === ps) {
+                        strings.push('');
                         ps = s + 1;
                         break;
                     }
@@ -2057,13 +2082,111 @@ export function formatUnit(str, ch?) {
 export function replaceHtml(el, html) {
     const oldEl = typeof el === 'string' ? document.getElementById(el) : el;
     /*@cc_on // Pure innerHTML is slightly faster in IE
-		oldEl.innerHTML = html;
-		return oldEl;
-	@*/
+        oldEl.innerHTML = html;
+        return oldEl;
+    @*/
     const newEl = oldEl.cloneNode(false);
     newEl.innerHTML = html;
     oldEl.parentNode.replaceChild(newEl, oldEl);
     /* Since we just removed the old element from the DOM, return a reference
-	to the new element, which can be used to restore variable references. */
+    to the new element, which can be used to restore variable references. */
     return newEl;
+}
+
+export function isValidIdentifier(str: string): boolean {
+    if (!str || str.length === 0) return false;
+    //valid character check
+    if (!str.match(/^[a-zA-Z_$][a-zA-Z_$0-9]*$/g))
+        return false;
+    //not a keyword
+    return ['break', 'case', 'catch', 'continue', 'debugger', 'default', 'delete', 'do', 'else', 'finally', 'for', 'function', 'if', 'in', 'instanceof', 'new', 'return', 'switch', 'this', 'throw', 'try', 'typeof', 'var', 'void', 'while', 'with', 'class', 'const', 'enum', 'export', 'extends', 'import', 'super', 'implements', 'interface', 'let', 'package', 'private', 'protected', 'public', 'static', 'yield', 'null', 'true', 'false', 'NaN', 'Infinity', 'undefined', 'eval', 'arguments'].indexOf(str) === -1;
+}
+
+export function isArrayEqual(a, b): boolean {
+    // if the other array is a falsy value, return
+    if (!a || !b)
+        return false;
+
+    // compare lengths - can save a lot of time 
+    if (a.length != b.length)
+        return false;
+
+    for (var i = 0, l = a.length; i < l; i++) {
+        // Check if we have nested arrays
+        if (Array.isArray(a[i]) && Array.isArray(b[i])) {
+            // recurse into the nested arrays
+            if (!isArrayEqual(a[i], b[i]))
+                return false;
+        }
+        else if (a[i] instanceof Object && b[i] instanceof Object) {
+            // recurse into another objects
+            if (!isObjectEqual(a[i], b[i]))
+                return false;
+        }
+        else if (a[i] !== b[i]) {
+            // Warning - two different object instances will never be equal: {x:20} != {x:20}
+            return false;
+        }
+    }
+    return true;
+}
+
+export function isObjectEqual(a, b): boolean {
+    let propName;
+    //For the first loop, we only check for types
+    for (propName in a) {
+        //Check for inherited methods and properties - like .equals itself
+        //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwnProperty
+        //Return false if the return value is different
+        if (a.hasOwnProperty(propName) != b.hasOwnProperty(propName)) {
+            return false;
+        }
+        //Check instance type
+        else if (typeof a[propName] != typeof b[propName]) {
+            //Different types => not equal
+            return false;
+        }
+    }
+    //Now a deeper check using other objects property names
+    for (propName in b) {
+        //We must check instances anyway, there may be a property that only exists in object2
+        //I wonder, if remembering the checked values from the first loop would be faster or not 
+        if (a.hasOwnProperty(propName) != b.hasOwnProperty(propName)) {
+            return false;
+        }
+        else if (typeof a[propName] != typeof b[propName]) {
+            return false;
+        }
+        //If the property is inherited, do not check any more (it must be equal if both objects inherit it)
+        if (!a.hasOwnProperty(propName))
+            continue;
+
+        //Now the detail check and recursion
+
+        //This returns the script back to the array comparing
+        if (Array.isArray(a[propName]) && Array.isArray(b[propName])) {
+            // recurse into the nested arrays
+            if (!isArrayEqual(a[propName], b[propName]))
+                return false;
+        }
+        else if (a[propName] instanceof Object && b[propName] instanceof Object) {
+            // recurse into another objects
+            if (!isObjectEqual(a[propName], b[propName]))
+                return false;
+        }
+        //Normal value comparison for strings and numbers
+        else if (a[propName] !== b[propName]) {
+            return false;
+        }
+    }
+    //If everything passed, let's say YES
+    return true;
+}
+
+export function isEqual(a, b): boolean {
+    if (Array.isArray(a) && Array.isArray(b))
+        return isArrayEqual(a, b);
+    else if (a instanceof Object && b instanceof Object)
+        return isObjectEqual(a, b);
+    return a === b;
 }

@@ -15,6 +15,7 @@
     <link href="css/theme.css" rel="stylesheet" type="text/css" />
     <link id="theme" rel="stylesheet" href="" type="text/css">
 </head>
+
 <body>
     <div id="toolbar" class="btn-toolbar" role="toolbar">
         <button id="btn-refresh" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="profileUI.doRefresh()">
@@ -159,7 +160,8 @@
                                 <label class="control-label" for="alias-params">Params</label>
                             </td>
                             <td colspan="6">
-                                <input class="form-control" type="text" id="alias-params">
+                                <input class="form-control" type="text" id="alias-params" onkeyup="profileUI.validateIdentifiers(this);" onchange="profileUI.validateIdentifiers(this);">
+                                <div class="form-error"></div>
                             </td>
                         </tr>
                         <tr class="panel-adv-body">
@@ -186,7 +188,51 @@
                                 <label class="control-label" for="trigger-pattern">Pattern</label>
                             </td>
                             <td colspan="4">
-                                <input class="form-control" type="text" id="trigger-pattern">
+                                <div class="input-group" style="width:100%;">
+                                    <input class="form-control" type="text" id="trigger-pattern">
+                                    <textarea id="trigger-editor-dropdown" class="form-control dropdown-menu" aria-labelledby="trigger-editor-adv" style="resize:both;position: absolute;display: none;border-radius: 4px;padding: 6px 12px;height: 200px"></textarea>
+                                    <input type="hidden" id="state">
+                                    <span class="input-group-btn" style="width: 17px;">
+                                        <button id="trigger-editor-adv" style="padding: 6px 4px;width:100%;border-radius: 0;padding-left:4px;padding-right:4px;border-left:0px;" class="btn btn-default" type="button" title="Open advanced pattern editor">
+                                            <i class="fa fa-edit"></i>
+                                        </button>
+                                        <script>
+                                            document.getElementById('trigger-editor-dropdown').addEventListener('blur', (e) => {
+                                                if(e.relatedTarget === document.getElementById('trigger-editor-adv')) return;
+                                                document.getElementById('trigger-pattern').value = document.getElementById('trigger-editor-dropdown').value;
+                                                document.getElementById('trigger-editor-dropdown').style.display = 'none';
+                                                document.getElementById('trigger-pattern').focus();
+                                            });
+                                            document.getElementById('trigger-editor-adv').addEventListener('click', (e) => {
+                                                if (document.getElementById('trigger-editor-dropdown').style.display == 'inline-block') {
+                                                    document.getElementById('trigger-pattern').value = document.getElementById('trigger-editor-dropdown').value;
+                                                    document.getElementById('trigger-editor-dropdown').style.display = 'none';
+                                                    document.getElementById('trigger-pattern').focus();
+                                                }
+                                                else {
+                                                    document.getElementById('trigger-editor-dropdown').value = document.getElementById('trigger-pattern').value;
+                                                    document.getElementById('trigger-editor-dropdown').style.display = 'inline-block';
+                                                    document.getElementById('trigger-editor-dropdown').focus();
+                                                }
+                                            });
+
+                                        </script>
+                                    </span>
+                                    <span class="input-group-btn" style="width: 17px;">
+                                        <button title="Select state" id="trigger-states" class="btn btn-default" style="width:100%;border-radius: 0;padding-left:4px;padding-right:4px;border-left:0px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-boundary="window">
+                                            <span class="caret"></span>
+                                        </button>
+                                        <ul id="trigger-states-dropdown" class="dropdown-menu" aria-labelledby="trigger-states" style="max-height: 200px;overflow: auto;overflow-x: hidden;"></ul>
+                                    </span>
+                                    <span class="input-group-btn" style="width: 1%;">
+                                        <button style="padding: 6px 4px;" class="btn btn-default" type="button" onclick="profileUI.AddTriggerState()" title="Add new trigger state">
+                                            <i class="fa fa-plus"></i>
+                                        </button>
+                                        <button style="padding: 6px 4px;" id="trigger-states-delete" disabled="disabled" class="btn btn-danger" type="button" onclick="profileUI.DeleteTriggerState()" title="Delete current trigger state">
+                                            <i class="fa fa-times"></i>
+                                        </button>
+                                    </span>
+                                </div>
                             </td>
                             <td style="padding-left:4px;width: 45px">
                                 <label class="control-label" for="trigger-style" style="padding-right:4px;">Style</label>
@@ -258,11 +304,23 @@
                                             <label class="control-label" for="trigger-type">Type</label>
                                         </td>
                                         <td>
-                                            <select id="trigger-type" data-container="body" class="selectpicker form-control" style="width: 140px">
+                                            <select id="trigger-type" data-container="body" class="selectpicker form-control" style="width: 140px" data-width="100%">
                                                 <option value="0">Regular Expression</option>
                                                 <option value="1">Command Input Regular Expression</option>
                                                 <option value="2">Event</option>
                                                 <option value="3">Alarm</option>
+                                                <option value="8">Pattern</option>
+                                                <option value="16">Command Input Pattern</option>
+                                                <option value="128">Loop Expression</option>
+                                                <option value="512" data-type="sub" hidden>Skip</option>
+                                                <option value="1024" data-type="sub" hidden>Wait</option>
+                                                <option value="4096" data-type="sub" hidden>Loop Pattern</option>
+                                                <option value="8192" data-type="sub" hidden>Loop Lines</option>
+                                                <option value="16384" data-type="sub" hidden>Duration</option>
+                                                <option value="32768" data-type="sub" hidden>Within Lines</option>
+                                                <option value="65536" data-type="sub" hidden>Manual</option>
+                                                <option value="131072" data-type="sub" hidden>ReParse</option>
+                                                <option value="262144" data-type="sub" hidden>ReParse Pattern</option>
                                             </select>
                                         </td>
                                         <td style="width: 60px;padding-left:5px">
@@ -276,13 +334,35 @@
                             </td>
                         </tr>
                         <tr class="panel-adv-body">
-                            <td>
-                                <label class="control-label" for="macro-name">Name</label>
+                            <td colspan="7" id="triggers-name">
+                                <table style="padding:0;margin:0;width:100%">
+                                    <tr>
+                                        <td style="width: 60px">
+                                            <label class="control-label" for="trigger-name">Name</label>
+                                        </td>
+                                        <td>
+                                            <input class="form-control" style="width: 100%" type="text" id="trigger-name">
+                                        </td>
+                                        <td style="width: 60px;padding-left:5px">
+                                            <label class="control-label" for="trigger-state">State</label>
+                                        </td>
+                                        <td style="width: 100px">
+                                            <input type="number" class="form-control" id="trigger-state" style="width: 100%">
+                                        </td>
+                                    </tr>
+                                </table>
                             </td>
-                            <td colspan="6">
-                                <input class="form-control" style="width: 100%" type="text" id="trigger-name">
+                        </tr>
+                        <tr class="panel-adv-body">
+                            <td data-row="triggers-params">
+                                <label class="control-label" for="trigger-params">Param</label>
                             </td>
-
+                            <td colspan="6" data-row="triggers-params">
+                                <div style="width:100%">
+                                    <input class="form-control" style="width: 100%" type="number" id="trigger-params">
+                                    <div id="triggers-params-suffix" class="input-group-addon" style="display: none;width: 40px;">ms</div>
+                                </div>
+                            </td>
                         </tr>
                         <tr class="panel-adv-body">
                             <td colspan="7" style="padding-left:5px;vertical-align: bottom;">
@@ -303,7 +383,7 @@
                                 </label>
                                 <label class="col-sm-4" for="trigger-raw">
                                     <input type="checkbox" id="trigger-raw" style="border: 0px"> Trigger on raw
-                                </label>                                
+                                </label>
                             </td>
                         </tr>
                     </table>
@@ -447,7 +527,10 @@
                                     <input type="checkbox" id="button-append" style="border: 0px"> Append to command</label>
                                 <label class="col-sm-6" for="button-chain">
                                     <input type="checkbox" id="button-chain" style="border: 0px"> Daisy chain</label>
-
+                                <!--
+                                <label class="col-sm-6" for="button-parse">
+                                    <input type="checkbox" id="button-parse" style="border: 0px;"> Parse caption</label>
+                                -->
                                 <label class="col-sm-6" for="button-stretch">
                                     <input type="checkbox" id="button-stretch" style="border: 0px" onchange="profileUI.UpdateButtonSample();"> Stretch icon</label>
                             </td>
@@ -457,7 +540,7 @@
                 <div class="form-inline panel-body" id="context-editor" class="editor-panel" style="display:none">
                     <table class="editor-body">
                         <tr>
-                            <td style="text-align:center;">
+                            <td style="width: 54px;text-align:center;">
                                 <a style="float:none" href="javascript:void(0)" title="Sample Context" id="context-sample" class="context"></a>
                             </td>
                             <td style="width: 60px">
@@ -543,6 +626,8 @@
                                     <input type="checkbox" id="context-append" style="border: 0px"> Append to command</label>
                                 <label class="col-sm-6" for="context-chain">
                                     <input type="checkbox" id="context-chain" style="border: 0px"> Daisy chain</label>
+                                <label class="col-sm-6" for="context-parse">
+                                    <input type="checkbox" id="context-parse" style="border: 0px;"> Parse caption</label>
                             </td>
                         </tr>
                     </table>
@@ -560,7 +645,7 @@
         <div>
             <progress max="100" id="progress-dialog-progressbar"></progress>
         </div>
-    </dialog>    
+    </dialog>
     <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
