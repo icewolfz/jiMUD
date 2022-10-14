@@ -7,16 +7,17 @@
     - Preference to enable/set character
     - Assign values as a single line
   - Add [#TEMPVAR](docs/commands.md#createmodify-profile-or-item) to create session only variables
-  - Add `Expression` trigger type that will execute when variable values have changed
 
-## 0.19.6
+## 0.19.6 2022-10-2
 
 - **Fixed:**
-  - Fixed disconnect dialog when screen size is small
+  - Fixed disconnect dialog when window size is small
   - Immortal tools: Fixed error when navigating by using keyboard
-    - Code editor: Fixed bugs in tabstrip
+  - Code editor: Fixed bugs in tabstrip
   - Command line arguments:
     - Fixed --profiles/-pf not loading new profiles and only setting already loaded profiles as enabled
+  - Remove `Hide On Minimize` hack as electron fixed minimize event and hack now breaks linux when option enabled
+  - Display: revert a performance fix that added flicker
 - **Changed:**
   - Update electron 19.0.16 to 19.1.1
   - Code editor:

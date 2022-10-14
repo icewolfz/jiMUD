@@ -126,7 +126,6 @@ export class Display extends EventEmitter {
     private _VScroll: ScrollBar;
     private _HScroll: ScrollBar;
     private _updating: UpdateType = UpdateType.none;
-    private _rTimeout = 0;
     private _splitHeight: number = -1;
 
     public split = null;
@@ -903,9 +902,9 @@ export class Display extends EventEmitter {
     private doUpdate(type?: UpdateType) {
         if (!type) return;
         this._updating |= type;
-        if (this._updating === UpdateType.none || this._rTimeout)
+        if (this._updating === UpdateType.none)
             return;
-        this._rTimeout = window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
             if ((this._updating & UpdateType.layout) === UpdateType.layout) {
                 this.updateLayout();
                 this._updating &= ~UpdateType.layout;
@@ -988,7 +987,6 @@ export class Display extends EventEmitter {
                 this.scrollDisplay();
                 this._updating &= ~UpdateType.scrollEnd;
             }
-            this._rTimeout = 0;
             this.doUpdate(this._updating);
         });
     }
