@@ -303,8 +303,11 @@ Controls what is captured into the chat window
   - `Compact` similar to full but with out the client submenus, **note** see Full note
 - `Tray icon single click` set what happens when the tray icon is clicked  **note** see known issues with linux
   - `None` - do nothing when clicked
-  - `Show` - show or focus on client window
-  - `Hide` - hide or minimize client window based on `Hide when minimized` setting
-  - `Toggle` - Toggle between show / hide
+  - `Show` - show or focus on active window
+  - `Hide` - hide or minimize active window based on `Hide when minimized` setting
+  - `Toggle` - Toggle between show / hide for active
+  - `Show All` show all windows
+  - `Hide All` all windows all windows based on `Hide when minimized` setting
+  - `Toggle All` Toggle between show / hide for all windows
   - `Menu` - display the tray menu
 - `Tray icon double click` set what happens when the tray icon is double clicked, same values as single click. __Mac__, __Windows__

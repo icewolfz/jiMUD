@@ -5215,6 +5215,37 @@ async function createTray() {
                         active.window.minimize();
                 }
                 break;
+            case TrayClick.showAll:
+                for (window in windows) {
+                    if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window] || windows[window].window.isDestroyed())
+                        continue;
+                    restoreWindowState(windows[window].window, states[windows[window].file || 'manager.html'], 2);
+                }
+                break;
+            case TrayClick.hideAll:
+                for (window in windows) {
+                    if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window] || windows[window].window.isDestroyed())
+                        continue;
+                    if (_settings.hideOnMinimize)
+                        windows[window].window.hide();
+                    else
+                        windows[window].window.minimize();
+                }
+                break;
+            case TrayClick.toggleAll:
+                for (window in windows) {
+                    if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window] || windows[window].window.isDestroyed())
+                        continue;
+                    if (windows[window].window.isVisible()) {
+                        if (_settings.hideOnMinimize)
+                            windows[window].window.hide();
+                        else
+                            windows[window].window.minimize();
+                    }
+                    else
+                        restoreWindowState(windows[window].window, states[windows[window].file || 'manager.html'], 2);
+                }
+                break;
             case TrayClick.menu:
                 tray.popUpContextMenu();
                 break;
@@ -5246,6 +5277,37 @@ async function createTray() {
                         active.window.hide();
                     else
                         active.window.minimize();
+                }
+                break;
+            case TrayClick.showAll:
+                for (window in windows) {
+                    if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window] || windows[window].window.isDestroyed())
+                        continue;
+                    restoreWindowState(windows[window].window, states[windows[window].file || 'manager.html'], 2);
+                }
+                break;
+            case TrayClick.hideAll:
+                for (window in windows) {
+                    if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window] || windows[window].window.isDestroyed())
+                        continue;
+                    if (_settings.hideOnMinimize)
+                        windows[window].window.hide();
+                    else
+                        windows[window].window.minimize();
+                }
+                break;
+            case TrayClick.toggleAll:
+                for (window in windows) {
+                    if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window] || windows[window].window.isDestroyed())
+                        continue;
+                    if (windows[window].window.isVisible()) {
+                        if (_settings.hideOnMinimize)
+                            windows[window].window.hide();
+                        else
+                            windows[window].window.minimize();
+                    }
+                    else
+                        restoreWindowState(windows[window].window, states[windows[window].file || 'manager.html'], 2);
                 }
                 break;
             case TrayClick.menu:

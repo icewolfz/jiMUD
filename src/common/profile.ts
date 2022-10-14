@@ -1636,7 +1636,7 @@ export function convertPattern(pattern: string, client?) {
                         stringBuilder.push("[\\.\\?\\!\\:\\;\\-\\—\\(\\)\\[\\]\\'\\\"\\\\/\\,]{1}");
                         state = convertPatternState.None;
                         break;
-                    case 't': //TODO not sure what a direction command is
+                    case 't': //jiMUD does not support direction commands
                         state = convertPatternState.None;
                         break;
                     case 'e':

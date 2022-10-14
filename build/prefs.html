@@ -577,6 +577,18 @@
                         if (this.checked)
                             _settings.trayClick = TrayClick.menu;
                         break;
+                    case 'trayClick-showAll':
+                        if (this.checked)
+                            _settings.trayClick = TrayClick.showAll;
+                        break;
+                    case 'trayClick-hideAll':
+                        if (this.checked)
+                            _settings.trayClick = TrayClick.hideAll;
+                        break;
+                    case 'trayClick-toggleAll':
+                        if (this.checked)
+                            _settings.trayClick = TrayClick.toggleAll;
+                        break;
                     case 'trayDblClick-none':
                         if (this.checked)
                             _settings.trayDblClick = TrayClick.none;
@@ -596,6 +608,18 @@
                     case 'trayDblClick-menu':
                         if (this.checked)
                             _settings.trayDblClick = TrayClick.menu;
+                        break;
+                    case 'trayDblClick-showAll':
+                        if (this.checked)
+                            _settings.trayDblClick = TrayClick.showAll;
+                        break;
+                    case 'trayDblClick-hideAll':
+                        if (this.checked)
+                            _settings.trayDblClick = TrayClick.hideAll;
+                        break;
+                    case 'trayDblClick-toggleAll':
+                        if (this.checked)
+                            _settings.trayDblClick = TrayClick.toggleAll;
                         break;
                     case 'chat-selective':
                         _settings.chat.captureAllLines = !this.checked;
@@ -866,12 +890,18 @@
             $('#trayClick-hide').prop('checked', _settings.trayClick === TrayClick.hide);
             $('#trayClick-toggle').prop('checked', _settings.trayClick === TrayClick.toggle);
             $('#trayClick-menu').prop('checked', _settings.trayClick === TrayClick.menu);
+            $('#trayClick-showAll').prop('checked', _settings.trayClick === TrayClick.showAll);
+            $('#trayClick-hideAll').prop('checked', _settings.trayClick === TrayClick.hideAll);
+            $('#trayClick-toggleAll').prop('checked', _settings.trayClick === TrayClick.toggleAll);
 
             $('#trayDblClick-none').prop('checked', _settings.trayDblClick === TrayClick.none);
             $('#trayDblClick-show').prop('checked', _settings.trayDblClick === TrayClick.show);
             $('#trayDblClick-hide').prop('checked', _settings.trayDblClick === TrayClick.hide);
             $('#trayDblClick-toggle').prop('checked', _settings.trayDblClick === TrayClick.toggle);
             $('#trayDblClick-menu').prop('checked', _settings.trayDblClick === TrayClick.menu);
+            $('#trayDblClick-showAll').prop('checked', _settings.trayDblClick === TrayClick.showAll);
+            $('#trayDblClick-hideAll').prop('checked', _settings.trayDblClick === TrayClick.hideAll);
+            $('#trayDblClick-toggleAll').prop('checked', _settings.trayDblClick === TrayClick.toggleAll);
 
             $('#onSecondInstance-0').prop('checked', _settings.onSecondInstance === 0);
             $('#onSecondInstance-1').prop('checked', _settings.onSecondInstance === 1);
@@ -2652,7 +2682,7 @@
                         <span class="linux help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">When app indicator is used on Linux, the click event is ignored</span>
                     </div>
                     <div class="col-sm-12 form-group" style="margin:0;padding:0">
-                        <div class="col-sm-6 form-group">
+                        <div class="col-sm-12 form-group">
                             <label class="control-label">Tray icon single click</label>
                             <div class="btn-group" data-toggle="buttons">
                                 <label class="btn btn-default btn-xs">
@@ -2668,6 +2698,15 @@
                                     <input type="radio" name="trayClick" id="trayClick-toggle"> Toggle
                                 </label>
                                 <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="trayClick" id="trayClick-showAll"> Show All
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="trayClick" id="trayClick-hideAll"> Hide All
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="trayClick" id="trayClick-toggleAll"> Toggle All
+                                </label>
+                                <label class="btn btn-default btn-xs">
                                     <input type="radio" name="trayClick" id="trayClick-menu"> Menu
                                 </label>
 
@@ -2675,7 +2714,7 @@
                             <span class="linux help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">When app indicator is used on Linux, the click event is ignored</span>
                         </div>
 
-                        <div class="col-sm-6 form-group">
+                        <div class="col-sm-12 form-group">
                             <label class="control-label">Tray icon double click</label>
                             <div class="btn-group" data-toggle="buttons">
                                 <label class="btn btn-default btn-xs">
@@ -2689,6 +2728,15 @@
                                 </label>
                                 <label class="btn btn-default btn-xs">
                                     <input type="radio" name="trayDblClick" id="trayDblClick-toggle"> Toggle
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="trayDblClick" id="trayDblClick-showAll"> Show All
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="trayDblClick" id="trayDblClick-hideAll"> Hide All
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="trayDblClick" id="trayDblClick-toggleAll"> Toggle All
                                 </label>
                                 <label class="btn btn-default btn-xs">
                                     <input type="radio" name="trayDblClick" id="trayDblClick-menu"> Menu

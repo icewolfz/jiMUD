@@ -254,7 +254,10 @@ export enum TrayClick {
   show = 1,
   hide = 2,
   toggle = 3,
-  menu = 4
+  menu = 4,
+  showAll = 5,
+  hideAll = 6,
+  toggleAll = 7
 }
 
 export enum TrayMenu {

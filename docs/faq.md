@@ -227,10 +227,13 @@ allowHalfOpen                     | boolean | true
 Value | Results
 ------|------------------
 0     | do nothing
-1     | show client
-2     | hide client
-3     | toggle show/hide
+1     | show active window and client
+2     | hide active window and client
+3     | toggle show/hide active window and client
 4     | show menu
+5     | show all windows
+6     | hide all windows
+7     | toggle all windows
 
 ### onDisconnect values
 
