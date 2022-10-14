@@ -5187,7 +5187,6 @@ async function createTray() {
     updateTray();
     if (_settings.trayMenu === TrayMenu.simple)
         _updateTrayContext();
-    //TODO fix tray click/double click events to support multi window system, maybe add new options for all windows/active window
     tray.on('click', () => {
         const active = getActiveWindow();
         switch (_settings.trayClick) {
