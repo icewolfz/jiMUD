@@ -786,19 +786,23 @@ export function getTimeSpan(i: number): string {
 
     al = Math.floor(i / (1000 * 60 * 60 * 24));
     i -= al * (1000 * 60 * 60 * 24);
-    if (al > 0) tmp.push(al + ' days');
+    if (al === 1) tmp.push(al + ' day');
+    else if (al > 0) tmp.push(al + ' days');
 
     al = Math.floor(i / (1000 * 60 * 60));
     i -= al * (1000 * 60 * 60);
-    if (al > 0) tmp.push(al + ' hours');
+    if (al === 1) tmp.push(al + ' hour');
+    else if (al > 0) tmp.push(al + ' hours');
 
     al = Math.floor(i / (1000 * 60));
     i -= al * (1000 * 60);
-    if (al > 0) tmp.push(al + ' minutes');
+    if (al === 1) tmp.push(al + ' minute');
+    else if (al > 0) tmp.push(al + ' minutes');
 
     al = Math.floor(i / (1000));
     i -= al * (1000);
-    if (al > 0) tmp.push(al + ' seconds');
+    if (al === 1) tmp.push(al + ' second');
+    else if (al > 0) tmp.push(al + ' seconds');
     if (tmp.length === 0)
         tmp.push('0 seconds');
     return tmp.join(', ');
@@ -2212,7 +2216,7 @@ export function createColorDialog() {
 export function boldUnicodeText(text) {
     const b = function (char) {
         let diff;
-        if (/[A-Z]/.test(char)) 
+        if (/[A-Z]/.test(char))
             diff = "𝗔".codePointAt(0) - "A".codePointAt(0);
         else
             diff = "𝗮".codePointAt(0) - "a".codePointAt(0);
