@@ -971,7 +971,7 @@
             }
         }
 
-        function processGMCP(mod, obj) {
+        async function processGMCP(mod, obj) {
             if (!mapper || !mapper.ready)
                 setTimeout(() => {
                     processGMCP(mod, obj);
@@ -996,7 +996,7 @@
             initProgressDialog({ title: 'Importing map data&hellip;', percent: 0, noClose: true });
         }
 
-        function updateAreas() {
+        async function updateAreas() {
             $('#select-area option').remove();
             if (!mapper.ready) {
                 setTimeout(updateAreas, 10);
@@ -1124,7 +1124,7 @@
 
         }
 
-        function _exportImage(file) {
+        async function _exportImage(file) {
             mapper.getRooms(mapper.active.area, mapper.active.z, mapper.active.zone, (rooms) => {
                 if (!rooms || rooms.length === 0) {
                     if (_progress.dialog)
@@ -1249,7 +1249,7 @@
             });
         }
 
-        function _exportCurrentImage(file) {
+        async function _exportCurrentImage(file) {
             var oldCanvas = document.getElementById('MapperCanvas');
             var newCanvas = document.createElement('canvas');
             var context = newCanvas.getContext('2d');
@@ -1426,7 +1426,7 @@
             });
         }
 
-        function removeAll() {
+        async function removeAll() {
             clearButton('#remove');
             dialog.showMessageBox({
                 type: 'question',

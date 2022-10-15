@@ -2593,7 +2593,7 @@
             loadOptions();
         }
 
-        function processGMCP(mod, obj) {
+        async function processGMCP(mod, obj) {
             if (options && options.debug)
                 console.log({ mod: mod, obj: obj });
             if (_ied)
