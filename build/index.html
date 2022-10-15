@@ -3131,7 +3131,6 @@
 
         function reloadOptions(settings, global) {
             if (global) {
-                window.update({ enableBackgroundThrottling: settings.enableBackgroundThrottlingClients })
                 window.loadTheme();
                 client.emit('load-theme');
             }

@@ -2141,6 +2141,13 @@ ipcMain.on('reload-options', (events, preferences, clientId) => {
             if (!Object.prototype.hasOwnProperty.call(windows, window))
                 continue;
             windows[window].window.webContents.send('reload-options');
+            updateWebContents(windows[window].window.webContents, { enableBackgroundThrottling: _settings.enableBackgroundThrottling });
+        }
+        for (id in clients) {
+            if (!Object.prototype.hasOwnProperty.call(clients, id) || getClientId(clients[id].view) === clientId)
+                continue;
+            clients[id].view.webContents.send('reload-options', preferences, preferences === global.settingsFile);
+            updateWebContents(clients[id].view.webContents, { enableBackgroundThrottling: _settings.enableBackgroundThrottlingClients });
         }
         if (_settings.showTrayIcon && !tray)
             createTray();
@@ -2151,16 +2158,12 @@ ipcMain.on('reload-options', (events, preferences, clientId) => {
         else if (tray)
             _updateTrayContext();
     }
-    for (id in clients) {
-        if (!Object.prototype.hasOwnProperty.call(clients, id) || getClientId(clients[id].view) === clientId)
-            continue;
-        clients[id].view.webContents.send('reload-options', preferences, preferences === global.settingsFile);
-        updateWebContents(clients[id].view.webContents, { enableBackgroundThrottling: _settings.enableBackgroundThrottlingClients });
-    }
-    for (window in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, window))
-            continue;
-        updateWebContents(windows[window].window.webContents, { enableBackgroundThrottling: _settings.enableBackgroundThrottling });
+    else {
+        for (id in clients) {
+            if (!Object.prototype.hasOwnProperty.call(clients, id) || getClientId(clients[id].view) === clientId)
+                continue;
+            clients[id].view.webContents.send('reload-options', preferences, preferences === global.settingsFile);
+        }
     }
 });
 
@@ -3060,6 +3063,40 @@ function updateJumpList() {
     }
 }
 
+function showAllWindows() {
+    for (window in windows) {
+        if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window] || windows[window].window.isDestroyed())
+            continue;
+        restoreWindowState(windows[window].window, states[windows[window].file || 'manager.html'], 2);
+    }
+}
+
+function hideAllWindows() {
+    for (window in windows) {
+        if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window] || windows[window].window.isDestroyed())
+            continue;
+        if (_settings.hideOnMinimize)
+            windows[window].window.hide();
+        else
+            windows[window].window.minimize();
+    }
+}
+
+function toggleAllWindows() {
+    for (window in windows) {
+        if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window] || windows[window].window.isDestroyed())
+            continue;
+        if (windows[window].window.isVisible()) {
+            if (_settings.hideOnMinimize)
+                windows[window].window.hide();
+            else
+                windows[window].window.minimize();
+        }
+        else
+            restoreWindowState(windows[window].window, states[windows[window].file || 'manager.html'], 2);
+    }
+}
+
 //#region Auto updates
 function createUpdater(window) {
     const autoUpdater = require('electron-updater').autoUpdater;
@@ -3464,6 +3501,8 @@ function updateWindow(window, parent, options) {
         window.setSkipTaskbar((!options.showInTaskBar && (options.alwaysOnTopClient || options.alwaysOnTop)) ? true : false);
     updateWebContents(window.webContents, options);
     const clientId = getWindowClientId(window);
+    //if no if more then likely a main window
+    if (!clientId) return;
     for (child in clients[clientId].windows) {
         if (!Object.prototype.hasOwnProperty.call(clients[clientId].windows, child))
             continue;
@@ -5215,35 +5254,13 @@ async function createTray() {
                 }
                 break;
             case TrayClick.showAll:
-                for (window in windows) {
-                    if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window] || windows[window].window.isDestroyed())
-                        continue;
-                    restoreWindowState(windows[window].window, states[windows[window].file || 'manager.html'], 2);
-                }
+                showAllWindows();
                 break;
             case TrayClick.hideAll:
-                for (window in windows) {
-                    if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window] || windows[window].window.isDestroyed())
-                        continue;
-                    if (_settings.hideOnMinimize)
-                        windows[window].window.hide();
-                    else
-                        windows[window].window.minimize();
-                }
+                hideAllWindows();
                 break;
             case TrayClick.toggleAll:
-                for (window in windows) {
-                    if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window] || windows[window].window.isDestroyed())
-                        continue;
-                    if (windows[window].window.isVisible()) {
-                        if (_settings.hideOnMinimize)
-                            windows[window].window.hide();
-                        else
-                            windows[window].window.minimize();
-                    }
-                    else
-                        restoreWindowState(windows[window].window, states[windows[window].file || 'manager.html'], 2);
-                }
+                toggleAllWindows();
                 break;
             case TrayClick.menu:
                 tray.popUpContextMenu();
@@ -5279,35 +5296,13 @@ async function createTray() {
                 }
                 break;
             case TrayClick.showAll:
-                for (window in windows) {
-                    if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window] || windows[window].window.isDestroyed())
-                        continue;
-                    restoreWindowState(windows[window].window, states[windows[window].file || 'manager.html'], 2);
-                }
+                showAllWindows();
                 break;
             case TrayClick.hideAll:
-                for (window in windows) {
-                    if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window] || windows[window].window.isDestroyed())
-                        continue;
-                    if (_settings.hideOnMinimize)
-                        windows[window].window.hide();
-                    else
-                        windows[window].window.minimize();
-                }
+                hideAllWindows();
                 break;
             case TrayClick.toggleAll:
-                for (window in windows) {
-                    if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window] || windows[window].window.isDestroyed())
-                        continue;
-                    if (windows[window].window.isVisible()) {
-                        if (_settings.hideOnMinimize)
-                            windows[window].window.hide();
-                        else
-                            windows[window].window.minimize();
-                    }
-                    else
-                        restoreWindowState(windows[window].window, states[windows[window].file || 'manager.html'], 2);
-                }
+                toggleAllWindows();
                 break;
             case TrayClick.menu:
                 tray.popUpContextMenu();
@@ -5586,6 +5581,13 @@ async function _updateTrayContext() {
             },
             { type: 'separator' },
             {
+                label: '&Show all windows', click: showAllWindows
+            },
+            {
+                label: 'H&ide all windows', click: hideAllWindows
+            },
+            { type: 'separator' },
+            {
                 label: '&Windows...',
                 click: (item, mWindow) => {
                     if (!active) return;
@@ -5693,9 +5695,14 @@ async function _updateTrayContext() {
                         newClientWindow(active.window);
                 }
             },
+            { type: 'separator' },
             {
-                type: 'separator'
-            }
+                label: '&Show all windows', click: showAllWindows
+            },
+            {
+                label: 'H&ide all windows', click: hideAllWindows
+            },
+            { type: 'separator' }
         ]);
         const item = {
             label: 'Windows',
