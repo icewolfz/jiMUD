@@ -267,10 +267,11 @@
             loadOptions();
             var p = path.join(__dirname, '..', 'docs', 'commands');
             var files = fs.readdirSync(p);
+            var idx = _data.findIndex(i => i.id == 'commands')
             for (var i = 0; i < files.length; i++) {
                 if (path.basename(files[i], '.md') === 'nnn') continue;
                 if (path.extname(files[i]) === '.md') {
-                    _data[5].nodes.push({
+                    _data[idx].nodes.push({
                         text: '#' + path.basename(files[i], '.md'),
                         id: 'commands/' + path.basename(files[i], '.md')
                     });
@@ -279,10 +280,11 @@
 
             p = path.join(__dirname, '..', 'docs', 'functions');
             files = fs.readdirSync(p);
+            idx = _data.findIndex(i => i.id == 'functions')
             for (var i = 0; i < files.length; i++) {
                 if (path.basename(files[i], '.md') === 'nnn') continue;
                 if (path.extname(files[i]) === '.md') {
-                    _data[6].nodes.push({
+                    _data[idx].nodes.push({
                         text: path.basename(files[i], '.md'),
                         id: 'functions/' + path.basename(files[i], '.md')
                     });
