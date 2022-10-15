@@ -3050,12 +3050,6 @@ function updateJumpList() {
                 iconIndex: 0
             }
         ]);
-    //TODO add recent support, require instance check
-    /*
-    list.push({
-      type: 'recent'
-    });
-  */
     try {
         app.setJumpList(list);
     } catch (error) {
