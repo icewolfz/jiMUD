@@ -3645,7 +3645,7 @@ async function newClientWindow(caller, connection, data, name) {
                 clients[clientId].view.webContents.once('dom-ready', () => {
                     if (connection)
                         clients[id].view.webContents.send('connection-settings', connection);
-                    clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, windows[getWindowId(clients[clientId].parent)].clients.length);
+                    clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, window.clients.length);
                 });
             }
             window.window.webContents.send('set-clients', window.clients.map(x => {
@@ -3970,7 +3970,7 @@ function loadWindowLayout(file, charData) {
                 const clientId = window.clients[c];
                 window.window.addBrowserView(clients[clientId].view);
                 clients[clientId].view.webContents.once('dom-ready', () => {
-                    clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, windows[getWindowId(clients[clientId].parent)].clients.length);
+                    clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, window.clients.length);
                 });
             }
             window.window.webContents.send('set-clients', window.clients.map(x => {
