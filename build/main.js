@@ -2326,7 +2326,7 @@ function createClient(options) {
     });
 
     view.webContents.on('render-process-gone', (event, goneDetails) => {
-        logError(`${link} render process gone, reason: ${goneDetails.reason}, exitCode ${goneDetails.exitCode}\n`, true);
+        logError(`${options.file} render process gone, reason: ${goneDetails.reason}, exitCode ${goneDetails.exitCode}\n`, true);
     });
 
     view.webContents.setWindowOpenHandler((details) => {

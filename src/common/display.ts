@@ -56,11 +56,30 @@ interface ContextEvent extends PointerEvent {
     line: string;
 }
 
+/**
+ * A line of data to display
+ */
 interface Line {
-    height: number;
-    top: number;
-    width: number;
-    images: number;
+    height: number; //height of the line
+    top: number;    //the top y coordinate
+    width: number;  //the total width of the line
+    images: number; //the currently loading images
+}
+
+/**
+ * Contains data for a wrapped display line that is the part of a full line, replaces Line interface
+ */
+interface WrapLine {
+    line: number;           //The line number
+    height: number          //the height of the line
+    width: number;          //lets cache the width for faster calculations
+    top: number;            //cache the top to speed up display
+    images: number;         //track loading images
+    startOffset: number;    //the text start offset
+    startFragment: number;  //the starting fragment index
+    endOffset: number;      //the text end offset
+    endFragment: number;    //the ending fragment index
+    indent: boolean;        //is line indented
 }
 
 /**
@@ -3800,6 +3819,342 @@ export class Display extends EventEmitter {
         }
         this._VScroll.updateLayout();
         this._HScroll.updateLayout();
+    }
+
+    public getLineText(line) {
+        if (line < 0 || line >= this._lines.length) return '';
+        //return this._line[line].line.substring(this._line[line].startOffset, this._line[line].endOffset);
+        return this.lines[line];
+    }
+
+    /**
+     *  Calculate the wrapped lines for raw line
+     * 
+     * @param {number} line the line index to calculate wrapped lines for
+     * @param {number=} width the width to wrap to
+     * @param {number=} indent the amount of leading indention to prepend
+     * @param {number=} left the starting left spacing to allow for fixed columns or addons
+     * @param {boolean=} force force the recalculate of each fragment's width
+     * @returns {wrapLine[]}
+     */
+    public calculateWrapLines(line: number, width?: number, indent?: number, left?: number, force?: boolean) {
+        if (line === undefined || line < 0)
+            line = 0;
+        if (line >= this.lines.length)
+            line = this.lines.length - 1;
+        if (!width || typeof width !== 'number')
+            width = this._innerWidth - this._VScroll.size - this._padding[1] - this._padding[3];
+        if (width < 200)
+            width = 200;
+        left = left || 0;
+        //cache locally for a performance boost
+        const charWidth = this._charWidth;
+        //calculate the indent with
+        indent = (indent || 0) * charWidth;
+        const wrapLines: WrapLine[] = [];
+        let currentLine: WrapLine = {
+            line: line,
+            height: 0,
+            width: 0,
+            top: 0,
+            images: 0,
+            startOffset: 0,
+            startFragment: 0,
+            endOffset: 0,
+            endFragment: 0,
+            indent: false
+        };
+        const formats = this.lineFormats[line];
+        const formatsLength = formats.length;
+        const text = this.lines[line].replace(/ /g, '\u00A0');
+        let endOffset = 0;
+        let startOffset = 0;
+        let measureText;
+        let font: any = 0;
+        //start at left column
+        let lineWidth = left;
+        let lineHeight = 0;
+        let formatIdx;
+        let currentWidth;
+        let previousWidth;
+        for (formatIdx = 0; formatIdx < formatsLength; formatIdx++) {
+            const currentFormat = formats[formatIdx];
+            let nextFormat;
+            if (formatIdx < formatsLength - 1) {
+                nextFormat = formats[formatIdx + 1];
+                //empty format block so move on until a new block to process
+                if (currentFormat.offset === nextFormat.offset && nextFormat.formatType === currentFormat.formatType)
+                    continue;
+                endOffset = nextFormat.offset;
+            }
+            else
+                endOffset = text.length;
+            if (force) {
+                currentFormat.width = 0;
+                currentFormat.height = 0;
+            }
+            startOffset = currentFormat.offset;
+            if (!currentLine) {
+                currentLine = {
+                    line: line,
+                    height: 0,
+                    width: 0,
+                    top: 0,
+                    images: 0,
+                    startOffset: startOffset,
+                    startFragment: formatIdx,
+                    endOffset: 0,
+                    endFragment: 0,
+                    indent: true
+                }
+            }
+            switch (currentFormat.formatType) {
+                case FormatType.Normal:
+                case FormatType.Link:
+                case FormatType.MXPLink:
+                case FormatType.MXPSend:
+                case FormatType.MXPExpired:
+                    //TODO add font/variable height support
+                    //empty block so skip
+                    if (endOffset - startOffset === 0) continue;
+                    measureText = text.substring(startOffset, endOffset);
+                    if (currentFormat.unicode || font)
+                        currentFormat.width = currentFormat.width || this.textWidth(measureText, font, currentFormat.style);
+                    else
+                        currentFormat.width = currentFormat.width || measureText.length * charWidth;
+                    if (lineWidth + currentFormat.width >= width) {
+                        lineHeight = Math.max(lineHeight, currentFormat.height || 0);
+                        let currentOffset = startOffset + 1;
+                        currentWidth = 0;
+                        previousWidth = 0;
+                        for (; currentOffset < endOffset; currentOffset++) {
+                            //uf unicode in block make sure to include any unicode modifiers if they are right after current char
+                            //also make sure surrogate pair are included
+                            if (currentFormat.unicode)
+                                while (currentOffset < endOffset && ((text.charCodeAt(currentOffset + 1) >= 0xD800 && text.charCodeAt(currentOffset + 1) <= 0xDBFF) || this.isUnicodeModifierCode(text.charCodeAt(currentOffset + 1))))
+                                    currentOffset++;
+                            measureText = text.substring(startOffset, currentOffset);
+                            previousWidth = currentWidth;
+                            if (currentFormat.unicode)
+                                currentWidth = this.textWidth(measureText, 0, currentFormat.style);
+                            else
+                                currentWidth = measureText.length * charWidth;
+                            if (lineWidth + currentWidth > width) {
+                                currentOffset--;
+                                const wordBreak = this.breakLine(line, currentLine.startFragment, currentLine.startOffset, formatIdx, currentOffset);
+                                currentOffset = wordBreak.offset;
+                                //format block changed so remeasure the entire section to get correct width
+                                if (formatIdx !== wordBreak.fragment) {
+                                    formatIdx = wordBreak.fragment;
+                                    currentLine.width = this.lineWidth(line, currentLine.startOffset, currentOffset - currentLine.startOffset);
+                                }
+                                //if same block measure the adjusted string width
+                                else {
+                                    measureText = text.substring(startOffset, currentOffset);
+                                    if (currentFormat.unicode)
+                                        currentWidth = this.textWidth(measureText, 0, currentFormat.style);
+                                    else
+                                        currentWidth = measureText.length * charWidth;
+                                    currentLine.width = lineWidth + currentWidth;
+                                }
+                                currentLine.endFragment = formatIdx;
+                                currentLine.endOffset = currentOffset;
+                                currentLine.height = lineHeight;
+                                wrapLines.push(currentLine);
+                                //start at left column + indent width
+                                lineWidth = left + indent;
+                                currentWidth = 0;
+                                lineHeight = 0;
+                                startOffset = currentOffset;
+                                //new line start with image
+                                currentLine = {
+                                    line: line,
+                                    height: 0,
+                                    width: 0,
+                                    top: 0,
+                                    images: 0,
+                                    startOffset: startOffset,
+                                    startFragment: formatIdx,
+                                    endOffset: 0,
+                                    endFragment: 0,
+                                    indent: true
+                                }
+                            }
+                        }
+                        lineWidth += currentWidth;
+                    }
+                    else
+                        lineWidth += currentFormat.width || 0;
+                    break;
+                case FormatType.Image:
+                    //TODO add image breaking support back in, see commented out block of code below to readd
+                    /*
+                    if (currentFormat.formatType === FormatType.Image) {
+                        if (lineWidth + (currentFormat.marginWidth || 0) + currentFormat.width > width) {
+                            //empty line so image is the current line
+                            if (lineWidth === 0) {
+                                if (currentFormat.marginHeight)
+                                    currentLine.height = Math.max(lineHeight, currentFormat.height + currentFormat.marginHeight);
+                                else
+                                    currentLine.height = Math.max(lineHeight, currentFormat.height || 0);
+                                currentLine.width = currentFormat.width;
+                                currentLine.endOffset = endOffset;
+                                currentLine.endFragment = formatIdx;
+                                wrapLines.push(currentLine);
+                                currentLine = null;
+                                lineWidth = 0;
+                                continue;
+                            }
+                            else {
+                                currentLine.width = lineWidth;
+                                currentLine.endOffset = startOffset;
+                                currentLine.endFragment = formatIdx - 1;
+                                wrapLines.push(currentLine);
+                                lineWidth = 0;
+                                //new line start with image
+                                currentLine = {
+                                    line: line,
+                                    height: 0,
+                                    width: 0,
+                                    top: 0,
+                                    images: 0,
+                                    startOffset: startOffset,
+                                    startFragment: formatIdx,
+                                    endOffset: 0,
+                                    endFragment: 0,
+                                    indent: true
+                                }
+                            }
+                        }
+                        lineWidth += currentFormat.marginWidth || 0;
+                        if (!currentFormat.width) {
+                            //TODO figure out how ot handle async wrap, need to unload all old wrapped lines and recalculate when image is loaded
+                            this._lines[line].images++;
+                            const img = new Image();
+                            measureText = '';
+                            if (currentFormat.url.length > 0) {
+                                measureText += currentFormat.url;
+                                if (!currentFormat.url.endsWith('/'))
+                                    measureText += '/';
+                            }
+                            if (currentFormat.t.length > 0) {
+                                measureText += currentFormat.t;
+                                if (!currentFormat.t.endsWith('/'))
+                                    measureText += '/';
+                            }
+                            measureText += currentFormat.name;
+                            img.src = measureText;
+                            img.dataset.id = '' + this.lineIDs[line];
+                            img.dataset.f = '' + formatIdx;
+                            Object.assign(img.style, {
+                                position: 'absolute',
+                                top: (this._innerWidth + 100) + 'px'
+                            });
+                            this._el.appendChild(img);
+                            img.onload = () => {
+                                const lIdx = this.lineIDs.indexOf(+img.dataset.id);
+                                if (lIdx === -1 || lIdx >= this.lines.length) return;
+                                this._lines[lIdx].images--;
+                                const fIdx = +img.dataset.f;
+                                const fmt = this.lineFormats[lIdx][fIdx];
+                                if (fmt.w.length > 0 && fmt.h.length > 0) {
+                                    Object.assign(img.style, {
+                                        width: formatUnit(fmt.w),
+                                        height: formatUnit(fmt.h, this._charHeight)
+                                    });
+                                }
+                                else if (fmt.w.length > 0)
+                                    img.style.width = formatUnit(fmt.w);
+                                else if (fmt.h.length > 0)
+                                    img.style.height = formatUnit(fmt.h, this._charHeight);
+                                const bounds = img.getBoundingClientRect();
+                                fmt.width = bounds.width || img.width;
+                                fmt.height = bounds.height || img.height;
+                                if (currentFormat.hspace.length > 0 || currentFormat.vspace.length > 0) {
+                                    const styles = getComputedStyle(img);
+                                    fmt.marginHeight = parseFloat(styles.marginTop) + parseFloat(styles.marginBottom);
+                                    fmt.marginWidth = parseFloat(styles.marginLeft) + parseFloat(styles.marginRight);
+                                }
+                                else {
+                                    fmt.marginHeight = 0;
+                                    fmt.marginWidth = 0;
+                                }
+                                this._el.removeChild(img);
+                                if (this._viewCache[lIdx])
+                                    delete this._viewCache[lIdx];
+                                if (this._lines[lIdx].images !== 0) return;
+                                const t = this.calculateSize(lIdx);
+                                this._lines[lIdx].width = t.width;
+                                this._lines[lIdx].height = t.height;
+                                this.updateTops(lIdx);
+                                if (lIdx >= this._viewRange.start && lIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._parser.busy) {
+                                    if (this.split) this.split.dirty = true;
+                                    this.doUpdate(UpdateType.display);
+                                }
+                            };
+                        }
+                        if (currentFormat.marginHeight)
+                            lineHeight = Math.max(lineHeight, currentFormat.height + currentFormat.marginHeight);
+                        else
+                            lineHeight = Math.max(lineHeight, currentFormat.height || 0);
+                    }
+                    lineWidth += currentFormat.width || 0;
+                    */
+                    break;
+            }
+            if (currentFormat.marginHeight)
+                lineHeight = Math.max(lineHeight, currentFormat.height + currentFormat.marginHeight);
+            else
+                lineHeight = Math.max(lineHeight, currentFormat.height || 0);
+
+        }
+        if (currentLine) {
+            currentLine.width = lineWidth;
+            currentLine.endFragment = formatIdx - 1;
+            currentLine.endOffset = endOffset;
+            wrapLines.push(currentLine);
+        }
+        return wrapLines;
+    }
+
+    private breakLine(line: number, startFragment: number, startOffset: number, endFragment: number, endOffset: number) {
+        if (endOffset <= startOffset)
+            return {
+                fragment: endFragment,
+                offset: endOffset
+            };
+        const formats = this.lineFormats[line];
+        const text = this.lines[line];
+        let fragmentEndOffset = endOffset;
+        for (let formatIdx = endFragment; formatIdx >= startFragment; formatIdx--) {
+            const currentFormat = formats[formatIdx];
+            let offset = currentFormat.offset;
+            if (offset < startOffset)
+                offset = startOffset;
+            if (endOffset - startOffset === 0)
+                continue;
+            //if an image break at image
+            if (currentFormat.formatType === FormatType.Image)
+                return {
+                    fragment: endFragment,
+                    offset: offset
+                };
+            const measureText = text.substring(offset, fragmentEndOffset);
+            for (let idx = measureText.length - 1; idx >= 0; idx--) {
+                //break at space or hyphen
+                const char = measureText.charAt(idx);
+                if (char === ' ' || char === '-')
+                    return {
+                        fragment: formatIdx,
+                        offset: offset + idx + 1 //make sure space is part of current line
+                    }
+            }
+            fragmentEndOffset = offset;
+        }
+        return {
+            fragment: endFragment,
+            offset: endOffset
+        }
     }
 }
 
