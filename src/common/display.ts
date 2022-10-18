@@ -3867,6 +3867,7 @@ export class Display extends EventEmitter {
         const formats = this.lineFormats[line];
         const formatsLength = formats.length;
         const text = this.lines[line].replace(/ /g, '\u00A0');
+        const rawText = this.lines[line];
         let endOffset = 0;
         let startOffset = 0;
         let measureText;
@@ -3877,6 +3878,7 @@ export class Display extends EventEmitter {
         let formatIdx;
         let currentWidth;
         let previousWidth;
+        let breakOffset = -1;
         for (formatIdx = 0; formatIdx < formatsLength; formatIdx++) {
             const currentFormat = formats[formatIdx];
             let nextFormat;
@@ -3939,17 +3941,14 @@ export class Display extends EventEmitter {
                                 currentWidth = this.textWidth(measureText, 0, currentFormat.style);
                             else
                                 currentWidth = measureText.length * charWidth;
+                            const char = rawText.charAt(currentOffset);
+                            if (char === ' ' || char === '-')
+                                breakOffset = currentOffset;
                             if (lineWidth + currentWidth > width) {
                                 currentOffset--;
-                                const wordBreak = this.breakLine(line, currentLine.startFragment, currentLine.startOffset, formatIdx, currentOffset);
-                                currentOffset = wordBreak.offset;
-                                //format block changed so remeasure the entire section to get correct width
-                                if (formatIdx !== wordBreak.fragment) {
-                                    formatIdx = wordBreak.fragment;
-                                    currentLine.width = this.lineWidth(line, currentLine.startOffset, currentOffset - currentLine.startOffset);
-                                }
-                                //if same block measure the adjusted string width
-                                else {
+                                //found a break point in current fragment use it to prevent extra searching
+                                if (breakOffset !== -1 && breakOffset <= currentOffset) {
+                                    currentOffset = breakOffset + 1;
                                     measureText = text.substring(startOffset, currentOffset);
                                     if (currentFormat.unicode)
                                         currentWidth = this.textWidth(measureText, 0, currentFormat.style);
@@ -3957,6 +3956,34 @@ export class Display extends EventEmitter {
                                         currentWidth = measureText.length * charWidth;
                                     currentLine.width = lineWidth + currentWidth;
                                 }
+                                //no break point and still in fragment so just leave it whole to speed things up
+                                else if (breakOffset === -1 && currentLine.startFragment === formatIdx) {
+                                    measureText = text.substring(startOffset, currentOffset);
+                                    if (currentFormat.unicode)
+                                        currentWidth = this.textWidth(measureText, 0, currentFormat.style);
+                                    else
+                                        currentWidth = measureText.length * charWidth;
+                                    currentLine.width = lineWidth + currentWidth;
+                                }
+                                else {
+                                    const wordBreak = this.findLineBreak(line, currentLine.startFragment, currentLine.startOffset, formatIdx, currentOffset);
+                                    currentOffset = wordBreak.offset;
+                                    //format block changed so remeasure the entire section to get correct width
+                                    if (formatIdx !== wordBreak.fragment) {
+                                        formatIdx = wordBreak.fragment;
+                                        currentLine.width = this.lineWidth(line, currentLine.startOffset, currentOffset - currentLine.startOffset);
+                                    }
+                                    //if same block measure the adjusted string width
+                                    else {
+                                        measureText = text.substring(startOffset, currentOffset);
+                                        if (currentFormat.unicode)
+                                            currentWidth = this.textWidth(measureText, 0, currentFormat.style);
+                                        else
+                                            currentWidth = measureText.length * charWidth;
+                                        currentLine.width = lineWidth + currentWidth;
+                                    }
+                                }
+                                breakOffset = -1;
                                 currentLine.endFragment = formatIdx;
                                 currentLine.endOffset = currentOffset;
                                 currentLine.height = lineHeight;
@@ -4117,7 +4144,7 @@ export class Display extends EventEmitter {
         return wrapLines;
     }
 
-    private breakLine(line: number, startFragment: number, startOffset: number, endFragment: number, endOffset: number) {
+    private findLineBreak(line: number, startFragment: number, startOffset: number, endFragment: number, endOffset: number) {
         if (endOffset <= startOffset)
             return {
                 fragment: endFragment,
