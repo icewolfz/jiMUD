@@ -2370,119 +2370,104 @@ export class Display extends EventEmitter {
             else
                 end = text.length;
             offset = format.offset;
-            if (format.formatType === FormatType.Normal) {
-                eText = text.substring(offset, end);
-                font = 0;
-                /*
-                if (format.font || format.size) {
-                    height = (Math.max(height, format.height = format.height || this.textHeight(eText, format.font, format.size)));
-                    format.width = format.width || this.textWidth(eText, font = `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`);
-                }
-                else */
-                if (format.unicode)
-                    format.width = format.width || this.textWidth(eText, 0, format.style);
-                else
-                    format.width = format.width || eText.length * cw;
-            }
-            else if (format.formatType === FormatType.Link && end - offset !== 0) {
-                eText = text.substring(offset, end);
-                if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font, format.style);
-                else
-                    format.width = format.width || eText.length * cw;
-            }
-            else if (format.formatType === FormatType.MXPLink && end - offset !== 0) {
-                eText = text.substring(offset, end);
-                if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font, format.style);
-                else
-                    format.width = format.width || eText.length * cw;
-            }
-            else if (format.formatType === FormatType.MXPSend && end - offset !== 0) {
-                eText = text.substring(offset, end);
-                if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font, format.style);
-                else
-                    format.width = format.width || eText.length * cw;
-            }
-            else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
-                eText = text.substring(offset, end);
-                if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font, format.style);
-                else
-                    format.width = format.width || eText.length * cw;
-            }
-            else if (format.formatType === FormatType.Image) {
-                width += format.marginWidth || 0;
-                if (!format.width) {
-                    this._lines[idx].images++;
-                    const img = new Image();
-                    eText = '';
-                    if (format.url.length > 0) {
-                        eText += format.url;
-                        if (!format.url.endsWith('/'))
-                            eText += '/';
+            switch (format.formatType) {
+                case FormatType.Normal:
+                    eText = text.substring(offset, end);
+                    font = 0;
+                    /*
+                    if (format.font || format.size) {
+                        height = (Math.max(height, format.height = format.height || this.textHeight(eText, format.font, format.size)));
+                        format.width = format.width || this.textWidth(eText, font = `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`);
                     }
-                    if (format.t.length > 0) {
-                        eText += format.t;
-                        if (!format.t.endsWith('/'))
-                            eText += '/';
+                    else */
+                    if (format.unicode)
+                        format.width = format.width || this.textWidth(eText, 0, format.style);
+                    else
+                        format.width = format.width || eText.length * cw;
+                    break;
+                case FormatType.Link:
+                case FormatType.MXPLink:
+                case FormatType.MXPSend:
+                case FormatType.MXPExpired:
+                    if (end - offset === 0) continue;
+                    eText = text.substring(offset, end);
+                    if (format.unicode || font)
+                        format.width = format.width || this.textWidth(eText, font, format.style);
+                    else
+                        format.width = format.width || eText.length * cw;
+                    break;
+                case FormatType.Image:
+                    width += format.marginWidth || 0;
+                    if (!format.width) {
+                        this._lines[idx].images++;
+                        const img = new Image();
+                        eText = '';
+                        if (format.url.length > 0) {
+                            eText += format.url;
+                            if (!format.url.endsWith('/'))
+                                eText += '/';
+                        }
+                        if (format.t.length > 0) {
+                            eText += format.t;
+                            if (!format.t.endsWith('/'))
+                                eText += '/';
+                        }
+                        eText += format.name;
+                        img.src = eText;
+                        img.dataset.id = '' + id;
+                        img.dataset.f = '' + f;
+                        Object.assign(img.style, {
+                            position: 'absolute',
+                            top: (this._innerWidth + 100) + 'px'
+                        });
+                        this._el.appendChild(img);
+                        img.onload = () => {
+                            const lIdx = this.lineIDs.indexOf(+img.dataset.id);
+                            if (lIdx === -1 || lIdx >= this.lines.length) return;
+                            this._lines[lIdx].images--;
+                            const fIdx = +img.dataset.f;
+                            const fmt = this.lineFormats[lIdx][fIdx];
+                            if (fmt.w.length > 0 && fmt.h.length > 0) {
+                                Object.assign(img.style, {
+                                    width: formatUnit(fmt.w),
+                                    height: formatUnit(fmt.h, this._charHeight)
+                                });
+                            }
+                            else if (fmt.w.length > 0)
+                                img.style.width = formatUnit(fmt.w);
+                            else if (fmt.h.length > 0)
+                                img.style.height = formatUnit(fmt.h, this._charHeight);
+                            const bounds = img.getBoundingClientRect();
+                            fmt.width = bounds.width || img.width;
+                            fmt.height = bounds.height || img.height;
+                            if (format.hspace.length > 0 || format.vspace.length > 0) {
+                                const styles = getComputedStyle(img);
+                                fmt.marginHeight = parseFloat(styles.marginTop) + parseFloat(styles.marginBottom);
+                                fmt.marginWidth = parseFloat(styles.marginLeft) + parseFloat(styles.marginRight);
+                            }
+                            else {
+                                fmt.marginHeight = 0;
+                                fmt.marginWidth = 0;
+                            }
+                            this._el.removeChild(img);
+                            if (this._viewCache[lIdx])
+                                delete this._viewCache[lIdx];
+                            if (this._lines[lIdx].images !== 0) return;
+                            const t = this.calculateSize(lIdx);
+                            this._lines[lIdx].width = t.width;
+                            this._lines[lIdx].height = t.height;
+                            this.updateTops(lIdx);
+                            if (lIdx >= this._viewRange.start && lIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._parser.busy) {
+                                if (this.split) this.split.dirty = true;
+                                this.doUpdate(UpdateType.display);
+                            }
+                        };
                     }
-                    eText += format.name;
-                    img.src = eText;
-                    img.dataset.id = '' + id;
-                    img.dataset.f = '' + f;
-                    Object.assign(img.style, {
-                        position: 'absolute',
-                        top: (this._innerWidth + 100) + 'px'
-                    });
-                    this._el.appendChild(img);
-                    img.onload = () => {
-                        const lIdx = this.lineIDs.indexOf(+img.dataset.id);
-                        if (lIdx === -1 || lIdx >= this.lines.length) return;
-                        this._lines[lIdx].images--;
-                        const fIdx = +img.dataset.f;
-                        const fmt = this.lineFormats[lIdx][fIdx];
-                        if (fmt.w.length > 0 && fmt.h.length > 0) {
-                            Object.assign(img.style, {
-                                width: formatUnit(fmt.w),
-                                height: formatUnit(fmt.h, this._charHeight)
-                            });
-                        }
-                        else if (fmt.w.length > 0)
-                            img.style.width = formatUnit(fmt.w);
-                        else if (fmt.h.length > 0)
-                            img.style.height = formatUnit(fmt.h, this._charHeight);
-                        const bounds = img.getBoundingClientRect();
-                        fmt.width = bounds.width || img.width;
-                        fmt.height = bounds.height || img.height;
-                        if (format.hspace.length > 0 || format.vspace.length > 0) {
-                            const styles = getComputedStyle(img);
-                            fmt.marginHeight = parseFloat(styles.marginTop) + parseFloat(styles.marginBottom);
-                            fmt.marginWidth = parseFloat(styles.marginLeft) + parseFloat(styles.marginRight);
-                        }
-                        else {
-                            fmt.marginHeight = 0;
-                            fmt.marginWidth = 0;
-                        }
-                        this._el.removeChild(img);
-                        if (this._viewCache[lIdx])
-                            delete this._viewCache[lIdx];
-                        if (this._lines[lIdx].images !== 0) return;
-                        const t = this.calculateSize(lIdx);
-                        this._lines[lIdx].width = t.width;
-                        this._lines[lIdx].height = t.height;
-                        this.updateTops(lIdx);
-                        if (lIdx >= this._viewRange.start && lIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._parser.busy) {
-                            if (this.split) this.split.dirty = true;
-                            this.doUpdate(UpdateType.display);
-                        }
-                    };
-                }
-                if (format.marginHeight)
-                    height = Math.max(height, format.height + format.marginHeight);
-                else
-                    height = Math.max(height, format.height || 0);
+                    if (format.marginHeight)
+                        height = Math.max(height, format.height + format.marginHeight);
+                    else
+                        height = Math.max(height, format.height || 0);
+                    break;
             }
             width += format.width || 0;
         }
