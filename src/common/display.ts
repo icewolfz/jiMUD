@@ -146,6 +146,7 @@ export class Display extends EventEmitter {
     private _HScroll: ScrollBar;
     private _updating: UpdateType = UpdateType.none;
     private _splitHeight: number = -1;
+    private _wordWrap: boolean = false;
 
     public split = null;
     public splitLive: boolean = false;
@@ -160,7 +161,6 @@ export class Display extends EventEmitter {
             this._VScroll.autoScroll = !locked;
         }
     }
-
 
     private _linkFunction;
     private _mxpLinkFunction;
@@ -186,6 +186,12 @@ export class Display extends EventEmitter {
     private _hideTrailingEmptyLine = true;
     private _enableColors = true;
     private _enableBackgroundColors = true;
+
+    get wordWrap() { return this._wordWrap; }
+    set wordWrap(value: boolean) {
+        if (value === this._wordWrap) return;
+        this._wordWrap = value;
+    }
 
     get enableColors() { return this._enableColors; }
     set enableColors(value) {
@@ -3889,6 +3895,7 @@ export class Display extends EventEmitter {
         const formatsLength = formats.length;
         const text = this.lines[line].replace(/ /g, '\u00A0');
         const rawText = this.lines[line];
+        const wrapText = this._wordWrap;
         let endOffset = 0;
         let startOffset = 0;
         let measureText;
@@ -3951,7 +3958,7 @@ export class Display extends EventEmitter {
                         currentFormat.width = currentFormat.width || this.textWidth(measureText, font, currentFormat.style);
                     else
                         currentFormat.width = currentFormat.width || measureText.length * charWidth;
-                    if (lineWidth + currentFormat.width >= width) {
+                    if (wrapText && lineWidth + currentFormat.width >= width) {
                         lineHeight = Math.max(lineHeight, currentFormat.height || charHeight);
                         let currentOffset = startOffset + 1;
                         currentWidth = 0;
@@ -4041,42 +4048,6 @@ export class Display extends EventEmitter {
                         lineWidth += currentFormat.width || 0;
                     break;
                 case FormatType.Image:
-                    if (lineWidth + (currentFormat.marginWidth || 0) + currentFormat.width > width) {
-                        //empty line so image is the current line
-                        if (currentLine.width === 0) {
-                            if (currentFormat.marginHeight)
-                                currentLine.height = Math.max(lineHeight, currentFormat.height + (currentFormat.marginHeight || 0));
-                            else
-                                currentLine.height = Math.max(lineHeight, currentFormat.height || charHeight);
-                            currentLine.width = currentFormat.width;
-                            currentLine.endOffset = endOffset;
-                            currentLine.endFragment = formatIdx;
-                            wrapLines.push(currentLine);
-                            currentLine = null;
-                            lineWidth = 0;
-                            continue;
-                        }
-                        else {
-                            currentLine.width = lineWidth;
-                            currentLine.endOffset = startOffset;
-                            currentLine.endFragment = formatIdx - 1;
-                            wrapLines.push(currentLine);
-                            lineWidth = 0;
-                            //new line start with image
-                            currentLine = {
-                                line: line,
-                                height: 0,
-                                width: 0,
-                                top: 0,
-                                images: 0,
-                                startOffset: startOffset,
-                                startFragment: formatIdx,
-                                endOffset: 0,
-                                endFragment: 0,
-                                indent: true
-                            }
-                        }
-                    }
                     if (!currentFormat.width || !currentFormat.height) {
                         const img = new Image();
                         measureText = '';
@@ -4170,6 +4141,42 @@ export class Display extends EventEmitter {
                     else
                         lineHeight = Math.max(lineHeight, currentFormat.height || charHeight);
                     lineHeight = charHeight;
+                    if (wrapText && lineWidth + (currentFormat.marginWidth || 0) + currentFormat.width > width) {
+                        //empty line so image is the current line
+                        if (currentLine.width === 0) {
+                            if (currentFormat.marginHeight)
+                                currentLine.height = Math.max(lineHeight, currentFormat.height + (currentFormat.marginHeight || 0));
+                            else
+                                currentLine.height = Math.max(lineHeight, currentFormat.height || charHeight);
+                            currentLine.width = currentFormat.width;
+                            currentLine.endOffset = endOffset;
+                            currentLine.endFragment = formatIdx;
+                            wrapLines.push(currentLine);
+                            currentLine = null;
+                            lineWidth = 0;
+                            continue;
+                        }
+                        else {
+                            currentLine.width = lineWidth;
+                            currentLine.endOffset = startOffset;
+                            currentLine.endFragment = formatIdx - 1;
+                            wrapLines.push(currentLine);
+                            lineWidth = 0;
+                            //new line start with image
+                            currentLine = {
+                                line: line,
+                                height: 0,
+                                width: 0,
+                                top: 0,
+                                images: 0,
+                                startOffset: startOffset,
+                                startFragment: formatIdx,
+                                endOffset: 0,
+                                endFragment: 0,
+                                indent: true
+                            }
+                        }
+                    }
                     lineWidth += currentFormat.marginWidth || 0;
                     lineWidth += currentFormat.width || 0;
                     break;
