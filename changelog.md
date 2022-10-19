@@ -58,6 +58,7 @@
   - Code editor:
     - Fixed upload cancel button
     - Fixed Area designer/Virtual area property drop downs shifting editors
+  - Display: Fixed MXP image hspace and vspace parsing
 - **Changed:**
   - All dark icons now have a white stroke to make them work better with dark mode and dark colors
   - Preferences that are now global:

@@ -2418,7 +2418,6 @@ export class Display extends EventEmitter {
                 case FormatType.Image:
                     width += format.marginWidth || 0;
                     if (!format.width) {
-                        this._lines[idx].images++;
                         const img = new Image();
                         eText = '';
                         if (format.url.length > 0) {
@@ -2435,52 +2434,73 @@ export class Display extends EventEmitter {
                         img.src = eText;
                         img.dataset.id = '' + id;
                         img.dataset.f = '' + f;
+                        this._el.appendChild(img);
                         Object.assign(img.style, {
                             position: 'absolute',
                             top: (this._innerWidth + 100) + 'px'
                         });
-                        this._el.appendChild(img);
-                        img.onload = () => {
-                            const lIdx = this.lineIDs.indexOf(+img.dataset.id);
-                            if (lIdx === -1 || lIdx >= this.lines.length) return;
-                            this._lines[lIdx].images--;
-                            const fIdx = +img.dataset.f;
-                            const fmt = this.lineFormats[lIdx][fIdx];
-                            if (fmt.w.length > 0 && fmt.h.length > 0) {
-                                Object.assign(img.style, {
-                                    width: formatUnit(fmt.w),
-                                    height: formatUnit(fmt.h, this._charHeight)
-                                });
-                            }
-                            else if (fmt.w.length > 0)
-                                img.style.width = formatUnit(fmt.w);
-                            else if (fmt.h.length > 0)
-                                img.style.height = formatUnit(fmt.h, this._charHeight);
-                            const bounds = img.getBoundingClientRect();
-                            fmt.width = bounds.width || img.width;
-                            fmt.height = bounds.height || img.height;
-                            if (format.hspace.length > 0 || format.vspace.length > 0) {
-                                const styles = getComputedStyle(img);
-                                fmt.marginHeight = parseFloat(styles.marginTop) + parseFloat(styles.marginBottom);
-                                fmt.marginWidth = parseFloat(styles.marginLeft) + parseFloat(styles.marginRight);
-                            }
-                            else {
-                                fmt.marginHeight = 0;
-                                fmt.marginWidth = 0;
-                            }
+                        if (format.w.length > 0 && format.h.length > 0) {
+                            Object.assign(img.style, {
+                                width: formatUnit(format.w, this._charWidth),
+                                height: formatUnit(format.h, this._charHeight)
+                            });
+                        }
+                        else if (format.w.length > 0)
+                            img.style.width = formatUnit(format.w, this._charWidth);
+                        else if (format.h.length > 0)
+                            img.style.height = formatUnit(format.h, this._charHeight);
+                        const bounds = img.getBoundingClientRect();
+                        if (format.w.length > 0)
+                            format.width = bounds.width || img.width;
+                        if (format.h.length > 0)
+                            format.height = bounds.height || img.height;
+                        format.marginHeight = 0;
+                        format.marginWidth = 0;
+                        if (format.hspace.length > 0 && format.vspace.length > 0) {
+                            img.style.marginLeft = formatUnit(format.hspace, this._charWidth);
+                            img.style.marginTop = formatUnit(format.vspace, this._charHeight);
+                            const styles = getComputedStyle(img);
+                            format.marginHeight = parseFloat(styles.marginTop) * 2;
+                            format.marginWidth = parseFloat(styles.marginLeft) * 2;
+                        }
+                        else if (format.hspace.length > 0) {
+                            img.style.marginLeft = formatUnit(format.hspace, this._charWidth);
+                            const styles = getComputedStyle(img);
+                            format.marginWidth = parseFloat(styles.marginLeft) * 2;
+                        }
+                        else if (format.vspace.length > 0) {
+                            img.style.marginTop = formatUnit(format.vspace, this._charHeight);
+                            const styles = getComputedStyle(img);
+                            format.marginHeight = parseFloat(styles.marginTop) * 2;
+                        }
+                        //only load if height or width missing
+                        if (!format.height || !format.width) {
+                            this._lines[idx].images++;
+                            img.onload = () => {
+                                const lIdx = this.lineIDs.indexOf(+img.dataset.id);
+                                if (lIdx === -1 || lIdx >= this.lines.length) return;
+                                this._lines[lIdx].images--;
+                                const fIdx = +img.dataset.f;
+                                const fmt = this.lineFormats[lIdx][fIdx];
+                                const bounds = img.getBoundingClientRect();
+                                fmt.width = bounds.width || img.width;
+                                fmt.height = bounds.height || img.height;
+                                this._el.removeChild(img);
+                                if (this._viewCache[lIdx])
+                                    delete this._viewCache[lIdx];
+                                if (this._lines[lIdx].images !== 0) return;
+                                const t = this.calculateSize(lIdx);
+                                this._lines[lIdx].width = t.width;
+                                this._lines[lIdx].height = t.height;
+                                this.updateTops(lIdx);
+                                if (lIdx >= this._viewRange.start && lIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._parser.busy) {
+                                    if (this.split) this.split.dirty = true;
+                                    this.doUpdate(UpdateType.display);
+                                }
+                            };
+                        }
+                        else
                             this._el.removeChild(img);
-                            if (this._viewCache[lIdx])
-                                delete this._viewCache[lIdx];
-                            if (this._lines[lIdx].images !== 0) return;
-                            const t = this.calculateSize(lIdx);
-                            this._lines[lIdx].width = t.width;
-                            this._lines[lIdx].height = t.height;
-                            this.updateTops(lIdx);
-                            if (lIdx >= this._viewRange.start && lIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._parser.busy) {
-                                if (this.split) this.split.dirty = true;
-                                this.doUpdate(UpdateType.display);
-                            }
-                        };
                     }
                     if (format.marginHeight)
                         height = Math.max(height, format.height + format.marginHeight);
@@ -3849,12 +3869,13 @@ export class Display extends EventEmitter {
         left = left || 0;
         //cache locally for a performance boost
         const charWidth = this._charWidth;
+        const charHeight = this._charHeight;
         //calculate the indent with
         indent = (indent || 0) * charWidth;
         const wrapLines: WrapLine[] = [];
         let currentLine: WrapLine = {
             line: line,
-            height: 0,
+            height: charHeight,
             width: 0,
             top: 0,
             images: 0,
@@ -3874,7 +3895,7 @@ export class Display extends EventEmitter {
         let font: any = 0;
         //start at left column
         let lineWidth = left;
-        let lineHeight = 0;
+        let lineHeight = charHeight;
         let formatIdx;
         let currentWidth;
         let previousWidth;
@@ -3899,7 +3920,7 @@ export class Display extends EventEmitter {
             if (!currentLine) {
                 currentLine = {
                     line: line,
-                    height: 0,
+                    height: charHeight,
                     width: 0,
                     top: 0,
                     images: 0,
@@ -3916,21 +3937,27 @@ export class Display extends EventEmitter {
                 case FormatType.MXPLink:
                 case FormatType.MXPSend:
                 case FormatType.MXPExpired:
-                    //TODO add font/variable height support
                     //empty block so skip
                     if (endOffset - startOffset === 0) continue;
                     measureText = text.substring(startOffset, endOffset);
+                    //TODO add font/variable height support
+                    /*
+                    if (format.font || format.size) {
+                        lineHeight = (Math.max(lineHeight, format.height = format.height || this.textHeight(eText, format.font, format.size) || charHeight));
+                        format.width = format.width || this.textWidth(eText, font = `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`);
+                    }
+                    else */
                     if (currentFormat.unicode || font)
                         currentFormat.width = currentFormat.width || this.textWidth(measureText, font, currentFormat.style);
                     else
                         currentFormat.width = currentFormat.width || measureText.length * charWidth;
                     if (lineWidth + currentFormat.width >= width) {
-                        lineHeight = Math.max(lineHeight, currentFormat.height || 0);
+                        lineHeight = Math.max(lineHeight, currentFormat.height || charHeight);
                         let currentOffset = startOffset + 1;
                         currentWidth = 0;
                         previousWidth = 0;
                         for (; currentOffset < endOffset; currentOffset++) {
-                            //uf unicode in block make sure to include any unicode modifiers if they are right after current char
+                            //if unicode in block make sure to include any unicode modifiers if they are right after current char
                             //also make sure surrogate pair are included
                             if (currentFormat.unicode)
                                 while (currentOffset < endOffset && ((text.charCodeAt(currentOffset + 1) >= 0xD800 && text.charCodeAt(currentOffset + 1) <= 0xDBFF) || this.isUnicodeModifierCode(text.charCodeAt(currentOffset + 1))))
@@ -3991,12 +4018,12 @@ export class Display extends EventEmitter {
                                 //start at left column + indent width
                                 lineWidth = left + indent;
                                 currentWidth = 0;
-                                lineHeight = 0;
+                                lineHeight = charHeight;
                                 startOffset = currentOffset;
                                 //new line start with image
                                 currentLine = {
                                     line: line,
-                                    height: 0,
+                                    height: charHeight,
                                     width: 0,
                                     top: 0,
                                     images: 0,
@@ -4014,128 +4041,146 @@ export class Display extends EventEmitter {
                         lineWidth += currentFormat.width || 0;
                     break;
                 case FormatType.Image:
-                    //TODO add image breaking support back in, see commented out block of code below to readd
-                    /*
-                    if (currentFormat.formatType === FormatType.Image) {
-                        if (lineWidth + (currentFormat.marginWidth || 0) + currentFormat.width > width) {
-                            //empty line so image is the current line
-                            if (lineWidth === 0) {
-                                if (currentFormat.marginHeight)
-                                    currentLine.height = Math.max(lineHeight, currentFormat.height + currentFormat.marginHeight);
-                                else
-                                    currentLine.height = Math.max(lineHeight, currentFormat.height || 0);
-                                currentLine.width = currentFormat.width;
-                                currentLine.endOffset = endOffset;
-                                currentLine.endFragment = formatIdx;
-                                wrapLines.push(currentLine);
-                                currentLine = null;
-                                lineWidth = 0;
-                                continue;
-                            }
-                            else {
-                                currentLine.width = lineWidth;
-                                currentLine.endOffset = startOffset;
-                                currentLine.endFragment = formatIdx - 1;
-                                wrapLines.push(currentLine);
-                                lineWidth = 0;
-                                //new line start with image
-                                currentLine = {
-                                    line: line,
-                                    height: 0,
-                                    width: 0,
-                                    top: 0,
-                                    images: 0,
-                                    startOffset: startOffset,
-                                    startFragment: formatIdx,
-                                    endOffset: 0,
-                                    endFragment: 0,
-                                    indent: true
-                                }
+                    if (lineWidth + (currentFormat.marginWidth || 0) + currentFormat.width > width) {
+                        //empty line so image is the current line
+                        if (currentLine.width === 0) {
+                            if (currentFormat.marginHeight)
+                                currentLine.height = Math.max(lineHeight, currentFormat.height + (currentFormat.marginHeight || 0));
+                            else
+                                currentLine.height = Math.max(lineHeight, currentFormat.height || charHeight);
+                            currentLine.width = currentFormat.width;
+                            currentLine.endOffset = endOffset;
+                            currentLine.endFragment = formatIdx;
+                            wrapLines.push(currentLine);
+                            currentLine = null;
+                            lineWidth = 0;
+                            continue;
+                        }
+                        else {
+                            currentLine.width = lineWidth;
+                            currentLine.endOffset = startOffset;
+                            currentLine.endFragment = formatIdx - 1;
+                            wrapLines.push(currentLine);
+                            lineWidth = 0;
+                            //new line start with image
+                            currentLine = {
+                                line: line,
+                                height: 0,
+                                width: 0,
+                                top: 0,
+                                images: 0,
+                                startOffset: startOffset,
+                                startFragment: formatIdx,
+                                endOffset: 0,
+                                endFragment: 0,
+                                indent: true
                             }
                         }
-                        lineWidth += currentFormat.marginWidth || 0;
-                        if (!currentFormat.width) {
-                            //TODO figure out how ot handle async wrap, need to unload all old wrapped lines and recalculate when image is loaded
-                            this._lines[line].images++;
-                            const img = new Image();
-                            measureText = '';
-                            if (currentFormat.url.length > 0) {
-                                measureText += currentFormat.url;
-                                if (!currentFormat.url.endsWith('/'))
-                                    measureText += '/';
-                            }
-                            if (currentFormat.t.length > 0) {
-                                measureText += currentFormat.t;
-                                if (!currentFormat.t.endsWith('/'))
-                                    measureText += '/';
-                            }
-                            measureText += currentFormat.name;
-                            img.src = measureText;
-                            img.dataset.id = '' + this.lineIDs[line];
-                            img.dataset.f = '' + formatIdx;
+                    }
+                    if (!currentFormat.width || !currentFormat.height) {
+                        const img = new Image();
+                        measureText = '';
+                        if (currentFormat.url.length > 0) {
+                            measureText += currentFormat.url;
+                            if (!currentFormat.url.endsWith('/'))
+                                measureText += '/';
+                        }
+                        if (currentFormat.t.length > 0) {
+                            measureText += currentFormat.t;
+                            if (!currentFormat.t.endsWith('/'))
+                                measureText += '/';
+                        }
+                        measureText += currentFormat.name;
+                        img.src = measureText;
+                        img.dataset.id = '' + this.lineIDs[line];
+                        img.dataset.f = '' + formatIdx;
+                        this._el.appendChild(img);
+                        Object.assign(img.style, {
+                            position: 'absolute',
+                            top: (this._innerWidth + 100) + 'px'
+                        });
+                        if (currentFormat.w.length > 0 && currentFormat.h.length > 0) {
                             Object.assign(img.style, {
-                                position: 'absolute',
-                                top: (this._innerWidth + 100) + 'px'
+                                width: formatUnit(currentFormat.w, charWidth),
+                                height: formatUnit(currentFormat.h, charHeight)
                             });
-                            this._el.appendChild(img);
+                        }
+                        else if (currentFormat.w.length > 0)
+                            img.style.width = formatUnit(currentFormat.w, charWidth);
+                        else if (currentFormat.h.length > 0)
+                            img.style.height = formatUnit(currentFormat.h, charHeight);
+                        else //if not set mark as loading
+                            this._lines[line].images++;
+                        const bounds = img.getBoundingClientRect();
+                        if (currentFormat.w.length > 0)
+                            currentFormat.width = bounds.width || img.width;
+                        if (currentFormat.h.length > 0)
+                            currentFormat.height = bounds.height || img.height;
+                        currentFormat.marginHeight = 0;
+                        currentFormat.marginWidth = 0;
+                        if (currentFormat.hspace.length > 0 && currentFormat.vspace.length > 0) {
+                            img.style.marginLeft = formatUnit(currentFormat.hspace, charWidth);
+                            img.style.marginTop = formatUnit(currentFormat.vspace, charHeight);
+                            const styles = getComputedStyle(img);
+                            currentFormat.marginHeight = parseFloat(styles.marginTop) * 2;
+                            currentFormat.marginWidth = parseFloat(styles.marginLeft) * 2;
+                        }
+                        else if (currentFormat.hspace.length > 0) {
+                            img.style.marginLeft = formatUnit(currentFormat.hspace, charWidth);
+                            const styles = getComputedStyle(img);
+                            currentFormat.marginWidth = parseFloat(styles.marginLeft) * 2;
+                        }
+                        else if (currentFormat.vspace.length > 0) {
+                            img.style.marginTop = formatUnit(currentFormat.vspace, charHeight);
+                            const styles = getComputedStyle(img);
+                            currentFormat.marginHeight = parseFloat(styles.marginTop) * 2;
+                        }
+                        //only calculate if width or height not set
+                        if (!currentFormat.width || !currentFormat.height) {
+                            //only append if needing to calculate otherwise just let it be garbage collected
                             img.onload = () => {
+                                //TODO make work once convert to wrapped line format
+                                return;
                                 const lIdx = this.lineIDs.indexOf(+img.dataset.id);
                                 if (lIdx === -1 || lIdx >= this.lines.length) return;
                                 this._lines[lIdx].images--;
                                 const fIdx = +img.dataset.f;
                                 const fmt = this.lineFormats[lIdx][fIdx];
-                                if (fmt.w.length > 0 && fmt.h.length > 0) {
-                                    Object.assign(img.style, {
-                                        width: formatUnit(fmt.w),
-                                        height: formatUnit(fmt.h, this._charHeight)
-                                    });
-                                }
-                                else if (fmt.w.length > 0)
-                                    img.style.width = formatUnit(fmt.w);
-                                else if (fmt.h.length > 0)
-                                    img.style.height = formatUnit(fmt.h, this._charHeight);
                                 const bounds = img.getBoundingClientRect();
                                 fmt.width = bounds.width || img.width;
                                 fmt.height = bounds.height || img.height;
-                                if (currentFormat.hspace.length > 0 || currentFormat.vspace.length > 0) {
-                                    const styles = getComputedStyle(img);
-                                    fmt.marginHeight = parseFloat(styles.marginTop) + parseFloat(styles.marginBottom);
-                                    fmt.marginWidth = parseFloat(styles.marginLeft) + parseFloat(styles.marginRight);
-                                }
-                                else {
-                                    fmt.marginHeight = 0;
-                                    fmt.marginWidth = 0;
-                                }
                                 this._el.removeChild(img);
                                 if (this._viewCache[lIdx])
                                     delete this._viewCache[lIdx];
                                 if (this._lines[lIdx].images !== 0) return;
-                                const t = this.calculateSize(lIdx);
-                                this._lines[lIdx].width = t.width;
-                                this._lines[lIdx].height = t.height;
-                                this.updateTops(lIdx);
+                                //TODO update wrapped lines with new mage widths
+                                const wraps = this.calculateWrapLines(lIdx);
+                                //this.updateTops(lIdx);
                                 if (lIdx >= this._viewRange.start && lIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._parser.busy) {
                                     if (this.split) this.split.dirty = true;
                                     this.doUpdate(UpdateType.display);
                                 }
                             };
                         }
-                        if (currentFormat.marginHeight)
-                            lineHeight = Math.max(lineHeight, currentFormat.height + currentFormat.marginHeight);
                         else
-                            lineHeight = Math.max(lineHeight, currentFormat.height || 0);
+                            this._el.removeChild(img);
                     }
+                    if (currentFormat.marginHeight)
+                        lineHeight = Math.max(lineHeight, (currentFormat.height + currentFormat.marginHeight) || charHeight);
+                    else
+                        lineHeight = Math.max(lineHeight, currentFormat.height || charHeight);
+                    lineHeight = charHeight;
+                    lineWidth += currentFormat.marginWidth || 0;
                     lineWidth += currentFormat.width || 0;
-                    */
                     break;
             }
             if (currentFormat.marginHeight)
-                lineHeight = Math.max(lineHeight, currentFormat.height + currentFormat.marginHeight);
+                lineHeight = Math.max(lineHeight, (currentFormat.height + currentFormat.marginHeight) || charHeight);
             else
-                lineHeight = Math.max(lineHeight, currentFormat.height || 0);
-
+                lineHeight = Math.max(lineHeight, currentFormat.height || charHeight);
         }
         if (currentLine) {
+            currentLine.height = lineHeight
             currentLine.width = lineWidth;
             currentLine.endFragment = formatIdx - 1;
             currentLine.endOffset = endOffset;
