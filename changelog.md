@@ -4,7 +4,7 @@
 
 - **New:**
   - New Multiple Document Interface:
-    - Allows multiple clients to be docked in one window with tabbed interface or seperate windows
+    - Allows multiple clients to be docked in one window with tabbed interface or separate windows
     - Full drag and drop support between windows of the same instance
     - Color coded tabs based on client activity
     - Tab icons based on main or dev connection
@@ -54,6 +54,7 @@
   - Immortal tools: Fixed issue with multiple events not correctly working
   - Profile manager: Fixed code editor spell checking replacement
   - Fixed #wait error when followed by trailing whitespace
+  - Profiles: Fixed loading of copied profile data files not correctly loading
   - Code editor:
     - Fixed upload cancel button
     - Fixed Area designer/Virtual area property drop downs shifting editors

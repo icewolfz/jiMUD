@@ -429,7 +429,7 @@ function createWindow(options) {
         }
         clientsChanged();
     });
-    //restore state sooner to try and prevent visual gitches
+    //restore state sooner to try and prevent visual glitches
     if (options.data && options.data.state) {
         restoreWindowState(window, options.data.state);
         stateMap.set(window, options.data.state);
@@ -464,7 +464,7 @@ function createWindow(options) {
         if (_close)
             return;
         e.preventDefault();
-        //for what ever reason electron does not seem to work well with await, it sill continues to execute async instead of waiting when using ipcrender
+        //for what ever reason electron does not seem to work well with await, it sill continues to execute async instead of waiting when using IPCrenderer
         _close = await canCloseAllClients(getWindowId(window)).catch(logError);
         if (_close) {
             states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
@@ -2489,7 +2489,7 @@ async function removeClient(id) {
     const client = clients[id];
     const cancel = await canCloseClient(id, true);
     //const cancel = await executeScript('if(typeof closeable === "function") closeable(); else (function() { return true; })();', client.view);
-    //dont close
+    //don't close
     if (cancel !== true)
         return;
     const window = client.parent;
@@ -2574,7 +2574,7 @@ async function canCloseClient(id, warn, all, allWindows) {
         return false;
     const wl = client.windows.length;
     for (let w = 0; w < wl; w++) {
-        //check each child window just to be saft
+        //check each child window just to be safe
         close = await executeScript(`if(typeof closeable === "function") closeable(${all}, ${allWindows}); else (function() { return true; })();`, client.windows[w].window);
         if (client.windows[w].window.isModal()) {
             if (warn) {
