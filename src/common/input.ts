@@ -2967,6 +2967,8 @@ export class Input extends EventEmitter {
             //#endregion gag
             case 'wait':
             case 'wa':
+                //filter out empty arguments to avoid trailing spaces
+                args = args.filter(a=>a);
                 if (args.length === 0 || args.length > 1)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'wa\x1b[0;-11;-12mit number');
                 i = parseInt(this.parseInline(args[0]), 10);

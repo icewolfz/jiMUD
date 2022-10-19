@@ -53,6 +53,7 @@
   - Fixed a bug in parsing #command arguments and quotes
   - Immortal tools: Fixed issue with multiple events not correctly working
   - Profile manager: Fixed code editor spell checking replacement
+  - Fixed #wait error when followed by trailing whitespace
   - Code editor:
     - Fixed upload cancel button
     - Fixed Area designer/Virtual area property drop downs shifting editors
