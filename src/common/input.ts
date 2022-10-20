@@ -1595,18 +1595,18 @@ export class Input extends EventEmitter {
         if (raw) {
             if (n === this.client.display.lines.length) {
                 n--;
-                if (this.client.display.lines[n].length === 0 && this.client.display.rawLines[n].length)
+                if (this.client.display.lines[n].text.length === 0 && this.client.display.lines[n].raw.length)
                     n--;
             }
-            else if (n === this.client.display.lines.length - 1 && this.client.display.lines[n].length === 0 && this.client.display.rawLines[n].length)
+            else if (n === this.client.display.lines.length - 1 && this.client.display.lines[n].text.length === 0 && this.client.display.lines[n].raw.length)
                 n--;
         }
         else if (n === this.client.display.lines.length) {
             n--;
-            if (this.client.display.lines[n].length === 0)
+            if (this.client.display.lines[n].text.length === 0)
                 n--;
         }
-        else if (n === this.client.display.lines.length - 1 && this.client.display.lines[n].length === 0)
+        else if (n === this.client.display.lines.length - 1 && this.client.display.lines[n].text.length === 0)
             n--;
         return n;
     }
@@ -2968,7 +2968,7 @@ export class Input extends EventEmitter {
             case 'wait':
             case 'wa':
                 //filter out empty arguments to avoid trailing spaces
-                args = args.filter(a=>a);
+                args = args.filter(a => a);
                 if (args.length === 0 || args.length > 1)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'wa\x1b[0;-11;-12mit number');
                 i = parseInt(this.parseInline(args[0]), 10);
@@ -4613,7 +4613,7 @@ export class Input extends EventEmitter {
                 //skip trailing new lines
                 n = this.client.display.lines.length;
                 while (n-- && i) {
-                    if (this.client.display.lines[n].length)
+                    if (this.client.display.lines[n].text.length)
                         break;
                     i--;
                 }
@@ -8801,7 +8801,7 @@ export class Input extends EventEmitter {
             if (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) {
                 const val = this.adjustLastLine(this.client.display.lines.length, true);
                 const line = this.client.display.lines[val];
-                t = this.TestTrigger(trigger, parent, t, line, this.client.display.rawLines[val] || line, val === this.client.display.lines.length - 1);
+                t = this.TestTrigger(trigger, parent, t, line, this.client.display.lines[val].raw || line, val === this.client.display.lines.length - 1);
                 continue;
             }
             if (trigger.type !== TriggerType.Event) continue;

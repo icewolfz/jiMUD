@@ -192,17 +192,17 @@ self.addEventListener('message', (e: MessageEvent) => {
             c = options.unique;
             options.unique = false;
             if (!e.data.args)
-                start([], [], [], false);
+                start([], false);
             else
-                start(e.data.args.lines, e.data.args.raw, e.data.args.formats, e.data.args.fragment);
+                start(e.data.args.lines, e.data.args.fragment);
             options.unique = c;
             break;
 
         case 'start':
             if (!e.data.args)
-                start([], [], [], false);
+                start([], false);
             else
-                start(e.data.args.lines, e.data.args.raw, e.data.args.formats, e.data.args.fragment);
+                start(e.data.args.lines, e.data.args.fragment);
             break;
         case 'flush':
             flush(e.data.args);
@@ -225,7 +225,7 @@ self.addEventListener('message', (e: MessageEvent) => {
             if (!logging || (!options.offline && !connected)) return;
             if (data.gagged && !options.gagged) return;
             if ((options.what & Log.Html) === Log.Html)
-                writeHtml(createLine(data.line, data.formats));
+                writeHtml(createLine({ text: data.line, formats: data.formats }));
             if ((options.what & Log.Text) === Log.Text || options.what === Log.None)
                 writeText(data.line + '\n');
             if ((options.what & Log.Raw) === Log.Raw)
@@ -373,7 +373,7 @@ function flush(newline?) {
         if (newline)
             nl = '\n';
         if ((flushBuffer.what & Log.Html) === Log.Html)
-            writeHtml(createLine(flushBuffer.line, flushBuffer.formats));
+            writeHtml(createLine({ text: flushBuffer.line, formats: flushBuffer.formats }));
         if ((flushBuffer.what & Log.Text) === Log.Text || flushBuffer.what === Log.None)
             writeText(flushBuffer.line + nl);
         if ((flushBuffer.what & Log.Raw) === Log.Raw)
@@ -386,7 +386,7 @@ function flush(newline?) {
     flushBuffer = null;
 }
 
-function start(lines: string[], raw: string[], formats: any[], fragment: boolean) {
+function start(lines: any[], fragment: boolean) {
     if (!options.enabled) {
         if (logging)
             stop();
@@ -401,11 +401,11 @@ function start(lines: string[], raw: string[], formats: any[], fragment: boolean
     buildFilename();
     if (options.prepend && lines && lines.length > 0) {
         if ((options.what & Log.Html) === Log.Html)
-            writeHtml(createLines(lines || [], formats || []));
+            writeHtml(createLines(lines || []));
         if ((options.what & Log.Text) === Log.Text || options.what === Log.None)
             writeText(lines.join('\n') + (fragment || lines.length === 0 ? '' : '\n'));
         if ((options.what & Log.Raw) === Log.Raw)
-            writeRaw(raw.join(''));
+            writeRaw(lines.map(l => l.raw).join(''));
     }
     postMessage({ event: 'started', args: logging });
 }
@@ -427,11 +427,11 @@ function toggle() {
     options.unique = c;
 }
 
-function createLines(lines: string[], formats: any[]) {
+function createLines(lines: any[]) {
     const text = [];
     const ll = lines.length;
     for (let l = 0; l < ll; l++)
-        text.push(createLine(lines[l], formats[l]));
+        text.push(createLine(lines[l]));
     return text.join('');
 }
 
@@ -440,13 +440,14 @@ function getClassName(str) {
     return str.replace(/[,]/g, '-').replace(/[\(\)\s;]/g, '');
 }
 
-function createLine(text: string, formats: any[]) {
+function createLine(line) {
     const parts = [];
     let offset = 0;
     let fCls;
+    const formats = line.formats;
     const len = formats.length;
     const styles = [];
-
+    const text = line.text;
     for (let f = 0; f < len; f++) {
         const format = formats[f];
         let nFormat;

@@ -83,6 +83,16 @@ interface WrapLine {
 }
 
 /**
+ * Contains parsed line data
+ */
+interface LineData {
+    text: string;       //the line text
+    formats: any[];     //the line formatting data
+    raw: string;        //the raw line data including all ansi codes
+    id: number;         //unique id for line
+}
+
+/**
  * Ansi display control
  *
  * @export
@@ -129,11 +139,9 @@ export class Display extends EventEmitter {
 
     private _lines: Line[] = [];
 
-    public lines: string[] = [];
+    public lines: LineData[] = [];
     private lineIDs: number[] = [];
-    public rawLines: string[] = [];
     public scrollToEnd: boolean = true;
-    private lineFormats = [];
     private _maxLines: number = 5000;
     private _charHeight: number;
     private _charWidth: number;
@@ -643,7 +651,7 @@ export class Display extends EventEmitter {
             if (e.detail === 2) {
                 const o = this.getLineOffset(e.pageX, e.pageY);
                 if (o.y >= 0 && o.y < this.lines.length) {
-                    const line = this.lines[o.y];
+                    const line = this.lines[o.y].text;
                     const len = line.length;
                     if (o.x >= 0 || o.x < len) {
                         let sPos = o.x;
@@ -684,7 +692,7 @@ export class Display extends EventEmitter {
                     };
                     this._currentSelection = {
                         start: { x: 0, y: o.y },
-                        end: { x: this.lines[o.y].length, y: o.y },
+                        end: { x: this.lines[o.y].text.length, y: o.y },
                         scrollTimer: null,
                         drag: false
                     };
@@ -739,7 +747,7 @@ export class Display extends EventEmitter {
                         if (this.lines.length === 0)
                             this._currentSelection.end.x = 0;
                         else if (this._currentSelection.end.y >= this.lines.length)
-                            this._currentSelection.end.x = this.lines[this.lines.length - 1].length;
+                            this._currentSelection.end.x = this.lines[this.lines.length - 1].text.length;
                     }
                     else
                         y = 0;
@@ -757,7 +765,7 @@ export class Display extends EventEmitter {
                         if (this.lines.length === 0)
                             this._currentSelection.end.x = 0;
                         else
-                            this._currentSelection.end.x = this.lines[this.lines.length - 1].length;
+                            this._currentSelection.end.x = this.lines[this.lines.length - 1].text.length;
                     }
                     else {
                         x = 0;
@@ -778,7 +786,7 @@ export class Display extends EventEmitter {
         this._el.addEventListener('contextmenu', (e: ContextEvent) => {
             const o = this.getLineOffset(e.pageX, e.pageY);
             if (o.y >= 0 && o.y < this.lines.length)
-                e.line = this.lines[o.y];
+                e.line = this.lines[o.y].text;
             else
                 e.line = '';
             e.word = this.getWordFromPosition(o);
@@ -1052,7 +1060,7 @@ export class Display extends EventEmitter {
     get EndOfLineLength(): number {
         if (this.lines.length === 0)
             return 0;
-        return this.lines[this.lines.length - 1].length;
+        return this.lines[this.lines.length - 1].text.length;
     }
 
     set enableFlashing(value: boolean) {
@@ -1142,8 +1150,6 @@ export class Display extends EventEmitter {
     public clear() {
         this._parser.Clear();
         this.lines = [];
-        this.rawLines = [];
-        this.lineFormats = [];
         this._expire = {};
         this._expire2 = [];
         this._overlays = {
@@ -1233,7 +1239,7 @@ export class Display extends EventEmitter {
     public updateView() {
         const w = this._maxLineLength * this._charWidth;
         let l = this.lines.length;
-        if (this._hideTrailingEmptyLine && l && this.lines[l - 1].length === 0)
+        if (this._hideTrailingEmptyLine && l && this.lines[l - 1].text.length === 0)
             l--;
         const h = l * this._charHeight;
         const mw = '' + (w === 0 ? 0 : Math.max(w, this._maxView));
@@ -1347,12 +1353,13 @@ export class Display extends EventEmitter {
         this.emit('add-line-done', data);
         if (data.gagged)
             return;
-        if (data.line === '\n' || data.line.length === 0)
-            this.lines.push('');
-        else
-            this.lines.push(data.line);
-        this.rawLines.push(data.raw);
-        this.lineFormats.push(data.formats);
+        const line: LineData = {
+            text: (data.line === '\n' || data.line.length === 0) ? '' : data.line,
+            raw: data.raw,
+            formats: data.formats,
+            id: this._lineID
+        }
+        this.lines.push(line);
         if (data.formats[0].hr) {
             t = this.WindowWidth;
             if (t > this._maxLineLength)
@@ -1382,8 +1389,6 @@ export class Display extends EventEmitter {
         this.lines.splice(line, 1);
         this.lineIDs.splice(line, 1);
         this._lines.splice(line, 1);
-        this.rawLines.splice(line, 1);
-        this.lineFormats.splice(line, 1);
         this._expire2.splice(line, 1);
         if (this._viewCache[line])
             delete this._viewCache[line];
@@ -1401,7 +1406,7 @@ export class Display extends EventEmitter {
                 if (this._currentSelection.start.y > this._currentSelection.end.y) {
                     this._currentSelection.start.y--;
                     if (this._currentSelection.start.y >= 0 && this._currentSelection.start.y < this.lines.length)
-                        this._currentSelection.start.x = this.lines[this._currentSelection.start.y].length;
+                        this._currentSelection.start.x = this.lines[this._currentSelection.start.y].text.length;
                     else
                         this._currentSelection.start.x = 0;
                 }
@@ -1418,7 +1423,7 @@ export class Display extends EventEmitter {
                 else {
                     this._currentSelection.end.y--;
                     if (this._currentSelection.end.y >= 0 && this._currentSelection.end.y < this.lines.length)
-                        this._currentSelection.end.x = this.lines[this._currentSelection.end.y].length;
+                        this._currentSelection.end.x = this.lines[this._currentSelection.end.y].text.length;
                     else
                         this._currentSelection.end.x = 0;
                 }
@@ -1448,8 +1453,6 @@ export class Display extends EventEmitter {
         this.lines.splice(line, amt);
         this.lineIDs.splice(line, amt);
         this._lines.splice(line, amt);
-        this.rawLines.splice(line, amt);
-        this.lineFormats.splice(line, amt);
         this._expire2.splice(line, amt);
 
         for (let a = 0; a < amt; a++) {
@@ -1472,7 +1475,7 @@ export class Display extends EventEmitter {
                     if (this._currentSelection.start.y > this._currentSelection.end.y) {
                         this._currentSelection.start.y--;
                         if (this._currentSelection.start.y >= 0 && this._currentSelection.start.y < this.lines.length)
-                            this._currentSelection.start.x = this.lines[this._currentSelection.start.y].length;
+                            this._currentSelection.start.x = this.lines[this._currentSelection.start.y].text.length;
                         else
                             this._currentSelection.start.x = 0;
                     }
@@ -1489,7 +1492,7 @@ export class Display extends EventEmitter {
                     else {
                         this._currentSelection.end.y--;
                         if (this._currentSelection.end.y >= 0 && this._currentSelection.end.y < this.lines.length)
-                            this._currentSelection.end.x = this.lines[this._currentSelection.end.y].length;
+                            this._currentSelection.end.x = this.lines[this._currentSelection.end.y].text.length;
                         else
                             this._currentSelection.end.x = 0;
                     }
@@ -1522,7 +1525,7 @@ export class Display extends EventEmitter {
     public colorSubStringByLine(idx: number, fore, back?, start?: number, end?: number, style?: FontStyle) {
         //invalid line bail
         if (idx < 0 || idx >= this.lines.length) return;
-        const lineLength = this.lines[idx].length;
+        const lineLength = this.lines[idx].text.length;
         //passed line skip
         if (start >= lineLength) return;
         if (!start || start < 0) start = 0;
@@ -1533,7 +1536,7 @@ export class Display extends EventEmitter {
         //clear cache
         if (this._viewCache[idx])
             delete this._viewCache[idx];
-        const formats = this.lineFormats[idx];
+        const formats = this.lines[idx].formats;
         let len = formats.length;
         let found: boolean = false;
         //whole line so just do everything
@@ -1645,7 +1648,7 @@ export class Display extends EventEmitter {
                     start = formatEnd;
             }
             //clean out duplicates and other no longer needed blocks
-            this.lineFormats[idx] = this.pruneFormats(formats, this.textLength);
+            this.lines[idx].formats = this.pruneFormats(formats, this.textLength);
             //rebuild widths for new blocks/old blocks as needed
             this.calculateSize(idx);
             //const t = this.calculateSize(idx);
@@ -1662,7 +1665,7 @@ export class Display extends EventEmitter {
     public removeStyleSubStringByLine(idx: number, style: FontStyle, start?: number, end?: number) {
         //invalid line bail
         if (idx < 0 || idx >= this.lines.length) return;
-        const lineLength = this.lines[idx].length;
+        const lineLength = this.lines[idx].text.length;
         //passed line skip
         if (start >= lineLength) return;
         if (!start || start < 0) start = 0;
@@ -1671,7 +1674,7 @@ export class Display extends EventEmitter {
         //clear cache
         if (this._viewCache[idx])
             delete this._viewCache[idx];
-        const formats = this.lineFormats[idx];
+        const formats = this.lines[idx].formats;
         let len = formats.length;
         let found: boolean = false;
         //whole line so just do everything
@@ -1779,7 +1782,7 @@ export class Display extends EventEmitter {
                     start = formatEnd;
             }
             //clean out duplicates and other no longer needed blocks
-            this.lineFormats[idx] = this.pruneFormats(formats, this.textLength);
+            this.lines[idx].formats = this.pruneFormats(formats, this.textLength);
             //rebuild widths for new blocks/old blocks as needed
             this.calculateSize(idx);
             //const t = this.calculateSize(idx);
@@ -1796,7 +1799,7 @@ export class Display extends EventEmitter {
     public highlightStyleSubStringByLine(idx: number, start?: number, end?: number, color?: boolean) {
         //invalid line bail
         if (idx < 0 || idx >= this.lines.length) return;
-        const lineLength = this.lines[idx].length;
+        const lineLength = this.lines[idx].text.length;
         //passed line skip
         if (start >= lineLength) return;
         if (!start || start < 0) start = 0;
@@ -1805,7 +1808,7 @@ export class Display extends EventEmitter {
         //clear cache
         if (this._viewCache[idx])
             delete this._viewCache[idx];
-        const formats = this.lineFormats[idx];
+        const formats = this.lines[idx].formats;
         let len = formats.length;
         let found: boolean = false;
         //whole line so just do everything
@@ -1935,7 +1938,7 @@ export class Display extends EventEmitter {
                     start = formatEnd;
             }
             //clean out duplicates and other no longer needed blocks
-            this.lineFormats[idx] = this.pruneFormats(formats, this.textLength);
+            this.lines[idx].formats = this.pruneFormats(formats, this.textLength);
             //rebuild widths for new blocks/old blocks as needed
             this.calculateSize(idx);
             //const t = this.calculateSize(idx);
@@ -2013,11 +2016,11 @@ export class Display extends EventEmitter {
     }
 
     get text(): string {
-        return this.lines.join('\n');
+        return this.lines.map(line => line.text).join('\n');
     }
 
     get raw(): string {
-        return this.rawLines.join('');
+        return this.lines.map(line => line.raw).join('');
     }
 
     public trimLines() {
@@ -2028,8 +2031,6 @@ export class Display extends EventEmitter {
             this.lines.splice(0, amt);
             this.lineIDs.splice(0, amt);
             this._lines.splice(0, amt);
-            this.rawLines.splice(0, amt);
-            this.lineFormats.splice(0, amt);
             this._expire2.splice(0, amt);
             if (this.hasSelection) {
                 this._currentSelection.start.y -= amt;
@@ -2069,15 +2070,14 @@ export class Display extends EventEmitter {
 
             let m = 0;
             const lines = this.lines;
-            const formats = this.lineFormats;
             const ll = lines.length;
             for (let l = 0; l < ll; l++) {
-                if (formats[0].hr) {
+                if (lines[l].formats[0].hr) {
                     if (this.WindowWidth > m)
                         m = this.WindowWidth;
                 }
-                else if (lines[l].length > m)
-                    m = lines[l].length;
+                else if (lines[l].text.length > m)
+                    m = lines[l].text.length;
             }
             this._viewCache = {};
             if (this.split)
@@ -2110,9 +2110,9 @@ export class Display extends EventEmitter {
             let text;
             let line = y;
             if (y < this.lines.length)
-                text = this.lines[y].replace(/ /g, '\u00A0');
+                text = this.lines[y].text.replace(/ /g, '\u00A0');
             else {
-                text = this.lines[this.lines.length - 1].replace(/ /g, '\u00A0');
+                text = this.lines[this.lines.length - 1].text.replace(/ /g, '\u00A0');
                 line = this.lines.length - 1;
             }
             const tl = text.length;
@@ -2168,7 +2168,7 @@ export class Display extends EventEmitter {
 
     public getWordFromPosition(position) {
         if (position.y >= 0 && position.y < this.lines.length) {
-            const line = this.lines[position.y];
+            const line = this.lines[position.y].text;
             const len = line.length;
             if (position.x >= 0 || position.x < len) {
                 let sPos = position.x;
@@ -2191,10 +2191,10 @@ export class Display extends EventEmitter {
 
     public getUrlFromPosition(position) {
         if (position.y >= 0 && position.y < this.lines.length) {
-            const line = this.lines[position.y];
+            const line = this.lines[position.y].text;
             const len = line.length;
             if (position.x >= 0 || position.x < len) {
-                const formats = this.lineFormats[position.y];
+                const formats = this.lines[position.y].formats;
                 const fl = formats.length;
                 let l;
                 for (l = 0; l < fl; l++) {
@@ -2308,13 +2308,13 @@ export class Display extends EventEmitter {
             return 0;
         if (start === undefined || start === null)
             return this._lines[line].width;
-        if (len === undefined || len === null || len > this.lines[line].length)
-            len = this.lines[line].length;
+        if (len === undefined || len === null || len > this.lines[line].text.length)
+            len = this.lines[line].text.length;
         if (len - start <= 0) return 0;
-        if (start === 0 && len >= this.lines[line].length)
+        if (start === 0 && len >= this.lines[line].text.length)
             return this._lines[line].width;
-        const text = this.lines[line].replace(/ /g, '\u00A0');
-        const formats = this.lineFormats[line];
+        const text = this.lines[line].text.replace(/ /g, '\u00A0');
+        const formats = this.lines[line].formats;
         const fLen = formats.length;
         const tl = text.length;
         let f = 0;
@@ -2367,8 +2367,8 @@ export class Display extends EventEmitter {
     private calculateSize(idx, force?: boolean) {
         if (idx === undefined)
             idx = this.lines.length - 1;
-        const text = this.lines[idx].replace(/ /g, '\u00A0');
-        const formats = this.lineFormats[idx];
+        const text = this.lines[idx].text.replace(/ /g, '\u00A0');
+        const formats = this.lines[idx].formats;
         let offset = 0;
         let height = 0;
         const len = formats.length;
@@ -2487,7 +2487,7 @@ export class Display extends EventEmitter {
                                 if (lIdx === -1 || lIdx >= this.lines.length) return;
                                 this._lines[lIdx].images--;
                                 const fIdx = +img.dataset.f;
-                                const fmt = this.lineFormats[lIdx][fIdx];
+                                const fmt = this.lines[lIdx].formats[fIdx];
                                 const bounds = img.getBoundingClientRect();
                                 fmt.width = bounds.width || img.width;
                                 fmt.height = bounds.height || img.height;
@@ -2522,7 +2522,7 @@ export class Display extends EventEmitter {
     private buildLineExpires(idx) {
         if (idx === undefined)
             idx = this.lines.length - 1;
-        const formats = this.lineFormats[idx];
+        const formats = this.lines[idx].formats;
         for (const ol in this._expire) {
             if (!this._expire.hasOwnProperty(ol))
                 continue;
@@ -2602,7 +2602,7 @@ export class Display extends EventEmitter {
                 if (sL < 0 || sL >= this.lines.length)
                     continue;
 
-                if (this.lineFormats[sL][0].hr) {
+                if (this.lines[sL].formats[0].hr) {
                     s = 0;
                     e = mw;
                 }
@@ -2610,8 +2610,8 @@ export class Display extends EventEmitter {
                     s = Math.min(range.start.x, range.end.x);
                     e = Math.max(range.start.x, range.end.x);
                     if (s < 0) s = 0;
-                    if (e > this.lines[sL].length)
-                        e = this.lines[sL].length;
+                    if (e > this.lines[sL].text.length)
+                        e = this.lines[sL].text.length;
                     e = this.lineWidth(sL, s, e);
                     s = this.lineWidth(sL, 0, s);
                     //e = this.textWidth(this.lines[sL].substring(s, e).replace(/ /g, '\u00A0'));
@@ -2632,8 +2632,8 @@ export class Display extends EventEmitter {
                 eL = len - 1;
             if (s < 0)
                 s = 0;
-            if (e > this.lines[eL].length)
-                e = this.lines[eL].length;
+            if (e > this.lines[eL].text.length)
+                e = this.lines[eL].text.length;
             for (let line = sL; line < eL + 1; line++) {
                 const startStyle = {
                     top: CornerType.Extern,
@@ -2646,13 +2646,13 @@ export class Display extends EventEmitter {
                 let rCls = cls;
                 let cl = 0;
                 if (sL === line) {
-                    const tLine = this.lines[line].replace(/ /g, '\u00A0');
+                    const tLine = this.lines[line].text.replace(/ /g, '\u00A0');
                     if (s >= tLine.length)
                         cl = tLine.length;
                     else
                         cl = s;
                 }
-                if (this.lineFormats[line][0].hr)
+                if (this.lines[line].formats[0].hr)
                     w = mw;
                 else if (sL === line)
                     w = this.lineWidth(line, s) + this._charWidth;
@@ -2666,7 +2666,7 @@ export class Display extends EventEmitter {
                 //cl = this.textWidth(tLine.substring(0, cl));
                 if (this._roundedRanges) {
                     let cr;
-                    if (this.lineFormats[line][0].hr)
+                    if (this.lines[line].formats[0].hr)
                         cr = mw;
                     else
                         cr = fl(eL === line ? this.lineWidth(line, 0, e) : (this._lines[line].width + this._charWidth));
@@ -2674,7 +2674,7 @@ export class Display extends EventEmitter {
                     if (line > sL) {
                         let pl = 0;
                         if (sL === line - 1) {
-                            if (this.lineFormats[line - 1][0].hr)
+                            if (this.lines[line - 1].formats[0].hr)
                                 pl = 0;
                             else if (fl(this.lineWidth(sL, 0, s)) >= fl(this._lines[line - 1].width + this._charWidth))
                                 //else if (fl(this.textWidth(this.lines[sL].substr(0, s).replace(/ /g, '\u00A0'))) >= fl(this._lines[line - 1].width + this._charWidth))
@@ -2683,7 +2683,7 @@ export class Display extends EventEmitter {
                                 pl = fl(this.lineWidth(sL, 0, s));
                             //pl = fl(this.textWidth(this.lines[sL].substring(0, s).replace(/ /g, '\u00A0')));
                         }
-                        const pr = this.lineFormats[line - 1][0].hr ? mw : fl(this._lines[line - 1].width + this._charWidth);
+                        const pr = this.lines[line - 1].formats[0].hr ? mw : fl(this._lines[line - 1].width + this._charWidth);
 
                         if (fl(cl) === pl)
                             startStyle.top = CornerType.Flat;
@@ -2699,7 +2699,7 @@ export class Display extends EventEmitter {
 
                     if (line < eL) {
                         let nr;
-                        if (this.lineFormats[line + 1][0].hr)
+                        if (this.lines[line + 1].formats[0].hr)
                             nr = mw;
                         else
                             nr = fl(eL === line + 1 ? this.lineWidth(line + 1, 0, e) : (this._lines[line + 1].width + this._charWidth));
@@ -2838,14 +2838,14 @@ export class Display extends EventEmitter {
              }
              this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
     */
-            if (this.lineFormats[sL][0].hr) {
+            if (this.lines[sL].formats[0].hr) {
                 s = 0;
                 e = Math.max(this._maxLineLength * this._charWidth, this._maxView);
             }
             else {
                 s = Math.min(sel.start.x, sel.end.x);
                 e = Math.max(sel.start.x, sel.end.x);
-                text = this.lines[sL];
+                text = this.lines[sL].text;
                 if (s < 0) s = 0;
                 if (e > text.length)
                     e = text.length;
@@ -2913,12 +2913,12 @@ export class Display extends EventEmitter {
             sL = 0;
         if (eL >= len) {
             eL = len - 1;
-            e = this.lines[eL].length;
+            e = this.lines[eL].text.length;
         }
         if (s < 0)
             s = 0;
-        if (e > this.lines[eL].length)
-            e = this.lines[eL].length;
+        if (e > this.lines[eL].text.length)
+            e = this.lines[eL].text.length;
         const fl = Math.trunc;
         for (let line = sL; line < eL + 1; line++) {
             const startStyle = {
@@ -2933,13 +2933,13 @@ export class Display extends EventEmitter {
             let cls = 'select-text';
             let cl = 0;
             if (sL === line) {
-                const tLine = this.lines[line].replace(/ /g, '\u00A0');
+                const tLine = this.lines[line].text.replace(/ /g, '\u00A0');
                 if (s >= tLine.length)
                     cl = tLine.length;
                 else
                     cl = s;
             }
-            if (this.lineFormats[line][0].hr)
+            if (this.lines[line].formats[0].hr)
                 w = mw;
             else if (sL === line)
                 w = this.lineWidth(line, s) + this._charWidth;
@@ -2954,7 +2954,7 @@ export class Display extends EventEmitter {
 
             if (this._roundedRanges) {
                 let cr;
-                if (this.lineFormats[line][0].hr)
+                if (this.lines[line].formats[0].hr)
                     cr = mw;
                 else
                     cr = fl(eL === line ? this.lineWidth(line, 0, e) : (this._lines[line].width + this._charWidth));
@@ -2962,7 +2962,7 @@ export class Display extends EventEmitter {
                 if (line > sL) {
                     let pl = 0;
                     if (sL === line - 1) {
-                        if (this.lineFormats[line - 1][0].hr)
+                        if (this.lines[line - 1].formats[0].hr)
                             pl = 0;
                         else if (fl(this.lineWidth(sL, 0, s)) >= fl(this._lines[line - 1].width + this._charWidth))
                             //else if (fl(this.textWidth(this.lines[sL].substr(0, s).replace(/ /g, '\u00A0'))) >= fl(this._lines[line - 1].width + this._charWidth))
@@ -2971,7 +2971,7 @@ export class Display extends EventEmitter {
                             pl = fl(this.lineWidth(sL, 0, s));
                         //pl = fl(this.textWidth(this.lines[sL].substring(0, s).replace(/ /g, '\u00A0')));
                     }
-                    const pr = this.lineFormats[line - 1][0].hr ? mw : fl(this._lines[line - 1].width + this._charWidth);
+                    const pr = this.lines[line - 1].formats[0].hr ? mw : fl(this._lines[line - 1].width + this._charWidth);
 
                     if (fl(cl) === pl)
                         startStyle.top = CornerType.Flat;
@@ -2987,7 +2987,7 @@ export class Display extends EventEmitter {
 
                 if (line < eL) {
                     let nr;
-                    if (this.lineFormats[line + 1][0].hr)
+                    if (this.lines[line + 1].formats[0].hr)
                         nr = mw;
                     else
                         nr = fl(eL === line + 1 ? this.lineWidth(line + 1, 0, e) : (this._lines[line + 1].width + this._charWidth));
@@ -3068,12 +3068,12 @@ export class Display extends EventEmitter {
         else if (sel.start.x === sel.end.x) {
             return '';
         }
-        else if (sel.start.y > 0 && sel.start.y < this.lineFormats.length && this.lineFormats[sel.start.y][0].hr)
+        else if (sel.start.y > 0 && sel.start.y < this.lines.length && this.lines[sel.start.y].formats[0].hr)
             return '---';
         else {
             s = Math.min(sel.start.x, sel.end.x);
             e = Math.max(sel.start.x, sel.end.x);
-            return this.lines[sel.start.y].substring(s, e);
+            return this.lines[sel.start.y].text.substring(s, e);
         }
         const len = this.lines.length;
 
@@ -3081,30 +3081,30 @@ export class Display extends EventEmitter {
             sL = 0;
         if (eL >= len) {
             eL = len - 1;
-            e = this.lines[eL].length;
+            e = this.lines[eL].text.length;
         }
         if (s < 0)
             s = 0;
-        if (e > this.lines[eL].length)
-            e = this.lines[eL].length;
+        if (e > this.lines[eL].text.length)
+            e = this.lines[eL].text.length;
 
         const txt = [];
-        if (this.lineFormats[sL][0].hr)
+        if (this.lines[sL].formats[0].hr)
             txt.push('---');
         else
-            txt.push(this.lines[sL].substring(s));
+            txt.push(this.lines[sL].text.substring(s));
         sL++;
         while (sL < eL) {
-            if (this.lineFormats[sL][0].hr)
+            if (this.lines[sL].formats[0].hr)
                 txt.push('---');
             else
-                txt.push(this.lines[sL]);
+                txt.push(this.lines[sL].text);
             sL++;
         }
-        if (this.lineFormats[eL][0].hr)
+        if (this.lines[eL].formats[0].hr)
             txt.push('---');
         else
-            txt.push(this.lines[eL].substring(0, e));
+            txt.push(this.lines[eL].text.substring(0, e));
         return txt.join('\n');
     }
 
@@ -3141,12 +3141,12 @@ export class Display extends EventEmitter {
             sL = 0;
         if (eL >= len) {
             eL = len - 1;
-            e = this.lines[eL].length;
+            e = this.lines[eL].text.length;
         }
         if (s < 0)
             s = 0;
-        if (e > this.lines[eL].length)
-            e = this.lines[eL].length;
+        if (e > this.lines[eL].text.length)
+            e = this.lines[eL].text.length;
 
         const txt = [this.getLineHTML(sL, s)];
         sL++;
@@ -3168,7 +3168,7 @@ export class Display extends EventEmitter {
         };
         this._currentSelection = {
             start: { x: 0, y: 0 },
-            end: { x: this.lines[ll].length, y: ll },
+            end: { x: this.lines[ll].text.length, y: ll },
             scrollTimer: null,
             drag: false
         };
@@ -3221,8 +3221,8 @@ export class Display extends EventEmitter {
             idx = this.lines.length - 1;
         const back = [];
         const fore = [];
-        const text = this.lines[idx].replace(/ /g, '\u00A0');
-        const formats = this.lineFormats[idx];
+        const text = this.lines[idx].text.replace(/ /g, '\u00A0');
+        const formats = this.lines[idx].formats;
         let offset = 0;
         let bStyle: any = '';
         let fStyle: any = '';
@@ -3411,13 +3411,13 @@ export class Display extends EventEmitter {
         if (start === undefined)
             start = 0;
         if (len === undefined)
-            len = this.lines[idx].length;
+            len = this.lines[idx].text.length;
         const parts = [];
         let offset = 0;
         let style: any = '';
         let fCls: any = '';
-        const text = this.lines[idx].replace(/ /g, '\u00A0');
-        const formats = this.lineFormats[idx];
+        const text = this.lines[idx].text.replace(/ /g, '\u00A0');
+        const formats = this.lines[idx].formats;
         const fLen = formats.length;
         let right = false;
 
@@ -3602,11 +3602,11 @@ export class Display extends EventEmitter {
                 parts.push(`src="${tmp}"/>`);
             }
         }
-        if (right && len < this.lines[idx].length)
+        if (right && len < this.lines[idx].text.length)
             return `<span class="line" style="min-width:100%">${parts.join('')}</span>`;
         if (right)
             return `<span class="line" style="min-width:100%">${parts.join('')}<br></span>`;
-        if (len < this.lines[idx].length)
+        if (len < this.lines[idx].text.length)
             return `<span class="line">${parts.join('')}</span>`;
         return `<span class="line">${parts.join('')}<br></span>`;
     }
@@ -3780,9 +3780,9 @@ export class Display extends EventEmitter {
         let format;
         let n = 0;
         for (fs = 0, fsl = formats.length; fs < fsl; fs++) {
-            fl = this.lineFormats[idx].length;
+            fl = this.lines[idx].formats.length;
             f = formats[fs];
-            format = this.lineFormats[idx][f];
+            format = this.lines[idx].formats[f];
             type = format.formatType;
             if (format.formatType === FormatType.MXPLink)
                 eType = FormatType.MXPLinkEnd;
@@ -3791,15 +3791,15 @@ export class Display extends EventEmitter {
             format.formatType = FormatType.MXPExpired;
             f++;
             for (; f < fl; f++) {
-                if (this.lineFormats[idx][f] === eType) {
+                if (this.lines[idx].formats[f] === eType) {
                     if (n === 0) {
-                        this.lineFormats[idx][f].formatType = FormatType.MXPSkip;
+                        this.lines[idx].formats[f].formatType = FormatType.MXPSkip;
                         break;
                     }
                     else
                         n--;
                 }
-                else if (this.lineFormats[idx][f] === type)
+                else if (this.lines[idx].formats[f] === type)
                     n++;
             }
         }
@@ -3891,10 +3891,10 @@ export class Display extends EventEmitter {
             endFragment: 0,
             indent: false
         };
-        const formats = this.lineFormats[line];
+        const formats = this.lines[line].formats;
         const formatsLength = formats.length;
-        const text = this.lines[line].replace(/ /g, '\u00A0');
-        const rawText = this.lines[line];
+        const text = this.lines[line].text.replace(/ /g, '\u00A0');
+        const rawText = this.lines[line].text;
         const wrapText = this._wordWrap;
         let endOffset = 0;
         let startOffset = 0;
@@ -4116,7 +4116,7 @@ export class Display extends EventEmitter {
                                 if (lIdx === -1 || lIdx >= this.lines.length) return;
                                 this._lines[lIdx].images--;
                                 const fIdx = +img.dataset.f;
-                                const fmt = this.lineFormats[lIdx][fIdx];
+                                const fmt = this.lines[lIdx].formats[fIdx];
                                 const bounds = img.getBoundingClientRect();
                                 fmt.width = bounds.width || img.width;
                                 fmt.height = bounds.height || img.height;
@@ -4202,8 +4202,8 @@ export class Display extends EventEmitter {
                 fragment: endFragment,
                 offset: endOffset
             };
-        const formats = this.lineFormats[line];
-        const text = this.lines[line];
+        const formats = this.lines[line].formats;
+        const text = this.lines[line].text;
         let fragmentEndOffset = endOffset;
         for (let formatIdx = endFragment; formatIdx >= startFragment; formatIdx--) {
             const currentFormat = formats[formatIdx];

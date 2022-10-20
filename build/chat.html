@@ -65,7 +65,7 @@
                         format: options.logTimeFormat
                     }
                 });
-                _logger.postMessage({ action: 'start', args: { lines: display.lines, raw: display.rawLines, formats: display.lineFormats, fragment: display.EndOfLine } });
+                _logger.postMessage({ action: 'start', args: { lines: display.lines, fragment: display.EndOfLine } });
             }
             _zoom = options.chat.zoom;
             webFrame.setZoomFactor(_zoom);
@@ -102,7 +102,7 @@
                         break;
                     case 'startInternal':
                     case 'start':
-                        _logger.postMessage({ action: e.data.event, args: { lines: display.lines, raw: display.rawLines, formats: display.lineFormats, fragment: display.EndOfLine } });
+                        _logger.postMessage({ action: e.data.event, args: { lines: display.lines, fragment: display.EndOfLine } });
                         break;
                 }
             };

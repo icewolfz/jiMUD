@@ -1574,8 +1574,6 @@
                 _logger.postMessage({
                     action: 'start', args: {
                         lines: client.display.lines,
-                        raw: client.display.rawLines,
-                        formats: client.display.lineFormats,
                         fragment: client.display.EndOfLine || client.telnet.prompt
                     }
                 });
@@ -2459,7 +2457,7 @@
                         break;
                     case 'startInternal':
                     case 'start':
-                        _logger.postMessage({ action: e.data.event, args: { lines: client.display.lines || [], raw: client.display.rawLines, formats: client.display.lineFormats, fragment: client.display.EndOfLine || client.telnet.prompt } });
+                        _logger.postMessage({ action: e.data.event, args: { lines: client.display.lines || [], fragment: client.display.EndOfLine || client.telnet.prompt } });
                         break;
                 }
             };

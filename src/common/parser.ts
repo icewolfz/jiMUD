@@ -2582,9 +2582,9 @@ export class Parser extends EventEmitter {
         if (!this.EndOfLine && (this.textLength > 0 || this.rawLength > 0)) {
             let lines = this.display.lines;
             if (lines.length > 0) {
-                iTmp = this.display.lines[lines.length - 1];
-                _MXPComment = this.display.rawLines[lines.length - 1];
-                formatBuilder.push.apply(formatBuilder, this.display.lineFormats[lines.length - 1]);
+                iTmp = this.display.lines[lines.length - 1].text;
+                _MXPComment = this.display.lines[lines.length - 1].raw;
+                formatBuilder.push.apply(formatBuilder, this.display.lines[lines.length - 1].formats);
                 lineLength = this.display.lines[lines.length - 1].length;
                 this.display.removeLine(lines.length - 1);
                 format = formatBuilder[formatBuilder.length - 1];
