@@ -3228,6 +3228,7 @@ export class Display extends EventEmitter {
         let fStyle: any = '';
         let fCls: any = '';
         const ch = this._charHeight;
+        const cw = this._charWidth;
         const len = formats.length;
         let left = 0;
         const id = this.lineIDs[idx];
@@ -3364,7 +3365,7 @@ export class Display extends EventEmitter {
                 if (format.width)
                     tmp.push('width:', format.width, 'px;');
                 else if (format.w.length > 0)
-                    tmp.push('width:', formatUnit(format.w), ';');
+                    tmp.push('width:', formatUnit(format.w, cw), ';');
 
                 if (format.height)
                     tmp.push('height:', format.height, 'px;');
@@ -3386,11 +3387,11 @@ export class Display extends EventEmitter {
                         break;
                 }
                 if (format.hspace.length > 0 && format.vspace.length > 0)
-                    tmp.push('margin:', formatUnit(format.vspace), ' ', formatUnit(format.hspace, ch), ';');
+                    tmp.push('margin:', formatUnit(format.vspace, cw), ' ', formatUnit(format.hspace, ch), ';');
                 else if (format.hspace.length > 0)
                     tmp.push('margin: 0px ', formatUnit(format.hspace, ch), ';');
                 else if (format.vspace.length > 0)
-                    tmp.push('margin:', formatUnit(format.vspace), ' 0px;');
+                    tmp.push('margin:', formatUnit(format.vspace, cw), ' 0px;');
                 //TODO remove max-height when variable height supported
                 tmp.push('max-height:', '' + ch, 'px;"');
                 back.push(tmp.join(''), ` src="./../assets/blank.png"/>`);
@@ -3567,7 +3568,7 @@ export class Display extends EventEmitter {
                 tmp += format.name;
                 parts.push(format.name, '"  style="');
                 if (format.w.length > 0)
-                    parts.push('width:', formatUnit(format.w), ';');
+                    parts.push('width:', formatUnit(format.w, this._charWidth), ';');
                 if (format.h.length > 0)
                     parts.push('height:', formatUnit(format.h, this._charHeight), ';');
                 switch (format.align.toLowerCase()) {
@@ -3586,7 +3587,7 @@ export class Display extends EventEmitter {
                 }
                 if (format.hspace.length > 0 && format.vspace.length > 0) {
                     parts.push('margin:');
-                    parts.push(formatUnit(format.vspace), ' ');
+                    parts.push(formatUnit(format.vspace, this._charWidth), ' ');
                     parts.push(formatUnit(format.hspace, this._charHeight), ';');
                 }
                 else if (format.hspace.length > 0) {
@@ -3595,7 +3596,7 @@ export class Display extends EventEmitter {
                 }
                 else if (format.vspace.length > 0) {
                     parts.push('margin:');
-                    parts.push(formatUnit(format.vspace), ' 0px;');
+                    parts.push(formatUnit(format.vspace, this._charWidth), ' 0px;');
                 }
                 parts.push('"');
                 if (format.ismap) parts.push(' ismap onclick="return false;"');
