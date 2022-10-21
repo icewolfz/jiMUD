@@ -90,6 +90,7 @@ interface LineData {
     formats: any[];     //the line formatting data
     raw: string;        //the raw line data including all ansi codes
     id: number;         //unique id for line
+    timestamp: number;  //timestamp the line was added
 }
 
 /**
@@ -155,6 +156,8 @@ export class Display extends EventEmitter {
     private _updating: UpdateType = UpdateType.none;
     private _splitHeight: number = -1;
     private _wordWrap: boolean = false;
+    private _indent: number = 4;
+    private _timestamp: boolean = false;
 
     public split = null;
     public splitLive: boolean = false;
@@ -1319,7 +1322,12 @@ export class Display extends EventEmitter {
         this._viewCache = {};
         if (this.split) this.split.viewCache = {};
         /*
+        if (line === 0) {
+            this._lines[line].top = 0;
+            line++;
+        }
         while (line < l) {
+            this._lines[line].top = this._lines[line - 1].top + this._lines[line - 1].height;
             //this._viewLines[line] = this._viewLines[line].replace(/top:\d+px/, `top:${line * this._charHeight}px`);
             //this._backgroundLines[line] = this._backgroundLines[line].replace(/top:\d+px/, `top:${line * this._charHeight}px`);
             line++;
@@ -1357,7 +1365,8 @@ export class Display extends EventEmitter {
             text: (data.line === '\n' || data.line.length === 0) ? '' : data.line,
             raw: data.raw,
             formats: data.formats,
-            id: this._lineID
+            id: this._lineID,
+            timestamp: Date.now()
         }
         this.lines.push(line);
         if (data.formats[0].hr) {
@@ -1369,14 +1378,21 @@ export class Display extends EventEmitter {
             this._maxLineLength = data.line.length;
         this.lineIDs.push(this._lineID);
         const idx = this.lines.length - 1;
-
+        //t = this.calculateWrapLines(idx, 0, this._indent);
         this._lines.push({ height: 0, top: 0, width: 0, images: 0 });
         t = this.calculateSize(idx);
         this.buildLineExpires(idx);
         this._lines[idx].height = t.height;
         this._lines[idx].width = t.width;
         if (idx - 1 >= 0)
-            this._lines[idx].top = this._lines[idx - 1].top + this._lines[idx].height;
+            this._lines[idx].top = this._lines[idx - 1].top + this._lines[idx].height;       
+        /*
+        if (idx - 1 >= 0)
+            t[0].top = this._lines[idx - 1].top + this._lines[idx - 1].height;
+        for (let l = 1, ll = t.length; t < ll; t++)
+            t[l].top = t[l - 1].top + t[l - 1].height;
+        this._lines.push(...t);
+        */
         this._lineID++;
         if (this.split) this.split.dirty = true;
         if (!noUpdate)
@@ -1654,6 +1670,8 @@ export class Display extends EventEmitter {
             //const t = this.calculateSize(idx);
             //this._lines[idx].width = t.width;
         }
+        //this.calculateWrapLines(idx, 0, this._indent);
+        //this._lines.push(...this.calculateWrapLines(idx, 0, this._indent));
         this.doUpdate(UpdateType.view);
     }
 
@@ -3850,8 +3868,9 @@ export class Display extends EventEmitter {
 
     public getLineText(line) {
         if (line < 0 || line >= this._lines.length) return '';
-        //return this._line[line].line.substring(this._line[line].startOffset, this._line[line].endOffset);
-        return this.lines[line];
+        //const idx = this.lineIDs.indexOf(this._lines[line].id);
+        //return this.lines[line].text.substring(this._lines[line].startOffset, this._lines[line].endOffset);
+        return this.lines[line].text;
     }
 
     /**
