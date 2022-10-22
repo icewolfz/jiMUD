@@ -192,6 +192,7 @@ export class Display extends EventEmitter {
     private _hideTrailingEmptyLine = true;
     private _enableColors = true;
     private _enableBackgroundColors = true;
+    private _linesMap: Map<number, WrapLine[]> = new Map<number, WrapLine[]>();
 
     get model() { return this._model; }
     set model(value: DisplayModel) {
@@ -203,6 +204,8 @@ export class Display extends EventEmitter {
         this._model = value;
         this._model.on('debug', msg => this.debug);
         this._model.on('bell', () => { this.emit('bell'); });
+        this._model.on('add-line', data => { this.emit('add-line', data); });
+        this._model.on('add-line-done', data => { this.emit('add-line-done', data); });
         this._model.on('line-added', (data, noUpdate) => {
             let t;
             if (data.formats[0].hr) {
@@ -214,6 +217,8 @@ export class Display extends EventEmitter {
                 this._maxLineLength = data.line.length;
             const idx = this._model.lines.length - 1;
             //t = this.calculateWrapLines(idx, 0, this._indent);
+            //track wrapped lines to line to make it easier ot lookup all wrapped lines and allow indexOf and other build in functions
+            //this._linesMap.set(idx, t);
             this._lines.push({ height: 0, top: 0, width: 0, images: 0 });
             t = this.calculateSize(idx);
             this._lines[idx].height = t.height;
@@ -1365,6 +1370,7 @@ export class Display extends EventEmitter {
         this.emit('line-removed', line, this.lines[line]);
         this._model.removeLine(line);
         this._lines.splice(line, 1);
+        this._linesMap.delete(line);
         if (this._viewCache[line])
             delete this._viewCache[line];
         if (this.split && this.split.viewCache[line])
@@ -1421,6 +1427,8 @@ export class Display extends EventEmitter {
         this.emit('lines-removed', line, this.lines.slice(line, amt));
         this._model.removeLines(line, amt);
         this._lines.splice(line, amt);
+        for (let l = line; l < amt; l++)
+            this._linesMap.delete(l);
         for (let a = 0; a < amt; a++) {
             if (this._viewCache[line + a])
                 delete this._viewCache[line + a];
