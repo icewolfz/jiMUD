@@ -106,8 +106,8 @@ interface LineData {
  * @todo Add/fix MXP image selection highlighting
  */
 export class Display extends EventEmitter {
-    private _lineID = 0;
-    private _parser: Parser;
+    private _model;
+
     private _el: HTMLElement;
     private _os;
     private _padding = [0, 0, 0, 0];
@@ -117,7 +117,6 @@ export class Display extends EventEmitter {
     private _background: HTMLElement;
     private _finder: Finder;
     private _maxView: number = 0;
-    private _aTimer = 0;
 
     private _maxLineLength: number = 0;
     private _currentSelection: Selection = {
@@ -140,14 +139,10 @@ export class Display extends EventEmitter {
 
     private _lines: Line[] = [];
 
-    public lines: LineData[] = [];
-    private lineIDs: number[] = [];
     public scrollToEnd: boolean = true;
     private _maxLines: number = 5000;
     private _charHeight: number;
     private _charWidth: number;
-    private _expire = {};
-    private _expire2 = [];
     private _overlays: Overlays = {
         selection: []
     };
@@ -197,6 +192,80 @@ export class Display extends EventEmitter {
     private _hideTrailingEmptyLine = true;
     private _enableColors = true;
     private _enableBackgroundColors = true;
+
+    get model() { return this._model; }
+    set model(value: DisplayModel) {
+        if (this._model === value) return;
+        //if model set remove all listeners
+        if(this._model)
+            this._model.removeAllListeners();
+        //set model and assign all the events needed
+        this._model = value;
+        this._model.on('debug', msg => this.debug);
+        this._model.on('bell', () => { this.emit('bell'); });
+        this._model.on('line-added', (data, noUpdate) => {
+            let t;
+            if (data.formats[0].hr) {
+                t = this.WindowWidth;
+                if (t > this._maxLineLength)
+                    this._maxLineLength = t;
+            }
+            else if (data.line.length > this._maxLineLength)
+                this._maxLineLength = data.line.length;
+            const idx = this._model.lines.length - 1;
+            //t = this.calculateWrapLines(idx, 0, this._indent);
+            this._lines.push({ height: 0, top: 0, width: 0, images: 0 });
+            t = this.calculateSize(idx);
+            this._lines[idx].height = t.height;
+            this._lines[idx].width = t.width;
+            if (idx - 1 >= 0)
+                this._lines[idx].top = this._lines[idx - 1].top + this._lines[idx].height;
+            /*
+            if (idx - 1 >= 0)
+                t[0].top = this._lines[idx - 1].top + this._lines[idx - 1].height;
+            for (let l = 1, ll = t.length; t < ll; t++)
+                t[l].top = t[l - 1].top + t[l - 1].height;
+            this._lines.push(...t);
+            */
+            if (this.split) this.split.dirty = true;
+            if (!noUpdate)
+                this.doUpdate(UpdateType.display);
+            this.doUpdate(UpdateType.display);
+        });
+
+        this._model.on('expire-links', args => {
+            this.doUpdate(UpdateType.view);
+            this.emit('expire-links');
+        });
+        this._model.on('parse-done', () => {
+            this.emit('parse-done');
+        });
+
+        this._model.on('set-title', (title, type) => {
+            this.emit('set-title', title, type);
+        });
+        this._model.on('music', (data) => {
+            this.emit('music', data);
+        });
+        this._model.on('sound', (data) => {
+            this.emit('sound', data);
+        });
+
+        this._model.on('MXP-tag-reply', (tag, args) => {
+            this.emit('MXP-tag-reply', tag, args);
+        });
+
+        this._model.on('expire-link-line', idx => {
+            if (this.split && idx >= this.split._viewRange.start && idx <= this.split._viewRange.end && this.split._viewRange.end !== 0 && !this._model.busy) {
+                this.split.dirty = true;
+                this.doUpdate(UpdateType.display);
+            }
+            if (idx >= this._viewRange.start && idx <= this._viewRange.end && this._viewRange.end !== 0 && !this._model.busy) {
+                if (this.split) this.split.dirty = true;
+                this.doUpdate(UpdateType.display);
+            }
+        });
+    }
 
     get wordWrap() { return this._wordWrap; }
     set wordWrap(value: boolean) {
@@ -461,6 +530,10 @@ export class Display extends EventEmitter {
         return '';
     }
 
+    get lines() {
+        return this._model.lines;
+    }
+
     constructor(display: string | JQuery | HTMLElement, options?);
     constructor(display?: any, options?: DisplayOptions) {
         super();
@@ -522,7 +595,7 @@ export class Display extends EventEmitter {
         this._ruler.style.lineHeight = 'normal';
         this._ruler.style.borderBottom = '1px solid black';
         this._ruler.style.visibility = 'hidden';
-        document.body.appendChild(this._ruler);
+        this._el.appendChild(this._ruler);
 
         this._character = document.createElement('div');
         this._character.id = this.id + '-Character';
@@ -531,7 +604,7 @@ export class Display extends EventEmitter {
         this._character.innerText = 'W';
         this._character.style.visibility = 'hidden';
         this._ruler.style.visibility = 'hidden';
-        document.body.appendChild(this._character);
+        this._el.appendChild(this._character);
 
         this._charHeight = parseFloat(window.getComputedStyle(this._character).height)
         this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
@@ -555,70 +628,8 @@ export class Display extends EventEmitter {
             options = { display: this };
         else
             options.display = this;
-        this._parser = new Parser(options);
-        this._parser.on('debug', (msg) => { this.debug(msg); });
 
-        this._parser.on('bell', () => { this.emit('bell'); });
-
-        this._parser.on('add-line', (data: ParserLine) => {
-            this.addParserLine(data, true);
-        });
-
-        this._parser.on('expire-links', (args) => {
-            let lines;
-            let line;
-            let expire;
-            if (!args || args.length === 0) {
-                for (line in this._expire2) {
-                    if (!this._expire2.hasOwnProperty(line))
-                        continue;
-                    this.expireLineLinkFormat(this._expire2[line], +line);
-                }
-                for (expire in this._expire) {
-                    if (!this._expire.hasOwnProperty(expire))
-                        continue;
-                    lines = this._expire[expire];
-                    for (line in lines) {
-                        if (!lines.hasOwnProperty(line))
-                            continue;
-                        this.expireLineLinkFormat(lines[line], +line);
-                    }
-                }
-                this._expire2 = [];
-                this._expire = {};
-                this.doUpdate(UpdateType.view);
-            }
-            else if (this._expire[args]) {
-                lines = this._expire[args];
-                for (line in lines) {
-                    if (!lines.hasOwnProperty(line))
-                        continue;
-                    this.expireLineLinkFormat(lines[line], +line);
-                }
-                delete this._expire[args];
-                this.doUpdate(UpdateType.view);
-            }
-            this.emit('expire-links', args);
-        });
-
-        this._parser.on('parse-done', () => {
-            this.doUpdate(UpdateType.display);
-            this.emit('parse-done');
-        });
-
-        this._parser.on('set-title', (title, type) => {
-            this.emit('set-title', title, type);
-        });
-        this._parser.on('music', (data) => {
-            this.emit('music', data);
-        });
-        this._parser.on('sound', (data) => {
-            this.emit('sound', data);
-        });
-
-        this._parser.on('MXP-tag-reply', (tag, args) => {
-            this.emit('MXP-tag-reply', tag, args);
-        });
+        this.model = new DisplayModel(options);
 
         this._el.addEventListener('mousedown', (e) => {
             if (e.buttons && e.button === 0) {
@@ -1041,23 +1052,23 @@ export class Display extends EventEmitter {
 
     set enableDebug(enable: boolean) {
         this._enableDebug = enable;
-        this._parser.enableDebug = enable;
+        this._model.enableDebug = enable;
     }
 
     get textLength(): number {
-        return this._parser.textLength;
+        return this._model.textLength;
     }
 
     get EndOfLine(): boolean {
-        return this._parser.EndOfLine;
+        return this._model.EndOfLine;
     }
 
     get parseQueueLength(): number {
-        return this._parser.parseQueueLength;
+        return this._model.parseQueueLength;
     }
 
     get parseQueueEndOfLine(): boolean {
-        return this._parser.parseQueueEndOfLine;
+        return this._model.parseQueueEndOfLine;
     }
 
     get EndOfLineLength(): number {
@@ -1067,66 +1078,66 @@ export class Display extends EventEmitter {
     }
 
     set enableFlashing(value: boolean) {
-        this._parser.enableFlashing = value;
+        this._model.enableFlashing = value;
     }
     get enableFlashing(): boolean {
-        return this._parser.enableFlashing;
+        return this._model.enableFlashing;
     }
 
     set enableMXP(value: boolean) {
-        this._parser.enableMXP = value;
+        this._model.enableMXP = value;
     }
     get enableMXP(): boolean {
-        return this._parser.enableMXP;
+        return this._model.enableMXP;
     }
 
     set showInvalidMXPTags(value: boolean) {
-        this._parser.showInvalidMXPTags = value;
+        this._model.showInvalidMXPTags = value;
     }
     get showInvalidMXPTags(): boolean {
-        return this._parser.showInvalidMXPTags;
+        return this._model.showInvalidMXPTags;
     }
 
     set enableBell(value: boolean) {
-        this._parser.enableBell = value;
+        this._model.enableBell = value;
     }
     get enableBell(): boolean {
-        return this._parser.enableBell;
+        return this._model.enableBell;
     }
 
     set enableURLDetection(value: boolean) {
-        this._parser.enableURLDetection = value;
+        this._model.enableURLDetection = value;
     }
     get enableURLDetection(): boolean {
-        return this._parser.enableURLDetection;
+        return this._model.enableURLDetection;
     }
 
     set enableMSP(value: boolean) {
-        this._parser.enableMSP = value;
+        this._model.enableMSP = value;
     }
     get enableMSP(): boolean {
-        return this._parser.enableMSP;
+        return this._model.enableMSP;
     }
 
     set displayControlCodes(value: boolean) {
-        this._parser.displayControlCodes = value;
+        this._model.displayControlCodes = value;
     }
     get displayControlCodes(): boolean {
-        return this._parser.displayControlCodes;
+        return this._model.displayControlCodes;
     }
 
     set emulateTerminal(value: boolean) {
-        this._parser.emulateTerminal = value;
+        this._model.emulateTerminal = value;
     }
     get emulateTerminal(): boolean {
-        return this._parser.emulateTerminal;
+        return this._model.emulateTerminal;
     }
 
     set MXPStyleVersion(value: string) {
-        this._parser.StyleVersion = value;
+        this._model.StyleVersion = value;
     }
     get MXPStyleVersion(): string {
-        return this._parser.StyleVersion;
+        return this._model.StyleVersion;
     }
 
     public debug(msg) {
@@ -1134,11 +1145,11 @@ export class Display extends EventEmitter {
     }
 
     public append(txt: string, remote?: boolean, force?: boolean, prependSplit?: boolean) {
-        this._parser.parse(txt, remote || false, force || false, prependSplit || false);
+        this._model.append(txt, remote || false, force || false, prependSplit || false);
     }
 
     public CurrentAnsiCode() {
-        return this._parser.CurrentAnsiCode();
+        return this._model.CurrentAnsiCode();
     }
 
     public updateWindow(width?, height?) {
@@ -1146,22 +1157,19 @@ export class Display extends EventEmitter {
             width = this.WindowWidth;
             height = this.WindowHeight;
         }
-        this._parser.updateWindow(width, height);
+        this._model.updateWindow(width, height);
         this.emit('update-window', width, height);
     }
 
     public clear() {
-        this._parser.Clear();
-        this.lines = [];
-        this._expire = {};
-        this._expire2 = [];
+        this._model.clear();
         this._overlays = {
             selection: []
         };
         this._viewCache = {};
-        this.lineIDs = [];
+
         this._lines = [];
-        this._lineID = 0;
+
         this._viewRange = { start: 0, end: 0 };
         this._maxLineLength = 0;
         this._overlay.innerHTML = null;
@@ -1173,7 +1181,6 @@ export class Display extends EventEmitter {
             drag: false,
             scrollTimer: null
         };
-        this._parser.Clear();
         this._VScroll.reset();
         this._HScroll.reset();
         if (this.split) {
@@ -1340,72 +1347,24 @@ export class Display extends EventEmitter {
     }
 
     get WindowWidth(): number {
-        return Math.trunc((this._innerWidth - this._VScroll.size - this._padding[1] - this._padding[3]) / parseFloat(window.getComputedStyle(this._character).width)) - 1;
+        return Math.trunc((this._innerWidth - this._VScroll.size - this._padding[1] - this._padding[3]) / parseFloat(window.getComputedStyle(this._character).width));
     }
 
     get WindowHeight(): number {
         if (this._HScroll.visible)
-            return Math.trunc((this._innerHeight - this._HScroll.size - this._padding[0] - this._padding[2]) / parseFloat(window.getComputedStyle(this._character).height)) - 1;
-        return Math.trunc((this._innerHeight - this._padding[0] - this._padding[2]) / parseFloat(window.getComputedStyle(this._character).height)) - 1;
+            return Math.trunc((this._innerHeight - this._HScroll.size - this._padding[0] - this._padding[2]) / parseFloat(window.getComputedStyle(this._character).height));
+        return Math.trunc((this._innerHeight - this._padding[0] - this._padding[2]) / parseFloat(window.getComputedStyle(this._character).height));
     }
 
     public click(callback) {
         this._el.addEventListener('click', callback);
     }
 
-    public addParserLine(data: ParserLine, noUpdate?: boolean) {
-        let t;
-        this.emit('add-line', data);
-        if (data == null || typeof data === 'undefined' || data.line == null || typeof data.line === 'undefined')
-            return;
-        this.emit('add-line-done', data);
-        if (data.gagged)
-            return;
-        const line: LineData = {
-            text: (data.line === '\n' || data.line.length === 0) ? '' : data.line,
-            raw: data.raw,
-            formats: data.formats,
-            id: this._lineID,
-            timestamp: Date.now()
-        }
-        this.lines.push(line);
-        if (data.formats[0].hr) {
-            t = this.WindowWidth;
-            if (t > this._maxLineLength)
-                this._maxLineLength = t;
-        }
-        else if (data.line.length > this._maxLineLength)
-            this._maxLineLength = data.line.length;
-        this.lineIDs.push(this._lineID);
-        const idx = this.lines.length - 1;
-        //t = this.calculateWrapLines(idx, 0, this._indent);
-        this._lines.push({ height: 0, top: 0, width: 0, images: 0 });
-        t = this.calculateSize(idx);
-        this.buildLineExpires(idx);
-        this._lines[idx].height = t.height;
-        this._lines[idx].width = t.width;
-        if (idx - 1 >= 0)
-            this._lines[idx].top = this._lines[idx - 1].top + this._lines[idx].height;       
-        /*
-        if (idx - 1 >= 0)
-            t[0].top = this._lines[idx - 1].top + this._lines[idx - 1].height;
-        for (let l = 1, ll = t.length; t < ll; t++)
-            t[l].top = t[l - 1].top + t[l - 1].height;
-        this._lines.push(...t);
-        */
-        this._lineID++;
-        if (this.split) this.split.dirty = true;
-        if (!noUpdate)
-            this.doUpdate(UpdateType.display);
-    }
-
     public removeLine(line: number) {
         if (line < 0 || line >= this.lines.length) return;
         this.emit('line-removed', line, this.lines[line]);
-        this.lines.splice(line, 1);
-        this.lineIDs.splice(line, 1);
+        this._model.removeLine(line);
         this._lines.splice(line, 1);
-        this._expire2.splice(line, 1);
         if (this._viewCache[line])
             delete this._viewCache[line];
         if (this.split && this.split.viewCache[line])
@@ -1451,12 +1410,6 @@ export class Display extends EventEmitter {
                 continue;
             this._overlays[ol].splice(line, 1);
         }
-
-        for (ol in this._expire) {
-            if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0 || line >= this._expire[ol].length)
-                continue;
-            this._expire[ol].splice(line, 1);
-        }
         if (this.split) this.split.dirty = true;
         this.updateTops(line);
         this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.overlays | UpdateType.selection);
@@ -1466,11 +1419,8 @@ export class Display extends EventEmitter {
         if (line < 0 || line >= this.lines.length) return;
         if (amt < 1) amt = 1;
         this.emit('lines-removed', line, this.lines.slice(line, amt));
-        this.lines.splice(line, amt);
-        this.lineIDs.splice(line, amt);
+        this._model.removeLines(line, amt);
         this._lines.splice(line, amt);
-        this._expire2.splice(line, amt);
-
         for (let a = 0; a < amt; a++) {
             if (this._viewCache[line + a])
                 delete this._viewCache[line + a];
@@ -1520,12 +1470,6 @@ export class Display extends EventEmitter {
             if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0 || line >= this._overlays[ol].length)
                 continue;
             this._overlays[ol].splice(line, amt);
-        }
-
-        for (ol in this._expire) {
-            if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0 || line >= this._expire[ol].length)
-                continue;
-            this._expire[ol].splice(line, amt);
         }
         if (this.split) this.split.dirty = true;
         this.updateTops(line);
@@ -1844,9 +1788,9 @@ export class Display extends EventEmitter {
                 }
                 if (color || (format.style & FontStyle.Bold) === FontStyle.Bold) {
                     if (typeof format.color === 'number')
-                        format.color = this._parser.IncreaseColor(this._parser.GetColor(format.color), 0.25);
+                        format.color = this._model.IncreaseColor(this._model.GetColor(format.color), 0.25);
                     else
-                        format.color = this._parser.IncreaseColor(format.color, 0.25);
+                        format.color = this._model.IncreaseColor(format.color, 0.25);
                 }
                 else
                     format.style |= FontStyle.Bold;
@@ -1933,9 +1877,9 @@ export class Display extends EventEmitter {
                     }
                     if (color || (format.style & FontStyle.Bold) === FontStyle.Bold) {
                         if (typeof format.color === 'number')
-                            nFormat.color = this._parser.IncreaseColor(this._parser.GetColor(format.color), 0.25);
+                            nFormat.color = this._model.IncreaseColor(this._model.GetColor(format.color), 0.25);
                         else
-                            nFormat.color = this._parser.IncreaseColor(format.color, 0.25);
+                            nFormat.color = this._model.IncreaseColor(format.color, 0.25);
                     }
                     else
                         nFormat.style |= FontStyle.Bold;
@@ -1944,9 +1888,9 @@ export class Display extends EventEmitter {
                 }
                 else if (color || (format.style & FontStyle.Bold) === FontStyle.Bold) {
                     if (typeof format.color === 'number')
-                        format.color = this._parser.IncreaseColor(this._parser.GetColor(format.color), 0.25);
+                        format.color = this._model.IncreaseColor(this._model.GetColor(format.color), 0.25);
                     else
-                        format.color = this._parser.IncreaseColor(format.color, 0.25);
+                        format.color = this._model.IncreaseColor(format.color, 0.25);
                 }
                 else
                     format.style |= FontStyle.Bold;
@@ -2014,15 +1958,15 @@ export class Display extends EventEmitter {
     }
 
     public SetColor(code: number, color) {
-        this._parser.SetColor(code, color);
+        this._model.SetColor(code, color);
     }
 
     public ClearMXP() {
-        this._parser.ClearMXP();
+        this._model.ClearMXP();
     }
 
     public ResetMXPLine() {
-        this._parser.ResetMXPLine();
+        this._model.ResetMXPLine();
     }
 
     get html(): string {
@@ -2046,10 +1990,8 @@ export class Display extends EventEmitter {
             return;
         if (this.lines.length > this._maxLines) {
             const amt = this.lines.length - this._maxLines;
-            this.lines.splice(0, amt);
-            this.lineIDs.splice(0, amt);
+            this._model.removeLines(0, amt);
             this._lines.splice(0, amt);
-            this._expire2.splice(0, amt);
             if (this.hasSelection) {
                 this._currentSelection.start.y -= amt;
                 this._currentSelection.end.y -= amt;
@@ -2078,12 +2020,6 @@ export class Display extends EventEmitter {
                 if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0)
                     continue;
                 this._overlays[ol].splice(0, amt);
-            }
-
-            for (ol in this._expire) {
-                if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0)
-                    continue;
-                this._expire[ol].splice(0, amt);
             }
 
             let m = 0;
@@ -2391,7 +2327,7 @@ export class Display extends EventEmitter {
         let height = 0;
         const len = formats.length;
         const cw = this._charWidth;
-        const id = this.lineIDs[idx];
+        const id = this._model.getLineID(idx);
         let width = 0;
         let font: any = 0;
         for (let f = 0; f < len; f++) {
@@ -2501,7 +2437,7 @@ export class Display extends EventEmitter {
                         if (!format.height || !format.width) {
                             this._lines[idx].images++;
                             img.onload = () => {
-                                const lIdx = this.lineIDs.indexOf(+img.dataset.id);
+                                const lIdx = this._model.getLineFromID(+img.dataset.id);
                                 if (lIdx === -1 || lIdx >= this.lines.length) return;
                                 this._lines[lIdx].images--;
                                 const fIdx = +img.dataset.f;
@@ -2517,7 +2453,7 @@ export class Display extends EventEmitter {
                                 this._lines[lIdx].width = t.width;
                                 this._lines[lIdx].height = t.height;
                                 this.updateTops(lIdx);
-                                if (lIdx >= this._viewRange.start && lIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._parser.busy) {
+                                if (lIdx >= this._viewRange.start && lIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._model.busy) {
                                     if (this.split) this.split.dirty = true;
                                     this.doUpdate(UpdateType.display);
                                 }
@@ -2535,38 +2471,6 @@ export class Display extends EventEmitter {
             width += format.width || 0;
         }
         return { width: width, height: this._charHeight };
-    }
-
-    private buildLineExpires(idx) {
-        if (idx === undefined)
-            idx = this.lines.length - 1;
-        const formats = this.lines[idx].formats;
-        for (const ol in this._expire) {
-            if (!this._expire.hasOwnProperty(ol))
-                continue;
-            if (this._expire[ol][idx])
-                delete this._expire[ol][idx];
-        }
-        delete this._expire2[idx];
-        let f = formats.length;
-        let format;
-        while (f--) {
-            format = formats[f];
-            if (format.formatType === FormatType.MXPSend || format.formatType === FormatType.MXPLink) {
-                if (format.expire && format.expire.length > 0) {
-                    if (!this._expire[format.expire])
-                        this._expire[format.expire] = [];
-                    if (!this._expire[format.expire][idx])
-                        this._expire[format.expire][idx] = [];
-                    this._expire[format.expire][idx].push(f);
-                }
-                else {
-                    if (!this._expire2[idx])
-                        this._expire2[idx] = [];
-                    this._expire2[idx].push(f);
-                }
-            }
-        }
     }
 
     public clearOverlay(type?: string) {
@@ -3249,9 +3153,8 @@ export class Display extends EventEmitter {
         const cw = this._charWidth;
         const len = formats.length;
         let left = 0;
-        const id = this.lineIDs[idx];
+        const id = this._model.getLineID(idx);
         let right = false;
-
         for (let f = 0; f < len; f++) {
             const format = formats[f];
             let nFormat;
@@ -3279,11 +3182,11 @@ export class Display extends EventEmitter {
                     fStyle = [];
                     fCls = [];
                     if (typeof format.background === 'number')
-                        bStyle.push('background:', this._parser.GetColor(format.background), ';');
+                        bStyle.push('background:', this._model.GetColor(format.background), ';');
                     else if (format.background)
                         bStyle.push('background:', format.background, ';');
                     if (typeof format.color === 'number')
-                        fStyle.push('color:', this._parser.GetColor(format.color), ';');
+                        fStyle.push('color:', this._model.GetColor(format.color), ';');
                     else if (format.color)
                         fStyle.push('color:', format.color, ';');
 
@@ -3325,7 +3228,7 @@ export class Display extends EventEmitter {
                 }
                 if (format.hr) {
                     back.push('<span style="left:0;width:', mw, 'px;', bStyle, '"></span>');
-                    fore.push('<span style="left:0;width:', mw, 'px;', fStyle, '"', fCls, '><div class="hr" style="background-color:', (typeof format.color === 'number' ? this._parser.GetColor(format.color) : format.color), '"></div></span>');
+                    fore.push('<span style="left:0;width:', mw, 'px;', fStyle, '"', fCls, '><div class="hr" style="background-color:', (typeof format.color === 'number' ? this._model.GetColor(format.color) : format.color), '"></div></span>');
                 }
                 else if (end - offset !== 0) {
                     back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
@@ -3439,7 +3342,6 @@ export class Display extends EventEmitter {
         const formats = this.lines[idx].formats;
         const fLen = formats.length;
         let right = false;
-
         for (let f = 0; f < fLen; f++) {
             const format = formats[f];
             let nFormat;
@@ -3467,11 +3369,11 @@ export class Display extends EventEmitter {
                 style = [];
                 fCls = [];
                 if (typeof format.background === 'number')
-                    style.push('background:', this._parser.GetColor(format.background), ';');
+                    style.push('background:', this._model.GetColor(format.background), ';');
                 else if (format.background)
                     style.push('background:', format.background, ';');
                 if (typeof format.color === 'number')
-                    style.push('color:', this._parser.GetColor(format.color), ';');
+                    style.push('color:', this._model.GetColor(format.color), ';');
                 else if (format.color)
                     style.push('color:', format.color, ';');
                 if (format.font)
@@ -3488,7 +3390,7 @@ export class Display extends EventEmitter {
                     if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline || (format.style & FontStyle.Underline) === FontStyle.Underline)
                         td.push('underline ');
                     if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline)
-                        style.push('border-bottom: 1px solid ', (typeof format.color === 'number' ? this._parser.GetColor(format.color) : format.color), ';');
+                        style.push('border-bottom: 1px solid ', (typeof format.color === 'number' ? this._model.GetColor(format.color) : format.color), ';');
                     else
                         style.push('padding-bottom: 1px;');
                     if ((format.style & FontStyle.Rapid) === FontStyle.Rapid || (format.style & FontStyle.Slow) === FontStyle.Slow) {
@@ -3510,7 +3412,7 @@ export class Display extends EventEmitter {
                 else
                     fCls = '';
                 if (format.hr)
-                    parts.push('<span style="', style, 'min-width:100%;width:100%;"', fCls, '><div style="position:relative;top: 50%;transform: translateY(-50%);height:4px;width:100%; background-color:', (typeof format.color === 'number' ? this._parser.GetColor(format.color) : format.color), '"></div></span>');
+                    parts.push('<span style="', style, 'min-width:100%;width:100%;"', fCls, '><div style="position:relative;top: 50%;transform: translateY(-50%);height:4px;width:100%; background-color:', (typeof format.color === 'number' ? this._model.GetColor(format.color) : format.color), '"></div></span>');
                 else if (end - offset !== 0)
                     parts.push('<span style="', style, '"', fCls, '>', htmlEncode(text.substring(offset, end)), '</span>');
             }
@@ -3659,7 +3561,7 @@ export class Display extends EventEmitter {
     private _scrollCorner: HTMLElement;
 
     public updateScrollbars() {
-        if (this._parser.busy)
+        if (this._model.busy)
             return;
         this._HScroll.offset = this._VScroll.trackOffset;
         this._HScroll.resize();
@@ -3787,49 +3689,6 @@ export class Display extends EventEmitter {
 
     public get scrollAtBottom() {
         return this._VScroll.atBottom;
-    }
-
-    private expireLineLinkFormat(formats, idx: number) {
-        let f;
-        let fs;
-        let fl;
-        let fsl;
-        let type;
-        let eType;
-        let format;
-        let n = 0;
-        for (fs = 0, fsl = formats.length; fs < fsl; fs++) {
-            fl = this.lines[idx].formats.length;
-            f = formats[fs];
-            format = this.lines[idx].formats[f];
-            type = format.formatType;
-            if (format.formatType === FormatType.MXPLink)
-                eType = FormatType.MXPLinkEnd;
-            else
-                eType = FormatType.MXPSendEnd;
-            format.formatType = FormatType.MXPExpired;
-            f++;
-            for (; f < fl; f++) {
-                if (this.lines[idx].formats[f] === eType) {
-                    if (n === 0) {
-                        this.lines[idx].formats[f].formatType = FormatType.MXPSkip;
-                        break;
-                    }
-                    else
-                        n--;
-                }
-                else if (this.lines[idx].formats[f] === type)
-                    n++;
-            }
-        }
-        if (this.split && idx >= this.split._viewRange.start && idx <= this.split._viewRange.end && this.split._viewRange.end !== 0 && !this._parser.busy) {
-            this.split.dirty = true;
-            this.doUpdate(UpdateType.display);
-        }
-        if (idx >= this._viewRange.start && idx <= this._viewRange.end && this._viewRange.end !== 0 && !this._parser.busy) {
-            if (this.split) this.split.dirty = true;
-            this.doUpdate(UpdateType.display);
-        }
     }
 
     public dispose() {
@@ -4083,7 +3942,7 @@ export class Display extends EventEmitter {
                         }
                         measureText += currentFormat.name;
                         img.src = measureText;
-                        img.dataset.id = '' + this.lineIDs[line];
+                        img.dataset.id = '' + this._model.getLineID(line);
                         img.dataset.f = '' + formatIdx;
                         this._el.appendChild(img);
                         Object.assign(img.style, {
@@ -4132,7 +3991,7 @@ export class Display extends EventEmitter {
                             img.onload = () => {
                                 //TODO make work once convert to wrapped line format
                                 return;
-                                const lIdx = this.lineIDs.indexOf(+img.dataset.id);
+                                const lIdx = this._model.getLineFromID().indexOf(+img.dataset.id);
                                 if (lIdx === -1 || lIdx >= this.lines.length) return;
                                 this._lines[lIdx].images--;
                                 const fIdx = +img.dataset.f;
@@ -4147,7 +4006,7 @@ export class Display extends EventEmitter {
                                 //TODO update wrapped lines with new mage widths
                                 const wraps = this.calculateWrapLines(lIdx);
                                 //this.updateTops(lIdx);
-                                if (lIdx >= this._viewRange.start && lIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._parser.busy) {
+                                if (lIdx >= this._viewRange.start && lIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._model.busy) {
                                     if (this.split) this.split.dirty = true;
                                     this.doUpdate(UpdateType.display);
                                 }
@@ -4794,5 +4653,333 @@ export class ScrollBar extends EventEmitter {
         window.removeEventListener('mousemove', this._wMove);
         window.removeEventListener('mouseup', this._wUp);
         window.removeEventListener('resize', this._wResize);
+    }
+}
+
+export class DisplayModel extends EventEmitter {
+    private _lineID = 0;
+    private _parser: Parser;
+    public lines: LineData[] = [];
+    private lineIDs: number[] = [];
+    private _expire = {};
+    private _expire2 = [];
+
+    get enableDebug() {
+        return this._parser.enableDebug;
+    }
+
+    set enableDebug(value) {
+        this._parser.enableDebug = value;
+    }
+
+    get textLength(): number {
+        return this._parser.textLength;
+    }
+
+    get EndOfLine(): boolean {
+        return this._parser.EndOfLine;
+    }
+
+    get parseQueueLength(): number {
+        return this._parser.parseQueueLength;
+    }
+
+    get parseQueueEndOfLine(): boolean {
+        return this._parser.parseQueueEndOfLine;
+    }
+
+    set enableFlashing(value: boolean) {
+        this._parser.enableFlashing = value;
+    }
+    get enableFlashing(): boolean {
+        return this._parser.enableFlashing;
+    }
+
+    set enableMXP(value: boolean) {
+        this._parser.enableMXP = value;
+    }
+    get enableMXP(): boolean {
+        return this._parser.enableMXP;
+    }
+
+    set showInvalidMXPTags(value: boolean) {
+        this._parser.showInvalidMXPTags = value;
+    }
+    get showInvalidMXPTags(): boolean {
+        return this._parser.showInvalidMXPTags;
+    }
+
+    set enableBell(value: boolean) {
+        this._parser.enableBell = value;
+    }
+    get enableBell(): boolean {
+        return this._parser.enableBell;
+    }
+
+    set enableURLDetection(value: boolean) {
+        this._parser.enableURLDetection = value;
+    }
+    get enableURLDetection(): boolean {
+        return this._parser.enableURLDetection;
+    }
+
+    set enableMSP(value: boolean) {
+        this._parser.enableMSP = value;
+    }
+    get enableMSP(): boolean {
+        return this._parser.enableMSP;
+    }
+
+    set displayControlCodes(value: boolean) {
+        this._parser.displayControlCodes = value;
+    }
+    get displayControlCodes(): boolean {
+        return this._parser.displayControlCodes;
+    }
+
+    set emulateTerminal(value: boolean) {
+        this._parser.emulateTerminal = value;
+    }
+    get emulateTerminal(): boolean {
+        return this._parser.emulateTerminal;
+    }
+
+    set MXPStyleVersion(value: string) {
+        this._parser.StyleVersion = value;
+    }
+    get MXPStyleVersion(): string {
+        return this._parser.StyleVersion;
+    }
+
+    constructor(options: DisplayOptions) {
+        super();
+        this._parser = new Parser(options);
+        this._parser.on('debug', (msg) => { this.emit(msg); });
+
+        this._parser.on('bell', () => { this.emit('bell'); });
+
+        this._parser.on('add-line', (data: ParserLine) => {
+            this.addParserLine(data, true);
+        });
+
+        this._parser.on('expire-links', (args) => {
+            let lines;
+            let line;
+            let expire;
+            if (!args || args.length === 0) {
+                for (line in this._expire2) {
+                    if (!this._expire2.hasOwnProperty(line))
+                        continue;
+                    this.expireLineLinkFormat(this._expire2[line], +line);
+                }
+                for (expire in this._expire) {
+                    if (!this._expire.hasOwnProperty(expire))
+                        continue;
+                    lines = this._expire[expire];
+                    for (line in lines) {
+                        if (!lines.hasOwnProperty(line))
+                            continue;
+                        this.expireLineLinkFormat(lines[line], +line);
+                    }
+                }
+                this._expire2 = [];
+                this._expire = {};
+                this.emit('expire-links', args);
+            }
+            else if (this._expire[args]) {
+                lines = this._expire[args];
+                for (line in lines) {
+                    if (!lines.hasOwnProperty(line))
+                        continue;
+                    this.expireLineLinkFormat(lines[line], +line);
+                }
+                delete this._expire[args];
+                this.emit('expire-links', args);
+            }
+        });
+
+        this._parser.on('parse-done', () => {
+            this.emit('parse-done');
+        });
+
+        this._parser.on('set-title', (title, type) => {
+            this.emit('set-title', title, type);
+        });
+        this._parser.on('music', (data) => {
+            this.emit('music', data);
+        });
+        this._parser.on('sound', (data) => {
+            this.emit('sound', data);
+        });
+
+        this._parser.on('MXP-tag-reply', (tag, args) => {
+            this.emit('MXP-tag-reply', tag, args);
+        });
+
+    }
+
+    public addParserLine(data: ParserLine, noUpdate?: boolean) {
+        this.emit('add-line', data);
+        if (data == null || typeof data === 'undefined' || data.line == null || typeof data.line === 'undefined')
+            return;
+        this.emit('add-line-done', data);
+        if (data.gagged)
+            return;
+        const line: LineData = {
+            text: (data.line === '\n' || data.line.length === 0) ? '' : data.line,
+            raw: data.raw,
+            formats: data.formats,
+            id: this._lineID,
+            timestamp: Date.now()
+        }
+        this.lines.push(line);
+        this.lineIDs.push(this._lineID);
+        this._lineID++;
+        this.buildLineExpires(this.lines.length - 1);
+        this.emit('line-added', data, noUpdate);
+    }
+
+    private expireLineLinkFormat(formats, idx: number) {
+        let f;
+        let fs;
+        let fl;
+        let fsl;
+        let type;
+        let eType;
+        let format;
+        let n = 0;
+        for (fs = 0, fsl = formats.length; fs < fsl; fs++) {
+            fl = this.lines[idx].formats.length;
+            f = formats[fs];
+            format = this.lines[idx].formats[f];
+            type = format.formatType;
+            if (format.formatType === FormatType.MXPLink)
+                eType = FormatType.MXPLinkEnd;
+            else
+                eType = FormatType.MXPSendEnd;
+            format.formatType = FormatType.MXPExpired;
+            f++;
+            for (; f < fl; f++) {
+                if (this.lines[idx].formats[f] === eType) {
+                    if (n === 0) {
+                        this.lines[idx].formats[f].formatType = FormatType.MXPSkip;
+                        break;
+                    }
+                    else
+                        n--;
+                }
+                else if (this.lines[idx].formats[f] === type)
+                    n++;
+            }
+        }
+        this.emit('expire-link-line', idx);
+    }
+
+    public clear() {
+        this._parser.Clear();
+        this.lines = [];
+        this._expire = {};
+        this._expire2 = [];
+        this.lineIDs = [];
+        this._lineID = 0;
+    }
+
+    public IncreaseColor(color, percent) {
+        return this._parser.IncreaseColor(color, percent);
+    }
+
+    public GetColor(color) {
+        return this._parser.GetColor(color);
+    }
+
+    public append(txt: string, remote?: boolean, force?: boolean, prependSplit?: boolean) {
+        this._parser.parse(txt, remote || false, force || false, prependSplit || false);
+    }
+
+    public CurrentAnsiCode() {
+        return this._parser.CurrentAnsiCode();
+    }
+
+    public updateWindow(width?, height?) {
+        this._parser.updateWindow(width, height);
+    }
+
+    public SetColor(code: number, color) {
+        this._parser.SetColor(code, color);
+    }
+
+    public ClearMXP() {
+        this._parser.ClearMXP();
+    }
+
+    public ResetMXPLine() {
+        this._parser.ResetMXPLine();
+    }
+
+    get busy() {
+        return this._parser.busy;
+    }
+
+    public removeLine(line: number) {
+        this.lines.splice(line, 1);
+        this.lineIDs.splice(line, 1);
+        this._expire2.splice(line, 1);
+        for (let ol in this._expire) {
+            if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0 || line >= this._expire[ol].length)
+                continue;
+            this._expire[ol].splice(line, 1);
+        }
+    }
+
+    public removeLines(line: number, amt: number) {
+        this.lines.splice(line, amt);
+        this.lineIDs.splice(line, amt);
+        this._expire2.splice(line, amt);
+        for (let ol in this._expire) {
+            if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0 || line >= this._expire[ol].length)
+                continue;
+            this._expire[ol].splice(line, amt);
+        }
+    }
+
+    public getLineID(line: number) {
+        if (line < 0 || line >= this.lineIDs.length) return -1;
+        return this.lineIDs[line];
+    }
+
+    public getLineFromID(id) {
+        return this.lineIDs.indexOf(id);
+    }
+
+    private buildLineExpires(idx) {
+        if (idx === undefined)
+            idx = this.lines.length - 1;
+        const formats = this.lines[idx].formats;
+        for (const ol in this._expire) {
+            if (!this._expire.hasOwnProperty(ol))
+                continue;
+            if (this._expire[ol][idx])
+                delete this._expire[ol][idx];
+        }
+        delete this._expire2[idx];
+        let f = formats.length;
+        let format;
+        while (f--) {
+            format = formats[f];
+            if (format.formatType === FormatType.MXPSend || format.formatType === FormatType.MXPLink) {
+                if (format.expire && format.expire.length > 0) {
+                    if (!this._expire[format.expire])
+                        this._expire[format.expire] = [];
+                    if (!this._expire[format.expire][idx])
+                        this._expire[format.expire][idx] = [];
+                    this._expire[format.expire][idx].push(f);
+                }
+                else {
+                    if (!this._expire2[idx])
+                        this._expire2[idx] = [];
+                    this._expire2[idx].push(f);
+                }
+            }
+        }
     }
 }
