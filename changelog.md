@@ -51,7 +51,10 @@
   - Immortal tools: File overwrite system has been added for all but uploading paths
 - **Fixed:**
   - Fixed a bug in parsing #command arguments and quotes
-  - Immortal tools: Fixed issue with multiple events not correctly working
+  - Immortal tools:
+    - Fixed issue with multiple events not correctly working
+    - Fixed issue when remote path was cut and it force updated the file list
+    - Fixed corruption issue when attempting to get multiple directory listings at once, now queues directory calls and updates as needed
   - Profile manager: Fixed code editor spell checking replacement
   - Fixed #wait error when followed by trailing whitespace
   - Profiles: Fixed loading of copied profile data files not correctly loading

@@ -1965,7 +1965,10 @@
             });
 
             $('#local-path').change(function () {
-                updateLocal($('#local-path').val());
+                const p = $('#local-path').val();
+                //was cut or removed so do not update
+                if (!p || p.length === 0) return;
+                updateLocal(p);
             });
             $('#local-path').keyup(function (e) {
                 if (e.which === 27)
@@ -1997,7 +2000,10 @@
             });
 
             $('#remote-path').change(function () {
-                _ied.getDir($('#remote-path').val());
+                const p = $('#remote-path').val();
+                //was cut or removed so do not update
+                if (!p || p.length === 0) return;
+                _ied.getDir(p);
             });
             $('#remote-path').keyup(function (e) {
                 if (e.which === 27)
@@ -3082,7 +3088,7 @@
             }
             else
                 _ied.exist(p + '/' + path.basename(file), false, 'upload', async (target, data) => {
-                    if(data === -2) {
+                    if (data === -2) {
                         logMessage('Remote name is a directory');
                         return true;
                     }
@@ -3173,10 +3179,10 @@
                 _ied.startItem(item.id);
             else
                 _ied.exist(item.remote, false, 'upload', async (target, data) => {
-                    if(data === -2) {
+                    if (data === -2) {
                         logMessage('Remote name is a directory');
                         return true;
-                    }                    
+                    }
                     //file exist if it returns an array of data, 0 is size, 1 is date
                     if (Array.isArray(data)) {
                         var remoteData = {

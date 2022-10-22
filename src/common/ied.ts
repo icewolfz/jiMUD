@@ -37,6 +37,7 @@ export class IED extends EventEmitter {
     private _temp: TempType = TempType.extension;
     private _activeIdx: number = -1;
     private _begin = null;
+    private _dir = [];
 
     public prefix = '';
     public local;
@@ -357,6 +358,11 @@ export class IED extends EventEmitter {
                         this.emit('dir', obj.path, files, obj.tag || (this.prefix + 'dir'), this._paths[obj.tag]);
                     delete this._data[obj.tag || 'dir'];
                     delete this._paths[obj.tag];
+                    this._dir.shift();
+                    if (this._dir.length) {
+                        const t = this._dir.shift();
+                        this.getDir(t[0], t[1], t[2]);
+                    }
                 }
                 break;
             case 'download':
@@ -456,6 +462,8 @@ export class IED extends EventEmitter {
         if (local)
             this._paths[this.prefix + 'dir:' + (tag || 'browse')] = local;
         if (noResolve) {
+            this._dir.push([dir, tag, local]);
+            if(this._dir.length > 1) return;
             this.emit('send-gmcp', 'IED.dir ' + JSON.stringify({ path: dir, tag: this.prefix + 'dir:' + (tag || 'browse'), compress: this.compressDir ? 1 : 0 }));
             this.emit('message', 'Getting Directory: ' + dir);
         }
@@ -697,7 +705,7 @@ export class IED extends EventEmitter {
         item.info = IED.getFileInfo(item.local);
         item.totalSize = item.info.size;
         item.originalSize = item.info.size;
-        if(error) {
+        if (error) {
             item.error = error;
             item.state = ItemState.error;
         }
@@ -936,6 +944,7 @@ export class IED extends EventEmitter {
     public reset() {
         this.emit('send-gmcp', 'IED.reset ' + JSON.stringify({ msg: 'Requested reset' }));
         this._gmcp = [];
+        this._dir = [];
         this._id++;
         this.emit('message', 'Requesting reset');
     }
