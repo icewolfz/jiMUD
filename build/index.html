@@ -416,7 +416,7 @@
                 var pos = client.display.getLineOffset(lastMouse.pageX, lastMouse.pageY);
                 if (pos.y < 0 || pos.y >= client.display.lines.length)
                     return '';
-                return client.display.lines[pos.y];
+                return client.display.getLineText(pos.y);
             },
             configurable: true
         });
