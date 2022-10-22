@@ -61,6 +61,9 @@
   - Display:
     - Fixed MXP image hspace and vspace parsing
     - Fixed window character height and width smaller then should be
+  - Logging:
+    - Fixed logger not enabling/disabling when changed from settings dialog
+    - Fixed logger not enabling/disabling on load
 - **Changed:**
   - All dark icons now have a white stroke to make them work better with dark mode and dark colors
   - Preferences that are now global:

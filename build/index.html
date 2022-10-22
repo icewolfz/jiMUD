@@ -1719,7 +1719,9 @@
             });
 
             client.on('add-line-done', (data) => {
-                _logger.postMessage({ action: 'add-line', args: data });
+                //lets skip logging if not enabled tp save some cpu on serlizing data
+                if(client.options.logEnabled)
+                    _logger.postMessage({ action: 'add-line', args: data });
             });
 
             client.on('received-data', (data) => {

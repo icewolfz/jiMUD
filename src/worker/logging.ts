@@ -107,6 +107,7 @@ self.addEventListener('message', (e: MessageEvent) => {
     switch (e.data.action) {
         case 'options':
             let option;
+            let oldEnabled = options.enabled;
             for (option in e.data.args) {
                 if (!e.data.args.hasOwnProperty(option))
                     continue;
@@ -161,14 +162,25 @@ self.addEventListener('message', (e: MessageEvent) => {
                 }
                 else
                     options[option] = e.data.args[option];
-                if (timeStamp !== 0) {
-                    fTimeStamp = new moment(timeStamp).format(options.format || 'YYYYMMDD-HHmmss');
-                    buildFilename();
-                    flush(true);
-                }
-                if (options.offline)
+            }
+            if (timeStamp !== 0) {
+                fTimeStamp = new moment(timeStamp).format(options.format || 'YYYYMMDD-HHmmss');
+                buildFilename();
+                flush(true);
+            }
+            //if enabled changed setup
+            if (oldEnabled != options.enabled) {
+                //if was not enabled and not logging start loggin
+                if (!oldEnabled && !logging)
+                    postMessage({ event: 'start' });
+                //if enabled but logging stop
+                else if (oldEnabled && logging)
+                    stop();
+                else if (options.offline)
                     postMessage({ event: 'start' });
             }
+            else if (options.offline)
+                postMessage({ event: 'start' });
             break;
         case 'name':
             options.name = e.data.args;
