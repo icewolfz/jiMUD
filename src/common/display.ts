@@ -331,6 +331,11 @@ export class Display extends EventEmitter {
     get enableSplit(): boolean { return this.split == null; }
     set enableSplit(value: boolean) {
         const id = this._el.id;
+        //reset the scroll corner to ensure it is in proper state
+        if (this._scrollCorner) {
+            this._el.removeChild(this._scrollCorner);
+            this._scrollCorner = null;
+        }         
         if (!this.split && value) {
             this.split = document.createElement('div');
             this.split.dirty = true;
