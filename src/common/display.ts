@@ -118,7 +118,7 @@ export class Display extends EventEmitter {
     private _finder: Finder;
     private _maxView: number = 0;
 
-    private _maxLineLength: number = 0;
+    private _maxWidth: number = 0;
     private _currentSelection: Selection = {
         start: { x: null, y: null },
         end: { x: null, y: null },
@@ -207,24 +207,20 @@ export class Display extends EventEmitter {
         this._model.on('add-line', data => { this.emit('add-line', data); });
         this._model.on('add-line-done', data => { this.emit('add-line-done', data); });
         this._model.on('line-added', (data, noUpdate) => {
-            let t;
-            if (data.formats[0].hr) {
-                t = this.WindowWidth;
-                if (t > this._maxLineLength)
-                    this._maxLineLength = t;
-            }
-            else if (data.line.length > this._maxLineLength)
-                this._maxLineLength = data.line.length;
             const idx = this._model.lines.length - 1;
             //t = this.calculateWrapLines(idx, 0, this._indent);
             //track wrapped lines to line to make it easier ot lookup all wrapped lines and allow indexOf and other build in functions
             //this._linesMap.set(idx, t);
             this._lines.push({ height: 0, top: 0, width: 0, images: 0 });
-            t = this.calculateSize(idx);
+            const t = this.calculateSize(idx);
             this._lines[idx].height = t.height;
             this._lines[idx].width = t.width;
             if (idx - 1 >= 0)
                 this._lines[idx].top = this._lines[idx - 1].top + this._lines[idx].height;
+            if (data.formats[0].hr)
+                this._maxWidth = Math.max(this._maxWidth, this._innerWidth - this._VScroll.size - this._padding[1] - this._padding[3]);
+            else
+                this._maxWidth = Math.max(this._maxWidth, this._lines[idx].width);
             /*
             if (idx - 1 >= 0)
                 t[0].top = this._lines[idx - 1].top + this._lines[idx - 1].height;
@@ -385,10 +381,10 @@ export class Display extends EventEmitter {
                         overlays.push.apply(overlays, this._overlays[ol].slice(start, end + 1));
                     }
                     overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
-                    const mw = '' + (this._maxLineLength === 0 ? 0 : Math.max(this._maxLineLength * this._charWidth, this._maxView));
+                    const mw = '' + (this._maxWidth === 0 ? 0 : Math.max(this._maxWidth, this._maxView));
                     const mv = '' + this._maxView;
-                    this.split.view.style.width = this._maxLineLength * this._charWidth + 'px';
-                    this.split.background.style.width = this._maxLineLength * this._charWidth + 'px';
+                    this.split.view.style.width = this._maxWidth + 'px';
+                    this.split.background.style.width = this._maxWidth + 'px';
                     const cache = {};
                     for (; start < end; start++) {
                         if (this.split.viewCache[start])
@@ -1176,7 +1172,7 @@ export class Display extends EventEmitter {
         this._lines = [];
 
         this._viewRange = { start: 0, end: 0 };
-        this._maxLineLength = 0;
+        this._maxWidth = 0;
         this._overlay.innerHTML = null;
         this._view.innerHTML = null;
         this._background.innerHTML = null;
@@ -1252,7 +1248,7 @@ export class Display extends EventEmitter {
     }
 
     public updateView() {
-        const w = this._maxLineLength * this._charWidth;
+        const w = this._maxWidth;
         let l = this.lines.length;
         if (this._hideTrailingEmptyLine && l && this.lines[l - 1].text.length === 0)
             l--;
@@ -1610,18 +1606,17 @@ export class Display extends EventEmitter {
             let m = 0;
             const lines = this.lines;
             const ll = lines.length;
+            const ww = this._innerWidth - this._VScroll.size - this._padding[1] - this._padding[3];
             for (let l = 0; l < ll; l++) {
-                if (lines[l].formats[0].hr) {
-                    if (this.WindowWidth > m)
-                        m = this.WindowWidth;
-                }
-                else if (lines[l].text.length > m)
-                    m = lines[l].text.length;
+                if (lines[l].formats[0].hr)
+                    m = Math.max(m, ww);
+                else
+                    m = Math.max(m, this._lines[l].width);
             }
             this._viewCache = {};
             if (this.split)
                 this.split.viewCache = {};
-            this._maxLineLength = m;
+            this._maxWidth = m;
             if (this.split) this.split.dirty = true;
             this.doUpdate(UpdateType.selection | UpdateType.overlays);
         }
@@ -2083,7 +2078,7 @@ export class Display extends EventEmitter {
             cls = 'overlay-default';
         this._overlays[type] = [];
         const fl = Math.trunc;
-        const mw = Math.max(this._maxLineLength * this._charWidth, this._maxView);
+        const mw = Math.max(this._maxWidth, this._maxView);
         const len = this.lines.length;
         for (r = 0; r < rl; r++) {
             range = ranges[r];
@@ -2347,7 +2342,7 @@ export class Display extends EventEmitter {
     */
             if (this.lines[sL].formats[0].hr) {
                 s = 0;
-                e = Math.max(this._maxLineLength * this._charWidth, this._maxView);
+                e = Math.max(this._maxWidth, this._maxView);
             }
             else {
                 s = Math.min(sel.start.x, sel.end.x);
@@ -2414,7 +2409,7 @@ export class Display extends EventEmitter {
             return;
         }
         const len = this.lines.length;
-        const mw = Math.max(this._maxLineLength * this._charWidth, this._maxView);
+        const mw = Math.max(this._maxWidth, this._maxView);
 
         if (sL < 0)
             sL = 0;
