@@ -119,6 +119,7 @@ export class Display extends EventEmitter {
     private _maxView: number = 0;
 
     private _maxWidth: number = 0;
+    private _maxHeight: number = 0;
     private _currentSelection: Selection = {
         start: { x: null, y: null },
         end: { x: null, y: null },
@@ -217,10 +218,14 @@ export class Display extends EventEmitter {
             this._lines[idx].width = t.width;
             if (idx - 1 >= 0)
                 this._lines[idx].top = this._lines[idx - 1].top + this._lines[idx].height;
-            if (data.formats[0].hr)
-                this._maxWidth = Math.max(this._maxWidth, this._innerWidth - this._VScroll.size - this._padding[1] - this._padding[3]);
-            else
+            if (data.formats[0].hr) {
+                this._maxWidth = Math.max(this._maxWidth, this._maxView);
+                this._maxHeight = Math.max(this._maxHeight, this._charHeight);
+            }
+            else {
                 this._maxWidth = Math.max(this._maxWidth, this._lines[idx].width);
+                this._maxHeight = Math.max(this._maxHeight, this._lines[idx].height);
+            }
             /*
             if (idx - 1 >= 0)
                 t[0].top = this._lines[idx - 1].top + this._lines[idx - 1].height;
@@ -1173,6 +1178,7 @@ export class Display extends EventEmitter {
 
         this._viewRange = { start: 0, end: 0 };
         this._maxWidth = 0;
+        this._maxHeight = 0;
         this._overlay.innerHTML = null;
         this._view.innerHTML = null;
         this._background.innerHTML = null;
@@ -1348,7 +1354,7 @@ export class Display extends EventEmitter {
     }
 
     get WindowWidth(): number {
-        return Math.trunc((this._innerWidth - this._VScroll.size - this._padding[1] - this._padding[3]) / parseFloat(window.getComputedStyle(this._character).width));
+        return Math.trunc(this._maxView / parseFloat(window.getComputedStyle(this._character).width));
     }
 
     get WindowHeight(): number {
@@ -1604,19 +1610,25 @@ export class Display extends EventEmitter {
             }
 
             let m = 0;
+            let mh = 0;
             const lines = this.lines;
             const ll = lines.length;
-            const ww = this._innerWidth - this._VScroll.size - this._padding[1] - this._padding[3];
+            const ww = this._maxView;
             for (let l = 0; l < ll; l++) {
-                if (lines[l].formats[0].hr)
+                if (lines[l].formats[0].hr) {
                     m = Math.max(m, ww);
-                else
+                    mh = Math.max(mh, this._charHeight);
+                }
+                else {
                     m = Math.max(m, this._lines[l].width);
+                    mh = Math.max(mh, this._lines[l].height);
+                }
             }
             this._viewCache = {};
             if (this.split)
                 this.split.viewCache = {};
             this._maxWidth = m;
+            this._maxHeight = mh;
             if (this.split) this.split.dirty = true;
             this.doUpdate(UpdateType.selection | UpdateType.overlays);
         }
@@ -3328,7 +3340,7 @@ export class Display extends EventEmitter {
         if (line >= this.lines.length)
             line = this.lines.length - 1;
         if (!width || typeof width !== 'number')
-            width = this._innerWidth - this._VScroll.size - this._padding[1] - this._padding[3];
+            width = this._maxView;
         if (width < 200)
             width = 200;
         left = left || 0;
