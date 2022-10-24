@@ -155,6 +155,7 @@ export interface ParserLine {
   gagged: boolean;
   formats: LineFormat[];
   remote: boolean;
+  timestamp?: number;
 }
 
 export interface ParserOptions {

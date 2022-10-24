@@ -50,6 +50,7 @@ interface ParserLine {
     fragment: boolean;
     gagged: boolean;
     formats: LineFormat[];
+    timestamp?: number;
 }
 
 enum Log {
@@ -237,7 +238,7 @@ self.addEventListener('message', (e: MessageEvent) => {
             if (!logging || (!options.offline && !connected)) return;
             if (data.gagged && !options.gagged) return;
             if ((options.what & Log.Html) === Log.Html)
-                writeHtml(createLine({ text: data.line, formats: data.formats }));
+                writeHtml(createLine({ text: data.line, formats: data.formats, timestamp: data.timestamp || Date.now() }));
             if ((options.what & Log.Text) === Log.Text || options.what === Log.None)
                 writeText(data.line + '\n');
             if ((options.what & Log.Raw) === Log.Raw)

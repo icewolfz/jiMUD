@@ -84,9 +84,9 @@ Reset - Resetting will revert all settings back to default values
 - `Create logs for every connection` This setting will force a new log every time you connect to the mud, if disabled it will attempt to create one large log for the current session.
 - `Log gagged lines` This forces the logger to include any lines that may have been hidden, for example when capture chat is enabled the lines are removed from the main flow, this setting will enable you keep them or keep the log as only whats on the display.
 - `Log what` what type formatted text to log
-  - `HTML` log text as formatted html into a .htm log file
-  - `Text` log text to .txt log file
-  - `Raw` log all text and raw control codes to .txt log file
+  - `HTML` log text as formatted html into a LOGNAMEFORMAT.htm log file
+  - `Text` log text to LOGNAMEFORMAT.txt log file
+  - `Raw` log all text and raw control codes to LOGNAMEFORMAT.raw.txt log file
 - `Date/time format` format for date/time when included in log file name **Note** Supports all moment time formats, **WARNING** take note of your operating system's allowed characters or it may break logging
 - `Save path` The location to save log files to, **note** path must exist supports
 

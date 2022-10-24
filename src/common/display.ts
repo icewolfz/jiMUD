@@ -4455,6 +4455,7 @@ export class DisplayModel extends EventEmitter {
     }
 
     public addParserLine(data: ParserLine, noUpdate?: boolean) {
+        data.timestamp = Date.now();
         this.emit('add-line', data);
         if (data == null || typeof data === 'undefined' || data.line == null || typeof data.line === 'undefined')
             return;
@@ -4466,7 +4467,7 @@ export class DisplayModel extends EventEmitter {
             raw: data.raw,
             formats: data.formats,
             id: this._lineID,
-            timestamp: Date.now()
+            timestamp: data.timestamp
         }
         this.lines.push(line);
         this.lineIDs.push(this._lineID);
