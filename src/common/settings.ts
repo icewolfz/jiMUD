@@ -102,7 +102,7 @@ export class Chat {
     public flashing: boolean = false;
     public showInTaskBar: boolean = false;
     public showTimestamp: boolean = false;
-    public timestampFormat: string = '[[]MM-DD HH:mm:ss[]] ';
+    public timestampFormat: string = '[[]MM-DD HH:mm:ss.SSS[]] ';
 }
 
 export class CodeEditor {
@@ -543,7 +543,7 @@ export class Settings {
         enableBackgroundColors: true,
         showInvalidMXPTags: false,
         showTimestamp: false,
-        timestampFormat: '[[]MM-DD HH:mm:ss[]] ',
+        timestampFormat: '[[]MM-DD HH:mm:ss.SSS[]] ',
     };
 
     public extensions = {

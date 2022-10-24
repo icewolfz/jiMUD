@@ -155,7 +155,7 @@ export class Display extends EventEmitter {
     private _wordWrap: boolean = false;
     private _indent: number = 4;
     private _timestamp: boolean = false;
-    private _timestampFormat: string = '[[]MM-DD HH:mm:ss[]] ';
+    private _timestampFormat: string = '[[]MM-DD HH:mm:ss.SSS[]] ';
     private _timestampWidth: number = 0;
 
     public split = null;
