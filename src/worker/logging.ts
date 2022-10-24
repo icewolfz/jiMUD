@@ -73,6 +73,8 @@ interface LogOptions {
     postfix?: string;
     prefix?: string;
     format?: string;
+    timestamp?: boolean;
+    timestampFormat?: string;
 }
 
 let options: LogOptions = {
@@ -84,7 +86,9 @@ let options: LogOptions = {
     prepend: false,
     name: '',
     what: Log.Html,
-    debug: false
+    debug: false,
+    timestamp: false,
+    timestampFormat: '[[]MM-DD HH:mm:ss.SSS[]] '
 };
 
 let connected: boolean = false;
@@ -239,10 +243,16 @@ self.addEventListener('message', (e: MessageEvent) => {
             if (data.gagged && !options.gagged) return;
             if ((options.what & Log.Html) === Log.Html)
                 writeHtml(createLine({ text: data.line, formats: data.formats, timestamp: data.timestamp || Date.now() }));
-            if ((options.what & Log.Text) === Log.Text || options.what === Log.None)
+            if ((options.what & Log.Text) === Log.Text || options.what === Log.None) {
+                if (options.timestamp)
+                    writeText(moment(data.timestamp).format(options.timestampFormat));
                 writeText(data.line + '\n');
-            if ((options.what & Log.Raw) === Log.Raw)
+            }
+            if ((options.what & Log.Raw) === Log.Raw) {
+                if (options.timestamp)
+                    writeText('\x1b[-7;-8m' + moment(data.timestamp).format(options.timestampFormat) + '\x1b[0m');
                 writeRaw(data.raw);
+            }
             break;
     }
 }, false);
@@ -386,11 +396,17 @@ function flush(newline?) {
         if (newline)
             nl = '\n';
         if ((flushBuffer.what & Log.Html) === Log.Html)
-            writeHtml(createLine({ text: flushBuffer.line, formats: flushBuffer.formats }));
-        if ((flushBuffer.what & Log.Text) === Log.Text || flushBuffer.what === Log.None)
+            writeHtml(createLine({ text: flushBuffer.line, formats: flushBuffer.formats, timestamp: flushBuffer.timestamp || Date.now() }));
+        if ((flushBuffer.what & Log.Text) === Log.Text || flushBuffer.what === Log.None) {
+            if (options.timestamp)
+                writeText(moment(flushBuffer.timestamp).format(options.timestampFormat));
             writeText(flushBuffer.line + nl);
-        if ((flushBuffer.what & Log.Raw) === Log.Raw)
+        }
+        if ((flushBuffer.what & Log.Raw) === Log.Raw) {
+            if (options.timestamp)
+                writeText('\x1b[-7;-8m' + moment(flushBuffer.timestamp).format(options.timestampFormat) + '\x1b[0m');
             writeRaw(flushBuffer.raw + nl);
+        }
     }
     //restore previous state and clear buffer
     logging = l;
@@ -415,10 +431,18 @@ function start(lines: any[], fragment: boolean) {
     if (options.prepend && lines && lines.length > 0) {
         if ((options.what & Log.Html) === Log.Html)
             writeHtml(createLines(lines || []));
-        if ((options.what & Log.Text) === Log.Text || options.what === Log.None)
-            writeText(lines.join('\n') + (fragment || lines.length === 0 ? '' : '\n'));
-        if ((options.what & Log.Raw) === Log.Raw)
-            writeRaw(lines.map(l => l.raw).join(''));
+        if ((options.what & Log.Text) === Log.Text || options.what === Log.None) {
+            if (options.timestamp)
+                writeText(lines.map(l => moment(l.timestamp).format(options.timestampFormat) + l.text).join('\n') + (fragment || lines.length === 0 ? '' : '\n'));
+            else
+                writeText(lines.map(l => l.text).join('\n') + (fragment || lines.length === 0 ? '' : '\n'));
+        }
+        if ((options.what & Log.Raw) === Log.Raw) {
+            if (options.timestamp)
+                writeText(lines.map(l => '\x1b[-7;-8m' + moment(l.timestamp).format(options.timestampFormat) + '\x1b[0m' + l.raw).join(''));
+            else
+                writeRaw(lines.map(l => l.raw).join(''));
+        }
     }
     postMessage({ event: 'started', args: logging });
 }
@@ -461,6 +485,29 @@ function createLine(line) {
     const len = formats.length;
     const styles = [];
     const text = line.text;
+    if (options.timestamp) {
+        fCls = [];
+        let color = GetColor(-8);
+        if (backgrounds[getClassName(color)])
+            fCls.push(' b', backgrounds[getClassName(color)]);
+        else {
+            backgrounds[getClassName(color)] = backgroundsCnt;
+            fCls.push(' b', backgroundsCnt);
+            styles.push(`.b${backgroundsCnt} { background-color: ${color}; }`);
+            backgroundsCnt++;
+        }
+        color = GetColor(-7);
+        if (colors[getClassName(color)])
+            fCls.push(' c', colors[getClassName(color)]);
+        else {
+            colors[getClassName(color)] = colorsCnt;
+            fCls.push(' c', colorsCnt);
+            styles.push(`.c${colorsCnt} { color: ${color}; }`);
+            colorsCnt++;
+        }
+        parts.push('<span class="ansi', ...fCls, '" style="float: left;">', moment(line.timestamp).format(options.timestampFormat), '</span>');
+        fCls = 0;
+    }
     for (let f = 0; f < len; f++) {
         const format = formats[f];
         let nFormat;
@@ -720,8 +767,8 @@ function buildColorTable() {
     _ColorTable[270] = 'rgb(0, 128, 128)';  //cyan back
     _ColorTable[271] = 'rgb(187, 187, 187)';  //white back
 
-    _ColorTable[272] = 'rgb(0,0,0)'; //iceMudInfoBackground
-    _ColorTable[273] = 'rgb(0, 255, 255)';  //iceMudInfoText
+    _ColorTable[272] = 'rgb(0,0,0)'; //InfoBackground
+    _ColorTable[273] = 'rgb(0, 255, 255)';  //InfoText
     _ColorTable[274] = 'rgb(0,0,0)'; //LocalEchoBackground
     _ColorTable[275] = 'rgb(255, 255, 0)';  //LocalEchoText
     _ColorTable[276] = 'rgb(0, 0, 0)';  //DefaultBack
@@ -745,9 +792,9 @@ function GetColor(code) {
         case -10:
             return colorTable[280];  //DefaultBrightFore
         case -8:
-            return colorTable[272]; //iceMudInfoBackground
+            return colorTable[272]; //InfoBackground
         case -7:
-            return colorTable[273];  //iceMudInfoText
+            return colorTable[273];  //InfoText
         case -4:
             return colorTable[274]; //LocalEchoBackground
         case -3:

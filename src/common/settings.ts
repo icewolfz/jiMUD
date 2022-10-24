@@ -417,6 +417,8 @@ export class Settings {
     public newlineShortcut: NewLineType = NewLineType.Ctrl;
 
     public logWhat: Log = Log.Html;
+    public logTimestamp: boolean = false;
+    public logTimestampFormat: string = '[[]MM-DD HH:mm:ss.SSS[]] ';
     public keepLastCommand: boolean = true;
     public enableMXP: boolean = true;
     public enableMSP: boolean = true;

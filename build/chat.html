@@ -64,7 +64,9 @@
                         what: options.logWhat,
                         debug: options.enableDebug,
                         postfix: '.chat',
-                        format: options.logTimeFormat
+                        format: options.logTimeFormat,
+                        timestamp: options.logTimestamp,
+                        timestampFormat: options.logTimestampFormat
                     }
                 });
                 _logger.postMessage({ action: 'start', args: { lines: display.lines, fragment: display.EndOfLine } });
@@ -220,7 +222,7 @@
                 display.addParserLine(data);
             if (!options)
                 loadOptions();
-            if (_logger)
+            if (_logger && options.chat.log)
                 _logger.postMessage({ action: 'add-line', args: data });
         }
 

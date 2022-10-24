@@ -707,8 +707,8 @@ export class Parser extends EventEmitter {
         _ColorTable[270] = 'rgb(0, 128, 128)';  //cyan back
         _ColorTable[271] = 'rgb(187, 187, 187)';  //white back
 
-        _ColorTable[272] = 'rgb(0,0,0)'; //iceMudInfoBackground
-        _ColorTable[273] = 'rgb(0, 255, 255)';  //iceMudInfoText
+        _ColorTable[272] = 'rgb(0,0,0)'; //InfoBackground
+        _ColorTable[273] = 'rgb(0, 255, 255)';  //InfoText
         _ColorTable[274] = 'rgb(0,0,0)'; //LocalEchoBackground
         _ColorTable[275] = 'rgb(255, 255, 0)';  //LocalEchoText
         _ColorTable[276] = 'rgb(0, 0, 0)';  //DefaultBack
@@ -732,9 +732,9 @@ export class Parser extends EventEmitter {
             case -10:
                 return this._ColorTable[280];  //DefaultBrightFore
             case -8:
-                return this._ColorTable[272]; //iceMudInfoBackground
+                return this._ColorTable[272]; //InfoBackground
             case -7:
-                return this._ColorTable[273];  //iceMudInfoText
+                return this._ColorTable[273];  //InfoText
             case -4:
                 return this._ColorTable[274]; //LocalEchoBackground
             case -3:

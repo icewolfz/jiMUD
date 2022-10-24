@@ -2786,8 +2786,8 @@ export class Display extends EventEmitter {
         const id = this._model.getLineID(idx);
         let right = false;
         if (this._timestamp) {
-            back.push('<span style="float: left;left:0;width:', this._timestampWidth, 'px;"></span>');
-            fore.push('<span style="float: left;left:0;width:', this._timestampWidth, 'px;color:', this._model.GetColor(6), ';">', moment(this.lines[idx].timestamp).format(this._timestampFormat), '</span>');
+            back.push('<span style="float: left;left:0;width:', this._timestampWidth, 'px;background:', this._model.GetColor(-8), ';"></span>');
+            fore.push('<span style="float: left;left:0;width:', this._timestampWidth, 'px;color:', this._model.GetColor(-7), ';">', moment(this.lines[idx].timestamp).format(this._timestampFormat), '</span>');
             left += this._timestampWidth;
         }
         for (let f = 0; f < len; f++) {
