@@ -12,6 +12,7 @@ import { Parser } from './parser';
 import { htmlEncode, formatUnit } from './library';
 import { Finder } from './finder';
 import { DisplayOptions, OverlayRange } from './types';
+const moment = require('moment');
 
 //const CONTAINS_RTL = /(?:[\u05BE\u05C0\u05C3\u05C6\u05D0-\u05F4\u0608\u060B\u060D\u061B-\u064A\u066D-\u066F\u0671-\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u0710\u0712-\u072F\u074D-\u07A5\u07B1-\u07EA\u07F4\u07F5\u07FA-\u0815\u081A\u0824\u0828\u0830-\u0858\u085E-\u08BD\u200F\uFB1D\uFB1F-\uFB28\uFB2A-\uFD3D\uFD50-\uFDFC\uFE70-\uFEFC]|\uD802[\uDC00-\uDD1B\uDD20-\uDE00\uDE10-\uDE33\uDE40-\uDEE4\uDEEB-\uDF35\uDF40-\uDFFF]|\uD803[\uDC00-\uDCFF]|\uD83A[\uDC00-\uDCCF\uDD00-\uDD43\uDD50-\uDFFF]|\uD83B[\uDC00-\uDEBB])/;
 //const CONTAINS_LTR = /(?:[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02B8\u0300-\u0590\u0800-\u1FFF'+'\u2C00-\uFB1C\uFDFE-\uFE6F\uFEFD-\uFFFF])/;
@@ -154,6 +155,8 @@ export class Display extends EventEmitter {
     private _wordWrap: boolean = false;
     private _indent: number = 4;
     private _timestamp: boolean = false;
+    private _timestampFormat: string = '[[]MM-DD HH:mm:ss[]] ';
+    private _timestampWidth: number = 0;
 
     public split = null;
     public splitLive: boolean = false;
@@ -273,6 +276,27 @@ export class Display extends EventEmitter {
         });
     }
 
+    get showTimestamp() { return this._timestamp; }
+    set showTimestamp(value: boolean) {
+        if (value === this._timestamp) return;
+        this._timestamp = value;
+        this._viewCache = {};
+        if (this.split)
+            this.split.viewCache = {};
+        this.doUpdate(UpdateType.display);
+    }
+
+    get timestampFormat() { return this._timestampFormat; }
+    set timestampFormat(value: string) {
+        if (this._timestampFormat === value) return;
+        this._timestampFormat = value;
+        this._timestampWidth = this.textWidth(moment().format(this._timestampFormat));
+        this._viewCache = {};
+        if (this.split)
+            this.split.viewCache = {};
+        this.doUpdate(UpdateType.display);
+    }
+
     get wordWrap() { return this._wordWrap; }
     set wordWrap(value: boolean) {
         if (value === this._wordWrap) return;
@@ -335,7 +359,7 @@ export class Display extends EventEmitter {
         if (this._scrollCorner) {
             this._el.removeChild(this._scrollCorner);
             this._scrollCorner = null;
-        }         
+        }
         if (!this.split && value) {
             this.split = document.createElement('div');
             this.split.dirty = true;
@@ -391,10 +415,10 @@ export class Display extends EventEmitter {
                         overlays.push.apply(overlays, this._overlays[ol].slice(start, end + 1));
                     }
                     overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
-                    const mw = '' + (this._maxWidth === 0 ? 0 : Math.max(this._maxWidth, this._maxView));
+                    const mw = '' + (this._maxWidth === 0 ? 0 : Math.max((this._timestamp ? this._timestampWidth : 0) + this._maxWidth, this._maxView));
                     const mv = '' + this._maxView;
-                    this.split.view.style.width = this._maxWidth + 'px';
-                    this.split.background.style.width = this._maxWidth + 'px';
+                    this.split.view.style.width = (this._timestamp ? this._timestampWidth : 0) + this._maxWidth + 'px';
+                    this.split.background.style.width = (this._timestamp ? this._timestampWidth : 0) + this._maxWidth + 'px';
                     const cache = {};
                     for (; start < end; start++) {
                         if (this.split.viewCache[start])
@@ -867,6 +891,9 @@ export class Display extends EventEmitter {
         this._finder.on('closed', () => {
             this.emit('closed');
         });
+        this._finder.on('highlight', () => {
+            this.emit('highlight');
+        });
 
         this._finder.on('found-results', () => {
             this.doUpdate(UpdateType.scrollView);
@@ -1240,6 +1267,7 @@ export class Display extends EventEmitter {
             this.updateWindow();
             //re-enable in case something outside of font change triggers a change
             this.$observer.observe(this._el, { attributes: true, attributeOldValue: true, attributeFilter: ['style'] });
+            this._timestampWidth = this.textWidth(moment().format(this._timestampFormat));
         }
         const pc = window.getComputedStyle(this._el);
         const padding = [
@@ -1259,7 +1287,7 @@ export class Display extends EventEmitter {
     }
 
     public updateView() {
-        const w = this._maxWidth;
+        const w = (this._timestamp ? this._timestampWidth : 0) + this._maxWidth;
         let l = this.lines.length;
         if (this._hideTrailingEmptyLine && l && this.lines[l - 1].text.length === 0)
             l--;
@@ -1643,6 +1671,8 @@ export class Display extends EventEmitter {
     public getLineOffset(pageX, pageY) {
         if (this.lines.length === 0)
             return { x: 0, y: 0 };
+        if (this._timestamp)
+            pageX -= this._timestampWidth;
         const os = this._os;
         let y = (pageY - os.top);
         if (this.split && this.split.shown) {
@@ -2095,7 +2125,7 @@ export class Display extends EventEmitter {
             cls = 'overlay-default';
         this._overlays[type] = [];
         const fl = Math.trunc;
-        const mw = Math.max(this._maxWidth, this._maxView);
+        const mw = Math.max((this._timestamp ? this._timestampWidth : 0) + this._maxWidth, this._maxView);
         const len = this.lines.length;
         for (r = 0; r < rl; r++) {
             range = ranges[r];
@@ -2136,6 +2166,8 @@ export class Display extends EventEmitter {
                     //e = this.textWidth(this.lines[sL].substring(s, e).replace(/ /g, '\u00A0'));
                     //s = this.textWidth(this.lines[sL].substring(0, s).replace(/ /g, '\u00A0'));
                 }
+                if (this._timestamp)
+                    s += this._timestampWidth;
                 if (!this._overlays[type][sL])
                     this._overlays[type][sL] = [];
                 if (this._roundedRanges)
@@ -2250,13 +2282,13 @@ export class Display extends EventEmitter {
 
                 if (!this._overlays[type][line])
                     this._overlays[type][line] = [];
-                this._overlays[type][line].push(`<span id="${type}-${r}" class="${rCls}" style="left:${cl * this._charWidth}px;width: ${w}px;"></span>`);
+                this._overlays[type][line].push(`<span id="${type}-${r}" class="${rCls}" style="left:${(this._timestamp ? this._timestampWidth : 0) + cl * this._charWidth}px;width: ${w}px;"></span>`);
                 if (startStyle.top === CornerType.Intern || startStyle.bottom === CornerType.Intern)
-                    this._overlays[type][line].push(`<span class="${cls} isb" style="top:${this._charHeight - 7}px;left:${(cl * this._charWidth - 7)}px;"></span>`);
+                    this._overlays[type][line].push(`<span class="${cls} isb" style="top:${this._charHeight - 7}px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl * this._charWidth - 7)}px;"></span>`);
                 if (endStyle.top === CornerType.Intern)
-                    this._overlays[type][line].push(`<span class="${cls} iet" style="top:0px;left:${(cl * this._charWidth) + w}px;"></span>`);
+                    this._overlays[type][line].push(`<span class="${cls} iet" style="top:0px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl * this._charWidth) + w}px;"></span>`);
                 if (endStyle.bottom === CornerType.Intern)
-                    this._overlays[type][line].push(`<span class="${cls} ieb" style="top:${this._charHeight - 7}px;left:${(cl * this._charWidth) + w}px;"></span>`);
+                    this._overlays[type][line].push(`<span class="${cls} ieb" style="top:${this._charHeight - 7}px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl * this._charWidth) + w}px;"></span>`);
             }
         }
         let ol;
@@ -2373,6 +2405,7 @@ export class Display extends EventEmitter {
                 //e = this.textWidth(text.substring(s, e).replace(/ /g, '\u00A0'));
                 //s = this.textWidth(text.substring(0, s).replace(/ /g, '\u00A0'));
             }
+            s += (this._timestamp ? this._timestampWidth : 0);
             if (this._roundedRanges)
                 this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`;
             else
@@ -2536,14 +2569,14 @@ export class Display extends EventEmitter {
                 }
             }
 
-            parts.push(`<span class="${cls}" style="left:${cl}px;width: ${w}px;"></span>`);
+            parts.push(`<span class="${cls}" style="left:${(this._timestamp ? this._timestampWidth : 0) + cl}px;width: ${w}px;"></span>`);
 
             if (startStyle.top === CornerType.Intern || startStyle.bottom === CornerType.Intern)
-                parts.push(`<span class="select-text isb" style="top:${this._charHeight - 7}px;left:${(cl - 7)}px;"></span>`);
+                parts.push(`<span class="select-text isb" style="top:${this._charHeight - 7}px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl - 7)}px;"></span>`);
             if (endStyle.top === CornerType.Intern)
-                parts.push(`<span class="select-text iet" style="top:0px;left:${(cl) + w}px;"></span>`);
+                parts.push(`<span class="select-text iet" style="top:0px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl) + w}px;"></span>`);
             if (endStyle.bottom === CornerType.Intern)
-                parts.push(`<span class="select-text ieb" style="top:${this._charHeight - 7}px;left:${(cl) + w}px;"></span>`);
+                parts.push(`<span class="select-text ieb" style="top:${this._charHeight - 7}px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl) + w}px;"></span>`);
 
             this._overlays.selection[line] = `<div style="top: ${line * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
         }
@@ -2752,6 +2785,11 @@ export class Display extends EventEmitter {
         let left = 0;
         const id = this._model.getLineID(idx);
         let right = false;
+        if (this._timestamp) {
+            back.push('<span style="float: left;left:0;width:', this._timestampWidth, 'px;"></span>');
+            fore.push('<span style="float: left;left:0;width:', this._timestampWidth, 'px;color:', this._model.GetColor(6), ';">', moment(this.lines[idx].timestamp).format(this._timestampFormat), '</span>');
+            left += this._timestampWidth;
+        }
         for (let f = 0; f < len; f++) {
             const format = formats[f];
             let nFormat;
@@ -4164,7 +4202,8 @@ export class ScrollBar extends EventEmitter {
         if (bar || !this.trackOffsetSize.width)
             this.trackOffsetSize = { height: this.track.offsetHeight, width: this.track.offsetWidth };
         this._percentView = this._contentSize / this._parentSize;
-        this.maxPosition = this._parentSize - Math.ceil(1 / this._percentView * this._parentSize);
+        //not sure why i subtracted from parent size to get maxPosition as it breaks resize and scroll to wne
+        this.maxPosition = this._parentSize;// - Math.ceil(1 / this._percentView * this._parentSize);
         if (this.maxPosition < 0)
             this.maxPosition = 0;
         this.update();

@@ -649,7 +649,11 @@
             });
 
             $('input[type="text"]').change(function () {
-                _settings[$(this).attr('id')] = $(this).val();
+                id = $(this).attr('id').split('-');
+                if (id.length === 2)
+                    _settings[id[0]][id[1]] = $(this).val();
+                else
+                    _settings[id[0]] = $(this).val();
             });
             $('input[type="number"]').change(function () {
                 if ($(this).attr('id') === 'mapper-memorySavePeriod')
@@ -1625,6 +1629,18 @@
                             <input type="checkbox" id="display-showInvalidMXPTags" /> Show invalid MXP tags
                         </label>
                     </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="display-showTimestamp" /> Show timestamp
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            Timestamp format
+                            <input type="text" id="display-timestampFormat" class="input-sm form-control" />
+                        </label>
+                        <span class="help-block" style="float: left;font-size: 0.8em;margin:0;padding:0">Supports all moment time formats</span>
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="display-fonts">
                     <div class="col-sm-12 form-group">
@@ -2255,6 +2271,18 @@
                         <label class="control-label">
                             <input type="checkbox" id="chat-showSplitButton" /> Show split button
                         </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="chat-showTimestamp" /> Show timestamp
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            Timestamp format
+                            <input type="text" id="chat-timestampFormat" class="input-sm form-control" />
+                        </label>
+                        <span class="help-block" style="float: left;font-size: 0.8em;margin:0;padding:0">Supports all moment time formats</span>
                     </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="chat-window">

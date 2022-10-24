@@ -1208,6 +1208,8 @@ export class Client extends EventEmitter {
         this.display.scrollLock = this.options.scrollLocked;
         this.display.enableSplit = this.options.display.split;
         this.display.hideTrailingEmptyLine = this.options.display.hideTrailingEmptyLine;
+        this.display.showTimestamp = this.options.display.showTimestamp;
+        this.display.timestampFormat = this.options.display.timestampFormat;
         this.display.splitLive = this.options.display.splitLive;
         this.display.splitHeight = this.options.display.splitHeight;
         this.display.roundedRanges = this.options.display.roundedOverlays;

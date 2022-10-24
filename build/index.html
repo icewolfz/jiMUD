@@ -1720,7 +1720,7 @@
 
             client.on('add-line-done', (data) => {
                 //lets skip logging if not enabled tp save some cpu on serlizing data
-                if(client.options.logEnabled)
+                if (client.options.logEnabled)
                     _logger.postMessage({ action: 'add-line', args: data });
             });
 
@@ -1953,6 +1953,10 @@
                 client.options.find.show = false;
                 doUpdate(32);
             });
+            client.display.on('highlight', () => {
+                client.options.find.highlight = client.display.Highlight;
+            });
+
         }
 
         async function initWindowEvents() {
@@ -2604,6 +2608,7 @@
             client.display.MatchWord = client.options.find.word;
             client.display.Reverse = client.options.find.reverse;
             client.display.RegularExpression = client.options.find.regex;
+            client.display.Highlight = client.options.find.highlight;
             updateTitle();
             updateIcon(client.port === 1035 ? 3 : 0);
             if (client.options.find.show)

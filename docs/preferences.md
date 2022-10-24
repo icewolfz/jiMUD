@@ -46,6 +46,8 @@ Reset - Resetting will revert all settings back to default values
 - `Enable colors` disable or enable all colors
 - `Enable background colors` disable or enable just background colors
 - `Show invalid MXP tags` display any MXP tags as normal text if they are not standard or custom elements
+- `Show timestamp` display the timestamp for when line of text was added
+- `Timestamp format` the timestamp display format**Note** Supports all moment time formats
 
 ## Display > Fonts
 
@@ -81,6 +83,11 @@ Reset - Resetting will revert all settings back to default values
 - `Enable Logging of offline text` Log text when not connected.
 - `Create logs for every connection` This setting will force a new log every time you connect to the mud, if disabled it will attempt to create one large log for the current session.
 - `Log gagged lines` This forces the logger to include any lines that may have been hidden, for example when capture chat is enabled the lines are removed from the main flow, this setting will enable you keep them or keep the log as only whats on the display.
+- `Log what` what type formatted text to log
+  - `HTML` log text as formatted html into a .htm log file
+  - `Text` log text to .txt log file
+  - `Raw` log all text and raw control codes to .txt log file
+- `Date/time format` format for date/time when included in log file name **Note** Supports all moment time formats, **WARNING** take note of your operating system's allowed characters or it may break logging
 - `Save path` The location to save log files to, **note** path must exist supports
 
 [Predefined variables for paths](faq.md#what-predefined-variables-can-be-use-for-paths)
@@ -141,13 +148,6 @@ Controls what is captured into the chat window
 
 **Note:** line names are case sensitive.
 
-## Code Editor
-
-- `Persistent` causes the code editor window to remain in memory to help speed up load times on future uses
-- `Always on top of the main window` Force code editor window to always be above main client window, when ever client window is focused it will bring the code editor along with it. **Requires restart on windows**
-- `Always on top of all windows` Force code editor to always be on top of all windows
-- `Show in taskbar` Always show code editor window in taskbar **Ignored when Always on top enabled in windows**
-
 ## Chat > Display
 
 - `Font` The font for the display area, mono spaced fonts work the best.
@@ -158,6 +158,8 @@ Controls what is captured into the chat window
 - `Split scroll live update` determines how the split screen updates as resize bar is adjusted, if on it will update as resize bar is moved, if slow resizing disable this as it should reduce cpu load during drag
 - `Show split button` Show or hide split toggle button in split scroll to allow for quick toggling
 - `Buffer size` How many lines to keep in the display before removing them, **note** the higher this is the more memory or slower things might get.
+- `Show timestamp` display the timestamp for when line of text was added
+- `Timestamp format` the timestamp display format**Note** Supports all moment time formats
 
 ## Chat > Window
 
@@ -165,6 +167,13 @@ Controls what is captured into the chat window
 - `Always on top of all windows` Force chat window to always be on top of all windows
 - `Persistent` causes the chat window to remain in memory to help speed up load times on future uses, note this setting only has effect if capture settings are off
 - `Show in taskbar` Always show mapper window in taskbar **Ignored when Always on top enabled in windows**
+
+## Code Editor
+
+- `Persistent` causes the code editor window to remain in memory to help speed up load times on future uses
+- `Always on top of the main window` Force code editor window to always be above main client window, when ever client window is focused it will bring the code editor along with it. **Requires restart on windows**
+- `Always on top of all windows` Force code editor to always be on top of all windows
+- `Show in taskbar` Always show code editor window in taskbar **Ignored when Always on top enabled in windows**
 
 ## Status
 

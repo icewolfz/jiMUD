@@ -64,9 +64,12 @@
   - Display:
     - Fixed MXP image hspace and vspace parsing
     - Fixed window character height and width smaller then should be
+    - Fixed not tracking highlight all setting for find
+    - Fixed scroll to end state when window resized or large amount of text added when non split view enabled
   - Logging:
     - Fixed logger not enabling/disabling when changed from settings dialog
     - Fixed logger not enabling/disabling on load
+  - Help files: Add missing logging preferences
 - **Changed:**
   - All dark icons now have a white stroke to make them work better with dark mode and dark colors
   - Preferences that are now global:

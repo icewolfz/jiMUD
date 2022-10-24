@@ -101,6 +101,8 @@ export class Chat {
     public bufferSize: number = 5000;
     public flashing: boolean = false;
     public showInTaskBar: boolean = false;
+    public showTimestamp: boolean = false;
+    public timestampFormat: string = '[[]MM-DD HH:mm:ss[]] ';
 }
 
 export class CodeEditor {
@@ -526,7 +528,8 @@ export class Settings {
         reverse: false,
         regex: false,
         selection: false,
-        show: false
+        show: false,
+        highlight: false,
     };
 
     public display = {
@@ -538,7 +541,9 @@ export class Settings {
         hideTrailingEmptyLine: true,
         enableColors: true,
         enableBackgroundColors: true,
-        showInvalidMXPTags: false
+        showInvalidMXPTags: false,
+        showTimestamp: false,
+        timestampFormat: '[[]MM-DD HH:mm:ss[]] ',
     };
 
     public extensions = {
