@@ -10,7 +10,6 @@ Reset - Resetting will revert all settings back to default values
 - `Auto takeover login` Automatically issue yes to takeover character after login
 - `Show character manager onload` open the character manager when the client first loads.
 - `Enable spellchecking` support spellchecking in command line and advanced editor **Requires restart** <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
-- `Persistent advanced editor` causes the advanced editor to remain in memory to help speed up load times on future uses
 - `On disconnect do` What to do when disconnected from the mud
   - `Nothing` do nothing
   - `Reconnect` reconnect using auto connect options
@@ -21,6 +20,10 @@ Reset - Resetting will revert all settings back to default values
 - `Max reconnect delay` set the maximum time in seconds, for reconnecting when using reconnect dialog, setting to 0 will revert to classic unlimited behavior.
 - `Check for updates on load` check for new version every time you load the client <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
 - `Enable sound` disable or enable sound globally
+
+- `Persistent advanced editor` causes the advanced editor to remain in memory to help speed up load times on future uses
+- `Clear advanced editor on send` clear the advanced editor after sending text to the mud
+- `Close advanced editor on send` close the advanced editor after sending text to the mud, **Note**If Persistent is enabled this will merely hide the editor until next use
 
 ## Interface
 

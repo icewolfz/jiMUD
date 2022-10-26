@@ -32,6 +32,8 @@
     - `Display control codes` Display unreadable characters, code < 32 || 127 as visual characters
     - `Emulate terminal extended characters` Enable/disable Terminal IBM/OEM (code page 437) extended characters, will convert them to the correct unicode character in an attempt to display like classic terminal
     - `Emulate control codes` Emulate control codes: bell, tab, backspace, escape
+    - `Clear advanced editor on send` clear the advanced editor after sending text to the mud
+    - `Close advanced editor on send` close the advanced editor after sending text to the mud, **Note**If Persistent is enabled this will merely hide the editor until next use    
   - `#connecttime` now display last disconnect time when possible if disconnected
   - Chat window display now uses global theme for display scroll bars
   - Add [#WINDOW](docs/commands.md) close and new argument support
