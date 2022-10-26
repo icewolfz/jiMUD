@@ -1180,13 +1180,16 @@ ipcMain.on('debug', (event, msg, id) => {
 });
 
 ipcMain.on('error', (event, err, id) => {
-    sendClient('error', err.id);
+    sendClient('error', err, id);
 });
 
 function sendClient(channel, msg, id) {
     let client = id ? clients[id] : getActiveClient();
-    if (client)
+    if (client && client.view.webContents) {
         client.view.webContents.send(channel, msg);
+        return true;
+    }
+    return false;
 }
 
 ipcMain.on('ondragstart', (event, files, icon) => {
@@ -2977,9 +2980,12 @@ function logError(err, skipClient) {
         msg = err.message;
     else
         msg = err;
-    if (!global.editorOnly && !skipClient)
-        sendClient('error', msg);
-    else if (_settings.logErrors) {
+    if (!global.editorOnly && !skipClient) {
+        //found a client else fallback to global settings
+        if(sendClient('error', msg))
+            return;
+    }
+    if (_settings.logErrors) {
         if (!_settings.showErrorsExtended) {
             if (err.stack)
                 msg = err.stack;
@@ -5483,7 +5489,7 @@ function getTrayWindowContext(window, windowId, noNew) {
 }
 
 function getOverlayIcon(overlay) {
-    switch (overlay) { 
+    switch (overlay) {
         case 1:
             return path.join(__dirname, '../assets/icons/png/connected.png');
         case 2:
