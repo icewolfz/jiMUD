@@ -5483,7 +5483,7 @@ function getTrayWindowContext(window, windowId, noNew) {
 }
 
 function getOverlayIcon(overlay) {
-    switch (overlay) {
+    switch (overlay) { 
         case 1:
             return path.join(__dirname, '../assets/icons/png/connected.png');
         case 2:
