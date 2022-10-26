@@ -29,6 +29,9 @@
     - `Load layout on open` set a layout file to use when loading client, *Global preference*
     - `Use only single instance` Allow only one instance of the application to open, *Global preference*
     - `On second instance` What to do whe na second instance is opened when `Use only single instance` is enabled and no command line arguments passed, *Global preference*
+    - `Display control codes` Display unreadable characters, code < 32 || 127 as visual characters
+    - `Emulate terminal extended characters` Enable/disable Terminal IBM/OEM (code page 437) extended characters, will convert them to the correct unicode character in an attempt to display like classic terminal
+    - `Emulate control codes` Emulate control codes: bell, tab, backspace, escape
   - `#connecttime` now display last disconnect time when possible if disconnected
   - Chat window display now uses global theme for display scroll bars
   - Add [#WINDOW](docs/commands.md) close and new argument support

@@ -1215,6 +1215,9 @@ export class Client extends EventEmitter {
         this.display.roundedRanges = this.options.display.roundedOverlays;
         this.display.showSplitButton = this.options.display.showSplitButton;
         this.display.tabWidth = this.options.display.tabWidth;
+        this.display.displayControlCodes = this.options.display.displayControlCodes;
+        this.display.emulateTerminal = this.options.display.emulateTerminal;
+        this.display.emulateControlCodes = this.options.display.emulateControlCodes;
         this.UpdateFonts();
         this.display.scrollDisplay();
         this.loadProfiles();

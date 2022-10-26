@@ -46,6 +46,9 @@ Reset - Resetting will revert all settings back to default values
 - `Enable colors` disable or enable all colors
 - `Enable background colors` disable or enable just background colors
 - `Show invalid MXP tags` display any MXP tags as normal text if they are not standard or custom elements
+- `Display control codes` Display unreadable characters, code < 32 || 127 as visual characters
+- `Emulate terminal extended characters` Enable/disable Terminal IBM/OEM (code page 437) extended characters, will convert them to the correct unicode character in an attempt to display like classic terminal
+- `Emulate control codes` Emulate control codes: bell, tab, backspace, escape
 - `Tab width` How many spaces in a tab
 - `Show timestamp` display the timestamp for when line of text was added
 - `Timestamp format` the timestamp display format**Note** Supports all moment time formats
@@ -158,6 +161,9 @@ Controls what is captured into the chat window
 - `Split scroll` Enable split screen scroll, this will allow you to scroll while displaying the most recent lines at the bottom, has known issues with text selection and find system scroll to view
 - `Split scroll live update` determines how the split screen updates as resize bar is adjusted, if on it will update as resize bar is moved, if slow resizing disable this as it should reduce cpu load during drag
 - `Show split button` Show or hide split toggle button in split scroll to allow for quick toggling
+- `Display control codes` Display unreadable characters, code < 32 || 127 as visual characters
+- `Emulate terminal extended characters` Enable/disable Terminal IBM/OEM (code page 437) extended characters, will convert them to the correct unicode character in an attempt to display like classic terminal
+- `Emulate control codes` Emulate control codes: bell, tab, backspace, escape
 - `Buffer size` How many lines to keep in the display before removing them, **note** the higher this is the more memory or slower things might get.
 - `Tab width` How many spaces in a tab
 - `Show timestamp` display the timestamp for when line of text was added

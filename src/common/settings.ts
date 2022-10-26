@@ -104,6 +104,9 @@ export class Chat {
     public showTimestamp: boolean = false;
     public timestampFormat: string = '[[]MM-DD HH:mm:ss.SSS[]] ';
     public tabWidth: number = 8;
+    public displayControlCodes: boolean = false;
+    public emulateTerminal: boolean = false;
+    public emulateControlCodes: boolean = true;
 }
 
 export class CodeEditor {
@@ -547,7 +550,10 @@ export class Settings {
         showInvalidMXPTags: false,
         showTimestamp: false,
         timestampFormat: '[[]MM-DD HH:mm:ss.SSS[]] ',
-        tabWidth: 8
+        tabWidth: 8,
+        displayControlCodes: false,
+        emulateTerminal: false,
+        emulateControlCodes: true
     };
 
     public extensions = {
