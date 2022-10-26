@@ -2982,7 +2982,7 @@ function logError(err, skipClient) {
         msg = err;
     if (!global.editorOnly && !skipClient) {
         //found a client else fallback to global settings
-        if(sendClient('error', msg))
+        if (sendClient('error', msg))
             return;
     }
     if (_settings.logErrors) {
@@ -3644,7 +3644,7 @@ async function newClientWindow(caller, connection, data, name) {
         }
         window.current = id;
         focusedClient = id;
-        window.window.webContents.once('ready-to-show', () => {
+        window.window.once('ready-to-show', () => {
             for (var c = 0, cl = window.clients.length; c < cl; c++) {
                 const clientId = window.clients[c];
                 window.window.addBrowserView(clients[clientId].view);
@@ -3955,7 +3955,7 @@ function loadWindowLayout(file, charData) {
         const window = windows[data.windows[i].id];
         //no clients so move on probably different type of window
         if (window.clients.length === 0) {
-            window.window.webContents.once('ready-to-show', () => {
+            window.window.once('ready-to-show', () => {
                 if (data.focusedWindow === getWindowId(window))
                     focusWindow(window, true);
                 if (window.options.file === 'code.editor.html') {
@@ -3971,7 +3971,7 @@ function loadWindowLayout(file, charData) {
         //current is wrong for what ever reason so fall back to first client
         if (!clients[current])
             current = window.clients[0];
-        window.window.webContents.once('ready-to-show', () => {
+        window.window.once('ready-to-show', () => {
             for (var c = 0, cl = window.clients.length; c < cl; c++) {
                 const clientId = window.clients[c];
                 window.window.addBrowserView(clients[clientId].view);

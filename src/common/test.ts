@@ -560,9 +560,9 @@ export class Tests extends EventEmitter {
         this.TestFunctions['testcontrolchars'] = function () {
             let i;
             let sample = '1:  ' + String.fromCharCode(1) + ',';
-            for (i = 3; i <= 6; i++)
+            for (i = 3; i <= 9; i++)
                 sample += `${i}: ${String.fromCharCode(i)},`;
-            for (i = 14; i <= 27; i++)
+            for (i = 11; i <= 27; i++)
                 sample += `${i}: ${String.fromCharCode(i)},`;
             for (i = 28; i <= 31; i++)
                 sample += `${i}: ${String.fromCharCode(i)},`;
