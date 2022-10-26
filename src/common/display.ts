@@ -1093,6 +1093,14 @@ export class Display extends EventEmitter {
         this._model.enableDebug = enable;
     }
 
+    get tabWidth(): number {
+        return this._model.tabWidth;
+    }
+
+    set tabWidth(value) {
+        this._model.tabWidth = value;
+    }
+
     get textLength(): number {
         return this._model.textLength;
     }
@@ -4306,6 +4314,14 @@ export class DisplayModel extends EventEmitter {
 
     set enableDebug(value) {
         this._parser.enableDebug = value;
+    }
+
+    get tabWidth(): number {
+        return this._parser.tabWidth;
+    }
+
+    set tabWidth(value) {
+        this._parser.tabWidth = value;
     }
 
     get textLength(): number {

@@ -49,6 +49,7 @@
   - Add [client.closeWindow](docs/scripting.md) for scripting to close an open window/tab
   - Mapper: Room editor panel is now resizable
   - Immortal tools: File overwrite system has been added for all but uploading paths
+  - Add tab width control for main and chat display
 - **Fixed:**
   - Fixed a bug in parsing #command arguments and quotes
   - Immortal tools:

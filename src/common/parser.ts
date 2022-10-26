@@ -301,6 +301,7 @@ export class Parser extends EventEmitter {
     public bell: string = './../assets/sounds/bell.m4a';
     public enableBell: boolean = true;
     public display: any = null;
+    public tabWidth: number = 8;
 
     public busy = false;
 
@@ -2629,6 +2630,7 @@ export class Parser extends EventEmitter {
         const f: boolean = this.emulateTerminal;
         const u: boolean = this.enableURLDetection;
         const s: boolean = this.enableMSP;
+        const tabWidth: number = this.tabWidth;
         let lnk = 0;
         let fLnk = 0;
         let lnkOffset = 0;
@@ -3470,7 +3472,7 @@ export class Parser extends EventEmitter {
                             this.mxpState.noBreak = false;
                         }
                         else if (e && c === '\t') {
-                            const _Tab = 8 - lineLength % 8;
+                            const _Tab = tabWidth - lineLength % tabWidth;
                             if (_Tab > 0) {
                                 stringBuilder.push(Array(_Tab + 1).join(' '));
                                 this.MXPCapture(Array(_Tab + 1).join(' '));

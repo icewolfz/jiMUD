@@ -103,6 +103,7 @@ export class Chat {
     public showInTaskBar: boolean = false;
     public showTimestamp: boolean = false;
     public timestampFormat: string = '[[]MM-DD HH:mm:ss.SSS[]] ';
+    public tabWidth: number = 8;
 }
 
 export class CodeEditor {
@@ -546,6 +547,7 @@ export class Settings {
         showInvalidMXPTags: false,
         showTimestamp: false,
         timestampFormat: '[[]MM-DD HH:mm:ss.SSS[]] ',
+        tabWidth: 8
     };
 
     public extensions = {
