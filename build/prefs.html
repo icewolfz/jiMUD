@@ -656,10 +656,11 @@
                     _settings[id[0]] = $(this).val();
             });
             $('input[type="number"]').change(function () {
-                if ($(this).attr('id') === 'mapper-memorySavePeriod')
-                    _settings.mapper.memorySavePeriod = parseInt($(this).val(), 10);
+                id = $(this).attr('id').split('-');
+                if (id.length === 2)
+                    _settings[id[0]][id[1]] = parseInt($(this).val(), 10);
                 else
-                    _settings[$(this).attr('id')] = parseInt($(this).val(), 10);
+                    _settings[id[0]] = parseInt($(this).val(), 10);
             });
             $('input[type="color"]').change(function () {
                 var idx = parseInt($(this).attr('id').match(/\d+/)[0], 10);
@@ -1629,7 +1630,7 @@
                             <input type="checkbox" id="display-showInvalidMXPTags" /> Show invalid MXP tags
                         </label>
                     </div>
-                    <div class="form-group">
+                    <div class="col-sm-6 form-group">
                         <label class="control-label">
                             Tab width
                             <input type="number" id="display-tabWidth" class="input-sm form-control" min="0" max="200" />
@@ -2258,7 +2259,7 @@
                             </label>
                         </div>
                     </div>
-                    <div class="form-group">
+                    <div class="col-sm-6 form-group">
                         <label class="control-label">
                             Buffer size
                             <input type="number" id="chat-bufferSize" class="input-sm form-control" min="100" max="1000000" />
@@ -2289,7 +2290,7 @@
                             <input type="checkbox" id="chat-showSplitButton" /> Show split button
                         </label>
                     </div>
-                    <div class="form-group">
+                    <div class="col-sm-6 form-group">
                         <label class="control-label">
                             Tab width
                             <input type="number" id="chat-tabWidth" class="input-sm form-control" min="0" max="200" />

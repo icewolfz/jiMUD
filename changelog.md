@@ -71,6 +71,7 @@
     - Fixed logger not enabling/disabling when changed from settings dialog
     - Fixed logger not enabling/disabling on load
   - Help files: Add missing logging preferences
+  - Fix number input type boxes in preferences dialog not correctly saving some values
 - **Changed:**
   - All dark icons now have a white stroke to make them work better with dark mode and dark colors
   - Preferences that are now global:
