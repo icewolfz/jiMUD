@@ -557,6 +557,24 @@ export class Tests extends EventEmitter {
             this.Client.display.displayControlCodes = dcc;
         };
 
+        this.TestFunctions['testcontrolchars'] = function () {
+            let i;
+            let sample = '1:  ' + String.fromCharCode(1) + ',';
+            for (i = 3; i <= 6; i++)
+                sample += `${i}: ${String.fromCharCode(i)},`;
+            for (i = 14; i <= 27; i++)
+                sample += `${i}: ${String.fromCharCode(i)},`;
+            for (i = 28; i <= 31; i++)
+                sample += `${i}: ${String.fromCharCode(i)},`;
+            for (i = 127; i <= 254; i++)
+                sample += `${i}: ${String.fromCharCode(i)},`;
+            sample += '\n';
+            const dcc = this.Client.display.displayControlCodes;
+            this.Client.display.displayControlCodes = true;
+            this.Client.print(sample, true)
+            this.Client.display.displayControlCodes = dcc;
+        }
+
         //spell-checker:disable
         this.TestFunctions['testurldetect'] = function () {
             let sample = '\x1B[0mhttp://www.google.com\n';

@@ -3621,7 +3621,7 @@ export class Parser extends EventEmitter {
                                 this.mxpState.noBreak = false;
                             }
                             else if (d) {
-                                i = 9215 + i;
+                                i = 9216 + i;
                                 stringBuilder.push(String.fromCharCode(i));
                                 this.MXPCapture('&#');
                                 this.MXPCapture(i.toString());

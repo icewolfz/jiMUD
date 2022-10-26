@@ -70,6 +70,7 @@
     - Fixed window character height and width smaller then should be
     - Fixed not tracking highlight all setting for find
     - Fixed scroll to end state when window resized or large amount of text added when non split view enabled
+    - Fixed display control character unicode symbol being wrong ones
   - Logging:
     - Fixed logger not enabling/disabling when changed from settings dialog
     - Fixed logger not enabling/disabling on load

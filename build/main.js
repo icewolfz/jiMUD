@@ -2977,7 +2977,7 @@ function logError(err, skipClient) {
         msg = err.message;
     else
         msg = err;
-    if (!global.editorOnly && client && client.view.webContents && !skipClient)
+    if (!global.editorOnly && !skipClient)
         sendClient('error', msg);
     else if (_settings.logErrors) {
         if (!_settings.showErrorsExtended) {
