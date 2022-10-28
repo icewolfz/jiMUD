@@ -128,6 +128,7 @@ let _loaded = false;
 let _characters;
 let tray = null;
 let _focused = false;
+let _reloading = false;
 const stateMap = new Map();
 
 process.on('uncaughtException', logError);
@@ -413,7 +414,8 @@ function createWindow(options) {
             if (!window.isDestroyed())
                 window.removeBrowserView(clients[id].view);
             idMap.delete(clients[id].view);
-            clients[id].view.webContents.destroy();
+            if (clients[id].view.webContents)
+                clients[id].view.webContents.destroy();
             if (clients[id].name)
                 delete names[clients[id].name];
             clients[id] = null;
@@ -1122,7 +1124,7 @@ app.on('ready', () => {
 app.on('window-all-closed', () => {
     // On macOS it is common for applications and their menu bar
     // to stay active until the user quits explicitly with Cmd + Q
-    if (process.platform !== 'darwin') {
+    if (!_reloading && process.platform !== 'darwin') {
         if (tray)
             tray.destroy();
         app.quit();
@@ -1580,6 +1582,8 @@ ipcMain.handle('show-dialog', (event, type, ...args) => {
         return dialog.showSaveDialog(sWindow, ...args);
     else if (type === 'showOpenDialog')
         return dialog.showOpenDialog(sWindow, ...args);
+    else if (type === 'showErrorBox')
+        return dialog.showErrorBox(sWindow, ...args);
     return new Promise();
 });
 
@@ -3104,6 +3108,32 @@ function toggleAllWindows() {
         else
             restoreWindowState(windows[window].window, states[windows[window].file || 'manager.html'], 2);
     }
+}
+
+async function closeAllWindows(checkClose) {
+    return new Promise(async (resolve, reject) => {
+        for (window in windows) {
+            if (!Object.prototype.hasOwnProperty.call(windows, window))
+                continue;
+            if (checkClose && !await canCloseAllClients(window, warn, true))
+                return false;
+            windows[window].window.close();
+        }
+        setTimeout(() => {
+            allWindowsClosed().then(resolve).catch(reject);
+        }, 0);
+    });
+}
+
+async function allWindowsClosed() {
+    return new Promise((resolve, reject) => {
+        if (Object.keys(windows).length === 0 && Object.keys(clients).length === 0)
+            resolve();
+        else
+            setTimeout(() => {
+                allWindowsClosed().then(resolve).catch(reject);
+            }, 0);
+    });
 }
 
 //#region Auto updates
@@ -4686,12 +4716,12 @@ function createMenu(window) {
                 },
                 { type: 'separator' },
                 {
-                    label: 'Save &Layout',
+                    label: 'Save &Layout...',
                     id: 'saveLayout',
                     click: (item, mWindow) => {
                         var file = dialog.showSaveDialogSync(window || mWindow, {
                             title: 'Save as...',
-                            defaultPath: path.join(parseTemplate('{documents}'), 'jiMUD-characters-data.zip'),
+                            defaultPath: path.join(app.getPath('userData'), 'window.layout'),
                             filters: [
                                 { name: 'Layout files (*.layout)', extensions: ['layout'] },
                                 { name: 'All files (*.*)', extensions: ['*'] },
@@ -4702,9 +4732,8 @@ function createMenu(window) {
                         saveWindowLayout(file);
                     }
                 },
-                /*
                 {
-                    label: 'L&oad Layout',
+                    label: 'L&oad Layout...',
                     id: 'loadLayout',
                     click: (item, mWindow) => {
                         dialog.showOpenDialog(window || mWindow, {
@@ -4713,20 +4742,29 @@ function createMenu(window) {
                                 { name: 'Layout files (*.layout)', extensions: ['layout'] },
                                 { name: 'All files (*.*)', extensions: ['*'] },
                             ]
-                        }).then(result => {
+                        }).then(async result => {
                             if (result.filePaths === undefined || result.filePaths.length === 0)
                                 return;
+                            if (!await canCloseAllWindows(true))
+                                return;
+                            _reloading = true;
+                            await closeAllWindows();
+                            const previousLayout = _layout;
                             _layout = result.filePaths[0];
-                            if (!loadWindowLayout(result.filePaths[0]))
+                            _loaded = loadWindowLayout(result.filePaths[0]);
+                            if (!_loaded) {
                                 dialog.showMessageBox(window || mWindow, {
                                     type: 'error',
                                     message: `Error loading: '${result.filePaths[0]}'.`
                                 });
-                            else
-                                _loaded = true;
+                                _loaded = loadWindowLayout(previousLayout);
+                            }
+                            _saved = false;
+                            _reloading = false;
                         });
                     }
                 },
+                /*
                 {
                     label: 'Reset Layout',
                     id: 'resetLayout',
