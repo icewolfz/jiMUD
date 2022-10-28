@@ -2260,6 +2260,15 @@ ipcMain.on('get-windows-and-clients', event => {
     event.returnValue = _windows;
 });
 
+ipcMain.on('get-window-client-count', (event) => {
+    const window = BrowserWindow.fromWebContents(event.sender);
+    const windowId = getWindowId(window);
+    event.returnValue = {
+        windows: Object.keys(windows).length,
+        clients: windows[windowId].clients.length
+    };
+})
+
 ipcMain.on('get-window-title', (event, id) => {
     if (windows[id])
         event.returnValue = windows[id].window.getTitle();

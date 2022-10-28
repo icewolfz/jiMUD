@@ -3311,7 +3311,7 @@
             reloadIcon();
         });
 
-        let _clients = { windows: 1, clients: 1 };
+        let _clients = ipcRenderer.sendSync('get-window-client-count') || {window: 1, clients: 1};
         function clientsChanged(windows, clients) {
             _clients.windows = windows;
             _clients.clients = clients;
