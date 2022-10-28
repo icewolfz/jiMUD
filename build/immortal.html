@@ -1014,6 +1014,7 @@
         }
 
         $(document).ready(() => {
+            setTitle(window.opener.getCharacterName());
             $('#local-list').DataTable({
                 keys: true,
                 paging: false,
@@ -1223,6 +1224,10 @@
             loadOptions();
             window.opener.client.on('options-loaded', optionsLoaded);
             window.opener.client.on('received-GMCP', processGMCP);
+            window.opener._status.on('set-title', setTitle);
+            window.opener.addEventListener('loadCharacter', updateCharacter);
+            window.opener.addEventListener('updateCharacter', updateCharacter);
+            window.opener.addEventListener('resetCharacter', updateCharacter);
             //#region IED set up
             _ied = new IED(options.local, options.remote);
             _ied.prefix = 'manager-';
@@ -2606,6 +2611,17 @@
                 _ied.processGMCP(mod, obj);
         }
 
+        function setTitle(title, lag) {
+            if (title && title.length > 0)
+                document.title = 'Immortal tools - ' + title;
+            else
+                document.title = 'Immortal tools';
+        }
+
+        function updateCharacter(e) {
+            setTitle(window.opener.getCharacterName());
+        }
+
         function showLocalContextMenu() {
             var selected = localTable.rows({ selected: true }).data().pluck('size');
             var dirs = 0;
@@ -3326,6 +3342,10 @@
             if (window.opener) {
                 window.opener.client.off('options-loaded', optionsLoaded);
                 window.opener.client.off('received-GMCP', processGMCP);
+                window.opener._status.off('set-title', setTitle);
+                window.opener.removeEventListener('loadCharacter', updateCharacter);
+                window.opener.removeEventListener('updateCharacter', updateCharacter);
+                window.opener.removeEventListener('resetCharacter', updateCharacter);
             }
             clearWatcher();
         };

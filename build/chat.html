@@ -53,7 +53,7 @@
                 display.tabWidth = options.chat.tabWidth;
                 display.displayControlCodes = options.chat.displayControlCodes;
                 display.emulateTerminal = options.chat.emulateTerminal;
-                display.emulateControlCodes = options.chat.emulateControlCodes;              
+                display.emulateControlCodes = options.chat.emulateControlCodes;
             }
             initLogger();
             if (_logger) {
@@ -139,6 +139,11 @@
         }
 
         $(document).ready(function () {
+            const characterName = window.opener.getCharacterName();
+            if (characterName && characterName.length > 0)
+                document.title = 'Chat - ' + characterName;
+            else
+                document.title = 'Chat';
             display = new Display('chat-display');
 
             display.on('split-move-done', (h) => {
@@ -236,6 +241,10 @@
                     loadOptions();
                 if (_logger)
                     _logger.postMessage({ action: 'name', args: title });
+                if (title && title.length > 0)
+                    document.title = 'Chat - ' + title;
+                else
+                    document.title = 'Chat';
             },
             'options-loaded': () => {
                 loadOptions();
@@ -252,7 +261,12 @@
         }
 
         function updateCharacter(e) {
-            _logger.postMessage({ action: 'name', args: window.opener.getCharacterName() || '' });
+            const char = window.opener.getCharacterName();
+            if (char && char.length > 0)
+                document.title = 'Chat - ' + char;
+            else
+                document.title = 'Chat';
+            _logger.postMessage({ action: 'name', args: char || '' });
         }
 
         window.opener._status.on('set-title', events['set-title']);

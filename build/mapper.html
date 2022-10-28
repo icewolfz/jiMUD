@@ -334,11 +334,7 @@
 
         $(document).ready(() => {
             try {
-                const characterName = window.opener.getCharacterName();
-                if (characterName && characterName.length > 0)
-                    document.title = 'Mapper - ' + characterName;
-                else
-                    document.title = 'Mapper';
+                setTitle(window.opener.getCharacterName());
                 const options = window.opener.client.options;
                 mapper = new Mapper(document.getElementById('MapperCanvas'), options.mapper.memory, options.mapper.memorySavePeriod, window.opener.getMapFile());
 
@@ -946,11 +942,7 @@
         }
 
         function updateCharacter(e) {
-            const char = window.opener.getCharacterName();
-            if (char && char.length > 0)
-                document.title = 'Mapper - ' + char;
-            else
-                document.title = 'Mapper';
+            setTitle(window.opener.getCharacterName());
             try {
                 mapper.mapFile = window.opener.getMapFile();
             }

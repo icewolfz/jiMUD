@@ -1227,12 +1227,28 @@
             });
             loadOptions();
             if (!editorOnly && window.opener.client) {
+                setTitle(window.opener.getCharacterName());
                 window.opener.client.on('options-loaded', optionsLoaded);
+                window.opener._status.on('set-title', setTitle);
+                window.opener.addEventListener('loadCharacter', updateCharacter);
+                window.opener.addEventListener('updateCharacter', updateCharacter);
+                window.opener.addEventListener('resetCharacter', updateCharacter);
             }
         });
 
         function optionsLoaded() {
             loadOptions();
+        }
+
+        function setTitle(title, lag) {
+            if (title && title.length > 0)
+                document.title = 'Advanced Editor - ' + title;
+            else
+                document.title = 'Advanced Editor';
+        }
+
+        function updateCharacter(e) {
+            setTitle(window.opener.getCharacterName());
         }
 
         function loadColors() {
@@ -1412,6 +1428,10 @@
                     return 'no';
                 }
                 window.opener.client.off('options-loaded', optionsLoaded);
+                window.opener._status.off('set-title', setTitle);
+                window.opener.removeEventListener('loadCharacter', updateCharacter);
+                window.opener.removeEventListener('updateCharacter', updateCharacter);
+                window.opener.removeEventListener('resetCharacter', updateCharacter);                
             }
         }
 

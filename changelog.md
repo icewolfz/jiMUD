@@ -35,7 +35,9 @@
     - `Clear advanced editor on send` clear the advanced editor after sending text to the mud
     - `Close advanced editor on send` close the advanced editor after sending text to the mud, **Note**If Persistent is enabled this will merely hide the editor until next use    
   - `#connecttime` now display last disconnect time when possible if disconnected
-  - Chat window display now uses global theme for display scroll bars
+  - Chat:
+    - Window display now uses global theme for display scroll bars
+    - Title bar now displays connected character name when possible
   - Add [#WINDOW](docs/commands.md) close and new argument support
   - Add [#CLOSE](docs/commands.md) close an open window
   - Add [#ALL](docs/commands.md) send commands to all client windows as if sent from command line
@@ -52,9 +54,15 @@
   - Add [client.sendToCommand](docs/scripting.md) for scripting to send command to all client windows
   - Add [client.sendToBackground](docs/scripting.md) for scripting to send command to all client windows  
   - Add [client.closeWindow](docs/scripting.md) for scripting to close an open window/tab
-  - Mapper: Room editor panel is now resizable
-  - Immortal tools: File overwrite system has been added for all but uploading paths
-  - Add tab width control for main and chat display
+  - Mapper:
+    - Room editor panel is now resizable
+    - Title bar now displays connected character name when possible
+  - Immortal tools:
+    - File overwrite system has been added for all but uploading paths
+    - Title bar now displays connected character name when possible
+  - Advanced editor, Skills, Profile manager, Command history:
+    - Title bar now displays connected character name when possible
+  - Add tab character width control for main and chat display
 - **Fixed:**
   - Fixed a bug in parsing #command arguments and quotes
   - Immortal tools:

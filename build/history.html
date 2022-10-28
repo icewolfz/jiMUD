@@ -96,7 +96,32 @@
         }
     }
 
+    function setTitle(title, lag) {
+        if (title && title.length > 0)
+            document.title = 'Command history - ' + title;
+        else
+            document.title = 'Command history';
+    }
+
+    function updateCharacter(e) {
+        setTitle(window.opener.getCharacterName());
+    }
+
+
+    window.onbeforeunload = () => {
+        window.opener._status.off('set-title', setTitle);
+        window.opener.removeEventListener('loadCharacter', updateCharacter);
+        window.opener.removeEventListener('updateCharacter', updateCharacter);
+        window.opener.removeEventListener('resetCharacter', updateCharacter);
+    };
+
     loadHistory();
+    setTitle(window.opener.getCharacterName());
+    window.opener._status.on('set-title', setTitle);
+    window.opener.addEventListener('loadCharacter', updateCharacter);
+    window.opener.addEventListener('updateCharacter', updateCharacter);
+    window.opener.addEventListener('resetCharacter', updateCharacter);
+
 </script>
 
 </html>

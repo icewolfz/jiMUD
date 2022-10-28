@@ -23,6 +23,7 @@
         var _cats = [];
 
         $(document).ready(function () {
+            setTitle(window.opener.getCharacterName());
             loadSkills()
             $('#filter-skills').change(() => {
                 if ($('#filter-skills').find(':selected').text() === 'All')
@@ -50,7 +51,11 @@
                 window.showContext(inputMenu);
             });
             window.opener._status.on('skill updated', updateSkill);
-            window.opener._status.on('skill init', resetSkills);            
+            window.opener._status.on('skill init', resetSkills);
+            window.opener._status.on('set-title', setTitle);
+            window.opener.addEventListener('loadCharacter', updateCharacter);
+            window.opener.addEventListener('updateCharacter', updateCharacter);
+            window.opener.addEventListener('resetCharacter', updateCharacter);
         });
 
         function loadSkills() {
@@ -187,8 +192,23 @@
 
         window.onbeforeunload = () => {
             window.opener._status.off('skill updated', updateSkill);
-            window.opener._status.off('skill init', resetSkills);      
+            window.opener._status.off('skill init', resetSkills);
+            window.opener._status.off('set-title', setTitle);
+            window.opener.removeEventListener('loadCharacter', updateCharacter);
+            window.opener.removeEventListener('updateCharacter', updateCharacter);
+            window.opener.removeEventListener('resetCharacter', updateCharacter);
         };
+
+        function setTitle(title, lag) {
+            if (title && title.length > 0)
+                document.title = 'Skills - ' + title;
+            else
+                document.title = 'Skills';
+        }
+
+        function updateCharacter(e) {
+            setTitle(window.opener.getCharacterName());
+        }        
     </script>
     <style>
         #body {

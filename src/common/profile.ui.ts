@@ -2830,6 +2830,17 @@ function optionsLoaded() {
         sortTree(true);
 }
 
+function setTitle(title, lag?) {
+    if (title && title.length > 0)
+        document.title = 'Profile manager - ' + title;
+    else
+        document.title = 'Profile manager';
+}
+
+function updateCharacter(e) {
+    setTitle(window.opener.getCharacterName());
+}
+
 function setAdvancedPanel(id, state) {
     const cState = $('#' + id + '-editor .btn-adv').data('open') || false;
     if (cState !== state)
@@ -2837,6 +2848,7 @@ function setAdvancedPanel(id, state) {
 }
 
 export function init() {
+    setTitle(window.opener.getCharacterName());  
     loadOptions();
     const p = path.join(parseTemplate('{data}'), 'profiles');
     if (!isDirSync(p)) {
@@ -3490,6 +3502,10 @@ export function init() {
         window.opener.client.on('profile-updated', profileUpdated);
         window.opener.client.on('profile-toggled', profileToggled);
         window.opener.client.on('options-saved', optionsChanged);
+        window.opener._status.on('set-title', setTitle);
+        window.opener.addEventListener('loadCharacter', updateCharacter);
+        window.opener.addEventListener('updateCharacter', updateCharacter);
+        window.opener.addEventListener('resetCharacter', updateCharacter);        
     }
 }
 
@@ -3525,6 +3541,10 @@ export function closed() {
         window.opener.client.off('profile-updated', profileUpdated);
         window.opener.client.off('profile-toggled', profileToggled);
         window.opener.client.off('options-saved', optionsChanged);
+        window.opener._status.off('set-title', setTitle);
+        window.opener.removeEventListener('loadCharacter', updateCharacter);
+        window.opener.removeEventListener('updateCharacter', updateCharacter);
+        window.opener.removeEventListener('resetCharacter', updateCharacter);        
     }
 };
 
