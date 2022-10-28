@@ -92,6 +92,10 @@ export enum ProfileSortOrder {
   None = 0, Alpha = 2, Priority = 4, Index = 8
 }
 
+export enum OnSecondInstance {
+  Nothing = 0, Show = 1, NewConnection = 2, NewWindow = 4
+}
+
 /**
    * Enum flag for Font styles.
    * @readonly
@@ -151,6 +155,7 @@ export interface ParserLine {
   gagged: boolean;
   formats: LineFormat[];
   remote: boolean;
+  timestamp?: number;
 }
 
 export interface ParserOptions {
@@ -250,7 +255,16 @@ export enum TrayClick {
   show = 1,
   hide = 2,
   toggle = 3,
-  menu = 4
+  menu = 4,
+  showAll = 5,
+  hideAll = 6,
+  toggleAll = 7
+}
+
+export enum TrayMenu {
+  simple = 0,
+  full = 1,
+  compact = 2
 }
 
 export enum MailStatus {

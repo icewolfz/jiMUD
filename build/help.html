@@ -22,7 +22,6 @@
     <script type="text/javascript">
         if (window.module) module = window.module;
         //spellchecker:ignore codeeditor
-        const { ipcRenderer } = require('electron');
         const { Search } = require('./js/search');
         const { isFileSync } = require('./js/library.js');
         const { Settings } = require('./js/settings');
@@ -45,7 +44,6 @@
             }
             return old_render(tokens, idx, options, env, self);
         };
-
         var container;
         var contents;
         var tree;
@@ -70,6 +68,10 @@
                 id: 'faq'
             },
             {
+                text: 'User Interface',
+                id: 'interface'
+            },            
+            {
                 text: 'Profiles',
                 id: 'profiles'
             },
@@ -88,7 +90,7 @@
             {
                 text: 'Functions',
                 id: 'functions',
-                nodes:[]
+                nodes: []
             },
             {
                 text: 'Preferences',
@@ -179,14 +181,14 @@
                     container.html(md.render(data));
                 }
                 else
-                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    dialog.showMessageBox({
                         type: 'error',
                         title: 'Help error',
                         message: 'Help file not found'
                     });
             }
             else
-                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                dialog.showMessageBox({
                     type: 'error',
                     title: 'Help error',
                     message: 'Help file not found'
@@ -236,16 +238,9 @@
         }
 
         function loadOptions(data) {
-            if (!data) {
-                var set = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
-                options = set.extensions['help'];
-            }
-            else
-                options = data;
+            options = data || window.opener.client.options.extensions.help;
             if (!options) {
-                options = {
-                    'navSize': 202,
-                };
+                options = { 'navSize': 202 };
                 saveOptions();
             }
             if (options.navSize < 202)
@@ -255,9 +250,11 @@
         }
 
         function saveOptions() {
-            ipcRenderer.send('setting-changed', { type: 'extensions', name: 'help', value: options });
+            if (!window.opener.client.options.extensions.help)
+                window.opener.client.options.extensions.help = {};
+            window.opener.client.options.extensions.help = options;
+            window.opener.client.saveOptions();
         }
-
 
         $(document).keydown((event) => {
             if (event.key === 'f' && !event.altKey && event.ctrlKey && !event.shiftKey && !event.metaKey) {
@@ -270,10 +267,11 @@
             loadOptions();
             var p = path.join(__dirname, '..', 'docs', 'commands');
             var files = fs.readdirSync(p);
+            var idx = _data.findIndex(i => i.id == 'commands')
             for (var i = 0; i < files.length; i++) {
                 if (path.basename(files[i], '.md') === 'nnn') continue;
                 if (path.extname(files[i]) === '.md') {
-                    _data[5].nodes.push({
+                    _data[idx].nodes.push({
                         text: '#' + path.basename(files[i], '.md'),
                         id: 'commands/' + path.basename(files[i], '.md')
                     });
@@ -282,10 +280,11 @@
 
             p = path.join(__dirname, '..', 'docs', 'functions');
             files = fs.readdirSync(p);
+            idx = _data.findIndex(i => i.id == 'functions')
             for (var i = 0; i < files.length; i++) {
                 if (path.basename(files[i], '.md') === 'nnn') continue;
                 if (path.extname(files[i]) === '.md') {
-                    _data[6].nodes.push({
+                    _data[idx].nodes.push({
                         text: path.basename(files[i], '.md'),
                         id: 'functions/' + path.basename(files[i], '.md')
                     });
@@ -299,7 +298,7 @@
                 container.id = 'container-display';
                 oDoc.body.appendChild(container);
                 container = $(container);
-                loadUrl('README');
+                setTimeout(() => loadUrl('README'), 1);
                 container[0].addEventListener('contextmenu', e => {
                     e.preventDefault();
                     const sel = oDoc.getSelection();
@@ -315,7 +314,7 @@
                         inputMenu = [
                             { role: 'selectAll' }
                         ];
-                    ipcRenderer.invoke('show-context', inputMenu);
+                    window.showContext(inputMenu);
                 });
             };
             contents = $('#contents');
@@ -323,7 +322,7 @@
             contents.on('change', (e) => {
                 if (!contents.val()) {
                     lastSel.prop("selected", true);
-                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    dialog.showMessageBox({
                         type: 'error',
                         title: 'Help error',
                         message: 'Help file not found'
@@ -393,7 +392,7 @@
                         checked: i === _current,
                     });
                 });
-                ipcRenderer.invoke('show-context', addMenu, { x: x, y: y });
+                window.showContext(addMenu, { x: x, y: y });
             });
 
             $('#help-drag-bar').mousedown((e) => {
@@ -456,7 +455,12 @@
                     dragging = false;
                 }
             });
+            window.opener.client.on('options-loaded', optionsLoaded);
         });
+
+        function optionsLoaded() {
+            loadOptions();
+        }
 
         function executeContextItem(idx, id, label, role) {
             _current = idx;
@@ -465,15 +469,9 @@
             updateButtons();
         }
 
-        ipcRenderer.on('reload-options', () => {
-            loadOptions();
-        });
-
-        ipcRenderer.on('setting-changed', (event, data) => {
-            if (data.type === 'extensions' && data.name === 'help') {
-                loadOptions(data.value);
-            }
-        });        
+        window.onbeforeunload = () => {
+            window.opener.client.removeListener('options-loaded', optionsLoaded);
+        };       
     </script>
 </head>
 

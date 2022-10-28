@@ -924,7 +924,7 @@ export class DataGrid extends EventEmitter {
         this.emit('selection-changed');
     }
 
-    public select(rows, scroll?) {
+    public select(rows, scroll?, silent?) {
         if ((this._updating & UpdateType.sort) === UpdateType.sort) {
             setTimeout(() => {
                 this.select(rows, scroll);
@@ -935,6 +935,11 @@ export class DataGrid extends EventEmitter {
             rows = [rows];
         else if (!this.$allowMultiSelection)
             rows = [rows[0]];
+        rows = rows.map(r => {
+            if (typeof r === 'number')
+                return r;
+            return this.$sortedRows.indexOf(this.$rows.indexOf(r));
+        });
         Array.from(this.$body.querySelectorAll('.selected'), a => a.classList.remove('selected'));
         this.$selected = rows;
         this.$selected.forEach(r => {
@@ -943,7 +948,8 @@ export class DataGrid extends EventEmitter {
         });
         if (scroll)
             this.scrollToRow(this.$selected[0]);
-        this.emit('selection-changed');
+        if (!silent)
+            this.emit('selection-changed');
     }
 
     public selectByDataIndex(indexes, scroll?) {
@@ -1037,6 +1043,16 @@ export class DataGrid extends EventEmitter {
             this.$rows.splice(rows[idx], 1);
         }
         this.emit('rows-removed');
+        this.doUpdate(UpdateType.buildRows | UpdateType.sort);
+    }
+
+    public updateRow(row, newRow) {
+        if (typeof row !== 'number')
+            row = this.$rows.indexOf(row);
+        if (row === -1 || row >= this.$rows.length)
+            return;
+        this.$rows[row] = newRow;
+        this.emit('row-updated');
         this.doUpdate(UpdateType.buildRows | UpdateType.sort);
     }
 
@@ -1544,7 +1560,10 @@ export class DataGrid extends EventEmitter {
                 this.$editor.editors.forEach(ed => ed.editorClick = null);
         });
         row.addEventListener('contextmenu', (e) => {
-            this.emit('row-contextmenu', e);
+            const sIdx = +(<HTMLElement>e.currentTarget).dataset.row;
+            const eR = +(<HTMLElement>e.currentTarget).dataset.dataIndex;
+            const el = <HTMLElement>e.currentTarget;
+            this.emit('row-contextmenu', e, { row: this.$rows[eR], rowIndex: sIdx, parent: +el.dataset.parent, child: +el.dataset.child, dataIndex: eR });
         });
         for (c = 0; c < cl; c++) {
             if (!cols[c].visible) continue;

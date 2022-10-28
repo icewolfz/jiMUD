@@ -11,9 +11,11 @@
     <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
     <link href="css/main.css" rel="stylesheet" type="text/css" />
     <link href="css/ansi.css" rel="stylesheet" type="text/css" />
-    <link href="css/chat.css" rel="stylesheet" type="text/css" />
     <link href="css/theme.css" rel="stylesheet" type="text/css" />
+    <link id="theme" rel="stylesheet" href="themes/default.css" type="text/css" />
+    <link href="css/chat.css" rel="stylesheet" type="text/css" />
     <script type="text/javascript">
+        window.loadTheme();
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js"></script>
@@ -21,7 +23,7 @@
     <script src="../lib/bootstrap-select.min.js"></script>
     <script type="text/javascript">
         if (window.module) module = window.module;
-        const { clipboard, ipcRenderer, webFrame } = require('electron');
+        const { clipboard, webFrame } = require('electron');
         const { parseTemplate } = require('./js/library.js');
         const { Settings } = require('./js/settings');
         const { Display } = require('./js/display');
@@ -31,7 +33,7 @@
         var display, _logger, _zoom = 1.0;
 
         function loadOptions() {
-            options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
+            options = window.opener.client.options;
             if (display) {
                 display.updateFont(options.chat.font, options.chat.fontSize);
                 display.maxLines = options.chat.bufferSize;
@@ -40,13 +42,20 @@
                 display.roundedRanges = options.chat.roundedOverlays;
                 display.showSplitButton = options.chat.showSplitButton;
                 display.enableFlashing = options.chat.flashing;
+                display.showTimestamp = options.chat.showTimestamp;
+                display.timestampFormat = options.chat.timestampFormat;
                 display.enableMXP = options.enableMXP;
                 display.enableURLDetection = options.enableURLDetection;
                 display.showInvalidMXPTags = options.display.showInvalidMXPTags;
                 display.hideTrailingEmptyLine = options.display.hideTrailingEmptyLine;
                 display.enableColors = options.display.enableColors;
                 display.enableBackgroundColors = options.display.enableBackgroundColors;
+                display.tabWidth = options.chat.tabWidth;
+                display.displayControlCodes = options.chat.displayControlCodes;
+                display.emulateTerminal = options.chat.emulateTerminal;
+                display.emulateControlCodes = options.chat.emulateControlCodes;
             }
+            initLogger();
             if (_logger) {
                 _logger.postMessage({
                     action: 'options', args: {
@@ -59,13 +68,55 @@
                         what: options.logWhat,
                         debug: options.enableDebug,
                         postfix: '.chat',
-                        format: options.logTimeFormat
+                        format: options.logTimeFormat,
+                        timestamp: options.logTimestamp,
+                        timestampFormat: options.logTimestampFormat
                     }
                 });
-                _logger.postMessage({ action: 'start', args: { lines: display.lines, raw: display.rawLines, formats: display.lineFormats, fragment: display.EndOfLine } });
+                _logger.postMessage({ action: 'start', args: { lines: display.lines, fragment: display.EndOfLine } });
             }
             _zoom = options.chat.zoom;
             webFrame.setZoomFactor(_zoom);
+        }
+
+        function initLogger() {
+            if (_logger) return;
+            _logger = new Worker('./js/logging.js');
+            _logger.onmessage = (e) => {
+                switch (e.data.event) {
+                    case 'started':
+                        $('#btn-enable').button('toggle');
+                        window.opener.client.options.chat.log = e.data.args;
+                        window.opener.client.saveOptions();
+                        break;
+                    case 'stopped':
+                        $('#btn-enable').button('toggle');
+                        window.opener.client.options.chat.log = e.data.args;
+                        window.opener.client.saveOptions();
+                        break;
+                    case 'logging':
+                        break;
+                    case 'error':
+                        error(e.data.args);
+                        break;
+                    case 'debug':
+                        if (options.enableDebug)
+                            console.debug(e.data.args);
+                        break;
+                    case 'toggled':
+                        options.chat.log = e.data.args;
+                        window.opener.client.options.chat.log = e.data.args;
+                        window.opener.client.saveOptions();
+                        break;
+                    case 'startInternal':
+                    case 'start':
+                        _logger.postMessage({ action: e.data.event, args: { lines: display.lines, fragment: display.EndOfLine } });
+                        break;
+                }
+            };
+            _logger.onerror = (e) => {
+                error(e);
+            };
         }
 
         function error(err) {
@@ -88,10 +139,16 @@
         }
 
         $(document).ready(function () {
-            display = new Display($('#display'));
+            const characterName = window.opener.getCharacterName();
+            if (characterName && characterName.length > 0)
+                document.title = 'Chat - ' + characterName;
+            else
+                document.title = 'Chat';
+            display = new Display('chat-display');
 
             display.on('split-move-done', (h) => {
-                ipcRenderer.send('setting-changed', { type: 'chat', name: 'splitHeight', value: h });
+                window.opener.client.options.chat.splitHeight = h;
+                window.opener.client.saveOptions();
             });
 
             display.on('selection-done', () => {
@@ -107,43 +164,7 @@
                     display.clearSelection();
                 }
             });
-            _logger = new Worker('./js/logging.js');
-            _logger.onmessage = (e) => {
-                switch (e.data.event) {
-                    case 'started':
-                        $('#btn-enable').button('toggle');
-                        ipcRenderer.send('setting-changed', { chat: 'chat', name: 'log', value: e.data.args });
-                        break;
-                    case 'stopped':
-                        $('#btn-enable').button('toggle');
-                        ipcRenderer.send('setting-changed', { chat: 'chat', name: 'log', value: e.data.args });
-                        break;
-                    case 'logging':
-                        break;
-                    case 'error':
-                        error(e.data.args);
-                        break;
-                    case 'debug':
-                        if (options.enableDebug)
-                            console.debug(e.data.args);
-                        break;
-                    case 'toggled':
-                        options.chat.log = e.data.args;
-                        ipcRenderer.send('setting-changed', { chat: 'chat', name: 'log', value: e.data.args });
-                        break;
-                    case 'startInternal':
-                    case 'start':
-                        _logger.postMessage({ action: e.data.event, args: { lines: display.lines, raw: display.rawLines, formats: display.lineFormats, fragment: display.EndOfLine } });
-                        break;
-                }
-            };
-            _logger.onerror = (e) => {
-                error(e);
-            };
-
-
             loadOptions();
-
             ['copy'].forEach(function (event) {
                 document.addEventListener(event, function () {
                     if (display.hasSelection) {
@@ -197,7 +218,7 @@
             display.showFind();
         }
 
-        ipcRenderer.on('chat', (event, data) => {
+        function updateChat(data) {
             if (typeof data === 'string') {
                 display.append(data);
                 data = {
@@ -210,38 +231,51 @@
                 display.addParserLine(data);
             if (!options)
                 loadOptions();
-            _logger.postMessage({ action: 'add-line', args: data });
-        });
+            if (_logger && options.chat.log)
+                _logger.postMessage({ action: 'add-line', args: data });
+        }
 
-        /*
-        ipcRenderer.on('chat-done', (event, data) => {
-
-        });
-        */
-
-        ipcRenderer.on('set-title', (event, title) => {
-            if (!options)
+        var events = {
+            'set-title': (title, lag) => {
+                if (!options)
+                    loadOptions();
+                if (_logger)
+                    _logger.postMessage({ action: 'name', args: title });
+                if (title && title.length > 0)
+                    document.title = 'Chat - ' + title;
+                else
+                    document.title = 'Chat';
+            },
+            'options-loaded': () => {
                 loadOptions();
-            _logger.postMessage({ action: 'name', args: title });
-        });
+            },
+            'load-theme': () => {
+                window.loadTheme();
+            },
+            'connecting': () => {
+                if (!options)
+                    loadOptions();
+                if (_logger)
+                    _logger.postMessage({ action: 'connected', args: window.opener.client.connected });
+            }
+        }
 
-        ipcRenderer.on('load-char', (event, char) => {
-            _logger.postMessage({ action: 'name', args: char });
-        });
+        function updateCharacter(e) {
+            const char = window.opener.getCharacterName();
+            if (char && char.length > 0)
+                document.title = 'Chat - ' + char;
+            else
+                document.title = 'Chat';
+            _logger.postMessage({ action: 'name', args: char || '' });
+        }
 
-        ipcRenderer.on('load-default', () => {
-            _logger.postMessage({ action: 'name', args: '' });
-        });
-
-        ipcRenderer.on('reload-options', () => {
-            loadOptions();
-        });
-
-        ipcRenderer.on('connected', () => {
-            if (!options)
-                loadOptions();
-            _logger.postMessage({ action: 'connected', args: true });
-        });
+        window.opener._status.on('set-title', events['set-title']);
+        window.opener.addEventListener('loadCharacter', updateCharacter);
+        window.opener.addEventListener('updateCharacter', updateCharacter);
+        window.opener.addEventListener('resetCharacter', updateCharacter);
+        window.opener.client.on('load-theme', events['load-theme']);
+        window.opener.client.on('options-loaded', events['options-loaded']);
+        window.opener.client.on('connecting', events['connecting']);
 
         // eslint-disable-next-line no-unused-vars
         function toggle() {
@@ -262,12 +296,30 @@
             if (z === _zoom) return;
             _zoom = z;
             webFrame.setZoomFactor(z);
-            ipcRenderer.send('setting-changed', { chat: 'chat', name: 'zoom', value: z });
+            window.opener.client.options.chat.zoom = z;
+            window.opener.client.saveOptions();
         }
 
-        // eslint-disable-next-line no-unused-vars
-        function closeHidden() {
-            ipcRenderer.invoke('window', 'hide');
+        window.onbeforeunload = e => {
+            if (window.opener.client.options.chat.persistent || window.opener.client.options.chat.captureTells || window.opener.client.options.chat.captureTalk || window.opener.client.options.chat.captureLines) {
+                window.hide();
+                e.returnValue = false;
+                return 'no';
+            }
+            window.opener._status.off('set-title', events['set-title']);
+            window.opener.removeEventListener('loadCharacter', updateCharacter);
+            window.opener.removeEventListener('updateCharacter', updateCharacter);
+            window.opener.removeEventListener('resetCharacter', updateCharacter);
+            window.opener.client.off('load-theme', events['load-theme']);
+            window.opener.client.off('options-loaded', events['options-loaded']);
+            window.opener.client.off('connecting', events['connecting']);
+        };
+
+        function skipSaveWindow() {
+            if (window.opener.client.options.chat.persistent || window.opener.client.options.chat.captureTells || window.opener.client.options.chat.captureTalk || window.opener.client.options.chat.captureLines)
+                return false;
+            //if not visible do not save this window as it was probably preserved due to a setting change
+            return !window.isVisible();
         }
     </script>
 </head>
@@ -309,7 +361,7 @@
             </button>
         </div>
     </div>
-    <div id="display"></div>
+    <div id="chat-display"></div>
 </body>
 
 </html>

@@ -1,6 +1,6 @@
 //spell-checker:words vscroll, hscroll, askoncancel, askonclose,commandon, cmdfont
 //spell-checker:ignore emoteto, emotetos askonchildren YYYYMMDD Hmmss
-import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect, ProfileSortOrder, OnProfileChange, OnProfileDeleted } from './types';
+import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect, ProfileSortOrder, OnProfileChange, OnProfileDeleted, TrayMenu, OnSecondInstance } from './types';
 const path = require('path');
 const fs = require('fs');
 
@@ -17,6 +17,8 @@ export class Mapper {
     public split: boolean = false;
     public fill: boolean = false;
     public room: boolean = false;
+    public roomWidth: number = 200;
+    public roomGroups: number = 1 | 2 | 4;
     public importType = 1;
     public vscroll: number = 0;
     public hscroll: number = 0;
@@ -99,6 +101,19 @@ export class Chat {
     public bufferSize: number = 5000;
     public flashing: boolean = false;
     public showInTaskBar: boolean = false;
+    public showTimestamp: boolean = false;
+    public timestampFormat: string = '[[]MM-DD HH:mm:ss.SSS[]] ';
+    public tabWidth: number = 8;
+    public displayControlCodes: boolean = false;
+    public emulateTerminal: boolean = false;
+    public emulateControlCodes: boolean = true;
+}
+
+export class CodeEditor {
+    public showInTaskBar: boolean = false;
+    public persistent: boolean = false;
+    public alwaysOnTop: boolean = false;
+    public alwaysOnTopClient: boolean = true;
 }
 
 /*
@@ -113,32 +128,32 @@ types:
 
 list = [];
 var fmt = (arr, obj, prefix) => {
-	arr.forEach(p => {
-		if(prefix && prefix.length !== 0)
-			key = prefix + '.' + p;
-		else
-			key = p;
-		if(SettingList.SettingList.filter(s => s[0] === key || s[1] === key).length) return;
-		var i = [key, 0, 0, obj[p]];
-		switch(typeof(obj[p]))
-		{
-			case 'boolean':
-				i[2] = 1;
-				break;
-			case 'number':
-				i[2] = 2;
-				break;
-			case 'object':
-				if(obj[p]) {
-					fmt(Object.keys(obj[p]), obj[p], key);
-					return;
-				}
-				else
-					i =[key, 0, 0, null];
-				break;
-		}
-		list.push(i);
-	});
+    arr.forEach(p => {
+        if(prefix && prefix.length !== 0)
+            key = prefix + '.' + p;
+        else
+            key = p;
+        if(SettingList.SettingList.filter(s => s[0] === key || s[1] === key).length) return;
+        var i = [key, 0, 0, obj[p]];
+        switch(typeof(obj[p]))
+        {
+            case 'boolean':
+                i[2] = 1;
+                break;
+            case 'number':
+                i[2] = 2;
+                break;
+            case 'object':
+                if(obj[p]) {
+                    fmt(Object.keys(obj[p]), obj[p], key);
+                    return;
+                }
+                else
+                    i =[key, 0, 0, null];
+                break;
+        }
+        list.push(i);
+    });
 }
 fmt(props, s);
 */
@@ -357,15 +372,19 @@ export let SettingList: any[] = [
 export class Settings {
     public checkForUpdates: boolean = false;
     public editorPersistent: boolean = false;
+    public editorClearOnSend: boolean = false;
+    public editorCloseOnSend: boolean = false;
     public AutoCopySelectedToClipboard: boolean = false;
     public autoCreateCharacter: boolean = false;
     public askonclose: boolean = true;
+    public askOnCloseAll: boolean = true;
     public askonloadCharacter: boolean = true;
     public askonchildren: boolean = true;
     public dev: boolean = false;
     public mapper: Mapper = new Mapper();
     public profiles: Profiles = new Profiles();
     public chat: Chat = new Chat();
+    public codeEditor: CodeEditor = new CodeEditor();
     public showScriptErrors: boolean = false;
     public title: string = '$t';
     public flashing: boolean = false;
@@ -391,6 +410,7 @@ export class Settings {
     public fixHiddenWindows: boolean = true;
     public maxReconnectDelay: number = 3600;
     public enableBackgroundThrottling: boolean = true;
+    public enableBackgroundThrottlingClients: boolean = false;
     public showInTaskBar: boolean = true;
     public showLagInTitle: boolean = false;
 
@@ -403,6 +423,8 @@ export class Settings {
     public newlineShortcut: NewLineType = NewLineType.Ctrl;
 
     public logWhat: Log = Log.Html;
+    public logTimestamp: boolean = false;
+    public logTimestampFormat: string = '[[]MM-DD HH:mm:ss.SSS[]] ';
     public keepLastCommand: boolean = true;
     public enableMXP: boolean = true;
     public enableMSP: boolean = true;
@@ -485,8 +507,13 @@ export class Settings {
     public pathDelay: number = 0;
     public pathDelayCount: number = 1;
     public echoSpeedpaths: boolean = false;
-    
 
+    public alwaysShowTabs: boolean = false;
+    public migrate: number = 0;
+
+    /**
+     * @depreciated Allow window states have been moved to a separate layout system
+     */
     public windows = {};
     public buttons = {
         connect: true,
@@ -509,7 +536,8 @@ export class Settings {
         reverse: false,
         regex: false,
         selection: false,
-        show: false
+        show: false,
+        highlight: false,
     };
 
     public display = {
@@ -521,7 +549,13 @@ export class Settings {
         hideTrailingEmptyLine: true,
         enableColors: true,
         enableBackgroundColors: true,
-        showInvalidMXPTags: false
+        showInvalidMXPTags: false,
+        showTimestamp: false,
+        timestampFormat: '[[]MM-DD HH:mm:ss.SSS[]] ',
+        tabWidth: 8,
+        displayControlCodes: false,
+        emulateTerminal: false,
+        emulateControlCodes: true
     };
 
     public extensions = {
@@ -539,6 +573,7 @@ export class Settings {
     public showChat: boolean = false;
     public showEditor: boolean = false;
     public showArmor: boolean = false;
+    public showCodeEditor: boolean = false;
     public showStatusWeather: boolean = true;
     public showStatusLimbs: boolean = true;
     public showStatusHealth: boolean = true;
@@ -556,6 +591,7 @@ export class Settings {
 
     public trayClick: TrayClick = TrayClick.show;
     public trayDblClick: TrayClick = TrayClick.none;
+    public trayMenu: TrayMenu = TrayMenu.simple;
 
     public pasteSpecialPrefix: string = '';
     public pasteSpecialPostfix: string = '';
@@ -563,6 +599,12 @@ export class Settings {
     public pasteSpecialPrefixEnabled: boolean = true;
     public pasteSpecialPostfixEnabled: boolean = true;
     public pasteSpecialReplaceEnabled: boolean = true;
+
+    public lockLayout: boolean = false;
+    public loadLayout: string = '';
+
+    public useSingleInstance: boolean = true;
+    public onSecondInstance: OnSecondInstance = OnSecondInstance.Show;
 
     public static load(file) {
         try {

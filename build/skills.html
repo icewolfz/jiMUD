@@ -17,21 +17,14 @@
     <script src="../lib/bootstrap-select.min.js"></script>
     <script type="text/javascript">
         if (window.module) module = window.module;
-        const { ipcRenderer } = require('electron');
         const { Settings } = require('./js/settings');
         const { capitalize } = require('./js/library');
-        var options;
         var _skills = {};
         var _cats = [];
 
-        function loadOptions() {
-            options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
-        }
-
         $(document).ready(function () {
-            loadOptions();
-            ipcRenderer.send('get-skills', 'skills');
-            resetSkills();
+            setTitle(window.opener.getCharacterName());
+            loadSkills()
             $('#filter-skills').change(() => {
                 if ($('#filter-skills').find(':selected').text() === 'All')
                     $('.category').css('display', '');
@@ -55,12 +48,18 @@
                     inputMenu = [
                         { role: 'selectAll' }
                     ];
-                ipcRenderer.invoke('show-context', inputMenu);
+                window.showContext(inputMenu);
             });
+            window.opener._status.on('skill updated', updateSkill);
+            window.opener._status.on('skill init', resetSkills);
+            window.opener._status.on('set-title', setTitle);
+            window.opener.addEventListener('loadCharacter', updateCharacter);
+            window.opener.addEventListener('updateCharacter', updateCharacter);
+            window.opener.addEventListener('resetCharacter', updateCharacter);
         });
 
-        ipcRenderer.on('skills', (event, skills) => {
-            _skills = skills;
+        function loadSkills() {
+            _skills = window.opener._status.skills;
             var cats = {};
             var cnt = 0;
             var keys;
@@ -94,9 +93,9 @@
                 body = body += '<div class="category" id="default">No skills</div>';
             }
             document.getElementById('body').innerHTML = body;
-        });
+        };
 
-        ipcRenderer.on('skill-updated', (event, skill, data) => {
+        function updateSkill(skill, data) {
             _skills[skill] = data;
             _el = $('#' + sanitizeID(skill));
             if (_el.length === 0) {
@@ -148,7 +147,7 @@
                 else
                     $('#' + sanitizeID(skill) + 'Percent').text(data.percent + '%');
             }
-        });
+        };
 
         function updateFilter() {
             var val = $('#filter-skills').val();
@@ -159,10 +158,6 @@
                 $('#filter-skills').append($('<option></option>').val(capitalize(_cats[key])).html(capitalize(_cats[key])));
             $('#filter-skills').val(val);
         }
-
-        ipcRenderer.on('skills-reset', (event, skill, data) => {
-            resetSkills();
-        });
 
         function resetSkills() {
             document.getElementById('body').innerHTML = '';
@@ -195,6 +190,25 @@
             return id.replace(/[^a-zA-Z0-9_-]/gi, '');
         }
 
+        window.onbeforeunload = () => {
+            window.opener._status.off('skill updated', updateSkill);
+            window.opener._status.off('skill init', resetSkills);
+            window.opener._status.off('set-title', setTitle);
+            window.opener.removeEventListener('loadCharacter', updateCharacter);
+            window.opener.removeEventListener('updateCharacter', updateCharacter);
+            window.opener.removeEventListener('resetCharacter', updateCharacter);
+        };
+
+        function setTitle(title, lag) {
+            if (title && title.length > 0)
+                document.title = 'Skills - ' + title;
+            else
+                document.title = 'Skills';
+        }
+
+        function updateCharacter(e) {
+            setTitle(window.opener.getCharacterName());
+        }        
     </script>
     <style>
         #body {

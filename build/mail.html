@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Mail</title>
-    <link rel="shortcut icon" href="../assets/icons/png/ied.png" />
+    <link rel="shortcut icon" href="../assets/icons/png/mail.png" />
     <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/bootstrap-select.min.css" rel="stylesheet" type="text/css" />
@@ -264,7 +264,7 @@
                     {
                         label: '&Toggle Developer Tools',
                         click: () => {
-                            ipcRenderer.invoke('window', 'toggleDevtools');
+                            window.toggleDevTools();
                         }
                     },
                     {
@@ -486,8 +486,18 @@
             if (options.debug)
                 console.error(error);
             if (options.logErrors) {
-                if (error.stack && !options.showErrorsExtended)
+                if (!options.showErrorsExtended) {
+                    if (error.stack)
+                        msg = error.stack;
+                    else {
+                        error = new Error(error || 'Unknown');
+                        msg = error.stack;
+                    }
+                }
+                else if (!err.stack) {
+                    error = new Error(error || 'Unknown');
                     msg = error.stack;
+                }
                 fs.writeFileSync(parseTemplate(path.join('{data}', 'jimud.error.log')), 'Immortal Tools: ' + new Date().toLocaleString() + '\n', { flag: 'a' });
                 fs.writeFileSync(parseTemplate(path.join('{data}', 'jimud.error.log')), msg + '\n', { flag: 'a' });
             }
@@ -933,7 +943,7 @@
             $('#bottom-loading').css('display', 'none');
             if (!_currentLetter) return;
             if (!letter) {
-                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                dialog.showMessageBox({
                     type: 'error',
                     title: 'Letter not found',
                     message: 'Letter could not be found.'
@@ -998,14 +1008,9 @@
             display.updateScrollbars();
         }
 
-        window.onbeforeunload = function () {
+        window.onbeforeunload = () => {
             if (mail) mail.close();
         };
-
-        // eslint-disable-next-line no-unused-vars
-        function closeHidden() {
-            ipcRenderer.invoke('window', 'hide');
-        }
     </script>
 </head>
 

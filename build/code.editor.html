@@ -12,6 +12,7 @@
     <link href="css/form.css" rel="stylesheet" type="text/css" />
     <link href="css/cm.css" rel="stylesheet" type="text/css" />
     <link href="css/code.editor.css" rel="stylesheet" type="text/css" />
+    <link href="css/propertygrid.css" rel="stylesheet" type="text/css" />
     <link href="css/datagrid.css" rel="stylesheet" type="text/css" />
     <link href="css/editorcontent.css" rel="stylesheet" type="text/css" />
     <script type="text/javascript">
@@ -23,6 +24,8 @@
         var manager;
         const { SetupEditor } = require('./js/editor/code.editor');
         const { ReplaceCommandThatPreservesSelection } = require('./js/editor/monaco');
+
+        function windowType() { return 'codeEditor'; }
 
         window.onerror = function (msg, url, line, col, error) {
             ipcRenderer.send('log-error', error, true);
@@ -98,7 +101,7 @@
                 editor.onContextMenu((e) => {
                     let idx = window.$editors.indexOf(editor);
                     if (manager.activePane === manager.panes[idx])
-                        manager.active.editor.emit('contextmenu', e);
+                        manager.active.editor.emit('contextmenu', e, editor);
                 });
                 editor.onDidChangeCursorSelection(() => {
                     doUpdate(32);
@@ -132,7 +135,7 @@
                 editor.getOriginalEditor().onContextMenu((e) => {
                     let idx = window.$dEditors.indexOf(editor);
                     if (manager.activePane === manager.panes[idx])
-                        manager.active.editor.emit('contextmenu-diff', e);
+                        manager.active.editor.emit('contextmenu-diff', e, editor.getOriginalEditor());
                 });
                 editor.getOriginalEditor().onDidChangeCursorSelection(() => {
                     doUpdate(32);
@@ -146,7 +149,7 @@
                 editor.getModifiedEditor().onContextMenu((e) => {
                     let idx = window.$dEditors.indexOf(editor);
                     if (manager.activePane === manager.panes[idx])
-                        manager.active.editor.emit('contextmenu', e);
+                        manager.active.editor.emit('contextmenu', e, editor.getModifiedEditor());
                 });
                 editor.getModifiedEditor().onDidChangeCursorSelection(() => {
                     doUpdate(32);
@@ -441,7 +444,7 @@
                 </span>
             </button>
         </div>
-        <div class="btn-group" role="group">
+        <div class="btn-group" role="group" id="btn-grp-remote">
             <button id="btn-open-remote" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Open Remote..." onclick="openRemote()">
                 <i class="fa fa-cloud-download"></i>
             </button>
@@ -875,7 +878,6 @@
             <button type="button" disabled="disabled" class="btn btn-primary" data-dismiss="modal" style="float: right;" id="remoteBrowseOk">Open</button>
         </div>
     </dialog>
-
     <dialog id="progress-dialog" style="z-index:1000;text-align:center">
         <div id="progress-dialog-title">Retrieving&hellip;</div>
         <div>
@@ -885,12 +887,6 @@
             <button id="progress-dialog-cancel">
                 Cancel
             </button>
-        </div>
-    </dialog>
-    <dialog id="update-progress" style="z-index:1000;text-align:center">
-        <div id="update-progress-title"></div>
-        <div>
-            <progress max="100" id="update-progressbar"></progress>
         </div>
     </dialog>
     <div style="display: none" id="wizard-pages">
@@ -1268,7 +1264,7 @@
         <div id="mon-wizard-description-long">
             <div class="col-sm-12 form-group">
                 <label class="control-label" style="width: 100%">Long
-                    <a href="#" onclick="ipcRenderer.send('send-editor', document.getElementById('mon-wiz-long').value, 'editor', true);document.getElementById('mon-wizard-description-long').focus();">
+                    <a href="#" onclick="openAdvancedEditor(document.getElementById('mon-wiz-long').value);document.getElementById('mon-wizard-description-long').focus();">
                         <i class="fa fa-edit"></i>
                     </a>
                     <textarea class="input-sm form-control" id="mon-wiz-long" style="width: 100%;height: 273px;"></textarea>
@@ -1754,7 +1750,7 @@
         <div id="room-wizard-description">
             <div class="col-sm-12 form-group">
                 <label class="control-label" style="width: 100%">Long
-                    <a href="#" onclick="ipcRenderer.send('send-editor', document.getElementById('room-wiz-long').value, 'editor', true);document.getElementById('room-wiz-long').focus();">
+                    <a href="#" onclick="openAdvancedEditor(document.getElementById('room-wiz-long').value);document.getElementById('room-wiz-long').focus();">
                         <i class="fa fa-edit"></i>
                     </a>
                     <textarea class="input-sm form-control" id="room-wiz-long" style="width: 100%;height: 216px;"></textarea>
@@ -1937,6 +1933,8 @@
     const tmp = require('tmp');
     tmp.setGracefulCleanup();
 
+    var _windowState = getWindowOptions();
+
     ipcRenderer.invoke('window', 'setEnabled', false);
 
     var krypto = null;
@@ -1957,7 +1955,7 @@
     var sbName = document.getElementById('statusbar-file');
     var sbLocation = document.getElementById('statusbar-location');
     var sbMessage = document.getElementById('statusbar-message');
-    var connected = ipcRenderer.sendSync('get-global', 'connected') === true;
+    var connected = window.opener ? window.opener.client.connected : false;
     var _ied;
     var $dialog;
     var $dialogs = {};
@@ -2093,7 +2091,7 @@
             {
                 label: '&Toggle Developer Tools',
                 click: () => {
-                    ipcRenderer.invoke('window', 'toggleDevTools');
+                    window.toggleDevTools();
                 },
                 enabled: true
             },
@@ -2114,7 +2112,7 @@
             },
         ]
     };
-    menubar = new Menubar([
+    var menuItems = [
         {
             label: '&File',
             id: 'file',
@@ -2177,7 +2175,8 @@
                     label: 'Op&en Remote...',
                     accelerator: 'CmdOrCtrl+Shift+O',
                     click: () => { openRemote(); },
-                    enabled: false
+                    enabled: false,
+                    visible: window.opener ? true : false
                 },
                 {
                     label: 'Open &Recent',
@@ -2208,20 +2207,23 @@
                     accelerator: 'CmdOrCtrl+U',
                     click: () => { uploadFile(); },
                     enabled: false,
+                    visible: window.opener ? true : false
                 },
                 {
                     label: 'Up&load As...',
                     accelerator: 'CmdOrCtrl+Alt+U',
                     click: () => { uploadFileAs(); },
                     enabled: false,
+                    visible: window.opener ? true : false
                 },
-                { type: 'separator' },
+                {
+                    type: 'separator',
+                    visible: window.opener ? true : false
+                },
                 {
                     label: '&Preferences...',
                     accelerator: 'CmdOrCtrl+Comma',
-                    click: () => {
-                        window.open('code.editor.prefs.html', 'modal', 'backgroundColor=#fff,height=465,width=800,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
-                    }
+                    click: () => { openWindow('prefs'); }
                 },
                 { type: 'separator' },
                 {
@@ -2265,32 +2267,31 @@
                             enabled: false
                         },
                         {
-                            label: '&Local...',
+                            label: window.opener ? '&Local...' : '&File...',
                             click: () => {
-                                ipcRenderer.invoke('show-dialog', 'showOpenDialog',
-                                    {
-                                        filters: $fileFilters,
-                                        properties: ['openFile'],
-                                        defaultPath: (manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')
-                                    }).then(result => {
-                                        if (result.filePaths === undefined || result.filePaths.length === 0) {
-                                            return;
-                                        }
-                                        var pane = manager.panes.indexOf(manager.activePane);
-                                        if (!manager.active.editor.diff)
-                                            manager.active.editor.deactivate(window.$editors[pane]);
-                                        if (manager.active.diffFile)
-                                            stopWatchFile(manager.active.diffFile);
-                                        manager.active.editor.diff = manager.active.editor.read(result.filePaths[0]);
-                                        manager.active.diffFile = result.filePaths[0];
-                                        watchFile(manager.active.diffFile);
-                                        window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
-                                        toggleDiffNav(true);
-                                        window.$editors[pane]._domElement.style.display = '';
-                                        manager.active.editor.activate(window.$dEditors[pane]);
-                                        window.$dEditors[pane].layout();
-                                        doUpdate(2);
-                                    });
+                                dialog.showOpenDialog({
+                                    filters: $fileFilters,
+                                    properties: ['openFile'],
+                                    defaultPath: (manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')
+                                }).then(result => {
+                                    if (result.filePaths === undefined || result.filePaths.length === 0) {
+                                        return;
+                                    }
+                                    var pane = manager.panes.indexOf(manager.activePane);
+                                    if (!manager.active.editor.diff)
+                                        manager.active.editor.deactivate(window.$editors[pane]);
+                                    if (manager.active.diffFile)
+                                        stopWatchFile(manager.active.diffFile);
+                                    manager.active.editor.diff = manager.active.editor.read(result.filePaths[0]);
+                                    manager.active.diffFile = result.filePaths[0];
+                                    watchFile(manager.active.diffFile);
+                                    window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
+                                    toggleDiffNav(true);
+                                    window.$editors[pane]._domElement.style.display = '';
+                                    manager.active.editor.activate(window.$dEditors[pane]);
+                                    window.$dEditors[pane].layout();
+                                    doUpdate(2);
+                                });
                             },
                             enabled: false
                         },
@@ -2313,7 +2314,8 @@
                                     });
                                 });
                             },
-                            enabled: false
+                            enabled: false,
+                            visible: window.opener ? true : false
                         },
 
                     ]
@@ -2373,21 +2375,7 @@
                 {
                     label: '&jiMUD...',
                     click: () => {
-                        var set = require('./js/settings').Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
-                        if (set.windows['help'] && set.windows['help'].options) {
-                            set.windows['help'].options.show = true;
-                            ipcRenderer.send('show-window', 'help', set.windows['help'].options);
-                        }
-                        else
-                            ipcRenderer.send('show-window', 'help', { show: true, file: 'help.html', icon: 'help', alwaysOnTopClient: true });
-                        var h = () => {
-                            var w = remote.BrowserWindow.getAllWindows().filter(w => w.getTitle() === 'jiMUD Help');
-                            if (w.length === 0)
-                                setTimeout(h, 100);
-                            else
-                                w[0].webContents.executeJavaScript('loadUrl(\'codeeditor\');');
-                        };
-                        h();
+                        openWindow('help');
                     }
                 },
                 {
@@ -2429,7 +2417,10 @@
                 }
             ]
         }
-    ]);
+    ];
+    if (!window.opener)
+        menuItems[0].submenu.splice(menuItems[0].submenu.findIndex(item => item.label === 'Up&load As...') + 1, 1);
+    menubar = new Menubar(menuItems);
     menubar.enabled = false;
     manager = new DockManager();
     var dock = $('.dock-manager');
@@ -2724,7 +2715,7 @@
         }
         if (e.panel.editor.supports('menu|tab-context')) {
             temp.push({ type: 'separator' });
-            temp = temp.concat(e.panel.editor.menu('tab-context'));
+            temp = temp.concat(e.panel.editor.menu('tab-context', connected));
         }
         if (temp.length)
             temp.push({ type: 'separator' });
@@ -2747,6 +2738,54 @@
         tabMenu.popup({ window: remote.getCurrentWindow() });
     });
 
+    //#region Id functions
+    function setId(id) {
+        _id = id;
+    }
+
+    function getId() {
+        if (window.opener)
+            return window.opener.getId();
+        if (!_id)
+            _id = ipcRenderer.sendSync('get-window-id') || 0;
+        return _id;
+    }
+    //#endregion
+
+    const _windows = {};
+
+    function openAdvancedEditor(text) {
+        if (_windows['editor.html'] && !_windows['editor.html'].closed) {
+            _windows['editor.html'].show();
+            _windows['editor.html'].focus();
+            _windows['editor.html'].insertFormatted(text);
+        }
+        /*
+        else if (window.opener && window.opener.client) {
+            if (!window.opener._windows['editor.html']) {
+                window.opener.openWindow('editor').then(() => {
+                    window.opener._windows['editor.html'].show();
+                    window.opener._windows['editor.html'].focus();
+                    window.opener._windows['editor.html'].insertFormatted(text);
+                });
+            }
+            else {
+                window.opener._windows['editor.html'].show();
+                window.opener._windows['editor.html'].focus();
+                window.opener._windows['editor.html'].insertFormatted(text);
+            }
+        }
+        */
+        else {
+            openWindow('editor');
+            _windows['editor.html'].addEventListener('editor-init', () => {
+                _windows['editor.html'].show();
+                _windows['editor.html'].focus();
+                _windows['editor.html'].insertFormatted(text);
+            }, { once: true });
+        }
+    }
+
     function updatePanel(panel) {
         panel.tab.classList.remove('new');
         panel.tab.classList.remove('changed');
@@ -2767,12 +2806,17 @@
         menubar.updateItem('File|Close', { enabled: enabled });
         menubar.updateItem('File|Close all', { enabled: enabled });
         menubar.updateItem('File|save as...', { enabled: enabled });
-        menubar.updateItem('file|diff|local...', { enabled: enabled && manager.active.editor.supports('diff') });
-        menubar.updateItem('file|diff|remote...', { enabled: connected && enabled && manager.active.editor.supports('diff') });
-        menubar.updateItem('file|upload', { enabled: connected && enabled && manager.active.editor.supports('upload') });
-        menubar.updateItem('file|upload as...', { enabled: connected && enabled && manager.active.editor.supports('upload-as') });
-        $('#btn-upload').prop('disabled', !(connected && enabled && manager.active.editor.supports('upload')));
-        $('#btn-upload-as').prop('disabled', !(connected && enabled && manager.active.editor.supports('upload-as')));
+        if (window.opener) {
+            menubar.updateItem('file|diff|local...', { enabled: enabled && manager.active.editor.supports('diff') });
+            menubar.updateItem('file|diff|remote...', { enabled: connected && enabled && manager.active.editor.supports('diff') });
+            menubar.updateItem('file|upload', { enabled: connected && enabled && manager.active.editor.supports('upload') });
+            menubar.updateItem('file|upload as...', { enabled: connected && enabled && manager.active.editor.supports('upload-as') });
+            $('#btn-upload').prop('disabled', !(connected && enabled && manager.active.editor.supports('upload')));
+            $('#btn-upload-as').prop('disabled', !(connected && enabled && manager.active.editor.supports('upload-as')));
+        }
+        else {
+            menubar.updateItem('file|diff|file...', { enabled: enabled && manager.active.editor.supports('diff') });
+        }
         var buttons = document.getElementById('editor-buttons');
         while (buttons.firstChild) {
             buttons.removeChild(buttons.firstChild);
@@ -2794,6 +2838,9 @@
         if (enabled && manager.active.editor.updateUI) manager.active.editor.updateUI();
         var tbh = toolbar.outerHeight();
         dock.css('top', tbh + 'px');
+        if (window.opener)
+            $('.connected').prop('disabled', !(connected && enabled));
+        manager.active.editor.update('menu', menubar, connected);
         doUpdate(2);
     }
 
@@ -2859,7 +2906,7 @@
         menubar.updateItem('edit|select all', { enabled: (manager.active && manager.active.editor) ? manager.active.editor.supports('selectall') : false });
     }
 
-    function createWatcher() {
+    async function createWatcher() {
         if (watcher)
             watcher.close();
         watcher = chokidar.watch('', {
@@ -2922,14 +2969,14 @@
             _editors[p].editor.watch(event, file, args);
             if (_editors[p] && _editors[p].diffFile === file) {
                 if (event === 'unlink') {
-                    choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                        {
-                            type: 'question',
-                            title: 'File deleted',
-                            message: path.basename(file) + ' has been deleted, clear diff?',
-                            buttons: ['Yes', 'No'],
-                            defaultId: 1
-                        });
+                    choice = dialog.showMessageBoxSync({
+                        type: 'question',
+                        title: 'File deleted',
+                        message: path.basename(file) + ' has been deleted, clear diff?',
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1,
+                        noLink: true
+                    });
                     //no
                     if (choice === 1) {
                         var pane = manager.panes.indexOf(_editors[p].pane);
@@ -2951,14 +2998,14 @@
                     }
                 }
                 else if (event !== 'raw') {
-                    choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                        {
-                            type: 'question',
-                            title: 'File changed',
-                            message: path.basename((file || p.editor.file) + ' has been changed, reload diff?'),
-                            buttons: ['Yes', 'No'],
-                            defaultId: 1
-                        });
+                    choice = dialog.showMessageBoxSync({
+                        type: 'question',
+                        title: 'File changed',
+                        message: path.basename((file || p.editor.file) + ' has been changed, reload diff?'),
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1,
+                        noLink: true
+                    });
                     //yes
                     if (choice === 0)
                         _editors[p].editor.diff = manager.active.editor.read(file);
@@ -3002,7 +3049,6 @@
 
     function saveOptions() {
         options.save(parseTemplate(path.join('{data}', 'editor.json')));
-        ipcRenderer.send('editor-settings-reload');
     }
 
     function getFileIcon(file) {
@@ -3080,10 +3126,6 @@
         return 'fa fa-file-o';
     }
 
-    // eslint-disable-next-line no-unused-vars
-    function childClosed(url, name) {
-    }
-
     function clearButton(id) {
         $(id).removeClass('open');
         $(id).blur();
@@ -3110,7 +3152,7 @@
     function doEditor() {
         if (!manager.active || !manager.active.editor || !manager.active.editor.supports('copy'))
             return;
-        ipcRenderer.send('send-editor', manager.active.editor.selected, 'editor', true);
+        openAdvancedEditor(manager.active.editor.selected);
         if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
 
@@ -3212,6 +3254,16 @@
 
     //https://github.com/electron/electron/blob/master/docs/api/dialog.md
     function showBrowseDialog(ops, callback) {
+        if (!window.opener) {
+            dialog.showMessageBox({
+                type: 'error',
+                title: 'Not supported',
+                message: 'Not supported in editor only mode, remote browsing can only be done when connected to the mud',
+                defaultId: 1,
+                noLink: true
+            });
+            return;
+        }
         if (typeof ops === 'function') {
             callback = ops;
             ops = {};
@@ -3432,13 +3484,13 @@
                     if (connected)
                         _ied.getDir(p + data.row.file, true, 'remoteBrowse');
                     else
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox',
-                            {
-                                type: 'error',
-                                title: 'Must be logged into the mud',
-                                message: 'Remote browsing can only be done when connected to the mud',
-                                defaultId: 1
-                            });
+                        dialog.showMessageBox({
+                            type: 'error',
+                            title: 'Must be logged into the mud',
+                            message: 'Remote browsing can only be done when connected to the mud',
+                            defaultId: 1,
+                            noLink: true
+                        });
                 }
                 else {
                     $dialog.el.close();
@@ -3571,13 +3623,13 @@
         if (connected)
             _ied.getDir(options.remote, false, 'remoteBrowse');
         else
-            ipcRenderer.invoke('show-dialog', 'showMessageBox',
-                {
-                    type: 'error',
-                    title: 'Must be logged into the mud',
-                    message: 'Remote browsing can only be done when connected to the mud',
-                    defaultId: 1
-                });
+            dialog.showMessageBox({
+                type: 'error',
+                title: 'Must be logged into the mud',
+                message: 'Remote browsing can only be done when connected to the mud',
+                defaultId: 1,
+                noLink: true
+            });
     }
 
     function showProgressDialog(data) {
@@ -3592,17 +3644,18 @@
         menubar.enabled = false;
         if (!$dialogs.progress) {
             $dialogs.progress = {};
-            progress.addEventListener('close', closeProgressDialog);
-            progress.addEventListener('cancel', closeProgressDialog);
-            document.getElementById('progress-dialog-cancel').addEventListener('click', closeProgressDialog);
+            progress.addEventListener('close', () => closeProgressDialog());
+            progress.addEventListener('cancel', () => closeProgressDialog());
+            document.getElementById('progress-dialog-cancel').addEventListener('click', () => closeProgressDialog());
         }
         setProgressDialogValue(0);
         progress.showModal();
     }
 
     function setProgressDialogValue(value, title) {
-        ipcRenderer.send('set-progress', { value: value / 100 });
-        ipcRenderer.send('set-progress-window', 'code-editor', { value: value / 100 });
+        if (window.opener)
+            window.opener.updateProgress({ value: value / 100 });
+        window.setProgressBar(value / 100);
         document.getElementById('progress-dialog-progressbar').value = value;
         if (title && title.length > 0)
             document.getElementById('progress-dialog-title').innerHTML = title;
@@ -3731,398 +3784,413 @@
 
     $(document).ready(() => {
         loadOptions();
-        _ied = new IED();
-        _ied.prefix = 'editor-';
-        _ied.compressUpload = true;
-        _ied.compressDownload = true;
-        _ied.compressDir = true;
-        _ied.on('init', () => {
+        if (!window.opener) {
+            $('#btn-grp-remote').css('display', 'none');
+        }
+        else {
+            window.opener.client.on('received-GMCP', processGMCP);
+            window.opener.client.on('connected', clientConnected);
+            window.opener.client.on('closed', clientClosed);
+            //#region init IED
+            _ied = new IED();
+            _ied.prefix = 'editor-';
+            _ied.compressUpload = true;
+            _ied.compressDownload = true;
+            _ied.compressDir = true;
+            _ied.on('init', () => {
 
-        });
-        _ied.on('error', (error) => {
-            if (error && error.code) {
-                switch (error.code) {
-                    case IEDError.USER_DENIED:
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
-                            type: 'error',
-                            title: 'Permission denied',
-                            message: 'Permission denied'
-                        });
-                        closeProgressDialog(error.tag);
-                        break;
-                    case IEDError.DL_NOTSTART:
-                    case IEDError.DL_TOOMANY:
-                    case IEDError.DL_INPROGRESS:
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
-                            type: 'error',
-                            title: 'Download error',
-                            message: `Download error for '${error.path}/${error.file}': ${error.msg}`
-                        });
-                        closeProgressDialog(error.tag);
-                        break;
-                    case IEDError.DL_INVALIDFMT:
-                    case IEDError.DL_UNKNOWN:
-                    case IEDError.DL_USERABORT:
-                    case IEDError.DL_INVALIDFILE:
-                    case IEDError.DL_INVALIDPATH:
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
-                            type: 'error',
-                            title: 'Download aborted',
-                            message: `Download aborted for '${error.path}/${error.file}': ${error.msg}`
-                        });
-                        closeProgressDialog(error.tag);
-                        break;
-                    case IEDError.RESET:
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
-                            type: 'error',
-                            title: 'Reset',
-                            message: 'Server reset: ' + error.msg
-                        });
-                        closeProgressDialog(error.tag);
-                        break;
-                    case IEDError.USERRESET:
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
-                            type: 'error',
-                            title: 'Reset',
-                            message: error.msg
-                        });
-                        break;
-                    case IEDError.UL_TOOMANY:
-                    case IEDError.UL_INPROGRESS:
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
-                            type: 'error',
-                            title: 'Upload error',
-                            message: `Upload error for '${error.path}/${error.file}': ${error.msg}`
-                        });
-                        closeProgressDialog(error.tag);
-                        break;
-                    case IEDError.UL_INVALIDFMT:
-                    case IEDError.UL_USERABORT:
-                    case IEDError.UL_BADENCODE:
-                    case IEDError.UL_TOOLARGE:
-                    case IEDError.UL_FAILWRITE:
-                    case IEDError.UL_UNKNOWN:
-                    case IEDError.UL_INVALIDFILE:
-                    case IEDError.UL_INVALIDPATH:
-                    case IEDError.UL_DENIED:
-                    case IEDError.UL_FILE:
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
-                            type: 'error',
-                            title: 'Upload aborted',
-                            message: `Upload aborted for '${error.path}/${error.file}': ${error.msg}`
-                        });
-                        closeProgressDialog(error.tag);
-                        break;
-                    case IEDError.CMD_EXIST:
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
-                            type: 'error',
-                            title: 'Already exist',
-                            message: `File or directory already exist: '${error.path}/${error.file}`
-                        });
-                        closeProgressDialog(error.tag);
-                        break;
-                    case IEDError.CMD_DIRECTORY:
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
-                            type: 'error',
-                            title: 'Is a directory',
-                            message: `File is a directory: '${error.path}/${error.file}`
-                        });
-                        closeProgressDialog(error.tag);
-                        break;
-                    case IEDError.CMD_NOEXIST:
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
-                            type: 'error',
-                            title: 'Does not exist',
-                            message: `File or directory does not exist: '${error.path}/${error.file}`
-                        });
-                        closeProgressDialog(error.tag);
-                        break;
-                    case IEDError.CMD_FILE:
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
-                            type: 'error',
-                            title: 'Not a directory',
-                            message: `File not a directory: '${error.path}/${error.file}`
-                        });
-                        closeProgressDialog(error.tag);
-                        break;
-                    case IEDError.DIR_CANTREAD:
-                        if (error.tag && error.tag === 'editor-dir:remoteBrowse')
-                            _ied.getDir('.', false, 'remoteBrowse');
-                        else {
-                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+            });
+            _ied.on('error', (error) => {
+                if (error && error.code) {
+                    switch (error.code) {
+                        case IEDError.USER_DENIED:
+                            dialog.showMessageBox({
                                 type: 'error',
-                                title: 'Can not read',
-                                message: 'Can not read or permission denied'
+                                title: 'Permission denied',
+                                message: 'Permission denied'
                             });
                             closeProgressDialog(error.tag);
-                        }
-                        break;
+                            break;
+                        case IEDError.DL_NOTSTART:
+                        case IEDError.DL_TOOMANY:
+                        case IEDError.DL_INPROGRESS:
+                            dialog.showMessageBox({
+                                type: 'error',
+                                title: 'Download error',
+                                message: `Download error for '${error.path}/${error.file}': ${error.msg}`
+                            });
+                            closeProgressDialog(error.tag);
+                            break;
+                        case IEDError.DL_INVALIDFMT:
+                        case IEDError.DL_UNKNOWN:
+                        case IEDError.DL_USERABORT:
+                        case IEDError.DL_INVALIDFILE:
+                        case IEDError.DL_INVALIDPATH:
+                            dialog.showMessageBox({
+                                type: 'error',
+                                title: 'Download aborted',
+                                message: `Download aborted for '${error.path}/${error.file}': ${error.msg}`
+                            });
+                            closeProgressDialog(error.tag);
+                            break;
+                        case IEDError.RESET:
+                            dialog.showMessageBox({
+                                type: 'error',
+                                title: 'Reset',
+                                message: 'Server reset: ' + error.msg
+                            });
+                            closeProgressDialog(error.tag);
+                            break;
+                        case IEDError.USERRESET:
+                            dialog.showMessageBox({
+                                type: 'error',
+                                title: 'Reset',
+                                message: error.msg
+                            });
+                            break;
+                        case IEDError.UL_TOOMANY:
+                        case IEDError.UL_INPROGRESS:
+                            dialog.showMessageBox({
+                                type: 'error',
+                                title: 'Upload error',
+                                message: `Upload error for '${error.path}/${error.file}': ${error.msg}`
+                            });
+                            closeProgressDialog(error.tag);
+                            break;
+                        case IEDError.UL_INVALIDFMT:
+                        case IEDError.UL_USERABORT:
+                        case IEDError.UL_BADENCODE:
+                        case IEDError.UL_TOOLARGE:
+                        case IEDError.UL_FAILWRITE:
+                        case IEDError.UL_UNKNOWN:
+                        case IEDError.UL_INVALIDFILE:
+                        case IEDError.UL_INVALIDPATH:
+                        case IEDError.UL_DENIED:
+                        case IEDError.UL_FILE:
+                            dialog.showMessageBox({
+                                type: 'error',
+                                title: 'Upload aborted',
+                                message: `Upload aborted for '${error.path}/${error.file}': ${error.msg}`
+                            });
+                            closeProgressDialog(error.tag);
+                            break;
+                        case IEDError.CMD_EXIST:
+                            dialog.showMessageBox({
+                                type: 'error',
+                                title: 'Already exist',
+                                message: `File or directory already exist: '${error.path}/${error.file}`
+                            });
+                            closeProgressDialog(error.tag);
+                            break;
+                        case IEDError.CMD_DIRECTORY:
+                            dialog.showMessageBox({
+                                type: 'error',
+                                title: 'Is a directory',
+                                message: `File is a directory: '${error.path}/${error.file}`
+                            });
+                            closeProgressDialog(error.tag);
+                            break;
+                        case IEDError.CMD_NOEXIST:
+                            dialog.showMessageBox({
+                                type: 'error',
+                                title: 'Does not exist',
+                                message: `File or directory does not exist: '${error.path}/${error.file}`
+                            });
+                            closeProgressDialog(error.tag);
+                            break;
+                        case IEDError.CMD_FILE:
+                            dialog.showMessageBox({
+                                type: 'error',
+                                title: 'Not a directory',
+                                message: `File not a directory: '${error.path}/${error.file}`
+                            });
+                            closeProgressDialog(error.tag);
+                            break;
+                        case IEDError.DIR_CANTREAD:
+                            if (error.tag && error.tag === 'editor-dir:remoteBrowse')
+                                _ied.getDir('.', false, 'remoteBrowse');
+                            else {
+                                dialog.showMessageBox({
+                                    type: 'error',
+                                    title: 'Can not read',
+                                    message: 'Can not read or permission denied'
+                                });
+                                closeProgressDialog(error.tag);
+                            }
+                            break;
+                    }
                 }
-            }
-            var msg;
-            if (error.stack)
-                msg = error.stack;
-            else if (error instanceof TypeError)
-                msg = error.name + ': ' + error.message;
-            else if (error instanceof Error)
-                msg = error.name + ': ' + error.message;
-            else if (error.message)
-                msg = error.message;
-            else if (error.msg)
-                msg = error.msg;
-            else
-                msg = error;
-            logOutput(msg);
-        });
-        _ied.on('reset', () => { });
-        _ied.on('dir', (dir, files, tag) => {
-            if (tag.startsWith('editor-dir:remoteBrowse')) {
-                $dialog.files = files;
-                $dialog.path.value = dir;
-                $dialog.current = dir;
-                if ($dialog.options.properties.indexOf('showHiddenFiles') === -1)
-                    $dialog.files = files.filter(f => f.file[0] !== '.');
-                $dialog.files = files.map(f => {
-                    if (f.size === -2)
-                        f.type = 'Directory';
-                    else
-                        f.type = path.extname(f.file);
-                    return f;
-                });
-                filterBrowseDialog();
-                if ($dialog.first) {
-                    $dialog.first = false;
-                    if ($dialog.options.defaultFile) {
-                        let idx = $dialog.datagrid.rows.indexOf(path.basename($dialog.options.defaultFile));
-                        $dialog.datagrid.selectByDataIndex(idx, true);
+                var msg;
+                if (error.stack)
+                    msg = error.stack;
+                else if (error instanceof TypeError)
+                    msg = error.name + ': ' + error.message;
+                else if (error instanceof Error)
+                    msg = error.name + ': ' + error.message;
+                else if (error.message)
+                    msg = error.message;
+                else if (error.msg)
+                    msg = error.msg;
+                else
+                    msg = error;
+                logOutput(msg);
+            });
+            _ied.on('reset', () => { });
+            _ied.on('dir', (dir, files, tag) => {
+                if (tag.startsWith('editor-dir:remoteBrowse')) {
+                    $dialog.files = files;
+                    $dialog.path.value = dir;
+                    $dialog.current = dir;
+                    if ($dialog.options.properties.indexOf('showHiddenFiles') === -1)
+                        $dialog.files = files.filter(f => f.file[0] !== '.');
+                    $dialog.files = files.map(f => {
+                        if (f.size === -2)
+                            f.type = 'Directory';
+                        else
+                            f.type = path.extname(f.file);
+                        return f;
+                    });
+                    filterBrowseDialog();
+                    if ($dialog.first) {
+                        $dialog.first = false;
+                        if ($dialog.options.defaultFile) {
+                            let idx = $dialog.datagrid.rows.indexOf(path.basename($dialog.options.defaultFile));
+                            $dialog.datagrid.selectByDataIndex(idx, true);
+                        }
+                        else
+                            $dialog.datagrid.scrollToTop();
                     }
                     else
                         $dialog.datagrid.scrollToTop();
-                }
-                else
-                    $dialog.datagrid.scrollToTop();
-                if (dir !== '/')
-                    $dialog.up.removeAttribute('disabled');
-                else
-                    $dialog.up.setAttribute('disabled', 'true');
-                while ($dialog.nav.firstChild)
-                    $dialog.nav.removeChild($dialog.nav.firstChild);
-                setTimeout(() => {
-                    var el;
-                    var paths = [];
-                    var parts = dir.split('/');
-                    if (dir.endsWith('/'))
-                        parts.pop();
+                    if (dir !== '/')
+                        $dialog.up.removeAttribute('disabled');
                     else
-                        dir += '/';
-                    var c = [];
-                    var dirs = files.filter(f => f.size === -2);
-
-                    for (var pt = 0, pl = parts.length; pt < pl; pt++) {
-                        c.push(parts[pt]);
-                        if (pt === 0)
-                            paths.push({ path: '/', name: '/', count: pt, open: pt === pl - 1 });
+                        $dialog.up.setAttribute('disabled', 'true');
+                    while ($dialog.nav.firstChild)
+                        $dialog.nav.removeChild($dialog.nav.firstChild);
+                    setTimeout(() => {
+                        var el;
+                        var paths = [];
+                        var parts = dir.split('/');
+                        if (dir.endsWith('/'))
+                            parts.pop();
                         else
-                            paths.push({ path: c.join('/'), name: parts[pt], count: pt, open: pt === pl - 1 });
-                    }
-                    for (var d = 0, dl = dirs.length; d < dl; d++) {
-                        paths.push({ path: dir + dirs[d].file, name: dirs[d].file, count: pt });
-                    }
+                            dir += '/';
+                        var c = [];
+                        var dirs = files.filter(f => f.size === -2);
 
-                    paths.sort(function compare(a, b) {
-                        if (a.path.toUpperCase() < b.path.toUpperCase())
-                            return -1;
-                        if (a.path.toUpperCase() > b.path.toUpperCase())
-                            return 1;
-                        return 0;
+                        for (var pt = 0, pl = parts.length; pt < pl; pt++) {
+                            c.push(parts[pt]);
+                            if (pt === 0)
+                                paths.push({ path: '/', name: '/', count: pt, open: pt === pl - 1 });
+                            else
+                                paths.push({ path: c.join('/'), name: parts[pt], count: pt, open: pt === pl - 1 });
+                        }
+                        for (var d = 0, dl = dirs.length; d < dl; d++) {
+                            paths.push({ path: dir + dirs[d].file, name: dirs[d].file, count: pt });
+                        }
+
+                        paths.sort(function compare(a, b) {
+                            if (a.path.toUpperCase() < b.path.toUpperCase())
+                                return -1;
+                            if (a.path.toUpperCase() > b.path.toUpperCase())
+                                return 1;
+                            return 0;
+                        });
+
+                        var frag = document.createDocumentFragment();
+                        for (let c = 0, cl = paths.length; c < cl; c++) {
+                            el = document.createElement('li');
+                            if (paths[c].drive && paths[c].open)
+                                el.innerHTML = `<a href="#" class="active" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-server"></i> ${paths[c].name}</a>`;
+                            else if (paths[c].drive)
+                                el.innerHTML = `<a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-server"></i> ${paths[c].name}</a>`;
+                            else if (paths[c].open)
+                                el.innerHTML = `<a href="#" class="active" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-open-o"></i> ${paths[c].name}</a>`;
+                            else
+                                el.innerHTML = `<a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-o"></i> ${paths[c].name}</a>`;
+                            frag.appendChild(el);
+                        }
+                        $dialog.nav.appendChild(frag);
                     });
-
-                    var frag = document.createDocumentFragment();
-                    for (let c = 0, cl = paths.length; c < cl; c++) {
-                        el = document.createElement('li');
-                        if (paths[c].drive && paths[c].open)
-                            el.innerHTML = `<a href="#" class="active" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-server"></i> ${paths[c].name}</a>`;
-                        else if (paths[c].drive)
-                            el.innerHTML = `<a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-server"></i> ${paths[c].name}</a>`;
-                        else if (paths[c].open)
-                            el.innerHTML = `<a href="#" class="active" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-open-o"></i> ${paths[c].name}</a>`;
-                        else
-                            el.innerHTML = `<a href="#" data-path="${paths[c].path}" style="padding-left: ${20 + paths[c].count * 15}px"><i class="fa fa-folder-o"></i> ${paths[c].name}</a>`;
-                        frag.appendChild(el);
+                    if (!$dialog.el.open) {
+                        menubar.enabled = false;
+                        $dialog.el.showModal();
                     }
-                    $dialog.nav.appendChild(frag);
-                });
-                if (!$dialog.el.open) {
-                    menubar.enabled = false;
-                    $dialog.el.showModal();
                 }
-            }
-        });
-        _ied.on('message', (msg) => {
-            logOutput(msg);
-        });
-        _ied.on('add', () => {
-        });
-        _ied.on('remove', (item) => {
-            if (!item) return;
-            if (item.ID.startsWith('editor-download:remote-open:'))
-                closeProgressDialog(item.ID, true);
-            else
-                closeProgressDialog(item.ID);
-        });
-        _ied.on('update', (item) => {
-            if (!item) return;
-            setProgressDialogValue(Math.ceil(item.percent * 100));
-        });
-        _ied.on('cmd', (obj) => {
-            if (!obj) return;
-            var id, panel, dock;
-            if (obj.cmd === 'debug' && obj.tag.startsWith('editor-debug:')) {
-                id = parseInt(obj.tag.substr(13));
-                panel = manager.findPanel(id);
-                dock = manager.panes.indexOf(panel.dock);
-                logOutput('Debug data for ' + panel.editor.filename);
-                var errors = obj.data.trim().split('\n');
-                var el = errors.length;
-                var markers = [];
-                var delta = [];
-                var editor;
-                if (panel.editor.diff)
-                    editor = window.$dEditors[dock].getModifiedEditor();
+            });
+            _ied.on('message', (msg) => {
+                logOutput(msg);
+            });
+            _ied.on('add', () => {
+            });
+            _ied.on('remove', (item) => {
+                if (!item) return;
+                if (item.ID.startsWith('editor-download:remote-open:'))
+                    closeProgressDialog(item.ID, true);
                 else
-                    editor = window.$editors[dock];
-                var model = editor.getModel();
-                for (var e = 0; e < el; e++) {
-                    let m;
-                    let line;
-                    if (m = /^line (\d+): Warning: (.*)/.exec(errors[e])) {
-                        line = parseInt(m[1], 10) || 1;
-                        markers.push({
-                            startColumn: 1,
-                            startLineNumber: line,
-                            endColumn: model.getLineContent(line).length,
-                            endLineNumber: line,
-                            message: 'Warning: ' + m[2],
-                            severity: 4 //waring
-                        });
-                        if (delta.filter(f => f.range.startLineNumber === line && f.options.marginClassName === 'line-error-margin').length === 0)
-                            delta.push({
-                                range: new monaco.Range(line, 1, line, model.getLineContent(line).length),
-                                options: {
-                                    stickiness: 1,
-                                    isWholeLine: true,
-                                    //className: 'line-warning-content',
-                                    //glyphMarginHoverMessage: { value: 'Warning: ' + m[2] },
-                                    //glyphMarginClassName: 'line-warning-glyph',
-                                    marginClassName: 'line-warning-margin',
-                                    zIndex: 0
-                                }
+                    closeProgressDialog(item.ID);
+            });
+            _ied.on('update', (item) => {
+                if (!item) return;
+                setProgressDialogValue(Math.ceil(item.percent * 100));
+            });
+            _ied.on('cmd', (obj) => {
+                if (!obj) return;
+                var id, panel, dock;
+                if (obj.cmd === 'debug' && obj.tag.startsWith('editor-debug:')) {
+                    id = parseInt(obj.tag.substr(13));
+                    panel = manager.findPanel(id);
+                    dock = manager.panes.indexOf(panel.dock);
+                    logOutput('Debug data for ' + panel.editor.filename);
+                    var errors = obj.data.trim().split('\n');
+                    var el = errors.length;
+                    var markers = [];
+                    var delta = [];
+                    var editor;
+                    if (panel.editor.diff)
+                        editor = window.$dEditors[dock].getModifiedEditor();
+                    else
+                        editor = window.$editors[dock];
+                    var model = editor.getModel();
+                    for (var e = 0; e < el; e++) {
+                        let m;
+                        let line;
+                        if (m = /^line (\d+): Warning: (.*)/.exec(errors[e])) {
+                            line = parseInt(m[1], 10) || 1;
+                            markers.push({
+                                startColumn: 1,
+                                startLineNumber: line,
+                                endColumn: model.getLineContent(line).length,
+                                endLineNumber: line,
+                                message: 'Warning: ' + m[2],
+                                severity: 4 //waring
                             });
-                        else
+                            if (delta.filter(f => f.range.startLineNumber === line && f.options.marginClassName === 'line-error-margin').length === 0)
+                                delta.push({
+                                    range: new monaco.Range(line, 1, line, model.getLineContent(line).length),
+                                    options: {
+                                        stickiness: 1,
+                                        isWholeLine: true,
+                                        //className: 'line-warning-content',
+                                        //glyphMarginHoverMessage: { value: 'Warning: ' + m[2] },
+                                        //glyphMarginClassName: 'line-warning-glyph',
+                                        marginClassName: 'line-warning-margin',
+                                        zIndex: 0
+                                    }
+                                });
+                            else
+                                delta.push({
+                                    range: new monaco.Range(line, 1, line, model.getLineContent(line).length),
+                                    options: {
+                                        stickiness: 1,
+                                        isWholeLine: true,
+                                        //className: 'line-warning-content',
+                                        //glyphMarginHoverMessage: { value: 'Warning: ' + m[2] },
+                                        //glyphMarginClassName: 'line-warning-glyph',
+                                        marginClassName: 'line-error-margin',
+                                        zIndex: 0
+                                    }
+                                });
+                            logOutput(`<a class="warning" href="#" onclick="gotoLine(${id}, ${line})">${panel.editor.file}: ${errors[e]}</a>`);
+                        }
+                        else if (m = /^line (\d+): (.*)/.exec(errors[e])) {
+                            line = parseInt(m[1], 10) || 1;
+                            markers.push({
+                                startColumn: 1,
+                                startLineNumber: line,
+                                endColumn: model.getLineContent(line).length,
+                                endLineNumber: line,
+                                message: m[2],
+                                severity: 8, //error
+                            });
+                            delta.forEach(f => {
+                                if (f.range.startLineNumber === line && f.options.marginClassName === 'line-warning-margin')
+                                    f.options.marginClassName = 'line-error-margin';
+                            });
                             delta.push({
                                 range: new monaco.Range(line, 1, line, model.getLineContent(line).length),
                                 options: {
                                     stickiness: 1,
                                     isWholeLine: true,
-                                    //className: 'line-warning-content',
-                                    //glyphMarginHoverMessage: { value: 'Warning: ' + m[2] },
-                                    //glyphMarginClassName: 'line-warning-glyph',
+                                    //className: 'line-error-content',
+                                    //glyphMarginHoverMessage: { value: m[2] },
+                                    //glyphMarginClassName: 'line-error-glyph',
                                     marginClassName: 'line-error-margin',
-                                    zIndex: 0
+                                    zIndex: 1
                                 }
                             });
-                        logOutput(`<a class="warning" href="#" onclick="gotoLine(${id}, ${line})">${panel.editor.file}: ${errors[e]}</a>`);
+                            logOutput(`<a class="error href="#" onclick="gotoLine(${id}, ${line})">${panel.editor.file}: ${errors[e]}</a>`);
+                        }
+                        else
+                            logOutput(errors[e]);
                     }
-                    else if (m = /^line (\d+): (.*)/.exec(errors[e])) {
-                        line = parseInt(m[1], 10) || 1;
-                        markers.push({
-                            startColumn: 1,
-                            startLineNumber: line,
-                            endColumn: model.getLineContent(line).length,
-                            endLineNumber: line,
-                            message: m[2],
-                            severity: 8, //error
-                        });
-                        delta.forEach(f => {
-                            if (f.range.startLineNumber === line && f.options.marginClassName === 'line-warning-margin')
-                                f.options.marginClassName = 'line-error-margin';
-                        });
-                        delta.push({
-                            range: new monaco.Range(line, 1, line, model.getLineContent(line).length),
-                            options: {
-                                stickiness: 1,
-                                isWholeLine: true,
-                                //className: 'line-error-content',
-                                //glyphMarginHoverMessage: { value: m[2] },
-                                //glyphMarginClassName: 'line-error-glyph',
-                                marginClassName: 'line-error-margin',
-                                zIndex: 1
-                            }
-                        });
-                        logOutput(`<a class="error href="#" onclick="gotoLine(${id}, ${line})">${panel.editor.file}: ${errors[e]}</a>`);
+                    monaco.editor.setModelMarkers(model, '', markers);
+                    panel.editor.decorations = model.deltaDecorations(panel.editor.decorations || [], delta);
+                    panel.editor.rawDecorations = delta;
+                    //if (panel.editor.decorations && panel.editor.decorations.length)
+                    //editor.updateOptions({ glyphMargin: true });
+                    _ied.deleteFile(obj.path + '/' + obj.file);
+                    closeProgressDialog(obj.tag);
+                }
+            });
+            _ied.on('download-finished', (item) => {
+                if (!item) return;
+                var id;
+                var panel;
+                var dock;
+                if (item.ID.startsWith('editor-download:diffRemote:')) {
+                    id = parseInt(item.ID.substr(27));
+                    panel = manager.findPanel(id);
+                    dock = manager.panes.indexOf(panel.dock);
+                    if (!manager.active.editor.diff)
+                        manager.active.editor.deactivate(window.$editors[dock]);
+                    if (manager.active.diffFile)
+                        stopWatchFile(manager.active.diffFile);
+                    manager.active.editor.diff = manager.active.editor.read(item.local);
+                    window.$dEditors[dock]._modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
+                    toggleDiffNav(true);
+                    window.$editors[dock]._domElement.style.display = '';
+                    manager.active.editor.activate(window.$dEditors[dock]);
+                    window.$dEditors[dock].layout();
+                    closeProgressDialog(item.ID);
+                    doUpdate(2);
+                }
+                else if (item.ID.startsWith('editor-download:remote-open:')) {
+                    var ids = item.ID.substr(28).split(':');
+                    id = parseInt(ids[0]);
+                    if (id !== 0) {
+                        panel = manager.findPanel(id);
+                        openFile($queue[0].tmp, item.remote, panel ? panel.dock : null, true, $queue[0].tmp);
                     }
                     else
-                        logOutput(errors[e]);
+                        openFile($queue[0].tmp, item.remote, null, true, $queue[0].tmp);
+                    doUpdate(2);
                 }
-                monaco.editor.setModelMarkers(model, '', markers);
-                panel.editor.decorations = model.deltaDecorations(panel.editor.decorations || [], delta);
-                panel.editor.rawDecorations = delta;
-                //if (panel.editor.decorations && panel.editor.decorations.length)
-                //editor.updateOptions({ glyphMargin: true });
-                _ied.deleteFile(obj.path + '/' + obj.file);
-                closeProgressDialog(obj.tag);
-            }
-        });
-        _ied.on('download-finished', (item) => {
-            if (!item) return;
-            var id;
-            var panel;
-            var dock;
-            if (item.ID.startsWith('editor-download:diffRemote:')) {
-                id = parseInt(item.ID.substr(27));
-                panel = manager.findPanel(id);
-                dock = manager.panes.indexOf(panel.dock);
-                if (!manager.active.editor.diff)
-                    manager.active.editor.deactivate(window.$editors[dock]);
-                if (manager.active.diffFile)
-                    stopWatchFile(manager.active.diffFile);
-                manager.active.editor.diff = manager.active.editor.read(item.local);
-                window.$dEditors[dock]._modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
-                toggleDiffNav(true);
-                window.$editors[dock]._domElement.style.display = '';
-                manager.active.editor.activate(window.$dEditors[dock]);
-                window.$dEditors[dock].layout();
-                closeProgressDialog(item.ID);
-                doUpdate(2);
-            }
-            else if (item.ID.startsWith('editor-download:remote-open:')) {
-                var ids = item.ID.substr(28).split(':');
-                id = parseInt(ids[0]);
-                if (id !== 0) {
+            });
+            _ied.on('upload-finished', item => {
+                if (!item) return;
+                var id;
+                var panel;
+                //var dock;
+                if (item.ID.startsWith('editor-upload:debug:')) {
+                    id = parseInt(item.ID.substr(20));
                     panel = manager.findPanel(id);
-                    openFile($queue[0].tmp, item.remote, panel ? panel.dock : null, true, $queue[0].tmp);
+                    //dock = manager.panes.indexOf(panel.dock);
+                    setProgressDialogValue(-1);
+                    document.getElementById('progress-dialog-progressbar').removeAttribute('value');
+                    document.getElementById('progress-dialog-title').innerHTML = 'Getting debug data&hellip;';
+                    logOutput('Requesting debug information for ' + panel.editor.file);
+                    if (window.opener)
+                        window.opener.client.sendGMCP('IED.cmd ' + JSON.stringify({ cmd: 'debug', path: path.dirname(item.remote), file: path.basename(item.remote), tag: 'editor-debug:' + id }));
                 }
-                else
-                    openFile($queue[0].tmp, item.remote, null, true, $queue[0].tmp);
-                doUpdate(2);
-            }
-        });
-        _ied.on('upload-finished', item => {
-            if (!item) return;
-            var id;
-            var panel;
-            //var dock;
-            if (item.ID.startsWith('editor-upload:debug:')) {
-                id = parseInt(item.ID.substr(20));
-                panel = manager.findPanel(id);
-                //dock = manager.panes.indexOf(panel.dock);
-                setProgressDialogValue(-1);
-                document.getElementById('progress-dialog-progressbar').removeAttribute('value');
-                document.getElementById('progress-dialog-title').innerHTML = 'Getting debug data&hellip;';
-                logOutput('Requesting debug information for ' + panel.editor.file);
-                ipcRenderer.send('send-gmcp', 'IED.cmd ' + JSON.stringify({ cmd: 'debug', path: path.dirname(item.remote), file: path.basename(item.remote), tag: 'editor-debug:' + id }));
-            }
-        });
+            });
+            _ied.on('send-gmcp', command => {
+                if (window.opener)
+                    window.opener.client.sendGMCP(command);
+            });
+            //#endregion
+        }
         $('#btm-drag-bar').mousedown(function (e) {
             e.preventDefault();
             outputDragging = true;
@@ -4248,20 +4316,33 @@
         });
 
         Array.from(document.querySelectorAll('.edit-dropdown')).forEach(d => initEditDropdown(d));
-
-        if (connected) {
-            document.getElementById('btn-open-remote').removeAttribute('disabled');
-            menubar.updateItem('file|open remote...', { enabled: connected });
+        if (window.opener) {
+            if (connected) {
+                document.getElementById('btn-open-remote').removeAttribute('disabled');
+                menubar.updateItem('file|open remote...', { enabled: connected });
+            }
+            else {
+                document.getElementById('btn-open-remote').setAttribute('disabled', 'true');
+                menubar.updateItem('file|open remote...', { enabled: false });
+            }
         }
         else {
-            document.getElementById('btn-open-remote').setAttribute('disabled', 'true');
-            menubar.updateItem('file|open remote...', { enabled: false });
+            if (_windowState && _windowState.windows.length) {
+                const _dir = 'file:///' + __dirname.replace(/\\/g, '/');
+                const wl = _windowState.windows.length;
+                for (let w = 0; w < wl; w++) {
+                    let file = _windowState.windows[w].details.url;
+                    if (file.startsWith(file))
+                        file = path.basename(file.substring(__dirname.length + 9), '.html');
+                    openWindow(file, _windowState.windows[w]);
+                }
+            }
         }
         createWatcher();
         postEditorLoad();
     });
 
-    function postEditorLoad() {
+    async function postEditorLoad() {
         if (!_ready) {
             setTimeout(postEditorLoad, 10);
             return;
@@ -4368,111 +4449,168 @@
     }
 
     // eslint-disable-next-line no-unused-vars
-    function closeHidden() {
+    function closeHidden(hidden) {
+        if (!hidden) return;
+        /*
         var dialogs = document.body.getElementsByTagName('dialog');
         var e = 0, el = dialogs.length;
         for (; e < el; e++) {
             if (dialogs[e].open) {
-                if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                    {
+                if (dialog.showMessageBoxSync({
+                    type: 'question',
+                    title: 'Open dialog',
+                    message: (dialogs[e].dataset.title || 'Dialog') + ' is open, exit?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1,
+                        noLink: true
+                }) === 1)
+                    return false;
+            }
+        }
+        if (!savedOpened())
+            return false;
+            */
+        return true;
+    }
+
+    function closeable(all) {
+        if (!$closeWindow) {
+            for (key in _windows) {
+                //if not a property, not defined, or closed skip
+                if (!Object.prototype.hasOwnProperty.call(_windows, key) || !_windows[key] || _windows[key].closed)
+                    continue;
+                dialog.showMessageBox({
+                    type: 'error',
+                    title: _windows[key].document.title + ' dialog open',
+                    message: `You must close the ${_windows[key].document.title} dialog before you can close code editor.`,
+                    defaultId: 1,
+                    noLink: true
+                });
+                _windows[key].focus();
+                $closeWindow = false;
+                return false;
+            }
+            if (document.activeElement)
+                document.activeElement.blur();
+            var dialogs = document.body.getElementsByTagName('dialog');
+            var e = 0, el = dialogs.length;
+            for (; e < el; e++) {
+                if (dialogs[e].open) {
+                    if (dialog.showMessageBoxSync({
                         type: 'question',
                         title: 'Open dialog',
                         message: (dialogs[e].dataset.title || 'Dialog') + ' is open, exit?',
                         buttons: ['Yes', 'No'],
-                        defaultId: 1
-                    }) === 1)
-                    return;
-            }
-        }
-        if (!savedOpened())
-            return;
-        ipcRenderer.invoke('window', 'hide');
-    }
-
-    // eslint-disable-next-line no-unused-vars
-    function closeWindow() {
-        ipcRenderer.invoke('window', 'close');
-    }
-
-    window.onbeforeunload = function (evt) {
-        if (!$closeWindow) {
-            if (document.activeElement)
-                document.activeElement.blur();
-            evt.returnValue = false;
-            setTimeout(() => {
-                var dialogs = document.body.getElementsByTagName('dialog');
-                var e = 0, el = dialogs.length;
-                for (; e < el; e++) {
-                    if (dialogs[e].open) {
-                        if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                            {
-                                type: 'question',
-                                title: 'Open dialog',
-                                message: (dialogs[e].dataset.title || 'Dialog') + ' is open, exit?',
-                                buttons: ['Yes', 'No'],
-                                defaultId: 1
-                            }) === 1)
-                            return 'no';
+                        defaultId: 1,
+                        noLink: true
+                    }) === 1) {
+                        $closeWindow = false;
+                        return false;
                     }
                 }
-                if (!savedOpened())
-                    return 'no';
-                //clean up
-                var keys = Object.keys(_editors);
-                var p = keys.length;
-                while (p--)
-                    closeEditor(_editors[keys[p]]);
-                if (watcher)
-                    watcher.close();
+            }
+            if (!savedOpened())
+                $closeWindow = false;
+            else
                 $closeWindow = true;
-                ipcRenderer.invoke('window', 'close');
-            });
-            return 'no';
         }
+        return $closeWindow;
+    }
+
+    if (!window.opener) {
+        let _close = false;
+        window.onbeforeunload = (e) => {
+            if (_close) return;
+            setTimeout(() => {
+                if (!closeable()) return;
+                cleanUp();
+                _close = true;
+                window.close();
+            });
+            e.returnValue = false;
+            return 'no';
+        };
+    }
+    else
+        window.onbeforeunload = cleanUp;
+
+    function cleanUp(e) {
+        //clean up
+        if (window.opener) {
+            if (window.opener.client.options.codeEditor.persistent) {
+                window.hide();
+                e.returnValue = false;
+                return 'no';
+            }
+            window.opener.client.off('received-GMCP', processGMCP);
+            window.opener.client.off('connected', clientConnected);
+            window.opener.client.off('closed', clientClosed);
+        }
+        var keys = Object.keys(_editors);
+        var p = keys.length;
+        while (p--)
+            closeEditor(_editors[keys[p]]);
         if (watcher)
             watcher.close();
-        $closeWindow = true;
-        ipcRenderer.invoke('window', 'close');
-        return;
-    };
+    }
 
-    ipcRenderer.on('progress-canceled', () => {
-        if (manager.active && manager.active.editor && manager.active.editor.cancel)
-            manager.active.editor.cancel();
-    });
-
-    ipcRenderer.on('progress-closed', () => {
-        if (manager.active && manager.active.editor && manager.active.editor.cancel)
-            manager.active.editor.cancel();
-
-    });
-
-    ipcRenderer.on('update-progress', (event, progressObj) => {
-        if (!$('#update-progress')[0].open) {
-            $('#update-progress-title').html('Downloading update&hellip;');
-            $('#update-progress')[0].show();
+    function skipSaveWindow() {
+        if (window.opener) {
+            if (window.opener.client.options.codeEditor.persistent)
+                return false;
+            //if not visible do not save this window as it was probably preserved due to a setting change
+            return !window.isVisible();
         }
-        $('#update-progressbar').val(progressObj.percent);
-    });
+        return false;
+    }
 
-    ipcRenderer.on('update-downloaded', () => {
-        if ($('#update-progress')[0].open)
-            $('#update-progress')[0].close();
+    ipcRenderer.on('progress', (event, ...args) => {
+        if (args[0] === 'canceled' || args[0] === 'closed') {
+            delete _windows['progress.html'];
+            if (manager.active && manager.active.editor && manager.active.editor.cancel)
+                manager.active.editor.cancel();
+        }
     });
 
     ipcRenderer.on('open-editor', (event, file, remoteFile, remoteEdit) => {
+        openEditor(file, remoteFile, remoteEdit);
+    });
+
+    function openEditor(file, remoteFile, remoteEdit) {
         if (_loading) {
             if (!_open)
                 _open = [];
-            _open.push([file, remoteFile, remoteEdit]);
+            if (Array.isArray(file))
+                _open = _open.concat(file.map(m => {
+                    if (Array.isArray(m))
+                        return m;
+                    if (typeof m === 'string')
+                        return [m];
+                    return [m.file || m.path, m.remote, m.remoteEdit];
+                }));
+            else
+                _open.push([file, remoteFile, remoteEdit]);
         }
+        else if (Array.isArray(file))
+            openFiles(file.map(m => {
+                if (Array.isArray(m)) {
+                    if (m.length === 3)
+                        return { file: m[0], remote: m[1], remoteEdit: m[2] };
+                    if (m.length === 2)
+                        return { file: m[0], remote: m[1] };
+                    return { file: m[0] };
+                }
+                if (typeof m === 'string')
+                    return { file: m };
+                return m;
+            }));
+        else if (typeof file !== 'string')
+            openFile(file.file || file.path, file.remote, null, file.remoteEdit);
         else
             openFile(file, remoteFile, null, remoteEdit);
-    });
+    }
 
-    ipcRenderer.on('send-editor', (event, text, window) => {
-        if (!manager.active || !manager.active.editor || window != 'code-editor')
-            return;
+    function updateValue(text) {
         if (($dialogs.monster && $dialogs.monster.open) || ($dialogs.room && $dialogs.room.open)) {
             if ((document.activeElement.tagName === 'INPUT' && document.activeElement.type === 'text') || document.activeElement.tagName === 'TEXTAREA')
                 document.activeElement.value = text;
@@ -4485,16 +4623,16 @@
         }
         else
             manager.active.editor.insert(text);
-    });
+    }
 
-    ipcRenderer.on('GMCP-received', (event, data) => {
+    function processGMCP(mod, obj) {
         if (options && options.debug)
-            console.log(data);
+            console.log({ mod: mod, obj, obj });
         if (_ied)
-            _ied.processGMCP(data.mod, data.obj);
-    });
+            _ied.processGMCP(mod, obj);
+    };
 
-    ipcRenderer.on('connected', () => {
+    function clientConnected() {
         connected = true;
         menubar.updateItem('file|diff|remote...', { enabled: manager.active && manager.active.editor && manager.active.editor.supports('diff') });
         menubar.updateItem('file|upload', { enabled: manager.active && manager.active.editor && manager.active.editor.supports('upload') });
@@ -4503,8 +4641,11 @@
         $('#btn-upload-as').prop('disabled', !(connected && manager.active && manager.active.editor && manager.active.editor.supports('upload-as')));
         document.getElementById('btn-open-remote').removeAttribute('disabled');
         menubar.updateItem('file|open remote...', { enabled: connected });
-    });
-    ipcRenderer.on('closed', () => {
+        $('.connected').prop('disabled', !(connected && manager.active && manager.active.editor));
+        if (manager.active && manager.active.editor)
+            manager.active.editor.update('menu', menubar, connected);
+    };
+    function clientClosed() {
         connected = false;
         menubar.updateItem('file|diff|remote...', { enabled: false });
         menubar.updateItem('file|upload', { enabled: false });
@@ -4513,9 +4654,12 @@
         $('#btn-upload-as').prop('disabled', true);
         document.getElementById('btn-open-remote').setAttribute('disabled', 'true');
         menubar.updateItem('file|open remote...', { enabled: false });
-    });
+        $('.connected').prop('disabled', true);
+        if (manager.active && manager.active.editor)
+            manager.active.editor.update('menu', menubar, connected);
+    };
 
-    ipcRenderer.on('editor-setting-changed', () => {
+    function reloadOptions() {
         loadOptions();
         var keys = Object.keys(_editors);
         var k = keys.length;
@@ -4535,12 +4679,7 @@
                 _editors[p].editor.options = options.virtualOptions;
 
         }
-    });
-
-    ipcRenderer.on('menu-update', (menu, options) => {
-        if (menubar)
-            menubar.updateItem(menu, options);
-    });
+    };
 
     function newFile(file, remoteFile) {
         createEditor({ file: file || 'new_' + newCounter + '.c', new: true, remote: remoteFile }, true);
@@ -4584,7 +4723,9 @@
     }
 
     function baseParseData() {
-        var character = capitalize(ipcRenderer.sendSync('get-global', 'characterLogin') || ipcRenderer.sendSync('get-global', 'character')) || 'Unknown';
+        var character = 'Unknown';
+        if (window.opener)
+            character = capitalize(window.opener.getCharacterName() || character);
         return {
             'your name': character,
             'character': character,
@@ -4601,7 +4742,7 @@
                 remote: document.getElementById('new-area-remote-path')
             };
             $('#btn-new-area-path').on('click', () => {
-                ipcRenderer.invoke('show-dialog', 'showOpenDialog', {
+                dialog.showOpenDialog({
                     defaultPath: $dialogs.area.path.value,
                     properties: ['openDirectory', 'createDirectory']
                 }).then(result => {
@@ -4755,7 +4896,7 @@
                 dialog: document.getElementById('new-virtual-area')
             };
             $('#btn-new-virtual-area-path').on('click', () => {
-                ipcRenderer.invoke('show-dialog', 'showOpenDialog', {
+                dialog.showOpenDialog({
                     defaultPath: $('#new-virtual-area-path').val(),
                     properties: ['openDirectory', 'createDirectory']
                 }).then(result => {
@@ -7671,13 +7812,13 @@
             return;
         }
         if (!connected) {
-            ipcRenderer.invoke('show-dialog', 'showMessageBox',
-                {
-                    type: 'error',
-                    title: 'Must be logged into the mud',
-                    message: 'Must be connected to the mud to open a remote file',
-                    defaultId: 1
-                });
+            dialog.showMessageBox({
+                type: 'error',
+                title: 'Must be logged into the mud',
+                message: 'Must be connected to the mud to open a remote file',
+                defaultId: 1,
+                noLink: true
+            });
             return;
         }
         if (remoteFile && remoteFile.length !== 0) {
@@ -7716,20 +7857,19 @@
             if (remoteEdit)
                 openRemote(remoteFile);
             else
-                ipcRenderer.invoke('show-dialog', 'showOpenDialog',
-                    {
-                        filters: $fileFilters,
-                        properties: ['multiSelections', 'openFile'],
-                        defaultPath: (manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')
-                    }).then(result => {
-                        if (result.filePaths === undefined || result.filePaths.length === 0) {
-                            return;
-                        }
-                        openFiles(result.filePaths.map((l) => { return { file: l }; }), true, dock);
-                    });
+                dialog.showOpenDialog({
+                    filters: $fileFilters,
+                    properties: ['multiSelections', 'openFile'],
+                    defaultPath: (manager.active && manager.active.editor) ? path.dirname(manager.active.editor.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0].file) : '')
+                }).then(result => {
+                    if (result.filePaths === undefined || result.filePaths.length === 0) {
+                        return;
+                    }
+                    openFiles(result.filePaths.map((l) => { return { file: l }; }), true, dock);
+                });
         }
         else if (isDirSync(file)) {
-            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+            dialog.showMessageBox({
                 type: 'info',
                 title: 'Can not open folders',
                 message: '\'' + file + '\' is a folder not a file.'
@@ -7757,7 +7897,7 @@
             if (typeof files[f].file !== 'string')
                 continue;
             if (!files[f].remoteEdit && isDirSync(files[f].file)) {
-                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                dialog.showMessageBox({
                     type: 'info',
                     title: 'Can not open folders',
                     message: '\'' + files[f].file + '\' is a folder not a file.'
@@ -7766,7 +7906,7 @@
             }
             if (!files[f].remoteEdit && !existsSync(files[f].file)) {
                 if (exists)
-                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    dialog.showMessageBox({
                         type: 'info',
                         title: 'Path does not exist',
                         message: 'The path \'' + files[f].file + '\' does not seem to exist anymore on disk.'
@@ -7885,7 +8025,7 @@
                     idx: r,
                     click: (item) => {
                         if (!existsSync(options.recent[item.idx].file)) {
-                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                            dialog.showMessageBox({
                                 type: 'info',
                                 title: 'Path does not exist',
                                 message: 'The path \'' + options.recent[item.idx].file + '\' does not seem to exist anymore on disk.'
@@ -7926,24 +8066,24 @@
             panel.editor.save();
         }
         catch (err) {
-            ipcRenderer.invoke('show-dialog', 'showMessageBox',
-                {
-                    type: 'error',
-                    title: 'Error saving',
-                    message: err.toString(),
-                    defaultId: 1
-                });
+            dialog.showMessageBox({
+                type: 'error',
+                title: 'Error saving',
+                message: err.toString(),
+                defaultId: 1,
+                noLink: true
+            });
             return false;
         }
         if (panel.editor.source === 1) {
             if (!connected) {
-                ipcRenderer.invoke('show-dialog', 'showMessageBox',
-                    {
-                        type: 'error',
-                        title: 'Must be logged into the mud',
-                        message: 'Saving remote files requires being connected to the mud',
-                        defaultId: 1
-                    });
+                dialog.showMessageBox({
+                    type: 'error',
+                    title: 'Must be logged into the mud',
+                    message: 'Saving remote files requires being connected to the mud',
+                    defaultId: 1,
+                    noLink: true
+                });
                 return;
             }
             panel.editor.upload();
@@ -7975,19 +8115,19 @@
         }
         if (panel.editor.source === 1) {
             if (!connected) {
-                ipcRenderer.invoke('show-dialog', 'showMessageBox',
-                    {
-                        type: 'error',
-                        title: 'Must be logged into the mud',
-                        message: 'Saving remote files requires being connected to the mud',
-                        defaultId: 1
-                    });
+                dialog.showMessageBox({
+                    type: 'error',
+                    title: 'Must be logged into the mud',
+                    message: 'Saving remote files requires being connected to the mud',
+                    defaultId: 1,
+                    noLink: true
+                });
                 return;
             }
             uploadFileAs(panel, true);
             return;
         }
-        var file = ipcRenderer.sendSync('show-dialog-sync', 'showSaveDialog', {
+        var file = dialog.showSaveDialogSync({
             title: 'Save as...',
             defaultPath: panel.editor.file,
             filters: $fileFilters
@@ -8007,13 +8147,13 @@
             panel.editor.save();
         }
         catch (err) {
-            ipcRenderer.invoke('show-dialog', 'showMessageBox',
-                {
-                    type: 'error',
-                    title: 'Error saving',
-                    message: err.toString(),
-                    defaultId: 1
-                });
+            dialog.showMessageBox({
+                type: 'error',
+                title: 'Error saving',
+                message: err.toString(),
+                defaultId: 1,
+                noLink: true
+            });
             return false;
         }
         addToRecent(file);
@@ -8029,13 +8169,13 @@
 
     function uploadFile(panel) {
         if (!connected) {
-            ipcRenderer.invoke('show-dialog', 'showMessageBox',
-                {
-                    type: 'error',
-                    title: 'Must be logged into the mud',
-                    message: 'Uploading requires being connected to the mud',
-                    defaultId: 1
-                });
+            dialog.showMessageBox({
+                type: 'error',
+                title: 'Must be logged into the mud',
+                message: 'Uploading requires being connected to the mud',
+                defaultId: 1,
+                noLink: true
+            });
             return;
         }
         if (!panel) {
@@ -8064,13 +8204,13 @@
 
     function uploadFileAs(panel, remoteEdit) {
         if (!connected) {
-            ipcRenderer.invoke('show-dialog', 'showMessageBox',
-                {
-                    type: 'error',
-                    title: 'Must be logged into the mud',
-                    message: 'Uploading requires being connected to the mud',
-                    defaultId: 1
-                });
+            dialog.showMessageBox({
+                type: 'error',
+                title: 'Must be logged into the mud',
+                message: 'Uploading requires being connected to the mud',
+                defaultId: 1,
+                noLink: true
+            });
             return;
         }
         if (!panel) {
@@ -8130,26 +8270,26 @@
         }
         var choice;
         if (panel.editor.changed && panel.editor.new) {
-            choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                {
-                    type: 'question',
-                    title: 'Revert new file?',
-                    message: 'Revert ' + panel.editor.filename + ' to start and lose changes?',
-                    buttons: ['Yes', 'No'],
-                    defaultId: 1
-                });
+            choice = dialog.showMessageBoxSync({
+                type: 'question',
+                title: 'Revert new file?',
+                message: 'Revert ' + panel.editor.filename + ' to start and lose changes?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+                noLink: true
+            });
             if (choice === 0)
                 panel.editor.revert();
         }
         else if (panel.editor.changed && !panel.editor.new) {
-            choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                {
-                    type: 'question',
-                    title: 'Revert file?',
-                    message: 'Revert ' + panel.editor.filename + ' and lose changes?',
-                    buttons: ['Yes', 'No'],
-                    defaultId: 1
-                });
+            choice = dialog.showMessageBoxSync({
+                type: 'question',
+                title: 'Revert file?',
+                message: 'Revert ' + panel.editor.filename + ' and lose changes?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+                noLink: true
+            });
             if (choice === 0)
                 panel.editor.revert();
         }
@@ -8197,14 +8337,14 @@
                 return false;
             panel = manager.active;
         }
-        var choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-            {
-                type: 'question',
-                title: panel.editor.new ? 'Save file?' : 'Save changes?',
-                message: panel.editor.new ? ('Save ' + panel.editor.filename + '?') : ('Save changes to ' + panel.editor.filename + '?'),
-                buttons: ['Yes', 'No', 'Cancel'],
-                defaultId: 1
-            });
+        var choice = dialog.showMessageBoxSync({
+            type: 'question',
+            title: panel.editor.new ? 'Save file?' : 'Save changes?',
+            message: panel.editor.new ? ('Save ' + panel.editor.filename + '?') : ('Save changes to ' + panel.editor.filename + '?'),
+            buttons: ['Yes', 'No', 'Cancel'],
+            defaultId: 1,
+            noLink: true
+        });
         //canceled
         if (choice === 2)
             return false;
@@ -8325,7 +8465,7 @@
                     p.editor = new AreaDesigner(data);
                 }
                 catch (err) {
-                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    dialog.showMessageBox({
                         type: 'info',
                         title: 'Error opening file',
                         message: 'Could not open \'' + data.file + '\'.'
@@ -8429,7 +8569,7 @@
                     p.editor = new VirtualEditor(data);
                 }
                 catch (err) {
-                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    dialog.showMessageBox({
                         type: 'info',
                         title: 'Error opening file',
                         message: 'Could not open \'' + data.file + '\'.'
@@ -8452,14 +8592,14 @@
                     f = path.join(path.dirname(p.editor.file), f);
                     if (existsSync(f))
                         openFile(f);
-                    else if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                        {
-                            type: 'question',
-                            title: 'Create room?',
-                            message: 'Create new external room?',
-                            buttons: ['Yes', 'No'],
-                            defaultId: 1
-                        }) === 0) {
+                    else if (dialog.showMessageBoxSync({
+                        type: 'question',
+                        title: 'Create room?',
+                        message: 'Create new external room?',
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1,
+                        noLink: true
+                    }) === 0) {
                         if (p.editor.remote)
                             newFromValue(p.editor.externalCode(room), f, path.dirname(p.editor.remote) + '/' + path.basename(f));
                         else
@@ -8800,7 +8940,7 @@
                     p.editor = new MonacoCodeEditor(data);
                 }
                 catch (err) {
-                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    dialog.showMessageBox({
                         type: 'info',
                         title: 'Error opening file',
                         message: 'Could not open \'' + data.file + '\'.'
@@ -8827,13 +8967,13 @@
             */
             p.editor.on('debug', file => {
                 if (!connected) {
-                    ipcRenderer.invoke('show-dialog', 'showMessageBox',
-                        {
-                            type: 'error',
-                            title: 'Must be logged into the mud',
-                            message: 'Testing can only be done when connected to the mud',
-                            defaultId: 1
-                        });
+                    dialog.showMessageBox({
+                        type: 'error',
+                        title: 'Must be logged into the mud',
+                        message: 'Testing can only be done when connected to the mud',
+                        defaultId: 1,
+                        noLink: true
+                    });
                     return;
                 }
                 if (!p.editor.remote)
@@ -8891,14 +9031,14 @@
             p.editor.on('reload', (type, file) => {
                 var choice;
                 if (type === 'unlink') {
-                    choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                        {
-                            type: 'question',
-                            title: 'File deleted',
-                            message: path.basename(file || p.editor.file) + ' has been deleted, keep open?',
-                            buttons: ['Yes', 'No'],
-                            defaultId: 1
-                        });
+                    choice = dialog.showMessageBoxSync({
+                        type: 'question',
+                        title: 'File deleted',
+                        message: path.basename(file || p.editor.file) + ' has been deleted, keep open?',
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1,
+                        noLink: true
+                    });
                     //no
                     if ((!file || p.editor.file === file) && choice === 1)
                         closeFile(p);
@@ -8906,14 +9046,14 @@
                         p.editor.deleted(choice === 0, file);
                 }
                 else {
-                    choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                        {
-                            type: 'question',
-                            title: 'File changed',
-                            message: path.basename((file || p.editor.file) + ' has been changed, reload?'),
-                            buttons: ['Yes', 'No'],
-                            defaultId: 1
-                        });
+                    choice = dialog.showMessageBoxSync({
+                        type: 'question',
+                        title: 'File changed',
+                        message: path.basename((file || p.editor.file) + ' has been changed, reload?'),
+                        buttons: ['Yes', 'No'],
+                        defaultId: 1,
+                        noLink: true
+                    });
                     //yes
                     if (choice === 0)
                         p.editor.revert(file);
@@ -8988,8 +9128,11 @@
                 while (buttons.firstChild) {
                     buttons.removeChild(buttons.firstChild);
                 }
-                if (p.editor.supports('buttons'))
+                if (p.editor.supports('buttons')) {
                     buttons.append(...p.editor.buttons);
+                    if (window.opener)
+                        $('.connected').prop('disabled', !(connected && enabled));
+                }
             });
             p.editor.on('contextmenu-diff', () => {
                 var temp = [];
@@ -9044,13 +9187,35 @@
 
                 if (p.editor.supports('menu|context')) {
                     temp.push({ type: 'separator' });
-                    temp = temp.concat(p.editor.menu('context'));
+                    temp = temp.concat(p.editor.menu('context', connected));
                 }
                 let inputMenu = Menu.buildFromTemplate(temp);
                 inputMenu.popup({ window: remote.getCurrentWindow() });
             });
-            p.editor.on('contextmenu', () => {
+            p.editor.on('contextmenu', (e, editor) => {
                 var temp = [];
+                //Broken on windows, seems spell checker always returns false try again once fixed to add spell checker
+                //seems if you change the lang to en-GB it will work, seems en-US is broken
+                /*
+                //const curr = remote.getCurrentWindow().webContents.session.getSpellCheckerLanguages() || [];
+                //remote.getCurrentWindow().webContents.session.setSpellCheckerLanguages(['en-GB'])
+                const word = editor.getModel().getWordAtPosition(e.target.position);
+                if (word && word.word.length !== 0 && webFrame.isWordMisspelled(word.word)) {
+                    let words = webFrame.getWordSuggestions(word.word);
+                    if (words.length) {
+                        for (let w = 0, wl = words.length; w < wl; w++)
+                            temp.push({
+                                label: words[w],
+                                position: e.target.poistion,
+                                click: (item) => {
+                                    console.log(item.label);
+                                }
+                            });
+                        temp.push({ type: 'separator' });
+                    }
+                }
+                remote.getCurrentWindow().webContents.session.setSpellCheckerLanguages(curr)
+                */
                 if (p.editor.supports('refresh')) {
                     temp.push({
                         label: 'Refresh',
@@ -9142,7 +9307,7 @@
 
                 if (p.editor.supports('menu|context')) {
                     temp.push({ type: 'separator' });
-                    temp = temp.concat(p.editor.menu('context'));
+                    temp = temp.concat(p.editor.menu('context', connected));
                 }
                 temp[0].id = '1';
                 let inputMenu = Menu.buildFromTemplate(temp);
@@ -9151,36 +9316,44 @@
             p.editor.on('error', () => {
                 //logOutput(manager.active.editor.filename+': Indenting complete');
             });
-            p.editor.on('progress-start', (type) => {
+            p.editor.on('progress-start', async (type) => {
                 if (type === 'indent')
                     logOutput(manager.active.editor.filename + ': Indenting started');
                 else if (type === 'format')
                     logOutput(manager.active.editor.filename + ': Formatting started');
                 else if (type === 'designer')
-                    ipcRenderer.send('progress-show', { title: 'Generating area&hellip;', percent: 0 });
+                    openWindow('progress', { title: 'Generating area...' });
             });
             p.editor.on('progress-canceled', (type) => {
-                if (type === 'designer')
-                    ipcRenderer.send('progress-canceled');
+                if (type === 'designer') {
+                    ipcRenderer.send('progress', 'close');
+                    window.setProgressBar(-1);
+                }
             });
             p.editor.on('progress-error', (type, err) => {
-                if (type === 'designer')
-                    ipcRenderer.send('progress-canceled');
+                if (type === 'designer') {
+                    ipcRenderer.send('progress', 'close');
+                    window.setProgressBar(-1);
+                }
                 if (options && options.debug)
                     console.log(err);
             });
-            p.editor.on('progress', (pObject) => {
+            p.editor.on('progress', async (pObject) => {
                 if (!pObject) return;
-                if (pObject.type === 'designer')
-                    ipcRenderer.send('progress', pObject);
+                if (pObject.type === 'designer') {
+                    window.setProgressBar(pObject.percent);
+                    ipcRenderer.send('progress', 'update', pObject);
+                }
             });
             p.editor.on('progress-complete', (type) => {
                 if (type === 'indent')
                     logOutput(manager.active.editor.filename + ': Indenting finished');
                 else if (type === 'format')
                     logOutput(manager.active.editor.filename + ': Formatting finished');
-                else if (type === 'designer')
-                    ipcRenderer.send('progress-close');
+                else if (type === 'designer') {
+                    ipcRenderer.send('progress', 'close');
+                    window.setProgressBar(-1);
+                }
             });
             p.editor.on('output', (msg) => {
                 logOutput(msg, true);
@@ -9297,6 +9470,99 @@
             doUpdate(_updating);
         });
     }
+
+    async function openWindow(name, data) {
+        if (name === 'preferences' || name === 'options')
+            name = 'prefs';
+        if (_windows[name + '.html'] && !_windows[name + '.html'].closed) {
+            _windows[name + '.html'].show();
+            _windows[name + '.html'].focus();
+            return;
+        }
+        let _options = '';
+        if (data && data.state) {
+            _options += ',' + buildWindowOptions(data.state, ['bounds', 'alwaysOnTop']);
+            _options += ',' + buildWindowOptions(data.state.bounds);
+        }
+        switch (name) {
+            case 'progress':
+                //fake a window for easy close detection
+                _windows['progress.html'] = { document: { title: 'progress', focus: function () { ipcRender.send('progess', 'focus'); } } };
+                ipcRenderer.send('show-window', 'progress', data ? data.title || '' : '', true);
+                break;
+            case 'editor':
+                if (data && data.details)
+                    _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent', 'defaultWidth', 'defaultHeight', 'showInTaskBar', 'noInputContext', ...Object.keys(data.state || {})]);
+                //advEditor = window.open('editor.html', 'Code Advanced Editor-' + getId(), `noInputContext=true,alwaysOnTopClient=true,showInTaskBar=false,persistent=false,defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/edit.png')}`);
+                _windows['editor.html'] = window.open('editor.html', 'Code Advanced Editor-' + getId(), `noInputContext=true,alwaysOnTopClient=true,showInTaskBar=false,persistent=false,defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/edit.png')}${_options}`);
+                break;
+            case 'prefs':
+                _windows['prefs.html'] = window.open('code.editor.prefs.html', 'modal-' + getId(), 'backgroundColor=#fff,height=465,width=800,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
+                break;
+            case 'help':
+                if (window.opener) {
+                    if (window.opener._windows['help.html'])
+                        window.opener._windows['help.html'].loadUrl('codeeditor');
+                    else
+                        window.opener.openWindow('help').then(() => {
+                            _windows['help.html'].addEventListener('load', () => {
+                                _windows['help.html'].loadUrl('codeeditor');
+                            }, { once: true });
+                        });
+                }
+                else {
+                    if (data && data.details)
+                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultWidth', 'defaultHeight', ...Object.keys(data.state || {})]);
+                    _windows['help.html'] = window.open('help.html', 'Help-' + getId(), `defaultWidth=800,defaultHeight=600,alwaysOnTopClient=true,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/help.png')}${_options}`);
+                    _windows['help.html'].addEventListener('load', () => {
+                        _windows['help.html'].loadUrl('codeeditor');
+                    }, { once: true });
+                }
+                break;
+        }
+        if (data && data.data && typeof _windows[name + '.html'].restoreWindow !== 'undefined')
+            _windows[name + '.html'].restoreWindow(data.data);
+    }
+
+    // eslint-disable-next-line no-unused-vars
+    function childClosed(file, url, name) {
+        delete _windows[file];
+    }
+
+    function buildWindowOptions(options, filters) {
+        if (!options) return '';
+        if (!filters) filters = [];
+        return Object.keys(options).filter(key => filters.indexOf(key) === -1).map(key => `${key}=${options[key]}`).join(',');
+    }
+
+    function saveWindow() {
+        if (!window.opener)
+            return _windowState.data;
+        return null;
+    }
+
+    function getWindowOptions() {
+        if (window.opener) return;
+        let data = ipcRenderer.sendSync('get-options', true);
+        if (data) {
+            //safety checks to make sure some basic objects
+            if (!('windows' in data) || !data.windows)
+                data.windows = [];
+            if (!('states' in data) || !data.windows)
+                data.states = {};
+            //make sure we have a settings file, default to global file
+            if (!('data' in data) || !data.data)
+                data.data = {};
+        }
+        else
+            data = {
+                data: {},
+                windows: [],
+                states: {}
+            };
+        return data;
+    }
+
 </script>
 
 </html>

@@ -50,6 +50,7 @@ interface ParserLine {
     fragment: boolean;
     gagged: boolean;
     formats: LineFormat[];
+    timestamp?: number;
 }
 
 enum Log {
@@ -72,6 +73,8 @@ interface LogOptions {
     postfix?: string;
     prefix?: string;
     format?: string;
+    timestamp?: boolean;
+    timestampFormat?: string;
 }
 
 let options: LogOptions = {
@@ -83,7 +86,9 @@ let options: LogOptions = {
     prepend: false,
     name: '',
     what: Log.Html,
-    debug: false
+    debug: false,
+    timestamp: false,
+    timestampFormat: '[[]MM-DD HH:mm:ss.SSS[]] '
 };
 
 let connected: boolean = false;
@@ -107,6 +112,7 @@ self.addEventListener('message', (e: MessageEvent) => {
     switch (e.data.action) {
         case 'options':
             let option;
+            let oldEnabled = options.enabled;
             for (option in e.data.args) {
                 if (!e.data.args.hasOwnProperty(option))
                     continue;
@@ -161,14 +167,25 @@ self.addEventListener('message', (e: MessageEvent) => {
                 }
                 else
                     options[option] = e.data.args[option];
-                if (timeStamp !== 0) {
-                    fTimeStamp = new moment(timeStamp).format(options.format || 'YYYYMMDD-HHmmss');
-                    buildFilename();
-                    flush(true);
-                }
-                if (options.offline)
+            }
+            if (timeStamp !== 0) {
+                fTimeStamp = new moment(timeStamp).format(options.format || 'YYYYMMDD-HHmmss');
+                buildFilename();
+                flush(true);
+            }
+            //if enabled changed setup
+            if (oldEnabled != options.enabled) {
+                //if was not enabled and not logging start loggin
+                if (!oldEnabled && !logging)
+                    postMessage({ event: 'start' });
+                //if enabled but logging stop
+                else if (oldEnabled && logging)
+                    stop();
+                else if (options.offline)
                     postMessage({ event: 'start' });
             }
+            else if (options.offline)
+                postMessage({ event: 'start' });
             break;
         case 'name':
             options.name = e.data.args;
@@ -192,17 +209,17 @@ self.addEventListener('message', (e: MessageEvent) => {
             c = options.unique;
             options.unique = false;
             if (!e.data.args)
-                start([], [], [], false);
+                start([], false);
             else
-                start(e.data.args.lines, e.data.args.raw, e.data.args.formats, e.data.args.fragment);
+                start(e.data.args.lines, e.data.args.fragment);
             options.unique = c;
             break;
 
         case 'start':
             if (!e.data.args)
-                start([], [], [], false);
+                start([], false);
             else
-                start(e.data.args.lines, e.data.args.raw, e.data.args.formats, e.data.args.fragment);
+                start(e.data.args.lines, e.data.args.fragment);
             break;
         case 'flush':
             flush(e.data.args);
@@ -225,11 +242,17 @@ self.addEventListener('message', (e: MessageEvent) => {
             if (!logging || (!options.offline && !connected)) return;
             if (data.gagged && !options.gagged) return;
             if ((options.what & Log.Html) === Log.Html)
-                writeHtml(createLine(data.line, data.formats));
-            if ((options.what & Log.Text) === Log.Text || options.what === Log.None)
+                writeHtml(createLine({ text: data.line, formats: data.formats, timestamp: data.timestamp || Date.now() }));
+            if ((options.what & Log.Text) === Log.Text || options.what === Log.None) {
+                if (options.timestamp)
+                    writeText(moment(data.timestamp).format(options.timestampFormat));
                 writeText(data.line + '\n');
-            if ((options.what & Log.Raw) === Log.Raw)
+            }
+            if ((options.what & Log.Raw) === Log.Raw) {
+                if (options.timestamp)
+                    writeText('\x1b[-7;-8m' + moment(data.timestamp).format(options.timestampFormat) + '\x1b[0m');
                 writeRaw(data.raw);
+            }
             break;
     }
 }, false);
@@ -373,11 +396,17 @@ function flush(newline?) {
         if (newline)
             nl = '\n';
         if ((flushBuffer.what & Log.Html) === Log.Html)
-            writeHtml(createLine(flushBuffer.line, flushBuffer.formats));
-        if ((flushBuffer.what & Log.Text) === Log.Text || flushBuffer.what === Log.None)
+            writeHtml(createLine({ text: flushBuffer.line, formats: flushBuffer.formats, timestamp: flushBuffer.timestamp || Date.now() }));
+        if ((flushBuffer.what & Log.Text) === Log.Text || flushBuffer.what === Log.None) {
+            if (options.timestamp)
+                writeText(moment(flushBuffer.timestamp).format(options.timestampFormat));
             writeText(flushBuffer.line + nl);
-        if ((flushBuffer.what & Log.Raw) === Log.Raw)
+        }
+        if ((flushBuffer.what & Log.Raw) === Log.Raw) {
+            if (options.timestamp)
+                writeText('\x1b[-7;-8m' + moment(flushBuffer.timestamp).format(options.timestampFormat) + '\x1b[0m');
             writeRaw(flushBuffer.raw + nl);
+        }
     }
     //restore previous state and clear buffer
     logging = l;
@@ -386,7 +415,7 @@ function flush(newline?) {
     flushBuffer = null;
 }
 
-function start(lines: string[], raw: string[], formats: any[], fragment: boolean) {
+function start(lines: any[], fragment: boolean) {
     if (!options.enabled) {
         if (logging)
             stop();
@@ -401,11 +430,19 @@ function start(lines: string[], raw: string[], formats: any[], fragment: boolean
     buildFilename();
     if (options.prepend && lines && lines.length > 0) {
         if ((options.what & Log.Html) === Log.Html)
-            writeHtml(createLines(lines || [], formats || []));
-        if ((options.what & Log.Text) === Log.Text || options.what === Log.None)
-            writeText(lines.join('\n') + (fragment || lines.length === 0 ? '' : '\n'));
-        if ((options.what & Log.Raw) === Log.Raw)
-            writeRaw(raw.join(''));
+            writeHtml(createLines(lines || []));
+        if ((options.what & Log.Text) === Log.Text || options.what === Log.None) {
+            if (options.timestamp)
+                writeText(lines.map(l => moment(l.timestamp).format(options.timestampFormat) + l.text).join('\n') + (fragment || lines.length === 0 ? '' : '\n'));
+            else
+                writeText(lines.map(l => l.text).join('\n') + (fragment || lines.length === 0 ? '' : '\n'));
+        }
+        if ((options.what & Log.Raw) === Log.Raw) {
+            if (options.timestamp)
+                writeText(lines.map(l => '\x1b[-7;-8m' + moment(l.timestamp).format(options.timestampFormat) + '\x1b[0m' + l.raw).join(''));
+            else
+                writeRaw(lines.map(l => l.raw).join(''));
+        }
     }
     postMessage({ event: 'started', args: logging });
 }
@@ -427,11 +464,11 @@ function toggle() {
     options.unique = c;
 }
 
-function createLines(lines: string[], formats: any[]) {
+function createLines(lines: any[]) {
     const text = [];
     const ll = lines.length;
     for (let l = 0; l < ll; l++)
-        text.push(createLine(lines[l], formats[l]));
+        text.push(createLine(lines[l]));
     return text.join('');
 }
 
@@ -440,13 +477,37 @@ function getClassName(str) {
     return str.replace(/[,]/g, '-').replace(/[\(\)\s;]/g, '');
 }
 
-function createLine(text: string, formats: any[]) {
+function createLine(line) {
     const parts = [];
     let offset = 0;
     let fCls;
+    const formats = line.formats;
     const len = formats.length;
     const styles = [];
-
+    const text = line.text;
+    if (options.timestamp) {
+        fCls = [];
+        let color = GetColor(-8);
+        if (backgrounds[getClassName(color)])
+            fCls.push(' b', backgrounds[getClassName(color)]);
+        else {
+            backgrounds[getClassName(color)] = backgroundsCnt;
+            fCls.push(' b', backgroundsCnt);
+            styles.push(`.b${backgroundsCnt} { background-color: ${color}; }`);
+            backgroundsCnt++;
+        }
+        color = GetColor(-7);
+        if (colors[getClassName(color)])
+            fCls.push(' c', colors[getClassName(color)]);
+        else {
+            colors[getClassName(color)] = colorsCnt;
+            fCls.push(' c', colorsCnt);
+            styles.push(`.c${colorsCnt} { color: ${color}; }`);
+            colorsCnt++;
+        }
+        parts.push('<span class="ansi', ...fCls, '" style="float: left;">', moment(line.timestamp).format(options.timestampFormat), '</span>');
+        fCls = 0;
+    }
     for (let f = 0; f < len; f++) {
         const format = formats[f];
         let nFormat;
@@ -706,8 +767,8 @@ function buildColorTable() {
     _ColorTable[270] = 'rgb(0, 128, 128)';  //cyan back
     _ColorTable[271] = 'rgb(187, 187, 187)';  //white back
 
-    _ColorTable[272] = 'rgb(0,0,0)'; //iceMudInfoBackground
-    _ColorTable[273] = 'rgb(0, 255, 255)';  //iceMudInfoText
+    _ColorTable[272] = 'rgb(0,0,0)'; //InfoBackground
+    _ColorTable[273] = 'rgb(0, 255, 255)';  //InfoText
     _ColorTable[274] = 'rgb(0,0,0)'; //LocalEchoBackground
     _ColorTable[275] = 'rgb(255, 255, 0)';  //LocalEchoText
     _ColorTable[276] = 'rgb(0, 0, 0)';  //DefaultBack
@@ -731,9 +792,9 @@ function GetColor(code) {
         case -10:
             return colorTable[280];  //DefaultBrightFore
         case -8:
-            return colorTable[272]; //iceMudInfoBackground
+            return colorTable[272]; //InfoBackground
         case -7:
-            return colorTable[273];  //iceMudInfoText
+            return colorTable[273];  //InfoText
         case -4:
             return colorTable[274]; //LocalEchoBackground
         case -3:

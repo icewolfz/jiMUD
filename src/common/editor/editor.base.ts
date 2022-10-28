@@ -151,6 +151,7 @@ export abstract class EditorBase extends EventEmitter {
     public abstract focus(): void;
     public abstract resize(): void;
     public abstract supports(what): boolean;
+    public abstract update(what, ...args): void;
 
     abstract set spellcheck(value: boolean);
 

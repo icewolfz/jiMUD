@@ -4,6 +4,10 @@ $color: "#333";
 $panelBackground: "rgb(240, 240, 240)";
 $panelInsetBackground: "rgb(240, 240, 240)";
 
+body {
+    background-color: white !important;
+}
+
 #toolbar {
     background-color: menu;
     margin-left: 2px;
@@ -43,12 +47,115 @@ $panelInsetBackground: "rgb(240, 240, 240)";
     margin-bottom: 0 !important;
 }
 
-#display {
+#chat-display {
+    z-index: 2;
+    overflow: hidden;
+    -webkit-user-select: auto;
+    user-select: auto;
+    color: #BBBBBB;
+    font-family: "Courier New", monospace;
+    text-align: left;
+    font-size: 1em;
+    background-color: black;
+    text-shadow: none;    
     top: 26px;
     bottom: 0;
     left: 0;
     right: 0;
     position: absolute;
+}
+
+#chat-display-view {
+    z-index: 3;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+
+    /*
+    position: relative;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    */
+}
+
+#chat-display-background {
+    top: 0px;
+    z-index: 1;
+    left: 0px;
+    right: 0px;
+    position: absolute;
+    pointer-events: none;
+}
+
+#chat-display-overlay {
+    top: 0px;
+    z-index: 2;
+    left: 0px;
+    right: 0px;
+    position: absolute;
+    pointer-events: none;
+}
+
+#chat-display-split {
+    position: absolute;
+    z-index: 3;
+    overflow: hidden;
+    -webkit-user-select: auto;
+    user-select: auto;
+    box-sizing: border-box;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    height: 100%;
+    color: #BBBBBB;
+    border: 0px solid silver;
+    font-family: "Courier New", monospace;
+    text-align: left;
+    font-size: 1em;
+    background-color: black;
+    text-shadow: none;
+    padding: 2px;
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+}
+
+#chat-display-split-bar {
+    background-color: menu;
+    height: 4px;
+    cursor: ns-resize;
+    position: absolute;
+    background-color: menu;
+    z-index: 1000;
+    width: 100%;
+    right: 0px;
+    box-sizing: border-box;
+}
+
+#chat-display-split-ghost-bar {
+    height: 4px;
+    right: 12px;
+    left: 0;
+    background-color: transparent;
+    opacity: 0.5;
+    position: absolute;
+    cursor: ns-resize;
+    z-index: 9991;
+    box-sizing: border-box;
+}
+
+#chat-display-split-frame {
+    height: 20%;
+    min-height: 150px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 12px;
+    display: none;
+    background-color: black;
+    overflow: hidden;
+    z-index: 10;
 }
 
 .find {
@@ -77,7 +184,7 @@ $panelInsetBackground: "rgb(240, 240, 240)";
 }
 
 .find input:focus {
-    border: 1px solid adadad;
+    border: 1px solid #adadad;
     color: #{$color};
 }
 

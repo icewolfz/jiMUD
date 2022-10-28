@@ -112,6 +112,16 @@ export function stripQuotes(str) {
     return str;
 }
 
+
+export function offset(el) {
+    const box = el.getBoundingClientRect();
+    const docElem = document.documentElement;
+    return {
+        top: box.top + window.pageYOffset - docElem.clientTop,
+        left: box.left + window.pageXOffset - docElem.clientLeft
+    };
+}
+
 export function CharAllowedInURL(chr, proto) {
     if (chr.length > 1)
         return false;
@@ -776,19 +786,23 @@ export function getTimeSpan(i: number): string {
 
     al = Math.floor(i / (1000 * 60 * 60 * 24));
     i -= al * (1000 * 60 * 60 * 24);
-    if (al > 0) tmp.push(al + ' days');
+    if (al === 1) tmp.push(al + ' day');
+    else if (al > 0) tmp.push(al + ' days');
 
     al = Math.floor(i / (1000 * 60 * 60));
     i -= al * (1000 * 60 * 60);
-    if (al > 0) tmp.push(al + ' hours');
+    if (al === 1) tmp.push(al + ' hour');
+    else if (al > 0) tmp.push(al + ' hours');
 
     al = Math.floor(i / (1000 * 60));
     i -= al * (1000 * 60);
-    if (al > 0) tmp.push(al + ' minutes');
+    if (al === 1) tmp.push(al + ' minute');
+    else if (al > 0) tmp.push(al + ' minutes');
 
     al = Math.floor(i / (1000));
     i -= al * (1000);
-    if (al > 0) tmp.push(al + ' seconds');
+    if (al === 1) tmp.push(al + ' second');
+    else if (al > 0) tmp.push(al + ' seconds');
     if (tmp.length === 0)
         tmp.push('0 seconds');
     return tmp.join(', ');
@@ -1943,8 +1957,8 @@ export function getColors() {
     _ColorTable[269] = 'rgb(128, 0, 128)'; //magenta back
     _ColorTable[270] = 'rgb(0, 128, 128)'; //cyan back
     _ColorTable[271] = 'rgb(187, 187, 187)'; //white back
-    _ColorTable[272] = 'rgb(0,0,0)'; //iceMudInfoBackground
-    _ColorTable[273] = 'rgb(0, 255, 255)'; //iceMudInfoText
+    _ColorTable[272] = 'rgb(0,0,0)'; //InfoBackground
+    _ColorTable[273] = 'rgb(0, 255, 255)'; //InfoText
     _ColorTable[274] = 'rgb(0,0,0)'; //LocalEchoBackground
     _ColorTable[275] = 'rgb(255, 255, 0)'; //LocalEchoText
     _ColorTable[276] = 'rgb(0, 0, 0)'; //DefaultBack
@@ -2189,4 +2203,24 @@ export function isEqual(a, b): boolean {
     else if (a instanceof Object && b instanceof Object)
         return isObjectEqual(a, b);
     return a === b;
+}
+
+export function createProgressDialog(title) {
+    return window.open('progress.html', 'modal', 'title=' + title + ',width=200,height=70,backgroundColor=#fff,icon=' + path.join(__dirname, '../../assets/icons/png/progress.png'));
+}
+
+export function createColorDialog() {
+    return window.open('colorpicker.html', 'modal', 'title=Pick color,width=326,height=296,backgroundColor=#fff,icon=' + path.join(__dirname, '../../assets/icons/png/color.png'));
+}
+
+export function boldUnicodeText(text) {
+    const b = function (char) {
+        let diff;
+        if (/[A-Z]/.test(char))
+            diff = "𝗔".codePointAt(0) - "A".codePointAt(0);
+        else
+            diff = "𝗮".codePointAt(0) - "a".codePointAt(0);
+        return String.fromCodePoint(char.codePointAt(0) + diff);
+    };
+    return text.replace(/[A-Za-z]/g, b);
 }

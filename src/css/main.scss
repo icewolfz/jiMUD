@@ -141,12 +141,6 @@ body {
     z-index: 10;
 }
 
-#display-border {
-    position: absolute;
-    z-index: 1;
-    box-sizing: border-box;
-}
-
 .overlay-line {
     position: absolute;
     clear: both;
@@ -189,13 +183,13 @@ body {
     box-sizing: border-box;
 }
 
-#commandinput {
+#commandInput {
     outline: none;
     resize: none;
     overflow: hidden;
 }
 
-#commandinput:focus {
+#commandInput:focus {
     outline: none;
 }
 

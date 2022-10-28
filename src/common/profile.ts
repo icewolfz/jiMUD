@@ -839,6 +839,9 @@ export class Profile {
                 profile.contexts.push(new Context(data.contexts[i], profile));
             }
         }
+        //copied or something as name does not match file so just change the name to file to prevent data loss.
+        if(path.basename(file, '.json') !== profile.name)
+            profile.name = path.basename(file, '.json');
         profile.file = profile.name;
         return profile;
     }
@@ -1636,7 +1639,7 @@ export function convertPattern(pattern: string, client?) {
                         stringBuilder.push("[\\.\\?\\!\\:\\;\\-\\—\\(\\)\\[\\]\\'\\\"\\\\/\\,]{1}");
                         state = convertPatternState.None;
                         break;
-                    case 't': //TODO not sure what a direction command is
+                    case 't': //jiMUD does not support direction commands
                         state = convertPatternState.None;
                         break;
                     case 'e':

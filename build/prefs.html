@@ -96,7 +96,7 @@
     <script type="text/javascript">
         //spell-checker:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
         const { parseTemplate, templatePath, existsSync, getColors, isFileSync, isDirSync, walkSync } = require('./js/library');
-        const { TrayClick } = require('./js/types');
+        const { TrayClick, TrayMenu } = require('./js/types');
         const Settings = require('./js/settings').Settings;
         const { ipcRenderer } = require('electron');
         const RGBColor = require('rgbcolor');
@@ -106,7 +106,22 @@
         var currentColors;
         var archiver, archive;
 
+        var _settingsFile;
+        var _globalFile = window.getGlobal('settingsFile');
+        if (window.opener) {
+            if (typeof window.opener.getSettings === 'function')
+                _settingsFile = window.opener.getSettings();
+            else
+                _settingsFile = window.opener._windowState.data.settings;
+            if (_settingsFile === _globalFile)
+                document.title = 'Global Preferences';
+        }
+        else {
+            _settingsFile = _globalFile;
+            document.title = 'Global Preferences';
+        }
         var _settings;
+
         if (window.module) module = window.module;
         $(window).keydown((event) => {
             if (document.getElementById('progress-dialog').open) {
@@ -118,7 +133,59 @@
         });
 
         $(document).ready(() => {
-
+            _settings = Settings.load(_settingsFile);
+            data = [
+                { text: 'General' },
+                {
+                    text: 'Display',
+                    nodes: [
+                        { text: 'Fonts', dataAttr: { title: 'Display > Fonts', pane: 'display-fonts' } },
+                    ]
+                },
+                { text: 'Command line' },
+                { text: 'Colors' },
+                {
+                    text: 'Logging',
+                    nodes: [
+                        { text: 'Viewer', dataAttr: { title: 'Logging > Viewer', pane: 'logging-viewer' } },
+                    ]
+                },
+                { text: 'Telnet' },
+                {
+                    text: 'Mapper',
+                    nodes: [
+                        { text: 'Window', dataAttr: { title: 'Mapper > Window', pane: 'mapper-window' } },
+                    ]
+                },
+                {
+                    text: 'Chat',
+                    nodes: [
+                        { text: 'Display', dataAttr: { title: 'Chat > Display', pane: 'chat-display' } },
+                        { text: 'Window', dataAttr: { title: 'Chat > Window', pane: 'chat-window' } },
+                    ]
+                },
+                { text: 'Code Editor' },
+                { text: 'Status' },
+                {
+                    text: 'Scripting',
+                    nodes: [
+                        { text: 'Special characters', dataAttr: { title: 'Scripting > Special characters' } },
+                    ]
+                },
+                {
+                    text: 'Advanced',
+                    nodes: [
+                        { text: 'Backup' },
+                        { text: 'Connection' },
+                        { text: 'Profiles' },
+                        { text: 'Profile manager' }
+                    ]
+                },
+            ]
+            if (_settingsFile === _globalFile) {
+                data[data.length - 1].nodes.push({ text: 'Tray' });
+                data.splice(1, 0, { text: 'Interface' });
+            }
             $('#pref-tree').treeview({
                 showBorder: false,
                 showImage: true,
@@ -144,54 +211,7 @@
                     else
                         $('#pref-title').html(node.text);
                 },
-                data: [
-                    { text: 'General' },
-                    {
-                        text: 'Display',
-                        nodes: [
-                            { text: 'Fonts', dataAttr: { title: 'Display > Fonts', pane: 'display-fonts' } },
-                        ]
-                    },
-                    { text: 'Command line' },
-                    { text: 'Colors' },
-                    {
-                        text: 'Logging',
-                        nodes: [
-                            { text: 'Viewer', dataAttr: { title: 'Logging > Viewer', pane: 'logging-viewer' } },
-                        ]
-                    },
-                    { text: 'Telnet' },
-                    {
-                        text: 'Mapper',
-                        nodes: [
-                            { text: 'Window', dataAttr: { title: 'Mapper > Window', pane: 'mapper-window' } },
-                        ]
-                    },
-                    {
-                        text: 'Chat',
-                        nodes: [
-                            { text: 'Display', dataAttr: { title: 'Chat > Display', pane: 'chat-display' } },
-                            { text: 'Window', dataAttr: { title: 'Chat > Window', pane: 'chat-window' } },
-                        ]
-                    },
-                    { text: 'Status' },
-                    {
-                        text: 'Scripting',
-                        nodes: [
-                            { text: 'Special characters', dataAttr: { title: 'Scripting > Special characters' } },
-                        ]
-                    },
-                    {
-                        text: 'Advanced',
-                        nodes: [
-                            { text: 'Backup' },
-                            { text: 'Connection' },
-                            { text: 'Profiles' },
-                            { text: 'Profile manager' },
-                            { text: 'Tray' }
-                        ]
-                    },
-                ],
+                data: data,
                 onInitialized: () => {
                     $('#pref-tree').treeview('expandAll', { levels: 5, silent: true });
                     const n = $('#pref-tree').treeview('findNodes', ['^General$', 'text']);
@@ -207,6 +227,10 @@
                 $('.linux').css('display', 'inline-block');
             else
                 $('.linux').css('display', 'none');
+            if (_settingsFile === _globalFile)
+                $('.global').css('display', '');
+            else
+                $('.global').css('display', 'none');
             fontList.getFonts()
                 .then(fonts => {
                     var fl = fonts.length;
@@ -242,7 +266,7 @@
                     el.change();
                 })
                 .catch(err => {
-                    ipcRenderer.send('error', err);
+                    window.error(err);
                 });
 
             var p = path.join(parseTemplate('{data}'), 'profiles');
@@ -292,8 +316,6 @@
                 $('#chat-font-sample').css('font-family', $('#chat-font').val() + ', monospace');
                 $('#chat-font-sample').css('font-size', $('#chat-fontSize').val());
             });
-
-            _settings = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
             loadThemes();
             loadSettings();
 
@@ -382,7 +404,7 @@
                     case 'mapper-memory':
                         _settings.mapper.memory = this.checked;
                         if (this.checked) {
-                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                            dialog.showMessageBox({
                                 type: 'warning',
                                 title: 'Warning',
                                 message: 'If client or OS crash, all in memory data will be lost and not saved to disk'
@@ -523,6 +545,18 @@
                         if (this.checked)
                             _settings.onProfileDeleted = 4;
                         break;
+                    case 'trayMenu-simple':
+                        if (this.checked)
+                            _settings.trayMenu = TrayMenu.simple;
+                        break;
+                    case 'trayMenu-full':
+                        if (this.checked)
+                            _settings.trayMenu = TrayMenu.full;
+                        break;
+                    case 'trayMenu-compact':
+                        if (this.checked)
+                            _settings.trayMenu = TrayMenu.compact;
+                        break;
                     case 'trayClick-none':
                         if (this.checked)
                             _settings.trayClick = TrayClick.none;
@@ -542,6 +576,18 @@
                     case 'trayClick-menu':
                         if (this.checked)
                             _settings.trayClick = TrayClick.menu;
+                        break;
+                    case 'trayClick-showAll':
+                        if (this.checked)
+                            _settings.trayClick = TrayClick.showAll;
+                        break;
+                    case 'trayClick-hideAll':
+                        if (this.checked)
+                            _settings.trayClick = TrayClick.hideAll;
+                        break;
+                    case 'trayClick-toggleAll':
+                        if (this.checked)
+                            _settings.trayClick = TrayClick.toggleAll;
                         break;
                     case 'trayDblClick-none':
                         if (this.checked)
@@ -563,6 +609,18 @@
                         if (this.checked)
                             _settings.trayDblClick = TrayClick.menu;
                         break;
+                    case 'trayDblClick-showAll':
+                        if (this.checked)
+                            _settings.trayDblClick = TrayClick.showAll;
+                        break;
+                    case 'trayDblClick-hideAll':
+                        if (this.checked)
+                            _settings.trayDblClick = TrayClick.hideAll;
+                        break;
+                    case 'trayDblClick-toggleAll':
+                        if (this.checked)
+                            _settings.trayDblClick = TrayClick.toggleAll;
+                        break;
                     case 'chat-selective':
                         _settings.chat.captureAllLines = !this.checked;
                         $('#chat-lines').prop('readonly', !_settings.chat.captureLines || !this.checked);
@@ -571,17 +629,38 @@
                         _settings.chat.captureAllLines = this.checked;
                         $('#chat-lines').prop('readonly', !_settings.chat.captureLines || this.checked);
                         break;
+                    case 'onSecondInstance-0':
+                        if (this.checked)
+                            _settings.onSecondInstance = 0;
+                        break;
+                    case 'onSecondInstance-1':
+                        if (this.checked)
+                            _settings.onSecondInstance = 1;
+                        break;
+                    case 'onSecondInstance-2':
+                        if (this.checked)
+                            _settings.onSecondInstance = 2;
+                        break;
+                    case 'onSecondInstance-4':
+                        if (this.checked)
+                            _settings.onSecondInstance = 4;
+                        break;
                 }
             });
 
             $('input[type="text"]').change(function () {
-                _settings[$(this).attr('id')] = $(this).val();
+                id = $(this).attr('id').split('-');
+                if (id.length === 2)
+                    _settings[id[0]][id[1]] = $(this).val();
+                else
+                    _settings[id[0]] = $(this).val();
             });
             $('input[type="number"]').change(function () {
-                if ($(this).attr('id') === 'mapper-memorySavePeriod')
-                    _settings.mapper.memorySavePeriod = parseInt($(this).val(), 10);
+                id = $(this).attr('id').split('-');
+                if (id.length === 2)
+                    _settings[id[0]][id[1]] = parseInt($(this).val(), 10);
                 else
-                    _settings[$(this).attr('id')] = parseInt($(this).val(), 10);
+                    _settings[id[0]] = parseInt($(this).val(), 10);
             });
             $('input[type="color"]').change(function () {
                 var idx = parseInt($(this).attr('id').match(/\d+/)[0], 10);
@@ -617,7 +696,7 @@
                 updateScheme($(this).index());
             });
             $('#btn-logPath').on('click', () => {
-                ipcRenderer.invoke('show-dialog', 'showOpenDialog', {
+                dialog.showOpenDialog({
                     defaultPath: parseTemplate($('#logPath').val()),
                     properties: ['openDirectory', 'createDirectory']
                 }).then(result => {
@@ -626,6 +705,18 @@
                     }
                     _settings.logPath = templatePath(result.filePaths[0]);
                     $('#logPath').val(_settings.logPath);
+                });
+            });
+            $('#btn-loadLayout').on('click', () => {
+                dialog.showOpenDialog({
+                    defaultPath: parseTemplate($('#loadLayout').val()),
+                    properties: ['openDirectory', 'createDirectory']
+                }).then(result => {
+                    if (result.filePaths === undefined || result.filePaths.length === 0) {
+                        return;
+                    }
+                    _settings.loadLayout = templatePath(result.filePaths[0]);
+                    $('#loadLayout').val(_settings.loadLayout);
                 });
             });
         });
@@ -795,17 +886,32 @@
             $('#onProfileDeleted-2').prop('checked', _settings.onProfileDeleted === 2);
             $('#onProfileDeleted-4').prop('checked', _settings.onProfileDeleted === 4);
 
+            $('#trayMenu-simple').prop('checked', _settings.trayMenu === TrayMenu.simple);
+            $('#trayMenu-full').prop('checked', _settings.trayMenu === TrayMenu.full);
+            $('#trayMenu-compact').prop('checked', _settings.trayMenu === TrayMenu.compact);
+
             $('#trayClick-none').prop('checked', _settings.trayClick === TrayClick.none);
             $('#trayClick-show').prop('checked', _settings.trayClick === TrayClick.show);
             $('#trayClick-hide').prop('checked', _settings.trayClick === TrayClick.hide);
             $('#trayClick-toggle').prop('checked', _settings.trayClick === TrayClick.toggle);
             $('#trayClick-menu').prop('checked', _settings.trayClick === TrayClick.menu);
+            $('#trayClick-showAll').prop('checked', _settings.trayClick === TrayClick.showAll);
+            $('#trayClick-hideAll').prop('checked', _settings.trayClick === TrayClick.hideAll);
+            $('#trayClick-toggleAll').prop('checked', _settings.trayClick === TrayClick.toggleAll);
 
             $('#trayDblClick-none').prop('checked', _settings.trayDblClick === TrayClick.none);
             $('#trayDblClick-show').prop('checked', _settings.trayDblClick === TrayClick.show);
             $('#trayDblClick-hide').prop('checked', _settings.trayDblClick === TrayClick.hide);
             $('#trayDblClick-toggle').prop('checked', _settings.trayDblClick === TrayClick.toggle);
             $('#trayDblClick-menu').prop('checked', _settings.trayDblClick === TrayClick.menu);
+            $('#trayDblClick-showAll').prop('checked', _settings.trayDblClick === TrayClick.showAll);
+            $('#trayDblClick-hideAll').prop('checked', _settings.trayDblClick === TrayClick.hideAll);
+            $('#trayDblClick-toggleAll').prop('checked', _settings.trayDblClick === TrayClick.toggleAll);
+
+            $('#onSecondInstance-0').prop('checked', _settings.onSecondInstance === 0);
+            $('#onSecondInstance-1').prop('checked', _settings.onSecondInstance === 1);
+            $('#onSecondInstance-2').prop('checked', _settings.onSecondInstance === 2);
+            $('#onSecondInstance-4').prop('checked', _settings.onSecondInstance === 4);
 
             $('#profiles-sortOrder-alpha').prop('checked', (_settings.profiles.sortOrder & 2) === 2);
             $('#profiles-sortOrder-priority').prop('checked', (_settings.profiles.sortOrder & 4) === 4);
@@ -872,13 +978,27 @@
         }
 
         function resetWindows() {
-            if (!_settings.windows) return;
-            for (var name in _settings.windows) {
-                _settings.windows[name].x = 0;
-                _settings.windows[name].y = 0;
-                _settings.windows[name].width = 800;
-                _settings.windows[name].height = 600;
-            }
+            if (dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Reset windows',
+                message: 'Will rest all client child windows and window states, once reset can not be restored, reset?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+                noLink: true
+            }) === 0)
+                window.opener.resetWindows();
+        }
+
+        function resetAllWindows() {
+            if (dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Reset windows',
+                message: 'Will reset all windows and stored window states, once reset can not be restored, reset?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+                noLink: true
+            }) === 0)
+                ipcRenderer.send('reset-windows');
         }
 
         function setColor(id, color, noChange) {
@@ -940,8 +1060,8 @@
                     setColor('color269', 'rgb(128, 0, 128)');//magenta back
                     setColor('color270', 'rgb(0, 128, 128)');//cyan back
                     setColor('color271', 'rgb(192, 192, 192)');//white back
-                    setColor('color272', 'rgb(0,0,0)'); //iceMudInfoBackground
-                    setColor('color273', 'rgb(0, 255, 255)');//iceMudInfoText
+                    setColor('color272', 'rgb(0,0,0)'); //InfoBackground
+                    setColor('color273', 'rgb(0, 255, 255)');//InfoText
                     setColor('color274', 'rgb(0,0,0)'); //LocalEchoBackground
                     setColor('color275', 'rgb(255, 255, 0)');//LocalEchoText
                     setColor('color276', 'rgb(0, 0, 0)');//DefaultBack
@@ -982,8 +1102,8 @@
                     setColor('color269', 'rgb(170, 0, 170)');//magenta back
                     setColor('color270', 'rgb(0, 170, 170)');//cyan back
                     setColor('color271', 'rgb(170, 170, 170)');//white back
-                    setColor('color272', 'rgb(0,0,0)'); //iceMudInfoBackground
-                    setColor('color273', 'rgb(85, 255, 255)');//iceMudInfoText
+                    setColor('color272', 'rgb(0,0,0)'); //InfoBackground
+                    setColor('color273', 'rgb(85, 255, 255)');//InfoText
                     setColor('color274', 'rgb(0,0,0)'); //LocalEchoBackground
                     setColor('color275', 'rgb(255, 255, 85)');//LocalEchoText
                     setColor('color276', 'rgb(0, 0, 0)');//DefaultBack
@@ -1024,8 +1144,8 @@
                     setColor('color269', 'rgb(211, 56, 211)');//magenta back
                     setColor('color270', 'rgb(51, 187, 200)');//cyan back
                     setColor('color271', 'rgb(203, 204, 205)');//white back
-                    setColor('color272', 'rgb(0,0,0)'); //iceMudInfoBackground
-                    setColor('color273', 'rgb(20, 240, 240)');//iceMudInfoText
+                    setColor('color272', 'rgb(0,0,0)'); //InfoBackground
+                    setColor('color273', 'rgb(20, 240, 240)');//InfoText
                     setColor('color274', 'rgb(0,0,0)'); //LocalEchoBackground
                     setColor('color275', 'rgb(234, 236, 35)');//LocalEchoText
                     setColor('color276', 'rgb(0, 0, 0)');//DefaultBack
@@ -1066,8 +1186,8 @@
                     setColor('color269', 'rgb(187, 0, 187)');//magenta back
                     setColor('color270', 'rgb(0, 187, 187)');//cyan back
                     setColor('color271', 'rgb(187, 187, 187)');//white back
-                    setColor('color272', 'rgb(0,0,0)'); //iceMudInfoBackground
-                    setColor('color273', 'rgb(85, 255, 255)');//iceMudInfoText
+                    setColor('color272', 'rgb(0,0,0)'); //InfoBackground
+                    setColor('color273', 'rgb(85, 255, 255)');//InfoText
                     setColor('color274', 'rgb(0,0,0)'); //LocalEchoBackground
                     setColor('color275', 'rgb(255, 255, 85)');//LocalEchoText
                     setColor('color276', 'rgb(0, 0, 0)');//DefaultBack
@@ -1108,8 +1228,8 @@
                     setColor('color269', 'rgb(156, 0, 156)');//magenta back
                     setColor('color270', 'rgb(0, 147, 147)');//cyan back
                     setColor('color271', 'rgb(210, 210, 210)');//white back
-                    setColor('color272', 'rgb(0,0,0)'); //iceMudInfoBackground
-                    setColor('color273', 'rgb(0, 255, 255)');//iceMudInfoText
+                    setColor('color272', 'rgb(0,0,0)'); //InfoBackground
+                    setColor('color273', 'rgb(0, 255, 255)');//InfoText
                     setColor('color274', 'rgb(0,0,0)'); //LocalEchoBackground
                     setColor('color275', 'rgb(255, 255, 0)');//LocalEchoText
                     setColor('color276', 'rgb(0, 0, 0)');//DefaultBack
@@ -1150,8 +1270,8 @@
                     setColor('color269', 'rgb(205, 0, 205)');//magenta back
                     setColor('color270', 'rgb(0, 205, 205)');//cyan back
                     setColor('color271', 'rgb(229, 229, 229)');//white back
-                    setColor('color272', 'rgb(0,0,0)'); //iceMudInfoBackground
-                    setColor('color273', 'rgb(0, 255, 255)');//iceMudInfoText
+                    setColor('color272', 'rgb(0,0,0)'); //InfoBackground
+                    setColor('color273', 'rgb(0, 255, 255)');//InfoText
                     setColor('color274', 'rgb(0,0,0)'); //LocalEchoBackground
                     setColor('color275', 'rgb(255, 255, 0)');//LocalEchoText
                     setColor('color276', 'rgb(0, 0, 0)');//DefaultBack
@@ -1192,8 +1312,8 @@
                     setColor('color269', 'rgb(136,23,152)');//magenta back
                     setColor('color270', 'rgb(58,150,221)');//cyan back
                     setColor('color271', 'rgb(204,204,204)');//white back
-                    setColor('color272', 'rgb(12,12,12)'); //iceMudInfoBackground
-                    setColor('color273', 'rgb(97,214,214)');//iceMudInfoText
+                    setColor('color272', 'rgb(12,12,12)'); //InfoBackground
+                    setColor('color273', 'rgb(97,214,214)');//iInfoText
                     setColor('color274', 'rgb(12,12,12)'); //LocalEchoBackground
                     setColor('color275', 'rgb(249,241,165)');//LocalEchoText
                     setColor('color276', 'rgb(12,12,12)');//DefaultBack
@@ -1214,14 +1334,16 @@
         // eslint-disable-next-line no-unused-vars
         function saveSettings() {
             _settings.chat.lines = $('#chat-lines').val().split(',');
-            _settings.save(ipcRenderer.sendSync('get-global', 'settingsFile'));
-            ipcRenderer.send('reload-options', false);
+            _settings.save(_settingsFile);
+            ipcRenderer.send('reload-options', _settingsFile, window.opener && typeof window.opener.getId === 'function' ? window.opener.getId() : 0);
+            if (window.opener && typeof window.opener.reloadOptions === 'function')
+                window.opener.reloadOptions(_settingsFile, _globalFile === _settingsFile);
             window.close();
         }
 
         // eslint-disable-next-line no-unused-vars
         function backup() {
-            var file = ipcRenderer.sendSync('show-dialog-sync', 'showSaveDialog', {
+            var file = dialog.showSaveDialogSync({
                 title: 'Save as...',
                 defaultPath: path.join(parseTemplate('{documents}'), 'jiMUD-data.zip'),
                 filters: [
@@ -1237,8 +1359,10 @@
             var data = parseTemplate('{data}');
             archive = new archiver.ZipFile();
 
-            if (isFileSync(path.join(data, 'characters.json')))
-                archive.addFile(path.join(data, 'characters.json'), 'characters.json');
+            if (isFileSync(path.join(data, 'characters.json.bak')))
+                archive.addFile(path.join(data, 'characters.json.bak'), 'characters.json.bak');
+            if (isFileSync(path.join(data, 'characters.sqlite')))
+                archive.addFile(path.join(data, 'characters.sqlite'), 'characters.sqlite');
             if (isFileSync(path.join(data, 'map.sqlite')))
                 archive.addFile(path.join(data, 'map.sqlite'), 'map.sqlite');
             if (isFileSync(path.join(data, 'mail.sqlite')))
@@ -1277,8 +1401,10 @@
         }
 
         function setProgressDialogValue(value) {
-            ipcRenderer.send('set-progress', { value: value });
-            ipcRenderer.send('set-progress-window', 'code-editor', { value: value });
+            if (window.opener)
+                window.opener.updateProgress(value);
+            else //global open so set to parent window
+                ipcRenderer.send('parent-window', 'setProgressBar', value);
             document.getElementById('progress-dialog-progressbar').value = value * 100;
         }
 
@@ -1334,19 +1460,9 @@
                             <input type="checkbox" id="showCharacterManager" /> Show character manager on load
                         </label>
                     </div>
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-6 form-group global">
                         <label class="control-label">
                             <input type="checkbox" id="spellchecking" /> Enable spellchecking
-                        </label>
-                    </div>
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">
-                            <input type="checkbox" id="editorPersistent" /> Persistent advanced editor
-                        </label>
-                    </div>
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">Theme
-                            <select id="theme" data-container="body" class="form-control selectpicker" data-width="150px"></select>
                         </label>
                     </div>
                     <div class="col-sm-12 form-group">
@@ -1387,7 +1503,7 @@
                             </div>
                         </label>
                     </div>
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-6 form-group global">
                         <label class="control-label">
                             <input type="checkbox" id="checkForUpdates" /> Check for updates on load
                         </label>
@@ -1395,6 +1511,59 @@
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="enableSound" /> Enable sound
+                        </label>
+                    </div>
+                    <fieldset class="col-sm-12 form-group" style="padding: 0;">
+                        <legend style="margin:0;padding-left:15px">Advanced editor</legend>
+                        <div class="col-sm-6 form-group">
+                            <label class="control-label">
+                                <input type="checkbox" id="editorPersistent" /> Persistent advanced editor
+                            </label>
+                        </div>
+                        <div class="col-sm-6 form-group">
+                            <label class="control-label">
+                                <input type="checkbox" id="editorClearOnSend" /> Clear advanced editor on send
+                            </label>
+                        </div>
+                        <div class="col-sm-6 form-group">
+                            <label class="control-label">
+                                <input type="checkbox" id="editorCloseOnSend" /> Close advanced editor on send
+                            </label>
+                        </div>
+                    </fieldset>                                                           
+                </div>
+                <div role="tabpanel" class="pref-pane global" id="interface">
+                    <div class="col-sm-6 form-group global">
+                        <label class="control-label">Theme
+                            <select id="theme" data-container="body" class="form-control selectpicker" data-width="150px"></select>
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group global">
+                        <label class="control-label">
+                            <input type="checkbox" id="alwaysShowTabs" /> Always show window tabs
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group global">
+                        <label class="control-label">
+                            <input type="checkbox" id="showTabsAddNewButton" /> Show add new button next to tabs
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group global">
+                        <label class="control-label">
+                            <input type="checkbox" id="lockLayout" /> Lock layout
+                        </label>
+                    </div>
+                    <div class="col-sm-12 form-group global">
+                        <label class="control-label" style="width:100%">
+                            Load layout on open
+                            <div class="input-group">
+                                <input type="text" id="loadLayout" style="width:100%" class="input-sm form-control" />
+                                <span class="input-group-btn">
+                                    <button class="btn btn-default btn-sm" type="button" id="btn-loadLayout">
+                                        &hellip;
+                                    </button>
+                                </span>
+                            </div>
                         </label>
                     </div>
                 </div>
@@ -1473,6 +1642,39 @@
                         <label class="control-label">
                             <input type="checkbox" id="display-showInvalidMXPTags" /> Show invalid MXP tags
                         </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="display-displayControlCodes" /> Display control codes
+                        </label>
+                    </div>   
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="display-emulateTerminal" /> Emulate terminal extended characters
+                        </label>
+                    </div>  
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="display-emulateControlCodes" /> Emulate control codes
+                        </label>
+                    </div>                   
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            Tab width
+                            <input type="number" id="display-tabWidth" class="input-sm form-control" min="0" max="200" />
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="display-showTimestamp" /> Show timestamp
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label" style="width: 100%;">
+                            Timestamp format
+                            <input type="text" id="display-timestampFormat" class="input-sm form-control" />
+                        </label>
+                        <span class="help-block" style="float: left;font-size: 0.8em;margin:0;padding:0">Supports all moment time formats</span>
                     </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="display-fonts">
@@ -1832,7 +2034,18 @@
                         </label>
                         <span class="help-block" style="float: left;font-size: 0.8em;margin:0;padding:0">Supports all moment time formats</span>
                     </div>
-
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="logTimestamp" /> Log timestamp
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label" style="width: 100%;">
+                            Log timestamp format
+                            <input type="text" id="logTimestampFormat" class="input-sm form-control" />
+                        </label>
+                        <span class="help-block" style="float: left;font-size: 0.8em;margin:0;padding:0">Supports all moment time formats</span>
+                    </div>
                     <div class="col-sm-12 form-group">
                         <label class="control-label" style="width:100%">
                             Save path
@@ -2074,7 +2287,7 @@
                             </label>
                         </div>
                     </div>
-                    <div class="form-group">
+                    <div class="col-sm-6 form-group">
                         <label class="control-label">
                             Buffer size
                             <input type="number" id="chat-bufferSize" class="input-sm form-control" min="100" max="1000000" />
@@ -2105,6 +2318,39 @@
                             <input type="checkbox" id="chat-showSplitButton" /> Show split button
                         </label>
                     </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="chat-displayControlCodes" /> Display control codes
+                        </label>
+                    </div>   
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="chat-emulateTerminal" /> Emulate terminal extended characters
+                        </label>
+                    </div>  
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="chat-emulateControlCodes" /> Emulate control codes
+                        </label>
+                    </div>                     
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            Tab width
+                            <input type="number" id="chat-tabWidth" class="input-sm form-control" min="0" max="200" />
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="chat-showTimestamp" /> Show timestamp
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label" style="width: 100%;">
+                            Timestamp format
+                            <input type="text" id="chat-timestampFormat" class="input-sm form-control" />
+                        </label>
+                        <span class="help-block" style="float: left;font-size: 0.8em;margin:0;padding:0">Supports all moment time formats</span>
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="chat-window">
                     <div class="col-sm-6 form-group">
@@ -2127,6 +2373,31 @@
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="chat-showInTaskBar" /> Show in taskbar
+                            <span class="win32 help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">Ignored when Always on top enabled in windows</span>
+                        </label>
+                    </div>
+                </div>
+                <div role="tabpanel" class="pref-pane" id="code-editor">
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="codeEditor-alwaysOnTopClient" /> Always on top of the main window
+                            <span class="win32 help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">Requires restart on windows</span>
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="codeEditor-alwaysOnTop" /> Always on top of all windows
+                        </label>
+                    </div>
+
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="codeEditor-persistent" /> Persistent
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="codeEditor-showInTaskBar" /> Show in taskbar
                             <span class="win32 help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">Ignored when Always on top enabled in windows</span>
                         </label>
                     </div>
@@ -2161,13 +2432,13 @@
                         <label class="control-label">
                             <input type="checkbox" id="notifyMSPPlay" /> Display Notification on MSP Play
                         </label>
-                    </div>                  
+                    </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             MSP: max retries on error
                             <input type="number" id="mspMaxRetriesOnError" class="input-sm form-control" min="0" max="100" />
                         </label>
-                    </div>                    
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="status">
                     <div class="col-sm-6 form-group">
@@ -2262,6 +2533,28 @@
                     </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="advanced">
+                    <div class="col-sm-6 form-group global">
+                        <label class="control-label">
+                            <input type="checkbox" id="useSingleInstance" /> Use only single instance
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group global">
+                        <label class="control-label">On second instance:</label>
+                        <div class="btn-group" data-toggle="buttons">
+                            <label class="btn btn-default btn-xs">
+                                <input type="radio" name="onSecondInstance" id="onSecondInstance-0"> Nothing
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="radio" name="onSecondInstance" id="onSecondInstance-1"> Show
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="radio" name="onSecondInstance" id="onSecondInstance-2"> New Connection
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="radio" name="onSecondInstance" id="onSecondInstance-4"> New Window
+                            </label>
+                        </div>
+                    </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="gamepads" /> Enable gamepads
@@ -2283,24 +2576,29 @@
                             <input type="checkbox" id="showErrorsExtended" /> Show extended error messages
                         </label>
                     </div>
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-6 form-group global">
                         <label class="control-label">
                             <input type="checkbox" id="fixHiddenWindows" /> Fix hidden windows
                         </label>
                     </div>
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-6 form-group global">
                         <label class="control-label">
                             <input type="checkbox" id="hideOnMinimize" /> Hide when minimized
                         </label>
                     </div>
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-6 form-group global">
                         <label class="control-label">
                             <input type="checkbox" id="showInTaskBar" /> Show in taskbar
                         </label>
                     </div>
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-6 form-group global">
                         <label class="control-label">
                             <input type="checkbox" id="enableBackgroundThrottling" /> Enable Background Throttling
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group global">
+                        <label class="control-label">
+                            <input type="checkbox" id="enableBackgroundThrottlingClients" /> Enable Background Throttling for Clients
                         </label>
                     </div>
                     <div class="col-sm-6 form-group">
@@ -2308,11 +2606,18 @@
                             <input type="checkbox" id="askonclose" /> Enable warning dialog when connected and closing client
                         </label>
                     </div>
+                    <div class="col-sm-6 form-group global">
+                        <label class="control-label">
+                            <input type="checkbox" id="askOnCloseAll" /> Enable warning dialog when any client is connected and closing window with more then 1 client
+                        </label>
+                    </div>
+                    <!--
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="askonchildren" /> Enable warning dialog when closing client and child windows are open
                         </label>
                     </div>
+                    -->
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="askonloadCharacter" /> Enable warning dialog when loading a character from manager
@@ -2450,14 +2755,29 @@
                         </label>
                     </div>
                 </div>
-                <div role="tabpanel" class="pref-pane" id="tray">
+                <div role="tabpanel" class="pref-pane global" id="tray">
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="showTrayIcon" /> Show tray icon
                         </label>
                     </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">Tray context menu style</label>
+                        <div class="btn-group" data-toggle="buttons">
+                            <label class="btn btn-default btn-xs">
+                                <input type="radio" name="trayMenu" id="trayMenu-simple"> Simple
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="radio" name="trayMenu" id="trayMenu-full"> Full
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="radio" name="trayMenu" id="trayMenu-compact"> Compact
+                            </label>
+                        </div>
+                        <span class="linux help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">When app indicator is used on Linux, the click event is ignored</span>
+                    </div>
                     <div class="col-sm-12 form-group" style="margin:0;padding:0">
-                        <div class="col-sm-6 form-group">
+                        <div class="col-sm-12 form-group">
                             <label class="control-label">Tray icon single click</label>
                             <div class="btn-group" data-toggle="buttons">
                                 <label class="btn btn-default btn-xs">
@@ -2473,6 +2793,15 @@
                                     <input type="radio" name="trayClick" id="trayClick-toggle"> Toggle
                                 </label>
                                 <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="trayClick" id="trayClick-showAll"> Show All
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="trayClick" id="trayClick-hideAll"> Hide All
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="trayClick" id="trayClick-toggleAll"> Toggle All
+                                </label>
+                                <label class="btn btn-default btn-xs">
                                     <input type="radio" name="trayClick" id="trayClick-menu"> Menu
                                 </label>
 
@@ -2480,7 +2809,7 @@
                             <span class="linux help-block" style="display:none;float: left;font-size: 0.8em;margin:0;padding:0">When app indicator is used on Linux, the click event is ignored</span>
                         </div>
 
-                        <div class="col-sm-6 form-group">
+                        <div class="col-sm-12 form-group">
                             <label class="control-label">Tray icon double click</label>
                             <div class="btn-group" data-toggle="buttons">
                                 <label class="btn btn-default btn-xs">
@@ -2494,6 +2823,15 @@
                                 </label>
                                 <label class="btn btn-default btn-xs">
                                     <input type="radio" name="trayDblClick" id="trayDblClick-toggle"> Toggle
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="trayDblClick" id="trayDblClick-showAll"> Show All
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="trayDblClick" id="trayDblClick-hideAll"> Hide All
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="trayDblClick" id="trayDblClick-toggleAll"> Toggle All
                                 </label>
                                 <label class="btn btn-default btn-xs">
                                     <input type="radio" name="trayDblClick" id="trayDblClick-menu"> Menu
@@ -2703,7 +3041,8 @@
     <div class="dialog-footer">
         <button style="float: left" type="button" class="btn btn-default" onclick="resetSettings()">Reset</button>
         <button style="float: left" type="button" class="btn btn-default" onclick="backup()">Backup</button>
-        <button style="float: left" type="button" class="btn btn-default" onclick="resetWindows()">Reset Windows</button>
+        <button style="float: left" type="button" class="btn btn-default" onclick="resetWindows()">Reset client windows</button>
+        <button style="float: left" type="button" class="btn btn-default" onclick="resetAllWindows()">Reset all windows</button>
         <button style="float: right" type="button" class="btn btn-default" onclick="window.close()">Cancel</button>
         <button style="float: right" type="button" class="btn btn-primary" onclick="saveSettings()">Ok</button>
     </div>

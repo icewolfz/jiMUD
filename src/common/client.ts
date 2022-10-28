@@ -65,6 +65,7 @@ export class Client extends EventEmitter {
     public telnet: Telnet;
     public profiles: ProfileCollection;
     public connectTime: number = 0;
+    public disconnectTime: number = 0;
     public lastSendTime: number = 0;
     public defaultTitle = 'jiMUD';
 
@@ -743,7 +744,7 @@ export class Client extends EventEmitter {
             if (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) {
                 const val = this._input.adjustLastLine(this.display.lines.length, true);
                 const line = this.display.lines[val];
-                a = this._input.TestTrigger(trigger, parent, a, line, this.display.rawLines[val] || line, val === this.display.lines.length - 1);
+                a = this._input.TestTrigger(trigger, parent, a, line, this.display.lines[val].raw || line, val === this.display.lines.length - 1);
                 continue;
             }
             //not an alarm either has sub alarms or was updated
@@ -909,7 +910,7 @@ export class Client extends EventEmitter {
         });
 
         if (typeof command === 'string')
-            this.commandInput = $(command);
+            this.commandInput = document.getElementById(command);
         else
             this.commandInput = command;
 
@@ -945,7 +946,7 @@ export class Client extends EventEmitter {
             this.emit('item-removed', type, profile, idx);
         });
 
-        this.commandInput.val('');
+        this.commandInput.value = '';
         this.commandInput.focus();
 
         this.telnet = new Telnet();
@@ -987,6 +988,7 @@ export class Client extends EventEmitter {
             this.connecting = false;
             this.echo('Connected...', AnsiColorCode.InfoText, AnsiColorCode.InfoBackground, true, true);
             this.connectTime = Date.now();
+            this.disconnectTime = 0;
             this.lastSendTime = Date.now();
             this.emit('connected');
             this.raise('connected');
@@ -1001,11 +1003,13 @@ export class Client extends EventEmitter {
         this.telnet.on('close', () => {
             this.connecting = false;
             this.echo('Connection closed to ' + this.host + ':' + this.port, AnsiColorCode.InfoText, AnsiColorCode.InfoBackground, true, true);
-            this.connectTime = 0;
-            this.lastSendTime = 0;
             this.MSP.reset();
+            this.disconnectTime = Date.now();
             this.emit('closed');
             this.raise('disconnected');
+            //clear after events in case events need the times
+            this.connectTime = 0;
+            this.lastSendTime = 0;
         });
         this.telnet.on('received-data', (data) => {
             data = { value: data };
@@ -1112,12 +1116,10 @@ export class Client extends EventEmitter {
             this.emit('parse-done');
         });
         this.display.on('set-title', (title, type) => {
-
             if (typeof title === 'undefined' || title == null || title.length === 0)
-                window.document.title = this.defaultTitle;
+                this.emit('set-title', this.defaultTitle);
             else if (type !== 1)
-                window.document.title = this.options.title.replace('$t', title);
-
+                this.emit('set-title', this.options.title.replace('$t', title))
         });
         this.display.on('music', (data) => {
             this.MSP.music(data);
@@ -1206,10 +1208,16 @@ export class Client extends EventEmitter {
         this.display.scrollLock = this.options.scrollLocked;
         this.display.enableSplit = this.options.display.split;
         this.display.hideTrailingEmptyLine = this.options.display.hideTrailingEmptyLine;
+        this.display.showTimestamp = this.options.display.showTimestamp;
+        this.display.timestampFormat = this.options.display.timestampFormat;
         this.display.splitLive = this.options.display.splitLive;
         this.display.splitHeight = this.options.display.splitHeight;
         this.display.roundedRanges = this.options.display.roundedOverlays;
         this.display.showSplitButton = this.options.display.showSplitButton;
+        this.display.tabWidth = this.options.display.tabWidth;
+        this.display.displayControlCodes = this.options.display.displayControlCodes;
+        this.display.emulateTerminal = this.options.display.emulateTerminal;
+        this.display.emulateControlCodes = this.options.display.emulateControlCodes;
         this.UpdateFonts();
         this.display.scrollDisplay();
         this.loadProfiles();
@@ -1250,8 +1258,8 @@ export class Client extends EventEmitter {
         //can only update if display has been setup
         if (!this.display) return;
         this.display.updateFont(this.options.font, this.options.fontSize);
-        this.commandInput.css('font-size', this.options.cmdfontSize);
-        this.commandInput.css('font-family', this.options.cmdfont + ', monospace');
+        this.commandInput.style.fontSize = this.options.cmdfontSize;
+        this.commandInput.style.fontFamily = this.options.cmdfont + ', monospace';
     }
 
     public parse(txt: string) {
@@ -1266,10 +1274,10 @@ export class Client extends EventEmitter {
         this.debug(err);
         let msg = '';
         if (err == null || typeof err === 'undefined')
-            msg = 'Unknown';
+            err = new Error('Unknown');
         else if (typeof err === 'string' && err.length === 0)
-            msg = 'Unknown';
-        else if (err.stack && this.options.showErrorsExtended)
+            err = new Error('Unknown');
+        if (err.stack && this.options.showErrorsExtended)
             msg = err.stack;
         else if (err instanceof Error || err instanceof TypeError)
             msg = err.name + ': ' + err.message;
@@ -1284,8 +1292,18 @@ export class Client extends EventEmitter {
             this.echo('Error: ' + msg, AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
 
         if (this.options.logErrors) {
-            if (!this.options.showErrorsExtended && err.stack)
+            if (!this.options.showErrorsExtended) {
+                if (err.stack)
+                    msg = err.stack;
+                else {
+                    err = new Error(err || msg);
+                    msg = err.stack;
+                }
+            }
+            else if (!err.stack) {
+                err = new Error(err || msg);
                 msg = err.stack;
+            }
             fs.writeFileSync(parseTemplate(path.join('{data}', 'jimud.error.log')), new Date().toLocaleString() + '\n', { flag: 'a' });
             fs.writeFileSync(parseTemplate(path.join('{data}', 'jimud.error.log')), msg + '\n', { flag: 'a' });
         }
@@ -1363,9 +1381,9 @@ export class Client extends EventEmitter {
 
     public sendCommand(txt?: string, noEcho?: boolean, comments?: boolean) {
         if (txt == null) {
-            txt = this.commandInput.val();
+            txt = this.commandInput.value;
             if (!this.telnet.echo)
-                this.commandInput.val('');
+                this.commandInput.value = '';
             else
                 this._input.AddCommandToHistory(txt);
         }
@@ -1382,14 +1400,14 @@ export class Client extends EventEmitter {
         if (this.options.keepLastCommand)
             this.commandInput.select();
         else
-            this.commandInput.val('');
+            this.commandInput.value = '';
     }
 
     public sendBackground(txt: string, noEcho?: boolean, comments?: boolean) {
         if (txt == null) {
-            txt = this.commandInput.val();
+            txt = this.commandInput.value;
             if (!this.telnet.echo)
-                this.commandInput.val('');
+                this.commandInput.value = '';
             else
                 this._input.AddCommandToHistory(txt);
         }

@@ -220,7 +220,7 @@ export class Finder extends EventEmitter {
         const ranges: OverlayRange[] = [];
         for (let l = lines.length - 1; l >= 0; l--) {
             items = [];
-            m = re.exec(lines[l]);
+            m = re.exec(lines[l].text);
             while (m !== null) {
                 id++;
                 // This is necessary to avoid infinite loops with zero-width matches
@@ -241,7 +241,7 @@ export class Finder extends EventEmitter {
                         }
                     );
                 }
-                m = re.exec(lines[l]);
+                m = re.exec(lines[l].text);
             }
             items.reverse();
             this._results.push.apply(this._results, items);

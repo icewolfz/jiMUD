@@ -9,9 +9,7 @@ Reset - Resetting will revert all settings back to default values
 - `Auto login` Attempt to auto login using character and supplied password from character manager
 - `Auto takeover login` Automatically issue yes to takeover character after login
 - `Show character manager onload` open the character manager when the client first loads.
-- `Enable spellchecking` support spellchecking in command line and advanced editor **Requires restart**
-- `Persistent advanced editor` causes the advanced editor to remain in memory to help speed up load times on future uses
-- `Theme` the theme for the main client window, the theme list is built from built in themes and themes located in {data}\themes folder and {documents}\jiMUD\themes, see [customizing](customizing.md#themes) doc for more themes information
+- `Enable spellchecking` support spellchecking in command line and advanced editor **Requires restart** <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
 - `On disconnect do` What to do when disconnected from the mud
   - `Nothing` do nothing
   - `Reconnect` reconnect using auto connect options
@@ -20,8 +18,20 @@ Reset - Resetting will revert all settings back to default values
   - `Close` close the client
 - `Auto connect delay` This determines the delay before an auto connect happens
 - `Max reconnect delay` set the maximum time in seconds, for reconnecting when using reconnect dialog, setting to 0 will revert to classic unlimited behavior.
-- `Check for updates on load` check for new version every time you load the client
+- `Check for updates on load` check for new version every time you load the client <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
 - `Enable sound` disable or enable sound globally
+
+- `Persistent advanced editor` causes the advanced editor to remain in memory to help speed up load times on future uses
+- `Clear advanced editor on send` clear the advanced editor after sending text to the mud
+- `Close advanced editor on send` close the advanced editor after sending text to the mud, **Note**If Persistent is enabled this will merely hide the editor until next use
+
+## Interface
+
+- `Theme` the theme for the main client window, the theme list is built from built in themes and themes located in {data}\themes folder and {documents}\jiMUD\themes, see [customizing](customizing.md#themes) doc for more themes information <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
+- `Always show window tabs` always show tabs even if only one client open <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
+- `Show add new button next to tabs` add a button to allow creation of new connections from tab strip <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
+- `Lock layout` saving only the last known global window states and preserve the previous saved windows and clients opened <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
+- `Load layout on open` set a layout file to use when loading client <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
 
 ## Display
 
@@ -39,6 +49,12 @@ Reset - Resetting will revert all settings back to default values
 - `Enable colors` disable or enable all colors
 - `Enable background colors` disable or enable just background colors
 - `Show invalid MXP tags` display any MXP tags as normal text if they are not standard or custom elements
+- `Display control codes` Display unreadable characters, code < 32 || 127 as visual characters
+- `Emulate terminal extended characters` Enable/disable Terminal IBM/OEM (code page 437) extended characters, will convert them to the correct unicode character in an attempt to display like classic terminal
+- `Emulate control codes` Emulate control codes: bell, tab, backspace, escape
+- `Tab width` How many spaces in a tab
+- `Show timestamp` display the timestamp for when line of text was added
+- `Timestamp format` the timestamp display format**Note** Supports all moment time formats
 
 ## Display > Fonts
 
@@ -74,6 +90,11 @@ Reset - Resetting will revert all settings back to default values
 - `Enable Logging of offline text` Log text when not connected.
 - `Create logs for every connection` This setting will force a new log every time you connect to the mud, if disabled it will attempt to create one large log for the current session.
 - `Log gagged lines` This forces the logger to include any lines that may have been hidden, for example when capture chat is enabled the lines are removed from the main flow, this setting will enable you keep them or keep the log as only whats on the display.
+- `Log what` what type formatted text to log
+  - `HTML` log text as formatted html into a LOGNAMEFORMAT.htm log file
+  - `Text` log text to LOGNAMEFORMAT.txt log file
+  - `Raw` log all text and raw control codes to LOGNAMEFORMAT.raw.txt log file
+- `Date/time format` format for date/time when included in log file name **Note** Supports all moment time formats, **WARNING** take note of your operating system's allowed characters or it may break logging
 - `Save path` The location to save log files to, **note** path must exist supports
 
 [Predefined variables for paths](faq.md#what-predefined-variables-can-be-use-for-paths)
@@ -81,7 +102,7 @@ Reset - Resetting will revert all settings back to default values
 ## Logging > Viewer
 
 - `Remember opened files on reload` Restore any files that where opened last time the viewer was closed
-- `Always on top of the main window` Force viewer window to always be above main client window, when ever client window is focused it will bring the viewer window along with it. _When disabled requires viewer to be closed to fully exits client_ **Requires restart on windows**
+- `Always on top of the main window` Force viewer window to always be above main client window, when ever client window is focused it will bring the viewer window along with it. **Requires restart on windows**
 - `Always on top of all windows` Force viewer window to always be on top of all windows
 - `Persistent` causes the viewer window to remain in memory to help speed up load times on future uses
 
@@ -115,7 +136,7 @@ Settings to control how to handle telnet options and emulation
 
 - `Open on load` Open the mapper when you load the client
 - `Persistent` causes the mapper window to remain in memory to help speed up load times on future uses, note this setting only has effect if mapper is not enabled
-- `Always on top of the main window` Force mapper window to always be above main client window, when ever client window is focused it will bring the mapper along with it. _When disabled requires mapper to be closed to fully exits client_ **Requires restart on windows**
+- `Always on top of the main window` Force mapper window to always be above main client window, when ever client window is focused it will bring the mapper along with it. **Requires restart on windows**
 - `Always on top of all windows` Force mapper to always be on top of all windows
 - `Show in taskbar` Always show mapper window in taskbar **Ignored when Always on top enabled in windows**
 
@@ -143,14 +164,27 @@ Controls what is captured into the chat window
 - `Split scroll` Enable split screen scroll, this will allow you to scroll while displaying the most recent lines at the bottom, has known issues with text selection and find system scroll to view
 - `Split scroll live update` determines how the split screen updates as resize bar is adjusted, if on it will update as resize bar is moved, if slow resizing disable this as it should reduce cpu load during drag
 - `Show split button` Show or hide split toggle button in split scroll to allow for quick toggling
+- `Display control codes` Display unreadable characters, code < 32 || 127 as visual characters
+- `Emulate terminal extended characters` Enable/disable Terminal IBM/OEM (code page 437) extended characters, will convert them to the correct unicode character in an attempt to display like classic terminal
+- `Emulate control codes` Emulate control codes: bell, tab, backspace, escape
 - `Buffer size` How many lines to keep in the display before removing them, **note** the higher this is the more memory or slower things might get.
+- `Tab width` How many spaces in a tab
+- `Show timestamp` display the timestamp for when line of text was added
+- `Timestamp format` the timestamp display format**Note** Supports all moment time formats
 
 ## Chat > Window
 
-- `Always on top of the main window` Force chat window to always be above main client window, when ever client window is focused it will bring the chat window along with it. _When disabled requires chat to be closed to fully exits client_ **Requires restart on windows**
+- `Always on top of the main window` Force chat window to always be above main client window, when ever client window is focused it will bring the chat window along with it. **Requires restart on windows**
 - `Always on top of all windows` Force chat window to always be on top of all windows
 - `Persistent` causes the chat window to remain in memory to help speed up load times on future uses, note this setting only has effect if capture settings are off
 - `Show in taskbar` Always show mapper window in taskbar **Ignored when Always on top enabled in windows**
+
+## Code Editor
+
+- `Persistent` causes the code editor window to remain in memory to help speed up load times on future uses
+- `Always on top of the main window` Force code editor window to always be above main client window, when ever client window is focused it will bring the code editor along with it. **Requires restart on windows**
+- `Always on top of all windows` Force code editor to always be on top of all windows
+- `Show in taskbar` Always show code editor window in taskbar **Ignored when Always on top enabled in windows**
 
 ## Status
 
@@ -208,16 +242,29 @@ Controls what is captured into the chat window
 
   ## Advanced
 
+- `Use only single instance` Allow only one instance of the application to open, all other attempts to open another instance will show the active window of the current instance, may use `-f` or `--force` argument to force open a new instance, -eo/--editor-only will open a new instance always <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
+  - Supported command arguments passed on:
+    - `-c/--character` When passed will open new connection for character in active window
+    - `-e/--editor` When passed will open code editor for active client
+    - `-nc/--new-connection` special argument that will open a new connection in active window
+    - `-nw/--new-window` special argument that will open a new window with a default connection
+- `On second instance` What to do when you open a second instance when use only one instance enabled and no command line arguments passed
+  - `Nothing` Do nothing
+  - `Show` Show and focus on active window
+  - `New Connection` Create a new connection in active window then show and focus on active window
+  - `New Window` Create a new window then focus on it
 - `Enable gamepads` Enable gamepad support to allow creating macros using gamepad axes or buttons. **Experimental**
 - `Enable GMCP Ping for lag meter` When text received from mud send back a GMCP ping if enabled to get a better time for the lag meter.
 - `Enable debug` Will display debug data to the dev tool console
 - `Log errors` Log errors to {data}/jimud.error.log [FAQ - Predefined path variables](faq.md#what-predefined-variables-can-be-use-for-paths)
 - `Show extended error messages` Display extended stack information for errors
-- `Fix hidden windows` Move windows that have been hidden off screen to on onscreen
-- `Hide when minimized` will hide the main window and any window set as a child **note** due to bugs in linux this feature may not work
-- `Show in taskbar` will show or hide the main window from the system's taskbar
-- `Enable Background Throttling` disable or enable throttling when a window is in the background or hidden
+- `Fix hidden windows` Move windows that have been hidden off screen to on onscreen <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
+- `Hide when minimized` will hide the main window and any window set as a child **note** due to bugs in linux this feature may not work <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
+- `Show in taskbar` will show or hide the main window from the system's taskbar <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
+- `Enable Background Throttling` disable or enable throttling when a window is in the background or hidden <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
+- `Enable Background Throttling for Clients` disable or enable throttling when a client is in the background or hidden <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
 - `Enable warning dialog when connected and closing client` disable or enable warning check when closing mud and connected
+- `Enable warning dialog when any client is connected and closing window with more then 1 client` disable or enable warning check when closing window with more then one client open <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
 - `Enable warning dialog when closing client and child windows are open` disable or enable warning dialog when closing and child windows are open
 - `Enable warning dialog when loading a character from manager` disable or enable warning dialog when loading a character
 - `Open 'Who is on' in web browser` Open the 'Who is on?' in a web browser, if disabled will open in a child window of jiMUD
@@ -267,13 +314,20 @@ Controls what is captured into the chat window
 - `Profile to select on load` select which profile to pick when profile manager is first opened, falls back to Default if profile not found
 - `Expand selected profile on load` auto expand selected profile when profile manager is first opened
 
-## Advanced > Tray
+## Advanced > Tray <span style="font-size: 0.5em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preferences*</span>
 
 - `Show tray icon` display an icon in the system tray/notification area
+- `Tray context menu style` determine how complex a menu to display
+  - `Simple` a simple menu that allows new connection/window, show/hide active window and quit
+  - `Full` a full menu with all window and client sub menus as needed, **note** this may cause a slow down as when enabled all incoming text from mud causes a menu rebuild to reflect current active state
+  - `Compact` similar to full but with out the client submenus, **note** see Full note
 - `Tray icon single click` set what happens when the tray icon is clicked  **note** see known issues with linux
   - `None` - do nothing when clicked
-  - `Show` - show or focus on client window
-  - `Hide` - hide or minimize client window based on `Hide when minimized` setting
-  - `Toggle` - Toggle between show / hide
+  - `Show` - show or focus on active window
+  - `Hide` - hide or minimize active window based on `Hide when minimized` setting
+  - `Toggle` - Toggle between show / hide for active
+  - `Show All` show all windows
+  - `Hide All` all windows all windows based on `Hide when minimized` setting
+  - `Toggle All` Toggle between show / hide for all windows
   - `Menu` - display the tray menu
 - `Tray icon double click` set what happens when the tray icon is double clicked, same values as single click. __Mac__, __Windows__

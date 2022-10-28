@@ -217,6 +217,9 @@ Display text to the screen, and the display text will not fire triggers
 <u>#AD</u>D name value
 >Add value to variable named name, if current value is non numeric an error will be displayed
 
+#ALL {commands}
+>Send commands to all client windows as if sent from command line
+
 <u>#CH</u>AT text
 >Send text to chat window and append a new line
 
@@ -225,6 +228,12 @@ Display text to the screen, and the display text will not fire triggers
 
 <u>#CHAR</u>ACTER
 >Send current character name to the mud, without echoing to the screen
+
+<u>#CLEARNA</u>ME *name or id*
+>Clear client current or named client's name
+
+<u>#CL</u>OSE *name or id*
+>Close current tab/window or named window
 
 #CR
 >Send a blank line to the mud
@@ -249,6 +258,10 @@ Display text to the screen, and the display text will not fire triggers
 
 <u>#MAT</u>H name value
 >Set value to variable named name
+
+<u>#NA</u>ME *name id*
+>Set the name for the current window or for the window id
+>If no arguments, displays current window name
 
 <u>#NO</u>OP *text*
 >Does nothing, but will expand arguments
@@ -277,14 +290,26 @@ Display text to the screen, and the display text will not fire triggers
 <u>#SHOWCL</u>IENT
 >Show client window
 
+#TAB *character or id*
+>Create a new client tab in current window
+
+#TO name or id {commands}
+>Send commands to named client or client id as if sent from command line
+
 <u>#TOGGLECL</u>IENT
 >Toggle show and hide of client window
 
 [<u>#WA</u>IT](commands/WAIT.md) amount
 > Pause current block for a number of milliseconds
 
-<u>#WIN</u>DOW name
->Open or show named window, supported names: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills, who
+<u>#WIN</u>DOW name *close*
+<u>#WIN</u>DOW name *character or id*
+>Open or show named window or create new window with name, supported names: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills, who
+>Pass close as 3rd argument will close the window if open and possible
+
+<u>#WIN</u>DOW new *character or id* *name*
+>Create a new client window using the optional character title or id
+>If character or id argument is 0 it will create just a new window with name
 
 [<u>#VE</u>RSION](commands/VERSION.md)
 >Display current jiMUD version information

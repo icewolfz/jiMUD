@@ -171,7 +171,7 @@
             $('#cv').text(process.versions.chrome);
             $('#logo-version').text('v' + version);
             resources = document.getElementById('resourcesRows');
-            if (ipcRenderer.sendSync('get-global', 'editorOnly'))
+            if (window.getGlobal('editorOnly'))
                 $('#logo-editor').css('display', 'block');
             updateMemory();
             setInterval(updateMemory, 1000);

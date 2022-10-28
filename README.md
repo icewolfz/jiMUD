@@ -54,17 +54,28 @@ Basic questions answered about jiMUD
 
 ## Command line arguments
 
-- `-h, --help`                                Print console help
-- `-d, --debug`                               Enable dev tools for all windows
-- `-s=[file], --settings=[file]`              Override default setting file
-- `-mf=[file], --map=[file]`                  Override default map file
-- `-c=[name], --character=[name]`             Allows you to load/create a character from character database
-- `-pf=[list], --profiles=[list]`             Set which profiles will be enabled, if not found will default
-- `-v, --version`                             Print current version
-- `-e, --editor, -e=[file], --editor=[file]`  Open code editor
-- `-eo, --eo, -eo=[file], --eo=[file]`        Open only the code editor
-- `-no-pd, -no-portable-dir`                  When using portable exe use default local data directory
-- `-data-dir=[file]`                          Set a custom directory to store saved data
+Usage: `jiMUD [arguments...]`
+
+- `-h, --help` Print console help
+- `-v, --version` Print current version
+- `-d, --debug` Enable dev tools for all windows
+- `-s=[file], --settings=[file]` Override default setting file
+- `-m=[file], --map=[file]` Override default map file
+- `-c=[name or id], --character=[name or id]` Load a character from character database, may be used multiple times to supply multiple characters to load
+- `-c=[id:#], --character=[id:#]` Load a character from character database by id only, may be used multiple times to supply multiple characters to load
+- `-e, --editor, -e=[file], --editor=[file]` Open code editor with current/new client, may be used multiple times to supply multiple files to load
+- `-eo, --eo, -eo=[file], --eo=[file]`  Open only the code editor, may be used multiple times to supply multiple files to load
+- `-no-pd, -no-portable-dir` When using portable exe use default local data directory
+- `-data-dir=[file]` Set a custom directory to store saved data
+- `-l=[file], -layout=[file]` Load window layout file
+- `-il, --ignore-layout` Ignore layout and do not save window states
+- `-nci, --no-character-import` Do not import old character.json
+- `-f, --force` Force load of instance even if single only instance enable
+- `-nls, --no-layout-save` Do not save any layout changes when application is closed
+- `-nw, --new-window` Open a new window
+- `-nw=[id], --new-window=[id]` Open a new window with and load a character
+- `-nt, --new-tab` Open a new tab
+- `-nt=[id], --new-tab=[id]` Open a new tab and load a character, similar to --character but will not replace current active tab if it exist
 
 ## References
 

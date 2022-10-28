@@ -1,32 +1,21 @@
 //spell-checker:words submenu, pasteandmatchstyle, statusvisible, taskbar, colorpicker, mailto, forecolor, tinymce, unmaximize
 //spell-checker:ignore prefs, partyhealth, combathealth, commandinput, limbsmenu, limbhealth, selectall, editoronly, limbarmor, maximizable, minimizable
 //spell-checker:ignore limbsarmor, lagmeter, buttonsvisible, connectbutton, charactersbutton, Editorbutton, zoomin, zoomout, unmaximize, resizable
-const { app, BrowserWindow, shell, screen } = require('electron');
-const { Tray, dialog, Menu, MenuItem } = require('electron');
-const ipcMain = require('electron').ipcMain;
+const { app, BrowserWindow, BrowserView, shell, screen, Tray, dialog, Menu, MenuItem, ipcMain, systemPreferences, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const url = require('url');
+const URL = require('url');
 const settings = require('./js/settings');
-const { EditorSettings } = require('./js/editor/code.editor.settings');
-const { TrayClick } = require('./js/types');
+const { TrayClick, TrayMenu, OnSecondInstance } = require('./js/types');
+const { Menubar } = require('./js/menubar');
+const { Characters } = require('./js/characters');
 
-require('@electron/remote/main').initialize()
-//require('electron-local-crash-reporter').start();
+const timers = [];
+
+require('@electron/remote/main').initialize();
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let win, winMap, winProfiles, winEditor, winChat, winCode, winProgress;
-let _winProgressTimer = 0;
-let set, mapperMax = false, editorMax = false, chatMax = false, codeMax = false;
-let edSet;
-let chatReady = 0, codeReady = 0, editorReady = 0, progressReady = 0, profilesReady = 0;
-let reload = null;
-let tray = null;
-let overlay = 0;
-let windows = {};
-let loadID;
-
 let argv;
 
 //check if previous command line arguments where stored load and use those instead
@@ -42,17 +31,14 @@ if (isFileSync(path.join(app.getPath('userData'), 'argv.json'))) {
         argv = process.argv;
     }
     //remove file as no longer needed
-    fs.unlink(path.join(app.getPath('userData'), 'argv.json'), err => {
-        if (err)
-            logError(err);
-    });
+    fs.unlink(path.join(app.getPath('userData'), 'argv.json'), logError);
 }
 else //not found use native
     argv = process.argv;
 
 argv = require('yargs-parser')(argv, {
-    string: ['data-dir', 's', 'setting', 'm', 'mf', 'map', 'c', 'character', 'pf', 'profiles'],
-    boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?'],
+    string: ['data-dir', 's', 'setting', 'm', 'map', 'c', 'character', 'l', 'layout'],
+    boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import', 'f', 'force', 'nls', 'no-layout-save', 'fci', 'force-character-import'],
     alias: {
         'd': ['debug'],
         'eo': ['editorOnly', 'editoronly'],
@@ -60,10 +46,17 @@ argv = require('yargs-parser')(argv, {
         'v': ['version'],
         'no-pd': ['no-portable-dir'],
         's': ['settings'],
-        'mf': ['map', 'm'],
+        'm': ['map'],
         'c': ['character', 'char'],
-        'pf': ['profiles'],
-        'e': ['editor']
+        'e': ['editor'],
+        'l': ['layout'],
+        'il': ['ignore-layout'],
+        'nci': ['no-character-import'],
+        'fci': ['force-character-import'],
+        'f': ['force'],
+        'nc': ['new-connection', 'nt', 'new-tab'],
+        'nw': ['new-window'],
+        'nls': ['no-layout-save']
     },
     configuration: {
         'short-option-groups': false
@@ -79,20 +72,31 @@ app.setAppUserModelId('jiMUD');
 
 if (!process.env.PORTABLE_EXECUTABLE_DIR) {
     if (argv._.indexOf('/?') !== -1 || argv.h) {
-        console.log('-h, --help                          Print console help');
-        console.log('-d, --debug                         Enable dev tools for all windows');
-        console.log('-s=[file], --setting=[file]         Override default setting file');
-        console.log('-mf=[file], --map=[file]            Override default map file');
-        console.log('-c=[name], --character=[name]       Allows you to load/create a character from character database');
-        console.log('-pf=[list], --profiles[]            Set which profiles will be enabled, if not found will default');
-        console.log('-v, --version                       Print current version');
-        console.log('-e, --e, -e=[file], --e=[file]      Open code editor');
-        console.log('-eo, --eo, -eo=[file], --eo=[file]  Open only the code editor');
-        console.log('-data-dir=[file]                    Set a custom directory to store saved data');
+        displayConsoleHelp();
         app.quit();
         return;
     }
     else if (argv.v) {
+        console.log(`jiMUD v${require('../package.json').version}`);
+        app.quit();
+        return;
+    }
+}
+else if (process.env.PORTABLE_EXECUTABLE_DIR) {
+    if (argv._.indexOf('/?') !== -1 || argv.h) {
+        dialog.showMessageBox({
+            type: 'info',
+            message: commandLineArgumentHelp()
+        });
+        displayConsoleHelp();
+        app.quit();
+        return;
+    }
+    else if (argv.v) {
+        dialog.showMessageBox({
+            type: 'info',
+            message: `jiMUD v${require('../package.json').version}`
+        });
         console.log(`jiMUD v${require('../package.json').version}`);
         app.quit();
         return;
@@ -103,733 +107,41 @@ Menu.setApplicationMenu(null);
 
 global.settingsFile = parseTemplate(path.join('{data}', 'settings.json'));
 global.mapFile = parseTemplate(path.join('{data}', 'map.sqlite'));
-global.profiles = null;
-global.character = null;
-global.characterLogin = null;
-global.characterPass = null;
-global.dev = false;
-global.disconnect = false;
-global.title = '';
 global.debug = false;
 global.editorOnly = false;
-global.connected = false;
 global.updating = false;
+let _settings = settings.Settings.load(global.settingsFile);
+let _checkingUpdates = false;
+let _layout = parseTemplate(path.join('{data}', 'window.layout'));
 
-let states = {
-    'main': { x: 0, y: 0, width: 800, height: 600 },
-    'mapper': { x: 0, y: 0, width: 800, height: 600 },
-    'profiles': { x: 0, y: 0, width: 800, height: 600 },
-    'editor': { x: 0, y: 0, width: 300, height: 225 },
-    'chat': { x: 0, y: 0, width: 300, height: 225 },
-};
+let clients = {}
+let windows = {};
+let states = {};
+let names = {};
+let focusedClient = 0;
+let focusedWindow = 0;
+let _clientID = 0;
+let _windowID = 0;
+const idMap = new Map();
+let _saved = false;
+let _loaded = false;
+let _characters;
+let tray = null;
+let _focused = false;
+let _reloading = false;
+const stateMap = new Map();
 
-process.on('uncaughtException', (err) => {
-    logError(err);
+process.on('uncaughtException', logError);
+process.on('unhandledRejection', (reason, promise) => {
+    logError(reason);
+    if (global.debug || _settings.enableDebug)
+        console.error(promise);
 });
 
-var characters;
-
-function loadCharacter(char) {
-    if (!char || char.length === 0) {
-        global.settingsFile = parseTemplate(path.join('{data}', 'settings.json'));
-        global.mapFile = parseTemplate(path.join('{data}', 'map.sqlite'));
-        global.profiles = null;
-        global.character = null;
-        global.characterLogin = null;
-        global.characterPass = null;
-        global.dev = false;
-        global.disconnect = false;
-        global.title = '';
-        global.debug = false;
-        global.editorOnly = false;
-        return;
-    }
-    if (!characters)
-        characters = { load: 0, characters: {} };
-    if (!characters.characters[char]) {
-        characters.characters[char] = { settings: path.join('{characters}', char + '.json'), map: path.join('{characters}', char + '.map') };
-        var d = settings.Settings.load(parseTemplate(path.join('{data}', 'settings.json')));
-        d.save(parseTemplate(characters.characters[char].settings));
-        fs.writeFileSync(path.join(app.getPath('userData'), 'characters.json'), JSON.stringify(characters));
-        if (isFileSync(parseTemplate(path.join('{data}', 'map.sqlite')))) {
-            copyFile(parseTemplate(path.join('{data}', 'map.sqlite')), parseTemplate(characters.characters[char].map));
-        }
-    }
-    global.character = char;
-    global.settingsFile = parseTemplate(characters.characters[char].settings);
-    global.mapFile = parseTemplate(characters.characters[char].map);
-    global.characterLogin = characters.characters[char].name || (char || '').replace(/[^a-zA-Z0-9]+/g, '');
-    global.dev = characters.characters[char].dev;
-    global.disconnect = characters.characters[char].disconnect || false;
-    global.characterPass = characters.characters[char].password || '';
-    global.title = char;
-    updateTray();
-}
-
-var menuTemp = [
-    //File
-    {
-        label: '&File',
-        id: 'file',
-        submenu: [
-            {
-                label: '&Connect',
-                id: 'connect',
-                accelerator: 'CmdOrCtrl+N',
-                click: () => {
-                    executeScript('client.connect()', win, true);
-                }
-            },
-            {
-                label: '&Disconnect',
-                id: 'disconnect',
-                accelerator: 'CmdOrCtrl+D',
-                enabled: false,
-                click: () => {
-                    executeScript('client.close()', win, true);
-                }
-            },
-            {
-                type: 'separator'
-            },
-            {
-                label: '&Enable parsing',
-                id: 'enableParsing',
-                type: 'checkbox',
-                checked: true,
-                click: () => {
-                    executeScript('toggleParsing()', win, true);
-                }
-            },
-            {
-                label: 'E&nable triggers',
-                id: 'enableTriggers',
-                type: 'checkbox',
-                checked: true,
-                click: () => {
-                    executeScript('toggleTriggers()', win, true);
-                }
-            },
-            {
-                type: 'separator'
-            },
-            {
-                label: 'Ch&aracters...',
-                id: 'characters',
-                accelerator: 'CmdOrCtrl+H',
-                click: () => {
-                    executeScript('showCharacters()', win, true);
-                }
-            },
-            { type: 'separator' },
-            {
-                label: '&Log',
-                id: 'log',
-                type: 'checkbox',
-                checked: false,
-                click: () => {
-                    executeScript('toggleLogging()', win, true);
-                }
-            },
-            {
-                label: '&View logs...',
-                click: () => {
-                    executeScript('showLogViewer()', win, true);
-                }
-            },
-            {
-                type: 'separator'
-            },
-            {
-                label: '&Preferences...',
-                id: 'preferences',
-                accelerator: 'CmdOrCtrl+Comma',
-                click: showPrefs
-            },
-            {
-                type: 'separator'
-            },
-            {
-                label: 'E&xit',
-                role: 'quit'
-            }
-        ]
-    },
-    //Edit
-    {
-        label: '&Edit',
-        id: 'edit',
-        submenu: [
-            {
-                role: 'undo'
-            },
-            {
-                role: 'redo'
-            },
-            {
-                type: 'separator'
-            },
-            {
-                role: 'cut'
-            },
-            {
-                role: 'copy'
-            },
-            {
-                label: 'Copy as HTML',
-                accelerator: 'CmdOrCtrl+Alt+C',
-                id: 'copyHTML',
-                enabled: false,
-                click: () => {
-                    executeScript('copyAsHTML();', win, true);
-                }
-            },
-            {
-                label: 'Paste',
-                accelerator: 'CmdOrCtrl+V',
-                click: () => {
-                    executeScript('$(\'#commandinput\').data(\'selStart\', client.commandInput[0].selectionStart);$(\'#commandinput\').data(\'selEnd\', client.commandInput[0].selectionEnd);paste()', win, true);
-                }
-            },
-            {
-                label: 'Paste special',
-                accelerator: 'CmdOrCtrl+Shift+V',
-                click: () => {
-                    executeScript('$(\'#commandinput\').data(\'selStart\', client.commandInput[0].selectionStart);$(\'#commandinput\').data(\'selEnd\', client.commandInput[0].selectionEnd);pasteSpecial()', win, true);
-                }
-            },
-            /*
-            {
-              role: 'pasteAndMatchStyle'
-            },
-            */
-            {
-                role: 'delete'
-            },
-            {
-                label: 'Select All',
-                accelerator: 'CmdOrCtrl+A',
-                click: () => {
-                    executeScript('selectAll()', win, true);
-                }
-            },
-            {
-                type: 'separator'
-            },
-            {
-                label: 'Clear',
-                click: () => {
-                    executeScript('client.clear()', win, true);
-                }
-            },
-            { type: 'separator' },
-            {
-                label: 'Find',
-                accelerator: 'CmdOrCtrl+F',
-                click: () => {
-                    win.webContents.focus();
-                    executeScript('client.display.showFind()', win, true);
-                }
-            },
-        ]
-    },
-    //Profiles
-    {
-        label: '&Profiles',
-        id: 'profiles',
-        submenu: []
-    },
-    //View
-    {
-        label: '&View',
-        id: 'view',
-        submenu: [
-            {
-                label: '&Lock',
-                id: 'lock',
-                type: 'checkbox',
-                checked: false,
-                click: () => {
-                    executeScript('client.toggleScrollLock()', win, true);
-                }
-            },
-            {
-                label: '&Who is on?...',
-                click: () => {
-                    executeScript('showWho()', win, true);
-                    win.webContents.focus();
-                }
-            },
-            {
-                type: 'separator'
-            },
-            {
-                label: '&Status',
-                id: 'status',
-                submenu: [
-                    {
-                        label: '&Visible',
-                        id: 'statusvisible',
-                        type: 'checkbox',
-                        checked: true,
-                        click: () => {
-                            executeScript('toggleView("status")', win, true);
-                        }
-                    },
-                    {
-                        label: '&Refresh',
-                        id: 'refresh',
-                        click: () => {
-                            executeScript('client.sendGMCP(\'Core.Hello { "client": "\' + client.telnet.terminal + \'", "version": "\' + client.telnet.version + \'" }\');', win, true);
-                        }
-                    },
-                    { type: 'separator' },
-                    {
-                        label: '&Weather',
-                        id: 'weather',
-                        type: 'checkbox',
-                        checked: true,
-                        click: () => {
-                            executeScript('toggleView("weather")', win, true);
-                        }
-                    },
-                    {
-                        label: '&Limbs',
-                        id: 'limbsmenu',
-                        submenu: [
-                            {
-                                label: '&Visible',
-                                id: 'limbs',
-                                type: 'checkbox',
-                                checked: true,
-                                click: () => {
-                                    executeScript('toggleView("limbs")', win, true);
-                                }
-                            },
-                            { type: 'separator' },
-                            {
-                                label: '&Health',
-                                id: 'limbhealth',
-                                type: 'checkbox',
-                                checked: true,
-                                click: () => {
-                                    executeScript('toggleView("limbhealth")', win, true);
-                                }
-                            },
-                            {
-                                label: '&Armor',
-                                id: 'limbarmor',
-                                type: 'checkbox',
-                                checked: true,
-                                click: () => {
-                                    executeScript('toggleView("limbarmor")', win, true);
-                                }
-                            },
-                        ]
-                    },
-                    {
-                        label: '&Health',
-                        id: 'health',
-                        type: 'checkbox',
-                        checked: true,
-                        click: () => {
-                            executeScript('toggleView("health")', win, true);
-                        }
-                    },
-                    {
-                        label: '&Experience',
-                        id: 'experience',
-                        type: 'checkbox',
-                        checked: true,
-                        click: () => {
-                            executeScript('toggleView("experience")', win, true);
-                        }
-                    },
-                    {
-                        label: '&Party Health',
-                        id: 'partyhealth',
-                        type: 'checkbox',
-                        checked: true,
-                        click: () => {
-                            executeScript('toggleView("partyhealth")', win, true);
-                        }
-                    },
-                    {
-                        label: '&Combat Health',
-                        id: 'combathealth',
-                        type: 'checkbox',
-                        checked: true,
-                        click: () => {
-                            executeScript('toggleView("combathealth")', win, true);
-                        }
-                    },
-                    {
-                        label: '&Lag meter',
-                        id: 'lagmeter',
-                        type: 'checkbox',
-                        checked: true,
-                        click: () => {
-                            executeScript('toggleView("lagmeter")', win, true);
-                        }
-                    }
-                ]
-            },
-            {
-                label: '&Buttons',
-                id: 'buttons',
-                /*
-                type: 'checkbox',
-                checked: true,
-                click: () => {
-                  executeScript('toggleView("buttons")', win, true);
-                },
-                */
-                submenu: [
-                    {
-                        label: '&Visible',
-                        id: 'buttonsvisible',
-                        type: 'checkbox',
-                        checked: true,
-                        click: () => {
-                            executeScript('toggleView("buttons")', win, true);
-                        }
-                    },
-                    { type: 'separator' },
-                    {
-                        label: '&Connect',
-                        id: 'connectbutton',
-                        type: 'checkbox',
-                        checked: true,
-                        click: () => {
-                            executeScript('toggleView("button.connect")', win, true);
-                        }
-                    },
-                    {
-                        label: '&Characters',
-                        id: 'charactersbutton',
-                        type: 'checkbox',
-                        checked: true,
-                        click: () => {
-                            executeScript('toggleView("button.characters")', win, true);
-                        }
-                    },
-                    {
-                        label: 'Code &editor',
-                        id: 'codeEditorbutton',
-                        type: 'checkbox',
-                        click: showCodeEditor
-                    },
-                    {
-                        label: '&Preferences',
-                        id: 'preferencesbutton',
-                        type: 'checkbox',
-                        checked: true,
-                        click: () => {
-                            executeScript('toggleView("button.preferences")', win, true);
-                        }
-                    },
-                    {
-                        label: '&Log',
-                        id: 'logbutton',
-                        type: 'checkbox',
-                        checked: true,
-                        click: () => {
-                            executeScript('toggleView("button.log")', win, true);
-                        }
-                    },
-                    {
-                        label: '&Clear',
-                        id: 'clearbutton',
-                        type: 'checkbox',
-                        checked: true,
-                        click: () => {
-                            executeScript('toggleView("button.clear")', win, true);
-                        }
-                    },
-                    {
-                        label: '&Lock',
-                        id: 'lockbutton',
-                        type: 'checkbox',
-                        checked: true,
-                        click: () => {
-                            executeScript('toggleView("button.lock")', win, true);
-                        }
-                    },
-                    {
-                        label: '&Map',
-                        id: 'mapbutton',
-                        type: 'checkbox',
-                        checked: true,
-                        click: () => {
-                            executeScript('toggleView("button.map")', win, true);
-                        }
-                    },
-                    /*
-                    {
-                      label: 'M&ail',
-                      id: "mailbutton",
-                      type: 'checkbox',
-                      checked: true,
-                      click: () => {
-                        executeScript('toggleView("button.mail")', win, true);
-                      }
-                    },
-                    {
-                      label: '&Compose mail',
-                      id: "composebutton",
-                      type: 'checkbox',
-                      checked: true,
-                      click: () => {
-                        executeScript('toggleView("button.compose")', win, true);
-                      }
-                    },
-                    */
-                    {
-                        label: '&User buttons',
-                        id: 'userbutton',
-                        type: 'checkbox',
-                        checked: true,
-                        click: () => {
-                            executeScript('toggleView("button.user")', win, true);
-                        }
-                    },
-                ]
-            },
-            {
-                type: 'separator'
-            },
-            {
-                label: '&Toggle Developer Tools',
-                click: () => {
-                    if (win.webContents.isDevToolsOpened())
-                        win.webContents.closeDevTools();
-                    else
-                        win.webContents.openDevTools();
-                    win.webContents.focus();
-                }
-            },
-            {
-                type: 'separator'
-            },
-            {
-                role: 'resetZoom'
-            },
-            {
-                role: 'zoomIn'
-            },
-            {
-                role: 'zoomOut'
-            },
-            {
-                type: 'separator'
-            },
-            {
-                role: 'togglefullscreen'
-            }
-        ]
-    },
-    //Window
-    {
-        role: 'window',
-        id: 'window',
-        submenu: [
-            {
-                label: '&Advanced editor...',
-                id: 'editor',
-                click: showEditor,
-                accelerator: 'CmdOrCtrl+E'
-            },
-            {
-                label: '&Chat...',
-                id: 'chat',
-                click: showChat,
-                accelerator: 'CmdOrCtrl+L'
-            },
-            {
-                label: '&Immortal tools...',
-                id: 'immortal',
-                click: () => {
-                    executeScript('showImmortalTools()', win, true);
-                },
-                visible: false,
-                accelerator: 'CmdOrCtrl+I'
-            },
-            {
-                label: '&Code editor...',
-                id: 'codeeditor',
-                click: showCodeEditor
-            },
-            {
-                label: '&Map...',
-                click: showMapper,
-                accelerator: 'CmdOrCtrl+T'
-            },
-            {
-                label: '&Skills...',
-                id: 'skills',
-                click: () => {
-                    executeScript('showSkills()', win, true);
-                },
-                accelerator: 'CmdOrCtrl+S'
-            },
-            {
-                label: '&Command history...',
-                id: 'history',
-                click: () => {
-                    executeScript('showCommandHistory()', win, true);
-                },
-                accelerator: 'CmdOrCtrl+Shift+H'
-            },
-            /*
-            {
-              label: '&Mail...',
-              click: () => {
-                executeScript('showMail()', win, true);
-              },
-              visible: true,
-              //accelerator: 'CmdOrCtrl+M'
-            },
-            {
-              label: '&Compose mail...',
-              click: () => {
-                executeScript('showComposer()', win, true);
-              },
-              visible: true,
-              //accelerator: 'CmdOrCtrl+M'
-            },
-            */
-            { type: 'separator' }
-        ]
-    },
-    //Help
-    {
-        label: '&Help',
-        role: 'help',
-        id: 'help',
-        submenu: [
-            {
-                label: '&ShadowMUD...',
-                click: () => {
-                    executeScript('showSMHelp()', win, true);
-                }
-            },
-            {
-                label: '&jiMUD...',
-                click: () => {
-                    executeScript('showHelp()', win, true);
-                }
-            },
-            {
-                label: '&jiMUD website...',
-                click: () => {
-                    shell.openExternal('https://github.com/icewolfz/jiMUD/tree/master/docs', '_blank');
-                    win.webContents.focus();
-                }
-            },
-            { type: 'separator' },
-            {
-                label: 'Check for updates...',
-                id: 'updater',
-                click: checkForUpdatesManual
-            },
-            { type: 'separator' },
-            {
-                label: '&About...',
-                click: showAbout
-            }
-        ]
-    }
-];
-
-if (process.platform === 'darwin') {
-    menuTemp.unshift({
-        label: app.getName(),
-        submenu: [
-            {
-                role: 'about'
-            },
-            {
-                type: 'separator'
-            },
-            {
-                role: 'services',
-                submenu: []
-            },
-            {
-                type: 'separator'
-            },
-            {
-                role: 'hide'
-            },
-            {
-                role: 'hideothers'
-            },
-            {
-                role: 'unhide'
-            },
-            {
-                type: 'separator'
-            },
-            {
-                role: 'quit'
-            }
-        ]
-    });
-    menuTemp.push()
-    // Edit menu.
-    menuTemp[2].submenu.push(
-        {
-            type: 'separator'
-        },
-        {
-            label: 'Speech',
-            submenu: [
-                {
-                    role: 'startspeaking'
-                },
-                {
-                    role: 'stopspeaking'
-                }
-            ]
-        }
-    );
-    // Window menu.
-    menuTemp[5].submenu.push(
-        {
-            label: 'Close',
-            accelerator: 'CmdOrCtrl+W',
-            role: 'close'
-        },
-        {
-            label: 'Minimize',
-            accelerator: 'CmdOrCtrl+M',
-            role: 'minimize'
-        },
-        {
-            label: 'Zoom',
-            role: 'zoom'
-        },
-        {
-            type: 'separator'
-        },
-        {
-            label: 'Bring All to Front',
-            role: 'front'
-        }
-    );
-}
-else {
-    menuTemp[4].submenu.push(
-        {
-            role: 'minimize'
-        },
-        {
-            role: 'close'
-        }
-    )
-}
-
-let menubar;
+process.on('warning', warning => {
+    if (global.debug || _settings.enableDebug)
+        console.warn(warning);
+});
 
 function addInputContext(window, spellcheck) {
     window.webContents.on('context-menu', (e, props) => {
@@ -845,14 +157,14 @@ function addInputContext(window, spellcheck) {
                 { type: 'separator' },
                 { role: 'selectAll' },
             ]);
-            if (global.debug) {
+            if (global.debug || _settings.enableDebug) {
                 inputMenu.append(new MenuItem({ type: 'separator' }));
                 inputMenu.append(new MenuItem({
                     label: 'Inspect',
                     x: props.x,
                     y: props.y,
-                    click: (item) => {
-                        window.webContents.inspectElement(item.x, item.y);
+                    click: (item, mWindow) => {
+                        mWindow.webContents.inspectElement(item.x, item.y);
                     }
                 }));
             }
@@ -861,24 +173,8 @@ function addInputContext(window, spellcheck) {
                 for (var w = props.dictionarySuggestions.length - 1; w >= 0; w--) {
                     inputMenu.insert(0, new MenuItem({
                         label: props.dictionarySuggestions[w],
-                        x: props.x,
-                        y: props.y,
-                        sel: props.selectionText.length - props.misspelledWord.length,
-                        idx: props.selectionText.indexOf(props.misspelledWord),
-                        word: props.misspelledWord,
-                        click: (item) => {
-                            executeScript(`(function spellTemp() {
-                                var el = $(document.elementFromPoint(${item.x}, ${item.y}));
-                                var value = el.val();
-                                var start = el[0].selectionStart;
-                                var wStart = start + ${item.idx};
-                                value = value.substring(0, wStart) + '${item.label}' + value.substring(wStart + ${item.word.length});
-                                el.val(value);
-                                el[0].selectionStart = start;
-                                el[0].selectionEnd = start + ${item.label.length + item.sel};
-                                ${((window !== winCode) ? 'el.blur();\n' : '')}
-                                el.focus();
-                            })();`, window, true);
+                        click: (item, mWindow) => {
+                            mWindow.webContents.replaceMisspelling(item.label);
                         }
                     }));
                 }
@@ -894,701 +190,941 @@ function addInputContext(window, spellcheck) {
     });
 }
 
-function createMenu() {
-    var profiles;
-    for (var m = 0; m < menuTemp.length; m++) {
-        if (menuTemp[m].id === 'profiles') {
-            profiles = menuTemp[m];
-            break;
-        }
-    }
-    profiles.submenu = [];
-    profiles.submenu.push(
-        {
-            label: 'Default',
-            type: 'checkbox',
-            checked: false,
-            id: 'default',
-            click: () => {
-                executeScript('client.toggleProfile("default")', win, true);
-            }
-        });
-
-    var p = path.join(app.getPath('userData'), 'profiles');
-    if (isDirSync(p)) {
-        var files = fs.readdirSync(p);
-        for (var i = 0; i < files.length; i++) {
-            if (path.extname(files[i]) === '.json') {
-                if (files[i].toLowerCase() === 'default.json')
-                    continue;
-                profiles.submenu.push(
-                    {
-                        label: path.basename(files[i], '.json'),
-                        type: 'checkbox',
-                        checked: false,
-                        id: path.basename(files[i], '.json').toLowerCase(),
-                        click: profileToggle
-                    });
-            }
-        }
-    }
-    profiles.submenu.push(
-        {
-            type: 'separator'
-        });
-    profiles.submenu.push(
-        {
-            label: '&Manage...',
-            click: showProfiles,
-            accelerator: 'CmdOrCtrl+P'
-
-        });
-    menubar = Menu.buildFromTemplate(menuTemp);
-    win.setMenu(menubar);
-    Menu.setApplicationMenu(menubar);
-    win.webContents.send('menu-reload');
+function commandLineArgumentHelp() {
+    let msg = 'Usage: jiMUD [arguments...]\n\n';
+    msg += '-h, --help - Print console help\n';
+    msg += '-v, --version - Print current version\n';
+    msg += '-d, --debug - Enable dev tools for all windows\n';
+    msg += '-s=[file], --setting=[file] - Override default setting file\n';
+    msg += '-m=[file], --map=[file] - Override default map file\n';
+    msg += '-c=[name or id], --character=[name or id] - Load a character from character database, may be used multiple times to supply multiple characters to load\n';
+    msg += '-c=[id:#], --character=[id:#] - Load a character from character database by id only, may be used multiple times to supply multiple characters to load\n';
+    msg += '-e, --e, -e=[file], --e=[file] - Open code editor with current/new client\n';
+    msg += '-eo, --eo, -eo=[file], --eo=[file] - Open only the code editor\n';
+    msg += '-no-pd, -no-portable-dir - Do not use portable dir\n';
+    msg += '-data-dir=[file] - Set a custom directory to store saved data\n';
+    msg += '-l=[file], --layout=[file] - Load window layout file\n';
+    msg += '-il, --ignore-layout - Ignore layout and do not save window states\n';
+    msg += '-nci, --no-character-import - Do not import old characters.json\n';
+    msg += '-fci, --force-character-import - Force import old characters.json\n';
+    msg += '-f, --force - Force load of instance even if single only instance enabled\n';
+    msg += '-nls, --no-layout-save - Do not save any layout changes when application is closed\n';
+    msg += '-nw, --new-window - Open a new window\n';
+    msg += '-nw=[id], --new-window=[id] - Open a new window with and load a character\n';
+    msg += '-nt, --new-tab - Open a new tab\n';
+    msg += '-nt=[id], --new-tab=[id] - Open a new tab and load a character, similar to --character but will not replace current active connection if it exist';
+    return msg;
 }
 
-function profileToggle(menuItem) {
-    if (!win || !win.webContents) return;
-    executeScript('client.toggleProfile("' + menuItem.label.toLowerCase() + '")', win, true);
+function displayConsoleHelp() {
+    console.log('Usage: jiMUD [arguments...]');
+    console.log('');
+    console.log('-h, --help                                Print console help');
+    console.log('-v, --version                             Print current version');
+    console.log('-d, --debug                               Enable dev tools for all windows');
+    console.log('-s=[file], --setting=[file]               Override default setting file');
+    console.log('-m=[file], --map=[file]                   Override default map file');
+    console.log('-c=[name or id], --character=[name or id] Load a character from character database, may be used multiple times to supply multiple characters to load');
+    console.log('-c=[id:#], --character=[id:#]             Load a character from character database by id only, may be used multiple times to supply multiple characters to load');
+    console.log('-e, --e, -e=[file], --e=[file]            Open code editor with current/new client');
+    console.log('-eo, --eo, -eo=[file], --eo=[file]        Open only the code editor');
+    console.log('-no-pd, -no-portable-dir                  Do not use portable dir');
+    console.log('-data-dir=[file]                          Set a custom directory to store saved data');
+    console.log('-l=[file], --layout=[file]                Load window layout file');
+    console.log('-il, --ignore-layout                      Ignore layout and do not save window states');
+    console.log('-nci, --no-character-import               Do not import old characters.json');
+    console.log('-fci, --force-character-import            Force import old characters.json');
+    console.log('-f, --force                               Force load of instance even if single only instance enabled');
+    console.log('-nls, --no-layout-save                    Do not save any layout changes when application is closed');
+    console.log('-nw, --new-window                         Open a new window');
+    console.log('-nw=[id], --new-window=[id]               Open a new window with and load a character');
+    console.log('-nt, --new-tab                            Open a new tab')
+    console.log('-nt=[id], --new-tab=[id]                  Open a new tab and load a character, similar to --character but will not replace current active connection if it exist');
 }
 
-function createTray() {
-    if (!set)
-        set = settings.Settings.load(global.settingsFile);
-    if (!set.showTrayIcon)
-        return;
-    tray = new Tray(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
-    const contextMenu = Menu.buildFromTemplate([
-        {
-            label: '&Show window...', click: () => {
-                showSelectedWindow();
-            }
-        },
-        {
-            label: 'H&ide window...', click: () => {
-                if (set.hideOnMinimize)
-                    win.hide();
-                else
-                    win.minimize();
-            }
-        },
-        { type: 'separator' },
-        {
-            label: 'Ch&aracters...',
-            id: 'characters',
-            click: () => {
-                restoreWindowState(win, getWindowState('main') || getWindowState('main', win), true, true);
-                executeScript('showCharacters()', win, true);
-            }
-        },
-        {
-            label: '&Manage profiles...',
-            click: showProfiles,
-        },
-        {
-            label: '&Code editor...',
-            click: showCodeEditor,
-        },
-        { type: 'separator' },
-        {
-            label: '&Preferences...',
-            click: showPrefs
-        },
-        { type: 'separator' },
-        {
-            label: '&Who is on?...',
-            click: () => {
-                executeScript('showWho()', win, true);
-            }
-        },
-        { type: 'separator' },
-        {
-            label: '&Help',
-            role: 'help',
-            submenu: [
-                {
-                    label: '&ShadowMUD...',
-                    click: () => {
-                        executeScript('showSMHelp()', win, true);
-                    }
-                },
-                {
-                    label: '&jiMUD...',
-                    click: () => {
-                        executeScript('showHelp()', win, true);
-                    }
-                },
-                {
-                    label: '&jiMUD website...',
-                    click: () => {
-                        shell.openExternal('https://github.com/icewolfz/jiMUD/tree/master/docs', '_blank');
-                    }
-                },
-                { type: 'separator' },
-                {
-                    label: '&About...',
-                    click: () => {
-                        showAbout();
-                    }
-                }
-            ]
-        },
-        { type: 'separator' },
-        { label: 'E&xit', role: 'quit' }
-    ]);
-    updateTray();
-    tray.setContextMenu(contextMenu);
-
-    tray.on('click', () => {
-        switch (set.trayClick) {
-            case TrayClick.show:
-                showSelectedWindow();
-                break;
-            case TrayClick.toggle:
-                if (win.isVisible()) {
-                    if (set.hideOnMinimize)
-                        win.hide();
-                    else
-                        win.minimize();
-                }
-                else
-                    restoreWindowState(win, getWindowState('main') || getWindowState('main', win), true, true);
-                break;
-            case TrayClick.hide:
-                if (set.hideOnMinimize)
-                    win.hide();
-                else
-                    win.minimize();
-                break;
-            case TrayClick.menu:
-                tray.popUpContextMenu();
-                break;
-        }
-    });
-
-    tray.on('double-click', () => {
-        switch (set.trayClick) {
-            case TrayClick.show:
-                showSelectedWindow();
-                break;
-            case TrayClick.toggle:
-                if (win.isVisible()) {
-                    if (set.hideOnMinimize)
-                        win.hide();
-                    else
-                        win.minimize();
-                }
-                else
-                    restoreWindowState(win, getWindowState('main') || getWindowState('main', win), true, true);
-                break;
-            case TrayClick.hide:
-                if (set.hideOnMinimize)
-                    win.hide();
-                else
-                    win.minimize();
-                break;
-            case TrayClick.menu:
-                tray.popUpContextMenu();
-                break;
-        }
-    });
-}
-
-function updateTray() {
-    if (!tray) return;
-    let t = '';
-    let d = '';
-    let title = global.title;
-    if (!title || title.length === 0)
-        title = global.character;
-    if ((set && set.dev) || global.dev)
-        d = ' to Development';
-    switch (overlay) {
-        case 1:
-            tray.setImage(path.join(__dirname, '../assets/icons/png/connected2.png'));
-            if (title && title.length > 0)
-                t = `Connected${d} as ${title} - jiMUD`;
-            else
-                t = `Connected${d} - jiMUD`;
+//id, data, file, title, icon
+function createWindow(options) {
+    options = options || {};
+    var bounds;
+    if (!options.file || options.file.length === 0)
+        options.file = 'manager.html';
+    if (options.data && options.data.state)
+        bounds = options.data.state.bounds;
+    else if (states[options.file])
+        bounds = states[options.file].bounds;
+    else
+        bounds = options.bounds || {
+            x: 0,
+            y: 0,
+            width: 800,
+            height: 600,
+        };
+    let backgroundColor = '#000';
+    switch (path.basename(_settings.theme, path.extname(_settings.theme))) {
+        case 'zen':
+            backgroundColor = '#dad2ba';
             break;
-        case 2:
-            if (title && title.length > 0)
-                t = `Connected${d} as ${title} - jiMUD`;
-            else
-                t = `Connected${d} - jiMUD`;
-            tray.setImage(path.join(__dirname, '../assets/icons/png/connectednonactive2.png'));
+        case 'lightgray':
+            backgroundColor = 'rgb(240, 240, 240)';
             break;
-        default:
-            if (title && title.length > 0)
-                t = `Disconnected${d} as ${title} - jiMUD`;
-            else
-                t = `Disconnected${d} - jiMUD`;
-            tray.setImage(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
+        case 'dark':
+            backgroundColor = 'rgb(30, 30, 30)';
             break;
     }
-
-    tray.setTitle(t);
-    tray.setToolTip(t);
-}
-
-function createWindow() {
-    /*
-    if(set.reportCrashes)
-    {
-      const {crashReporter} = require('electron')
-      crashReporter.start({
-        productName: 'jiMUD',
-        companyName: 'jiMUD',
-        submitURL: 'http://localhost:3000/api/app-crashes',
-        uploadToServer: true
-      })
-    }
-    */
-    if (!set)
-        set = settings.Settings.load(global.settingsFile);
-    var s = loadWindowState('main');
     // Create the browser window.
-    win = new BrowserWindow({
-        title: 'jiMUD',
-        x: getWindowX(s.x, s.width),
-        y: getWindowY(s.y, s.height),
-        width: s.width,
-        height: s.height,
-        backgroundColor: '#000',
+    let window = new BrowserWindow({
+        parent: options.parent || null,
+        title: options.title || 'jiMUD',
+        x: getWindowX(bounds.x, bounds.width),
+        y: getWindowY(bounds.y, bounds.height),
+        width: bounds.width,
+        height: bounds.height,
+        backgroundColor: options.backgroundColor || backgroundColor,
         show: false,
-        icon: path.join(__dirname, '../assets/icons/png/64x64.png'),
-        skipTaskbar: !set.showInTaskBar ? true : false,
+        icon: path.join(__dirname, options.icon || '../assets/icons/png/64x64.png'),
+        skipTaskbar: !_settings.showInTaskBar,
         webPreferences: {
             nodeIntegration: true,
             nodeIntegrationInWorker: true,
             webviewTag: false,
             sandbox: false,
-            spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true,
+            spellcheck: _settings ? _settings.spellchecking : false,
+            enableRemoteModule: 'remote' in options ? options.remote : true,
             contextIsolation: false,
-            backgroundThrottling: set ? set.enableBackgroundThrottling : true
-        }
+            backgroundThrottling: _settings ? _settings.enableBackgroundThrottling : true,
+            preload: path.join(__dirname, 'preload.js')
+        },
+        //titleBarStyle: 'hidden',
+        //titleBarOverlay: true
     });
-    require("@electron/remote/main").enable(win.webContents);
+    if (!('remote' in options) || options.remote)
+        require("@electron/remote/main").enable(window.webContents);
 
-    // and load the index.html of the app.
-    win.loadURL(url.format({
-        pathname: path.join(__dirname, 'index.html'),
+    // and load the file of the app.
+    window.loadURL(URL.format({
+        pathname: path.join(__dirname, options.file),
         protocol: 'file:',
         slashes: true
     }));
-    /*
-    if(s.maximized) {
-        let wSize = screen.getPrimaryDisplay().workAreaSize;
-        win.setContentSize(wSize.width, wSize.height);
-    }
-    */
-    //win.setOverlayIcon(path.join(__dirname, '/../assets/icons/jimud.png'), 'Connected');
 
-    // Open the DevTools.
-    if (s.devTools)
-        win.webContents.openDevTools();
-    win.on('resize', () => {
-        if (!win.isMaximized() && !win.isFullScreen())
-            trackWindowState('main', win);
-    });
-
-    win.on('move', () => {
-        if (!win.isMaximized() && !win.isFullScreen())
-            trackWindowState('main', win);
-    });
-
-    win.on('maximize', () => {
-        trackWindowState('main', win);
-        states.main.maximized = true;
-    });
-
-    win.on('unmaximize', () => {
-        trackWindowState('main', win);
-        states.main.maximized = false;
-    });
-
-    win.on('unresponsive', () => {
+    window.on('unresponsive', () => {
         dialog.showMessageBox({
             type: 'info',
             message: 'Unresponsive',
             buttons: ['Reopen', 'Keep waiting', 'Close']
         }).then(result => {
-            if (!win)
+            if (!window)
                 return;
             if (result.response === 0) {
-                win.reload();
-                logError('Client unresponsive, reload.\n', true);
+                window.reload();
+                logError('Window unresponsive, reload.\n', true);
             }
             else if (result.response === 2) {
-                set = settings.Settings.load(global.settingsFile);
-                set.windows.main = getWindowState('main', win);
-                if (winMap) {
-                    set.windows.mapper = getWindowState('mapper', winMap);
-                    win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows.mapper, noSave: true });
-                    executeScript('closeWindow()', winMap);
-                    winMap = null;
-                }
-                if (winEditor) {
-                    set.windows.editor = getWindowState('editor', winEditor);
-                    win.webContents.send('setting-changed', { type: 'window', name: 'editor', value: set.windows.editor, noSave: true });
-                    winEditor.close();
-                    winEditor = null;
-                }
-                if (winChat) {
-                    set.windows.chat = getWindowState('chat', winChat);
-                    win.webContents.send('setting-changed', { type: 'window', name: 'chat', value: set.windows.chat, noSave: true });
-                    winChat.close();
-                    winChat = null;
-                }
-                if (winCode) {
-                    if (!edSet)
-                        edSet = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-                    if (global.editorOnly)
-                        edSet.stateOnly = getWindowState('code-editor', winCode);
-                    else {
-                        if (winCode != null)
-                            edSet.window.show = true;
-                        edSet.state = getWindowState('code-editor', winCode);
-                    }
-                    edSet.save(parseTemplate(path.join('{data}', 'editor.json')));
-                    executeScript('closeWindow()', winCode);
-                    winCode = null;
-                }
-                closeWindows(false, true);
-                logError('Client unresponsive, closed.\n', true);
-                set.save(global.settingsFile);
-                win.destroy();
-                win = null;
+                logError('Window unresponsive, closed.\n', true);
+                window.destroy();
             }
             else
-                logError('Client unresponsive, waiting.\n', true);
+                logError('Window unresponsive, waiting.\n', true);
         });
     });
 
-    win.on('minimize', () => {
-        if (set.hideOnMinimize)
-            win.hide();
+    window.on('focus', () => {
+        focusedWindow = getWindowId(window);
+        window.webContents.send('focus');
+        _focused = true;
     });
 
-    win.webContents.on('render-process-gone', (event, details) => {
+    window.on('blur', () => {
+        if (window && !window.isDestroyed() && window.webContents)
+            window.webContents.send('blur');
+        _focused = false;
+    });
+
+    window.on('minimize', () => {
+        if (_settings.hideOnMinimize && !global.editorOnly)
+            window.hide();
+    });
+
+    window.webContents.on('render-process-gone', (event, details) => {
         logError(`Client render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
     });
 
-    win.webContents.setWindowOpenHandler((details) => {
-        var u = new url.URL(details.url);
+    window.webContents.on('devtools-reload-page', () => {
+        onContentsLoaded(window.webContents).then(() => {
+            const windowId = getWindowId(window);
+            const cl = windows[windowId].clients.length;
+            for (var idx = 0; idx < cl; idx++) {
+                window.webContents.send('new-client', { id: windows[windowId].clients[idx], current: windows[windowId].current === windows[windowId].clients[idx] });
+                clients[windows[windowId].clients[idx]].view.webContents.send('window-reloaded');
+            }
+            window.webContents.send('switch-client', windows[windowId].current);
+        });
+    });
+
+    window.webContents.setWindowOpenHandler((details) => {
+        var u = new URL.URL(details.url);
         if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'mailto:') {
             shell.openExternal(details.url);
             return { action: 'deny' };
         }
         return {
             action: 'allow',
-            overrideBrowserWindowOptions: buildOptions(details, win, set)
+            overrideBrowserWindowOptions: buildOptions(details, window, _settings)
         }
     });
 
-    win.webContents.on('did-create-window', (w, details) => {
+    window.webContents.on('did-create-window', (childWindow, details) => {
         let frameName = details.frameName;
         let url = details.url;
-        if (global.debug)
-            w.webContents.openDevTools();
-        require("@electron/remote/main").enable(w.webContents);
-        w.removeMenu();
-        w.once('ready-to-show', () => {
-            loadWindowScripts(w, frameName);
-            addInputContext(w, set && set.spellchecking);
-            w.show();
-            //w.reload();
-        });
-        w.webContents.on('render-process-gone', (event, details) => {
-            logError(`${url} render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
-        });
-        w.on('unresponsive', () => {
-            dialog.showMessageBox({
-                type: 'info',
-                message: 'Unresponsive',
-                buttons: ['Reopen', 'Keep waiting', 'Close']
-            }).then(result => {
-                if (!w)
-                    return;
-                if (result.response === 0) {
-                    w.reload();
-                    logError(`${url} unresponsive, reload.\n`, true);
-                }
-                else if (result.response === 2) {
-                    w.destroy();
-                }
-                else
-                    logError(`${url} unresponsive, waiting.\n`, true);
-            });
-        });
+        let file = url;
+        if (url.startsWith('file:///' + __dirname.replace(/\\/g, '/')))
+            file = url.substring(__dirname.length + 9);
+        initializeChildWindow(childWindow, url, details);
 
-        w.on('closed', () => {
-            if (win && !win.isDestroyed() && win.webContents) {
-                executeScript(`childClosed('${url}', '${frameName}');`, win, true);
-                win.focus();
+        childWindow.on('closed', e => {
+            if (window && !window.isDestroyed())
+                executeScriptClient(`if(typeof childClosed === "function") childClosed('${file}', '${url}', '${frameName}');`, window, true).catch(logError);
+            idMap.delete(childWindow);
+            stateMap.delete(childWindow);
+        });
+        childWindow.on('close', e => {
+            const id = getWindowId(window);
+            const index = getChildWindowIndex(windows[id].windows, childWindow);
+            if (window && !window.isDestroyed()) {
+                if (index !== -1 && windows[id].windows[index].details.options.persistent) {
+                    e.preventDefault();
+                    executeScript('if(typeof closeHidden !== "function" || closeHidden(true)) window.hide();', childWindow);
+                }
             }
         });
+        windows[getWindowId(window)].windows.push({ window: childWindow, details: details });
+        idMap.set(childWindow, getWindowId(window));
     });
 
     // Emitted when the window is closed.
-    win.on('closed', () => {
-        if (winMap) {
-            set.windows.mapper = getWindowState('mapper', winMap);
-            //win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows.mapper, noSave: true });
-            executeScript('closeWindow()', winMap);
-            winMap = null;
+    window.on('closed', () => {
+        const windowId = getWindowId(window);
+        idMap.delete(window);
+        stateMap.delete(window);
+        const cl = windows[windowId].clients.length;
+        for (var idx = 0; idx < cl; idx++) {
+            const id = windows[windowId].clients[idx];
+            //close any child windows linked to view
+            closeClientWindows(id);
+            if (!window.isDestroyed())
+                window.removeBrowserView(clients[id].view);
+            idMap.delete(clients[id].view);
+            if (clients[id].view.webContents)
+                clients[id].view.webContents.destroy();
+            if (clients[id].name)
+                delete names[clients[id].name];
+            clients[id] = null;
+            delete clients[id];
         }
-        if (winEditor) {
-            set.windows.editor = getWindowState('editor', winEditor);
-            //win.webContents.send('setting-changed', { type: 'window', name: 'editor', value: set.windows.editor, noSave: true });
-            winEditor.close();
-            winEditor = null;
+        windows[windowId].window = null;
+        delete windows[windowId];
+        if (windowId === focusedWindow && Object.keys(windows).length) {
+            if (global.editorOnly) //editor only just to be safe
+                focusedWindow = parseInt(Object.keys(windows)[0], 10);
+            else
+                focusedWindow = parseInt(Object.keys(windows).filter(key => windows[key].clients.length)[0], 10);
         }
-        if (winChat) {
-            set.windows.chat = getWindowState('chat', winChat);
-            //win.webContents.send('setting-changed', { type: 'window', name: 'chat', value: set.windows.chat, noSave: true });
-            winChat.close();
-            winChat = null;
+        clientsChanged();
+    });
+    //restore state sooner to try and prevent visual glitches
+    if (options.data && options.data.state) {
+        restoreWindowState(window, options.data.state);
+        stateMap.set(window, options.data.state);
+    }
+    else if (states[options.file]) {
+        restoreWindowState(window, states[options.file]);
+        stateMap.set(window, states[options.file]);
+    }
+    else
+        stateMap.set(window, saveWindowState(window));
+    window.once('ready-to-show', () => {
+        loadWindowScripts(window, options.script || path.basename(options.file, '.html'));
+        executeScript(`if(typeof setId === "function") setId(${getWindowId(window)});`, window);
+        executeScript('window.loadTheme();', window);
+        if (options.data && options.data.data)
+            executeScript('if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify(options.data.data) + ');', window);
+        if (options.data && options.data.state) {
+            //restoreWindowState(window, options.data.state);
         }
-        if (winCode && winCode.getParentWindow() == win) {
-            if (!edSet)
-                edSet = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-            if (global.editorOnly)
-                edSet.stateOnly = getWindowState('code-editor', winCode);
-            else {
-                edSet.state = getWindowState('code-editor', winCode);
-                edSet.window.show = true;
-            }
-            edSet.save(parseTemplate(path.join('{data}', 'editor.json')));
-            executeScript('closeWindow()', winCode);
-            winCode = null;
+        else if (states[options.file]) {
+            //restoreWindowState(window, states[options.file]);
         }
-        closeWindows(true, false);
-        set.save(global.settingsFile);
-        // Dereference the window object, usually you would store windows
-        // in an array if your app supports multi windows, this is the time
-        // when you should delete the corresponding element.
-        win = null;
+        else
+            window.show();
+        if (options.menubar)
+            options.menubar.enabled = true;
     });
 
-    win.once('ready-to-show', async () => {
-        createMenu();
-        loadMenu();
-
-        //addInputContext(win, set && set.spellchecking);
-        if (isFileSync(path.join(app.getPath('userData'), 'monsters.css'))) {
-            fs.readFile(path.join(app.getPath('userData'), 'monsters.css'), 'utf8', (err, data) => {
-                win.webContents.insertCSS(parseTemplate(data));
-            });
-        }
-        loadWindowScripts(win, 'user');
-        await executeScript('loadTheme(\'' + set.theme.replace(/\\/g, '\\\\').replace(/'/g, '\\\'') + '\');updateInterface();', win);
-        //win.setContentSize(s.width, s.height);
-        restoreWindowState(win, s, true);
-        if (set.showMapper)
-            showMapper(true);
-        else if (set.mapper.persistent || set.mapper.enabled)
-            createMapper();
-
-        if (set.showEditor)
-            showEditor(true);
-        else if (set.editorPersistent)
-            createEditor();
-        if (set.showChat)
-            showChat(true);
-        else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
-            createChat();
-
-        for (var name in set.windows) {
-            if (name === 'main') continue;
-            if (set.windows[name].options) {
-                if (set.windows[name].options.show)
-                    showWindow(name, set.windows[name].options, true);
-                else if (set.windows[name].options.persistent)
-                    createNewWindow(name, set.windows[name].options);
-            }
-            else {
-                if (set.windows[name].show)
-                    showWindow(name, set.windows[name], true);
-                else if (set.windows[name].persistent)
-                    createNewWindow(name, set.windows[name]);
-            }
-        }
-        set.save(global.settingsFile);
-
-        if (!edSet)
-            edSet = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-        if (edSet.window.show)
-            showCodeEditor(true);
-        else if (!global.editorOnly && edSet.window.persistent)
-            createCodeEditor();
-        updateJumpList();
-        checkForUpdates();
-    });
-
-    win.on('close', (e) => {
-        set = settings.Settings.load(global.settingsFile);
-        set.windows.main = getWindowState('main', win || e.sender);
-        win.webContents.send('setting-changed', { type: 'window', name: 'main', value: set.windows.main, noSave: true });
-        if (winProfiles) {
-            e.preventDefault();
-            dialog.showMessageBox(winProfiles, {
-                type: 'warning',
-                title: 'Close profile manager',
-                message: 'You must close the profile manager before you can exit.'
-            });
-            set.save(global.settingsFile);
+    //close hack due to electron's dumb ability to not allow a simple sync call to return a true/false state
+    let _close = false;
+    window.on('close', async (e) => {
+        if (_close)
             return;
+        e.preventDefault();
+        //for what ever reason electron does not seem to work well with await, it sill continues to execute async instead of waiting when using IPCrenderer
+        _close = await canCloseAllClients(getWindowId(window)).catch(logError);
+        if (_close) {
+            states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
+            stateMap.set(window, states[options.file]);
+            //if _loaded and not saved and the last window open save as its the final state
+            if (_loaded && !_saved && Object.keys(windows).length === 1) {
+                await saveWindowLayout(null, _settings.lockLayout);
+                _saved = true;
+            }
+            window.close();
         }
-        if (winMap && !winMap.isDestroyed() && !winMap.isVisible())
-            executeScript('closeHidden()', winMap);
-        set.save(global.settingsFile);
     });
+
+    window.on('resize', () => {
+        if (window.isMaximized() || window.isFullScreen()) return;
+        states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
+        stateMap.set(window, states[options.file]);
+    });
+
+    window.on('move', () => {
+        if (window.isMaximized() || window.isFullScreen()) return;
+        states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
+        stateMap.set(window, states[options.file]);
+    });
+
+    window.on('show', () => {
+        updateOverlay();
+    });
+
+    window.on('restore', () => {
+        //const active = getActiveClient(window);
+        //if (active)
+        //active.view.webContents.send('restore');
+        //states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
+        //stateMap.set(window, states[options.file]);
+    });
+    window.on('maximize', () => {
+        const active = getActiveClient(window);
+        if (active)
+            active.view.webContents.send('maximize');
+        states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
+        states[options.file].maximized = true;
+        stateMap.set(window, states[options.file]);
+    });
+    window.on('unmaximize', () => {
+        const active = getActiveClient(window);
+        if (active)
+            active.view.webContents.send('unmaximize');
+        states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
+        states[options.file].maximized = false;
+        stateMap.set(window, states[options.file]);
+    });
+
+    window.on('enter-full-screen', () => {
+        const active = getActiveClient(window);
+        if (active)
+            active.view.webContents.send('maximize');
+        states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
+        states[options.file].fullscreen = true;
+        stateMap.set(window, states[options.file]);
+        window.webContents.send('enter-full-screen');
+    });
+
+    window.on('leave-full-screen', () => {
+        const active = getActiveClient(window);
+        if (active)
+            active.view.webContents.send('maximize');
+        states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
+        states[options.file].fullscreen = false;
+        stateMap.set(window, states[options.file]);
+        window.webContents.send('leave-full-screen');
+    });
+
+    window.on('resized', () => {
+        /*
+        if (window.isMaximized() || window.isFullScreen())  return;
+        const active = getActiveClient(window);
+        if (active)
+            active.view.webContents.send('resized');
+        states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
+        stateMap.set(window, states[options.file]);
+        */
+    });
+
+    if (global.debug) {
+        window.webContents.on('ipc-message', (event, channel, ...args) => {
+            if (channel.startsWith('REMOTE_')) return;
+            console.log(`Window Id: ${getWindowId(window)}, ipc-message: ${channel}`);
+            console.log(args);
+        });
+        window.webContents.on('ipc-message-sync', (event, channel, ...args) => {
+            if (channel.startsWith('REMOTE_')) return;
+            console.log(`Window Id: ${getWindowId(window)}, ipc-message-sync: ${channel}`);
+            console.log(args);
+        });
+    }
+
+    if (!options.id) {
+        _windowID++;
+        //in case the new id is used from old layout loop until find empty id
+        while (windows[_windowID])
+            _windowID++;
+        options.id = _windowID;
+    }
+    windows[options.id] = { options: { file: options.file !== 'manager.html' ? options.file : undefined, remote: options.remote, backgroundColor: options.backgroundColor, icon: options.icon, title: options.title }, window: window, clients: [], current: 0, menubar: options.menubar, windows: [] };
+    if (options.menubar) {
+        options.menubar.window = window;
+        options.menubar.enabled = false;
+    }
+    idMap.set(window, options.id);
+    return options.id;
 }
 
-function resetProfiles() {
-    updateMenuItem({ menu: ['profiles', 'default'], checked: false });
-    var p = path.join(app.getPath('userData'), 'profiles');
-    if (isDirSync(p)) {
-        var files = fs.readdirSync(p);
-        for (var i = 0; i < files.length; i++) {
-            if (path.extname(files[i]) !== '.json')
-                continue;
-            updateMenuItem({ menu: ['profiles', path.basename(files[i], '.json')], checked: false });
-        }
+function createDialog(options) {
+    if (!options)
+        options = {};
+    options.parent = options.parent || getActiveWindow().window;
+    const bounds = options.parent.getBounds();
+    //a bounds passed do some basic safety checks
+    if (options.bounds) {
+        //check for width/height if missing default
+        if (!('width' in options.bounds))
+            options.bounds.width = 500;
+        if (!('height' in options.bounds))
+            options.bounds.height = 560;
+        //check coords first as x and y could be 0 and that returns false
+        if (!('x' in options.bounds))
+            options.bounds.x = Math.floor(bounds.x + bounds.width / 2 - options.bounds.width / 2);
+        if (!('y' in options.bounds))
+            options.bounds.y = Math.floor(bounds.y + bounds.height / 2 - options.bounds.height / 2);
     }
+    else
+        options.bounds = {
+            x: Math.floor(bounds.x + bounds.width / 2 - 250),
+            y: Math.floor(bounds.y + bounds.height / 2 - 280),
+            width: 500,
+            height: 560,
+        }
+    const window = new BrowserWindow({
+        parent: options.parent,
+        modal: options.modal,
+        x: options.bounds.x,
+        y: options.bounds.y,
+        width: options.bounds.width || 500,
+        height: options.bounds.height || 560,
+        movable: options.modal ? false : true,
+        minimizable: false,
+        maximizable: false,
+        skipTaskbar: true,
+        show: false,
+        resizable: options.modal ? false : (options.resize || false),
+        title: options.title || 'jiMUD',
+        icon: options.icon || path.join(__dirname, '../assets/icons/png/64x64.png'),
+        backgroundColor: options.backgroundColor || '#000',
+        webPreferences: {
+            nodeIntegration: true,
+            webviewTag: false,
+            sandbox: false,
+            spellcheck: _settings ? _settings.spellchecking : false,
+            enableRemoteModule: true,
+            contextIsolation: false,
+            backgroundThrottling: _settings ? _settings.enableBackgroundThrottling : true,
+            preload: path.join(__dirname, 'preload.js')
+        }
+    });
+    require("@electron/remote/main").enable(window.webContents);
+    window.webContents.on('render-process-gone', (event, details) => {
+        logError(`About render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
+    });
+
+    window.on('unresponsive', () => {
+        dialog.showMessageBox({
+            type: 'info',
+            message: 'Unresponsive',
+            buttons: ['Reopen', 'Keep waiting', 'Close']
+        }).then(result => {
+            if (!window)
+                return;
+            if (result.response === 0) {
+                window.reload();
+                logError('Dialog unresponsive, reload.\n', true);
+            }
+            else if (result.response === 2) {
+                window.destroy();
+            }
+            else
+                logError('Dialog unresponsive, waiting.\n', true);
+        });
+    });
+
+    if (global.debug) {
+        window.webContents.on('ipc-message', (event, channel, ...args) => {
+            if (channel.startsWith('REMOTE_')) return;
+            console.log(`Dialog URL: ${options.url}, ipc-message: ${channel}`);
+            console.log(args);
+        });
+        window.webContents.on('ipc-message-sync', (event, channel, ...args) => {
+            if (channel.startsWith('REMOTE_')) return;
+            console.log(`Dialog URL: ${options.url}, ipc-message-sync: ${channel}`);
+            console.log(args);
+        });
+    }
+
+    window.removeMenu();
+    // and load the index.html of the app.
+    window.loadURL(URL.format({
+        pathname: options.url || path.join(__dirname, 'blank.html'),
+        protocol: 'file:',
+        slashes: true
+    }));
+
+    window.once('ready-to-show', () => {
+        if (options.show)
+            window.show();
+        if (global.debug)
+            openDevtools(window.webContents, { activate: false });
+    });
+    addInputContext(window, _settings.spellchecking);
+    return window;
+}
+
+function openCharacters() {
+    if (_characters) return;
+    _characters = new Characters({ file: path.join(parseTemplate('{data}'), 'characters.sqlite') });
+    _characters.on('error', logError);
 }
 
 if (argv['disable-gpu'])
     app.disableHardwareAcceleration();
 
+global.debug = argv.debug;
+if (Array.isArray(argv.s)) {
+    global.settingsFile = parseTemplate(argv.s[0]);
+    _settings = settings.Settings.load(global.settingsFile);
+}
+else if (argv.s) {
+    global.settingsFile = parseTemplate(argv.s);
+    _settings = settings.Settings.load(global.settingsFile);
+}
+
+if (Array.isArray(argv.m))
+    global.mapFile = parseTemplate(argv.m[0]);
+else if (argv.m)
+    global.mapFile = parseTemplate(argv.m);
+
+if (argv.eo)
+    global.editorOnly = true;
+
+//fake already being saved to not save any changes
+if (argv.nls)
+    _saved = true;
+
+if (_settings.useSingleInstance && !global.editorOnly && !argv.f) {
+    var lock = app.requestSingleInstanceLock();
+    if (!lock) {
+        app.quit();
+        return;
+    }
+    else
+        app.on('second-instance', (event, second_argv, workingDirectory, additionalData) => {
+            second_argv = require('yargs-parser')(second_argv, {
+                string: ['data-dir', 's', 'setting', 'm', 'map', 'c', 'character', 'l', 'layout'],
+                boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import', 'f', 'force', 'nls', 'no-layout-save', 'fci', 'force-character-import'],
+                alias: {
+                    'd': ['debug'],
+                    'eo': ['editorOnly', 'editoronly'],
+                    'h': ['help', '?'],
+                    'v': ['version'],
+                    'no-pd': ['no-portable-dir'],
+                    's': ['settings'],
+                    'm': ['map'],
+                    'c': ['character', 'char'],
+                    'e': ['editor'],
+                    'l': ['layout'],
+                    'il': ['ignore-layout'],
+                    'nci': ['no-character-import'],
+                    'fci': ['force-character-import'],
+                    'f': ['force'],
+                    'nc': ['new-connection', 'nt', 'new-tab'],
+                    'nw': ['new-window'],
+                    'nls': ['no-layout-save']
+                },
+                configuration: {
+                    'short-option-groups': false
+                }
+            });
+            const active = getActiveWindow();
+            let fWindow = -1;
+            let char;
+            if (Array.isArray(second_argv.nw)) {
+                for (let nc = 0, ncl = second_argv.nw.length; nc < ncl; nc++) {
+                    if (typeof second_argv.nw[nc] === 'string' || typeof second_argv.nw[nc] === 'number') {
+                        char = getCharacterFromId(second_argv.nw[nc]);
+                        newClientWindow(active.window, null, {
+                            characterId: char.ID,
+                            settings: parseTemplate(char.Preferences),
+                            map: parseTemplate(char.Map),
+                            port: char.Port
+                        });
+                    }
+                    else
+                        newClientWindow(active.window);
+                }
+                fWindow = 0;
+            }
+            else if (typeof second_argv.nw === 'string' || typeof second_argv.nw === 'number') {
+                char = getCharacterFromId(second_argv.nw);
+                newClientWindow(active.window, null, {
+                    characterId: char.ID,
+                    settings: parseTemplate(char.Preferences),
+                    map: parseTemplate(char.Map),
+                    port: char.Port
+                });
+                fWindow = 0;
+            }
+            else if (second_argv.nw) {
+                newClientWindow(active.window);
+                fWindow = 0;
+            }
+
+            if (Array.isArray(second_argv.nc)) {
+                for (let nc = 0, ncl = second_argv.nc.length; nc < ncl; nc++) {
+                    if (typeof second_argv.nw[nc] === 'string' || typeof second_argv.nw[nc] === 'number') {
+                        char = getCharacterFromId(second_argv.nw[nc]);
+                        newConnection(active.window, null, {
+                            characterId: char.ID,
+                            settings: parseTemplate(char.Preferences),
+                            map: parseTemplate(char.Map),
+                            port: char.Port
+                        });
+                    }
+                    else
+                        newConnection(active.window);
+                }
+                fWindow = 1;
+            }
+            else if (typeof second_argv.nc === 'string' || typeof second_argv.nc === 'number') {
+                char = getCharacterFromId(second_argv.nw);
+                newConnection(active.window, null, {
+                    characterId: char.ID,
+                    settings: parseTemplate(char.Preferences),
+                    map: parseTemplate(char.Map),
+                    port: char.Port
+                });
+                fWindow = 0;
+            }
+            else if (second_argv.nc) {
+                newConnection(active.window);
+                fWindow = 1;
+            }
+
+            if (Array.isArray(second_argv.c)) {
+                second_argv.c.map(c => {
+                    char = getCharacterFromId(c);
+                    newConnection(active.window, null, {
+                        characterId: char.ID,
+                        settings: parseTemplate(char.Preferences),
+                        map: parseTemplate(char.Map),
+                        port: char.Port
+                    });
+                });
+                fWindow = 1;
+            }
+            else if (second_argv.c) {
+                char = getCharacterFromId(second_argv.c);
+                newConnection(active.window, null, {
+                    characterId: char.ID,
+                    settings: parseTemplate(char.Preferences),
+                    map: parseTemplate(char.Map),
+                    port: char.Port
+                });
+                fWindow = 1;
+            }
+            if (argv.e) {
+                //showCodeEditor();
+                if (Array.isArray(argv.e))
+                    executeScriptClient(`openFiles("${argv.e.join('", "')}")`, active.window, true);
+                else if (typeof argv.e === 'string')
+                    executeScriptClient(`openFiles("${argv.e}")`, active.window, true);
+                else
+                    executeScriptClient('openWindow("code.editor")', active.window, true);
+                fWindow = 1;
+            }
+
+            //if a new connect focus current
+            if (fWindow === 1) {
+                restoreWindowState(active.window, stateMap.get(active.window), 2);
+                active.window.focus();
+            }
+            //if no connection or window do onSecondInstance setting
+            else if (fWindow == -1) {
+                if (_settings.onSecondInstance === OnSecondInstance.Show) {
+                    restoreWindowState(active.window, stateMap.get(active.window), 2);
+                    active.window.focus();
+                }
+                else if (_settings.onSecondInstance === OnSecondInstance.NewConnection) {
+                    newConnection(active.window);
+                    restoreWindowState(active.window, stateMap.get(active.window), 2);
+                    active.window.focus();
+                }
+                else if (_settings.onSecondInstance === OnSecondInstance.NewWindow) {
+                    newClientWindow(active.window);
+                }
+            }
+        });
+}
+
+//do not import if editor only mode, process after instance use to avoid processing file if not needed
+if (isFileSync(path.join(app.getPath('userData'), 'characters.json'))) {
+    //if force import, import with out any prompts as its a command line and they should know better
+    if (argv.fci) {
+        _settings.migrate = 1;
+        _settings.save(global.settingsFile);
+        openCharacters();
+        _characters.import(path.join(app.getPath('userData'), 'characters.json'));
+    }
+    //if not editor only, can import and not migrated ask 
+    else if (!argv.eo && !argv.nci && _settings.migrate < 1)
+        switch (dialog.showMessageBoxSync({
+            type: 'question',
+            title: 'Import characters',
+            message: 'Import old characters?',
+            buttons: ['Yes', 'No', 'Never ask again'],
+            defaultId: 1,
+            noLink: true
+        })) {
+            case 0:
+                _settings.migrate = 1;
+                _settings.save(global.settingsFile);
+                openCharacters();
+                _characters.import(path.join(app.getPath('userData'), 'characters.json'));
+                break;
+            case 2:
+                _settings.migrate = 1;
+                _settings.save(global.settingsFile);
+                break;
+        }
+}
+
+if (Array.isArray(argv.l))
+    _layout = parseTemplate(argv.l[0]);
+else if (argv.l)
+    _layout = argv.l;
+else if (global.editorOnly)
+    _layout = parseTemplate(path.join('{data}', 'editor.layout'));
+else if (_settings.loadLayout)
+    _layout = parseTemplate(_settings.loadLayout);
+
+app.on('render-process-gone', (event, webContents, details) => {
+    logError(`Render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
+});
+
+app.on('child-process-gone', (event, details) => {
+    logError(`Child process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
+});
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
+    let window;
+    let charID;
     if (!existsSync(path.join(app.getPath('userData'), 'characters')))
         fs.mkdirSync(path.join(app.getPath('userData'), 'characters'));
 
-    loadCharacters();
-    var a, al;
-    if (process.env.PORTABLE_EXECUTABLE_DIR) {
-        if (argv._.indexOf('/?') !== -1 || argv.h) {
-            var msg = '';
-            msg += '-h, --help - Print console help\n';
-            msg += '-d, --debug - Enable dev tools for all windows\n';
-            msg += '-s=[file], --setting=[file] - Override default setting file\n';
-            msg += '-mf=[file], --map=[file] - Override default map file\n';
-            msg += '-c=[name], --character=[name] - Allows you to load/create a character from character database\n';
-            msg += '-pf=[list], --profiles[] - Set which profiles will be enabled, if not found will default\n';
-            msg += '-v, --version - Print current version\n';
-            msg += '-e, --e, -e=[file], --e=[file] - Open code editor\n';
-            msg += '-eo, --eo, -eo=[file], --eo=[file] - Open only the code editor\n';
-            msg += '-no-pd, -no-portable-dir - Do not use portable dir\n';
-            msg += '-data-dir=[file] - Set a custom directory to store saved data';
-            dialog.showMessageBox({
-                type: 'info',
-                message: msg
-            });
-            console.log('-h, --help                          Print console help');
-            console.log('-d, --debug                         Enable dev tools for all windows');
-            console.log('-s=[file], --setting=[file]         Override default setting file');
-            console.log('-mf=[file], --map=[file]            Override default map file');
-            console.log('-c=[name], --character=[name]       Allows you to load/create a character from character database');
-            console.log('-pf=[list], --profiles[]            Set which profiles will be enabled, if not found will default');
-            console.log('-v, --version                       Print current version');
-            console.log('-e, --e, -e=[file], --e=[file]      Open code editor');
-            console.log('-eo, --eo, -eo=[file], --eo=[file]  Open only the code editor');
-            console.log('-data-dir=[file]                    Set a custom directory to store saved data');
-            app.quit();
-            return;
-        }
-        else if (argv.v) {
-            dialog.showMessageBox({
-                type: 'info',
-                message: `jiMUD v${require('../package.json').version}`
-            });
-            console.log(`jiMUD v${require('../package.json').version}`);
-            app.quit();
-            return;
-        }
-    }
-    global.debug = argv.debug;
-    if (argv.eo) {
-        if (Array.isArray(argv.eo)) {
-            al = argv.eo.length;
-            a = 0;
-            for (; a < al; a++) {
-                if (typeof argv.eo[a] === 'string')
-                    openEditor(argv.eo[a]);
-            }
-        }
-        else if (typeof argv.eo === 'string') {
-            openEditor(argv.eo);
-        }
-        global.editorOnly = true;
-    }
-
-    if (Array.isArray(argv.c)) {
-        global.character = argv.c[0];
-        loadCharacter(global.character);
-    }
-    else if (argv.c) {
-        global.character = argv.c;
-        loadCharacter(global.character);
-    }
-    if (Array.isArray(argv.s))
-        global.settingsFile = parseTemplate(argv.s[0]);
-    else if (argv.s)
-        global.settingsFile = parseTemplate(argv.s);
-
-    if (Array.isArray(argv.mf))
-        global.mapFile = parseTemplate(argv.mf[0]);
-    else if (argv.mf)
-        global.mapFile = parseTemplate(argv.mf);
-
-    if (Array.isArray(argv.pf))
-        global.profiles = parseTemplate(argv.pf[0]).split(',');
-    else if (argv.pf)
-        global.profiles = parseTemplate(argv.pf).split(',');
-
-    if (global.editorOnly)
-        showCodeEditor();
-    else {
-        createTray();
-        createWindow();
-        //only load after as it requires a client window
-        if (argv.e) {
-            showCodeEditor();
-            if (Array.isArray(argv.e)) {
-                al = argv.eo.length;
-                a = 0;
-                for (; a < al; a++) {
-                    if (typeof argv.eo[a] === 'string')
-                        openEditor(argv.eo[a]);
+    //use default
+    let _ignore = false;
+    //attempt to load layout, 
+    if (isFileSync(_layout)) {
+        if (!argv.il) {
+            if (!global.editorOnly && (argv.c || argv.nc)) {
+                if (Array.isArray(argv.c))
+                    charID = argv.c.map(c => {
+                        char = getCharacterFromId(c);
+                        return {
+                            characterId: char.ID,
+                            settings: parseTemplate(char.Preferences),
+                            map: parseTemplate(char.Map),
+                            port: char.Port
+                        }
+                    });
+                else if (argv.c) {
+                    getCharacterFromId(argv.c);
+                    charID = [{
+                        characterId: charID.ID,
+                        settings: parseTemplate(charID.Preferences),
+                        map: parseTemplate(charID.Map),
+                        port: charID.Port
+                    }];
                 }
+                //not set so set first as null as new connections do not replace current connection
+                if (!charID) charID = [null];
+                if (Array.isArray(argv.nc))
+                    charID.push(...argv.nc.map(c => {
+                        if (typeof c === 'string' || typeof c === 'number') {
+                            char = getCharacterFromId(c);
+                            return {
+                                characterId: char.ID,
+                                settings: parseTemplate(char.Preferences),
+                                map: parseTemplate(char.Map),
+                                port: char.Port
+                            }
+                        }
+                        else
+                            return {
+                                settings: global.settingsFile,
+                                map: global.mapFile
+                            }
+                    }));
+                else if (typeof argv.nc === 'string' || typeof argv.nc === 'number') {
+                    char = getCharacterFromId(argv.nc);
+                    charID.push({
+                        characterId: char.ID,
+                        settings: parseTemplate(char.Preferences),
+                        map: parseTemplate(char.Map),
+                        port: char.Port
+                    });
+                }
+                else if (argv.nc) {
+                    charID.push({
+                        settings: global.settingsFile,
+                        map: global.mapFile
+                    });
+                }
+                _loaded = loadWindowLayout(_layout, charID);
             }
-            else if (typeof argv.e === 'string') {
-                openEditor(argv.e);
-            }
+            else
+                _loaded = loadWindowLayout(_layout);
         }
     }
+    else if (!argv.il)
+        _ignore = true;
+
+    //if it fails load default window
+    if (!_loaded) {
+        //use default unless ignoring layouts
+        _loaded = _ignore;
+        if (global.editorOnly)
+            newEditorWindow(null, argv.eo);
+        else if (argv.c || argv.nc) {
+            if (Array.isArray(argv.c))
+                charID = argv.c.map(c => {
+                    char = getCharacterFromId(c);
+                    return {
+                        characterId: char.ID,
+                        settings: parseTemplate(char.Preferences),
+                        map: parseTemplate(char.Map),
+                        port: char.Port
+                    }
+                });
+            else if (argv.c) {
+                getCharacterFromId(argv.c);
+                charID = [{
+                    characterId: charID.ID,
+                    settings: parseTemplate(charID.Preferences),
+                    map: parseTemplate(charID.Map),
+                    port: charID.Port
+                }];
+            }
+            if (!charID) charID = [];
+            if (Array.isArray(argv.nc))
+                charID.push(...argv.nc.map(c => {
+                    if (typeof c === 'string' || typeof c === 'number') {
+                        char = getCharacterFromId(c);
+                        return {
+                            characterId: char.ID,
+                            settings: parseTemplate(char.Preferences),
+                            map: parseTemplate(char.Map),
+                            port: char.Port
+                        }
+                    }
+                    else
+                        return {
+                            settings: global.settingsFile,
+                            map: global.mapFile
+                        }
+                }));
+            else if (typeof argv.nc === 'string' || typeof argv.nc === 'number') {
+                char = getCharacterFromId(argv.nc);
+                charID.push({
+                    characterId: char.ID,
+                    settings: parseTemplate(char.Preferences),
+                    map: parseTemplate(char.Map),
+                    port: char.Port
+                });
+            }
+            else if (argv.nc) {
+                charID.push({
+                    settings: global.settingsFile,
+                    map: global.mapFile
+                });
+            }
+            newClientWindow(null, null, charID);
+        }
+        else
+            newClientWindow();
+    }
+    else if (Array.isArray(argv.eo) || typeof argv.eo === 'string') {
+        window = getActiveWindow();
+        if (window)
+            onContentsLoaded(window.window.webContents).then(() => {
+                window.window.webContents.send('open-editor', argv.eo);
+                focusWindow(window, true);
+            });
+    }
+
+    if (!global.editorOnly) {
+        //current active window
+        window = getActiveWindow();
+        //only load after as it requires a client window
+        if (argv.e && window) {
+            //showCodeEditor();
+            if (Array.isArray(argv.e))
+                executeScriptClient(`openFiles("${argv.e.join('", "')}")`, window.window, true);
+            else if (typeof argv.e === 'string')
+                executeScriptClient(`openFiles("${argv.e}")`, window.window, true);
+            else
+                executeScriptClient('openWindow("code.editor")', window.window, true);
+        }
+
+        if (Array.isArray(argv.nw)) {
+            for (let nc = 0, ncl = argv.nw.length; nc < ncl; nc++) {
+                if (typeof argv.nw[nc] === 'string' || typeof argv.nw[nc] === 'number') {
+                    char = getCharacterFromId(argv.nw[nc]);
+                    newClientWindow(window.window, null, {
+                        characterId: char.ID,
+                        settings: parseTemplate(char.Preferences),
+                        map: parseTemplate(char.Map),
+                        port: char.Port
+                    });
+                }
+                else
+                    newClientWindow(window.window);
+            }
+        }
+        else if (typeof argv.nw === 'string' || typeof argv.nw === 'number') {
+            char = getCharacterFromId(argv.nw);
+            newClientWindow(window.window, null, {
+                characterId: char.ID,
+                settings: parseTemplate(char.Preferences),
+                map: parseTemplate(char.Map),
+                port: char.Port
+            });
+        }
+        else if (argv.nw) {
+            newClientWindow(window.window);
+        }
+        createTray();
+    }
+    updateJumpList();
+    checkForUpdates();
 });
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
-    //asked to reload with a different character
-    if (reload) {
-        loadCharacter(reload);
-        createWindow();
-        reload = null;
-        return;
-    }
     // On macOS it is common for applications and their menu bar
     // to stay active until the user quits explicitly with Cmd + Q
-    if (process.platform !== 'darwin') {
+    if (!_reloading && process.platform !== 'darwin') {
         if (tray)
             tray.destroy();
         app.quit();
@@ -1598,506 +1134,40 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (win == null) {
-        createWindow();
+    if (Object.keys(windows).length === 0) {
+        //use default
+        let _ignore = false;
+        //attempt to load layout, 
+        if (isFileSync(_layout)) {
+            if (!argv.il)
+                _loaded = loadWindowLayout(_layout);
+        }
+        else if (!argv.il)
+            _ignore = true;
+
+        //if it fails load default window
+        if (!_loaded) {
+            //use default unless ignoring layouts
+            _loaded = _ignore;
+            newClientWindow();
+        }
     }
 });
 
-app.on('before-quit', (e) => {
-    if (winProfiles) {
+app.on('before-quit', async (e) => {
+    if (!await canCloseAllWindows(true)) {
         e.preventDefault();
-        dialog.showMessageBox(winProfiles, {
-            type: 'warning',
-            title: 'Close profile manager',
-            message: 'You must close the profile manager before you can exit.'
-        });
-        set.save(global.settingsFile);
-    }
-});
-
-ipcMain.on('check-for-updates', checkForUpdatesManual);
-
-ipcMain.on('reload', (event, char) => {
-    //already loaded so no need to reload
-    if (char === global.character)
-        return;
-    reload = char;
-    win.close();
-});
-
-ipcMain.on('load-default', () => {
-    var name;
-    var cWin;
-    //already loaded so no need to switch
-    var sf = parseTemplate(path.join('{data}', 'settings.json'));
-    var mf = parseTemplate(path.join('{data}', 'map.sqlite'));
-    if (sf === global.settingsFile && mf === global.mapFile) {
-        for (name in windows) {
-            if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-                continue;
-            windows[name].webContents.send('load-default', true);
-        }
         return;
     }
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('load-default');
-    global.settingsFile = sf;
-    global.mapFile = mf;
-    resetProfiles();
-    set = settings.Settings.load(global.settingsFile);
-
-    if (winMap) {
-        executeScript('closeWindow()', winMap);
-        winMap = null;
+    //wait until save is done before continue just to be safe
+    //only saved if not already been saved somewhere else and was loaded with no errors
+    if (_loaded && !_saved) {
+        await saveWindowLayout(null, _settings.lockLayout);
+        _saved = true;
     }
-
-    if (winEditor) {
-        winEditor.close();
-        winEditor = null;
-    }
-    if (winChat) {
-        winChat.close();
-        winChat = null;
-    }
-    for (name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-            continue;
-        executeScript('closed();', windows[name].window);
-        set.windows[name] = getWindowState(name, windows[name].window);
-        set.windows[name].options = copyWindowOptions(name);
-        cWin = windows[name].window;
-        windows[name].window = null;
-        cWin.close();
-    }
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('change-options', global.settingsFile);
-
-    if (set.showMapper)
-        showMapper(true);
-    else if (set.mapper.persistent || set.mapper.enabled)
-        createMapper();
-
-    if (set.showEditor)
-        showEditor(true);
-    else if (set.editorPersistent)
-        createEditor();
-    if (set.showChat)
-        showChat(true);
-    else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
-        createChat();
-    if (!edSet)
-        edSet = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-    if (edSet.window.show)
-        showCodeEditor(true);
-    else if (!global.editorOnly && edSet.window.persistent)
-        createCodeEditor();
+    if (app.hasSingleInstanceLock())
+        app.releaseSingleInstanceLock();
 });
-
-ipcMain.on('change-char', (event, char, create, empty) => {
-    if (create && !characters.characters[char]) {
-        var wins = BrowserWindow.getAllWindows();
-        var current = BrowserWindow.fromWebContents(event.sender);
-        //TODO add a setting to enable this
-        /*
-        for (var w = 0, wl = wins.length; w < wl; w++) {
-            if (wins[w].getTitle().startsWith('Character manager') && wins[w].getParentWindow() === current) {
-                wins[w].webContents.send('add-char', char, empty, null, true);
-                return;
-            }
-        }
-        */
-        characters.characters[char] = { name: char.replace(/[^a-zA-Z0-9]+/g, ''), settings: path.join('{characters}', char + '.json'), map: path.join('{characters}', char + '.map') };
-        var sf = parseTemplate(characters.characters[char].settings);
-        var response;
-        var d;
-        if (isFileSync(sf)) {
-            //TODO add a setting to control how the setting file is handled
-            /*
-            response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
-                type: 'warning',
-                title: 'File exists',
-                message: 'Setting file for ' + char + ' exist, replace?',
-                buttons: ['Yes', 'No'],
-                defaultId: 1,
-            });
-            if (response === 0) {
-                d = Settings.load(parseTemplate(path.join('{data}', 'settings.json')));
-                d.save(sf);
-            }
-            */
-        }
-        else {
-            if (empty)
-                d = new Settings();
-            else
-                d = Settings.load(parseTemplate(path.join('{data}', 'settings.json')));
-            d.save(sf);
-        }
-        sf = parseTemplate(characters.characters[char].map);
-        if (isFileSync(sf)) {
-            //TODO add setting to control what to do if map exist
-            /*
-            response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
-                type: 'warning',
-                title: 'File exists',
-                message: 'Map file for ' + char + ' exist, replace?',
-                buttons: ['Yes', 'No'],
-                defaultId: 1,
-            });
-            if (response === 0) {
-                if (isFileSync(parseTemplate(path.join('{data}', 'map.sqlite'))))
-                    copyFile(parseTemplate(path.join('{data}', 'map.sqlite')), sf);
-                else
-                    fs.closeSync(fs.openSync(sf, 'w'));
-            }
-            */
-        }
-        else if (!empty && isFileSync(parseTemplate(path.join('{data}', 'map.sqlite'))))
-            copyFile(parseTemplate(path.join('{data}', 'map.sqlite')), sf);
-        else
-            fs.closeSync(fs.openSync(sf, 'w'));
-        for (var w = 0, wl = wins.length; w < wl; w++) {
-            wins[w].webContents.send('add-char', char, empty, characters.characters[char]);
-        }
-    }
-    if (characters.characters[char])
-        changeCharacter(char);
-});
-
-ipcMain.on('load-char', (event, char) => {
-    changeCharacter(char);
-});
-
-function changeCharacter(char) {
-    var name;
-    //already loaded so no need to switch
-    if (char === global.character) {
-        loadCharacter(char);
-        win.webContents.send('load-char', char, true);
-        if (winMap)
-            winMap.webContents.send('load-char', char, true);
-        for (name in windows) {
-            if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-                continue;
-            windows[name].window.webContents.send('load-char', char, true);
-        }
-        return;
-    }
-    closeWindows(false, true);
-    set.windows.main = getWindowState('main', win);
-    if (winMap) {
-        set.windows.mapper = getWindowState('mapper', winMap);
-        win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows.mapper, noSave: true });
-        executeScript('closeWindow()', winMap);
-        winMap = null;
-    }
-    if (winEditor) {
-        set.windows.editor = getWindowState('editor', winEditor);
-        win.webContents.send('setting-changed', { type: 'window', name: 'editor', value: set.windows.editor, noSave: true });
-        winEditor.close();
-        winEditor = null;
-    }
-    if (winChat) {
-        set.windows.chat = getWindowState('chat', winChat);
-        win.webContents.send('setting-changed', { type: 'window', name: 'chat', value: set.windows.chat, noSave: true });
-        winChat.close();
-        winChat = null;
-    }
-    set.save(global.settingsFile);
-    loadCharacter(char);
-    resetProfiles();
-    set = settings.Settings.load(global.settingsFile);
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('load-char', char);
-    if (winMap)
-        winMap.webContents.send('load-char', char);
-    for (name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-            continue;
-        windows[name].window.webContents.send('load-char', char);
-    }
-
-    if (winMap) {
-        executeScript('closeWindow()', winMap);
-        winMap = null;
-    }
-
-    if (winEditor) {
-        winEditor.close();
-        winEditor = null;
-    }
-    if (winChat) {
-        winChat.close();
-        winChat = null;
-    }
-    if (winCode) {
-        executeScript('closeWindow()', winCode);
-        winCode = null;
-    }
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('change-options', global.settingsFile);
-
-    if (set.showMapper)
-        showMapper(true);
-    else if (set.mapper.persistent || set.mapper.enabled)
-        createMapper();
-
-    if (set.showEditor)
-        showEditor(true);
-    else if (set.editorPersistent)
-        createEditor();
-
-    if (set.showChat)
-        showChat(true);
-    else if (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)
-        createChat();
-
-    if (!edSet)
-        edSet = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-    if (edSet.window.show)
-        showCodeEditor(true);
-    else if (!global.editorOnly && edSet.window.persistent)
-        createCodeEditor();
-
-    for (name in set.windows) {
-        if (name === 'main') continue;
-        if (set.windows[name].options) {
-            if (set.windows[name].options.show)
-                showWindow(name, set.windows[name].options, true);
-            else if (set.windows[name].options.persistent)
-                createNewWindow(name, set.windows[name].options);
-        }
-        else {
-            if (set.windows[name].show)
-                showWindow(name, set.windows[name], true);
-            else if (set.windows[name].persistent)
-                createNewWindow(name, set.windows[name]);
-        }
-    }
-    set.save(global.settingsFile);
-}
-
-ipcMain.on('options-changed', () => {
-    set = settings.Settings.load(global.settingsFile);
-});
-
-ipcMain.on('reload-options', (event, save) => {
-    var s;
-    resetProfiles();
-    closeWindows(save, true, true);
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('reload-options');
-    set = settings.Settings.load(global.settingsFile);
-    if (win && !win.isDestroyed() && win.webContents) {
-        win.webContents.setBackgroundThrottling(set.enableBackgroundThrottling);
-        win.setSkipTaskbar(!set.showInTaskBar ? true : false);
-    }
-    if (set.showTrayIcon && !tray)
-        createTray();
-    else if (!set.showTrayIcon && tray) {
-        tray.destroy();
-        tray = null;
-    }
-
-    if (winMap) {
-        s = loadWindowState('mapper');
-        winMap.setBounds({ x: s.x, y: s.y, width: s.width, height: s.height });
-        winMap.webContents.send('reload-options');
-        if (winMap.setParentWindow)
-            winMap.setParentWindow(set.mapper.alwaysOnTopClient ? win : null);
-        winMap.setAlwaysOnTop(set.mapper.alwaysOnTop);
-        winMap.setSkipTaskbar((!set.mapper.showInTaskBar && (set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop)) ? true : false);
-        winMap.webContents.setBackgroundThrottling(set.enableBackgroundThrottling);
-    }
-    else if (set.mapper.enabled)
-        createMapper();
-    if (winChat) {
-        s = loadWindowState('chat');
-        winChat.setBounds({ x: s.x, y: s.y, width: s.width, height: s.height });
-        winChat.webContents.send('reload-options');
-        if (winChat.setParentWindow)
-            winChat.setParentWindow(set.chat.alwaysOnTopClient ? win : null);
-        winChat.setAlwaysOnTop(set.chat.alwaysOnTop);
-        winChat.setSkipTaskbar((!set.chat.showInTaskBar && (set.chat.alwaysOnTopClient || set.chat.alwaysOnTop)) ? true : false);
-        winChat.webContents.setBackgroundThrottling(set.enableBackgroundThrottling);
-    }
-
-    if (winProfiles) {
-        s = loadWindowState('profiles');
-        winProfiles.setBounds({ x: s.x, y: s.y, width: s.width, height: s.height });
-        winProfiles.webContents.send('reload-options');
-        winProfiles.webContents.setBackgroundThrottling(set.enableBackgroundThrottling);
-    }
-    if (winEditor) {
-        s = loadWindowState('editor');
-        winEditor.setBounds({ x: s.x, y: s.y, width: s.width, height: s.height });
-        winEditor.webContents.send('reload-options');
-        winEditor.webContents.setBackgroundThrottling(set.enableBackgroundThrottling);
-    }
-
-    for (var name in set.windows) {
-        if (name === 'main') continue;
-        if (set.windows[name].window) {
-            s = loadWindowState(name);
-            set.windows[name].window.setBounds({ x: s.x, y: s.y, width: s.width, height: s.height });
-            if (set.windows[name].window.webContents)
-                set.windows[name].window.webContents.setBackgroundThrottling(set.enableBackgroundThrottling);
-        }
-        if (set.windows[name].options) {
-            if (set.windows[name].options.show)
-                showWindow(name, set.windows[name].options, true);
-            else if (set.windows[name].options.persistent)
-                createNewWindow(name, set.windows[name].options);
-        }
-        else {
-            if (set.windows[name].show)
-                showWindow(name, set.windows[name], true);
-            else if (set.windows[name].persistent)
-                createNewWindow(name, set.windows[name]);
-        }
-    }
-    set.save(global.settingsFile);
-
-});
-
-ipcMain.on('set-title', (event, title) => {
-    global.title = title;
-    if (winChat)
-        winChat.webContents.send('set-title', title);
-    if (winProfiles)
-        winProfiles.webContents.send('set-title', title);
-    if (winEditor)
-        winEditor.webContents.send('set-title', title);
-    if (winMap)
-        winMap.webContents.send('set-title', title);
-    for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-            continue;
-        windows[name].window.webContents.send('set-title', title);
-    }
-    updateTray();
-});
-
-ipcMain.on('closed', () => {
-    global.connected = false;
-    if (winChat)
-        winChat.webContents.send('closed');
-    if (winProfiles)
-        winProfiles.webContents.send('closed');
-    if (winEditor)
-        winEditor.webContents.send('closed');
-    if (winMap)
-        winMap.webContents.send('closed');
-    if (winCode)
-        winCode.webContents.send('closed');
-    for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-            continue;
-        windows[name].window.webContents.send('closed');
-    }
-});
-
-ipcMain.on('connected', () => {
-    global.connected = true;
-    if (winChat)
-        winChat.webContents.send('connected');
-    if (winProfiles)
-        winProfiles.webContents.send('connected');
-    if (winEditor)
-        winEditor.webContents.send('connected');
-    if (winMap)
-        winMap.webContents.send('connected');
-    if (winCode)
-        winCode.webContents.send('connected');
-    for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-            continue;
-        windows[name].window.webContents.send('connected');
-    }
-});
-
-ipcMain.on('set-color', (event, type, color, code, window) => {
-    if (winEditor)
-        winEditor.webContents.send('set-color', type, color, code, window);
-    if (winCode)
-        winCode.webContents.send('set-color', type, color, code, window);
-    for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-            continue;
-        windows[name].window.webContents.send('set-color', type, color, code, window);
-    }
-});
-
-ipcMain.on('open-editor', (event, file, remote, remoteEdit) => {
-    showCodeEditor();
-    openEditor(file, remote, remoteEdit);
-});
-
-function openEditor(file, remote, remoteEdit) {
-    if (codeReady !== 2 || !winCode) {
-        setTimeout(() => {
-            openEditor(file, remote, remoteEdit);
-        }, 1000);
-    }
-    else {
-        winCode.webContents.send('open-editor', file, remote, remoteEdit);
-    }
-}
-
-ipcMain.on('send-background', (event, command, noEcho, comments) => {
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('send-background', command, noEcho, comments);
-});
-
-ipcMain.on('send-command', (event, command, noEcho, comments) => {
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('send-command', command, noEcho, comments);
-});
-
-ipcMain.on('send-gmcp', (event, data) => {
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('send-gmcp', data);
-});
-
-ipcMain.on('send-raw', (event, raw) => {
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('send-raw', raw);
-});
-
-ipcMain.on('send', (event, raw, echo) => {
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('send', raw, echo);
-});
-
-ipcMain.on('send-editor', (event, text, window, show, args) => {
-    if (show)
-        showSelectedWindow(window, args);
-    sendEditor(text, window);
-});
-
-function sendEditor(text, window) {
-    if ((codeReady !== 2 || !winCode || !winCode.isVisible()) && window === 'code-editor') {
-        setTimeout(() => {
-            sendEditor(text, window);
-        }, 1000);
-    }
-    else if ((editorReady !== 2 || !winEditor || !winEditor.isVisible()) && window === 'editor') {
-        setTimeout(() => {
-            sendEditor(text, window);
-        }, 1000);
-    }
-    else {
-        if (winEditor)
-            winEditor.webContents.send('send-editor', text, window);
-        if (winCode)
-            winCode.webContents.send('send-editor', text, window);
-        for (var name in windows) {
-            if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-                continue;
-            windows[name].window.webContents.send('send-editor', text, window);
-        }
-    }
-}
 
 ipcMain.on('log', (event, raw) => {
     console.log(raw);
@@ -2107,532 +1177,22 @@ ipcMain.on('log-error', (event, err, skipClient) => {
     logError(err, skipClient);
 });
 
-ipcMain.on('debug', (event, msg) => {
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('debug', msg);
+ipcMain.on('debug', (event, msg, id) => {
+    sendClient('debug', msg, id);
 });
 
-ipcMain.on('error', (event, err) => {
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('error', err);
+ipcMain.on('error', (event, err, id) => {
+    sendClient('error', err, id);
 });
 
-ipcMain.on('reload-mail', () => {
-    createMenu();
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('reload-mail');
-    for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window || !windows[name].window.webContents)
-            continue;
-        windows[name].window.webContents.send('reload-mail');
+function sendClient(channel, msg, id) {
+    let client = id ? clients[id] : getActiveClient();
+    if (client && client.view.webContents) {
+        client.view.webContents.send(channel, msg);
+        return true;
     }
-});
-
-ipcMain.on('reload-profiles', () => {
-    createMenu();
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('reload-profiles');
-    for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window || !windows[name].window.webContents)
-            continue;
-        windows[name].window.webContents.send('reload-profiles');
-    }
-});
-
-ipcMain.on('chat', (event, text) => {
-    sendChat(text);
-    for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-            continue;
-        windows[name].window.webContents.send('chat', text);
-    }
-});
-
-function sendChat(text) {
-    if (chatReady !== 2 || !winChat) {
-        setTimeout(() => { sendChat(text); }, 100);
-        return;
-    }
-    else
-        winChat.webContents.send('chat', text);
+    return false;
 }
-
-ipcMain.on('profile-edit-item', (event, profile, type, index) => {
-    showProfiles();
-    profileEditItem(profile, type, index);
-});
-
-function profileEditItem(profile, type, index) {
-    if (profilesReady !== 2 || !winProfiles) {
-        setTimeout(() => { profileEditItem(profile, type, index); }, 100);
-        return;
-    }
-    else
-        winProfiles.webContents.send('profile-edit-item', profile, type, index);
-}
-
-ipcMain.on('setting-changed', (event, data) => {
-    if (data.type === 'mapper' && data.name === 'alwaysOnTopClient') {
-        if (winMap.setParentWindow)
-            winMap.setParentWindow(data.value ? win : null);
-        winMap.setSkipTaskbar((!set.mapper.showInTaskBar && (set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop)) ? true : false);
-    }
-    if (data.type === 'mapper' && data.name === 'setAlwaysOnTop') {
-        winMap.setAlwaysOnTop(data.value);
-        winMap.setSkipTaskbar((!set.mapper.showInTaskBar && (set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop)) ? true : false);
-    }
-    if (win && event.sender != win.webContents) {
-        win.webContents.send('setting-changed', data);
-        win.setSkipTaskbar(!set.showInTaskBar ? true : false);
-    }
-    if (winMap && event.sender != winMap.webContents)
-        winMap.webContents.send('setting-changed', data);
-
-    if (data.type === 'chat' && data.name === 'alwaysOnTopClient') {
-        if (winChat.setParentWindow)
-            winChat.setParentWindow(data.value ? win : null);
-        winChat.setSkipTaskbar((!set.chat.showInTaskBar && (set.chat.alwaysOnTopClient || set.chat.alwaysOnTop)) ? true : false);
-    }
-    if (data.type === 'chat' && data.name === 'setAlwaysOnTop') {
-        winChat.setAlwaysOnTop(data.value);
-        winChat.setSkipTaskbar((!set.chat.showInTaskBar && (set.chat.alwaysOnTopClient || set.chat.alwaysOnTop)) ? true : false);
-    }
-    if (data.type === 'mapper' && data.name === 'enabled' && !winMap && data.value)
-        createMapper();
-    if (!winChat && data.type === 'chat' && (data.name === 'captureTells' || data.name === 'captureTalk' || data.name === 'captureLines')) {
-        if (data.value)
-            createChat();
-    }
-    var name;
-    if (data.type === 'windows')
-        for (name in windows) {
-            if (name === 'main' || !Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-                continue;
-
-            if (name === data.name) {
-                windows[name].alwaysOnTopClient = data.value.alwaysOnTopClient;
-                windows[name].persistent = data.value.persistent;
-                windows[name].alwaysOnTop = data.value.alwaysOnTop;
-            }
-            if (windows[name].window)
-                windows[name].window.webContents.send('setting-changed', data);
-            if (windows[name].window.setParentWindow)
-                windows[name].window.setParentWindow(windows[name].alwaysOnTopClient ? win : null);
-            windows[name].window.setSkipTaskbar((windows[name].alwaysOnTopClient || windows[name].alwaysOnTop) ? true : false);
-            if (windows[name].persistent)
-                createNewWindow(name, windows[name]);
-        }
-    if (data.type === 'extensions')
-        for (name in windows) {
-            if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-                continue;
-            if (windows[name].window)
-                windows[name].window.webContents.send('setting-changed', data);
-        }
-});
-
-ipcMain.on('editor-setting-changed', (event, data) => {
-    if (winCode) {
-        winCode.webContents.send('editor-setting-changed');
-        if (edSet)
-            winCode.webContents.setBackgroundThrottling(edSet.enableBackgroundThrottling);
-    }
-    if (winCode.setParentWindow)
-        winCode.setParentWindow((!global.editorOnly && data.alwaysOnTopClient) ? win : null);
-    winCode.setSkipTaskbar((!global.editorOnly && (data.alwaysOnTopClient || data.alwaysOnTop)) ? true : false);
-    if (!global.editorOnly && data.persistent && !winCode)
-        createCodeEditor();
-});
-
-ipcMain.on('editor-settings-saved', () => {
-    edSet = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-});
-
-ipcMain.on('GMCP-received', (event, data) => {
-    if (winMap)
-        winMap.webContents.send('GMCP-received', data);
-    if (winCode)
-        winCode.webContents.send('GMCP-received', data);
-    for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-            continue;
-        windows[name].window.webContents.send('GMCP-received', data);
-    }
-});
-
-ipcMain.on('request-command-history', () => {
-    if (win)
-        win.webContents.send('request-command-history');
-});
-
-ipcMain.on('change-command-history-index', (event, index) => {
-    if (win)
-        win.webContents.send('change-command-history-index', index);
-});
-
-ipcMain.on('add-command-history', (event, cmd) => {
-    if (win)
-        win.webContents.send('add-command-history', cmd);
-});
-
-ipcMain.on('clear-command-history', () => {
-    if (win)
-        win.webContents.send('clear-command-history');
-});
-
-ipcMain.on('command-history', (event, history) => {
-    if (winMap)
-        winMap.webContents.send('command-history', history);
-    if (winCode)
-        winCode.webContents.send('command-history', history);
-    for (var name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-            continue;
-        windows[name].window.webContents.send('command-history', history);
-    }
-});
-
-ipcMain.on('update-menuitem', (event, args) => {
-    updateMenuItem(args);
-});
-
-ipcMain.on('set-overlay', (event, args) => {
-    overlay = args;
-    if (!win) return;
-    switch (args) {
-        case 1:
-            if (process.platform === 'linux')
-                win.setIcon(path.join(__dirname, '../assets/icons/png/connected2.png'));
-            else
-                win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connected.png'), 'Connected');
-            break;
-        case 2:
-            if (process.platform === 'linux')
-                win.setIcon(path.join(__dirname, '../assets/icons/png/connectednonactive2.png'));
-            else
-                win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/connectednonactive.png'), 'Received data');
-            break;
-        case 'code':
-            if (process.platform === 'linux')
-                win.setIcon(path.join(__dirname, '../assets/icons/png/code.png'));
-            else
-                win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/codeol.png'), 'Received data');
-            break;
-        default:
-            if (process.platform === 'linux')
-                win.setIcon(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
-            else
-                win.setOverlayIcon(path.join(__dirname, '../assets/icons/png/disconnected.png'), 'Disconnected');
-            break;
-    }
-    updateTray();
-});
-
-ipcMain.on('set-progress', (event, args) => {
-    if (win)
-        win.setProgressBar(args.value, args.options);
-    else if (global.editorOnly && winCode)
-        winCode.setProgressBar(args.value, args.options);
-});
-
-ipcMain.on('set-progress-window', (event, window, args) => {
-    if (window == 'mapper') {
-        if (winMap)
-            winMap.setProgressBar(args.value, args.options);
-    }
-    else if (window === 'code-editor') {
-        if (winCode)
-            winCode.setProgressBar(args.value, args.options);
-    }
-    else if (windows[window] && windows[window].window)
-        windows[window].window.setProgressBar(args.value, args.options);
-});
-
-ipcMain.on('progress-show', (event, title) => {
-    if (winProgress != null) {
-        if (!progressReady) return;
-        winProgress.show();
-        if (typeof title === 'string')
-            setProgressTitle(title);
-        else if (title)
-            setProgress(title);
-    }
-    else {
-        progressReady = 0;
-        var sender = BrowserWindow.fromWebContents(event.sender);
-        var b = sender.getBounds();
-        winProgress = new BrowserWindow({
-            parent: sender,
-            modal: true,
-            x: Math.floor(b.x + b.width / 2 - 100),
-            y: Math.floor(b.y + b.height / 2 - 35),
-            width: 200,
-            height: 70,
-            movable: false,
-            minimizable: false,
-            maximizable: false,
-            skipTaskbar: true,
-            resizable: false,
-            frame: false,
-            title: title,
-            icon: path.join(__dirname, '../assets/icons/png/progress.png'),
-            show: false,
-            webPreferences: {
-                nodeIntegration: true,
-                webviewTag: false,
-                sandbox: false,
-                spellcheck: set ? set.spellchecking : false,
-                enableRemoteModule: true,
-                contextIsolation: false,
-                backgroundThrottling: set ? set.enableBackgroundThrottling : true
-            }
-        });
-        require("@electron/remote/main").enable(winProgress.webContents);
-        winProgress.removeMenu();
-        winProgress.on('closed', () => {
-            winProgress = null;
-            progressReady = 3;
-        });
-        winProgress.loadURL(url.format({
-            pathname: path.join(__dirname, 'progress.html'),
-            protocol: 'file:',
-            slashes: true
-        }));
-
-        if (global.debug)
-            winProgress.webContents.openDevTools();
-
-        winProgress.webContents.on('did-finish-load', () => {
-            progressReady = 2;
-        });
-
-        winProgress.once('ready-to-show', () => {
-            if (progressReady !== 2)
-                progressReady = 1;
-            winProgress.show();
-            if (typeof title === 'string')
-                setProgressTitle(title);
-            else if (title)
-                setProgress(title);
-        });
-
-        winProgress.webContents.on('render-process-gone', (event, details) => {
-            logError(`Progress render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
-        });
-        winProgress.on('unresponsive', () => {
-            dialog.showMessageBox({
-                type: 'info',
-                message: 'Unresponsive',
-                buttons: ['Reopen', 'Keep waiting', 'Close']
-            }).then(result => {
-                if (!winProgress)
-                    return;
-                if (result.response === 0) {
-                    winProgress.reload();
-                    logError('Progress unresponsive, reload.\n', true);
-                }
-                else if (result.response === 2) {
-                    winProgress.destroy();
-                }
-                else
-                    logError('Progress unresponsive, waiting.\n', true);
-            });
-        });
-    }
-});
-
-ipcMain.on('progress', (event, progressObj) => {
-    setProgress(progressObj);
-});
-
-ipcMain.on('progress-close', (event, progressObj) => {
-    if (winProgress)
-        winProgress.webContents.send('progress-close', progressObj);
-    if (win)
-        win.setProgressBar(0);
-    else if (global.editorOnly && winCode)
-        winCode.setProgressBar(0);
-});
-
-ipcMain.on('get-skills', (event, window) => {
-    if (win)
-        win.webContents.send('get-skills', window);
-});
-
-ipcMain.on('skills', (event, skills, window) => {
-    if (window) {
-        if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window].window)
-            return;
-        windows[window].window.webContents.send('skills', skills);
-    }
-    else
-        for (let name in windows) {
-            if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-                continue;
-            windows[name].window.webContents.send('skills', skills);
-        }
-});
-
-ipcMain.on('skill-updated', (event, skill, data) => {
-    for (let name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-            continue;
-        windows[name].window.webContents.send('skill-updated', skill, data);
-    }
-});
-
-ipcMain.on('skills-reset', (event, window) => {
-    if (window) {
-        if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window].window)
-            return;
-        windows[window].window.webContents.send('skills-reset');
-    }
-    else
-        for (let name in windows) {
-            if (!Object.prototype.hasOwnProperty.call(windows, name) || !windows[name].window)
-                continue;
-            windows[name].window.webContents.send('skills-reset');
-        }
-});
-
-function setProgress(progressObj) {
-    clearTimeout(_winProgressTimer);
-    if (progressReady === 3) return;
-    if (progressReady !== 2)
-        _winProgressTimer = setTimeout(() => setProgress(progressObj), 100);
-    else {
-        winProgress.webContents.send('progress', progressObj);
-        if (win)
-            win.setProgressBar((progressObj.value || progressObj.percent) / 100, progressObj.options);
-        else if (global.editorOnly && winCode)
-            winCode.setProgressBar((progressObj.value || progressObj.percent) / 100, progressObj.options);
-    }
-}
-
-function setProgressTitle(title) {
-    if (progressReady === 3) return;
-    if (progressReady !== 2 || !winProgress)
-        setTimeout(() => setProgressTitle(title), 100);
-    else
-        winProgress.webContents.send('progress-title', title);
-}
-
-ipcMain.on('progress-title', (event, title) => {
-    setProgressTitle(title);
-});
-
-ipcMain.on('progress-closed', () => {
-    if (winProgress && winProgress.getParentWindow())
-        winProgress.getParentWindow().webContents.send('progress-closed');
-    setProgress({ percent: 0 });
-});
-
-ipcMain.on('progress-canceled', async () => {
-    if (winProgress && winProgress.getParentWindow()) {
-        winProgress.getParentWindow().webContents.send('progress-canceled');
-        await executeScript('progressCanceled()', winProgress.getParentWindow());
-    }
-    setProgress({ percent: 0 });
-});
-
-ipcMain.on('progress-loaded', () => {
-    if (winProgress && winProgress.getParentWindow())
-        winProgress.getParentWindow().webContents.send('progress-loaded');
-});
-
-ipcMain.on('progress-cancelable', (enable) => {
-    if (winProgress)
-        winProgress.webContents.send('progress-cancelable', enable);
-});
-
-ipcMain.on('show-window', (event, window, args) => {
-    showSelectedWindow(window, args);
-});
-
-function showSelectedWindow(window, args) {
-    if (!window || window === 'main') {
-        if (global.editorOnly)
-            restoreWindowState(winCode, getWindowState('code-editor') || getWindowState('code-editor', winCode), true, true);
-        else
-            restoreWindowState(win, getWindowState('main') || getWindowState('main', win), true, true);
-    }
-    else if (window === 'about')
-        showAbout();
-    else if (window === 'prefs')
-        showPrefs();
-    else if (window === 'mapper')
-        showMapper();
-    else if (window === 'editor')
-        showEditor();
-    else if (window === 'profiles')
-        showProfiles();
-    else if (window === 'chat')
-        showChat();
-    else if (window === 'color')
-        showColor(args);
-    else if (window === 'code-editor')
-        showCodeEditor();
-    else if (windows[window] && windows[window].window)
-        showWindow(window, windows[window], false);
-    else
-        createNewWindow(window, args);
-}
-
-ipcMain.on('import-map', (event, data) => {
-    if (winMap)
-        winMap.webContents.send('import', data);
-    else if (data) {
-        createMapper(false, true, () => { winMap.webContents.send('import', data); });
-    }
-});
-
-ipcMain.on('flush', (event, sender) => {
-    if (winMap)
-        winMap.webContents.send('flush', sender);
-    else if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('flush-end', sender);
-});
-
-ipcMain.on('flush-end', (event, sender) => {
-    if (win && !win.isDestroyed() && win.webContents)
-        win.webContents.send('flush-end', sender);
-});
-
-ipcMain.on('reload-characters', () => {
-    loadCharacters(true);
-    if (global.character)
-        loadCharacter(global.character);
-});
-
-ipcMain.on('profile-item-added', (event, type, profile, item) => {
-    if (winProfiles)
-        winProfiles.webContents.send('profile-item-added', type, profile, item);
-});
-
-ipcMain.on('profile-item-updated', (event, type, profile, idx, item) => {
-    if (winProfiles)
-        winProfiles.webContents.send('profile-item-updated', type, profile, idx, item);
-});
-
-ipcMain.on('profile-item-removed', (event, type, profile, idx) => {
-    if (winProfiles)
-        winProfiles.webContents.send('profile-item-removed', type, profile, idx);
-});
-
-ipcMain.on('profile-updated', (event, profile, noChanges, type) => {
-    if (winProfiles)
-        winProfiles.webContents.send('profile-updated', profile, noChanges, type);
-});
-
-ipcMain.on('profile-toggled', (event, profile, enabled) => {
-    if (winProfiles)
-        winProfiles.webContents.send('profile-toggled', profile, enabled);
-});
-
-ipcMain.on('profile-enabled', (event, profile) => {
-    if (winProfiles)
-        winProfiles.webContents.send('profile-enabled', profile);
-});
 
 ipcMain.on('ondragstart', (event, files, icon) => {
     if (!files || files.length === 0) return;
@@ -2664,35 +1224,26 @@ ipcMain.on('get-global', (event, key) => {
         case 'mapFile':
             event.returnValue = global.mapFile;
             break;
-        case 'profiles':
-            event.returnValue = global.profiles;
-            break;
-        case 'character':
-            event.returnValue = global.character;
-            break;
-        case 'characterLogin':
-            event.returnValue = global.characterLogin;
-            break;
-        case 'characterPass':
-            event.returnValue = global.characterPass;
-            break;
-        case 'dev':
-            event.returnValue = global.dev;
-            break;
-        case 'disconnect':
-            event.returnValue = global.disconnect;
-            break;
-        case 'title':
-            event.returnValue = global.title;
-            break;
         case 'debug':
             event.returnValue = global.debug;
             break;
-        case 'connected':
-            event.returnValue = global.connected;
-            break;
         case 'updating':
             event.returnValue = global.updating;
+            break;
+        case 'closeAll':
+            event.returnValue = global.closeAll || false;
+            break;
+        case 'noCloseAll':
+            event.returnValue = global.noCloseAll || false;
+            break;
+        case 'layout':
+            event.returnValue = _layout;
+            break;
+        case 'theme':
+            event.returnValue = _settings ? _settings.theme : '';
+            break;
+        case 'askonloadCharacter':
+            event.returnValue = _settings ? _settings.askonloadCharacter : true;
             break;
         default:
             event.returnValue = null;
@@ -2711,37 +1262,107 @@ ipcMain.on('set-global', (event, key, value) => {
         case 'mapFile':
             global.mapFile = value;
             break;
-        case 'profiles':
-            global.profiles = value;
-            break;
-        case 'character':
-            global.character = value;
-            break;
-        case 'characterLogin':
-            global.characterLogin = value;
-            break;
-        case 'characterPass':
-            global.characterPass = value;
-            break;
-        case 'dev':
-            global.dev = value;
-            break;
-        case 'disconnect':
-            global.disconnect = value;
-            break;
-        case 'title':
-            global.title = value;
-            break;
         case 'debug':
             global.debug = value;
-            break;
-        case 'connected':
-            global.connected = value;
             break;
         case 'updating':
             global.updating = value;
             break;
+        case 'closeAll':
+            global.closeAll = value;
+            break;
+        case 'noCloseAll':
+            global.noCloseAll = value;
+            break;
     }
+});
+
+ipcMain.on('get-setting', (event, key) => {
+    if (!_settings) {
+        event.returnValue = null;
+        return;
+    }
+    switch (key) {
+        case 'theme':
+            event.returnValue = _settings.theme;
+            break;
+        case 'askonloadCharacter':
+            event.returnValue = _settings.askonloadCharacter;
+            break;
+        case 'spellchecking':
+            event.returnValue = _settings.spellchecking;
+            break;
+        case 'alwaysShowTabs':
+            event.returnValue = _settings.alwaysShowTabs;
+            break;
+        case 'enableBackgroundThrottling':
+            event.returnValue = _settings.enableBackgroundThrottling;
+            return;
+        case 'showTabsAddNewButton':
+            event.returnValue = _settings.showTabsAddNewButton;
+            return;
+        case 'askOnCloseAll':
+            event.returnValue = _settings.askOnCloseAll;
+            return;
+        default:
+            if (key in _settings)
+                event.returnValue = _settings[key];
+            else
+                event.returnValue = null;
+            break;
+    }
+});
+
+ipcMain.on('set-setting', (event, key, value) => {
+    if (!_settings)
+        return;
+    switch (key) {
+        case 'theme':
+            _settings.theme = value;
+            _settings.save(global.settingsFile);
+            break;
+        case 'askonloadCharacter':
+            _settings.askonloadCharacter = value;
+            _settings.save(global.settingsFile);
+            break;
+        case 'spellchecking':
+            _settings.spellchecking = value;
+            _settings.save(global.settingsFile);
+            break;
+        case 'alwaysShowTabs':
+            _settings.alwaysShowTabs = value;
+            _settings.save(global.settingsFile);
+            break;
+        case 'enableBackgroundThrottling':
+            _settings.enableBackgroundThrottling = value;
+            _settings.save(global.settingsFile);
+            break;
+        case 'showTabsAddNewButton':
+            _settings.showTabsAddNewButton = value;
+            _settings.save(global.settingsFile);
+            break
+        case 'askOnCloseAll':
+            _settings.askOnCloseAll = value;
+            _settings.save(global.settingsFile);
+            break
+        default:
+            if (key in _settings && typeof value === typeof _settings[key]) {
+                _settings[key] = value;
+                _settings.save(global.settingsFile);
+            }
+            break;
+    }
+});
+
+ipcMain.on('get-pid', (event) => {
+    event.returnValue = process.pid;
+});
+
+ipcMain.on('get-system-color', (event, color) => {
+    if (color === 'accent')
+        event.returnValue = systemPreferences.getAccentColor();
+    else
+        event.returnValue = systemPreferences.getColor(color);
 });
 
 ipcMain.handle('get-app', async (event, key, ...args) => {
@@ -2783,6 +1404,162 @@ ipcMain.on('get-app-sync', async (event, key, ...args) => {
     }
 });
 
+ipcMain.on('set-progress', (event, progress, mode) => {
+    const window = BrowserWindow.fromWebContents(event.sender);
+    const clientId = getClientId(browserViewFromContents(event.sender));
+    const windowId = getWindowId(window);
+    clients[clientId].progress = progress.value;
+    clients[clientId].progressMode = progress.mode || mode;
+    const cl = windows[windowId].clients.length;
+    let totalProgress = 0.0;
+    let totalCount = 0;
+    let progressMode = 'normal';
+    for (let c = 0; c < cl; c++) {
+        if (clients[windows[windowId].clients[c]].progress === -1 || !('progress' in clients[windows[windowId].clients[c]]))
+            continue;
+        if (clients[clientId].progressMode && clients[clientId].progressMode.length)
+            progressMode = clients[clientId].progressMode;
+        totalProgress += clients[windows[windowId].clients[c]].progress;
+        totalCount++;
+    }
+    if (!totalCount)
+        totalProgress = -1;
+    else
+        totalProgress /= totalCount;
+
+    window.setProgressBar(totalProgress, { mode: progressMode });
+});
+
+ipcMain.on('reload-profiles', event => {
+    for (clientId in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId))
+            continue;
+        clients[clientId].view.webContents.send('reload-profiles');
+    }
+});
+
+ipcMain.on('reload-profile', (event, profile) => {
+    for (clientId in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId))
+            continue;
+        clients[clientId].view.webContents.send('reload-profile', profile);
+    }
+});
+
+ipcMain.on('import-characters', (event, file, id, backup, replace) => {
+    openCharacters();
+    _characters.import(file, backup, replace);
+    for (clientId in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId) || parseInt(clientId, 10) === id)
+            continue;
+        clients[clientId].view.webContents.send('characters-imported');
+    }
+});
+
+ipcMain.on('get-characters', (event, options) => {
+    openCharacters();
+    event.returnValue = _characters.getCharacters(options);
+});
+
+ipcMain.on('get-character', (event, id, property) => {
+    openCharacters();
+    let character = _characters.getCharacter(id);
+    event.returnValue = character ? (property ? character[property] : character) : null;
+});
+
+ipcMain.on('update-character', (event, character, id, noReload) => {
+    openCharacters();
+    _characters.updateCharacter(character);
+    for (clientId in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId) || parseInt(clientId, 10) === id)
+            continue;
+        clients[clientId].view.webContents.send('character-updated', character.ID, noReload);
+    }
+});
+
+ipcMain.on('update-character-time', (event, data, id) => {
+    openCharacters();
+    let character = _characters.getCharacter(data.ID);
+    data.TotalMilliseconds += character.TotalMilliseconds;
+    /*
+    if (data.TotalMilliseconds >= 86400000)
+    {
+        data.TotalDays = character.TotalDays + (data.TotalMilliseconds / 86400000);
+        data.TotalMilliseconds %= 86400000;
+    }
+    */
+    _characters.updateCharacter(data);
+    for (clientId in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId) || parseInt(clientId, 10) === id)
+            continue;
+        clients[clientId].view.webContents.send('character-updated', character.ID, true);
+    }
+});
+
+ipcMain.on('add-character', (event, character) => {
+    openCharacters();
+    const id = _characters.addCharacter(character);
+    event.returnValue = id;
+    character.ID = id;
+    for (clientId in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId))
+            continue;
+        clients[clientId].view.webContents.send('character-added', character);
+    }
+});
+
+ipcMain.on('get-character-next-id', (event) => {
+    openCharacters();
+    event.returnValue = _characters.getNextId();
+});
+
+ipcMain.on('remove-character', (event, id) => {
+    openCharacters();
+    _characters.removeCharacter(id);
+});
+
+ipcMain.on('get-character-from-id', (event, id, property) => {
+    openCharacters();
+    let character = getCharacterFromId(id);
+    event.returnValue = character ? (property ? character[property] : character) : null;
+});
+
+function getCharacterId(id) {
+    openCharacters();
+    if (id.startsWith('id:')) {
+        id = id.substring(3);
+        if (id.length === 0)
+            return 0;
+        id = parseInt(id, 10);
+        if (_characters.getCharacter(id))
+            return id;
+    }
+    const chars = _characters.getCharactersByTitle(id);
+    if (chars.length !== 0)
+        return chars[0].ID;
+    id = parseInt(id, 10);
+    if (_characters.getCharacter(id))
+        return id;
+    return 0;
+}
+
+function getCharacterFromId(id) {
+    openCharacters();
+    if (id.startsWith('id:')) {
+        id = id.substring(3);
+        if (id.length === 0)
+            return 0;
+        id = parseInt(id, 10);
+        return _characters.getCharacter(id);
+    }
+    const chars = _characters.getCharactersByTitle(id);
+    if (chars.length !== 0)
+        return chars[0].ID;
+    id = parseInt(id, 10);
+    return _characters.getCharacter(id)
+}
+
+//#region IPC dialogs
 ipcMain.on('show-dialog-sync', (event, type, ...args) => {
     var sWindow = BrowserWindow.fromWebContents(event.sender);
     if (type === 'showMessageBox')
@@ -2791,20 +1568,30 @@ ipcMain.on('show-dialog-sync', (event, type, ...args) => {
         event.returnValue = dialog.showSaveDialogSync(sWindow, ...args);
     else if (type === 'showOpenDialog')
         event.returnValue = dialog.showOpenDialogSync(sWindow, ...args);
+    else {
+        logError('Invalid show-dialog-sync: ' + type);
+        event.returnValue = null;
+    }
 });
 
 ipcMain.handle('show-dialog', (event, type, ...args) => {
-    return new Promise((resolve, reject) => {
-        var sWindow = BrowserWindow.fromWebContents(event.sender);
-        if (type === 'showMessageBox')
-            dialog.showMessageBox(sWindow, ...args).then(resolve).catch(reject);
-        else if (type === 'showSaveDialog')
-            dialog.showSaveDialog(sWindow, ...args).then(resolve).catch(reject);
-        else if (type === 'showOpenDialog')
-            dialog.showOpenDialog(sWindow, ...args).then(resolve).catch(reject);
-    });
+    var sWindow = BrowserWindow.fromWebContents(event.sender);
+    if (type === 'showMessageBox')
+        return dialog.showMessageBox(sWindow, ...args);
+    else if (type === 'showSaveDialog')
+        return dialog.showSaveDialog(sWindow, ...args);
+    else if (type === 'showOpenDialog')
+        return dialog.showOpenDialog(sWindow, ...args);
+    else if (type === 'showErrorBox')
+        return dialog.showErrorBox(sWindow, ...args);
+    return new Promise();
 });
 
+ipcMain.on('show-error-box', (event, title, contents) => {
+    dialog.showErrorBox(title, contents);
+});
+//#endregion
+//#region IPC Show context menu
 ipcMain.on('show-context-sync', (event, template, options, show, close) => {
     showContext(event, template, options, show, close);
     event.returnValue = true;
@@ -2824,10 +1611,10 @@ function showContext(event, template, options, show, close) {
     template.map((item, idx) => {
         if (typeof item.click === 'string') {
             var click = item.click;
-            item.click = () => event.sender.executeJavaScript(click);
+            item.click = (item, window, keyboard) => event.sender.executeJavaScript(`(function() { event = ${JSON.stringify(keyboard)}; ${click} })();`);
         }
         else
-            item.click = () => event.sender.executeJavaScript(`executeContextItem(${idx}, "${item.id}", "${item.label}", "${item.role}");`);
+            item.click = (item, window, keyboard) => event.sender.executeJavaScript(`executeContextItem(${idx}, "${item.id}", "${item.label}", "${item.role}", ${JSON.stringify(keyboard)});`);
     });
     var cMenu = Menu.buildFromTemplate(template);
     if (show)
@@ -2840,20 +1627,17 @@ function showContext(event, template, options, show, close) {
         });
     cMenu.popup(options);
 }
+//#endregion
 
 ipcMain.on('trash-item', (event, file) => {
     if (!file)
         return;
-    shell.trashItem(file).catch(err => logError(err));
+    shell.trashItem(file).catch(logError);
 });
 
 ipcMain.on('trash-item-sync', async (event, file) => {
-    await shell.trashItem(file).catch(err => logError(err));
+    await shell.trashItem(file).catch(logError);
     event.returnValue = true;
-});
-
-ipcMain.on('parseTemplate', (event, str, data) => {
-    event.returnValue = parseTemplate(str, data);
 });
 
 ipcMain.handle('window', (event, action, ...args) => {
@@ -2872,18 +1656,16 @@ ipcMain.handle('window', (event, action, ...args) => {
     else if (action === 'openDevTools')
         current.openDevTools();
     else if (action === 'show')
-        current.show();
+        restoreWindowState(current, stateMap.get(current), 2);
     else if (action === 'toggle') {
-        if (args && args.length)
-            showSelectedWindow(args[0], args.slice(1));
-        else if (current.isVisible()) {
+        if (current.isVisible()) {
             if (args[0])
                 current.hide();
             else
                 current.minimize();
         }
         else
-            current.show();
+            restoreWindowState(current, stateMap.get(current), 2);
     }
     else if (action === 'setEnabled')
         current.setEnabled(...args);
@@ -2897,47 +1679,87 @@ ipcMain.handle('window', (event, action, ...args) => {
         current.reload();
     else if (action === 'setIcon')
         current.setIcon(...args);
-    else if (action === 'closeWindows')
-        closeWindows(true, false);
+    else if (action === 'update')
+        updateWindow(current, getChildParentWindow(current), ...args);
+    else if (action === 'updateAll')
+        updateAll(...args);
+    else if (action === 'setProgress' || action === 'setProgressBar')
+        current.setProgressBar(...args);
 });
 
-ipcMain.handle('attach-context-event', event => {
-    event.sender.on('context-menu', (e, props) => {
-        executeScriptContents(`executeContextMenu(${JSON.stringify(props)})`, event.sender);
-    });
-});
-
-ipcMain.handle('attach-context-event-prevent', event => {
-    event.sender.on('context-menu', (e, props) => {
-        executeScriptContents(`executeContextMenu(${JSON.stringify(props)})`, event.sender);
-    });
-});
-
-ipcMain.on('window-info', (event, info, ...args) => {
-    if (info === "child-count") {
-        var wins = BrowserWindow.getAllWindows();
-        var current = BrowserWindow.fromWebContents(event.sender);
-        var count = 0;
-        for (var w = 0, wl = wins.length; w < wl; w++) {
-            if (wins[w] === current || !wins[w].isVisible())
-                continue;
-            if (wins[w].getParentWindow() !== current)
-                continue;
-            count++;
+ipcMain.handle('parent-window', (event, action, ...args) => {
+    var current = BrowserWindow.fromWebContents(event.sender);
+    //get parent or default back to caller
+    current = current.getParentWindow() || current;
+    if (!current || current.isDestroyed()) return;
+    if (action === "focus")
+        current.focus();
+    else if (action === "hide")
+        current.hide();
+    else if (action === "minimize")
+        current.minimize();
+    else if (action === "close")
+        current.close();
+    else if (action === 'clearCache')
+        return current.webContents.session.clearCache();
+    else if (action === 'openDevTools')
+        current.openDevTools();
+    else if (action === 'show')
+        restoreWindowState(current, stateMap.get(current), 2);
+    else if (action === 'toggle') {
+        if (current.isVisible()) {
+            if (args[0])
+                current.hide();
+            else
+                current.minimize();
         }
-        event.returnValue = count;
+        else
+            restoreWindowState(current, stateMap.get(current), 2);
+    }
+    else if (action === 'setEnabled')
+        current.setEnabled(...args);
+    else if (action === 'toggleDevTools') {
+        if (current.isDevToolsOpened())
+            current.closeDevTools();
+        else
+            current.openDevTools();
+    }
+    else if (action === 'reload')
+        current.reload();
+    else if (action === 'setIcon')
+        current.setIcon(...args);
+    else if (action === 'update')
+        updateWindow(current, getChildParentWindow(current), ...args);
+    else if (action === 'updateAll')
+        updateAll(...args);
+    else if (action === 'setProgress' || action === 'setProgressBar')
+        current.setProgressBar(...args);
+});
+
+ipcMain.handle('contents', (event, action, ...args) => {
+    if (event.sender.isDestroyed()) return;
+    if (action === 'update')
+        updateWebContents(event.sender, ...args);
+    else if (action === 'replaceMisspelling')
+        event.sender.replaceMisspelling(...args);
+    else if (action === 'inspectElement')
+        event.sender.inspectElement(...args);
+})
+
+ipcMain.on('window-info', (event, info, id, ...args) => {
+    if (info === "child-count") {
+        event.returnValue = clients[id] ? clients[id].windows.length : 0;
     }
     else if (info === 'child-open') {
-        if (!args || args.length === 0) {
+        if (!clients[id] || !args || args.length === 0) {
             event.returnValue = 0;
             return
         }
-        var wins = BrowserWindow.getAllWindows();
-        var current = BrowserWindow.fromWebContents(event.sender);
-        for (var w = 0, wl = wins.length; w < wl; w++) {
-            if (wins[w] === current || !wins[w].isVisible())
-                continue;
-            if (wins[w].getTitle().startsWith(args[0]) && wins[w].getParentWindow() === current) {
+        const wl = clients[id].windows.length;
+        for (var idx = 0; idx < wl; idx++) {
+            const window = clients[id].windows[idx].window;
+            //call any code hooks in the child windows
+            if (window && !window.isDestroyed() && window.getTitle().startsWith(args[0])) {
                 event.returnValue = 1;
                 return;
             }
@@ -2945,62 +1767,12 @@ ipcMain.on('window-info', (event, info, ...args) => {
         event.returnValue = 0;
     }
     else if (info === 'child-close') {
-        var wins = BrowserWindow.getAllWindows();
-        var current = BrowserWindow.fromWebContents(event.sender);
-        var count = 0;
-        for (var w = 0, wl = wins.length; w < wl; w++) {
-            if (wins[w] === current || !wins[w].isVisible())
-                continue;
-            if (args.length && !wins[w].getTitle().startsWith(args[0])) {
-                //make sure proper close systems called
-                for (let name in windows) {
-                    if (!Object.prototype.hasOwnProperty.call(windows, name) || windows[name].window != wins[w])
-                        continue;
-                    executeScript('if(closing) closing();', windows[name].window);
-                    executeScript('if(closed) closed();', windows[name].window);
-                    executeScript('if(closeHidden) closeHidden()', windows[name].window);
-                    set.windows[name] = getWindowState(name, windows[name].window);
-                    set.windows[name].options = copyWindowOptions(name);
-                    windows[name].window = null;
-                    delete windows[name];
-                }
-                if (winMap == wins[w]) {
-                    set.windows.mapper = getWindowState('mapper', winMap);
-                    win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows.mapper, noSave: true });
-                    executeScript('closeWindow()', winMap);
-                    winMap = null;
-                }
-                if (winEditor == wins[w]) {
-                    set.windows.editor = getWindowState('editor', winEditor);
-                    win.webContents.send('setting-changed', { type: 'window', name: 'editor', value: set.windows.editor, noSave: true });
-                    winEditor = null;
-                }
-                if (winChat == wins[w]) {
-                    set.windows.chat = getWindowState('chat', winChat);
-                    win.webContents.send('setting-changed', { type: 'window', name: 'chat', value: set.windows.chat, noSave: true });
-                    winChat = null;
-                }
-                if (winCode == wins[w] && winCode.getParentWindow() == win) {
-                    if (!edSet)
-                        edSet = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-                    if (global.editorOnly)
-                        edSet.stateOnly = getWindowState('code-editor', winCode);
-                    else {
-                        edSet.state = getWindowState('code-editor', winCode);
-                        edSet.window.show = true;
-                    }
-                    edSet.save(parseTemplate(path.join('{data}', 'editor.json')));
-                    executeScript('closeWindow()', winCode);
-                    winCode = null;
-                }
-                wins[w].close();
-                continue;
-            }
-            if (wins[w].getParentWindow() !== current)
-                continue;
-            count++;
+        if (!clients[id])
+            event.returnValue = 0;
+        else {
+            event.returnValue = clients[id].windows.length;
+            closeClientWindows(id);
         }
-        event.returnValue = count;
     }
     else if (info === 'isVisible') {
         var current = BrowserWindow.fromWebContents(event.sender);
@@ -3018,200 +1790,1131 @@ ipcMain.on('window-info', (event, info, ...args) => {
         var current = BrowserWindow.fromWebContents(event.sender);
         event.returnValue = current ? current.isMinimized() : 0;
     }
-});
-
-ipcMain.on('window-info-by-title', (event, title, info) => {
-    var current = BrowserWindow.getAllWindows().filter(w => w.getTitle() === title);
-    if (!current)
-        event.returnValue = 0;
-    else if (info === 'isVisible')
-        event.returnValue = current ? current.isVisible() : 0;
-    else if (info === 'isEnabled')
-        event.returnValue = current ? current.isEnabled() : 0;
-    else if (info === 'isDevToolsOpened')
-        event.returnValue = current ? current.isDevToolsOpened() : 0;
-    else if (info === 'isMinimized')
-        event.returnValue = current ? current.isMinimized() : 0;
-    else if (info === 'isDestroyed')
-        event.returnValue = current ? current.isDestroyed() : 0;
-});
-
-ipcMain.on('inspect', (event, x, y) => {
-    event.sender.inspectElement(x || 0, y || 0);
-});
-
-function updateMenuItem(args) {
-    var item, i = 0, items;
-    var tItem, tItems;
-    if (!menubar || args == null || args.menu == null) return;
-
-    if (!Array.isArray(args.menu))
-        args.menu = args.menu.split('|');
-
-    items = menubar.items;
-    tItems = menuTemp;
-    for (i = 0; i < args.menu.length; i++) {
-        if (!items || items.length === 0) break;
-        for (var m = 0; m < items.length; m++) {
-            if (!items[m].id) continue;
-            if (items[m].id === args.menu[i]) {
-                item = items[m];
-                tItem = tItems[m];
-                if (item.submenu) {
-                    items = item.submenu.items;
-                    tItems = tItem.submenu;
-                }
-                else
-                    items = null;
-                break;
-            }
-        }
+    else {
+        logError('Invalid window-info: ' + info);
+        event.returnValue = false;
     }
-    if (!item)
-        return;
-    if (args.enabled != null)
-        item.enabled = args.enabled ? true : false;
-    if (args.checked != null)
-        item.checked = args.checked ? true : false;
-    if (args.icon != null)
-        item.icon = args.icon;
-    if (args.visible != null)
-        item.visible = args.visible ? true : false;
-    if (args.position != null)
-        item.position = args.position;
+});
 
-    tItem.enabled = item.enabled;
-    tItem.checked = item.checked;
-    tItem.icon = item.icon;
-    tItem.visible = item.visible;
-    tItem.position = item.position;
-}
+//#region Client creation, docking, and related management
+ipcMain.on('new-client', (event, connection, data, name) => {
+    newConnection(BrowserWindow.fromWebContents(event.sender), connection, data, name);
+});
 
-function loadMenu() {
-    set = settings.Settings.load(global.settingsFile);
-    updateMenuItem({ menu: ['view', 'status', 'statusvisible'], checked: set.showStatus });
-    updateMenuItem({ menu: ['view', 'status', 'weather'], checked: set.showStatusWeather });
-    updateMenuItem({ menu: ['view', 'status', 'limbsmenu', 'limbs'], checked: set.showStatusLimbs });
-    updateMenuItem({ menu: ['view', 'status', 'limbsmenu', 'limbhealth'], checked: !set.showArmor });
-    updateMenuItem({ menu: ['view', 'status', 'limbsmenu', 'limbarmor'], checked: set.showArmor });
+ipcMain.on('new-window', (event, connection, data, name) => {
+    newClientWindow(BrowserWindow.fromWebContents(event.sender), connection, data, name);
+});
 
-    updateMenuItem({ menu: ['view', 'status', 'health'], checked: set.showStatusHealth });
-    updateMenuItem({ menu: ['view', 'status', 'experience'], checked: set.showStatusExperience });
-    updateMenuItem({ menu: ['view', 'status', 'partyhealth'], checked: set.showStatusPartyHealth });
-    updateMenuItem({ menu: ['view', 'status', 'combathealth'], checked: set.showStatusCombatHealth });
-    updateMenuItem({ menu: ['view', 'status', 'lagmeter'], checked: set.lagMeter });
-    updateMenuItem({ menu: ['view', 'buttons'], checked: set.showButtonBar });
-}
-
-function getWindowState(id, window) {
-    var bounds = states[id];
-    if (!window || window.isDestroyed())
-        return states[id];
-    if (window.isMinimized())
-        return {
-            x: bounds.x,
-            y: bounds.y,
-            width: bounds.width,
-            height: bounds.height,
-            fullscreen: bounds.fullscreen || window.isFullScreen(),
-            maximized: bounds.maximized || window.isMaximized(),
-            devTools: window.webContents.isDevToolsOpened()
-        };
-    return {
-        x: bounds.x,
-        y: bounds.y,
-        width: bounds.width,
-        height: bounds.height,
-        fullscreen: window.isFullScreen(),
-        maximized: window.isMaximized(),
-        devTools: window.webContents.isDevToolsOpened()
-    };
-}
-
-function loadWindowState(window) {
-    if (!set)
-        set = settings.Settings.load(global.settingsFile);
-    if (window === 'code-editor') {
-        if (!edSet)
-            edSet = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-        if (global.editorOnly) {
-            if (!edSet.stateOnly)
-                return {
-                    x: 0,
-                    y: 0,
-                    width: 800,
-                    height: 600,
-                };
-            states[window] = {
-                x: edSet.stateOnly.x,
-                y: edSet.stateOnly.y,
-                width: edSet.stateOnly.width,
-                height: edSet.stateOnly.height,
-            };
-            return edSet.stateOnly;
+ipcMain.on('switch-client', (event, id, offset) => {
+    if (clients[id]) {
+        const window = BrowserWindow.fromWebContents(event.sender);
+        const windowId = getWindowId(window);
+        if (window != clients[id].parent) {
+            //Probably wanting to dock from 1 window to another, so just ignore
+            return;
         }
-        if (!edSet.state)
-            return {
-                x: 0,
-                y: 0,
-                width: 800,
-                height: 600,
-            };
-        states[window] = {
-            x: edSet.state.x,
-            y: edSet.state.y,
-            width: edSet.state.width,
-            height: edSet.state.height,
-        };
-        return edSet.state;
-    }
-    if (!set.windows || !set.windows[window])
-        return {
+        const bounds = window.getContentBounds();
+        clients[id].view.setBounds({
             x: 0,
-            y: 0,
-            width: 800,
-            height: 600,
-        };
-    states[window] = {
-        x: set.windows[window].x,
-        y: set.windows[window].y,
-        width: set.windows[window].width,
-        height: set.windows[window].height,
-    };
-    return set.windows[window];
-}
-
-function trackWindowState(id, window) {
-    if (!window) return states[id];
-    var bounds = window.getBounds();
-    if (!states[id])
-        states[id] = {
-            x: bounds.x,
-            y: bounds.y,
+            y: (offset || 0),
             width: bounds.width,
-            height: bounds.height
-        };
-    else if (!window.isMaximized()) {
-        states[id].x = bounds.x;
-        states[id].y = bounds.y;
-        states[id].width = bounds.width;
-        states[id].height = bounds.height;
+            height: bounds.height - (offset || 0)
+        });
+        //closed or some other reason so do not switch
+        if (window.getBrowserViews().length === 0)
+            return;
+        if (windowId === focusedWindow)
+            focusedClient = id;
+        //already active
+        //if (windows[windowId].current === id)
+        //return;
+        if (windows[windowId].current && clients[windows[windowId].current])
+            clients[windows[windowId].current].view.webContents.send('deactivated');
+        windows[windowId].current = id;
+        clients[id].view.webContents.send('activated');
+        //window.addBrowserView(clients[id].view);
+        window.setTopBrowserView(clients[id].view);
+        focusWindow(window, true);
+    }
+});
+
+ipcMain.on('remove-client', (event, id) => {
+    if (clients[id])
+        removeClient(id, true);
+});
+
+ipcMain.on('remove-other-clients', (event, id) => {
+    if (clients[id]) {
+        const windowId = getWindowId(clients[id].parent);
+        const window = windows[windowId];
+        for (c = window.clients.length - 1; c >= 0; c--) {
+            if (window.clients[c] === id) continue;
+            removeClient(window.clients[c], true);
+        }
+    }
+});
+
+ipcMain.on('goto-client', (event, id, action) => {
+    let window;
+    if (action === 3) {
+        if (!clients[id]) return;
+        window = clients[id].parent;
+    }
+    else
+        window = BrowserWindow.fromWebContents(event.sender);
+    const windowId = getWindowId(window);
+    let idx;
+    //if only 1 client or no clients ignore
+    if (windows[windowId].clients.length < 2) return;
+    //goto next client
+    if (action === 1) {
+        idx = windows[windowId].clients.indexOf(id);
+        if (idx === -1) return;
+        idx++;
+        if (idx >= windows[windowId].clients.length)
+            idx = 0;
+        window.webContents.send('switch-client', windows[windowId].clients[idx]);
+    }
+    //goto previous client
+    else if (action === 2) {
+        idx = windows[windowId].clients.indexOf(id);
+        if (idx === -1) return;
+        idx--;
+        if (idx < 0)
+            idx = windows[windowId].clients.length - 1;
+        window.webContents.send('switch-client', windows[windowId].clients[idx]);
+    }
+    //goto client
+    else
+        window.webContents.send('switch-client', id);
+})
+
+ipcMain.on('reorder-client', (event, id, index, oldIndex) => {
+    let window = BrowserWindow.fromWebContents(event.sender);
+    let windowId = getWindowId(window);
+    const currentIdx = windows[windowId].clients.indexOf(id);
+    if (currentIdx === -1)
+        return;
+    windows[windowId].clients.splice(currentIdx, 1);
+    windows[windowId].clients.splice(index, 0, id);
+});
+
+ipcMain.on('dock-client', (event, id, options) => {
+    if (!clients[id]) return;
+    //tab from a different instant, can not transfer due to process structure
+    if (options && 'pid' in options && options.pid !== process.pid) return;
+    let window = BrowserWindow.fromWebContents(event.sender);
+    let windowId = getWindowId(window);
+    const oldWindow = clients[id].parent;
+    const oldWindowId = getWindowId(oldWindow);
+    //same window so trying to drag out so create new window
+    if (window === oldWindow) {
+        //if only one client no need for a new window so bail
+        if (windows[oldWindowId].clients.length === 1) {
+            if (options) {
+                window.setPosition(options.x || 0, options.y || 0);
+            }
+            return;
+        }
+        //remove from old window
+        oldWindow.removeBrowserView(clients[id].view);
+        const oldIdx = windows[oldWindowId].clients.indexOf(id);
+        windows[oldWindowId].clients.splice(oldIdx, 1);
+        oldWindow.webContents.send('removed-client', id);
+        states['manager.html'] = saveWindowState(oldWindow, stateMap.get(oldWindow) || states['manager.html']);
+        //all views removed so close the window
+        if (windows[oldWindowId].clients.length === 0)
+            oldWindow.close();
+        //options and we have a state use the new x/y
+        if (options && states['manager.html']) {
+            states['manager.html'].bounds.x = options.x || states['manager.html'].bounds.x;
+            states['manager.html'].bounds.y = options.y || states['manager.html'].bounds.y;
+        }
+        windowId = createWindow({ remote: false });
+        windows[windowId].menubar = createMenu(windows[windowId].window);
+        //windows[windowId].menubar.enabled = false;
+        window = windows[windowId].window;
+        //no state so manually set the position
+        if (options && !states['manager.html']) {
+            window.setPosition(options.x || 0, options.y || 0);
+        }
+        focusedWindow = windowId;
+        focusedClient = id;
+        windows[windowId].clients.push(id);
+        windows[windowId].current = id;
+        clients[id].parent = window;
+        //window.setBrowserView(clients[id].view);
+        window.addBrowserView(clients[id].view);
+        window.setTopBrowserView(clients[id].view);
+        //clients[id].menu.window = window;
+        //window.setMenu(clients[id].menu);
+        onContentsLoaded(window.webContents).then(() => {
+            window.webContents.send('new-client', { id: id });
+            if (focusedClient === id && focusedWindow === windowId)
+                focusWindow(window, true);
+            clientsChanged();
+        });
+        return;
+    }
+    //remove from old window
+    oldWindow.removeBrowserView(clients[id].view);
+    const oldIdx = windows[oldWindowId].clients.indexOf(id);
+    windows[oldWindowId].clients.splice(oldIdx, 1);
+    oldWindow.webContents.send('removed-client', id);
+    //all views removed so close the window
+    if (windows[oldWindowId].clients.length === 0)
+        oldWindow.close();
+    //Add to new window
+    if (options && typeof options.index !== 'undefined' && options.index !== -1 && options.index < windows[windowId].clients.length)
+        windows[windowId].clients.splice(options.index, 0, id);
+    else
+        windows[windowId].clients.push(id);
+    clients[id].parent = window;
+    clients[id].parent.addBrowserView(clients[id].view);
+    if (windowId === focusedWindow)
+        focusedClient = id;
+    if (windows[windowId].current && clients[windows[windowId].current])
+        clients[windows[windowId].current].view.webContents.send('deactivated');
+    windows[windowId].current = id;
+    clients[id].view.webContents.send('activated');
+    window.setTopBrowserView(clients[id].view);
+    setClientWindowsParent(id, window, oldWindow);
+    if (options)
+        window.webContents.send('new-client', { id: id, index: options.index });
+    else
+        window.webContents.send('new-client', { id: id });
+    focusWindow(window, true);
+    clientsChanged();
+    states['manager.html'] = saveWindowState(window, stateMap.get(window) || states['manager.html']);
+    stateMap.set(window, states['manager.html']);
+});
+
+ipcMain.on('position-client', (event, id, options) => {
+    if (!clients[id]) return;
+    let window = BrowserWindow.fromWebContents(event.sender);
+    const oldWindow = clients[id].parent;
+    const oldWindowId = getWindowId(oldWindow);
+    if (options && window === oldWindow && windows[oldWindowId].clients.length === 1) {
+        window.setPosition(options.x || 0, options.y || 0);
+    }
+});
+
+ipcMain.on('focus-client', (event, id, window, switchClient) => {
+    if (typeof id === 'string')
+        id = names[id];
+    if (!clients[id]) return;
+    if (window)
+        restoreWindowState(clients[id].parent, stateMap.get(clients[id].parent), 2);
+    focusClient(id, false, switchClient);
+});
+
+ipcMain.on('focus-window', (event, id, clientId) => {
+    if (!windows[id]) return;
+    restoreWindowState(windows[id].window, stateMap.get(windows[id].window), 2);
+    if (clientId && windows[id].clients.indexOf(id) !== -1)
+        windows[id].window.webContents.send('switch-client', parseInt(clientId, 10));
+})
+
+ipcMain.on('close-window', (event, id) => {
+    let window;
+    if (window === 'profile-manager')
+        window = getWindowId('profiles');
+    else if (window === 'about')
+        window = getWindowId('about');
+    else if (window === 'global-preferences')
+        window = getWindowId('prefs');
+    else if (window === 'progress')
+        window = progressMap.get(BrowserWindow.fromWebContents(event.sender));
+    else if (window === 'windows')
+        window = getWindowId('windows');
+    else if (windows[id])
+        window = windows[id].window;
+    if (window)
+        window.close();
+});
+
+ipcMain.on('execute-client', (event, id, code) => {
+    if (typeof id === 'string')
+        id = names[id];
+    if (clients[id])
+        executeScript(code, clients[id].view);
+});
+
+ipcMain.on('execute-all-clients', (event, code) => {
+    for (id in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, id) || getClientId(clients[id].view) === clientId)
+            continue;
+        executeScript(code, clients[id].view);
+    }
+});
+
+ipcMain.on('update-client', (event, id, offset) => {
+    if (clients[id]) {
+        offset = offset || 0;
+        var bounds = BrowserWindow.fromWebContents(event.sender).getContentBounds();
+        clients[id].view.setBounds({
+            x: 0,
+            y: offset,
+            width: bounds.width,
+            height: bounds.height - offset
+        });
+    }
+});
+//#endregion
+
+//#region Quit/close related functions
+ipcMain.on('quit', quitApp)
+
+async function quitApp() {
+    if (await canCloseAllWindows(true)) {
+        if (_loaded && !_saved) {
+            await saveWindowLayout(null, _settings.lockLayout);
+            _saved = true;
+        }
+        app.quit();
     }
 }
 
-function restoreWindowState(window, state, show, focus) {
-    if (!window) return;
-    if (state && state.maximized)
-        window.maximize();
-    if (show)
-        window.show();
-    if (state && state.fullscreen)
-        window.setFullScreen(state.fullscreen);
-    if (focus)
-        window.focus();
+ipcMain.on('can-close-client', async (event, id) => {
+    event.returnValue = await canCloseClient(id);
+});
+
+ipcMain.on('can-close-all-client', async (event) => {
+    const close = await canCloseAllClients(getWindowId(BrowserWindow.fromWebContents(event.sender)));
+    event.returnValue = close;
+});
+
+ipcMain.on('can-close-all-windows', async (event) => {
+    event.returnValue = await canCloseAllWindows();
+});
+//#endregion
+
+ipcMain.on('update-title', (event, options) => {
+    const client = clientFromContents(event.sender);
+    if (client) {
+        client.parent.webContents.send('update-title', getClientId(clients[clientId].view), options);
+        if (options && typeof options.icon === 'number') {
+            //only update if the overlay changed
+            if (client.overlay === options.icon) return;
+            client.overlay = options.icon;
+            updateIcon(client.parent);
+        }
+        else if (tray) //something changed the title even if icon did not change update the menu to be safe
+            updateTrayContext();
+        const windowsDialog = getWindowId('windows');
+        if (windowsDialog) {
+            const windowId = getWindowId(client.parent);
+            windowsDialog.webContents.send('client-updated', {
+                id: getClientId(client.view), title: client.view.webContents.getTitle(), overlay: client.overlay
+            }, {
+                id: windowId, title: client.parent.getTitle(), overlay: windows[windowId].overlay
+            });
+        }
+    }
+});
+
+ipcMain.on('window-update-title', event => {
+    const windowsDialog = getWindowId('windows');
+    if (windowsDialog) {
+        const window = BrowserWindow.fromWebContents(event.sender);
+        const windowId = getWindowId(window);
+        windowsDialog.webContents.send('client-updated', null, { id: getWindowId(window), title: window.getTitle(), overlay: windows[windowId].overlay });
+    }
+});
+
+ipcMain.on('get-options', (event, isWindow) => {
+    if (isWindow) {
+        const window = BrowserWindow.fromWebContents(event.sender);
+        event.returnValue = { windows: windows[getWindowId(window)].windows.map(w => w.details) }
+    }
+    else {
+        const view = browserViewFromContents(event.sender);
+        event.returnValue = clients[getClientId(view)].options;
+    }
+});
+
+ipcMain.on('get-preference', (event, preference) => {
+    event.returnValue = _settings[preference];
+});
+
+ipcMain.on('set-preference', (event, preference, value) => {
+    _settings[preference] = value;
+});
+
+ipcMain.on('reload-options', (events, preferences, clientId) => {
+    if (preferences === global.settingsFile) {
+        _settings = settings.Settings.load(global.settingsFile);
+        for (window in windows) {
+            if (!Object.prototype.hasOwnProperty.call(windows, window))
+                continue;
+            windows[window].window.webContents.send('reload-options');
+            updateWebContents(windows[window].window.webContents, { enableBackgroundThrottling: _settings.enableBackgroundThrottling });
+        }
+        for (id in clients) {
+            if (!Object.prototype.hasOwnProperty.call(clients, id) || getClientId(clients[id].view) === clientId)
+                continue;
+            clients[id].view.webContents.send('reload-options', preferences, preferences === global.settingsFile);
+            updateWebContents(clients[id].view.webContents, { enableBackgroundThrottling: _settings.enableBackgroundThrottlingClients });
+        }
+        if (_settings.showTrayIcon && !tray)
+            createTray();
+        else if (!_settings.showTrayIcon && tray) {
+            tray.destroy();
+            tray = null;
+        }
+        else if (tray)
+            _updateTrayContext();
+    }
+    else {
+        for (id in clients) {
+            if (!Object.prototype.hasOwnProperty.call(clients, id) || getClientId(clients[id].view) === clientId)
+                continue;
+            clients[id].view.webContents.send('reload-options', preferences, preferences === global.settingsFile);
+        }
+    }
+});
+
+ipcMain.on('get-client-id', (event, name) => {
+    if (name)
+        event.returnValue = names[name];
+    else
+        event.returnValue = getClientId(browserViewFromContents(event.sender));
+});
+
+ipcMain.on('get-client-name', (event, id) => {
+    if (!id)
+        id = getClientId(browserViewFromContents(event.sender));
+    if (clients[id])
+        event.returnValue = clients[id].name;
+    else
+        event.returnValue = null;
+});
+
+ipcMain.on('clear-client-name', (event, id) => {
+    if (!id)
+        id = getClientId(browserViewFromContents(event.sender));
+    else if (typeof id === 'string')
+        id = names[id];
+    if (clients[id] && clients[id].name) {
+        delete names[clients[id].name];
+        delete clients[id].name;
+    }
+});
+
+ipcMain.on('set-client-name', (event, name, id) => {
+    if (!id)
+        id = getClientId(browserViewFromContents(event.sender));
+    if (clients[id]) {
+        //if already named remove name from old window
+        if (names[name] && clients[names[name]])
+            delete clients[names[name]].name;
+        clients[id].name = name;
+        names[name] = id;
+    }
+});
+
+ipcMain.on('is-client-name', (event, id) => {
+    event.returnValue = names[id] ? true : false
+});
+
+ipcMain.on('is-client', (event, id) => {
+    event.returnValue = names[id] || clients[id] ? true : false
+});
+
+ipcMain.on('get-window-id', event => {
+    event.returnValue = getWindowId(event.sender);
+});
+
+ipcMain.on('get-windows-and-clients', event => {
+    const _windows = [];
+    for (window in windows) {
+        if (!Object.prototype.hasOwnProperty.call(windows, window))
+            continue;
+        const data = {
+            title: windows[window].window.getTitle(),
+            id: getWindowId(windows[window].window),
+            overlay: windows[window].overlay,
+            clients: [],
+            windows: []
+        };
+        for (let wc = 0, wcl = windows[window].windows.length; wc < wcl; wc++) {
+            data.windows.push({
+                title: windows[window].windows[wc].window.getTitle(),
+                index: wc
+            });
+        }
+        for (let c = 0, cl = windows[window].clients.length; c < cl; c++) {
+            if (!clients[windows[window].clients[c]] || !clients[windows[window].clients[c]].view) continue;
+            client = {
+                id: windows[window].clients[c],
+                title: clients[windows[window].clients[c]].view.webContents.getTitle(),
+                overlay: clients[windows[window].clients[c]].overlay,
+                windows: []
+            };
+            for (let wc = 0, wcl = clients[client.id].windows.length; wc < wcl; wc++) {
+                client.windows.push({
+                    title: clients[client.id].windows[wc].window.getTitle(),
+                    index: wc
+                });
+            }
+            data.clients.push(client);
+        }
+        _windows.push(data);
+    }
+    event.returnValue = _windows;
+});
+
+ipcMain.on('get-window-client-count', (event) => {
+    const window = BrowserWindow.fromWebContents(event.sender);
+    const windowId = getWindowId(window);
+    event.returnValue = {
+        windows: Object.keys(windows).length,
+        clients: windows[windowId].clients.length
+    };
+})
+
+ipcMain.on('get-window-title', (event, id) => {
+    if (windows[id])
+        event.returnValue = windows[id].window.getTitle();
+    else
+        event.returnValue = '';
+});
+
+ipcMain.on('get-client-title', (event, id) => {
+    if (clients[id])
+        event.returnValue = clients[id].view.webContents.getTitle();
+    else
+        event.returnValue = '';
+});
+
+//bounds, id, data, file
+function createClient(options) {
+    options = options || {};
+    if (!options.file || options.file.length === 0)
+        options.file = 'build/index.html';
+    const view = new BrowserView({
+        webPreferences: {
+            nodeIntegration: true,
+            nodeIntegrationInWorker: true,
+            webviewTag: false,
+            sandbox: false,
+            spellcheck: _settings ? _settings.spellchecking : false,
+            enableRemoteModule: true,
+            contextIsolation: false,
+            backgroundThrottling: _settings ? _settings.enableBackgroundThrottlingClients : true,
+            preload: path.join(__dirname, 'preload.js')
+        }
+    });
+    switch (path.basename(_settings.theme, path.extname(_settings.theme))) {
+        case 'zen':
+            view.setBackgroundColor(options.backgroundColor || '#dad2ba');
+            break;
+        case 'lightgray':
+            view.setBackgroundColor(options.backgroundColor || 'rgb(240, 240, 240)');
+            break;
+        case 'dark':
+            view.setBackgroundColor(options.backgroundColor || 'rgb(30, 30, 30)');
+            break;
+        default:
+            view.setBackgroundColor(options.backgroundColor || 'black');
+            break;
+    }
+
+    view.webContents.on('context-menu', (e, params) => {
+        view.webContents.send('context-menu', params);
+    });
+
+    view.webContents.on('focus', () => {
+        focusedClient = getClientId(view);
+    });
+
+    view.webContents.on('devtools-reload-page', () => {
+        onContentsLoaded(view.webContents).then(() => {
+            executeScript(`if(typeof setId === "function") setId(${getClientId(view)});`, clients[getClientId(view)].view);
+            executeScript('window.loadTheme();', clients[options.id].view);
+            /*
+            if (options.data)
+                executeScript('if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify({ data: options.data.data, windows: options.data.windows, states: options.data.states }) + ');', clients[options.id].view);
+            else
+                executeScript('if(typeof restoreWindow === "function") restoreWindow({data: {}, windows: [], states: {}});', clients[options.id].view);
+            */
+        });
+    });
+
+    view.webContents.on('render-process-gone', (event, goneDetails) => {
+        logError(`${options.file} render process gone, reason: ${goneDetails.reason}, exitCode ${goneDetails.exitCode}\n`, true);
+    });
+
+    view.webContents.setWindowOpenHandler((details) => {
+        var u = new URL.URL(details.url);
+        if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'mailto:') {
+            shell.openExternal(details.url);
+            return { action: 'deny' };
+        }
+        return {
+            action: 'allow',
+            overrideBrowserWindowOptions: buildOptions(details, BrowserWindow.fromBrowserView(view), _settings)
+        }
+    });
+
+    view.webContents.on('did-create-window', (childWindow, details) => {
+        let frameName = details.frameName;
+        let url = details.url;
+        let file = url;
+        if (url.startsWith('file:///' + __dirname.replace(/\\/g, '/')))
+            file = url.substring(__dirname.length + 9);
+        initializeChildWindow(childWindow, url, details, false);
+
+        childWindow.on('resize', () => {
+            clients[getClientId(view)].states[file] = states[file];
+        });
+
+        childWindow.on('move', () => {
+            clients[getClientId(view)].states[file] = states[file];
+        });
+
+        childWindow.on('maximize', () => {
+            clients[getClientId(view)].states[file] = states[file];
+        });
+
+        childWindow.on('unmaximize', () => {
+            clients[getClientId(view)].states[file] = states[file];
+        });
+
+        childWindow.on('enter-full-screen', () => {
+            clients[getClientId(view)].states[file] = states[file];
+        });
+
+        childWindow.on('leave-full-screen', () => {
+            clients[getClientId(view)].states[file] = states[file];
+        });
+
+        childWindow.on('resized', () => {
+            clients[getClientId(view)].states[file] = states[file];
+        });
+
+        childWindow.on('closed', () => {
+            if (view && view.webContents && !view.webContents.isDestroyed()) {
+                executeScript(`if(typeof childClosed === "function") childClosed('${file}', '${url}', '${frameName}');`, view, true).catch(logError);
+                //remove remove from list
+                const id = getClientId(view);
+                if (clients[id]) {
+                    const index = getChildWindowIndex(clients[id].windows, childWindow);
+                    if (index !== -1) {
+                        clients[id].windows[index] = null;
+                        clients[id].windows.splice(index, 1);
+                    }
+                }
+            }
+            idMap.delete(childWindow);
+            stateMap.delete(childWindow);
+        });
+
+        let _close = false;
+        childWindow.on('close', async e => {
+            if (_close) return;
+            e.preventDefault();
+            _close = await executeScript(`if(typeof closeable === "function") closeable(); else (function() { return true; })();`, childWindow).catch(logError);
+            if (!_close) return;
+            const id = getClientId(view);
+            if (clients[id]) {
+                const index = getChildWindowIndex(clients[id].windows, childWindow);
+                if (index !== -1 && clients[id].windows[index].details.options.persistent) {
+                    e.preventDefault();
+                    executeScript('if(typeof closeHidden !== "function" || closeHidden(true)) window.hide();', childWindow).catch(logError);
+                    clients[id].states[file] = states[file];
+                    return;
+                }
+                clients[id].states[file] = states[file];
+            }
+            executeCloseHooks(childWindow);
+            if (childWindow && !childWindow.isDestroyed())
+                childWindow.close();
+            if (clients[id] && clients[id].parent)
+                clients[id].parent.focus();
+        });
+        clients[getClientId(view)].windows.push({ window: childWindow, details: details });
+        idMap.set(childWindow, getClientId(view));
+    });
+
+    if (global.debug) {
+        view.webContents.on('ipc-message', (event, channel, ...args) => {
+            if (channel.startsWith('REMOTE_')) return;
+            console.log(`Client Id: ${getClientId(view)}, ipc-message: ${channel}`);
+            console.log(args);
+        });
+        view.webContents.on('ipc-message-sync', (event, channel, ...args) => {
+            if (channel.startsWith('REMOTE_')) return;
+            console.log(`Client Id: ${getClientId(view)}, ipc-message-sync: ${channel}`);
+            console.log(args);
+        });
+    }
+
+    view.setAutoResize({
+        width: true,
+        height: true
+    })
+    if (options.data && options.data.state) {
+        view.setBounds(options.data.state.bounds);
+        if (global.debug)
+            openDevtools(view.webContents, { activate: false });
+        else if (options.data.state.devTools)
+            openDevtools(view.webContents);
+    }
+    else {
+        view.setBounds({
+            x: 0,
+            y: options.offset || 0,
+            width: options.bounds.width,
+            height: options.bounds.height - (options.offset || 0)
+        });
+        if (global.debug)
+            openDevtools(view.webContents, { activate: false });
+    }
+    view.webContents.loadFile(options.file);
+    require("@electron/remote/main").enable(view.webContents);
+    if (!options.id) {
+        _clientID++;
+        //in case the new id is used from old layout loop until find empty id
+        while (clients[_clientID])
+            _clientID++;
+        options.id = _clientID;
+    }
+    clients[options.id] = { view: view, windows: [], parent: options.parent, file: options.file !== 'build/index.html' ? options.file : 0, states: {} };
+    idMap.set(view, options.id);
+    loadWindowScripts(view, options.script || 'user');
+    script = `if(typeof setId === "function") setId(${options.id});window.loadTheme();`;
+    if (options.data)
+        clients[options.id].options = { data: options.data.data, windows: options.data.windows || [], states: options.data.states || {} };
+    else
+        clients[options.id].options = { data: {}, windows: [], states: {} };
+    // + 'if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify(clients[options.id].options) + ');'
+    executeScript(script, clients[options.id].view);
+    if (options.name && options.name.length !== 0) {
+        clients[options.id].name = options.name;
+        names[options.name] = options.id;
+    }
+    //win.setTopBrowserView(view)    
+    //addBrowserView
+    //setBrowserView  
+    //addInputContext(view, _settings.spellchecking);
+    return options.id;
 }
+
+async function removeClient(id) {
+    const client = clients[id];
+    const cancel = await canCloseClient(id, true);
+    //const cancel = await executeScript('if(typeof closeable === "function") closeable(); else (function() { return true; })();', client.view);
+    //don't close
+    if (cancel !== true)
+        return;
+    const window = client.parent;
+    const windowId = getWindowId(window);
+    const idx = windows[windowId].clients.indexOf(id);
+    //last client so close window instead of removing
+    if (windows[windowId].clients.length === 1 && idx !== -1) {
+        windows[windowId].window.close();
+        return;
+    }
+    //close client windows first incase they need parent window set
+    closeClientWindows(id);
+    windows[windowId].clients.splice(idx, 1);
+    if (windows[windowId].current === id) {
+        if (idx >= windows[windowId].clients.length)
+            windows[windowId].current = windows[windowId].clients[windows[windowId].clients.length - 1];
+        else
+            windows[windowId].current = windows[windowId].clients[idx];
+    }
+    client.parent = null;
+    delete client.parent;
+    idMap.delete(client.view);
+    //close the view
+    executeCloseHooks(client.view);
+    client.view.webContents.destroy();
+    if (clients[id].name)
+        delete names[clients[id].name];
+    clients[id] = null;
+    delete clients[id];
+    window.webContents.send('removed-client', id);
+    clientsChanged();
+}
+
+function closeClientWindows(id) {
+    //no windows so just bail
+    if (!clients[id] || clients[id].windows.length === 0) return;
+    const wl = clients[id].windows.length;
+    for (var idx = 0; idx < wl; idx++) {
+        const window = clients[id].windows[idx].window;
+        //call any code hooks in the child windows
+        if (window && !window.isDestroyed()) {
+            //executeCloseHooks(window);
+            window.close();
+        }
+    }
+}
+
+function setClientWindowsParent(id, parent, oldParent) {
+    //no windows so just bail
+    if (clients[id].windows.length === 0) return;
+    const wl = clients[id].windows.length;
+    for (var idx = 0; idx < wl; idx++) {
+        const window = clients[id].windows[idx].window;
+        //call any code hooks in the child windows
+        if (window && !window.isDestroyed()) {
+            if (oldParent && window.getParentWindow() === oldParent)
+                window.setParentWindow(parent);
+            else if (!oldParent && window.getParentWindow())
+                window.setParentWindow(parent);
+        }
+    }
+}
+
+function clientsChanged() {
+    const windowLength = Object.keys(windows).length;
+    for (clientId in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId) || !clients[clientId].view.webContents || clients[clientId].view.webContents.isDestroyed())
+            continue;
+        clients[clientId].view.webContents.send('clients-changed', windowLength, windows[getWindowId(clients[clientId].parent)].clients.length);
+    }
+    const windowsDialog = getWindowId('windows');
+    if (windowsDialog)
+        windowsDialog.webContents.send('clients-changed', windowLength, Object.keys(clients).length);
+    updateTray();
+}
+
+async function canCloseClient(id, warn, all, allWindows) {
+    const client = clients[id];
+    let close = await executeScript(`if(typeof closeable === "function") closeable(${all}, ${allWindows}); else (function() { return true; })();`, client.view);
+    //main client can not close so no need to check children
+    if (close === false)
+        return false;
+    const wl = client.windows.length;
+    for (let w = 0; w < wl; w++) {
+        //check each child window just to be safe
+        close = await executeScript(`if(typeof closeable === "function") closeable(${all}, ${allWindows}); else (function() { return true; })();`, client.windows[w].window);
+        if (client.windows[w].window.isModal()) {
+            if (warn) {
+                dialog.showMessageBox(mWindow, {
+                    type: 'info',
+                    message: `All modal dialogs must be closed before you can exit.`
+                });
+                client.windows[w].window.focus();
+            }
+            return false;
+        }
+        if (close === false)
+            return false;
+    }
+    return true;;
+}
+
+async function canCloseAllClients(windowId, warn, all) {
+    //reset all tracking unless its all windows trying to close
+    if (!all) {
+        global.closeAll = false;
+        global.noCloseAll = false;
+    }
+    const cl = windows[windowId].clients.length;
+    for (var idx = 0; idx < cl; idx++) {
+        const close = await canCloseClient(windows[windowId].clients[idx], warn, true, all);
+        if (!close)
+            return false;
+    }
+    return true;
+}
+
+async function canCloseAllWindows(warn) {
+    //reset all tracking
+    global.closeAll = false;
+    global.noCloseAll = false;
+    for (window in windows) {
+        if (!Object.prototype.hasOwnProperty.call(windows, window))
+            continue;
+        const close = await canCloseAllClients(window, warn, true);
+        if (!close)
+            return false;
+    }
+    if (getWindowId('profiles') && !getWindowId('profiles').isDestroyed()) {
+        dialog.showMessageBox(getWindowId('profiles'), {
+            type: 'info',
+            message: `Profile manager must be closed before you can exit.`
+        });
+        getWindowId('profiles').focus();
+        return false;
+    }
+    if (getWindowId('about') && !getWindowId('about').isDestroyed()) {
+        dialog.showMessageBox(getWindowId('about'), {
+            type: 'info',
+            message: `About dialog must be closed before you can exit.`
+        });
+        getWindowId('about').focus();
+        return false;
+    }
+    if (getWindowId('prefs') && !getWindowId('prefs').isDestroyed()) {
+        dialog.showMessageBox(getWindowId('prefs'), {
+            type: 'info',
+            message: `Preference dialog must be closed before you can exit.`
+        });
+        getWindowId('prefs').focus();
+        return false;
+    }
+    if (progressMap.size) {
+        dialog.showMessageBox({
+            type: 'info',
+            message: `All progress dialogs must be closed before you can exit.`
+        });
+        return false;
+    }
+    return true;
+}
+
+function initializeChildWindow(window, link, details, noClose) {
+    let file = link;
+    if (link.startsWith('file:///' + __dirname.replace(/\\/g, '/')))
+        file = link.substring(__dirname.length + 9);
+    require("@electron/remote/main").enable(window.webContents);
+    window.removeMenu();
+    window.once('ready-to-show', () => {
+        if (details.options.overlayIcon)
+            window.setOverlayIcon(details.options.overlayIcon, details.options.overlayTip || details.options.title || '');
+        //exclude the -ID when loading scripts
+        if (/\-[0-9]+$/.test(details.frameName))
+            loadWindowScripts(window, details.frameName.substring(0, details.frameName.lastIndexOf('-')));
+        else
+            loadWindowScripts(window, details.frameName);
+        if (!details.options.noInputContext)
+            addInputContext(window, _settings.spellchecking);
+        if ('visible' in details.options && !details.options.visible)
+            window.hide();
+        else
+            window.show();
+        if (global.debug)
+            openDevtools(window.webContents, { activate: false });
+    });
+    window.webContents.on('render-process-gone', (event, goneDetails) => {
+        logError(`${link} render process gone, reason: ${goneDetails.reason}, exitCode ${goneDetails.exitCode}\n`, true);
+    });
+    window.on('unresponsive', () => {
+        dialog.showMessageBox({
+            type: 'info',
+            message: 'Unresponsive',
+            buttons: ['Reopen', 'Keep waiting', 'Close']
+        }).then(result => {
+            if (!window)
+                return;
+            if (result.response === 0) {
+                window.reload();
+                logError(`${link} unresponsive, reload.\n`, true);
+            }
+            else if (result.response === 2) {
+                window.destroy();
+            }
+            else
+                logError(`${link} unresponsive, waiting.\n`, true);
+        });
+    });
+
+    window.webContents.setWindowOpenHandler((childDetails) => {
+        var u = new URL.URL(childDetails.url);
+        if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'mailto:') {
+            shell.openExternal(childDetails.url);
+            return { action: 'deny' };
+        }
+        return {
+            action: 'allow',
+            overrideBrowserWindowOptions: buildOptions(childDetails, window, _settings)
+        }
+    });
+
+    window.webContents.on('did-create-window', (childWindow, childDetails) => {
+        initializeChildWindow(childWindow, childDetails.url, childDetails);
+    });
+
+    window.webContents.on('context-menu', (e, params) => {
+        window.webContents.send('context-menu', params);
+    });
+
+    window.on('resize', () => {
+        states[file] = saveWindowState(window, stateMap.get(window) || states[file]);
+        stateMap.set(window, states[file]);
+    });
+
+    window.on('move', () => {
+        states[file] = saveWindowState(window, stateMap.get(window) || states[file]);
+        stateMap.set(window, states[file]);
+    });
+
+    window.on('maximize', () => {
+        states[file] = saveWindowState(window, stateMap.get(window) || states[file]);
+        states[file].maximized = true;
+        stateMap.set(window, states[file]);
+    });
+
+    window.on('unmaximize', () => {
+        states[file] = saveWindowState(window, stateMap.get(window) || states[file]);
+        states[file].maximized = false;
+        stateMap.set(window, states[file]);
+    });
+
+    window.on('enter-full-screen', () => {
+        states[file] = saveWindowState(window, stateMap.get(window) || states[file]);
+        states[file].fullscreen = true;
+        stateMap.set(window, states[file]);
+    });
+
+    window.on('leave-full-screen', () => {
+        states[file] = saveWindowState(window, stateMap.get(window) || states[file]);
+        states[file].fullscreen = true;
+        stateMap.set(window, states[file]);
+    });
+
+    window.on('resized', () => {
+        states[file] = saveWindowState(window, stateMap.get(window) || states[file]);
+        stateMap.set(window, states[file]);
+    });
+
+    window.on('closed', () => {
+        stateMap.delete(window);
+        if (noClose || !details || !details.options) return;
+        const parent = details.options.parent;
+        if (parent && !parent.isDestroyed() && parent.webContents && !parent.webContents.isDestroyed())
+            executeScript(`if(typeof childClosed === "function") childClosed('${file}', '${link}', '${details.frameName}');`, parent, true).catch(logError);
+    });
+
+    window.on('close', e => {
+        states[file] = saveWindowState(window, stateMap.get(window) || states[file]);
+    });
+    stateMap.set(window, saveWindowState(window) || states[file]);
+}
+
+function getChildWindowIndex(windows, childWindow) {
+    if (!windows | windows.length === 0) return -1;
+    for (var idx = 0, wl = windows.length; idx < wl; idx++) {
+        if (windows[idx].window === childWindow)
+            return idx;
+    }
+    return -1;
+}
+
+function getWindowClientId(window) {
+    const clientId = idMap.get(window);
+    if (clients[clientId])
+        return clientId;
+    return null;
+}
+
+function executeCloseHooks(window) {
+    if (!window) return;
+    executeScript('if(typeof closing === "function") closing();', window).catch(logError);
+    executeScript('if(typeof closed === "function") closed();', window).catch(logError);
+    executeScript('if(typeof closeHidden === "function") closeHidden();', window).catch(logError);
+}
+
+function updateIcon(window) {
+    const windowId = getWindowId(window);
+    switch (clients[windows[windowId].current].overlay) {
+        case 4:
+        case 1:
+            window.setIcon(getOverlayIcon(7));
+            break;
+        case 5:
+        case 2:
+            window.setIcon(getOverlayIcon(8));
+            break;
+        case 'code':
+            window.setIcon(path.join(__dirname, '../assets/icons/png/code.png'));
+            break;
+        default:
+            window.setIcon(getOverlayIcon(6));
+            break;
+    }
+    updateOverlay();
+}
+
+function updateOverlay() {
+    let overlay = 0;
+    let window = BrowserWindow.getFocusedWindow();
+    let windowId;
+    if (global.editorOnly)
+        overlay = 'code';
+    else if (window && getWindowId(window) && windows[getWindowId(window)] && clients[windows[getWindowId(window)].current]) {
+        windowId = getWindowId(window);
+        if (!clients[windows[windowId].current])
+            overlay = 0;
+        else
+            overlay = clients[windows[windowId].current].overlay;
+        if (overlay === 5)
+            windows[windowId].overlay = 2;
+        else if (overlay === 4)
+            windows[windowId].overlay = 1;
+        else if (overlay === 3)
+            windows[windowId].overlay = 0;
+        else
+            windows[windowId].overlay = overlay;
+    }
+    else {
+        //use the last active window as the target to update info
+        window = getActiveWindow().window;
+        for (windowId in windows) {
+            if (!Object.prototype.hasOwnProperty.call(windows, windowId))
+                continue;
+            const cl = windows[windowId].clients.length;
+            windows[windowId].overlay = 0;
+            for (let idx = 0; idx < cl; idx++) {
+                switch (clients[windows[windowId].clients[idx]].overlay) {
+                    case 4:
+                    case 1:
+                        if (overlay < 1) {
+                            overlay = 1;
+                            windows[windowId].overlay = 1;
+                        }
+                        break;
+                    case 5:
+                    case 2:
+                        if (overlay < 2) {
+                            overlay = 2;
+                            windows[windowId].overlay = 2;
+                        }
+                        break;
+                }
+            }
+            if (windows[windowId].overlay === 3)
+                windows[windowId].overlay = 0;
+        }
+    }
+    switch (overlay) {
+        case 4:
+        case 1:
+            if (process.platform !== 'linux')
+                window.setOverlayIcon(getOverlayIcon(1), 'Connected');
+            break;
+        case 5:
+        case 2:
+            if (process.platform !== 'linux') {
+                if (_focused)
+                    window.setOverlayIcon(getOverlayIcon(1), 'Connected');
+                else
+                    window.setOverlayIcon(getOverlayIcon(2), 'Received data');
+            }
+            break;
+        case 'code':
+            if (process.platform !== 'linux')
+                window.setOverlayIcon(path.join(__dirname, '../assets/icons/png/codeol.png'), 'Code editor');
+            break;
+        default:
+            if (process.platform !== 'linux')
+                window.setOverlayIcon(getOverlayIcon(0), 'Disconnected');
+            break;
+    }
+    updateTray();
+}
+
+ipcMain.on('parseTemplate', (event, str, data) => {
+    event.returnValue = parseTemplate(str, data);
+});
 
 function parseTemplate(str, data) {
+    if (!str) return str;
     str = str.replace(/{home}/g, app.getPath('home'));
     str = str.replace(/{path}/g, app.getAppPath());
     str = str.replace(/{appData}/g, app.getPath('appData'));
@@ -3237,6 +2940,7 @@ function parseTemplate(str, data) {
     return str;
 }
 
+//#region File system functions
 function isDirSync(aPath) {
     try {
         return fs.statSync(aPath).isDirectory();
@@ -3258,7 +2962,6 @@ function existsSync(filename) {
     }
 }
 
-
 function isFileSync(aPath) {
     try {
         return fs.statSync(aPath).isFile();
@@ -3270,951 +2973,17 @@ function isFileSync(aPath) {
         }
     }
 }
-
-function showPrefs() {
-    var b;
-    if (win)
-        b = win.getBounds();
-    else
-        b = { x: 0, y: 0, height: 600, width: 800 };
-
-    let pref = new BrowserWindow({
-        parent: getParentWindow(),
-        modal: true,
-        x: Math.floor(b.x + b.width / 2 - 400),
-        y: Math.floor(b.y + b.height / 2 - 230),
-        width: 800,
-        height: 460,
-        movable: false,
-        minimizable: false,
-        maximizable: false,
-        skipTaskbar: true,
-        resizable: false,
-        title: 'Preferences',
-        icon: path.join(__dirname, '../assets/icons/png/preferences.png'),
-        webPreferences: {
-            nodeIntegration: true,
-            webviewTag: false,
-            sandbox: false,
-            spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true,
-            contextIsolation: false,
-            backgroundThrottling: set ? set.enableBackgroundThrottling : true
-        }
-    });
-    require("@electron/remote/main").enable(pref.webContents);
-    pref.removeMenu();
-    pref.on('closed', () => {
-        pref = null;
-    });
-    pref.loadURL(url.format({
-        pathname: path.join(__dirname, 'prefs.html'),
-        protocol: 'file:',
-        slashes: true
-    }));
-
-    if (global.debug)
-        pref.webContents.openDevTools();
-
-    pref.once('ready-to-show', () => {
-        pref.show();
-    });
-
-    pref.webContents.on('render-process-gone', (event, details) => {
-        logError(`Preferences render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
-    });
-    pref.on('unresponsive', () => {
-        dialog.showMessageBox({
-            type: 'info',
-            message: 'Unresponsive',
-            buttons: ['Reopen', 'Keep waiting', 'Close']
-        }).then(result => {
-            if (!pref)
-                return;
-            if (result.response === 0) {
-                pref.reload();
-                logError('Preferences unresponsive, reload.\n', true);
-            }
-            else if (result.response === 2) {
-                pref.destroy();
-            }
-            else
-                logError('Preferences unresponsive, waiting.\n', true);
-        });
-    });
-    addInputContext(pref, set && set.spellchecking);
-}
-
-function createMapper(show, loading, loaded) {
-    if (winMap) return;
-    var s = loadWindowState('mapper');
-    winMap = new BrowserWindow({
-        parent: set.mapper.alwaysOnTopClient ? getParentWindow() : null,
-        alwaysOnTop: set.mapper.alwaysOnTop,
-        title: 'Mapper',
-        x: getWindowX(s.x, s.width),
-        y: getWindowY(s.y, s.height),
-        width: s.width,
-        height: s.height,
-        backgroundColor: '#eae4d6',
-        show: false,
-        skipTaskbar: (!set.mapper.showInTaskBar && (set.mapper.alwaysOnTopClient || set.mapper.alwaysOnTop)) ? true : false,
-        icon: path.join(__dirname, '../assets/icons/png/map.png'),
-        webPreferences: {
-            nodeIntegration: true,
-            webviewTag: false,
-            sandbox: false,
-            spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true,
-            contextIsolation: false,
-            backgroundThrottling: set ? set.enableBackgroundThrottling : true
-        }
-    });
-    require("@electron/remote/main").enable(winMap.webContents);
-
-
-    winMap.removeMenu();
-    winMap.loadURL(url.format({
-        pathname: path.join(__dirname, 'mapper.html'),
-        protocol: 'file:',
-        slashes: true
-    }));
-
-    winMap.webContents.on('render-process-gone', (event, details) => {
-        logError(`Mapper render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
-    });
-
-    winMap.on('unresponsive', () => {
-        dialog.showMessageBox({
-            type: 'info',
-            message: 'Unresponsive',
-            buttons: ['Reopen', 'Keep waiting', 'Close']
-        }).then(result => {
-            if (!winMap)
-                return;
-            if (result.response === 0) {
-                winMap.reload();
-                logError('Mapper unresponsive, reload.\n', true);
-            }
-            else if (result.response === 2) {
-                winMap.destroy();
-            }
-            else
-                logError('Mapper unresponsive, waiting.\n', true);
-        });
-    });
-
-    winMap.on('closed', (e) => {
-        if (e.sender === winMap) {
-            if (!winMap.isDestroyed() && !winMap.isVisible())
-                executeScript('closeHidden()', winMap);
-            winMap = null;
-        }
-    });
-
-    winMap.on('resize', () => {
-        if (!winMap.isMaximized() && !winMap.isFullScreen())
-            trackWindowState('mapper', winMap);
-    });
-
-    winMap.on('move', () => {
-        trackWindowState('mapper', winMap);
-    });
-
-    winMap.on('maximize', () => {
-        trackWindowState('mapper', winMap);
-        states.mapper.maximized = true;
-    });
-
-    winMap.on('unmaximize', () => {
-        trackWindowState('mapper', winMap);
-        states.mapper.maximized = false;
-    });
-
-    if (global.debug)
-        winMap.webContents.openDevTools();
-
-    winMap.once('ready-to-show', () => {
-        loadWindowScripts(winMap, 'map');
-        addInputContext(winMap, set && set.spellchecking);
-        if (show) {
-            restoreWindowState(winMap, s, true);
-        }
-        else {
-            if (s.fullscreen)
-                winMap.setFullScreen(s.fullscreen);
-            mapperMax = s.maximized;
-        }
-        if (loading) {
-            clearTimeout(loadID);
-            loadID = setTimeout(() => { win.focus(); }, 500);
-        }
-        if (loaded)
-            loaded();
-    });
-
-    winMap.on('close', (e) => {
-        set = settings.Settings.load(global.settingsFile);
-        if (win != null && winMap === e.sender) {
-            set.showMapper = false;
-            win.webContents.send('setting-changed', { type: 'normal', name: 'showMapper', value: false, noSave: true });
-        }
-        set.windows.mapper = getWindowState('mapper', e.sender);
-        if (win && !win.isDestroyed() && win.webContents)
-            win.webContents.send('setting-changed', { type: 'window', name: 'mapper', value: set.windows.mapper, noSave: true });
-        set.save(global.settingsFile);
-        if (winMap === e.sender && winMap && (set.mapper.enabled || set.mapper.persistent)) {
-            e.preventDefault();
-            executeScript('closeHidden()', winMap);
-            winMap.hide();
-        }
-    });
-}
-
-function showMapper(loading) {
-    set = settings.Settings.load(global.settingsFile);
-    set.showMapper = true;
-    win.webContents.send('setting-changed', { type: 'normal', name: 'showMapper', value: true, noSave: true });
-    set.save(global.settingsFile);
-    if (winMap != null) {
-        restoreWindowState(winMap, {
-            maximized: mapperMax,
-        }, true);
-        mapperMax = false;
-        if (loading) {
-            clearTimeout(loadID);
-            loadID = setTimeout(() => { win.focus(); }, 500);
-        }
-    }
-    else
-        createMapper(true, loading);
-}
-
-function showProfiles() {
-    if (winProfiles != null) {
-        winProfiles.show();
-        return;
-    }
-    var s = loadWindowState('profiles');
-    winProfiles = new BrowserWindow({
-        parent: getParentWindow(),
-        x: getWindowX(s.x, s.width),
-        y: getWindowY(s.y, s.height),
-        width: s.width,
-        height: s.height,
-        movable: true,
-        minimizable: true,
-        maximizable: true,
-        skipTaskbar: !set.profiles.showInTaskBar,
-        resizable: true,
-        title: 'Profile Manger',
-        icon: path.join(__dirname, '../assets/icons/png/profiles.png'),
-        show: false,
-        webPreferences: {
-            nodeIntegration: true,
-            webviewTag: false,
-            sandbox: false,
-            spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true,
-            contextIsolation: false,
-            backgroundThrottling: set ? set.enableBackgroundThrottling : true
-        }
-    });
-    require("@electron/remote/main").enable(winProfiles.webContents);
-    winProfiles.webContents.on('render-process-gone', (event, details) => {
-        logError(`Profile manager render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
-    });
-
-    winProfiles.on('unresponsive', () => {
-        dialog.showMessageBox({
-            type: 'info',
-            message: 'Unresponsive',
-            buttons: ['Reopen', 'Keep waiting', 'Close']
-        }).then(result => {
-            if (!winProfiles)
-                return;
-            if (result.response === 0) {
-                winProfiles.reload();
-                logError('Profile manager unresponsive, reload.\n', true);
-            }
-            else if (result.response === 2) {
-                winProfiles.destroy();
-            }
-            else
-                logError('Profile manager unresponsive, waiting.\n', true);
-        });
-    });
-
-    if (global.debug)
-        winProfiles.webContents.openDevTools();
-
-    winProfiles.webContents.on('did-finish-load', () => {
-        profilesReady = 2;
-    });
-
-    winProfiles.removeMenu();
-    winProfiles.on('closed', () => {
-        winProfiles = null;
-        profilesReady = 0;
-    });
-    winProfiles.loadURL(url.format({
-        pathname: path.join(__dirname, 'profiles.html'),
-        protocol: 'file:',
-        slashes: true
-    }));
-    winProfiles.once('ready-to-show', () => {
-        loadWindowScripts(winProfiles, 'profiles');
-        //addInputContext(winProfiles, set && set.spellchecking);
-        restoreWindowState(winProfiles, s, true);
-        if (profilesReady !== 2)
-            profilesReady = 1;
-    });
-
-    winProfiles.on('close', () => {
-        set = settings.Settings.load(global.settingsFile);
-        set.windows.profiles = getWindowState('profiles', winProfiles);
-        if (win && !win.isDestroyed() && win.webContents)
-            win.webContents.send('setting-changed', { type: 'window', name: 'profiles', value: set.windows.profiles, noSave: true });
-        set.save(global.settingsFile);
-        win.focus();
-    });
-
-    winProfiles.on('resize', () => {
-        if (!winProfiles.isMaximized() && !winProfiles.isFullScreen())
-            trackWindowState('profiles', winProfiles);
-    });
-
-    winProfiles.on('move', () => {
-        trackWindowState('profiles', winProfiles);
-    });
-
-    winProfiles.on('maximize', () => {
-        trackWindowState('profiles', winProfiles);
-        states.profiles.maximized = true;
-    });
-
-    winProfiles.on('unmaximize', () => {
-        trackWindowState('profiles', winProfiles);
-        states.profiles.maximized = false;
-    });
-
-}
-
-function createEditor(show, loading) {
-    if (winEditor) return;
-    var s = loadWindowState('editor');
-    winEditor = new BrowserWindow({
-        parent: getParentWindow(),
-        title: 'Advanced Editor',
-        x: getWindowX(s.x, s.width),
-        y: getWindowY(s.y, s.height),
-        width: s.width,
-        height: s.height,
-        backgroundColor: '#000',
-        show: false,
-        skipTaskbar: !set.showEditorInTaskBar,
-        icon: path.join(__dirname, '../assets/icons/png/edit.png'),
-        webPreferences: {
-            nodeIntegration: true,
-            webviewTag: false,
-            sandbox: false,
-            spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true,
-            contextIsolation: false,
-            backgroundThrottling: set ? set.enableBackgroundThrottling : true
-        }
-    });
-    require("@electron/remote/main").enable(winEditor.webContents);
-    winEditor.webContents.on('render-process-gone', (event, details) => {
-        logError(`Advanced editor process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
-    });
-
-    winEditor.on('unresponsive', () => {
-        dialog.showMessageBox({
-            type: 'info',
-            message: 'Unresponsive',
-            buttons: ['Reopen', 'Keep waiting', 'Close']
-        }).then(result => {
-            if (!winEditor)
-                return;
-            if (result.response === 0) {
-                winEditor.reload();
-                logError('Advanced editor unresponsive, reload.\n', true);
-            }
-            else if (result.response === 2) {
-                winEditor.destroy();
-            }
-            else
-                logError('Advanced editor unresponsive, waiting.\n', true);
-        });
-    });
-
-    winEditor.removeMenu();
-    winEditor.loadURL(url.format({
-        pathname: path.join(__dirname, 'editor.html'),
-        protocol: 'file:',
-        slashes: true
-    }));
-
-    winEditor.on('closed', (e) => {
-        if (e.sender !== winEditor) return;
-        winEditor = null;
-        editorReady = 0;
-    });
-
-    winEditor.on('resize', () => {
-        if (!winEditor.isMaximized() && !winEditor.isFullScreen())
-            trackWindowState('editor', winEditor);
-    });
-
-    winEditor.on('move', () => {
-        trackWindowState('editor', winEditor);
-    });
-
-    winEditor.on('maximize', () => {
-        trackWindowState('editor', winEditor);
-        states.editor.maximized = true;
-    });
-
-    winEditor.on('unmaximize', () => {
-        trackWindowState('editor', winEditor);
-        states.editor.maximized = false;
-    });
-
-    if (global.debug)
-        winEditor.webContents.openDevTools();
-
-    winEditor.webContents.on('did-finish-load', () => {
-        editorReady = 2;
-    });
-
-    winEditor.once('ready-to-show', () => {
-        loadWindowScripts(winEditor, 'editor');
-        //addInputContext(winEditor, set && set.spellchecking);
-        if (show) {
-            restoreWindowState(winEditor, s, true);
-        }
-        else {
-            if (s.fullscreen)
-                winEditor.setFullScreen(s.fullscreen);
-            editorMax = s.maximized;
-        }
-        if (loading) {
-            clearTimeout(loadID);
-            if (editorOnly && winCode)
-                loadID = setTimeout(() => { winCode.focus(); }, 500);
-            else if (win)
-                loadID = setTimeout(() => { win.focus(); }, 500);
-        }
-        if (editorReady !== 2)
-            editorReady = 1;
-    });
-
-    winEditor.on('close', (e) => {
-        set = settings.Settings.load(global.settingsFile);
-        set.showEditor = false;
-        set.windows.editor = getWindowState('editor', winEditor || e.sender);
-        if (win) {
-            win.webContents.send('setting-changed', { type: 'window', name: 'editor', value: set.windows.editor, noSave: true });
-            win.webContents.send('setting-changed', { type: 'normal', name: 'showEditor', value: false, noSave: true });
-            win.focus();
-        }
-        set.save(global.settingsFile);
-        executeScript('tinymce.activeEditor.setContent(\'\');', e.sender);
-        if (winEditor === e.sender && winEditor && (set.editorPersistent && !global.editorOnly)) {
-            e.preventDefault();
-            executeScript('if(closeHidden) closeHidden()', winEditor);
-            winEditor.hide();
-        }
-    });
-}
-
-function showEditor(loading) {
-    set = settings.Settings.load(global.settingsFile);
-    set.showEditor = true;
-    if (win)
-        win.webContents.send('setting-changed', { type: 'normal', name: 'showEditor', value: true, noSave: true });
-    set.save(global.settingsFile);
-    if (winEditor != null) {
-        if (!editorReady)
-            return;
-        restoreWindowState(winEditor, {
-            maximized: editorMax
-        }, true);
-        editorMax = false;
-        if (loading) {
-            clearTimeout(loadID);
-            loadID = setTimeout(() => { win.focus(); }, 500);
-        }
-    }
-    else
-        createEditor(true, loading);
-}
-
-function createChat(show, loading) {
-    if (winChat) return;
-    var s = loadWindowState('chat');
-    winChat = new BrowserWindow({
-        parent: set.chat.alwaysOnTopClient ? getParentWindow() : null,
-        title: 'Chat',
-        x: getWindowX(s.x, s.width),
-        y: getWindowY(s.y, s.height),
-        width: s.width,
-        height: s.height,
-        backgroundColor: '#000',
-        show: false,
-        skipTaskbar: (!set.chat.showInTaskBar && (set.chat.alwaysOnTopClient || set.chat.alwaysOnTop)) ? true : false,
-        icon: path.join(__dirname, '../assets/icons/png/chat.png'),
-        webPreferences: {
-            nodeIntegration: true,
-            nodeIntegrationInWorker: true,
-            webviewTag: false,
-            sandbox: false,
-            spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true,
-            contextIsolation: false,
-            backgroundThrottling: set ? set.enableBackgroundThrottling : true
-        }
-    });
-    require("@electron/remote/main").enable(winChat.webContents);
-    winChat.webContents.on('render-process-gone', (event, details) => {
-        logError(`Chat capture render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
-    });
-
-    winChat.on('unresponsive', () => {
-        dialog.showMessageBox({
-            type: 'info',
-            message: 'Unresponsive',
-            buttons: ['Reopen', 'Keep waiting', 'Close']
-        }).then(result => {
-            if (!winChat)
-                return;
-            if (result.response === 0) {
-                winChat.reload();
-                logError('Chat capture unresponsive, reload.\n', true);
-            }
-            else if (result.response === 2) {
-                winChat.destroy();
-            }
-            else
-                logError('Chat capture unresponsive, waiting.\n', true);
-        });
-    });
-
-    winChat.removeMenu();
-    winChat.loadURL(url.format({
-        pathname: path.join(__dirname, 'chat.html'),
-        protocol: 'file:',
-        slashes: true
-    }));
-
-    winChat.on('closed', (e) => {
-        if (e.sender !== winChat) return;
-        winChat = null;
-        chatReady = 0;
-    });
-
-    winChat.on('resize', () => {
-        if (!winChat.isMaximized() && !winChat.isFullScreen())
-            trackWindowState('chat', winChat);
-    });
-
-    winChat.on('move', () => {
-        trackWindowState('chat', winChat);
-    });
-
-    winChat.on('maximize', () => {
-        trackWindowState('chat', winChat);
-        states.chat.maximized = true;
-    });
-
-    winChat.on('unmaximize', () => {
-        trackWindowState('chat', winChat);
-        states.chat.maximized = false;
-    });
-
-    if (global.debug)
-        winChat.webContents.openDevTools();
-
-    winChat.webContents.on('did-finish-load', () => {
-        chatReady = 2;
-    });
-
-    winChat.once('ready-to-show', () => {
-        loadWindowScripts(winChat, 'chat');
-        addInputContext(winChat, set && set.spellchecking);
-        if (show) {
-            restoreWindowState(winChat, s, true);
-        }
-        else {
-            if (s.fullscreen)
-                winChat.setFullScreen(s.fullscreen);
-            chatMax = s.maximized;
-        }
-        if (chatReady !== 2)
-            chatReady = 1;
-        if (loading) {
-            clearTimeout(loadID);
-            loadID = setTimeout(() => { win.focus(); }, 500);
-        }
-    });
-
-    winChat.on('close', (e) => {
-        set = settings.Settings.load(global.settingsFile);
-        if (winChat === e.sender) {
-            set.showChat = false;
-            if (win && !win.isDestroyed() && win.webContents)
-                win.webContents.send('setting-changed', { type: 'normal', name: 'showChat', value: false, noSave: true });
-        }
-        set.windows.chat = getWindowState('chat', e.sender);
-        if (win && !win.isDestroyed() && win.webContents)
-            win.webContents.send('setting-changed', { type: 'window', name: 'chat', value: set.windows.chat, noSave: true });
-        set.save(global.settingsFile);
-        if (winChat === e.sender && winChat && (set.chat.persistent || set.chat.captureTells || set.chat.captureTalk || set.chat.captureLines)) {
-            e.preventDefault();
-            executeScript('closeHidden()', winChat);
-            winChat.hide();
-        }
-    });
-}
-
-function showChat(loading) {
-    set = settings.Settings.load(global.settingsFile);
-    set.showChat = true;
-    win.webContents.send('setting-changed', { type: 'normal', name: 'showChat', value: true, noSave: true });
-    set.save(global.settingsFile);
-    if (winChat != null) {
-        if (!chatReady)
-            return;
-        restoreWindowState(winChat, {
-            maximized: chatMax
-        }, true);
-        chatMax = false;
-        if (loading) {
-            clearTimeout(loadID);
-            loadID = setTimeout(() => { win.focus(); }, 500);
-        }
-    }
-    else
-        createChat(true, loading);
-}
-
-function createNewWindow(name, options) {
-    if (windows[name] && windows[name].window)
-        return;
-    if (!options) options = {};
-    var s = loadWindowState(name);
-    windows[name] = options;
-    windows[name].window = new BrowserWindow({
-        parent: windows[name].alwaysOnTopClient ? getParentWindow() : null,
-        title: options.title || name,
-        x: getWindowX(options.x || s.x, options.width || s.width),
-        y: getWindowY(options.y || s.y, options.height || s.height),
-        width: options.width || s.width,
-        height: options.height || s.height,
-        backgroundColor: options.background || '#000',
-        show: false,
-        skipTaskbar: (!windows[name].showInTaskBar && (windows[name].alwaysOnTopClient || windows[name].alwaysOnTop)) ? true : false,
-        icon: path.join(__dirname, '../assets/icons/png/' + (options.icon || name) + '.png'),
-        webPreferences: {
-            nodeIntegration: true,
-            webviewTag: false,
-            sandbox: false,
-            spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true,
-            contextIsolation: false,
-            backgroundThrottling: set ? set.enableBackgroundThrottling : true
-        }
-    });
-    require("@electron/remote/main").enable(windows[name].window.webContents);
-    delete windows[name].width;
-    delete windows[name].height;
-    delete windows[name].x;
-    delete windows[name].y;
-
-    windows[name].window.webContents.on('render-process-gone', (event, details) => {
-        logError(`${name} render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
-    });
-
-    windows[name].window.on('unresponsive', () => {
-        dialog.showMessageBox({
-            type: 'info',
-            message: 'Unresponsive',
-            buttons: ['Reopen', 'Keep waiting', 'Close']
-        }).then(result => {
-            if (!windows[name].window)
-                return;
-            if (result.response === 0) {
-                windows[name].window.reload();
-                logError(`${name} unresponsive, reload.\n`, true);
-            }
-            else if (result.response === 2) {
-                windows[name].window.destroy();
-            }
-            else
-                logError(`${name} unresponsive, waiting.\n`, true);
-        });
-    });
-
-    windows[name].window.setMenu(options.menu || null);
-
-    windows[name].window.loadURL(url.format({
-        pathname: path.join(__dirname, (windows[name].file || (name + '.html'))),
-        protocol: 'file:',
-        slashes: true
-    }));
-
-    windows[name].window.on('closed', (e) => {
-        if (!windows || !windows[name] || e.sender !== windows[name].window) return;
-        windows[name].window = null;
-        windows[name].ready = false;
-        if (windows[name].alwaysOnTopClient)
-            getParentWindow().focus();
-    });
-
-    windows[name].window.on('resize', () => {
-        if (!windows[name].window.isMaximized() && !windows[name].window.isFullScreen())
-            trackWindowState(name, windows[name].window);
-    });
-
-    windows[name].window.on('move', () => {
-        trackWindowState(name, windows[name].window);
-    });
-
-    windows[name].window.on('maximize', () => {
-        trackWindowState(name, windows[name].window);
-        states[name].maximized = true;
-    });
-
-    windows[name].window.on('unmaximize', () => {
-        trackWindowState(name, windows[name].window);
-        states[name].maximized = false;
-    });
-
-    windows[name].window.webContents.setWindowOpenHandler((details) => {
-        var u = new url.URL(details.url);
-        if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'mailto:') {
-            shell.openExternal(details.url);
-            return { action: 'deny' };
-        }
-        return {
-            action: 'allow',
-            overrideBrowserWindowOptions: buildOptions(details, windows[name].window, set)
-        }
-    });
-
-    windows[name].window.webContents.on('did-create-window', (w, details) => {
-        let frameName = details.frameName;
-        let url = details.url;
-        if (global.debug)
-            w.webContents.openDevTools();
-        w.removeMenu();
-        w.once('ready-to-show', () => {
-            loadWindowScripts(w, frameName);
-            if (!options.noInput)
-                addInputContext(w, global.editorOnly ? (edSet && edSet.spellchecking) : (set && set.spellchecking));
-            w.show();
-            //w.reload();
-        });
-        w.webContents.on('render-process-gone', (event, details) => {
-            logError(`${url} render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
-        });
-
-        w.on('unresponsive', () => {
-            dialog.showMessageBox({
-                type: 'info',
-                message: 'Unresponsive',
-                buttons: ['Reopen', 'Keep waiting', 'Close']
-            }).then(result => {
-                if (!w)
-                    return;
-                if (result.response === 0) {
-                    w.reload();
-                    logError(`${url} unresponsive, reload.\n`, true);
-                }
-                else if (result.response === 2) {
-                    w.destroy();
-                }
-                else
-                    logError(`${url} unresponsive, waiting.\n`, true);
-            });
-        });
-
-        w.on('close', () => {
-            if (w && w.getParentWindow()) {
-                executeScript(`if(childClosed) childClosed('${url}', '${frameName}');`, w.getParentWindow());
-                w.focus();
-            }
-        });
-    });
-
-    if (global.debug)
-        windows[name].window.webContents.openDevTools();
-
-    windows[name].window.once('ready-to-show', () => {
-        loadWindowScripts(windows[name].window, name);
-        if (!options.noInput)
-            addInputContext(windows[name].window, global.editorOnly ? (edSet && edSet.spellchecking) : (set && set.spellchecking));
-        if (options.show) {
-            restoreWindowState(windows[name].window, s, true);
-        }
-        else {
-            if (s.fullscreen)
-                windows[name].window.setFullScreen(s.fullscreen);
-            windows[name].max = s.maximized;
-        }
-        windows[name].ready = true;
-    });
-
-    windows[name].window.on('close', (e) => {
-        //something already closed the window
-        if (!windows[name]) return;
-        set = settings.Settings.load(global.settingsFile);
-        set.windows[name] = getWindowState(name, e.sender);
-        if (windows[name] && windows[name].window === e.sender)
-            windows[name].show = false;
-        set.windows[name].options = copyWindowOptions(name);
-        set.save(global.settingsFile);
-        if (win && !win.isDestroyed() && win.webContents)
-            win.webContents.send('setting-changed', { type: 'window', name: name, value: set.windows[name], noSave: true });
-        if (windows[name].window === e.sender && windows[name].window && windows[name].persistent) {
-            e.preventDefault();
-            executeScript('if(closeHidden) closeHidden()', windows[name].window);
-        }
-    });
-}
-
-function showWindow(name, options, skipSave) {
-    if (name === 'main') return;
-    if (!set)
-        set = settings.Settings.load(global.settingsFile);
-    options.show = true;
-    if (!set.windows[name])
-        set.windows[name] = {};
-    set.windows[name].show = true;
-    win.webContents.send('setting-changed', { type: 'window', name: name, value: set.windows[name], noSave: true });
-    if (!skipSave)
-        set.save(global.settingsFile);
-    if (!options) options = { show: true };
-    if (windows[name] && windows[name].window) {
-        restoreWindowState(windows[name].window, {
-            maximized: windows[name].max
-        }, true);
-        windows[name].max = false;
-    }
-    else
-        createNewWindow(name, options);
-}
-
-function showColor(args) {
-    var w;
-    if (windows[args.window])
-        w = windows[args.window].window;
-    else
-        w = winEditor || getParentWindow();
-    let cp = new BrowserWindow({
-        parent: w,
-        modal: true,
-        width: 326,
-        height: 296,
-        movable: true,
-        minimizable: false,
-        maximizable: false,
-        skipTaskbar: true,
-        resizable: false,
-        title: 'Pick color',
-        icon: path.join(__dirname, '../assets/icons/png/color.png'),
-        show: false,
-        webPreferences: {
-            nodeIntegration: true,
-            webviewTag: false,
-            sandbox: false,
-            spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true,
-            contextIsolation: false,
-            backgroundThrottling: set ? set.enableBackgroundThrottling : true
-        }
-    });
-    require("@electron/remote/main").enable(cp.webContents);
-    cp.webContents.on('render-process-gone', (event, details) => {
-        logError(`Colorpicker render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
-    });
-
-    cp.on('unresponsive', () => {
-        dialog.showMessageBox({
-            type: 'info',
-            message: 'Unresponsive',
-            buttons: ['Reopen', 'Keep waiting', 'Close']
-        }).then(result => {
-            if (!cp)
-                return;
-            if (result.response === 0) {
-                cp.reload();
-                logError('Colorpicker unresponsive, reload.\n', true);
-            }
-            else if (result.response === 2) {
-                cp.destroy();
-            }
-            else
-                logError('Colorpicker unresponsive, waiting.\n', true);
-        });
-    });
-
-    cp.removeMenu();
-    cp.on('closed', () => {
-        cp = null;
-    });
-    cp.loadURL(url.format({
-        pathname: path.join(__dirname, 'colorpicker.html'),
-        protocol: 'file:',
-        slashes: true
-    }));
-
-    if (global.debug)
-        cp.webContents.openDevTools();
-
-    cp.once('ready-to-show', () => {
-        cp.show();
-        executeScript('setType("' + (args.type || 'forecolor') + '");setColor("' + (args.color || '') + '");setWindow("' + (args.window || '') + '");', cp);
-    });
-}
-
-function copyFile(src, dest) {
-
-    let readStream = fs.createReadStream(src);
-
-    readStream.once('error', (err) => {
-        console.error(err);
-    });
-
-    readStream.once('end', () => { });
-
-    readStream.pipe(fs.createWriteStream(dest));
-}
-
-function loadCharacters(noLoad) {
-    if (isFileSync(path.join(app.getPath('userData'), 'characters.json'))) {
-        characters = fs.readFileSync(path.join(app.getPath('userData'), 'characters.json'), 'utf-8');
-        if (characters.length > 0) {
-            try {
-                characters = JSON.parse(characters);
-            }
-            catch (e) {
-                console.error('Could not load: \'characters.json\'');
-            }
-            if (!noLoad && characters.load)
-                loadCharacter(characters.load);
-        }
-    }
-}
+//#endregion
 
 function logError(err, skipClient) {
+    if (!err) {
+        if (!global.debug) return;
+        err = new Error('Empty error');
+    }
     var msg = '';
-    if (global.debug)
+    if (global.debug || _settings.enableDebug)
         console.error(err);
-    if (!set)
-        set = settings.Settings.load(global.settingsFile);
-    if (err.stack && set.showErrorsExtended)
+    if (err.stack && _settings.showErrorsExtended)
         msg = err.stack;
     else if (err instanceof TypeError)
         msg = err.name + ': ' + err.message;
@@ -4224,27 +2993,27 @@ function logError(err, skipClient) {
         msg = err.message;
     else
         msg = err;
-
-
-    if (!global.editorOnly && win && !win.isDestroyed() && win.webContents && !skipClient)
-        win.webContents.send('error', msg);
-    else if (set.logErrors) {
-        if (err.stack && !set.showErrorsExtended)
+    if (!global.editorOnly && !skipClient) {
+        //found a client else fallback to global settings
+        if (sendClient('error', msg))
+            return;
+    }
+    if (_settings.logErrors) {
+        if (!_settings.showErrorsExtended) {
+            if (err.stack)
+                msg = err.stack;
+            else {
+                err = new Error(err);
+                msg = err.stack;
+            }
+        }
+        else if (!err.stack) {
+            err = new Error(err);
             msg = err.stack;
+        }
         fs.writeFileSync(path.join(app.getPath('userData'), 'jimud.error.log'), new Date().toLocaleString() + '\n', { flag: 'a' });
         fs.writeFileSync(path.join(app.getPath('userData'), 'jimud.error.log'), msg + '\n', { flag: 'a' });
     }
-}
-
-function copyWindowOptions(name) {
-    if (!name || !windows[name]) return {};
-    var ops = {};
-    for (var op in windows[name]) {
-        if (!Object.prototype.hasOwnProperty.call(windows[name], op) || op === 'window')
-            continue;
-        ops[op] = windows[name][op];
-    }
-    return ops;
 }
 
 function loadWindowScripts(window, name) {
@@ -4256,306 +3025,50 @@ function loadWindowScripts(window, name) {
     }
     if (isFileSync(path.join(app.getPath('userData'), name + '.js'))) {
         fs.readFile(path.join(app.getPath('userData'), name + '.js'), 'utf8', (err, data) => {
-            executeScript(data, window);
+            executeScript(data, window).catch(logError);
         });
     }
-}
-
-function closeWindows(save, clear) {
-    if (!set)
-        set = settings.Settings.load(global.settingsFile);
-    var name;
-    var cWin;
-    for (name in windows) {
-        if (!Object.prototype.hasOwnProperty.call(windows, name))
-            continue;
-        if (windows[name].window) {
-            executeScript('if(closing) closing();', windows[name].window);
-            executeScript('if(closed) closed();', windows[name].window);
-            set.windows[name] = getWindowState(name, windows[name].window);
-        }
-        set.windows[name].options = copyWindowOptions(name);
-        if (windows[name].window) {
-            cWin = windows[name].window;
-            windows[name].window = null;
-            cWin.close();
-        }
-    }
-    if (clear)
-        windows = {};
-    if (save) {
-        if (win && !win.isDestroyed() && win.webContents)
-            win.webContents.send('setting-changed', { type: 'window', name: name, value: set.windows[name], noSave: true });
-        set.save(global.settingsFile);
-    }
-}
-
-function createCodeEditor(show, loading, loaded) {
-    if (winCode) return;
-    if (!edSet)
-        edSet = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-    var s = loadWindowState('code-editor');
-    if (global.editorOnly) {
-        if (!edSet.stateOnly)
-            edSet.stateOnly = {
-                x: 0,
-                y: 0,
-                width: 800,
-                height: 600,
-            };
-        states['code-editor'] = edSet.stateOnly;
-    }
-    else {
-        if (!edSet.state)
-            edSet.state = {
-                x: 0,
-                y: 0,
-                width: 800,
-                height: 600,
-            };
-        states['code-editor'] = edSet.state;
-    }
-    winCode = new BrowserWindow({
-        parent: (!global.editorOnly && edSet.window.alwaysOnTopClient) ? win : null,
-        alwaysOnTop: edSet.window.alwaysOnTop,
-        title: 'Code editor',
-        x: getWindowX(s.x, s.width),
-        y: getWindowY(s.y, s.height),
-        width: s.width,
-        height: s.height,
-        backgroundColor: 'grey',
-        show: false,
-        skipTaskbar: (!global.editorOnly && (edSet.window.alwaysOnTopClient || edSet.window.alwaysOnTop)) ? true : false,
-        icon: path.join(__dirname, '../assets/icons/win/code.ico'),
-        webPreferences: {
-            nodeIntegration: true,
-            webviewTag: false,
-            sandbox: false,
-            spellcheck: edSet ? edSet.spellchecking : false,
-            enableRemoteModule: true,
-            contextIsolation: false,
-            backgroundThrottling: edSet ? edSet.enableBackgroundThrottling : true
-        }
-
-    });
-    require("@electron/remote/main").enable(winCode.webContents);
-    winCode.on('unresponsive', () => {
-        dialog.showMessageBox({
-            type: 'info',
-            message: 'Unresponsive',
-            buttons: ['Reopen', 'Keep waiting', 'Close']
-        }).then(result => {
-            if (!winCode)
-                return;
-            if (result.response === 0) {
-                winCode.reload();
-                logError('Code editor unresponsive, reload.\n', true);
-            }
-            else if (result.response === 2) {
-                winCode.destroy();
-            }
-            else
-                logError('Code editor unresponsive, waiting.\n', true);
-        });
-    });
-
-    winCode.removeMenu();
-    winCode.loadURL(url.format({
-        pathname: path.join(__dirname, 'code.editor.html'),
-        protocol: 'file:',
-        slashes: true
-    }));
-
-    winCode.webContents.on('render-process-gone', (event, details) => {
-        logError(`Code editor render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
-    });
-
-    winCode.on('closed', (e) => {
-        if (e.sender !== winCode) return;
-        winCode = null;
-        codeReady = 0;
-    });
-
-    winCode.on('resize', () => {
-        if (!winCode.isMaximized() && !winCode.isFullScreen())
-            trackWindowState('code-editor', winCode);
-    });
-
-    winCode.on('move', () => {
-        trackWindowState('code-editor', winCode);
-    });
-
-    winCode.on('maximize', () => {
-        trackWindowState('code-editor', winCode);
-        states['code-editor'].maximized = true;
-    });
-
-    winCode.on('unmaximize', () => {
-        trackWindowState('code-editor', winCode);
-        states['code-editor'].maximized = false;
-    });
-
-    if (global.debug)
-        winCode.webContents.openDevTools();
-
-    winCode.webContents.on('did-finish-load', () => {
-        codeReady = 2;
-    });
-
-    winCode.once('ready-to-show', () => {
-        loadWindowScripts(winCode, 'code.editor');
-        addInputContext(winCode, edSet && edSet.spellchecking);
-        if (show)
-            restoreWindowState(winCode, s, true);
-        else {
-            if (s.fullscreen)
-                winCode.setFullScreen(s.fullscreen);
-            codeMax = s.maximized;
-        }
-        if (loading) {
-            clearTimeout(loadID);
-            if (!global.editorOnly)
-                loadID = setTimeout(() => { win.focus(); }, 500);
-        }
-        if (loaded)
-            loaded();
-        if (codeReady !== 2)
-            codeReady = 1;
-        if (global.editorOnly) {
-            updateJumpList();
-            checkForUpdates();
-            if (process.platform === 'linux')
-                winCode.setIcon(path.join(__dirname, '../assets/icons/png/code.png'));
-            else
-                winCode.setOverlayIcon(path.join(__dirname, '../assets/icons/png/codeol.png'), 'Received data');
-        }
-    });
-
-    winCode.on('close', (e) => {
-        //force a reload to make sure newest settings are saved
-        edSet = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-        if (!global.editorOnly) {
-            if (winCode && winCode.getParentWindow() == win)
-                edSet.window.show = false;
-            else if (winCode != null)
-                edSet.window.show = true;
-            edSet.state = getWindowState('code-editor', winCode);
-        }
-        else
-            edSet.stateOnly = getWindowState('code-editor', winCode || e.sender);
-        edSet.save(parseTemplate(path.join('{data}', 'editor.json')));
-        if (winCode === e.sender && winCode && !global.editorOnly && edSet.window.persistent) {
-            e.preventDefault();
-            executeScript('if(closeHidden) closeHidden()', winCode);
-        }
-    });
-
-    winCode.webContents.setWindowOpenHandler((details) => {
-        var u = new url.URL(details.url);
-        if (u.protocol === 'https:' || u.protocol === 'http:' || u.protocol === 'mailto:') {
-            shell.openExternal(details.url);
-            return { action: 'deny' };
-        }
-        return {
-            action: 'allow',
-            overrideBrowserWindowOptions: buildOptions(details, winCode, edSet)
-        }
-    });
-
-    winCode.webContents.on('did-create-window', (w, details) => {
-        let frameName = details.frameName;
-        let url = details.url;
-        if (global.debug)
-            w.webContents.openDevTools();
-        w.removeMenu();
-        w.once('ready-to-show', () => {
-            loadWindowScripts(w, frameName);
-            addInputContext(w, edSet && edSet.spellchecking);
-            w.show();
-            //w.reload();
-        });
-        w.webContents.on('render-process-gone', (event, details) => {
-            logError(`${url} render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
-        });
-
-        w.on('unresponsive', () => {
-            dialog.showMessageBox({
-                type: 'info',
-                message: 'Unresponsive',
-                buttons: ['Reopen', 'Keep waiting', 'Close']
-            }).then(result => {
-                if (!w)
-                    return;
-                if (result.response === 0) {
-                    w.reload();
-                    logError(`${url} unresponsive, reload.\n`, true);
-                }
-                else if (result.response === 2) {
-                    w.destroy();
-                }
-                else
-                    logError(`${url} unresponsive, waiting.\n`, true);
-            });
-        });
-
-        w.on('close', () => {
-            if (w && w.getParentWindow()) {
-                executeScript(`if(childClosed) childClosed('${url}', '${frameName}');`, w.getParentWindow());
-                w.getParentWindow().focus();
-            }
-        });
-    });
-}
-
-function showCodeEditor(loading) {
-    if (!edSet)
-        edSet = EditorSettings.load(parseTemplate(path.join('{data}', 'editor.json')));
-    if (!global.editorOnly)
-        edSet.window.show = true;
-    edSet.save(parseTemplate(path.join('{data}', 'editor.json')));
-    if (winCode != null) {
-        if (!codeReady)
-            return;
-        var s = getWindowState('code-editor', winCode);
-        restoreWindowState(winCode, {
-            maximized: codeMax,
-            fullscreen: s.fullscreen
-        }, true);
-        codeMax = false;
-        if (loading) {
-            clearTimeout(loadID);
-            loadID = setTimeout(() => { win.focus(); }, 500);
-        }
-    }
-    else
-        createCodeEditor(true, loading);
 }
 
 function updateJumpList() {
     if (process.platform !== 'win32')
         return;
     const list = [];
-    //TODO figure out some way to open editor window for current jimud instance
     list.push({
         type: 'tasks',
         items: [
             {
                 type: 'task',
-                title: 'New Code Editor',
+                title: 'New code editor',
                 description: 'Opens a new code editor',
                 program: process.execPath,
                 args: '-eo', // force editor only mode
-                iconPath: process.execPath,
+                iconPath: path.join(__dirname, '..', '..', 'app.asar.unpacked', 'assets', 'icons', 'win', 'code2.ico'),//process.execPath,
                 iconIndex: 0
             }
         ]
     });
-    //TODO add recent support, require instance check
-    /*
-    list.push({
-      type: 'recent'
-    });
-  */
+    if (_settings.useSingleInstance)
+        list[0].items.push(...[
+            {
+                type: 'task',
+                title: 'New tab',
+                description: 'Opens a new tab in active window',
+                program: process.execPath,
+                args: '-nt',
+                iconPath: path.join(__dirname, '..', '..', 'app.asar.unpacked', 'assets', 'icons', 'win', 'tab.ico'),
+                iconIndex: 0
+            },
+            {
+                type: 'task',
+                title: 'New window',
+                description: 'Opens a new window',
+                program: process.execPath,
+                args: '-nw',
+                iconPath: path.join(__dirname, '..', '..', 'app.asar.unpacked', 'assets', 'icons', 'win', 'window.ico'),
+                iconIndex: 0
+            }
+        ]);
     try {
         app.setJumpList(list);
     } catch (error) {
@@ -4563,142 +3076,196 @@ function updateJumpList() {
     }
 }
 
-function createUpdater() {
+function showAllWindows() {
+    for (window in windows) {
+        if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window] || windows[window].window.isDestroyed())
+            continue;
+        restoreWindowState(windows[window].window, states[windows[window].file || 'manager.html'], 2);
+    }
+}
+
+function hideAllWindows() {
+    for (window in windows) {
+        if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window] || windows[window].window.isDestroyed())
+            continue;
+        if (_settings.hideOnMinimize)
+            windows[window].window.hide();
+        else
+            windows[window].window.minimize();
+    }
+}
+
+function toggleAllWindows() {
+    for (window in windows) {
+        if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window] || windows[window].window.isDestroyed())
+            continue;
+        if (windows[window].window.isVisible()) {
+            if (_settings.hideOnMinimize)
+                windows[window].window.hide();
+            else
+                windows[window].window.minimize();
+        }
+        else
+            restoreWindowState(windows[window].window, states[windows[window].file || 'manager.html'], 2);
+    }
+}
+
+async function closeAllWindows(checkClose) {
+    return new Promise(async (resolve, reject) => {
+        for (window in windows) {
+            if (!Object.prototype.hasOwnProperty.call(windows, window))
+                continue;
+            if (checkClose && !await canCloseAllClients(window, warn, true))
+                return false;
+            windows[window].window.close();
+        }
+        setTimeout(() => {
+            allWindowsClosed().then(resolve).catch(reject);
+        }, 0);
+    });
+}
+
+async function allWindowsClosed() {
+    return new Promise((resolve, reject) => {
+        if (Object.keys(windows).length === 0 && Object.keys(clients).length === 0)
+            resolve();
+        else
+            setTimeout(() => {
+                allWindowsClosed().then(resolve).catch(reject);
+            }, 0);
+    });
+}
+
+//#region Auto updates
+function createUpdater(window) {
     const autoUpdater = require('electron-updater').autoUpdater;
     autoUpdater.on('download-progress', progressObj => {
-        if (win) {
-            win.setProgressBar(progressObj.percent / 100);
-            win.webContents.send('update-progress', progressObj);
-        }
-        else if (global.editorOnly && winCode) {
-            winCode.setProgressBar(progressObj.percent / 100);
-            winCode.webContents.send('update-progress', progressObj);
-        }
+        window.setProgressBar(progressObj.percent / 100);
+        const progress = progressMap.get(window);
+        if (progress)
+            progress.webContents.send('progress', 'update', progressObj);
     });
     return autoUpdater;
 }
 
 function checkForUpdates() {
-    if (!set)
-        set = settings.Settings.load(global.settingsFile);
-    if (set.checkForUpdates) {
+    const window = getActiveWindow().window;
+    if (_settings.checkForUpdates && !_checkingUpdates) {
+        _checkingUpdates = true;
         //resources/app-update.yml
         if (!isFileSync(path.join(app.getAppPath(), '..', 'app-update.yml'))) {
-            if (dialog.showMessageBoxSync(getParentWindow(), {
+            if (dialog.showMessageBoxSync({
                 type: 'warning',
                 title: 'Not supported',
                 message: 'Auto update is not supported with this version of jiMUD, try anyways?',
                 buttons: ['Yes', 'No'],
                 defaultId: 1,
+                noLink: true
             }) !== 0)
                 return;
         }
-        const autoUpdater = createUpdater();
+        const autoUpdater = createUpdater(window);
         autoUpdater.on('update-downloaded', () => {
-            if (win) {
-                win.setProgressBar(-1);
-                win.webContents.send('update-downloaded');
-            }
-            else if (global.editorOnly && winCode) {
-                winCode.setProgressBar(-1);
-                winCode.webContents.send('update-downloaded');
-            }
+            window.setProgressBar(-1);
+            const progress = progressMap.get(window);
+            if (progress)
+                progress.close();
             //store current line arguments to use on next load
             fs.writeFileSync(path.join(app.getPath('userData'), 'argv.json'), JSON.stringify(process.argv));
+            _checkingUpdates = false;
         });
         autoUpdater.on('error', (error) => {
             dialog.showErrorBox('Error: ', error == null ? 'unknown' : (error.stack || error).toString());
-            if (global.editorOnly) {
-                winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: true });
-                winCode.setProgressBar(-1);
-                winCode.webContents.send('update-downloaded');
-            }
-            else {
-                updateMenuItem({ menu: ['help', 'updater'], enabled: true });
-                win.setProgressBar(-1);
-                win.webContents.send('update-downloaded');
-            }
+            window.setProgressBar(-1);
+            const progress = progressMap.get(window);
+            if (progress)
+                progress.close();
+            _checkingUpdates = false;
         });
-        autoUpdater.checkForUpdatesAndNotify();
+        autoUpdater.on('update-available', () => {
+            openProgress(window, 'Downloading update&hellip;');
+        });
+        autoUpdater.on('update-not-available', () => {
+            window.setProgressBar(-1);
+            const progress = progressMap.get(window);
+            if (progress)
+                progress.close();
+            _checkingUpdates = false;
+        });
+        autoUpdater.checkForUpdatesAndNotify().then((results) => {
+            if (!results)
+                _checkingUpdates = false;
+        });
     }
 }
 
 function checkForUpdatesManual() {
+    const window = getActiveWindow().window;
     if (!isFileSync(path.join(app.getAppPath(), '..', 'app-update.yml'))) {
-        if (dialog.showMessageBoxSync(getParentWindow(), {
+        if (dialog.showMessageBoxSync(window, {
             type: 'warning',
             title: 'Not supported',
             message: 'Auto update is not supported with this version of jiMUD, try anyways?',
             buttons: ['Yes', 'No'],
             defaultId: 1,
+            noLink: true
         }) !== 0)
             return;
     }
-    const autoUpdater = createUpdater();
+    if (_checkingUpdates) return;
+    _checkingUpdates = true;
+
+    const autoUpdater = createUpdater(window);
     autoUpdater.autoDownload = false;
     autoUpdater.on('error', (error) => {
         dialog.showErrorBox('Error: ', error == null ? 'unknown' : (error.stack || error).toString());
-        if (global.editorOnly) {
-            winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: true });
-            winCode.setProgressBar(-1);
-            winCode.webContents.send('update-downloaded');
-        }
-        else {
-            updateMenuItem({ menu: ['help', 'updater'], enabled: true });
-            win.setProgressBar(-1);
-            win.webContents.send('update-downloaded');
-        }
+        window.setProgressBar(-1);
+        const progress = progressMap.get(window);
+        if (progress)
+            progress.close();
+        _checkingUpdates = false;
     });
 
     autoUpdater.on('update-available', () => {
-        dialog.showMessageBox(getParentWindow(), {
+        dialog.showMessageBox(window, {
             type: 'info',
             title: 'Found Updates',
             message: 'Found updates, do you want update now?',
             buttons: ['Yes', 'No', 'Open website']
         }).then(buttonIndex => {
-            if (buttonIndex.response === 0)
+            if (buttonIndex.response === 0) {
+                openProgress(window, 'Downloading update&hellip;');
                 autoUpdater.downloadUpdate();
+            }
             else {
                 if (buttonIndex.response === 2)
                     shell.openExternal('https://github.com/icewolfz/jiMUD/releases/latest', '_blank');
-                if (global.editorOnly)
-                    winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: true });
-                else
-                    updateMenuItem({ menu: ['help', 'updater'], enabled: true });
+                _checkingUpdates = false;
             }
         });
     });
 
     autoUpdater.on('update-not-available', () => {
-        dialog.showMessageBox(getParentWindow(), {
+        dialog.showMessageBox(window, {
             title: 'No Updates',
             message: 'Current version is up-to-date.',
             buttons: ['Ok', 'Open website']
         }).then(buttonIndex => {
             if (buttonIndex.response === 1)
                 shell.openExternal('https://github.com/icewolfz/jiMUD/releases/latest', '_blank');
-            if (global.editorOnly)
-                winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: true });
-            else
-                updateMenuItem({ menu: ['help', 'updater'], enabled: true });
+            _checkingUpdates = false;
         });
     });
 
     autoUpdater.on('update-downloaded', () => {
-        if (global.editorOnly) {
-            winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: false });
-            winCode.setProgressBar(-1);
-            winCode.webContents.send('update-downloaded');
-        }
-        else {
-            updateMenuItem({ menu: ['help', 'updater'], enabled: false });
-            win.setProgressBar(-1);
-            win.webContents.send('update-downloaded');
-        }
+        window.setProgressBar(-1);
+        const progress = progressMap.get(window);
+        if (progress)
+            progress.close();
+        _checkingUpdates = false;
         dialog.showMessageBox({
             title: 'Install Updates',
-            message: 'Updates downloaded, application will be quit for update or when you next restart the application...',
+            message: 'Updates downloaded, Quit for update now or when you next restart the application...',
             buttons: ['Now', 'Later']
         }).then(result => {
             if (result.response === 0) {
@@ -4709,129 +3276,18 @@ function checkForUpdatesManual() {
             }
         });
     });
-    if (global.editorOnly)
-        winCode.webContents.send('menu-update', 'help|check for updates...', { enabled: false });
-    else
-        updateMenuItem({ menu: ['help', 'updater'], enabled: false });
-    autoUpdater.checkForUpdates();
-}
-
-function showAbout() {
-    var b;
-
-    if (global.editorOnly)
-        b = winCode.getBounds();
-    else
-        b = win.getBounds();
-
-    let about = new BrowserWindow({
-        parent: getParentWindow(),
-        modal: false,
-        x: Math.floor(b.x + b.width / 2 - 250),
-        y: Math.floor(b.y + b.height / 2 - 280),
-        width: 500,
-        height: 560,
-        movable: true,
-        minimizable: false,
-        maximizable: false,
-        skipTaskbar: true,
-        resizable: false,
-        title: 'About jiMUD',
-        icon: path.join(__dirname, '../assets/icons/png/64x64.png'),
-        webPreferences: {
-            nodeIntegration: true,
-            webviewTag: false,
-            sandbox: false,
-            spellcheck: set ? set.spellchecking : false,
-            enableRemoteModule: true,
-            contextIsolation: false,
-            backgroundThrottling: set ? set.enableBackgroundThrottling : true
-        }
-    });
-    require("@electron/remote/main").enable(about.webContents);
-    about.webContents.on('render-process-gone', (event, details) => {
-        logError(`About render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
-    });
-
-    about.on('unresponsive', () => {
-        dialog.showMessageBox({
-            type: 'info',
-            message: 'Unresponsive',
-            buttons: ['Reopen', 'Keep waiting', 'Close']
-        }).then(result => {
-            if (!about)
-                return;
-            if (result.response === 0) {
-                about.reload();
-                logError('About unresponsive, reload.\n', true);
-            }
-            else if (result.response === 2) {
-                about.destroy();
-            }
-            else
-                logError('About unresponsive, waiting.\n', true);
-        });
-    });
-
-    about.removeMenu();
-    about.on('closed', () => {
-        about = null;
-    });
-
-    // and load the index.html of the app.
-    about.loadURL(url.format({
-        pathname: path.join(__dirname, 'about.html'),
-        protocol: 'file:',
-        slashes: true
-    }));
-
-    about.once('ready-to-show', () => {
-        about.show();
+    autoUpdater.checkForUpdates().then((results) => {
+        if (!results)
+            _checkingUpdates = false;
     });
 }
 
-function getParentWindow() {
-    if (global.editorOnly)
-        return winCode;
-    return win;
-}
+ipcMain.on('check-for-updates', checkForUpdatesManual);
+//#endregion
 
-// eslint-disable-next-line no-unused-vars
-async function executeScript(script, w, f) {
-    return new Promise((resolve, reject) => {
-        if (!w || !w.webContents) {
-            reject();
-            return;
-        }
-        w.webContents.executeJavaScript(script).then(results => resolve(results)).catch(err => {
-            if (err)
-                logError(err);
-            reject();
-        });
-    });
-    //if (f)
-    //w.webContents.focus();
-}
-
-// eslint-disable-next-line no-unused-vars
-async function executeScriptContents(script, w) {
-    return new Promise((resolve, reject) => {
-        if (!w) {
-            reject();
-            return;
-        }
-        w.executeJavaScript(script).then(results => resolve(results)).catch(err => {
-            if (err)
-                logError(err);
-            reject();
-        });
-    });
-}
-
+//#region Window build/position functions
 function getWindowX(x, w) {
-    if (!set)
-        set = settings.Settings.load(global.settingsFile);
-    if (set.fixHiddenWindows) {
+    if (_settings.fixHiddenWindows) {
         const { width } = screen.getPrimaryDisplay().workAreaSize;
         if (x + w >= width)
             return width - w;
@@ -4842,9 +3298,7 @@ function getWindowX(x, w) {
 }
 
 function getWindowY(y, h) {
-    if (!set)
-        set = settings.Settings.load(global.settingsFile);
-    if (set.fixHiddenWindows) {
+    if (_settings.fixHiddenWindows) {
         const { height } = screen.getPrimaryDisplay().workAreaSize;
         if (y + h >= height)
             return height - h;
@@ -4854,19 +3308,14 @@ function getWindowY(y, h) {
     return y;
 }
 
-/*
-function focusAndPerform(methodName) {
-  return function(menuItem, window) {
-    window.webContents.focus();
-    window.webContents[methodName]();
-  };
-}
-*/
-
 function buildOptions(details, window, settings) {
+    let file = details.url;
+    if (file.startsWith('file:///' + __dirname.replace(/\\/g, '/')))
+        file = file.substring(__dirname.length + 9);
     options = {
+        file: file,
         backgroundColor: '#000',
-        show: false,
+        show: true,
         icon: path.join(__dirname, '../assets/icons/png/64x64.png'),
         webPreferences: {
             nodeIntegration: true,
@@ -4876,22 +3325,107 @@ function buildOptions(details, window, settings) {
             spellcheck: settings ? settings.spellchecking : false,
             enableRemoteModule: true,
             contextIsolation: false,
-            backgroundThrottling: settings ? settings.enableBackgroundThrottling : true
-        },
-        width: 800,
-        height: 600
+            backgroundThrottling: settings ? settings.enableBackgroundThrottling : true,
+            preload: path.join(__dirname, 'preload.js')
+        }
     };
     if (details.features.length) {
         features = details.features.split(',');
+        options.features = {};
         for (var f = 0, fl = features.length; f < fl; f++) {
             feature = features[f].split('=');
-            if (feature[0] == "width" || feature[0] == "height" || feature[0] == 'x' || feature[0] == 'y')
-                options[feature[0]] = parseInt(feature[1], 10);
-            else
-                options[feature[0]] = feature[1];
+            switch (feature[0]) {
+                case '':
+                    continue;
+                case 'defaultX':
+                case 'defaultY':
+                    if (feature[1] === 'center')
+                        options[feature[0]] = feature[1];
+                    else
+                        options[feature[0]] = parseInt(feature[1], 10);
+                    options.features[feature[0]] = options[feature[0]];
+                    break;
+                case 'defaultWidth':
+                case 'defaultHeight':
+                case "width":
+                case "height":
+                case "x":
+                case "y":
+                    options[feature[0]] = parseInt(feature[1], 10);
+                    options.features[feature[0]] = options[feature[0]];
+                    break;
+                default:
+                    if (feature.length === 1 || feature[1] === "true") {
+                        options[feature[0]] = true;
+                        options.features[feature[0]] = options[feature[0]];
+                    }
+                    else if (feature[1] === "false") {
+                        options[feature[0]] = false;
+                        options.features[feature[0]] = options[feature[0]];
+                    }
+                    else if (feature[1] !== '[object Object]') {
+                        options[feature[0]] = feature[1];
+                        options.features[feature[0]] = options[feature[0]];
+                    }
+                    break;
+            }
         }
+        //if passed but showInTaskBar is passed set skipTaskbar based on that setting
+        if (!('skipTaskbar' in options) && 'showInTaskBar' in options)
+            options.skipTaskbar = (!options.showInTaskBar && (options.alwaysOnTopClient || options.alwaysOnTop)) ? true : false;
+        if (options.alwaysOnTopClient)
+            options.parent = window;
     }
-    if (details.frameName === 'modal') {
+    //not passed so see if any previous openings to use them as defaults
+    if (states[file]) {
+        if (states[file].bounds) {
+            if (!('x' in options))
+                options.x = states[file].bounds.x;
+            if (!('y' in options))
+                options.y = states[file].bounds.y;
+            if (!('width' in options))
+                options.width = states[file].bounds.width;
+            if (!('height' in options))
+                options.height = states[file].bounds.height;
+        }
+        Object.keys(states[file]).map(key => {
+            if (key === 'bounds') return;
+            if (!(key in options))
+                options[key] = states[file][key];
+        });
+    }
+    if ('visible' in options)
+        options.show = options.visible;
+    //if no width or height see if a default was supplied
+    if (!('width' in options))
+        options.width = 'defaultWidth' in options ? options.defaultWidth : 800;
+    if (!('height' in options))
+        options.height = 'defaultHeight' in options ? options.defaultHeight : 600;
+    if (!('x' in options)) {
+        if ('defaultX' in options) {
+            if (options.defaultX === 'center') {
+                parentBounds = window.getBounds();
+                options.x = Math.floor(parentBounds.x + parentBounds.width / 2 - options.width / 2);
+            }
+            else
+                options.x = options.defaultX;
+        }
+        else
+            options.x = 0;
+    }
+    if (!('y' in options)) {
+        if ('defaultY' in options) {
+            if (options.defaultY === 'center') {
+                parentBounds = window.getBounds();
+                options.y = Math.floor(parentBounds.y + parentBounds.height / 2 - options.height / 2);
+            }
+            else
+                options.y = options.defaultY;
+        }
+        else
+            options.y = 0;
+    }
+    if (details.frameName === 'modal' || details.frameName.startsWith('modal-')) {
         // open window as modal
         Object.assign(options, {
             modal: true,
@@ -4902,7 +3436,6 @@ function buildOptions(details, window, settings) {
             skipTaskbar: true,
             resizable: false
         });
-
         var b = window.getBounds();
         options.x = Math.floor(b.x + b.width / 2 - options.width / 2);
         options.y = Math.floor(b.y + b.height / 2 - options.height / 2);
@@ -4911,7 +3444,2437 @@ function buildOptions(details, window, settings) {
         if (Object.prototype.hasOwnProperty.call(options, 'x'))
             options.x = getWindowX(options.x, options.width);
         if (Object.prototype.hasOwnProperty.call(options, 'y'))
-            options.x = getWindowY(options.y, options.height);
+            options.y = getWindowY(options.y, options.height);
     }
     return options;
+}
+//#endregion
+//#region Window/client query functions
+function getActiveClient(window) {
+    if (!window) return clients[focusedClient];
+    if (windows[getWindowId(window)].current === 0 || windows[getWindowId(window)].clients.length === 0)
+        return null;
+    return clients[windows[getWindowId(window)].current];
+}
+
+function getActiveWindow() {
+    //if not found default to the first window with clients
+    return windows[focusedWindow];
+}
+
+function getWindowId(window) {
+    if (!window) return focusedWindow;
+    return idMap.get(window);
+}
+
+function getClientId(client) {
+    if (!client) return focusedClient;
+    return idMap.get(client);
+}
+
+function browserViewFromContents(contents) {
+    if (!contents) return null
+    for (clientId in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId))
+            continue;
+        if (clients[clientId].view.webContents === contents)
+            return clients[clientId].view;
+    }
+    return null;
+}
+
+function clientIdFromContents(contents) {
+    if (!contents) return null
+    for (clientId in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId))
+            continue;
+        if (clients[clientId].view.webContents === contents)
+            return clientId;
+    }
+    return null;
+}
+
+function clientFromContents(contents) {
+    if (!contents) return null
+    for (clientId in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId))
+            continue;
+        if (clients[clientId].view.webContents === contents)
+            return clients[clientId];
+    }
+    return null;
+}
+
+//#endregion
+function focusWindow(window, focusWindow) {
+    let client = getActiveClient(window);
+    if (!client) return;
+    if (focusWindow) {
+        client.parent.focus();
+        client.parent.webContents.focus();
+    }
+    client.view.webContents.focus();
+}
+
+function focusClient(clientId, focusWindow, switchClient) {
+    if (!clients[clientId]) return;
+    client = clients[clientId];
+    //client.parent.webContents.send('switch-client', clientId);
+    if (focusWindow) {
+        client.parent.focus();
+        client.parent.webContents.focus();
+    }
+    const windowId = getWindowId(client.parent);
+    if (switchClient && windows[windowId].current !== clientId)
+        client.parent.webContents.send('switch-client', clientId);
+    client.view.webContents.focus();
+}
+
+function updateWindow(window, parent, options) {
+    if (!window || !options) return;
+    if ('alwaysOnTopClient' in options)
+        window.setParentWindow(options.alwaysOnTopClient ? parent : null);
+    if ('alwaysOnTop' in options)
+        window.setAlwaysOnTop(options.alwaysOnTop);
+    if ('showInTaskBar' in options)
+        window.setSkipTaskbar((!options.showInTaskBar && (options.alwaysOnTopClient || options.alwaysOnTop)) ? true : false);
+    updateWebContents(window.webContents, options);
+    const clientId = getWindowClientId(window);
+    //if no if more then likely a main window
+    if (!clientId) return;
+    for (child in clients[clientId].windows) {
+        if (!Object.prototype.hasOwnProperty.call(clients[clientId].windows, child))
+            continue;
+        if (clients[clientId].windows[child].window === window) {
+            //update live options to ensure any window data is saved correctly
+            const details = clients[clientId].windows[child].details;
+            for (option in options) {
+                if (!Object.prototype.hasOwnProperty.call(options, option)) continue;
+                details.options[option] = options[option];
+                if (option in details.options.features)
+                    details.options.features[option] = options[option];
+            }
+            break;
+        }
+    }
+}
+
+function updateWebContents(contents, options) {
+    if (!contents || !options) return;
+    if ('enableBackgroundThrottling' in options)
+        contents.setBackgroundThrottling(options.enableBackgroundThrottling);
+}
+
+function updateAll(options) {
+    const windows = BrowserWindow.getAllWindows();
+    const l = windows.length;
+    for (let idx = 0; idx < l; idx++) {
+        if (idMap.has(windows[windows[idx]]) && 'showInTaskBar' in options)
+            windows[idx].setSkipTaskbar(!options.showInTaskBar);
+        updateWebContents(windows[idx].webContents);
+    }
+    for (id in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, id))
+            continue;
+        updateWebContents(clients[id].view.webContents, options);
+    }
+}
+
+function getChildParentWindow(child) {
+    if (!child) return null;
+    //if set use current parent
+    let parent = child.getParentWindow();
+    if (parent) return parent;
+    let id = getWindowId(child);
+    //if has a parent so find it
+    if (typeof id === 'number') {
+        //a main window is parent so return the window
+        if (windows[id])
+            return windows[id].window;
+        //if a client return the client parent
+        else if (clients[id])
+            return clients[id].parent;
+    }
+    //if all else fails try and drill client child windows
+    /*
+    for (id in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, id))
+            continue;
+        //search all the clients for child window
+        const wl = clients[id].windows.length;
+        for (var idx = 0; idx < wl; idx++) {
+            if (clients[id].windows[idx].window === child)
+                return clients[id].parent;
+        }
+    }
+    */
+    //parent not found so bail
+    return null;
+}
+
+function newConnectionFromCharacterId(id, window) {
+    const charID = getCharacterFromId(id);
+    if (charID) {
+        //window.webContents.once('did-finish-load', () => {
+        newConnection(window, null, {
+            characterId: charID.ID,
+            settings: parseTemplate(charID.Preferences),
+            map: parseTemplate(charID.Map),
+            port: charID.Port
+        });
+        //});
+    }
+}
+
+function newConnection(window, connection, data, name) {
+    let windowId = getWindowId(window);
+    let id;
+    if (data)
+        id = createClient({ parent: window, name: name, offset: windows[windowId].clients.length ? clients[windows[windowId].current].view.getBounds().y : 0, bounds: window.getContentBounds(), data: { data: data } });
+    else
+        id = createClient({ parent: window, name: name, offset: windows[windowId].clients.length ? clients[windows[windowId].current].view.getBounds().y : 0, bounds: window.getContentBounds() });
+    focusedWindow = windowId;
+    focusedClient = id;
+    windows[windowId].clients.push(id);
+    windows[windowId].current = id;
+    //did-navigate //fires before dom-ready but view seems to still not be loaded and delayed
+    //did-finish-load //slowest but ensures the view is in the window and visible before firing
+    window.addBrowserView(clients[id].view);
+    window.setTopBrowserView(clients[id].view);
+    onContentsLoaded(clients[id].view.webContents).then(() => {
+        window.webContents.send('new-client', { id: id, current: windows[windowId].current === id });
+        if (connection)
+            clients[id].view.webContents.send('connection-settings', connection);
+        if (focusedClient === id && focusedWindow === windowId)
+            focusWindow(window, true);
+        clientsChanged();
+    });
+}
+
+async function newClientWindow(caller, connection, data, name) {
+    if (caller) {
+        //save the current states so it has the latest for new window
+        states['manager.html'] = saveWindowState(caller, stateMap.get(caller) || states['manager.html']);
+        stateMap.set(caller, states['manager.html']);
+        //offset the state so it is not an exact overlap
+        states['manager.html'].bounds.x += 20;
+        states['manager.html'].bounds.y += 20;
+        const { height, width } = screen.getPrimaryDisplay().workAreaSize;
+        //make sure the window appears on the screen
+        if (states['manager.html'].bounds.x > (width - 10))
+            states['manager.html'].bounds.x = width - states['manager.html'].bounds.width;
+        if (states['manager.html'].bounds.x < 10)
+            states['manager.html'].bounds.x = 10;
+        if (states['manager.html'].bounds.y > (height - 10))
+            states['manager.html'].bounds.y = height - states['manager.html'].bounds.height;
+        if (states['manager.html'].bounds.y < 10)
+            states['manager.html'].bounds.y = 10;
+    }
+    let windowId = createWindow({ remote: false });
+    windows[windowId].menubar = createMenu(windows[windowId].window);
+    //windows[windowId].menubar.enabled = false;    
+    let window = windows[windowId];
+    let id;
+    focusedWindow = windowId;
+    if (Array.isArray(data)) {
+        for (let d = 0, dl = data.length; d < dl; d++) {
+            id = createClient({ parent: window.window, name: d === 0 ? name : null, bounds: window.window.getContentBounds(), data: { data: data[d] } });
+            window.clients.push(id);
+        }
+        window.current = id;
+        focusedClient = id;
+        window.window.once('ready-to-show', () => {
+            for (var c = 0, cl = window.clients.length; c < cl; c++) {
+                const clientId = window.clients[c];
+                window.window.addBrowserView(clients[clientId].view);
+                onContentsLoaded(clients[clientId].view.webContents).then(() => {
+                    if (connection)
+                        clients[id].view.webContents.send('connection-settings', connection);
+                    clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, window.clients.length);
+                });
+            }
+            window.window.webContents.send('set-clients', window.clients.map(x => {
+                return {
+                    id: x,
+                    current: x === window.current,
+                    noUpdate: true
+                };
+            }), window.current);
+            window.window.setTopBrowserView(clients[window.current].view);
+            if (focusedWindow === windowId)
+                focusWindow(window.window, true);
+        });
+    }
+    else {
+        if (data)
+            id = createClient({ parent: window.window, name: name, bounds: window.window.getContentBounds(), data: { data: data } });
+        else
+            id = createClient({ parent: window.window, name: name, bounds: window.window.getContentBounds() });
+        window.current = id;
+        focusedClient = id;
+        window.clients.push(id);
+        window.window.addBrowserView(clients[id].view);
+        window.window.setTopBrowserView(clients[id].view);
+        onContentsLoaded(clients[id].view.webContents).then(() => {
+            clientsChanged();
+            if (connection)
+                clients[id].view.webContents.send('connection-settings', connection);
+        });
+        onContentsLoaded(window.window.webContents).then(() => {
+            window.window.webContents.send('new-client', { id: id });
+            if (focusedClient === id && focusedWindow === windowId)
+                focusWindow(window.window, true);
+        });
+    }
+    return window.window;
+}
+
+function newEditorWindow(caller, files) {
+    if (caller) {
+        //save the current states so it has the latest for new window
+        states['code.editor.html'] = saveWindowState(caller, stateMap.get(caller) || states['code.editor.html']);
+        stateMap.set(caller, states['code.editor.html']);
+        //offset the state so it is not an exact overlap
+        states['code.editor.html'].bounds.x += 20;
+        states['code.editor.html'].bounds.y += 20;
+        const { height, width } = screen.getPrimaryDisplay().workAreaSize;
+        //make sure the window appears on the screen
+        if (states['code.editor.html'].bounds.x > (width - 10))
+            states['code.editor.html'].bounds.x = width - states['code.editor.html'].bounds.width;
+        if (states['code.editor.html'].bounds.x < 10)
+            states['code.editor.html'].bounds.x = 10;
+        if (states['code.editor.html'].bounds.y > (height - 10))
+            states['code.editor.html'].bounds.y = height - states['code.editor.html'].bounds.height;
+        if (states['code.editor.html'].bounds.y < 10)
+            states['code.editor.html'].bounds.y = 10;
+    }
+    let windowId = createWindow({ file: 'code.editor.html', backgroundColor: 'gray', icon: '../assets/icons/win/code.ico', title: 'Code editor' });
+    let window = windows[windowId].window;
+    focusedWindow = windowId;
+    onContentsLoaded(window.webContents).then(() => {
+        if (Array.isArray(files) || typeof files === 'string')
+            window.webContents.send('open-editor', files);
+        focusWindow(window, true);
+        if (process.platform === 'linux')
+            window.setIcon(path.join(__dirname, '../assets/icons/png/code.png'));
+        else
+            window.setOverlayIcon(path.join(__dirname, '../assets/icons/png/codeol.png'), 'Code editor');
+    });
+    return window;
+}
+//#region Execute scripts in window/view
+// eslint-disable-next-line no-unused-vars
+async function executeScript(script, window, focus) {
+    return new Promise((resolve, reject) => {
+        if (!window || (typeof window.isDestroyed === 'function' && window.isDestroyed()) || !window.webContents || window.webContents.isDestroyed()) {
+            reject();
+            return;
+        }
+        window.webContents.executeJavaScript(script).then(results => resolve(results)).catch(err => {
+            if (err)
+                logError(err);
+            reject();
+        });
+    });
+    //if (f)
+    //w.webContents.focus();
+}
+
+// eslint-disable-next-line no-unused-vars
+async function executeScriptClient(script, window, focus) {
+    return new Promise(async (resolve, reject) => {
+        if (!window) {
+            reject();
+            return;
+        }
+        const id = windows[getWindowId(window)].current;
+        if (!clients[id]) return;
+        clients[id].view.webContents.executeJavaScript(script).then(results => resolve(results)).catch(err => {
+            if (err)
+                logError(err);
+            reject();
+        });
+        if (focus) {
+            clients[id].parent.focus();
+            clients[id].parent.webContents.focus();
+            clients[id].view.webContents.focus();
+        }
+    });
+}
+//#endregion
+//#region window layout systems
+async function saveWindowLayout(file, locked) {
+    if (!file)
+        file = parseTemplate(path.join('{data}', global.editorOnly ? 'editor.layout' : 'window.layout'));
+    let id;
+    let data;
+    //lock layout loads old layout data and only updates global states and leaves windows/clients alone
+    if (locked) {
+        try {
+            data = fs.readFileSync(file, 'utf-8');
+        }
+        catch (e) {
+            logError(e);
+            return;
+        }
+        try {
+            data = JSON.parse(data);
+        }
+        catch (e) {
+            logError(e);
+            return;
+        }
+        data.states = states;
+    }
+    else {
+        data = {
+            windowID: _windowID, //save last id to prevent reused ids
+            clientID: _clientID,
+            focusedClient: focusedClient,
+            focusedWindow: focusedWindow,
+            windows: [],
+            clients: [],
+            states: states
+        }
+        //save windows
+        //{ window: window, clients: [], current: 0 }
+        for (id in windows) {
+            if (!Object.prototype.hasOwnProperty.call(windows, id))
+                continue;
+            const wData = {
+                id: getWindowId(windows[id].window), //use function to ensure proper id data type
+                clients: windows[id].clients,
+                current: windows[id].current,
+                //get any custom data from window
+                data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].window).catch(logError),
+                state: saveWindowState(windows[id].window, stateMap.get(windows[id].window)),
+                menubar: windows[id].menubar ? true : false,
+                options: windows[id].options,
+                windows: []
+            }
+            const wl = windows[id].windows.length;
+            for (var idx = 0; idx < wl; idx++) {
+                wData.push({
+                    options: windows[id].windows[idx].details.options.features,
+                    state: saveWindowState(windows[id].windows[idx].window, stateMap.get(windows[id].windows[idx].window)),
+                    data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].windows[idx].window).catch(logError),
+                });
+            }
+            data.windows.push(wData);
+        }
+        //save clients
+        //{parent: window, view: view, menu: menu, windows: childWindows}
+        for (id in clients) {
+            if (!Object.prototype.hasOwnProperty.call(clients, id))
+                continue;
+            const cData = {
+                id: getClientId(clients[id].view), //use function to ensure proper id data type
+                parent: clients[id].parent ? getWindowId(clients[id].parent) : -1,
+                file: clients[id].file,
+                windows: [],
+                state: {
+                    bounds: clients[id].view.getBounds(),
+                    devTools: clients[id].view.webContents.isDevToolsOpened()
+                },
+                //get any custom data from window
+                data: await executeScript('if(typeof saveWindow === "function") saveWindow()', clients[id].view).catch(logError),
+                states: clients[id].states,
+                name: clients[id].name
+            }
+            const wl = clients[id].windows.length;
+            for (var idx = 0; idx < wl; idx++) {
+                const window = clients[id].windows[idx].window;
+                //for what ever reason skip the window, eg chat window no longer needed for what ever reason
+                if (await executeScript(`if(typeof skipSaveWindow === "function") skipSaveWindow(); else (function() { return false; })();`, window).catch(logError))
+                    continue;
+                const wData = {
+                    client: getClientId(clients[id].view), //use function to ensure proper id data type
+                    state: saveWindowState(window, stateMap.get(window)),
+                    details: { url: clients[id].windows[idx].details.url, options: clients[id].windows[idx].details.options.features },
+                    //get any custom data from window
+                    data: await executeScript('if(typeof saveWindow === "function") saveWindow()', window).catch(logError)
+                }
+                for (key in wData.state) {
+                    if (!Object.prototype.hasOwnProperty.call(wData.state, key) || key === 'alwaysOnTop')
+                        continue;
+                    if (key in wData.details.options)
+                        delete wData.details.options[key];
+                }
+                delete wData.details.options.x;
+                delete wData.details.options.y;
+                delete wData.details.options.width;
+                delete wData.details.options.height;
+                cData.windows.push(wData);
+            }
+            data.clients.push(cData);
+        }
+    }
+    fs.writeFileSync(file, JSON.stringify(data));
+}
+
+function loadWindowLayout(file, charData) {
+    if (!file)
+        file = parseTemplate(path.join('{data}', global.editorOnly ? 'editor.layout' : 'window.layout'));
+    //cant find so cant load
+    if (!isFileSync(file))
+        return false;
+    let data;
+    try {
+        data = fs.readFileSync(file, 'utf-8');
+    }
+    catch (e) {
+        logError(e);
+        return false;
+    }
+    try {
+        data = JSON.parse(data);
+    }
+    catch (e) {
+        logError(e);
+        return false;
+    }
+    states = data.states || {};
+    //no windows so for what ever reason so just start a clean client
+    if (data.windows.length === 0) {
+        if (global.editorOnly)
+            newEditorWindow();
+        else if (charData)
+            newClientWindow(null, null, charData);
+        else
+            newClientWindow();
+        return true;
+    }
+    //_windowID = data.windowID;
+    //_clientID = data.clientID;
+    focusedClient = data.focusedClient;
+    focusedWindow = data.focusedWindow;
+    //create windows
+    let i, il = data.windows.length;
+    for (i = 0; i < il; i++) {
+        createWindow({
+            ...data.windows[i].options,
+            ...{
+                id: data.windows[i].id,
+                data: { data: data.windows[i].data, state: data.windows[i].state, states: data.states }
+            }
+        });
+        if (data.windows[i].menubar)
+            windows[data.windows[i].id].menubar = createMenu(windows[data.windows[i].id].window);
+        //windows[data.windows[i].id].menubar.enabled = false;
+        windows[data.windows[i].id].current = data.windows[i].current;
+        windows[data.windows[i].id].clients = data.windows[i].clients;
+    }
+
+    //create clients and link to windows
+    il = data.clients.length;
+    for (i = 0; i < il; i++) {
+        const client = data.clients[i];
+        if (client.id === windows[focusedWindow].current && charData) {
+            if (charData[0])
+                client.data = charData[0];
+            charData.shift();
+        }
+        createClient({ parent: windows[client.parent].window, name: client.name, bounds: client.state.bounds, id: client.id, data: client, file: client.file });
+    }
+    //append any remaining new characters
+    if (charData && charData.length) {
+        il = charData.length;
+        let id;
+        for (i = 0; i < il; i++) {
+            id = createClient({ parent: windows[focusedWindow].window, bounds: windows[focusedWindow].window.getContentBounds(), data: { data: charData[i] } });
+            windows[focusedWindow].clients.push(id);
+        }
+        windows[focusedWindow].current = id;
+        focusedClient = id;
+        data.windows[i].current = id;
+    }
+    //set current clients for each window after everything is created
+    il = data.windows.length;
+    for (i = 0; i < il; i++) {
+        const window = windows[data.windows[i].id];
+        //no clients so move on probably different type of window
+        if (window.clients.length === 0) {
+            onContentsLoaded(window.window.webContents).then(() => {
+                if (data.focusedWindow === getWindowId(window))
+                    focusWindow(window, true);
+                if (window.options.file === 'code.editor.html') {
+                    if (process.platform === 'linux')
+                        window.window.setIcon(path.join(__dirname, '../assets/icons/png/code.png'));
+                    else
+                        window.window.setOverlayIcon(path.join(__dirname, '../assets/icons/png/codeol.png'), 'Code editor');
+                }
+            });
+            continue;
+        }
+        let current = data.windows[i].current;
+        //current is wrong for what ever reason so fall back to first client
+        if (!clients[current])
+            current = window.clients[0];
+        onContentsLoaded(window.window.webContents).then(() => {
+            for (var c = 0, cl = window.clients.length; c < cl; c++) {
+                const clientId = window.clients[c];
+                window.window.addBrowserView(clients[clientId].view);
+                onContentsLoaded(clients[clientId].view.webContents).then(() => {
+                    clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, window.clients.length);
+                });
+            }
+            window.window.webContents.send('set-clients', window.clients.map(x => {
+                return {
+                    id: x,
+                    current: x === current,
+                    noUpdate: true
+                };
+            }), current);
+
+            window.window.setTopBrowserView(clients[current].view);
+            if (data.focusedWindow === getWindowId(window.window))
+                focusWindow(window.window, true);
+        });
+    }
+    return true;
+}
+
+function saveWindowState(window, previous) {
+    try {
+        if (!window || window.isDestroyed())
+            return previous;
+        return {
+            bounds: previous && previous.fullscreen ? previous.bounds : window.getNormalBounds(),
+            fullscreen: previous ? previous.fullscreen : window.isFullScreen(),
+            maximized: previous ? previous.maximized : window.isMaximized(),
+            minimized: previous ? previous.minimized : window.isMinimized(),
+            devTools: global.debug ? false : window.webContents.isDevToolsOpened(),
+            visible: window.isVisible(),
+            normal: window.isNormal(),
+            enabled: window.isEnabled(),
+            alwaysOnTop: window.isAlwaysOnTop()
+        };
+    }
+    catch (err) {
+        logError(err);
+    }
+    return previous;
+}
+
+function restoreWindowState(window, state, showType) {
+    if (!window || !state) return;
+    //hack to improve visual loading
+    if (showType !== 2)
+        window.hide();
+    if (state.maximized)
+        window.maximize();
+    else if (state.minimized)
+        window.minimize();
+    if (!state.visible && showType !== 2)
+        window.hide();
+    else if (!showType !== 1)
+        window.show();
+    if (state.fullscreen)
+        window.setFullScreen(state.fullscreen);
+    if (global.debug && showType !== 2)
+        openDevtools(window.webContents, { activate: false });
+    else if (state.devTools && showType !== 2)
+        openDevtools(window.webContents);
+    if (!state.enabled)
+        window.setEnabled(false);
+    if (state.alwaysOnTop)
+        window.setAlwaysOnTop(true);
+}
+//#endregion
+//#region Client window menu code
+function createMenu(window) {
+    var menuTemp = [
+        //File
+        {
+            label: '&File',
+            id: 'file',
+            submenu: [
+                {
+                    label: 'New &Tab',
+                    id: 'newConnect',
+                    accelerator: 'CmdOrCtrl+Shift+N',
+                    click: (item, mWindow, keyboard) => {
+                        //allow for some hidden ways to force open main/dev if needed with out the complex menus
+                        if (!keyboard.triggeredByAccelerator) {
+                            if (keyboard.ctrlKey)
+                                newConnection(window || mWindow, { port: 1035 });
+                            else if (keyboard.shiftKey)
+                                newConnection(window || mWindow, { port: 1030 });
+                            else
+                                newConnection(window || mWindow);
+                        }
+                        else
+                            newConnection(window || mWindow);
+                    }
+                },
+                {
+                    label: 'New &Window',
+                    id: '',
+                    accelerator: 'CmdOrCtrl+Alt+N',
+                    click: (item, mWindow, keyboard) => {
+                        //allow for some hidden ways to force open main/dev if needed with out the complex menus
+                        if (!keyboard.triggeredByAccelerator) {
+                            if (keyboard.ctrlKey)
+                                newClientWindow(window || mWindow, { port: 1035 });
+                            else if (keyboard.shiftKey)
+                                newClientWindow(window || mWindow, { port: 1030 });
+                            else
+                                newClientWindow(window || mWindow);
+                        }
+                        else
+                            newClientWindow(window || mWindow);
+                    }
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    label: '&Connect',
+                    id: 'connect',
+                    accelerator: 'CmdOrCtrl+N',
+                    click: (item, mWindow) => {
+                        executeScriptClient('client.connect()', window || mWindow, true);
+                    }
+                },
+                {
+                    label: '&Disconnect',
+                    id: 'disconnect',
+                    accelerator: 'CmdOrCtrl+D',
+                    enabled: false,
+                    click: (item, mWindow) => {
+                        executeScriptClient('client.close()', window || mWindow, true);
+                    }
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    label: '&Enable parsing',
+                    id: 'enableParsing',
+                    type: 'checkbox',
+                    checked: true,
+                    click: (item, mWindow) => {
+                        executeScriptClient('toggleParsing()', window || mWindow, true);
+                    }
+                },
+                {
+                    label: 'E&nable triggers',
+                    id: 'enableTriggers',
+                    type: 'checkbox',
+                    checked: true,
+                    click: (item, mWindow) => {
+                        executeScriptClient('toggleTriggers()', window || mWindow, true);
+                    }
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    label: 'Ch&aracters...',
+                    id: 'characters',
+                    accelerator: 'CmdOrCtrl+H',
+                    click: (item, mWindow) => {
+                        executeScriptClient('openWindow("characters")', window || mWindow, true);
+                    }
+                },
+                { type: 'separator' },
+                {
+                    label: '&Log',
+                    id: 'log',
+                    type: 'checkbox',
+                    checked: false,
+                    click: (item, mWindow) => {
+                        executeScriptClient('toggleLogging()', window || mWindow, true);
+                    }
+                },
+                {
+                    label: '&View logs...',
+                    click: (item, mWindow) => {
+                        executeScriptClient('openWindow("log.viewer")', window || mWindow, true);
+                    }
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    label: '&Global Preferences...',
+                    id: 'globalPreferences',
+                    accelerator: 'CmdOrCtrl+Comma',
+                    click: (item, mWindow) => openPreferences(window || mWindow)
+                },
+                {
+                    label: '&Preferences...',
+                    id: 'preferences',
+                    accelerator: 'CmdOrCtrl+Comma',
+                    click: (item, mWindow) => executeScriptClient('openWindow("prefs");', window || mWindow, true),
+                    visible: false
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    label: 'Clo&se',
+                    id: 'close',
+                    accelerator: 'CmdOrCtrl+W',
+                    enabled: false,
+                    visible: false,
+                    click: (item, mWindow) => {
+                        mWindow = window || mWindow;
+                        if (windows[getWindowId(mWindow)].clients.length === 1)
+                            mWindow.close();
+                        else
+                            removeClient(windows[getWindowId(mWindow)].current, true);
+                    }
+                },
+                {
+                    label: 'E&xit',
+                    //role: 'quit'
+                    click: quitApp
+                }
+            ]
+        },
+        //Edit
+        {
+            label: '&Edit',
+            id: 'edit',
+            submenu: [
+                {
+                    role: 'undo'
+                },
+                {
+                    role: 'redo'
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    role: 'cut'
+                },
+                {
+                    role: 'copy'
+                },
+                {
+                    label: 'Copy as HTML',
+                    accelerator: 'CmdOrCtrl+Alt+C',
+                    id: 'copyHTML',
+                    enabled: false,
+                    click: (item, mWindow) => {
+                        executeScriptClient('copyAsHTML();', window || mWindow, true);
+                    }
+                },
+                {
+                    label: 'Paste',
+                    accelerator: 'CmdOrCtrl+V',
+                    click: (item, mWindow) => {
+                        executeScriptClient('client.commandInput.dataset.selStart = client.commandInput.selectionStart;client.commandInput.dataset.selEnd = client.commandInput.selectionEnd;paste()', window || mWindow, true);
+                    }
+                },
+                {
+                    label: 'Paste special',
+                    accelerator: 'CmdOrCtrl+Shift+V',
+                    click: (item, mWindow) => {
+                        executeScriptClient('client.commandInput.dataset.selStart = client.commandInput.selectionStart;client.commandInput.dataset.selEnd = client.commandInput.selectionEnd;pasteSpecial()', window || mWindow, true);
+                    }
+                },
+                /*
+                {
+                  role: 'pasteAndMatchStyle'
+                },
+                */
+                {
+                    role: 'delete'
+                },
+                {
+                    label: 'Select All',
+                    accelerator: 'CmdOrCtrl+A',
+                    click: (item, mWindow) => {
+                        executeScriptClient('selectAll()', window || mWindow, true);
+                    }
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    label: 'Clear',
+                    click: (item, mWindow) => {
+                        executeScriptClient('client.clear()', window || mWindow, true);
+                    }
+                },
+                { type: 'separator' },
+                {
+                    label: 'Find',
+                    accelerator: 'CmdOrCtrl+F',
+                    click: (item, mWindow) => {
+                        focusWindow(window || mWindow, true);
+                        executeScriptClient('client.display.showFind()', window || mWindow);
+                    }
+                },
+            ]
+        },
+        //Profiles
+        {
+            label: '&Profiles',
+            id: 'profiles',
+            submenu: []
+        },
+        //View
+        {
+            label: '&View',
+            id: 'view',
+            submenu: [
+                {
+                    label: '&Lock',
+                    id: 'lock',
+                    type: 'checkbox',
+                    checked: false,
+                    click: (item, mWindow) => {
+                        executeScriptClient('client.toggleScrollLock()', window || mWindow, true);
+                    }
+                },
+                {
+                    label: '&Who is on?...',
+                    click: (item, mWindow) => {
+                        executeScriptClient('openWindow("who")', window || mWindow, true);
+                    }
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    label: '&Status',
+                    id: 'status',
+                    submenu: [
+                        {
+                            label: '&Visible',
+                            id: 'statusvisible',
+                            type: 'checkbox',
+                            checked: true,
+                            click: (item, mWindow) => {
+                                executeScriptClient('toggleView("status")', window || mWindow, true);
+                            }
+                        },
+                        {
+                            label: '&Refresh',
+                            id: 'refresh',
+                            click: (item, mWindow) => {
+                                executeScriptClient('client.sendGMCP(\'Core.Hello { "client": "\' + client.telnet.terminal + \'", "version": "\' + client.telnet.version + \'" }\');', window || mWindow, true);
+                            }
+                        },
+                        { type: 'separator' },
+                        {
+                            label: '&Weather',
+                            id: 'weather',
+                            type: 'checkbox',
+                            checked: true,
+                            click: (item, mWindow) => {
+                                executeScriptClient('toggleView("weather")', window || mWindow, true);
+                            }
+                        },
+                        {
+                            label: '&Limbs',
+                            id: 'limbsmenu',
+                            submenu: [
+                                {
+                                    label: '&Visible',
+                                    id: 'limbs',
+                                    type: 'checkbox',
+                                    checked: true,
+                                    click: (item, mWindow) => {
+                                        executeScriptClient('toggleView("limbs")', window || mWindow, true);
+                                    }
+                                },
+                                { type: 'separator' },
+                                {
+                                    label: '&Health',
+                                    id: 'limbhealth',
+                                    type: 'checkbox',
+                                    checked: true,
+                                    click: (item, mWindow) => {
+                                        executeScriptClient('toggleView("limbhealth")', window || mWindow, true);
+                                    }
+                                },
+                                {
+                                    label: '&Armor',
+                                    id: 'limbarmor',
+                                    type: 'checkbox',
+                                    checked: true,
+                                    click: (item, mWindow) => {
+                                        executeScriptClient('toggleView("limbarmor")', window || mWindow, true);
+                                    }
+                                },
+                            ]
+                        },
+                        {
+                            label: '&Health',
+                            id: 'health',
+                            type: 'checkbox',
+                            checked: true,
+                            click: (item, mWindow) => {
+                                executeScriptClient('toggleView("health")', window || mWindow, true);
+                            }
+                        },
+                        {
+                            label: '&Experience',
+                            id: 'experience',
+                            type: 'checkbox',
+                            checked: true,
+                            click: (item, mWindow) => {
+                                executeScriptClient('toggleView("experience")', window || mWindow, true);
+                            }
+                        },
+                        {
+                            label: '&Party Health',
+                            id: 'partyhealth',
+                            type: 'checkbox',
+                            checked: true,
+                            click: (item, mWindow) => {
+                                executeScriptClient('toggleView("partyhealth")', window || mWindow, true);
+                            }
+                        },
+                        {
+                            label: '&Combat Health',
+                            id: 'combathealth',
+                            type: 'checkbox',
+                            checked: true,
+                            click: (item, mWindow) => {
+                                executeScriptClient('toggleView("combathealth")', window || mWindow, true);
+                            }
+                        },
+                        {
+                            label: '&Lag meter',
+                            id: 'lagmeter',
+                            type: 'checkbox',
+                            checked: true,
+                            click: (item, mWindow) => {
+                                executeScriptClient('toggleView("lagmeter")', window || mWindow, true);
+                            }
+                        }
+                    ]
+                },
+                {
+                    label: '&Buttons',
+                    id: 'buttons',
+                    /*
+                    type: 'checkbox',
+                    checked: true,
+                    click: (item, mWindow) => {
+                      executeScript('toggleView("buttons")', window || mWindow, true);
+                    },
+                    */
+                    submenu: [
+                        {
+                            label: '&Visible',
+                            id: 'buttonsvisible',
+                            type: 'checkbox',
+                            checked: true,
+                            click: (item, mWindow) => {
+                                executeScriptClient('toggleView("buttons")', window || mWindow, true);
+                            }
+                        },
+                        { type: 'separator' },
+                        {
+                            label: '&Connect',
+                            id: 'connectbutton',
+                            type: 'checkbox',
+                            checked: true,
+                            click: (item, mWindow) => {
+                                executeScriptClient('toggleView("button.connect")', window || mWindow, true);
+                            }
+                        },
+                        {
+                            label: '&Characters',
+                            id: 'charactersbutton',
+                            type: 'checkbox',
+                            checked: true,
+                            click: (item, mWindow) => {
+                                executeScriptClient('toggleView("button.characters")', window || mWindow, true);
+                            }
+                        },
+                        {
+                            label: 'Code &editor',
+                            id: 'codeEditorbutton',
+                            type: 'checkbox',
+                            checked: true,
+                            click: (item, mWindow) => {
+                                executeScriptClient('toggleView("button.codeEditor")', window || mWindow, true);
+                            }
+                        },
+                        {
+                            label: '&Immortal tools',
+                            id: 'immortalbutton',
+                            type: 'checkbox',
+                            visible: false,
+                            checked: false,
+                            click: (item, mWindow) => {
+                                executeScriptClient('toggleView("button.immortal")', window || mWindow, true);
+                            }
+                        },
+                        {
+                            label: '&Preferences',
+                            id: 'preferencesbutton',
+                            type: 'checkbox',
+                            checked: false,
+                            click: (item, mWindow) => {
+                                executeScriptClient('toggleView("button.preferences")', window || mWindow, true);
+                            }
+                        },
+                        {
+                            label: '&Log',
+                            id: 'logbutton',
+                            type: 'checkbox',
+                            checked: true,
+                            click: (item, mWindow) => {
+                                executeScriptClient('toggleView("button.log")', window || mWindow, true);
+                            }
+                        },
+                        {
+                            label: '&Clear',
+                            id: 'clearbutton',
+                            type: 'checkbox',
+                            checked: true,
+                            click: (item, mWindow) => {
+                                executeScriptClient('toggleView("button.clear")', window || mWindow, true);
+                            }
+                        },
+                        {
+                            label: '&Lock',
+                            id: 'lockbutton',
+                            type: 'checkbox',
+                            checked: true,
+                            click: (item, mWindow) => {
+                                executeScriptClient('toggleView("button.lock")', window || mWindow, true);
+                            }
+                        },
+                        {
+                            label: '&Map',
+                            id: 'mapbutton',
+                            type: 'checkbox',
+                            checked: true,
+                            click: (item, mWindow) => {
+                                executeScriptClient('toggleView("button.map")', window || mWindow, true);
+                            }
+                        },
+                        /*
+                        {
+                          label: 'M&ail',
+                          id: "mailbutton",
+                          type: 'checkbox',
+                          checked: true,
+                          click: (item, mWindow) => {
+                            executeScriptClient('toggleView("button.mail")', window || mWindow, true);
+                          }
+                        },
+                        {
+                          label: '&Compose mail',
+                          id: "composebutton",
+                          type: 'checkbox',
+                          checked: true,
+                          click: (item, mWindow) => {
+                            executeScriptClient('toggleView("button.compose")', window || mWindow, true);
+                          }
+                        },
+                        */
+                        {
+                            label: '&User buttons',
+                            id: 'userbutton',
+                            type: 'checkbox',
+                            checked: true,
+                            click: (item, mWindow) => {
+                                executeScriptClient('toggleView("button.user")', window || mWindow, true);
+                            }
+                        },
+                    ]
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    label: '&Developer Tools',
+                    id: 'devtools',
+                    submenu: [
+                        {
+                            label: '&Toggle Window ',
+                            click: (item, mWindow) => {
+                                mWindow = window || mWindow;
+                                if (mWindow.webContents.isDevToolsOpened())
+                                    mWindow.webContents.closeDevTools();
+                                else
+                                    mWindow.webContents.openDevTools();
+                                focusWindow(mWindow);
+                            }
+                        },
+                        {
+                            label: 'Toggle Active &Client',
+                            click: async (item, mWindow) => {
+                                mWindow = window || mWindow;
+                                var view = getActiveClient(mWindow).view;
+                                if (view && view.webContents.isDevToolsOpened())
+                                    view.webContents.closeDevTools();
+                                else if (view)
+                                    view.webContents.openDevTools();
+                                focusWindow(mWindow);
+                            }
+                        },
+                        {
+                            label: 'Toggle &Both',
+                            click: async (item, mWindow) => {
+                                mWindow = window || mWindow;
+                                if (mWindow.webContents.isDevToolsOpened())
+                                    mWindow.webContents.closeDevTools();
+                                else
+                                    mWindow.webContents.openDevTools();
+                                var view = getActiveClient(mWindow).view;
+                                if (view && view.webContents.isDevToolsOpened())
+                                    view.webContents.closeDevTools();
+                                else if (view)
+                                    view.webContents.openDevTools();
+                                focusWindow(mWindow);
+                            }
+                        }
+                    ]
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    role: 'resetZoom'
+                },
+                {
+                    role: 'zoomIn'
+                },
+                {
+                    role: 'zoomOut'
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    role: 'togglefullscreen'
+                }
+            ]
+        },
+        //Window
+        {
+            //role: 'window',
+            id: 'window',
+            label: '&Window',
+            submenu: [
+                {
+                    label: '&Advanced editor...',
+                    id: 'editor',
+                    click: (item, mWindow) => {
+                        executeScriptClient('openWindow("editor")', window || mWindow, true);
+                    },
+                    accelerator: 'CmdOrCtrl+E'
+                },
+                {
+                    label: '&Chat...',
+                    id: 'chat',
+                    click: (item, mWindow) => {
+                        executeScriptClient('openWindow("chat")', window || mWindow, true);
+                    },
+                    accelerator: 'CmdOrCtrl+L'
+                },
+                {
+                    label: '&Immortal tools...',
+                    id: 'immortal',
+                    click: (item, mWindow) => {
+                        executeScriptClient('openWindow("immortal")', window || mWindow, true);
+                    },
+                    visible: false,
+                    accelerator: 'CmdOrCtrl+I'
+                },
+                {
+                    label: 'Code &editor...',
+                    id: 'codeeditor',
+                    click: (item, mWindow) => {
+                        executeScriptClient('openWindow("code.editor")', window || mWindow, true);
+                    },
+                },
+                {
+                    label: '&Map...',
+                    click: (item, mWindow) => {
+                        executeScriptClient('openWindow("mapper")', window || mWindow, true);
+                    },
+                    accelerator: 'CmdOrCtrl+T'
+                },
+                {
+                    label: '&Skills...',
+                    id: 'skills',
+                    click: (item, mWindow) => {
+                        executeScriptClient('openWindow("skills")', window || mWindow, true);
+                    },
+                    accelerator: 'CmdOrCtrl+S'
+                },
+                {
+                    label: 'Command &history...',
+                    id: 'history',
+                    click: (item, mWindow) => {
+                        executeScriptClient('openWindow("history")', window || mWindow, true);
+                    },
+                    accelerator: 'CmdOrCtrl+Shift+H'
+                },
+                { type: 'separator' },
+                {
+                    label: 'Save &Layout...',
+                    id: 'saveLayout',
+                    click: (item, mWindow) => {
+                        var file = dialog.showSaveDialogSync(window || mWindow, {
+                            title: 'Save as...',
+                            defaultPath: path.join(app.getPath('userData'), 'window.layout'),
+                            filters: [
+                                { name: 'Layout files (*.layout)', extensions: ['layout'] },
+                                { name: 'All files (*.*)', extensions: ['*'] },
+                            ]
+                        });
+                        if (file === undefined || file.length === 0)
+                            return;
+                        saveWindowLayout(file);
+                    }
+                },
+                {
+                    label: 'L&oad Layout...',
+                    id: 'loadLayout',
+                    click: (item, mWindow) => {
+                        dialog.showOpenDialog(window || mWindow, {
+                            defaultPath: app.getPath('userData'),
+                            filters: [
+                                { name: 'Layout files (*.layout)', extensions: ['layout'] },
+                                { name: 'All files (*.*)', extensions: ['*'] },
+                            ]
+                        }).then(async result => {
+                            if (result.filePaths === undefined || result.filePaths.length === 0)
+                                return;
+                            if (!await canCloseAllWindows(true))
+                                return;
+                            _reloading = true;
+                            await closeAllWindows();
+                            const previousLayout = _layout;
+                            _layout = result.filePaths[0];
+                            _loaded = loadWindowLayout(result.filePaths[0]);
+                            if (!_loaded) {
+                                dialog.showMessageBox(window || mWindow, {
+                                    type: 'error',
+                                    message: `Error loading: '${result.filePaths[0]}'.`
+                                });
+                                _loaded = loadWindowLayout(previousLayout);
+                            }
+                            _saved = false;
+                            _reloading = false;
+                        });
+                    }
+                },
+                /*
+                {
+                    label: 'Reset Layout',
+                    id: 'resetLayout',
+                    click: (item, mWindow) => {
+                        dialog.showMessageBox({
+                            type: 'info',
+                            message: 'Reset layout to defaults?',
+                            buttons: ['Yes', 'No']
+                        }).then(result => {
+                            if (result.response === 0) {
+                                _layout = parseTemplate(path.join('{data}', 'window.layout'));
+                                if (isFileSync(path.join(app.getPath('userData'), 'window.layout'))) {
+                                    if (!loadWindowLayout())
+                                        dialog.showMessageBox(window || mWindow, {
+                                            type: 'error',
+                                            message: `Error loading: default layout.`
+                                        });
+                                    else
+                                        _loaded = true;
+                                }
+                                else
+                                    dialog.showMessageBox(window || mWindow, {
+                                        type: 'error',
+                                        message: 'Unable to load, default layout not found.'
+                                    });
+                            }
+                        });
+                    }
+                },
+                */
+                /*
+                {
+                  label: '&Mail...',
+                  click: (item, mWindow) => {
+                    executeScriptClient('showMail()', window || mWindow, true);
+                  },
+                  visible: true,
+                  //accelerator: 'CmdOrCtrl+M'
+                },
+                {
+                  label: '&Compose mail...',
+                  click: (item, mWindow) => {
+                    executeScriptClient('showComposer()', window || mWindow, true);
+                  },
+                  visible: true,
+                  //accelerator: 'CmdOrCtrl+M'
+                },
+                */
+                { type: 'separator' }
+            ]
+        },
+        //Help
+        {
+            label: '&Help',
+            role: 'help',
+            id: 'help',
+            submenu: [
+                {
+                    label: '&ShadowMUD...',
+                    click: (item, mWindow) => {
+                        executeScriptClient('openWindow("smhelp")', window || mWindow, true);
+                    }
+                },
+                {
+                    label: '&jiMUD...',
+                    click: (item, mWindow) => {
+                        executeScriptClient('openWindow("help")', window || mWindow, true);
+                    }
+                },
+                {
+                    label: '&jiMUD website...',
+                    click: (item, mWindow) => {
+                        shell.openExternal('https://github.com/icewolfz/jiMUD/tree/master/docs', '_blank');
+                        focusWindow(window || mWindow);
+                    }
+                },
+                { type: 'separator' },
+                {
+                    label: 'Check for updates...',
+                    id: 'updater',
+                    click: checkForUpdatesManual
+                },
+                { type: 'separator' },
+                {
+                    label: '&About...',
+                    click: (item, mWindow) => openAbout(window || mWindow)
+                }
+            ]
+        }
+    ];
+
+    if (process.platform === 'darwin') {
+        menuTemp.unshift({
+            label: app.getName(),
+            submenu: [
+                {
+                    role: 'about'
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    role: 'services',
+                    submenu: []
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    role: 'hide'
+                },
+                {
+                    role: 'hideothers'
+                },
+                {
+                    role: 'unhide'
+                },
+                {
+                    type: 'separator'
+                },
+                {
+                    label: 'E&xit',
+                    //role: 'quit'
+                    click: quitApp
+                }
+            ]
+        });
+        menuTemp.push()
+        // Edit menu.
+        menuTemp[2].submenu.push(
+            {
+                type: 'separator'
+            },
+            {
+                label: 'Speech',
+                submenu: [
+                    {
+                        role: 'startspeaking'
+                    },
+                    {
+                        role: 'stopspeaking'
+                    }
+                ]
+            }
+        );
+        // Window menu.
+        menuTemp[5].submenu.push(
+            {
+                label: '&Windows...',
+                click: (item, mWindow) => openWindows(window || mWindow)
+            },
+            { type: 'separator' },
+            {
+                label: 'Clo&se',
+                accelerator: 'CmdOrCtrl+W',
+                click: (item, mWindow) => {
+                    mWindow = window || mWindow;
+                    if (windows[getWindowId(mWindow)].clients.length === 1)
+                        mWindow.close();
+                    else
+                        removeClient(windows[getWindowId(mWindow)].current, true);
+                }
+            },
+            {
+                label: 'Close &others',
+                accelerator: 'CmdOrCtrl+Shift+W',
+                click: (item, mWindow) => {
+                    mWindow = window || mWindow;
+                    const _windows = windows[getWindowId(mWindow)];
+                    const current = _windows.current;
+                    for (c = _windows.clients.length - 1; c >= 0; c--) {
+                        if (_windows.clients[c] === current) continue;
+                        removeClient(_windows.clients[c], true);
+                    }
+                }
+            },
+            {
+                label: 'Minimize',
+                accelerator: 'CmdOrCtrl+M',
+                role: 'minimize'
+            },
+            {
+                label: 'Zoom',
+                role: 'zoom'
+            },
+            {
+                type: 'separator'
+            },
+            {
+                label: 'Bring All to Front',
+                role: 'front'
+            }
+        );
+    }
+    else {
+        menuTemp[4].submenu.push(
+            {
+                label: '&Windows...',
+                click: (item, mWindow) => openWindows(window || mWindow)
+            },
+            { type: 'separator' },
+            {
+                role: 'minimize'
+            },
+            {
+                label: 'Clo&se',
+                accelerator: 'CmdOrCtrl+W',
+                click: (item, mWindow) => {
+                    mWindow = window || mWindow;
+                    if (windows[getWindowId(mWindow)].clients.length === 1)
+                        mWindow.close();
+                    else
+                        removeClient(windows[getWindowId(mWindow)].current, true);
+                }
+            },
+            {
+                label: 'Close &others',
+                accelerator: 'CmdOrCtrl+Shift+W',
+                click: (item, mWindow) => {
+                    mWindow = window || mWindow;
+                    const _windows = windows[getWindowId(mWindow)];
+                    const current = _windows.current;
+                    for (c = _windows.clients.length - 1; c >= 0; c--) {
+                        if (_windows.clients[c] === current) continue;
+                        removeClient(_windows.clients[c], true);
+                    }
+                }
+            }
+        )
+    }
+    var profiles;
+    for (var m = 0; m < menuTemp.length; m++) {
+        if (menuTemp[m].id === 'profiles') {
+            profiles = menuTemp[m];
+            break;
+        }
+    }
+    profiles.submenu = [];
+    profiles.submenu.push(
+        {
+            label: 'Default',
+            type: 'checkbox',
+            checked: false,
+            id: 'default',
+            click: (item, mWindow) => {
+                executeScriptClient('client.toggleProfile("default")', window || mWindow, true);
+            }
+        });
+
+    var p = path.join(app.getPath('userData'), 'profiles');
+    if (isDirSync(p)) {
+        var files = fs.readdirSync(p);
+        for (var i = 0; i < files.length; i++) {
+            if (path.extname(files[i]) === '.json') {
+                if (files[i].toLowerCase() === 'default.json')
+                    continue;
+                profiles.submenu.push(
+                    {
+                        label: path.basename(files[i], '.json'),
+                        type: 'checkbox',
+                        checked: false,
+                        id: path.basename(files[i], '.json').toLowerCase(),
+                        click: profileToggle
+                    });
+            }
+        }
+    }
+    profiles.submenu.push(
+        {
+            type: 'separator'
+        });
+    profiles.submenu.push(
+        {
+            label: '&Manage...',
+            accelerator: 'CmdOrCtrl+P',
+            //click: (item, mWindow) => openProfileManager(window || mWindow)
+            click: (item, mWindow) => executeScriptClient('openWindow("profiles")', window || mWindow, true)
+
+        });
+    return new Menubar(menuTemp, window);
+    //return Menu.buildFromTemplate(menuTemp);
+}
+
+function profileToggle(menuItem, mWindow) {
+    executeScriptClient('client.toggleProfile("' + menuItem.label.toLowerCase() + '")', mWindow, true);
+}
+
+ipcMain.on('update-menuitem', (event, menuitem, rebuild) => {
+    updateMenuItem(BrowserWindow.fromWebContents(event.sender), menuitem, rebuild);
+});
+
+ipcMain.on('update-menuitems', (event, menuitems, rebuild) => {
+    updateMenuItems(BrowserWindow.fromWebContents(event.sender), menuitems, rebuild);
+});
+
+ipcMain.on('update-menuitem-all', (event, menuitem, rebuild) => {
+    updateMenuItemAll(menuitem, rebuild);
+});
+
+ipcMain.on('update-menuitems-all', (event, menuitems, rebuild) => {
+    updateMenuItemsAll(menuitems, rebuild);
+});
+
+ipcMain.on('reset-profiles-menu', (event) => {
+    resetProfilesMenu(BrowserWindow.fromWebContents(event.sender));
+});
+
+ipcMain.on('show-window', (event, window, ...args) => {
+    if (window === 'profile-manager')
+        openProfileManager(BrowserWindow.fromWebContents(event.sender));
+    else if (window === 'about')
+        openAbout(BrowserWindow.fromWebContents(event.sender));
+    else if (window === 'global-preferences')
+        openPreferences(BrowserWindow.fromWebContents(event.sender));
+    else if (window === 'progress')
+        openProgress(BrowserWindow.fromWebContents(event.sender), ...args)
+    else if (window === 'windows')
+        openWindows(BrowserWindow.fromWebContents(event.sender));
+});
+
+ipcMain.on('reset-windows', (event, id) => {
+    if (id) {
+        if (clients[id])
+            clients[id].states = {};
+    }
+    else {
+        //clear window states
+        states = {};
+        let x = 0;
+        let y = 0;
+        for (window in windows) {
+            if (!Object.prototype.hasOwnProperty.call(windows, window))
+                continue;
+            windows[window].window.setBounds({ x: x, y: y, width: 800, height: 600 });
+            x += 10;
+            y += 10;
+            windows[window].state = saveWindowState(windows[window].window);
+        }
+        for (client in clients) {
+            if (!Object.prototype.hasOwnProperty.call(clients, client))
+                continue;
+            clients[client].states = {};
+            executeScript('resetWindows()', clients[client].view);
+        }
+    }
+    event.returnValue = true;
+});
+
+const progressMap = new Map();
+ipcMain.on('progress', (event, ...args) => {
+    window = BrowserWindow.fromWebContents(event.sender);
+    const parent = window.getParentWindow();
+    //no parent means the main window wants to send to progress
+    if (!parent) {
+        const progress = progressMap.get(window);
+        progress.send('progress', ...args);
+    }
+    else //else progress wants to send to main
+        parent.send('progress', ...args);
+});
+
+function resetProfilesMenu(window) {
+    if (!window || !windows[getWindowId(window)].menubar) return;
+    const profiles = windows[getWindowId(window)].menubar.getItem('profiles');
+    profiles.submenu.items.forEach(item => {
+        item.checked = false;
+    });
+}
+
+function updateMenuItem(window, menuitem, rebuild) {
+    if (!window || !windows[getWindowId(window)].menubar) return;
+    windows[getWindowId(window)].menubar.updateItem(menuitem);
+    if (rebuild)
+        windows[getWindowId(windows[window])].menubar.rebuild();
+}
+
+function updateMenuItems(window, menuitems, rebuild) {
+    if (!window || !windows[getWindowId(window)].menubar) return;
+    windows[getWindowId(window)].menubar.updateItems(menuitems);
+    if (rebuild)
+        windows[getWindowId(windows[window])].menubar.rebuild();
+}
+
+function updateMenuItemAll(menuitem, rebuild) {
+    for (window in windows) {
+        if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[getWindowId(windows[window])].menubar)
+            continue;
+        windows[getWindowId(windows[window])].menubar.updateItem(menuitem);
+    }
+    if (rebuild)
+        windows[getWindowId(windows[window])].menubar.rebuild();
+}
+
+function updateMenuItemsAll(menuitems, rebuild) {
+    for (window in windows) {
+        if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[getWindowId(windows[window])].menubar)
+            continue;
+        windows[getWindowId(windows[window])].menubar.updateItems(menuitems);
+    }
+    if (rebuild)
+        windows[getWindowId(windows[window])].menubar.rebuild();
+}
+
+function openPreferences(parent) {
+    let window = getWindowId('prefs');
+    if (window && !window.isDestroyed())
+        window.focus();
+    else {
+        window = createDialog({
+            show: true,
+            parent: parent,
+            url: path.join(__dirname, 'prefs.html'),
+            title: 'Global Preferences',
+            bounds: { width: 800, height: 460 },
+            icon: path.join(__dirname, '../assets/icons/png/preferences.png'),
+            modal: true
+        });
+        window.on('closed', () => {
+            idMap.delete('prefs');
+            stateMap.delete(window);
+        });
+        idMap.set('prefs', window);
+    }
+}
+
+function openWindows(parent) {
+    let window = getWindowId('windows');
+    if (window && !window.isDestroyed())
+        window.focus();
+    else {
+        let bounds = { width: 420, height: 300 };
+        if (states['windows.html']) {
+            bounds.x = states['windows.html'].bounds.x;
+            bounds.y = states['windows.html'].bounds.y;
+        }
+        window = createDialog({
+            show: true,
+            parent: parent,
+            url: path.join(__dirname, 'windows.html'),
+            title: 'Windows',
+            bounds: bounds,
+            icon: path.join(__dirname, '../assets/icons/png/windows.png'),
+            resize: false,
+            backgroundColor: 'white'
+        });
+        window.on('closed', () => {
+            idMap.delete('windows');
+        });
+        window.on('close', () => {
+            states['windows.html'] = saveWindowState(window);
+        });
+        idMap.set('windows', window);
+    }
+}
+
+function openAbout(parent) {
+    let window = getWindowId('about');
+    if (window && !window.isDestroyed())
+        window.focus();
+    else {
+        window = createDialog({ show: true, parent: parent, url: path.join(__dirname, 'about.html'), title: 'About jiMUD', bounds: { width: 500, height: 560 } });
+        window.on('closed', () => {
+            idMap.delete('about');
+            stateMap.delete(window);
+        });
+        idMap.set('about', window);
+    }
+}
+
+function openProgress(parent, title, modal) {
+    let window = progressMap.get(parent);
+    if (window && !window.isDestroyed())
+        window.focus();
+    else {
+        window = createDialog({ modal: modal, show: true, parent: parent, url: path.join(__dirname, 'progress.html'), title: title, bounds: { width: 200, height: 70 }, backgroundColor: '#fff', icon: path.join(__dirname, '../../assets/icons/png/progress.png') });
+        window.on('closed', () => {
+            stateMap.delete(window);
+            progressMap.delete(parent);
+        });
+        window.webContents.send(title);
+        progressMap.set(parent, window);
+    }
+    return window;
+}
+
+function openProfileManager(parent) {
+    let window = getWindowId('profiles');
+    if (window && !window.isDestroyed())
+        window.focus();
+    else {
+        window = createWindow({ id: 'profiles', file: 'profiles.html', parent: parent, icon: '../assets/icons/png/profiles.png', title: 'Profile Manger' });
+        window.setSkipTaskbar(!_settings.profiles.showInTaskBar);
+    }
+}
+//#endregion
+
+async function openDevtools(window, options) {
+    window.openDevTools(options);
+}
+
+//#region Tray functions
+async function createTray() {
+    if (!_settings.showTrayIcon)
+        return;
+    tray = new Tray(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
+    updateTray();
+    if (_settings.trayMenu === TrayMenu.simple)
+        _updateTrayContext();
+    tray.on('click', () => {
+        const active = getActiveWindow();
+        switch (_settings.trayClick) {
+            case TrayClick.show:
+                if (active)
+                    restoreWindowState(active.window, states[active.file || 'manager.html'], 2);
+                break;
+            case TrayClick.toggle:
+                if (active) {
+                    if (active.window.isVisible()) {
+                        if (_settings.hideOnMinimize)
+                            active.window.hide();
+                        else
+                            active.window.minimize();
+                    }
+                    else
+                        restoreWindowState(active.window, states[active.file || 'manager.html'], 2);
+                }
+                break;
+            case TrayClick.hide:
+                if (active) {
+                    if (_settings.hideOnMinimize)
+                        active.window.hide();
+                    else
+                        active.window.minimize();
+                }
+                break;
+            case TrayClick.showAll:
+                showAllWindows();
+                break;
+            case TrayClick.hideAll:
+                hideAllWindows();
+                break;
+            case TrayClick.toggleAll:
+                toggleAllWindows();
+                break;
+            case TrayClick.menu:
+                tray.popUpContextMenu();
+                break;
+        }
+    });
+
+    tray.on('double-click', () => {
+        const active = getActiveWindow();
+        switch (_settings.trayClick) {
+            case TrayClick.show:
+                if (active)
+                    restoreWindowState(active.window, states[active.file || 'manager.html'], 2);
+                break;
+            case TrayClick.toggle:
+                if (active) {
+                    if (active.window.isVisible()) {
+                        if (_settings.hideOnMinimize)
+                            active.window.hide();
+                        else
+                            active.window.minimize();
+                    }
+                    else
+                        restoreWindowState(active.window, states[active.file || 'manager.html'], 2);
+                }
+                break;
+            case TrayClick.hide:
+                if (active) {
+                    if (_settings.hideOnMinimize)
+                        active.window.hide();
+                    else
+                        active.window.minimize();
+                }
+                break;
+            case TrayClick.showAll:
+                showAllWindows();
+                break;
+            case TrayClick.hideAll:
+                hideAllWindows();
+                break;
+            case TrayClick.toggleAll:
+                toggleAllWindows();
+                break;
+            case TrayClick.menu:
+                tray.popUpContextMenu();
+                break;
+        }
+    });
+}
+
+function getClientConnectionState(clientId) {
+    //STATE as NAME from/on DEV
+    let title = clients[clientId].view.webContents.getTitle();
+    //find if on dev
+    let dev = title.split(/ on| from/);
+    //if length 2 means on dev
+    if (dev.length === 2) {
+        title = dev[0].trim();
+        dev = true;
+    }
+    else
+        dev = false;
+    let name = title.split(' as ');
+    if (name.length === 2) {
+        title = name[0];
+        name = name[1];
+    }
+    else
+        name = '';
+    return { state: title, dev: dev, name: name };
+}
+
+function getTrayClientContext(window) {
+    return [{
+        label: 'Ch&aracters...',
+        id: 'characters',
+        click: () => {
+            if (!window) return;
+            restoreWindowState(window, stateMap.get(window), 2);
+            executeScriptClient('openWindow("characters")', window, true);
+        }
+    },
+    {
+        label: '&Manage profiles...',
+        click: (item, mWindow) => {
+            if (!window) return;
+            restoreWindowState(window, stateMap.get(window), 2);
+            executeScriptClient('openWindow("profiles")', window, true);
+        }
+    },
+    {
+        label: '&Code editor...',
+        click: () => {
+            if (!window) return;
+            restoreWindowState(window, stateMap.get(window), 2);
+            executeScriptClient('openWindow("code.editor")', window, true);
+        },
+    },
+    { type: 'separator' },
+    {
+        label: '&Preferences...',
+        click: (item, mWindow) => {
+            if (!window) return;
+            restoreWindowState(window, stateMap.get(window), 2);
+            executeScriptClient('openWindow("prefs");', window, true);
+        }
+    },
+    { type: 'separator' },
+    {
+        label: '&Who is on?...',
+        click: () => {
+            if (!window) return;
+            restoreWindowState(window, stateMap.get(window), 2);
+            executeScriptClient('openWindow("who")', window, true);
+        }
+    },
+    { type: 'separator' },
+    {
+        label: '&Help',
+        role: 'help',
+        submenu: [
+            {
+                label: '&ShadowMUD...',
+                click: () => {
+                    if (!window) return;
+                    restoreWindowState(window, stateMap.get(window), 2);
+                    executeScriptClient('openWindow("smhelp")', window, true);
+                }
+            },
+            {
+                label: '&jiMUD...',
+                click: () => {
+                    if (!window) return;
+                    restoreWindowState(window, stateMap.get(window), 2);
+                    executeScriptClient('openWindow("help")', window, true);
+                }
+            },
+            {
+                label: '&jiMUD website...',
+                click: () => {
+                    shell.openExternal('https://github.com/icewolfz/jiMUD/tree/master/docs', '_blank');
+                }
+            },
+            { type: 'separator' },
+            {
+                label: '&About...',
+                click: () => {
+                    if (!window) return;
+                    restoreWindowState(window, stateMap.get(window), 2);
+                    openAbout(window)
+                }
+            }
+        ]
+    }];
+}
+
+function getTrayWindowContext(window, windowId, noNew) {
+    const contextMenu = [];
+    if (!noNew)
+        contextMenu.push(...[
+            {
+                label: 'New &Tab',
+                id: 'newConnect',
+                click: (item, mWindow, keyboard) => {
+                    if (!window) return;
+                    //allow for some hidden ways to force open main/dev if needed with out the complex menus
+                    if (!keyboard.triggeredByAccelerator) {
+                        if (keyboard.ctrlKey)
+                            newConnection(window, { port: 1035 });
+                        else if (keyboard.shiftKey)
+                            newConnection(window, { port: 1030 });
+                        else
+                            newConnection(window);
+                    }
+                    else
+                        newConnection(window);
+                }
+            }, { type: 'separator' }]);
+    contextMenu.push(...[
+        {
+            label: '&Show window...', click: () => {
+                if (!window) return;
+                restoreWindowState(window, stateMap.get(window), 2);
+            }
+        },
+        {
+            label: 'H&ide window...', click: () => {
+                if (!window) return;
+                if (_settings.hideOnMinimize)
+                    window.hide();
+                else
+                    window.minimize();
+            }
+        },
+        { type: 'separator' }
+    ]);
+    if (_settings.trayMenu === TrayMenu.compact)
+        return contextMenu;
+    const cl = windows[windowId].clients.length;
+    if (cl === 1) {
+        contextMenu.push(...getTrayClientContext(windows[windowId].window));
+    }
+    else {
+        contextMenu.push({
+            label: 'Clients',
+            submenu: []
+        });
+        const clientMenu = contextMenu[contextMenu.length - 1];
+        for (let c = 0; c < cl; c++) {
+            const clientId = windows[windowId].clients[c];
+            const state = getClientConnectionState(clientId);
+            const item = {
+                label: state.name || state.state,
+                id: clientId,
+                icon: nativeImage.createFromPath(getOverlayIcon(clients[windows[windowId].clients[c]].overlay)).resize({ height: 16, quality: 'good' }),
+                click: (item) => {
+                    if (!window) return;
+                    restoreWindowState(window, stateMap.get(window), 2);
+                    window.webContents.send('switch-client', parseInt(item.id, 10));
+                }
+            };
+            clientMenu.submenu.push(item);
+        }
+    }
+    return contextMenu;
+}
+
+function getOverlayIcon(overlay) {
+    switch (overlay) {
+        case 1:
+            return path.join(__dirname, '../assets/icons/png/connected.png');
+        case 2:
+            return path.join(__dirname, '../assets/icons/png/connectednonactive.png');
+        case 3:
+            return path.join(__dirname, '../assets/icons/png/code.disconnected.png');
+        case 4:
+            return path.join(__dirname, '../assets/icons/png/code.connected.png');
+        case 5:
+            return path.join(__dirname, '../assets/icons/png/code.connectednonactive.png');
+        case 6:
+            return path.join(__dirname, '../assets/icons/png/disconnected2.png');
+        case 7:
+            return path.join(__dirname, '../assets/icons/png/connected2.png');
+        case 8:
+            return path.join(__dirname, '../assets/icons/png/connectednonactive2.png');
+    }
+    return path.join(__dirname, '../assets/icons/png/disconnected.png');
+}
+
+//debounce the context updater to improve performance
+let _trayContextTimer;
+function updateTrayContext() {
+    if (_trayContextTimer || _settings.trayMenu === TrayMenu.simple) return;
+    _trayContextTimer = setTimeout(_updateTrayContext, 250);
+}
+
+async function _updateTrayContext() {
+    if (!tray) return;
+    const active = getActiveWindow();
+    const activeID = active ? getWindowId(active.window) : 0;
+    let contextMenu = [];
+
+    if (_settings.trayMenu === TrayMenu.simple) {
+        contextMenu.push(...[
+            {
+                label: 'New &Tab',
+                id: 'newConnect',
+                click: (item, mWindow, keyboard) => {
+                    if (!active) return;
+                    //allow for some hidden ways to force open main/dev if needed with out the complex menus
+                    if (!keyboard.triggeredByAccelerator) {
+                        if (keyboard.ctrlKey)
+                            newConnection(active.window, { port: 1035 });
+                        else if (keyboard.shiftKey)
+                            newConnection(active.window, { port: 1030 });
+                        else
+                            newConnection(active.window);
+                    }
+                    else
+                        newConnection(active.window);
+                }
+            },
+            {
+                label: 'New &Window',
+                id: '',
+                click: (item, mWindow, keyboard) => {
+                    //allow for some hidden ways to force open main/dev if needed with out the complex menus
+                    if (!active) return;
+                    if (!keyboard.triggeredByAccelerator) {
+                        if (keyboard.ctrlKey)
+                            newClientWindow(active.window, { port: 1035 });
+                        else if (keyboard.shiftKey)
+                            newClientWindow(active.window, { port: 1030 });
+                        else
+                            newClientWindow(active.window);
+                    }
+                    else
+                        newClientWindow(active.window);
+                }
+            },
+            {
+                type: 'separator'
+            },
+            {
+                label: '&Show window...', click: () => {
+                    if (!active) return;
+                    restoreWindowState(active.window, stateMap.get(active.window), 2);
+                }
+            },
+            {
+                label: 'H&ide window...', click: () => {
+                    if (!active) return;
+                    if (_settings.hideOnMinimize)
+                        active.window.hide();
+                    else
+                        active.window.minimize();
+                }
+            },
+            { type: 'separator' },
+            {
+                label: '&Show all windows', click: showAllWindows
+            },
+            {
+                label: 'H&ide all windows', click: hideAllWindows
+            },
+            { type: 'separator' },
+            {
+                label: '&Windows...',
+                click: (item, mWindow) => {
+                    if (!active) return;
+                    openWindows(active.window);
+                }
+            },
+            { type: 'separator' },
+            {
+                label: 'E&xit',
+                //role: 'quit'
+                click: quitApp
+            }
+        ]);
+        tray.setContextMenu(Menu.buildFromTemplate(contextMenu));
+        _trayContextTimer = 0;
+        return;
+    }
+
+    //1 window so standard hide/show
+    if (activeID && Object.keys(windows).length === 1) {
+        contextMenu.push(...[
+            {
+                label: 'New &Tab',
+                id: 'newConnect',
+                click: (item, mWindow, keyboard) => {
+                    if (!active) return;
+                    //allow for some hidden ways to force open main/dev if needed with out the complex menus
+                    if (!keyboard.triggeredByAccelerator) {
+                        if (keyboard.ctrlKey)
+                            newConnection(active.window, { port: 1035 });
+                        else if (keyboard.shiftKey)
+                            newConnection(active.window, { port: 1030 });
+                        else
+                            newConnection(active.window);
+                    }
+                    else
+                        newConnection(active.window);
+                }
+            },
+            {
+                label: 'New &Window',
+                id: '',
+                click: (item, mWindow, keyboard) => {
+                    //allow for some hidden ways to force open main/dev if needed with out the complex menus
+                    if (!active) return;
+                    if (!keyboard.triggeredByAccelerator) {
+                        if (keyboard.ctrlKey)
+                            newClientWindow(active.window, { port: 1035 });
+                        else if (keyboard.shiftKey)
+                            newClientWindow(active.window, { port: 1030 });
+                        else
+                            newClientWindow(active.window);
+                    }
+                    else
+                        newClientWindow(active.window);
+                }
+            },
+            {
+                type: 'separator'
+            }
+        ]);
+        if (windows[activeID].clients.length === 1) {
+            contextMenu.push(...[
+                {
+                    label: '&Show window...', click: () => {
+                        if (!active) return;
+                        restoreWindowState(active.window, stateMap.get(active.window), 2);
+                    }
+                },
+                {
+                    label: 'H&ide window...', click: () => {
+                        if (!active) return;
+                        if (_settings.hideOnMinimize)
+                            active.window.hide();
+                        else
+                            active.window.minimize();
+                    }
+                },
+                { type: 'separator' },
+            ]);
+            contextMenu.push(...getTrayClientContext(active.window));
+        }
+        else {
+            contextMenu.push(...getTrayWindowContext(active.window, activeID, true));
+            contextMenu.push({ type: 'separator' });
+        }
+    }
+    else {
+        contextMenu.push(...[
+            {
+                label: 'New &Window',
+                id: '',
+                click: (item, mWindow, keyboard) => {
+                    //allow for some hidden ways to force open main/dev if needed with out the complex menus
+                    if (!active) return;
+                    if (!keyboard.triggeredByAccelerator) {
+                        if (keyboard.ctrlKey)
+                            newClientWindow(active.window, { port: 1035 });
+                        else if (keyboard.shiftKey)
+                            newClientWindow(active.window, { port: 1030 });
+                        else
+                            newClientWindow(active.window);
+                    }
+                    else
+                        newClientWindow(active.window);
+                }
+            },
+            { type: 'separator' },
+            {
+                label: '&Show all windows', click: showAllWindows
+            },
+            {
+                label: 'H&ide all windows', click: hideAllWindows
+            },
+            { type: 'separator' }
+        ]);
+        const item = {
+            label: 'Windows',
+            submenu: []
+        };
+        for (window in windows) {
+            if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window] || windows[window].window.isDestroyed() || windows[window].clients.length === 0)
+                continue;
+            item.submenu.push({
+                label: windows[window].window.getTitle(),
+                icon: nativeImage.createFromPath(getOverlayIcon(windows[window].clients.length > 1 ? (windows[window].overlay + 6) : clients[windows[window].clients[0]].overlay)).resize({ height: 16, quality: 'good' }),
+                submenu: getTrayWindowContext(windows[window].window, getWindowId(windows[window].window))
+            });
+        }
+        contextMenu.push(item);
+        contextMenu.push({ type: 'separator' });
+    }
+    contextMenu.push(
+        {
+            label: '&Windows...',
+            click: (item, mWindow) => {
+                if (!active) return;
+                openWindows(active.window);
+            }
+        },
+        { type: 'separator' },
+        {
+            label: 'E&xit',
+            //role: 'quit'
+            click: quitApp
+        }
+    );
+    tray.setContextMenu(Menu.buildFromTemplate(contextMenu));
+    _trayContextTimer = 0;
+}
+
+async function updateTray() {
+    if (!tray) return;
+    let overlay = 0;
+    const cState = {
+        connected: 0,
+        total: 0,
+    }
+    for (clientId in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId))
+            continue;
+        cState.total++;
+        switch (clients[clientId].overlay) {
+            case 4:
+            case 1:
+                if (overlay < 1)
+                    overlay = 1;
+                cState.connected++;
+                break;
+            case 5:
+            case 2:
+                if (_focused) {
+                    if (overlay < 1)
+                        overlay = 1;
+                }
+                else if (overlay < 2)
+                    overlay = 2;
+                cState.connected++;
+                break;
+        }
+    }
+    let title = '';
+    if (cState.total === 1)
+        title = cState.connected ? 'Connected' : 'Disconnected';
+    else {
+        if (cState.connected)
+            title = `${cState.connected} Connected`;
+        if (cState.total !== cState.connected)
+            title += `${title ? ', ' : ''}${cState.total - cState.connected} Disconnected`;
+    }
+    title += ' - jiMUD';
+    switch (overlay) {
+        case 4:
+        case 1:
+            tray.setImage(getOverlayIcon(7));
+            break;
+        case 5:
+        case 2:
+            tray.setImage(getOverlayIcon(8));
+            break;
+        default:
+            tray.setImage(getOverlayIcon(6));
+            break;
+    }
+    tray.setTitle(title);
+    tray.setToolTip(title);
+    updateTrayContext();
+}
+//#endregion
+
+//#region Debug timers
+function StartDebugTimer() {
+    timers.push(Date.now());
+}
+
+function EndDebugTimer(label) {
+    label = label || `Timer: ${timers.length}`;
+    const start = timers.pop();
+    console.log(`${label} ${Date.now() - start}`);
+}
+
+ipcMain.on('StartDebugTimer', event => {
+    StartDebugTimer();
+});
+
+ipcMain.on('EndDebugTimer', (event, label) => {
+    EndDebugTimer(label);
+});
+//#endregion
+//Wrapper for loading contents as some times it may already be loaded and the event may not fire
+function onContentsLoaded(contents) {
+    return new Promise((resolve, reject) => {
+        if (!contents || contents.isDestroyed()) reject();
+        //if loading event probably not fired
+        if (contents.isLoading()) {
+            contents.once('dom-ready', () => {
+                resolve();
+            });
+        }
+        else
+            resolve();
+    })
 }
