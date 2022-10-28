@@ -349,7 +349,7 @@ function createWindow(options) {
     });
 
     window.webContents.on('devtools-reload-page', () => {
-        window.webContents.once('dom-ready', () => {
+        onContentsLoaded(window.webContents).then(() => {
             const windowId = getWindowId(window);
             const cl = windows[windowId].clients.length;
             for (var idx = 0; idx < cl; idx++) {
@@ -1065,7 +1065,7 @@ app.on('ready', () => {
     else if (Array.isArray(argv.eo) || typeof argv.eo === 'string') {
         window = getActiveWindow();
         if (window)
-            window.window.webContents.once('dom-ready', () => {
+            onContentsLoaded(window.window.webContents).then(() => {
                 window.window.webContents.send('open-editor', argv.eo);
                 focusWindow(window, true);
             });
@@ -1944,7 +1944,7 @@ ipcMain.on('dock-client', (event, id, options) => {
         window.setTopBrowserView(clients[id].view);
         //clients[id].menu.window = window;
         //window.setMenu(clients[id].menu);
-        window.webContents.once('dom-ready', () => {
+        onContentsLoaded(window.webContents).then(() => {
             window.webContents.send('new-client', { id: id });
             if (focusedClient === id && focusedWindow === windowId)
                 focusWindow(window, true);
@@ -2316,7 +2316,7 @@ function createClient(options) {
     });
 
     view.webContents.on('devtools-reload-page', () => {
-        view.webContents.once('dom-ready', () => {
+        onContentsLoaded(view.webContents).then(() => {
             executeScript(`if(typeof setId === "function") setId(${getClientId(view)});`, clients[getClientId(view)].view);
             executeScript('window.loadTheme();', clients[options.id].view);
             /*
@@ -3602,7 +3602,7 @@ function newConnection(window, connection, data, name) {
     //did-finish-load //slowest but ensures the view is in the window and visible before firing
     window.addBrowserView(clients[id].view);
     window.setTopBrowserView(clients[id].view);
-    clients[id].view.webContents.once('dom-ready', () => {
+    onContentsLoaded(clients[id].view.webContents).then(() => {
         window.webContents.send('new-client', { id: id, current: windows[windowId].current === id });
         if (connection)
             clients[id].view.webContents.send('connection-settings', connection);
@@ -3648,7 +3648,7 @@ async function newClientWindow(caller, connection, data, name) {
             for (var c = 0, cl = window.clients.length; c < cl; c++) {
                 const clientId = window.clients[c];
                 window.window.addBrowserView(clients[clientId].view);
-                clients[clientId].view.webContents.once('dom-ready', () => {
+                onContentsLoaded(clients[clientId].view.webContents).then(() => {
                     if (connection)
                         clients[id].view.webContents.send('connection-settings', connection);
                     clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, window.clients.length);
@@ -3676,12 +3676,12 @@ async function newClientWindow(caller, connection, data, name) {
         window.clients.push(id);
         window.window.addBrowserView(clients[id].view);
         window.window.setTopBrowserView(clients[id].view);
-        clients[id].view.webContents.once('dom-ready', () => {
+        onContentsLoaded(clients[id].view.webContents).then(() => {
             clientsChanged();
             if (connection)
                 clients[id].view.webContents.send('connection-settings', connection);
         });
-        window.window.webContents.once('dom-ready', () => {
+        onContentsLoaded(window.window.webContents).then(() => {
             window.window.webContents.send('new-client', { id: id });
             if (focusedClient === id && focusedWindow === windowId)
                 focusWindow(window.window, true);
@@ -3712,7 +3712,7 @@ function newEditorWindow(caller, files) {
     let windowId = createWindow({ file: 'code.editor.html', backgroundColor: 'gray', icon: '../assets/icons/win/code.ico', title: 'Code editor' });
     let window = windows[windowId].window;
     focusedWindow = windowId;
-    window.webContents.once('dom-ready', () => {
+    onContentsLoaded(window.webContents).then(() => {
         if (Array.isArray(files) || typeof files === 'string')
             window.webContents.send('open-editor', files);
         focusWindow(window, true);
@@ -3955,7 +3955,7 @@ function loadWindowLayout(file, charData) {
         const window = windows[data.windows[i].id];
         //no clients so move on probably different type of window
         if (window.clients.length === 0) {
-            window.window.once('ready-to-show', () => {
+            onContentsLoaded(window.window.webContents).then(() => {
                 if (data.focusedWindow === getWindowId(window))
                     focusWindow(window, true);
                 if (window.options.file === 'code.editor.html') {
@@ -3971,11 +3971,11 @@ function loadWindowLayout(file, charData) {
         //current is wrong for what ever reason so fall back to first client
         if (!clients[current])
             current = window.clients[0];
-        window.window.once('ready-to-show', () => {
+        onContentsLoaded(window.window.webContents).then(() => {
             for (var c = 0, cl = window.clients.length; c < cl; c++) {
                 const clientId = window.clients[c];
                 window.window.addBrowserView(clients[clientId].view);
-                clients[clientId].view.webContents.once('dom-ready', () => {
+                onContentsLoaded(clients[clientId].view.webContents).then(() => {
                     clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, window.clients.length);
                 });
             }
@@ -5817,3 +5817,17 @@ ipcMain.on('EndDebugTimer', (event, label) => {
     EndDebugTimer(label);
 });
 //#endregion
+//Wrapper for loading contents as some times it may already be loaded and the event may not fire
+function onContentsLoaded(contents) {
+    return new Promise((resolve, reject) => {
+        if (!contents || contents.isDestroyed()) reject();
+        //if loading event probably not fired
+        if (contents.isLoading()) {
+            contents.once('dom-ready', () => {
+                resolve();
+            });
+        }
+        else
+            resolve();
+    })
+}
