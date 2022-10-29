@@ -50,6 +50,10 @@ this.print(name + ' says ' + message);
 
 ## Basic function list
 
+- `client.id()` return current client id
+- `client.setName(name, id?)` set name for id or if no id set current client name
+- `client.getName(id?)` return name for id, if no id return current client name
+- `client.clearName(id?)` clears client name of supplied if, if no id clears current client id
 - `client.closeWindow(name|id)` Close an open window or tab
   - `name|id` if no name or id will attempt to close current tab/window, otherwise will attempt to close named window or by id
 - `client.beep()` play system beep sound

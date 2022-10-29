@@ -2503,6 +2503,11 @@
             };
             client.readClipboard = window.readClipboard;
             client.writeClipboard = window.writeClipboard;
+            client.id = getId;
+            client.setName = setName;
+            client.getName = getName;
+            client.clearName = clearName;
+
             client.sendAll = (text, echo) => ipcRenderer.send('execute-all-clients', `client.send(${JSON.stringify(text)},${echo});`);
             client.sendAllRaw = (text) => ipcRenderer.send('execute-all-clients', `client.raw(${JSON.stringify(text)});`);
             client.sendAllCommand = (text, noEcho, comments) => ipcRenderer.send('execute-all-clients', `client.sendCommand(${JSON.stringify(text)},${noEcho}, ${comments});`);
@@ -4102,8 +4107,8 @@
             ipcRenderer.send('set-client-name', name, id || getId());
         }
 
-        function getName() {
-            return ipcRenderer.sendSync('get-client-name', getId());
+        function getName(id) {
+            return ipcRenderer.sendSync('get-client-name', id || getId());
         }
 
         function clearName(id) {

@@ -46,6 +46,10 @@
   - Add [#ID](docs/commands.md) Display client id
   - Add [#CLEARNAME](docs/commands.md) clear current tab or client id's name
   - Add [#TO](docs/commands.md) Send commands to target client name/id
+  - Add [client.id](docs/scripting.md) return client id
+  - Add [client.setName](docs/scripting.md) set client name
+  - Add [client.getName](docs/scripting.md) return client name
+  - Add [client.clearName](docs/scripting.md) clear client name
   - Add [client.sendAll](docs/scripting.md) for scripting to send text to mud for all client windows
   - Add [client.sendAllRaw](docs/scripting.md) for scripting to send raw text to mud for all client windows
   - Add [client.sendAllCommand](docs/scripting.md) for scripting to send command to all client windows
