@@ -395,14 +395,14 @@ export class Display extends EventEmitter {
                     this.split.style.bottom = this._HScroll.size + 'px';
                     this.split.bottom = this._HScroll.size;
                 }
-                if (this.split.dirty && this.split.shown && this._VScroll.scrollSize >= 0 && this.lines.length > 0) {
+                if (this.split.dirty && this.split.shown && this._VScroll.scrollSize >= 0 && this._lines.length > 0) {
                     this.split._viewRange.start = Math.trunc(this._VScroll.scrollSize / this._charHeight);
                     this.split._viewRange.end = Math.ceil((this._VScroll.scrollSize + this._innerHeight) / this._charHeight);
 
                     if (this.split._viewRange.start < 0)
                         this.split._viewRange.start = 0;
-                    if (this.split._viewRange.end > this.lines.length)
-                        this.split._viewRange.end = this.lines.length;
+                    if (this.split._viewRange.end > this._lines.length)
+                        this.split._viewRange.end = this._lines.length;
                     const lines = [];
                     const bLines = [];
                     let start = this.split._viewRange.start;
@@ -437,7 +437,7 @@ export class Display extends EventEmitter {
                 }
             };
             this.split.updateOverlays = () => {
-                if (this.split.shown && this._VScroll.scrollSize >= 0 && this.lines.length > 0) {
+                if (this.split.shown && this._VScroll.scrollSize >= 0 && this._lines.length > 0) {
                     const start = this.split._viewRange.start;
                     const end = this.split._viewRange.end;
                     const overlays = [];
@@ -696,10 +696,10 @@ export class Display extends EventEmitter {
         });
 
         this._el.addEventListener('mouseup', (e) => {
-            if (this.lines.length === 0 || e.button !== 0) return;
+            if (this._lines.length === 0 || e.button !== 0) return;
             if (e.detail === 2) {
                 const o = this.getLineOffset(e.pageX, e.pageY);
-                if (o.y >= 0 && o.y < this.lines.length) {
+                if (o.y >= 0 && o.y < this._lines.length) {
                     const line = this.lines[o.y].text;
                     const len = line.length;
                     if (o.x >= 0 || o.x < len) {
@@ -734,7 +734,7 @@ export class Display extends EventEmitter {
             }
             else if (e.detail === 3) {
                 const o = this.getLineOffset(e.pageX, e.pageY);
-                if (o.y >= 0 && o.y < this.lines.length) {
+                if (o.y >= 0 && o.y < this._lines.length) {
                     this._prevSelection = {
                         start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
                         end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
@@ -793,9 +793,9 @@ export class Display extends EventEmitter {
                     else if (y >= this._innerHeight && this._VScroll.position < this._VScroll.scrollSize) {
                         y = this._charHeight;
                         this._currentSelection.end.y++;
-                        if (this.lines.length === 0)
+                        if (this._lines.length === 0)
                             this._currentSelection.end.x = 0;
-                        else if (this._currentSelection.end.y >= this.lines.length)
+                        else if (this._currentSelection.end.y >= this._lines.length)
                             this._currentSelection.end.x = this.lines[this.lines.length - 1].text.length;
                     }
                     else
@@ -809,9 +809,9 @@ export class Display extends EventEmitter {
                         x = this._charWidth;
                         this._currentSelection.end.x++;
                     }
-                    else if (x > 0 && this._currentSelection.end.y >= this.lines.length) {
+                    else if (x > 0 && this._currentSelection.end.y >= this._lines.length) {
                         x = 0;
-                        if (this.lines.length === 0)
+                        if (this._lines.length === 0)
                             this._currentSelection.end.x = 0;
                         else
                             this._currentSelection.end.x = this.lines[this.lines.length - 1].text.length;
@@ -834,7 +834,7 @@ export class Display extends EventEmitter {
 
         this._el.addEventListener('contextmenu', (e: ContextEvent) => {
             const o = this.getLineOffset(e.pageX, e.pageY);
-            if (o.y >= 0 && o.y < this.lines.length)
+            if (o.y >= 0 && o.y < this._lines.length)
                 e.line = this.lines[o.y].text;
             else
                 e.line = '';
@@ -1118,7 +1118,7 @@ export class Display extends EventEmitter {
     }
 
     get EndOfLineLength(): number {
-        if (this.lines.length === 0)
+        if (this._lines.length === 0)
             return 0;
         return this.lines[this.lines.length - 1].text.length;
     }
@@ -1184,7 +1184,7 @@ export class Display extends EventEmitter {
     }
     get emulateControlCodes(): boolean {
         return this._model.emulateControlCodes;
-    }    
+    }
 
     set MXPStyleVersion(value: string) {
         this._model.StyleVersion = value;
@@ -1303,7 +1303,7 @@ export class Display extends EventEmitter {
 
     public updateView() {
         const w = (this._timestamp ? this._timestampWidth : 0) + this._maxWidth;
-        let l = this.lines.length;
+        let l = this._lines.length;
         if (this._hideTrailingEmptyLine && l && this.lines[l - 1].text.length === 0)
             l--;
         const h = l * this._charHeight;
@@ -1416,8 +1416,8 @@ export class Display extends EventEmitter {
     }
 
     public removeLine(line: number) {
-        if (line < 0 || line >= this.lines.length) return;
-        this.emit('line-removed', line, this.lines[line]);
+        if (line < 0 || line >= this._lines.length) return;
+        this.emit('line-removed', line, this.lines[line].text);
         this._model.removeLine(line);
         this._lines.splice(line, 1);
         this._linesMap.delete(line);
@@ -1436,7 +1436,7 @@ export class Display extends EventEmitter {
             else if (this._currentSelection.start.y === line) {
                 if (this._currentSelection.start.y > this._currentSelection.end.y) {
                     this._currentSelection.start.y--;
-                    if (this._currentSelection.start.y >= 0 && this._currentSelection.start.y < this.lines.length)
+                    if (this._currentSelection.start.y >= 0 && this._currentSelection.start.y < this._lines.length)
                         this._currentSelection.start.x = this.lines[this._currentSelection.start.y].text.length;
                     else
                         this._currentSelection.start.x = 0;
@@ -1453,7 +1453,7 @@ export class Display extends EventEmitter {
                 }
                 else {
                     this._currentSelection.end.y--;
-                    if (this._currentSelection.end.y >= 0 && this._currentSelection.end.y < this.lines.length)
+                    if (this._currentSelection.end.y >= 0 && this._currentSelection.end.y < this._lines.length)
                         this._currentSelection.end.x = this.lines[this._currentSelection.end.y].text.length;
                     else
                         this._currentSelection.end.x = 0;
@@ -1472,9 +1472,9 @@ export class Display extends EventEmitter {
     }
 
     public removeLines(line: number, amt: number) {
-        if (line < 0 || line >= this.lines.length) return;
+        if (line < 0 || line >= this._lines.length) return;
         if (amt < 1) amt = 1;
-        this.emit('lines-removed', line, this.lines.slice(line, amt));
+        this.emit('lines-removed', line, this._lines.slice(line, amt));
         this._model.removeLines(line, amt);
         this._lines.splice(line, amt);
         for (let l = line; l < amt; l++)
@@ -1498,7 +1498,7 @@ export class Display extends EventEmitter {
                 else if (this._currentSelection.start.y === l) {
                     if (this._currentSelection.start.y > this._currentSelection.end.y) {
                         this._currentSelection.start.y--;
-                        if (this._currentSelection.start.y >= 0 && this._currentSelection.start.y < this.lines.length)
+                        if (this._currentSelection.start.y >= 0 && this._currentSelection.start.y < this._lines.length)
                             this._currentSelection.start.x = this.lines[this._currentSelection.start.y].text.length;
                         else
                             this._currentSelection.start.x = 0;
@@ -1515,7 +1515,7 @@ export class Display extends EventEmitter {
                     }
                     else {
                         this._currentSelection.end.y--;
-                        if (this._currentSelection.end.y >= 0 && this._currentSelection.end.y < this.lines.length)
+                        if (this._currentSelection.end.y >= 0 && this._currentSelection.end.y < this._lines.length)
                             this._currentSelection.end.x = this.lines[this._currentSelection.end.y].text.length;
                         else
                             this._currentSelection.end.x = 0;
@@ -1613,11 +1613,11 @@ export class Display extends EventEmitter {
     }
 
     get text(): string {
-        return this.lines.map(line => line.text).join('\n');
+        return this._model.text;
     }
 
     get raw(): string {
-        return this.lines.map(line => line.raw).join('');
+        return this._model.raw;
     }
 
     public trimLines() {
@@ -1684,7 +1684,7 @@ export class Display extends EventEmitter {
 
     //TODO add font support, as different blocks of text could have different font formats, need to not just measure with but measure based on format block data
     public getLineOffset(pageX, pageY) {
-        if (this.lines.length === 0)
+        if (this._lines.length === 0)
             return { x: 0, y: 0 };
         if (this._timestamp)
             pageX -= this._timestampWidth;
@@ -1705,11 +1705,11 @@ export class Display extends EventEmitter {
         if (y >= 0) {
             let text;
             let line = y;
-            if (y < this.lines.length)
+            if (y < this._lines.length)
                 text = this.lines[y].text.replace(/ /g, '\u00A0');
             else {
                 text = this.lines[this.lines.length - 1].text.replace(/ /g, '\u00A0');
-                line = this.lines.length - 1;
+                line = this._lines.length - 1;
             }
             const tl = text.length;
             let w = Math.ceil(this.lineWidth(line, 0, x));
@@ -1763,7 +1763,7 @@ export class Display extends EventEmitter {
     }
 
     public getWordFromPosition(position) {
-        if (position.y >= 0 && position.y < this.lines.length) {
+        if (position.y >= 0 && position.y < this._lines.length) {
             const line = this.lines[position.y].text;
             const len = line.length;
             if (position.x >= 0 || position.x < len) {
@@ -1786,7 +1786,7 @@ export class Display extends EventEmitter {
     }
 
     public getUrlFromPosition(position) {
-        if (position.y >= 0 && position.y < this.lines.length) {
+        if (position.y >= 0 && position.y < this._lines.length) {
             const line = this.lines[position.y].text;
             const len = line.length;
             if (position.x >= 0 || position.x < len) {
@@ -1900,7 +1900,7 @@ export class Display extends EventEmitter {
     }
 
     private lineWidth(line, start?, len?) {
-        if (line < 0 || line >= this.lines.length)
+        if (line < 0 || line >= this._lines.length)
             return 0;
         if (start === undefined || start === null)
             return this._lines[line].width;
@@ -2163,7 +2163,7 @@ export class Display extends EventEmitter {
             else {
                 sL = range.start.y;
                 //invalid view
-                if (sL < 0 || sL >= this.lines.length)
+                if (sL < 0 || sL >= this._lines.length)
                     continue;
 
                 if (this.lines[sL].formats[0].hr) {
@@ -2356,7 +2356,7 @@ export class Display extends EventEmitter {
         }
         else {
             sL = sel.start.y;
-            if (sL < 0 || sL >= this.lines.length) {
+            if (sL < 0 || sL >= this._lines.length) {
                 this._prevSelection = {
                     start: { x: sel.end.x, y: sel.end.y },
                     end: { x: sel.end.x, y: sel.end.y }
@@ -2473,7 +2473,7 @@ export class Display extends EventEmitter {
             };
             return;
         }
-        const len = this.lines.length;
+        const len = this._lines.length;
         const mw = Math.max(this._maxWidth, this._maxView);
 
         if (sL < 0)
@@ -2614,7 +2614,7 @@ export class Display extends EventEmitter {
     }
 
     get selection(): string {
-        if (this.lines.length === 0) return '';
+        if (this._lines.length === 0) return '';
         const sel = this._currentSelection;
         let s;
         let e;
@@ -2635,14 +2635,14 @@ export class Display extends EventEmitter {
         else if (sel.start.x === sel.end.x) {
             return '';
         }
-        else if (sel.start.y > 0 && sel.start.y < this.lines.length && this.lines[sel.start.y].formats[0].hr)
+        else if (sel.start.y > 0 && sel.start.y < this._lines.length && this.lines[sel.start.y].formats[0].hr)
             return '---';
         else {
             s = Math.min(sel.start.x, sel.end.x);
             e = Math.max(sel.start.x, sel.end.x);
             return this.lines[sel.start.y].text.substring(s, e);
         }
-        const len = this.lines.length;
+        const len = this._lines.length;
 
         if (sL < 0)
             sL = 0;
@@ -2676,7 +2676,7 @@ export class Display extends EventEmitter {
     }
 
     get selectionAsHTML(): string {
-        if (this.lines.length === 0) return '';
+        if (this._lines.length === 0) return '';
         const sel = this._currentSelection;
         let s;
         let e;
@@ -2702,7 +2702,7 @@ export class Display extends EventEmitter {
             e = Math.max(sel.start.x, sel.end.x);
             return this.getLineHTML(sel.start.y, s, e);
         }
-        const len = this.lines.length;
+        const len = this._lines.length;
 
         if (sL < 0)
             sL = 0;
@@ -2726,7 +2726,7 @@ export class Display extends EventEmitter {
     }
 
     public selectAll() {
-        let ll = this.lines.length;
+        let ll = this._lines.length;
         if (ll === 0) return;
         ll--;
         this._prevSelection = {
@@ -2785,7 +2785,7 @@ export class Display extends EventEmitter {
 
     private buildLineDisplay(idx?: number, mw?, mv?) {
         if (idx === undefined)
-            idx = this.lines.length - 1;
+            idx = this._lines.length - 1;
         const back = [];
         const fore = [];
         const text = this.lines[idx].text.replace(/ /g, '\u00A0');
@@ -4408,7 +4408,7 @@ export class DisplayModel extends EventEmitter {
     }
     get emulateControlCodes(): boolean {
         return this._parser.emulateControlCodes;
-    }    
+    }
 
     set MXPStyleVersion(value: string) {
         this._parser.StyleVersion = value;
@@ -5107,5 +5107,21 @@ export class DisplayModel extends EventEmitter {
             nF.push(format);
         }
         return nF;
+    }
+
+    get text(): string {
+        return this.lines.map(line => line.text).join('\n');
+    }
+
+    get raw(): string {
+        return this.lines.map(line => line.raw).join('');
+    }
+
+    public getText(line, start, end) {
+        if (line < 0 || line >= this.lines.length) return '';
+        if (start < 0) start = 0;
+        if (end > this.lines[line].text.length)
+            return this.lines[line].text.substring(start);
+        return this.lines[line].text.substring(start, end);
     }
 }
