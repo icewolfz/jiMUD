@@ -251,7 +251,7 @@ Controls what is captured into the chat window
 - `On second instance` What to do when you open a second instance when use only one instance enabled and no command line arguments passed
   - `Nothing` Do nothing
   - `Show` Show and focus on active window
-  - `New Connection` Create a new connection in active window then show and focus on active window
+  - `New Tab` Create a new tab in active window then show and focus on active window
   - `New Window` Create a new window then focus on it
 - `Enable gamepads` Enable gamepad support to allow creating macros using gamepad axes or buttons. **Experimental**
 - `Enable GMCP Ping for lag meter` When text received from mud send back a GMCP ping if enabled to get a better time for the lag meter.
@@ -318,7 +318,7 @@ Controls what is captured into the chat window
 
 - `Show tray icon` display an icon in the system tray/notification area
 - `Tray context menu style` determine how complex a menu to display
-  - `Simple` a simple menu that allows new connection/window, show/hide active window and quit
+  - `Simple` a simple menu that allows new tab/window, show/hide active window and quit
   - `Full` a full menu with all window and client sub menus as needed, **note** this may cause a slow down as when enabled all incoming text from mud causes a menu rebuild to reflect current active state
   - `Compact` similar to full but with out the client submenus, **note** see Full note
 - `Tray icon single click` set what happens when the tray icon is clicked  **note** see known issues with linux
