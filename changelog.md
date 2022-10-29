@@ -43,6 +43,7 @@
   - Add [#ALL](docs/commands.md) send commands to all client windows as if sent from command line
   - Add [#TAB](docs/commands.md) Create a new client tab in current window
   - Add [#NAME](docs/commands.md) Set name for current tab or client id
+  - Add [#ID](docs/commands.md) Display client id
   - Add [#CLEARNAME](docs/commands.md) clear current tab or client id's name
   - Add [#TO](docs/commands.md) Send commands to target client name/id
   - Add [client.sendAll](docs/scripting.md) for scripting to send text to mud for all client windows

@@ -253,6 +253,9 @@ Display text to the screen, and the display text will not fire triggers
 <u>#HIDECL</u>IENT
 >Hide client window
 
+#ID
+>Display client id
+
 <u>#IDLE</u>TIME
 >Display time a command was last sent
 
