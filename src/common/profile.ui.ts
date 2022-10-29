@@ -2832,9 +2832,9 @@ function optionsLoaded() {
 
 function setTitle(title, lag?) {
     if (title && title.length > 0)
-        document.title = 'Profile manager - ' + title;
+        document.title = 'Profile manager - ' + title+ (window.opener.client.port === 1035 ? ' - Development' : '');
     else
-        document.title = 'Profile manager';
+        document.title = 'Profile manager'+ (window.opener.client.port === 1035 ? ' - Development' : '');
 }
 
 function updateCharacter(e) {

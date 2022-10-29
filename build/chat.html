@@ -139,11 +139,7 @@
         }
 
         $(document).ready(function () {
-            const characterName = window.opener.getCharacterName();
-            if (characterName && characterName.length > 0)
-                document.title = 'Chat - ' + characterName;
-            else
-                document.title = 'Chat';
+            events['set-title'](window.opener.getCharacterName());
             display = new Display('chat-display');
 
             display.on('split-move-done', (h) => {
@@ -240,11 +236,11 @@
                 if (!options)
                     loadOptions();
                 if (_logger)
-                    _logger.postMessage({ action: 'name', args: title });
+                    _logger.postMessage({ action: 'name', args: title || '' });
                 if (title && title.length > 0)
-                    document.title = 'Chat - ' + title;
+                    document.title = 'Chat - ' + title + (window.opener.client.port === 1035 ? ' - Development' : '');
                 else
-                    document.title = 'Chat';
+                    document.title = 'Chat' + (window.opener.client.port === 1035 ? ' - Development' : '');
             },
             'options-loaded': () => {
                 loadOptions();
@@ -261,12 +257,7 @@
         }
 
         function updateCharacter(e) {
-            const char = window.opener.getCharacterName();
-            if (char && char.length > 0)
-                document.title = 'Chat - ' + char;
-            else
-                document.title = 'Chat';
-            _logger.postMessage({ action: 'name', args: char || '' });
+            events['set-title'](window.opener.getCharacterName());
         }
 
         window.opener._status.on('set-title', events['set-title']);

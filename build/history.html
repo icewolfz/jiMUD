@@ -98,9 +98,9 @@
 
     function setTitle(title, lag) {
         if (title && title.length > 0)
-            document.title = 'Command history - ' + title;
+            document.title = 'Command history - ' + title + (window.opener.client.port === 1035 ? ' - Development' : '');
         else
-            document.title = 'Command history';
+            document.title = 'Command history' + (window.opener.client.port === 1035 ? ' - Development' : '');
     }
 
     function updateCharacter(e) {
