@@ -14,8 +14,6 @@ const timers = [];
 
 require('@electron/remote/main').initialize();
 
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected.
 let argv;
 
 //check if previous command line arguments where stored load and use those instead
