@@ -149,31 +149,15 @@
 
             display.on('selection-done', () => {
                 if (options.AutoCopySelectedToClipboard && display.hasSelection) {
-                    clipboard.write({
-                        text: display.selection,
-                        html: display.selectionAsHTML
-                    });
-                    clipboard.write({
-                        text: display.selection,
-                        html: display.selectionAsHTML
-                    }, 'selection');
+                    doCopy();
                     display.clearSelection();
                 }
+                document.getElementById('btn-copy').disabled = !display.hasSelection;
             });
+
             loadOptions();
             ['copy'].forEach(function (event) {
-                document.addEventListener(event, function () {
-                    if (display.hasSelection) {
-                        clipboard.write({
-                            text: display.selection,
-                            html: display.selectionAsHTML
-                        });
-                        clipboard.write({
-                            text: display.selection,
-                            html: display.selectionAsHTML
-                        }, 'selection');
-                    }
-                });
+                document.addEventListener(event, doCopy);
             });
             window.addEventListener('keydown', (e) => {
                 if (e.which === 33) //page up

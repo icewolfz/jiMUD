@@ -384,6 +384,9 @@ Test commands allow you to debug or test features of the client
 #TESTUNICODEEMOJI
 >Display emoji unicode symbols
 
+#TESTCONTROLCHARS
+>Test display control codes setting for display
+
 **Note:** All italic arguments are optional and can be left out
 
 **Note:** All quoted arguments will be processed based on [scripting quote preference](preferences.md#scripting) when required
