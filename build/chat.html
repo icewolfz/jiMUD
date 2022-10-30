@@ -139,8 +139,8 @@
         }
 
         $(document).ready(function () {
-            events['set-title'](window.opener.getCharacterName());
             display = new Display('chat-display');
+            events['set-title'](window.opener.getCharacterName());
 
             display.on('split-move-done', (h) => {
                 window.opener.client.options.chat.splitHeight = h;
@@ -224,7 +224,7 @@
                 };
             }
             else
-                display.addParserLine(data);
+                display.model.addParserLine(data);
             if (!options)
                 loadOptions();
             if (_logger && options.chat.log)
