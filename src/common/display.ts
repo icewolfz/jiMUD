@@ -107,7 +107,7 @@ interface LineData {
  * @todo Add/fix MXP image selection highlighting
  */
 export class Display extends EventEmitter {
-    private _model;
+    private _model: DisplayModel;
 
     private _el: HTMLElement;
     private _os;
@@ -1187,10 +1187,10 @@ export class Display extends EventEmitter {
     }
 
     set MXPStyleVersion(value: string) {
-        this._model.StyleVersion = value;
+        this._model.MXPStyleVersion = value;
     }
     get MXPStyleVersion(): string {
-        return this._model.StyleVersion;
+        return this._model.MXPStyleVersion;
     }
 
     public debug(msg) {
@@ -3641,7 +3641,7 @@ export class Display extends EventEmitter {
                             img.onload = () => {
                                 //TODO make work once convert to wrapped line format
                                 return;
-                                const lIdx = this._model.getLineFromID().indexOf(+img.dataset.id);
+                                const lIdx = this._model.getLineFromID(+img.dataset.id);
                                 if (lIdx === -1 || lIdx >= this.lines.length) return;
                                 this._lines[lIdx].images--;
                                 const fIdx = +img.dataset.f;
@@ -4919,10 +4919,10 @@ export class DisplayModel extends EventEmitter {
     //color like javascript.substring using 0 index for start and end
     public highlightStyleSubStringByLine(idx: number, start?: number, end?: number, color?: boolean) {
         //invalid line bail
-        if (idx < 0 || idx >= this.lines.length) return;
+        if (idx < 0 || idx >= this.lines.length) return false;
         const lineLength = this.lines[idx].text.length;
         //passed line skip
-        if (start >= lineLength) return;
+        if (start >= lineLength) return false;
         if (!start || start < 0) start = 0;
         if (!end || end > lineLength)
             end = lineLength;
@@ -5059,6 +5059,7 @@ export class DisplayModel extends EventEmitter {
             //clean out duplicates and other no longer needed blocks
             this.lines[idx].formats = this.pruneFormats(formats, this.textLength);
         }
+        return true;
     }
 
     private pruneFormats(formats, textLen) {
