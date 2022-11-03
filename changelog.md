@@ -111,7 +111,7 @@
     - Removed -mf argument to keep argument name scheme flowing
     - Removed -pf/--profiles as no longer supported, use character manager with per user settings  
   - Mapper: Switch room editor to property grid control
-  - Update electron 19.1.1 to 19.1.3
+  - Update electron 19.1.1 to 19.1.4
   - Update electron-updater 5.2.1 to 5.3.0
   - Update mathjs 11.2.1 to 11.3.2
   - Update monaco-editor 0.34.0 to 0.34.1
