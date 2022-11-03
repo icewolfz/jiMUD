@@ -21,8 +21,9 @@
       - Notes is now a tracked file path like settings and map and can be changed by the user
       - All new characters will use a unique generated id number instead of title or name for data files to prevent sharing files by default
   - Command line arguments:
-    - Added -l/--layout to allow loading of a saved layout
-    - Added -il/--ignore-layout to ignore loading last used layout or --layout
+    - Added [-l/--layout](docs/README.md) to allow loading of a saved layout
+    - Added [-il/--ignore-layout](docs/README.md) to ignore loading last used layout or --layout
+    - Added [-el/--error-log](docs/README.md) to allow setting custom error log files
   - Preferences:
     - `Show add new button next to tabs` add a button to allow creation of new connections from tab strip, *Global preference* 
     - `Lock layout` saving only the last known global window states and preserve the previous saved windows and clients opened, *Global preference*

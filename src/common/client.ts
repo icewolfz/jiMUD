@@ -1304,8 +1304,7 @@ export class Client extends EventEmitter {
                 err = new Error(err || msg);
                 msg = err.stack;
             }
-            fs.writeFileSync(parseTemplate(path.join('{data}', 'jimud.error.log')), new Date().toLocaleString() + '\n', { flag: 'a' });
-            fs.writeFileSync(parseTemplate(path.join('{data}', 'jimud.error.log')), msg + '\n', { flag: 'a' });
+            fs.writeFileSync(window.getGlobal('errorLog'), `${new Date().toLocaleString()}\n${msg}\n`, { flag: 'a' });
         }
 
         if (err === 'Error: ECONNRESET - read ECONNRESET.' && this.telnet.connected)

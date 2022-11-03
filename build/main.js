@@ -15,6 +15,7 @@ const timers = [];
 require('@electron/remote/main').initialize();
 
 let argv;
+let errorLog = parseTemplate(path.join('{data}', 'jimud.error.log'));
 
 //check if previous command line arguments where stored load and use those instead
 if (isFileSync(path.join(app.getPath('userData'), 'argv.json'))) {
@@ -35,7 +36,7 @@ else //not found use native
     argv = process.argv;
 
 argv = require('yargs-parser')(argv, {
-    string: ['data-dir', 's', 'setting', 'm', 'map', 'c', 'character', 'l', 'layout'],
+    string: ['data-dir', 's', 'setting', 'm', 'map', 'c', 'character', 'l', 'layout', 'el', 'error-log'],
     boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import', 'f', 'force', 'nls', 'no-layout-save', 'fci', 'force-character-import'],
     alias: {
         'd': ['debug'],
@@ -54,12 +55,16 @@ argv = require('yargs-parser')(argv, {
         'f': ['force'],
         'nc': ['new-connection', 'nt', 'new-tab'],
         'nw': ['new-window'],
-        'nls': ['no-layout-save']
+        'nls': ['no-layout-save'],
+        'el': ['error-log']
     },
     configuration: {
         'short-option-groups': false
     }
 });
+
+if (argv.el && argv.el.length)
+    errorLog = argv.el;
 
 if (argv['data-dir'] && argv['data-dir'].length > 0)
     app.setPath('userData', argv['data-dir']);
@@ -210,7 +215,8 @@ function commandLineArgumentHelp() {
     msg += '-nw, --new-window - Open a new window\n';
     msg += '-nw=[id], --new-window=[id] - Open a new window with and load a character\n';
     msg += '-nt, --new-tab - Open a new tab\n';
-    msg += '-nt=[id], --new-tab=[id] - Open a new tab and load a character, similar to --character but will not replace current active connection if it exist';
+    msg += '-nt=[id], --new-tab=[id] - Open a new tab and load a character, similar to --character but will not replace current active connection if it exist\n';
+    msg += '-el=[file], --error-log=[file] Set a custom error log path';
     return msg;
 }
 
@@ -238,6 +244,7 @@ function displayConsoleHelp() {
     console.log('-nw=[id], --new-window=[id]               Open a new window with and load a character');
     console.log('-nt, --new-tab                            Open a new tab')
     console.log('-nt=[id], --new-tab=[id]                  Open a new tab and load a character, similar to --character but will not replace current active connection if it exist');
+    console.log('-el=[file], --error-log=[file]            Set a custom error log path');
 }
 
 //id, data, file, title, icon
@@ -726,7 +733,7 @@ if (_settings.useSingleInstance && !global.editorOnly && !argv.f) {
     else
         app.on('second-instance', (event, second_argv, workingDirectory, additionalData) => {
             second_argv = require('yargs-parser')(second_argv, {
-                string: ['data-dir', 's', 'setting', 'm', 'map', 'c', 'character', 'l', 'layout'],
+                string: ['data-dir', 's', 'setting', 'm', 'map', 'c', 'character', 'l', 'layout', 'el', 'error-log'],
                 boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import', 'f', 'force', 'nls', 'no-layout-save', 'fci', 'force-character-import'],
                 alias: {
                     'd': ['debug'],
@@ -745,7 +752,8 @@ if (_settings.useSingleInstance && !global.editorOnly && !argv.f) {
                     'f': ['force'],
                     'nc': ['new-connection', 'nt', 'new-tab'],
                     'nw': ['new-window'],
-                    'nls': ['no-layout-save']
+                    'nls': ['no-layout-save'],
+                    'el': ['error=log']
                 },
                 configuration: {
                     'short-option-groups': false
@@ -1242,6 +1250,9 @@ ipcMain.on('get-global', (event, key) => {
             break;
         case 'askonloadCharacter':
             event.returnValue = _settings ? _settings.askonloadCharacter : true;
+            break;
+        case 'errorLog':
+            event.returnValue = errorLog;
             break;
         default:
             event.returnValue = null;
@@ -3009,8 +3020,7 @@ function logError(err, skipClient) {
             err = new Error(err);
             msg = err.stack;
         }
-        fs.writeFileSync(path.join(app.getPath('userData'), 'jimud.error.log'), new Date().toLocaleString() + '\n', { flag: 'a' });
-        fs.writeFileSync(path.join(app.getPath('userData'), 'jimud.error.log'), msg + '\n', { flag: 'a' });
+        fs.writeFileSync(errorLog, `${new Date().toLocaleString()}\n${msg}\n`, { flag: 'a' });
     }
 }
 

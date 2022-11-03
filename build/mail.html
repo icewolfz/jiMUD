@@ -498,8 +498,7 @@
                     error = new Error(error || 'Unknown');
                     msg = error.stack;
                 }
-                fs.writeFileSync(parseTemplate(path.join('{data}', 'jimud.error.log')), 'Immortal Tools: ' + new Date().toLocaleString() + '\n', { flag: 'a' });
-                fs.writeFileSync(parseTemplate(path.join('{data}', 'jimud.error.log')), msg + '\n', { flag: 'a' });
+                fs.writeFileSync(window.getGlobal('errorLog'), `Mail: ${new Date().toLocaleString()}\n${msg}\n`, { flag: 'a' });
             }
         }
 

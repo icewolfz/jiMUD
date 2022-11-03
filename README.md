@@ -76,6 +76,7 @@ Usage: `jiMUD [arguments...]`
 - `-nw=[id], --new-window=[id]` Open a new window with and load a character
 - `-nt, --new-tab` Open a new tab
 - `-nt=[id], --new-tab=[id]` Open a new tab and load a character, similar to --character but will not replace current active tab if it exist
+- `-el=[file], --error-log=[file]` Set a custom error log path
 
 ## References
 
