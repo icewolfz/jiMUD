@@ -745,5 +745,14 @@ Devanagari
             this.Client.print(sample, true);
             this.Client.print(sample2, true);
         };
+
+        this.TestFunctions['testlines'] = function () {
+            const maxLines = this.Client.display.maxLines;
+            let sample = '';
+            const id = this.Client.display.model.getNextLineID;
+            for (let h = 0; h < maxLines; h++)
+                sample += `Line: ${h}, LineID: ${id + h}\n`;
+            this.Client.print(sample, true);
+        };
     }
 }
