@@ -872,38 +872,6 @@ if (_settings.useSingleInstance && !global.editorOnly && !argv.f) {
         });
 }
 
-//do not import if editor only mode, process after instance use to avoid processing file if not needed
-if (isFileSync(path.join(app.getPath('userData'), 'characters.json'))) {
-    //if force import, import with out any prompts as its a command line and they should know better
-    if (argv.fci) {
-        _settings.migrate = 1;
-        _settings.save(global.settingsFile);
-        openCharacters();
-        _characters.import(path.join(app.getPath('userData'), 'characters.json'));
-    }
-    //if not editor only, can import and not migrated ask 
-    else if (!argv.eo && !argv.nci && _settings.migrate < 1)
-        switch (dialog.showMessageBoxSync({
-            type: 'question',
-            title: 'Import characters',
-            message: 'Import old characters?',
-            buttons: ['Yes', 'No', 'Never ask again'],
-            defaultId: 1,
-            noLink: true
-        })) {
-            case 0:
-                _settings.migrate = 1;
-                _settings.save(global.settingsFile);
-                openCharacters();
-                _characters.import(path.join(app.getPath('userData'), 'characters.json'));
-                break;
-            case 2:
-                _settings.migrate = 1;
-                _settings.save(global.settingsFile);
-                break;
-        }
-}
-
 if (Array.isArray(argv.l))
     _layout = parseTemplate(argv.l[0]);
 else if (argv.l)
@@ -925,6 +893,38 @@ app.on('child-process-gone', (event, details) => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
+    //do not import if editor only mode, process after instance use to avoid processing file if not needed
+    if (isFileSync(path.join(app.getPath('userData'), 'characters.json'))) {
+        //if force import, import with out any prompts as its a command line and they should know better
+        if (argv.fci) {
+            _settings.migrate = 1;
+            _settings.save(global.settingsFile);
+            openCharacters();
+            _characters.import(path.join(app.getPath('userData'), 'characters.json'));
+        }
+        //if not editor only, can import and not migrated ask 
+        else if (!argv.eo && !argv.nci && _settings.migrate < 1)
+            switch (dialog.showMessageBoxSync({
+                type: 'question',
+                title: 'Import characters',
+                message: 'Import old characters?',
+                buttons: ['Yes', 'No', 'Never ask again'],
+                defaultId: 1,
+                noLink: true
+            })) {
+                case 0:
+                    _settings.migrate = 1;
+                    _settings.save(global.settingsFile);
+                    openCharacters();
+                    _characters.import(path.join(app.getPath('userData'), 'characters.json'));
+                    break;
+                case 2:
+                    _settings.migrate = 1;
+                    _settings.save(global.settingsFile);
+                    break;
+            }
+    }
+
     let window;
     let charID;
     if (!existsSync(path.join(app.getPath('userData'), 'characters')))
