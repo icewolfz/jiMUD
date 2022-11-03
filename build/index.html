@@ -1957,6 +1957,7 @@
             });
             client.display.on('highlight', () => {
                 client.options.find.highlight = client.display.Highlight;
+                doUpdate(32);
             });
 
         }
