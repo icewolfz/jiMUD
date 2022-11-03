@@ -64,7 +64,7 @@ argv = require('yargs-parser')(argv, {
 });
 
 if (argv.el && argv.el.length)
-    errorLog = argv.el;
+    errorLog = parseTemplate(argv.el);
 
 if (argv['data-dir'] && argv['data-dir'].length > 0)
     app.setPath('userData', argv['data-dir']);
