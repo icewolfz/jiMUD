@@ -74,7 +74,9 @@
     - Fixed issue with multiple events not correctly working
     - Fixed issue when remote path was cut and it force updated the file list
     - Fixed corruption issue when attempting to get multiple directory listings at once, now queues directory calls and updates as needed
-  - Profile manager: Fixed code editor spell checking replacement
+  - Profile manager:
+    - Fixed code editor spell checking replacement
+    - Fixed treeview checkboxes for none selected items effecting selected item
   - Fixed #wait error when followed by trailing whitespace
   - Profiles: Fixed loading of copied profile data files not correctly loading
   - Code editor:

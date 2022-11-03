@@ -251,7 +251,7 @@ interface MenuItemConstructorOptionsCustom extends Electron.MenuItemConstructorO
     word?: string;
 }
 
-function addInputContext() {    
+function addInputContext() {
     remote.getCurrentWindow().webContents.on('context-menu', (e, props) => {
         e.preventDefault();
         const inputMenu = Menu.buildFromTemplate(<Electron.MenuItemConstructorOptions[]>[
@@ -289,11 +289,10 @@ function addInputContext() {
                 inputMenu.insert(0, new MenuItem(<MenuItemConstructorOptionsCustom>{
                     label: props.dictionarySuggestions[w],
                     x: props.x,
-                    y: props.y,            
+                    y: props.y,
                     click: (item: any) => {
                         let el = document.elementFromPoint(item.x, item.y);
-                        if(el.classList.contains('ace_content'))
-                        {
+                        if (el.classList.contains('ace_content')) {
                             el = el.closest('pre');
                             let editor = el.id.substring(0, el.id.lastIndexOf('-'));
                             const cursor = editors[editor].selection.getCursor();
@@ -1766,72 +1765,72 @@ function nodeCheckChanged(event, node) {
             }
             else
                 changed = 0;
-            if (profile === currentProfile)
+            if (profile === currentProfile && node.id === currentNode.id)
                 $('#editor-enabled').prop('checked', _enabled.indexOf(node.dataAttr.profile) !== -1);
             break;
         case 'aliases':
             profile.enableAliases = node.state.checked;
             t = 'profile';
             data.enableAliases = node.state.checked;
-            if (profile === currentProfile)
+            if (profile === currentProfile && node.id === currentNode.id)
                 $('#profile-enableAliases').prop('checked', node.state.checked);
             break;
         case 'macros':
             profile.enableMacros = node.state.checked;
             t = 'profile';
             data.enableMacros = node.state.checked;
-            if (profile === currentProfile)
+            if (profile === currentProfile && node.id === currentNode.id)
                 $('#profile-enableMacros').prop('checked', node.state.checked);
             break;
         case 'triggers':
             profile.enableTriggers = node.state.checked;
             t = 'profile';
             data.enableTriggers = node.state.checked;
-            if (profile === currentProfile)
+            if (profile === currentProfile && node.id === currentNode.id)
                 $('#profile-enableTriggers').prop('checked', node.state.checked);
             break;
         case 'buttons':
             profile.enableButtons = node.state.checked;
             t = 'profile';
             data.enableButtons = node.state.checked;
-            if (profile === currentProfile)
+            if (profile === currentProfile && node.id === currentNode.id)
                 $('#profile-enableButtons').prop('checked', node.state.checked);
             break;
         case 'contexts':
             profile.enableContexts = node.state.checked;
             t = 'profile';
             data.enableContexts = node.state.checked;
-            if (profile === currentProfile)
+            if (profile === currentProfile && node.id === currentNode.id)
                 $('#profile-enableContexts').prop('checked', node.state.checked);
             break;
         case 'alias':
             profile.aliases[node.dataAttr.index].enabled = node.state.checked;
             data.enabled = node.state.checked;
-            if (node.id === currentNode.id)
+            if (node.id === currentNode.id && node.id === currentNode.id)
                 $('#editor-enabled').prop('checked', node.state.checked);
             break;
         case 'macro':
             profile.macros[node.dataAttr.index].enabled = node.state.checked;
             data.enabled = node.state.checked;
-            if (node.id === currentNode.id)
+            if (node.id === currentNode.id && node.id === currentNode.id)
                 $('#editor-enabled').prop('checked', node.state.checked);
             break;
         case 'trigger':
             profile.triggers[node.dataAttr.index].enabled = node.state.checked;
             data.enabled = node.state.checked;
-            if (node.id === currentNode.id && getState() === 0)
+            if (node.id === currentNode.id && getState() === 0 && node.id === currentNode.id)
                 $('#editor-enabled').prop('checked', node.state.checked);
             break;
         case 'button':
             profile.buttons[node.dataAttr.index].enabled = node.state.checked;
             data.enabled = node.state.checked;
-            if (node.id === currentNode.id)
+            if (node.id === currentNode.id && node.id === currentNode.id)
                 $('#editor-enabled').prop('checked', node.state.checked);
             break;
         case 'context':
             profile.contexts[node.dataAttr.index].enabled = node.state.checked;
             data.enabled = node.state.checked;
-            if (node.id === currentNode.id)
+            if (node.id === currentNode.id && node.id === currentNode.id)
                 $('#editor-enabled').prop('checked', node.state.checked);
             break;
     }
@@ -2832,9 +2831,9 @@ function optionsLoaded() {
 
 function setTitle(title, lag?) {
     if (title && title.length > 0)
-        document.title = 'Profile manager - ' + title+ (window.opener.client.port === 1035 ? ' - Development' : '');
+        document.title = 'Profile manager - ' + title + (window.opener.client.port === 1035 ? ' - Development' : '');
     else
-        document.title = 'Profile manager'+ (window.opener.client.port === 1035 ? ' - Development' : '');
+        document.title = 'Profile manager' + (window.opener.client.port === 1035 ? ' - Development' : '');
 }
 
 function updateCharacter(e) {
@@ -2848,7 +2847,7 @@ function setAdvancedPanel(id, state) {
 }
 
 export function init() {
-    setTitle(window.opener.getCharacterName());  
+    setTitle(window.opener.getCharacterName());
     loadOptions();
     const p = path.join(parseTemplate('{data}'), 'profiles');
     if (!isDirSync(p)) {
@@ -3505,7 +3504,7 @@ export function init() {
         window.opener._status.on('set-title', setTitle);
         window.opener.addEventListener('loadCharacter', updateCharacter);
         window.opener.addEventListener('updateCharacter', updateCharacter);
-        window.opener.addEventListener('resetCharacter', updateCharacter);        
+        window.opener.addEventListener('resetCharacter', updateCharacter);
     }
 }
 
@@ -3544,7 +3543,7 @@ export function closed() {
         window.opener._status.off('set-title', setTitle);
         window.opener.removeEventListener('loadCharacter', updateCharacter);
         window.opener.removeEventListener('updateCharacter', updateCharacter);
-        window.opener.removeEventListener('resetCharacter', updateCharacter);        
+        window.opener.removeEventListener('resetCharacter', updateCharacter);
     }
 };
 
