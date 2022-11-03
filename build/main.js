@@ -15,7 +15,6 @@ const timers = [];
 require('@electron/remote/main').initialize();
 
 let argv;
-let errorLog = parseTemplate(path.join('{data}', 'jimud.error.log'));
 
 //check if previous command line arguments where stored load and use those instead
 if (isFileSync(path.join(app.getPath('userData'), 'argv.json'))) {
@@ -63,13 +62,15 @@ argv = require('yargs-parser')(argv, {
     }
 });
 
-if (argv.el && argv.el.length)
-    errorLog = parseTemplate(argv.el);
-
 if (argv['data-dir'] && argv['data-dir'].length > 0)
     app.setPath('userData', argv['data-dir']);
 else if (process.env.PORTABLE_EXECUTABLE_DIR && !argv['no-pd'] && !argv['no-portable-dir'])
     app.setPath('userData', process.env.PORTABLE_EXECUTABLE_DIR);
+
+let errorLog = parseTemplate(path.join('{data}', 'jimud.error.log'));
+
+if (argv.el && argv.el.length)
+    errorLog = parseTemplate(argv.el);
 
 app.setAppUserModelId('jiMUD');
 
