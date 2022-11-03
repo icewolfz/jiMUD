@@ -976,24 +976,25 @@
                         type: 'info',
                         title: 'Import data',
                         message: 'Import does not import setting, map or note files and assumes any files are in character data folder.',
+                    }).then(() => {
+                        if (path.extname(result.filePaths[0]) !== 'json') {
+                            dialog.showMessageBox({
+                                type: 'question',
+                                title: 'Import characters',
+                                message: 'Import as new characters?',
+                                buttons: ['Yes', 'No'],
+                                defaultId: 1,
+                                noLink: true
+                            }).then((resultConfirm) => {
+                                if (resultConfirm.response === 0)
+                                    ipcRenderer.send('import-characters', result.filePaths[0], null, null, true);
+                                else
+                                    ipcRenderer.send('import-characters', result.filePaths[0]);
+                            });
+                        }
+                        else
+                            ipcRenderer.send('import-characters', result.filePaths[0]);
                     });
-                    if (path.extname(result.filePaths[0]) !== 'json') {
-                        dialog.showMessageBox({
-                            type: 'question',
-                            title: 'Import characters',
-                            message: 'Import as new characters?',
-                            buttons: ['Yes', 'No'],
-                            defaultId: 1,
-                            noLink: true
-                        }).then((resultConfirm) => {
-                            if (resultConfirm.response === 0)
-                                ipcRenderer.send('import-characters', result.filePaths[0], null, null, true);
-                            else
-                                ipcRenderer.send('import-characters', result.filePaths[0]);
-                        });
-                    }
-                    else
-                        ipcRenderer.send('import-characters', result.filePaths[0]);
                 });
         }
 
