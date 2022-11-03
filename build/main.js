@@ -5126,8 +5126,11 @@ ipcMain.on('progress', (event, ...args) => {
 
 function resetProfilesMenu(window) {
     if (!window || !windows[getWindowId(window)].menubar) return;
-    const profiles = windows[getWindowId(window)].menubar.getItem('profiles');
-    profiles.submenu.items.forEach(item => {
+    const profiles = windows[getWindowId(window)].menubar.getItem('profiles', 2);
+    profiles[0].submenu.items.forEach(item => {
+        item.checked = false;
+    });
+    profiles[1].submenu.forEach(item => {
         item.checked = false;
     });
 }
