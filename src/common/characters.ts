@@ -384,7 +384,7 @@ export class Characters extends EventEmitter {
     }
 
     public import(file, backup, replaceOld) {
-        if (path.extname(file) === 'json') {
+        if (path.extname(file) === '.json') {
             let oldCharacters = fs.readFileSync(file, 'utf-8');
             try {
                 //data try and convert and then import any found data
