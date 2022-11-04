@@ -2908,6 +2908,7 @@
             _captureReviews = [];
             if (client.options.chat.captureTells) {
                 _captures.push(new RegExp('^([a-zA-Z\'\\s_-]*) tells you:(.*)$'),
+                    new RegExp('^(\\([a-zA-Z\'\\s_-]*\\)) tells you:(.*)$'),
                     new RegExp('^You tell ([a-zA-Z\'\\s_-]*):(.*)$'),
                     new RegExp('^\\*([a-zA-Z\'\\s_-]*)(\\s?)(.*?)$'),
                     new RegExp('^([a-zA-Z\'\\s_-]*) is idle, and may not have been paying attention.$'),
@@ -3317,7 +3318,7 @@
             reloadIcon();
         });
 
-        let _clients = ipcRenderer.sendSync('get-window-client-count') || {window: 1, clients: 1};
+        let _clients = ipcRenderer.sendSync('get-window-client-count') || { window: 1, clients: 1 };
         function clientsChanged(windows, clients) {
             _clients.windows = windows;
             _clients.clients = clients;

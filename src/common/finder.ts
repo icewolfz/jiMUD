@@ -276,6 +276,7 @@ export class Finder extends EventEmitter {
     }
 
     public gotoResult(idx: number, focus?: boolean) {
+        if (!this._results) return;
         if (idx < 0) idx = 0;
         if (idx >= this._results.length)
             idx = this._results.length - 1;
@@ -296,7 +297,7 @@ export class Finder extends EventEmitter {
     }
 
     public refresh() {
-        if (this._results.length == 0) return;
+        if (!this._results || this._results.length == 0) return;
         const ranges: OverlayRange[] = [];
         const model = this._display.model;
         for (let r = 0, rl = this._results.length; r < rl; r++) {
@@ -342,7 +343,7 @@ export class Finder extends EventEmitter {
     }
 
     private updateCount() {
-        if (this._results.length === 0)
+        if (!this._results || this._results.length === 0)
             $('#' + this._display.id + '-find-count', this._control).html('<span class=\'find-no-results\'>No Results</span>');
         else if (this._results.length > 999)
             $('#' + this._display.id + '-find-count', this._control).html((this._position + 1) + ' of 999+');
