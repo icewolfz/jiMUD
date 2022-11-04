@@ -1218,6 +1218,9 @@ export class Client extends EventEmitter {
         this.display.displayControlCodes = this.options.display.displayControlCodes;
         this.display.emulateTerminal = this.options.display.emulateTerminal;
         this.display.emulateControlCodes = this.options.display.emulateControlCodes;
+        this.display.wordWrap = this.options.display.wordWrap;
+        this.display.wrapAt = this.options.display.wrapAt;
+        this.display.indent = this.options.display.indent;
         this.UpdateFonts();
         this.display.scrollDisplay();
         this.loadProfiles();

@@ -11,7 +11,7 @@ import EventEmitter = require('events');
 import { Parser } from './parser';
 import { htmlEncode, formatUnit } from './library';
 import { Finder } from './finder';
-import { DisplayOptions, OverlayRange } from './types';
+import { DisplayOptions, OverlayRange, Point } from './types';
 const moment = require('moment');
 
 //const CONTAINS_RTL = /(?:[\u05BE\u05C0\u05C3\u05C6\u05D0-\u05F4\u0608\u060B\u060D\u061B-\u064A\u066D-\u066F\u0671-\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u0710\u0712-\u072F\u074D-\u07A5\u07B1-\u07EA\u07F4\u07F5\u07FA-\u0815\u081A\u0824\u0828\u0830-\u0858\u085E-\u08BD\u200F\uFB1D\uFB1F-\uFB28\uFB2A-\uFD3D\uFD50-\uFDFC\uFE70-\uFEFC]|\uD802[\uDC00-\uDD1B\uDD20-\uDE00\uDE10-\uDE33\uDE40-\uDEE4\uDEEB-\uDF35\uDF40-\uDFFF]|\uD803[\uDC00-\uDCFF]|\uD83A[\uDC00-\uDCCF\uDD00-\uDD43\uDD50-\uDFFF]|\uD83B[\uDC00-\uDEBB])/;
@@ -43,7 +43,23 @@ interface ScrollState {
 }
 
 export enum ScrollType { vertical = 0, horizontal = 1 }
-export enum UpdateType { none = 0, view = 1, overlays = 2, selection = 4, scrollbars = 8, update = 16, scroll = 32, scrollEnd = 64, scrollView = 128, display = 256, selectionChanged = 512, scrollViewOverlays = 1024, layout = 2048, scrollReset = 4096 }
+export enum UpdateType {
+    none = 0,
+    view = 1 << 0,
+    overlays = 1 << 1,
+    selection = 1 << 2,
+    scrollbars = 1 << 3,
+    update = 1 << 4,
+    scroll = 1 << 5,
+    scrollEnd = 1 << 6,
+    scrollView = 1 << 7,
+    display = 1 << 8,
+    selectionChanged = 1 << 9,
+    scrollViewOverlays = 1 << 10,
+    layout = 1 << 11,
+    scrollReset = 1 << 12,
+    calculateLines = 1 << 13
+}
 
 enum CornerType {
     Flat = 0,
@@ -55,16 +71,7 @@ interface ContextEvent extends PointerEvent {
     word: string;
     url: string;
     line: string;
-}
-
-/**
- * A line of data to display
- */
-interface Line {
-    height: number; //height of the line
-    top: number;    //the top y coordinate
-    width: number;  //the total width of the line
-    images: number; //the currently loading images
+    wrappedLine: string;
 }
 
 /**
@@ -72,15 +79,18 @@ interface Line {
  */
 interface WrapLine {
     line: number;           //The line number
+    id: number;             //The line id
     height: number          //the height of the line
     width: number;          //lets cache the width for faster calculations
     top: number;            //cache the top to speed up display
     images: number;         //track loading images
     startOffset: number;    //the text start offset
-    startFragment: number;  //the starting fragment index
+    startFormat: number;    //the starting fragment index
     endOffset: number;      //the text end offset
-    endFragment: number;    //the ending fragment index
+    endFormat: number;      //the ending fragment index
     indent: boolean;        //is line indented
+    formatWidths: number[]  //format widths
+    hr: boolean             //is a horizontal rule line
 }
 
 /**
@@ -118,19 +128,22 @@ export class Display extends EventEmitter {
     private _background: HTMLElement;
     private _finder: Finder;
     private _maxView: number = 0;
+    private _maxViewHeight: number = 0;
 
     private _maxWidth: number = 0;
     private _maxHeight: number = 0;
     private _currentSelection: Selection = {
-        start: { x: null, y: null },
-        end: { x: null, y: null },
+        start: { x: null, y: null, lineID: null, lineOffset: null },
+        end: { x: null, y: null, lineID: null, lineOffset: null },
         scrollTimer: null,
         drag: false
     };
-    private _prevSelection = {
-        start: { x: null, y: null },
-        end: { x: null, y: null }
+    /*
+    private _prevSelection: OverlayRange = {
+        start: { x: null, y: null, lineID: null, lineOffset: null },
+        end: { x: null, y: null, lineID: null, lineOffset: null }
     };
+    */
     private _borderSize: Size = { width: 0, height: 0 };
     private _character: HTMLElement;
     private _viewRange: Range = { start: 0, end: 0 };
@@ -139,7 +152,7 @@ export class Display extends EventEmitter {
     private _lastMouse: MouseEvent;
     private _roundedRanges: boolean = true;
 
-    private _lines: Line[] = [];
+    private _lines: WrapLine[] = [];
 
     public scrollToEnd: boolean = true;
     private _maxLines: number = 5000;
@@ -148,11 +161,13 @@ export class Display extends EventEmitter {
     private _overlays: Overlays = {
         selection: []
     };
+    private _overlayRanges = {};
     private _VScroll: ScrollBar;
     private _HScroll: ScrollBar;
     private _updating: UpdateType = UpdateType.none;
     private _splitHeight: number = -1;
     private _wordWrap: boolean = false;
+    private _wrapAt: number = 0;
     private _indent: number = 4;
     private _timestamp: boolean = false;
     private _timestampFormat: string = '[[]MM-DD HH:mm:ss.SSS[]] ';
@@ -212,30 +227,28 @@ export class Display extends EventEmitter {
         this._model.on('add-line-done', data => { this.emit('add-line-done', data); });
         this._model.on('line-added', (data, noUpdate) => {
             const idx = this._model.lines.length - 1;
-            //t = this.calculateWrapLines(idx, 0, this._indent);
+            const t = this.calculateWrapLines(idx, 0, this._indent, (this._timestamp ? this._timestampWidth : 0));
             //track wrapped lines to line to make it easier ot lookup all wrapped lines and allow indexOf and other build in functions
-            //this._linesMap.set(idx, t);
-            this._lines.push({ height: 0, top: 0, width: 0, images: 0 });
-            const t = this.calculateSize(idx);
-            this._lines[idx].height = t.height;
-            this._lines[idx].width = t.width;
-            if (idx - 1 >= 0)
-                this._lines[idx].top = this._lines[idx - 1].top + this._lines[idx].height;
+            this._linesMap.set(this._model.getLineID(idx), t);
             if (data.formats[0].hr) {
+                t[0].hr = true;
                 this._maxWidth = Math.max(this._maxWidth, this._maxView);
                 this._maxHeight = Math.max(this._maxHeight, this._charHeight);
             }
             else {
-                this._maxWidth = Math.max(this._maxWidth, this._lines[idx].width);
-                this._maxHeight = Math.max(this._maxHeight, this._lines[idx].height);
+                this._maxWidth = Math.max(this._maxWidth, t[0].width);
+                this._maxHeight = Math.max(this._maxHeight, t[0].height);
             }
-            /*
             if (idx - 1 >= 0)
                 t[0].top = this._lines[idx - 1].top + this._lines[idx - 1].height;
-            for (let l = 1, ll = t.length; t < ll; t++)
+            for (let l = 1, ll = t.length; l < ll; l++) {
                 t[l].top = t[l - 1].top + t[l - 1].height;
+                this._maxWidth = Math.max(this._maxWidth, t[l].width);
+                this._maxHeight = Math.max(this._maxHeight, t[l].height);
+            }
             this._lines.push(...t);
-            */
+
+
             if (this.split) this.split.dirty = true;
             if (!noUpdate)
                 this.doUpdate(UpdateType.display);
@@ -301,6 +314,22 @@ export class Display extends EventEmitter {
     set wordWrap(value: boolean) {
         if (value === this._wordWrap) return;
         this._wordWrap = value;
+        this.doUpdate(UpdateType.calculateLines);
+    }
+
+    get wrapAt() { return this._wrapAt; }
+    set wrapAt(value: number) {
+        if (value === this._wrapAt) return;
+        this._wrapAt = value;
+        this.doUpdate(UpdateType.calculateLines);
+    }
+
+    get indent() { return this._indent; }
+    set indent(value: number) {
+        if (value === this._indent)
+            return;
+        this._indent = value;
+        this.doUpdate(UpdateType.calculateLines);
     }
 
     get enableColors() { return this._enableColors; }
@@ -339,7 +368,7 @@ export class Display extends EventEmitter {
     set roundedRanges(value: boolean) {
         if (value !== this._roundedRanges) {
             this._roundedRanges = value;
-            this.doUpdate(UpdateType.selection | UpdateType.overlays);
+            this.doUpdate(UpdateType.selection | UpdateType.overlays | UpdateType.scrollViewOverlays);
         }
     }
 
@@ -569,6 +598,10 @@ export class Display extends EventEmitter {
         return this._model.lines;
     }
 
+    get wrappedLines() {
+        return this._lines;
+    }
+
     constructor(display: string | JQuery | HTMLElement, options?);
     constructor(display?: any, options?: DisplayOptions) {
         super();
@@ -671,15 +704,17 @@ export class Display extends EventEmitter {
                 e.preventDefault();
                 e.cancelBubble = true;
                 const os = this._os;
-                if (e.pageX - os?.left > this._innerWidth)
+                if (e.pageX - os?.left > this._maxView)
                     return;
-                if (e.pageY - os?.top > this._innerHeight)
+                if (e.pageY - os?.top > this._maxViewHeight)
                     return;
                 this._currentSelection.drag = true;
+                /*
                 this._prevSelection = {
-                    start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
-                    end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
+                    start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset },
+                    end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset }
                 };
+                */
                 if (e.shiftKey) {
                     this._currentSelection.end = this.getLineOffset(e.pageX, e.pageY);
                     this.emit('selection-start');
@@ -700,7 +735,7 @@ export class Display extends EventEmitter {
             if (e.detail === 2) {
                 const o = this.getLineOffset(e.pageX, e.pageY);
                 if (o.y >= 0 && o.y < this._lines.length) {
-                    const line = this.lines[o.y].text;
+                    const line = this.getLineText(o.y);
                     const len = line.length;
                     if (o.x >= 0 || o.x < len) {
                         let sPos = o.x;
@@ -715,13 +750,15 @@ export class Display extends EventEmitter {
                             ePos++;
                         }
                         if (sPos >= 0 && ePos <= len) {
+                            /*
                             this._prevSelection = {
-                                start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
-                                end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
+                                start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset },
+                                end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset }
                             };
+                            */
                             this._currentSelection = {
-                                start: { x: sPos, y: o.y },
-                                end: { x: ePos, y: o.y },
+                                start: { x: sPos, y: o.y, lineID: this._lines[o.y].id, lineOffset: this._lines[o.y].startOffset + sPos },
+                                end: { x: ePos, y: o.y, lineID: this._lines[o.y].id, lineOffset: this._lines[o.y].startOffset + ePos },
                                 scrollTimer: null,
                                 drag: false
                             };
@@ -735,13 +772,15 @@ export class Display extends EventEmitter {
             else if (e.detail === 3) {
                 const o = this.getLineOffset(e.pageX, e.pageY);
                 if (o.y >= 0 && o.y < this._lines.length) {
+                    /*
                     this._prevSelection = {
-                        start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
-                        end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
+                        start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset },
+                        end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset }
                     };
+                    */
                     this._currentSelection = {
-                        start: { x: 0, y: o.y },
-                        end: { x: this.lines[o.y].text.length, y: o.y },
+                        start: { x: 0, y: o.y, lineID: this._lines[o.y].id, lineOffset: this._lines[o.y].startOffset },
+                        end: { x: this.getLineText(o.y).length, y: o.y, lineID: this._lines[o.y].id, lineOffset: this._lines[o.y].startOffset + this.getLineText(o.y).length },
                         scrollTimer: null,
                         drag: false
                     };
@@ -771,10 +810,12 @@ export class Display extends EventEmitter {
             if (this._currentSelection.drag) {
                 this._lastMouse = e;
                 this._currentSelection.scrollTimer = setInterval(() => {
+                    /*
                     this._prevSelection = {
-                        start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
-                        end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
+                        start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset },
+                        end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset }
                     };
+                    */
                     /// pull as long as you can scroll either direction
 
                     if (!this._lastMouse) {
@@ -796,7 +837,7 @@ export class Display extends EventEmitter {
                         if (this._lines.length === 0)
                             this._currentSelection.end.x = 0;
                         else if (this._currentSelection.end.y >= this._lines.length)
-                            this._currentSelection.end.x = this.lines[this.lines.length - 1].text.length;
+                            this._currentSelection.end.x = this.getLineText(this._lines.length - 1).length;
                     }
                     else
                         y = 0;
@@ -814,13 +855,19 @@ export class Display extends EventEmitter {
                         if (this._lines.length === 0)
                             this._currentSelection.end.x = 0;
                         else
-                            this._currentSelection.end.x = this.lines[this.lines.length - 1].text.length;
+                            this._currentSelection.end.x = this.getLineText(this.lines.length - 1).length;
                     }
                     else {
                         x = 0;
                         this._currentSelection.end.x = 0;
                     }
-
+                    if (this._currentSelection.end.y >= this._lines.length) {
+                        this._currentSelection.end.lineID = this._lines[this._lines.length - 1].id;
+                        this._currentSelection.end.lineOffset = this._lines[this._lines.length - 1].endOffset;
+                    }
+                    else {
+                        this._currentSelection.end.lineID = this._lines[this._currentSelection.end.y].id;
+                    }
                     if (x === 0 && y === 0)
                         return;
 
@@ -834,10 +881,14 @@ export class Display extends EventEmitter {
 
         this._el.addEventListener('contextmenu', (e: ContextEvent) => {
             const o = this.getLineOffset(e.pageX, e.pageY);
-            if (o.y >= 0 && o.y < this._lines.length)
-                e.line = this.lines[o.y].text;
-            else
+            if (o.y >= 0 && o.y < this._lines.length) {
+                e.line = this.getLineText(o.y, true);
+                e.wrappedLine = this.getLineText(o.y);
+            }
+            else {
                 e.line = '';
+                e.wrappedLine = this.getLineText(o.y);
+            }
             e.word = this.getWordFromPosition(o);
             e.url = this.getUrlFromPosition(o);
             this.emit('context-menu', e);
@@ -1045,7 +1096,7 @@ export class Display extends EventEmitter {
             }
 
             if ((this._updating & UpdateType.selectionChanged) === UpdateType.selectionChanged) {
-                this._prevSelection.end = this._currentSelection.end;
+                //this._prevSelection.end = this._currentSelection.end;
                 this._currentSelection.end = this.getLineOffset(this._lastMouse.pageX, this._lastMouse.pageY);
                 this.emit('selection-changed');
                 this._updating &= ~UpdateType.selectionChanged;
@@ -1058,8 +1109,18 @@ export class Display extends EventEmitter {
                 this.updateOverlays();
                 this._updating &= ~UpdateType.overlays;
             }
+            if ((this._updating & UpdateType.calculateLines) === UpdateType.calculateLines) {
+                this.update();
+                this.reCalculateLines();
+                if (this.split) this.split.dirty = true;
+                this.doUpdate(UpdateType.display | UpdateType.scrollbars);
+                this._updating &= ~UpdateType.calculateLines;
+                this._updating &= ~UpdateType.update;
+            }
             if ((this._updating & UpdateType.update) === UpdateType.update) {
                 this.update();
+                if (this._wordWrap && !this._wrapAt)
+                    this.reCalculateLines();
                 this.updateScrollbars();
                 this._updating &= ~UpdateType.update;
                 this._updating &= ~UpdateType.scrollbars;
@@ -1230,8 +1291,8 @@ export class Display extends EventEmitter {
         this._view.innerHTML = null;
         this._background.innerHTML = null;
         this._currentSelection = {
-            start: { x: null, y: null },
-            end: { x: null, y: null },
+            start: { x: null, y: null, lineID: null, lineOffset: null },
+            end: { x: null, y: null, lineID: null, lineOffset: null },
             drag: false,
             scrollTimer: null
         };
@@ -1304,7 +1365,7 @@ export class Display extends EventEmitter {
     public updateView() {
         const w = (this._timestamp ? this._timestampWidth : 0) + this._maxWidth;
         let l = this._lines.length;
-        if (this._hideTrailingEmptyLine && l && this.lines[l - 1].text.length === 0)
+        if (this._hideTrailingEmptyLine && l && this.getLineText(l - 1).length === 0)
             l--;
         const h = l * this._charHeight;
         const mw = '' + (w === 0 ? 0 : Math.max(w, this._maxView));
@@ -1383,7 +1444,6 @@ export class Display extends EventEmitter {
         if (l === 0) return;
         this._viewCache = {};
         if (this.split) this.split.viewCache = {};
-        /*
         if (line === 0) {
             this._lines[line].top = 0;
             line++;
@@ -1394,7 +1454,6 @@ export class Display extends EventEmitter {
             //this._backgroundLines[line] = this._backgroundLines[line].replace(/top:\d+px/, `top:${line * this._charHeight}px`);
             line++;
         }
-        */
     }
 
     get WindowSize(): Size {
@@ -1416,90 +1475,41 @@ export class Display extends EventEmitter {
     }
 
     public removeLine(line: number) {
-        if (line < 0 || line >= this._lines.length) return;
+        if (line < 0 || line >= this.lines.length) return;
         this.emit('line-removed', line, this.lines[line].text);
+        const lineID = this._model.getLineID(line);
+        const wrapIndex = this._lines.findIndex(l => l.id === lineID);
+        let amt = 0;
+        for (let idx = wrapIndex, ll = this._lines.length; idx < ll; idx++) {
+            if (this._lines[idx].id != lineID) break;
+            amt++;
+            if (this._viewCache[idx])
+                delete this._viewCache[idx];
+            if (this.split && this.split.viewCache[idx])
+                delete this.split.viewCache[idx];
+        }
+        this._lines.splice(wrapIndex, amt);
         this._model.removeLine(line);
-        this._lines.splice(line, 1);
-        this._linesMap.delete(line);
-        if (this._viewCache[line])
-            delete this._viewCache[line];
-        if (this.split && this.split.viewCache[line])
-            delete this.split.viewCache[line];
+        this._linesMap.delete(lineID);
 
         if (!this._currentSelection.drag) {
-            if (this._currentSelection.start.y === line && this._currentSelection.end.y === line) {
-                this._currentSelection.start.y = null;
-                this._currentSelection.start.x = null;
-                this._currentSelection.end.y = null;
-                this._currentSelection.end.x = null;
-            }
-            else if (this._currentSelection.start.y === line) {
-                if (this._currentSelection.start.y > this._currentSelection.end.y) {
-                    this._currentSelection.start.y--;
-                    if (this._currentSelection.start.y >= 0 && this._currentSelection.start.y < this._lines.length)
-                        this._currentSelection.start.x = this.lines[this._currentSelection.start.y].text.length;
-                    else
-                        this._currentSelection.start.x = 0;
-                }
-                else {
-                    this._currentSelection.start.y++;
-                    this._currentSelection.start.x = 0;
-                }
-            }
-            else if (this._currentSelection.end.y === line) {
-                if (this._currentSelection.start.y > this._currentSelection.end.y) {
-                    this._currentSelection.end.y++;
-                    this._currentSelection.end.x = 0;
-                }
-                else {
-                    this._currentSelection.end.y--;
-                    if (this._currentSelection.end.y >= 0 && this._currentSelection.end.y < this._lines.length)
-                        this._currentSelection.end.x = this.lines[this._currentSelection.end.y].text.length;
-                    else
-                        this._currentSelection.end.x = 0;
-                }
-            }
-        }
-        let ol;
-        for (ol in this._overlays) {
-            if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0 || line >= this._overlays[ol].length)
-                continue;
-            this._overlays[ol].splice(line, 1);
-        }
-        if (this.split) this.split.dirty = true;
-        this.updateTops(line);
-        this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.overlays | UpdateType.selection);
-    }
-
-    public removeLines(line: number, amt: number) {
-        if (line < 0 || line >= this._lines.length) return;
-        if (amt < 1) amt = 1;
-        this.emit('lines-removed', line, this._lines.slice(line, amt));
-        this._model.removeLines(line, amt);
-        this._lines.splice(line, amt);
-        for (let l = line; l < amt; l++)
-            this._linesMap.delete(l);
-        for (let a = 0; a < amt; a++) {
-            if (this._viewCache[line + a])
-                delete this._viewCache[line + a];
-            if (this.split && this.split.viewCache[line + a])
-                delete this.split.viewCache[line + a];
-        }
-
-        if (!this._currentSelection.drag) {
-            for (let l = line; l < line + amt; l++) {
+            for (let l = wrapIndex; l < wrapIndex + amt; l++) {
                 if (this._currentSelection.start.y >= l && this._currentSelection.end.y >= l) {
                     this._currentSelection.start.y = null;
                     this._currentSelection.start.x = null;
+                    this._currentSelection.start.lineID = null;
+                    this._currentSelection.start.lineOffset = null;
                     this._currentSelection.end.y = null;
                     this._currentSelection.end.x = null;
+                    this._currentSelection.end.lineID = null;
+                    this._currentSelection.end.lineOffset = null;
                     break;
                 }
                 else if (this._currentSelection.start.y === l) {
                     if (this._currentSelection.start.y > this._currentSelection.end.y) {
                         this._currentSelection.start.y--;
                         if (this._currentSelection.start.y >= 0 && this._currentSelection.start.y < this._lines.length)
-                            this._currentSelection.start.x = this.lines[this._currentSelection.start.y].text.length;
+                            this._currentSelection.start.x = this.getLineText(this._currentSelection.start.y).length;
                         else
                             this._currentSelection.start.x = 0;
                     }
@@ -1516,21 +1526,111 @@ export class Display extends EventEmitter {
                     else {
                         this._currentSelection.end.y--;
                         if (this._currentSelection.end.y >= 0 && this._currentSelection.end.y < this._lines.length)
-                            this._currentSelection.end.x = this.lines[this._currentSelection.end.y].text.length;
+                            this._currentSelection.end.x = this.getLineText(this._currentSelection.end.y).length;
                         else
                             this._currentSelection.end.x = 0;
                     }
                 }
+            }
+            if (this._lines.length && this._currentSelection.start.y !== null && this._currentSelection.start.y >= 0 && this._currentSelection.start.y < this._lines.length) {
+                this._currentSelection.start.lineID = this._lines[this._currentSelection.start.y].id;
+                this._currentSelection.start.lineOffset = this._currentSelection.start.x + this._lines[this._currentSelection.start.y].startOffset;
+            }
+            if (this._lines.length && this._currentSelection.end.y !== null && this._currentSelection.end.y >= 0 && this._currentSelection.end.y < this._lines.length) {
+                this._currentSelection.end.lineID = this._lines[this._currentSelection.end.y].id;
+                this._currentSelection.end.lineOffset = this._currentSelection.end.x + this._lines[this._currentSelection.end.y].startOffset;
             }
         }
         let ol;
         for (ol in this._overlays) {
             if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0 || line >= this._overlays[ol].length)
                 continue;
-            this._overlays[ol].splice(line, amt);
+            this._overlays[ol].splice(wrapIndex, amt);
         }
         if (this.split) this.split.dirty = true;
-        this.updateTops(line);
+        this.updateTops(wrapIndex);
+        this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.overlays | UpdateType.selection);
+    }
+
+    public removeLines(line: number, amt: number) {
+        if (line < 0 || line >= this.lines.length) return;
+        if (amt < 1) amt = 1;
+        this.emit('lines-removed', line, this._lines.slice(line, amt));
+        const lineID = this._model.getLineID(line);
+        const wrapIndex = this._lines.findIndex(l => l.id === lineID);
+        let wrapAmt = 0;
+        //loop map and count wrapped lines
+        for (let l = line; l < amt; l++) {
+            const dLine = this._model.getLineID(line);
+            wrapAmt += this._linesMap.get(dLine).length;
+            this._linesMap.delete(dLine);
+        }
+        this._lines.splice(wrapIndex, wrapAmt);
+        this._model.removeLines(line, amt);
+        for (let a = 0; a < wrapAmt; a++) {
+            if (this._viewCache[wrapIndex + a])
+                delete this._viewCache[wrapIndex + a];
+            if (this.split && this.split.viewCache[wrapIndex + a])
+                delete this.split.viewCache[wrapIndex + a];
+        }
+
+        if (!this._currentSelection.drag) {
+            for (let l = wrapIndex; l < wrapIndex + wrapAmt; l++) {
+                if (this._currentSelection.start.y >= l && this._currentSelection.end.y >= l) {
+                    this._currentSelection.start.y = null;
+                    this._currentSelection.start.x = null;
+                    this._currentSelection.start.lineID = null;
+                    this._currentSelection.start.lineOffset = null;
+                    this._currentSelection.end.y = null;
+                    this._currentSelection.end.x = null;
+                    this._currentSelection.end.lineID = null;
+                    this._currentSelection.end.lineOffset = null;
+                    break;
+                }
+                else if (this._currentSelection.start.y === l) {
+                    if (this._currentSelection.start.y > this._currentSelection.end.y) {
+                        this._currentSelection.start.y--;
+                        if (this._currentSelection.start.y >= 0 && this._currentSelection.start.y < this._lines.length)
+                            this._currentSelection.start.x = this.getLineText(this._currentSelection.start.y).length;
+                        else
+                            this._currentSelection.start.x = 0;
+                    }
+                    else {
+                        this._currentSelection.start.y++;
+                        this._currentSelection.start.x = 0;
+                    }
+                }
+                else if (this._currentSelection.end.y === l) {
+                    if (this._currentSelection.start.y > this._currentSelection.end.y) {
+                        this._currentSelection.end.y++;
+                        this._currentSelection.end.x = 0;
+                    }
+                    else {
+                        this._currentSelection.end.y--;
+                        if (this._currentSelection.end.y >= 0 && this._currentSelection.end.y < this._lines.length)
+                            this._currentSelection.end.x = this.getLineText(this._currentSelection.end.y).length;
+                        else
+                            this._currentSelection.end.x = 0;
+                    }
+                }
+            }
+            if (this._lines.length && this._currentSelection.start.y !== null && this._currentSelection.start.y >= 0 && this._currentSelection.start.y < this._lines.length) {
+                this._currentSelection.start.lineID = this._lines[this._currentSelection.start.y].id;
+                this._currentSelection.start.lineOffset = this._currentSelection.start.x + this._lines[this._currentSelection.start.y].startOffset;
+            }
+            if (this._lines.length && this._currentSelection.end.y !== null && this._currentSelection.end.y >= 0 && this._currentSelection.end.y < this._lines.length) {
+                this._currentSelection.end.lineID = this._lines[this._currentSelection.end.y].id;
+                this._currentSelection.end.lineOffset = this._currentSelection.end.x + this._lines[this._currentSelection.end.y].startOffset;
+            }
+        }
+        let ol;
+        for (ol in this._overlays) {
+            if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0 || line >= this._overlays[ol].length)
+                continue;
+            this._overlays[ol].splice(wrapIndex, wrapAmt);
+        }
+        if (this.split) this.split.dirty = true;
+        this.updateTops(wrapIndex);
         this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.overlays | UpdateType.selection);
     }
 
@@ -1542,16 +1642,8 @@ export class Display extends EventEmitter {
         //only update if something changed
         if (!this._model.colorSubStringByLine(idx, fore, back, start, end, style))
             return;
-        //clear cache
-        if (this._viewCache[idx])
-            delete this._viewCache[idx];
-        //rebuild widths for new blocks/old blocks as needed
-        this.calculateSize(idx);
-        //const t = this.calculateSize(idx);
-        //this._lines[idx].width = t.width;
-        //this.calculateWrapLines(idx, 0, this._indent);
-        //this._lines.push(...this.calculateWrapLines(idx, 0, this._indent));
-        this.doUpdate(UpdateType.view);
+        //rebuild wraps in case a format was removed
+        this.reCalculateWrapLines(idx, 0, this._indent, (this._timestamp ? this._timestampWidth : 0));
     }
 
     public removeStyleSubStrByLine(idx: number, style: FontStyle, start?: number, len?: number) {
@@ -1563,14 +1655,8 @@ export class Display extends EventEmitter {
         //only update if something changed
         if (!this._model.removeStyleSubStringByLine(idx, style, start, end))
             return;
-        //clear cache
-        if (this._viewCache[idx])
-            delete this._viewCache[idx];
-        //rebuild widths for new blocks/old blocks as needed
-        this.calculateSize(idx);
-        //const t = this.calculateSize(idx);
-        //this._lines[idx].width = t.width;        
-        this.doUpdate(UpdateType.view);
+        //rebuild wraps in case a format was removed
+        this.reCalculateWrapLines(idx, 0, this._indent, (this._timestamp ? this._timestampWidth : 0));
     }
 
     public highlightSubStrByLine(idx: number, start?: number, len?: number) {
@@ -1582,14 +1668,8 @@ export class Display extends EventEmitter {
         //only update if something changed
         if (!this._model.highlightStyleSubStringByLine(idx, start, end, color))
             return;
-        //clear cache
-        if (this._viewCache[idx])
-            delete this._viewCache[idx];
-        //rebuild widths for new blocks/old blocks as needed
-        this.calculateSize(idx);
-        //const t = this.calculateSize(idx);
-        //this._lines[idx].width = t.width;     
-        this.doUpdate(UpdateType.view);
+        //rebuild wraps in case a format was removed
+        this.reCalculateWrapLines(idx, 0, this._indent, (this._timestamp ? this._timestampWidth : 0));
     }
 
     public SetColor(code: number, color) {
@@ -1625,16 +1705,24 @@ export class Display extends EventEmitter {
             return;
         if (this.lines.length > this._maxLines) {
             const amt = this.lines.length - this._maxLines;
+            const lastLineID = this._model.getLineID(amt);
+            //let wrapAmt = this._lines.findIndex(l => l.id == lastLineID);
+            const _lines = this._lines;
+            let wrapAmt = 0;
+            const _linesLength = _lines.length;
+            for (wrapAmt = 0; wrapAmt < _linesLength; wrapAmt++) {
+                if (_lines[wrapAmt].id >= lastLineID) break;
+            }
+            this._lines.splice(0, wrapAmt);
             this._model.removeLines(0, amt);
-            this._lines.splice(0, amt);
             if (this.hasSelection) {
                 this._currentSelection.start.y -= amt;
                 this._currentSelection.end.y -= amt;
 
                 if (this._currentSelection.start.y < 0 && this._currentSelection.end.y < 0) {
                     this._currentSelection = {
-                        start: { x: null, y: null },
-                        end: { x: null, y: null },
+                        start: { x: null, y: null, lineID: null, lineOffset: null },
+                        end: { x: null, y: null, lineID: null, lineOffset: null },
                         scrollTimer: null,
                         drag: false
                     };
@@ -1659,11 +1747,11 @@ export class Display extends EventEmitter {
 
             let m = 0;
             let mh = 0;
-            const lines = this.lines;
+            const lines = this._lines;
             const ll = lines.length;
             const ww = this._maxView;
             for (let l = 0; l < ll; l++) {
-                if (lines[l].formats[0].hr) {
+                if (lines[l].hr) {
                     m = Math.max(m, ww);
                     mh = Math.max(mh, this._charHeight);
                 }
@@ -1683,9 +1771,9 @@ export class Display extends EventEmitter {
     }
 
     //TODO add font support, as different blocks of text could have different font formats, need to not just measure with but measure based on format block data
-    public getLineOffset(pageX, pageY) {
+    public getLineOffset(pageX, pageY): Point {
         if (this._lines.length === 0)
-            return { x: 0, y: 0 };
+            return { x: 0, y: 0, lineID: 0, lineOffset: 0 };
         if (this._timestamp)
             pageX -= this._timestampWidth;
         const os = this._os;
@@ -1700,19 +1788,25 @@ export class Display extends EventEmitter {
             y += this._VScroll.position;
         y = Math.trunc(y / this._charHeight);
 
-        const xPos = (pageX - os.left) + this._HScroll.position;
+        let xPos = (pageX - os.left) + this._HScroll.position;
         let x = Math.trunc(xPos / this._charWidth);
+        let id = 0;
+        let offset = 0;
         if (y >= 0) {
             let text;
             let line = y;
-            if (y < this._lines.length)
-                text = this.lines[y].text.replace(/ /g, '\u00A0');
-            else {
-                text = this.lines[this.lines.length - 1].text.replace(/ /g, '\u00A0');
+            if (y >= this._lines.length)
                 line = this._lines.length - 1;
+            //if indented offset by the indent width
+            if (this._lines[line].indent) {
+                xPos -= this._indent * this._charWidth;
+                x = Math.trunc(xPos / this._charWidth);
             }
+            text = this.getLineText(y).replace(/ /g, '\u00A0');
             const tl = text.length;
-            let w = Math.ceil(this.lineWidth(line, 0, x));
+            let w = Math.ceil(this.wrapLineWidth(line, 0, x));
+            id = this._model.getLineFromID(this._lines[line].id);
+            offset = this._lines[line].startOffset;
             //let w = Math.ceil(this.textWidth(text.substr(0, x)));
             if (w > xPos && xPos > 0) {
                 while (w > xPos && x > 0) {
@@ -1720,7 +1814,7 @@ export class Display extends EventEmitter {
                     //unicode surrogate pair check
                     while (x > 0 && text.charCodeAt(x) >= 0xD800 && text.charCodeAt(x) <= 0xDBFF)
                         x--;
-                    w = Math.ceil(this.lineWidth(line, 0, x));
+                    w = Math.ceil(this.wrapLineWidth(line, 0, x));
                 }
                 x++;
                 //unicode modifier check
@@ -1733,7 +1827,7 @@ export class Display extends EventEmitter {
                     //unicode modifier check
                     while (tl > x + 1 && this.isUnicodeModifierCode(text.charCodeAt(x)))
                         x++;
-                    w = Math.ceil(this.lineWidth(line, 0, x));
+                    w = Math.ceil(this.wrapLineWidth(line, 0, x));
                 }
                 if (w > xPos) {
                     x--;
@@ -1750,7 +1844,7 @@ export class Display extends EventEmitter {
                     //unicode modifier check
                     while (tl > x + 1 && this.isUnicodeModifierCode(text.charCodeAt(x)))
                         x++;
-                    w = Math.ceil(this.lineWidth(line, 0, x));
+                    w = Math.ceil(this.wrapLineWidth(line, 0, x));
                 }
             }
             //unicode modifier check
@@ -1759,12 +1853,37 @@ export class Display extends EventEmitter {
                     x--;
             }
         }
-        return { x: x, y: y };
+        return { x: x, y: y, lineID: id, lineOffset: offset + x };
+    }
+
+    public getWrapOffset(line, offset) {
+        if (line < 0 || line >= this._model.lines.length) return { x: 0, y: 0 };
+        const lineID = this._model.getLineID(line);
+        const t = this._linesMap.get(lineID);
+        for (let l = 0, ll = t.length; l < ll; l++) {
+            if (offset >= t[l].startOffset && offset < t[l].endOffset)
+                return { x: offset - t[l].startOffset, y: this._lines.indexOf(t[l]) };
+            else if (offset === t[l].endOffset)
+                return { x: offset - t[l].startOffset, y: this._lines.indexOf(t[l]) };
+        }
+        return { x: offset - t[t.length - 1].startOffset, y: this._lines.indexOf(t[t.length - 1]) };
+    }
+
+    public getWrapOffsetByLineID(lineID, offset) {
+        const t = this._linesMap.get(lineID);
+        if (!t) return this._model.getLineFromID(lineID);
+        for (let l = 0, ll = t.length; l < ll; l++) {
+            if (offset >= t[l].startOffset && offset < t[l].endOffset)
+                return { x: offset - t[l].startOffset, y: this._lines.indexOf(t[l]) };
+            else if (offset === t[l].endOffset)
+                return { x: offset - t[l].startOffset, y: this._lines.indexOf(t[l]) };
+        }
+        return { x: offset - t[t.length - 1].startOffset, y: this._lines.indexOf(t[t.length - 1]) };
     }
 
     public getWordFromPosition(position) {
         if (position.y >= 0 && position.y < this._lines.length) {
-            const line = this.lines[position.y].text;
+            const line = this.getLineText(position.y);
             const len = line.length;
             if (position.x >= 0 || position.x < len) {
                 let sPos = position.x;
@@ -1787,10 +1906,12 @@ export class Display extends EventEmitter {
 
     public getUrlFromPosition(position) {
         if (position.y >= 0 && position.y < this._lines.length) {
-            const line = this.lines[position.y].text;
+            const line = this.getLineText(position.y, true);
             const len = line.length;
-            if (position.x >= 0 || position.x < len) {
-                const formats = this.lines[position.y].formats;
+            const idx = this._model.getLineFromID(this._lines[position.y].id);
+            const x = position.x + this._lines[position.y].startOffset;
+            if (x >= 0 || x < len) {
+                const formats = this.lines[idx].formats;
                 const fl = formats.length;
                 let l;
                 for (l = 0; l < fl; l++) {
@@ -1814,7 +1935,7 @@ export class Display extends EventEmitter {
                     }
                     if (l >= fl)
                         end = line.length;
-                    if (position.x >= format.offset && position.x < end) {
+                    if (x >= format.offset && x < end) {
                         return format.href;
                     }
                 }
@@ -1899,16 +2020,80 @@ export class Display extends EventEmitter {
         return parseInt(window.getComputedStyle(this._ruler).fontSize, 10);
     }
 
-    private lineWidth(line, start?, len?) {
-        if (line < 0 || line >= this._lines.length)
+    private wrapLineWidth(idx, start?, len?) {
+        if (idx < 0 || idx >= this._lines.length)
             return 0;
         if (start === undefined || start === null)
-            return this._lines[line].width;
+            return this._lines[idx].width;
+        if (len === undefined || len === null || len > this.getLineText(idx).length)
+            len = this.getLineText(idx).length;
+        if (len - start <= 0) return 0;
+        if (start === 0 && len >= this.getLineText(idx).length)
+            return this._lines[idx].width;
+        const text = this.getLineText(idx).replace(/ /g, '\u00A0');
+        const line = this._model.getLineFromID(this._lines[idx].id);
+
+        const formats = this.lines[line].formats;
+        const fLen = formats.length;
+        const tl = text.length;
+        const endFormat = this._lines[idx].endFormat
+        const startOffset = this._lines[idx].startOffset;
+        let f = this._lines[idx].startFormat;
+        let end;
+        let font;
+        let offset;
+        let width = 0;
+        for (; f <= endFormat; f++) {
+            //no width so ignore these blocks
+            if (!formats[f].width || formats[f].formatType === FormatType.LinkEnd || formats[f].formatType === FormatType.MXPLinkEnd || formats[f].formatType === FormatType.MXPSendEnd)
+                continue;
+            //TODO not supported in width calculations at the moment
+            if (formats[f].align === 'right')
+                continue;
+            //find end
+            if (f < fLen - 1)
+                end = formats[f + 1].offset - startOffset;
+            else
+                end = tl;
+            //not in this block so move to next
+            if (start >= end)
+                continue;
+            offset = formats[f].offset - startOffset;
+            //block is between start/end so whole width and move on
+            if (offset >= start && len >= end) {
+                width += formats[f].width + (formats[f].marginWidth || 0);
+                continue;
+            }
+            //get font
+            if (formats[f].font || formats[f].size)
+                font = `${formats[f].size || this._character.style.fontSize} ${formats[f].font || this._character.style.fontFamily}`;
+            else
+                font = 0;
+            if (offset > start)
+                start = offset;
+            if (len < end)
+                end = len;
+            //if unicode or non standard font calculate width
+            if (formats[f].unicode || font)
+                width += this.textWidth(text.substring(start, end), font, formats[f].style);
+            else
+                width += text.substring(start, end).length * this._charWidth;
+            //len is in block so quit
+            if (len <= end)
+                break;
+        }
+        return width;
+    }
+
+    //get line width of full non wrapped line
+    private lineWidth(line, start?, len?) {
+        if (line < 0 || line >= this.lines.length)
+            return 0;
+        if (start === undefined || start === null)
+            start = 0;
         if (len === undefined || len === null || len > this.lines[line].text.length)
             len = this.lines[line].text.length;
         if (len - start <= 0) return 0;
-        if (start === 0 && len >= this.lines[line].text.length)
-            return this._lines[line].width;
         const text = this.lines[line].text.replace(/ /g, '\u00A0');
         const formats = this.lines[line].formats;
         const fLen = formats.length;
@@ -1960,172 +2145,18 @@ export class Display extends EventEmitter {
         return width;
     }
 
-    private calculateSize(idx, force?: boolean) {
-        if (idx === undefined)
-            idx = this.lines.length - 1;
-        const text = this.lines[idx].text.replace(/ /g, '\u00A0');
-        const formats = this.lines[idx].formats;
-        let offset = 0;
-        let height = 0;
-        const len = formats.length;
-        const cw = this._charWidth;
-        const id = this._model.getLineID(idx);
-        let width = 0;
-        let font: any = 0;
-        for (let f = 0; f < len; f++) {
-            const format = formats[f];
-            if (force) {
-                format.width = 0;
-                format.height = 0;
-            }
-            let nFormat;
-            let end;
-            let eText;
-            if (f < len - 1) {
-                nFormat = formats[f + 1];
-                //skip empty blocks
-                if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
-                    continue;
-                end = nFormat.offset;
-            }
-            else
-                end = text.length;
-            offset = format.offset;
-            switch (format.formatType) {
-                case FormatType.Normal:
-                    eText = text.substring(offset, end);
-                    font = 0;
-                    /*
-                    if (format.font || format.size) {
-                        height = (Math.max(height, format.height = format.height || this.textHeight(eText, format.font, format.size)));
-                        format.width = format.width || this.textWidth(eText, font = `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`);
-                    }
-                    else */
-                    if (format.unicode)
-                        format.width = format.width || this.textWidth(eText, 0, format.style);
-                    else
-                        format.width = format.width || eText.length * cw;
-                    break;
-                case FormatType.Link:
-                case FormatType.MXPLink:
-                case FormatType.MXPSend:
-                case FormatType.MXPExpired:
-                    if (end - offset === 0) continue;
-                    eText = text.substring(offset, end);
-                    if (format.unicode || font)
-                        format.width = format.width || this.textWidth(eText, font, format.style);
-                    else
-                        format.width = format.width || eText.length * cw;
-                    break;
-                case FormatType.Image:
-                    width += format.marginWidth || 0;
-                    if (!format.width) {
-                        const img = new Image();
-                        eText = '';
-                        if (format.url.length > 0) {
-                            eText += format.url;
-                            if (!format.url.endsWith('/'))
-                                eText += '/';
-                        }
-                        if (format.t.length > 0) {
-                            eText += format.t;
-                            if (!format.t.endsWith('/'))
-                                eText += '/';
-                        }
-                        eText += format.name;
-                        img.src = eText;
-                        img.dataset.id = '' + id;
-                        img.dataset.f = '' + f;
-                        this._el.appendChild(img);
-                        Object.assign(img.style, {
-                            position: 'absolute',
-                            top: (this._innerWidth + 100) + 'px'
-                        });
-                        if (format.w.length > 0 && format.h.length > 0) {
-                            Object.assign(img.style, {
-                                width: formatUnit(format.w, this._charWidth),
-                                height: formatUnit(format.h, this._charHeight)
-                            });
-                        }
-                        else if (format.w.length > 0)
-                            img.style.width = formatUnit(format.w, this._charWidth);
-                        else if (format.h.length > 0)
-                            img.style.height = formatUnit(format.h, this._charHeight);
-                        const bounds = img.getBoundingClientRect();
-                        if (format.w.length > 0)
-                            format.width = bounds.width || img.width;
-                        if (format.h.length > 0)
-                            format.height = bounds.height || img.height;
-                        format.marginHeight = 0;
-                        format.marginWidth = 0;
-                        if (format.hspace.length > 0 && format.vspace.length > 0) {
-                            img.style.marginLeft = formatUnit(format.hspace, this._charWidth);
-                            img.style.marginTop = formatUnit(format.vspace, this._charHeight);
-                            const styles = getComputedStyle(img);
-                            format.marginHeight = parseFloat(styles.marginTop) * 2;
-                            format.marginWidth = parseFloat(styles.marginLeft) * 2;
-                        }
-                        else if (format.hspace.length > 0) {
-                            img.style.marginLeft = formatUnit(format.hspace, this._charWidth);
-                            const styles = getComputedStyle(img);
-                            format.marginWidth = parseFloat(styles.marginLeft) * 2;
-                        }
-                        else if (format.vspace.length > 0) {
-                            img.style.marginTop = formatUnit(format.vspace, this._charHeight);
-                            const styles = getComputedStyle(img);
-                            format.marginHeight = parseFloat(styles.marginTop) * 2;
-                        }
-                        //only load if height or width missing
-                        if (!format.height || !format.width) {
-                            this._lines[idx].images++;
-                            img.onload = () => {
-                                const lIdx = this._model.getLineFromID(+img.dataset.id);
-                                if (lIdx === -1 || lIdx >= this.lines.length) return;
-                                this._lines[lIdx].images--;
-                                const fIdx = +img.dataset.f;
-                                const fmt = this.lines[lIdx].formats[fIdx];
-                                const bounds = img.getBoundingClientRect();
-                                fmt.width = bounds.width || img.width;
-                                fmt.height = bounds.height || img.height;
-                                this._el.removeChild(img);
-                                if (this._viewCache[lIdx])
-                                    delete this._viewCache[lIdx];
-                                if (this._lines[lIdx].images !== 0) return;
-                                const t = this.calculateSize(lIdx);
-                                this._lines[lIdx].width = t.width;
-                                this._lines[lIdx].height = t.height;
-                                this.updateTops(lIdx);
-                                if (lIdx >= this._viewRange.start && lIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._model.busy) {
-                                    if (this.split) this.split.dirty = true;
-                                    this.doUpdate(UpdateType.display);
-                                }
-                            };
-                        }
-                        else
-                            this._el.removeChild(img);
-                    }
-                    if (format.marginHeight)
-                        height = Math.max(height, format.height + format.marginHeight);
-                    else
-                        height = Math.max(height, format.height || 0);
-                    break;
-            }
-            width += format.width || 0;
-        }
-        return { width: width, height: this._charHeight };
-    }
-
     public clearOverlay(type?: string) {
         if (!type)
             type = 'default';
         if (!this._overlays[type] || this._overlays[type].length === 0) return;
         this._overlays[type] = [];
+        delete this._overlayRanges[type];
         if (this.split) this.split.dirty = true;
         this.doUpdate(UpdateType.overlays);
     }
 
     //TODO add font support, as different blocks of text could have different font formats, need to not just measure with but measure based on format block data
-    public addOverlays(ranges: OverlayRange[], cls?: string, type?: string) {
+    public addOverlays(ranges: OverlayRange[], rangeCls?: string, type?: string) {
         let s;
         let e;
         let sL;
@@ -2136,12 +2167,13 @@ export class Display extends EventEmitter {
         const rl = ranges.length;
         if (!type)
             type = 'default';
-        if (!cls || cls.length === 0)
-            cls = 'overlay-default';
+        if (!rangeCls || rangeCls.length === 0)
+            rangeCls = 'overlay-default';
         this._overlays[type] = [];
         const fl = Math.trunc;
         const mw = Math.max((this._timestamp ? this._timestampWidth : 0) + this._maxWidth, this._maxView);
-        const len = this.lines.length;
+        const len = this._lines.length;
+        this._overlayRanges[type] = { ranges: ranges, cls: rangeCls };
         for (r = 0; r < rl; r++) {
             range = ranges[r];
             if (range.start.y > range.end.y) {
@@ -2158,6 +2190,11 @@ export class Display extends EventEmitter {
             }
             else if (range.start.x === range.end.x) {
                 //empty range
+                if (this.split) {//} && (range.start.y >= this.split._viewRange.start)) {
+                    this.split.dirty = true;
+                    this.doUpdate(UpdateType.scrollViewOverlays);
+                }
+                this.doUpdate(UpdateType.overlays);
                 continue;
             }
             else {
@@ -2166,7 +2203,7 @@ export class Display extends EventEmitter {
                 if (sL < 0 || sL >= this._lines.length)
                     continue;
 
-                if (this.lines[sL].formats[0].hr) {
+                if (this._lines[sL].hr) {
                     s = 0;
                     e = mw;
                 }
@@ -2174,32 +2211,35 @@ export class Display extends EventEmitter {
                     s = Math.min(range.start.x, range.end.x);
                     e = Math.max(range.start.x, range.end.x);
                     if (s < 0) s = 0;
-                    if (e > this.lines[sL].text.length)
-                        e = this.lines[sL].text.length;
-                    e = this.lineWidth(sL, s, e);
-                    s = this.lineWidth(sL, 0, s);
+                    if (e > this.getLineText(sL).length)
+                        e = this.getLineText(sL).length;
+                    e = this.wrapLineWidth(sL, s, e);
+                    s = this.wrapLineWidth(sL, 0, s);
                     //e = this.textWidth(this.lines[sL].substring(s, e).replace(/ /g, '\u00A0'));
                     //s = this.textWidth(this.lines[sL].substring(0, s).replace(/ /g, '\u00A0'));
                 }
-                if (this._timestamp)
-                    s += this._timestampWidth;
+                s += (this._timestamp ? this._timestampWidth : 0);
+                if (this._lines[sL].indent)
+                    s += this._indent * this._charWidth;
                 if (!this._overlays[type][sL])
                     this._overlays[type][sL] = [];
                 if (this._roundedRanges)
-                    this._overlays[type][sL].push(`<span id="${type}-${r}" class="${cls} trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span>`);
+                    this._overlays[type][sL].push(`<span id="${type}-${r}" class="${rangeCls} trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span>`);
                 else
-                    this._overlays[type][sL].push(`<span id="${type}-${r}" class="${cls}" style="left: ${s}px;width: ${e}px"></span>`);
+                    this._overlays[type][sL].push(`<span id="${type}-${r}" class="${rangeCls}" style="left: ${s}px;width: ${e}px"></span>`);
                 continue;
             }
 
             if (sL < 0)
                 sL = 0;
-            if (eL >= len)
+            if (eL >= len) {
                 eL = len - 1;
+                e = this.getLineText(eL).length;
+            }
             if (s < 0)
                 s = 0;
-            if (e > this.lines[eL].text.length)
-                e = this.lines[eL].text.length;
+            if (e > this.getLineText(eL).length)
+                e = this.getLineText(eL).length;
             for (let line = sL; line < eL + 1; line++) {
                 const startStyle = {
                     top: CornerType.Extern,
@@ -2209,47 +2249,52 @@ export class Display extends EventEmitter {
                     top: CornerType.Extern,
                     bottom: CornerType.Extern
                 };
-                let rCls = cls;
+                let cls = rangeCls;
                 let cl = 0;
                 if (sL === line) {
-                    const tLine = this.lines[line].text.replace(/ /g, '\u00A0');
+                    const tLine = this.getLineText(line).replace(/ /g, '\u00A0');
                     if (s >= tLine.length)
                         cl = tLine.length;
                     else
                         cl = s;
                 }
-                if (this.lines[line].formats[0].hr)
+                if (this._lines[line].hr)
                     w = mw;
                 else if (sL === line)
-                    w = this.lineWidth(line, s) + this._charWidth;
-                //w = this.textWidth(this.lines[sL].substr(s)) + this._charWidth;
+                    w = this.wrapLineWidth(line, s) + this._charWidth;
+                //w = this.textWidth(this.lines[sL].substr(s).replace(/ /g, '\u00A0')) + this._charWidth;
                 else if (eL === line)
-                    w = this.lineWidth(line, 0, e);
+                    w = this.wrapLineWidth(line, 0, e);
                 //w = this.textWidth(tLine.substring(0, e));
                 else
                     w = this._lines[line].width + this._charWidth;
-                cl = this.lineWidth(line, 0, cl);
+                cl = this.wrapLineWidth(line, 0, cl);
+                if (this._lines[line].indent)
+                    cl += this._indent * this._charWidth;
                 //cl = this.textWidth(tLine.substring(0, cl));
                 if (this._roundedRanges) {
                     let cr;
-                    if (this.lines[line].formats[0].hr)
+                    if (this._lines[line].hr)
                         cr = mw;
                     else
-                        cr = fl(eL === line ? this.lineWidth(line, 0, e) : (this._lines[line].width + this._charWidth));
+                        cr = fl(eL === line ? this.wrapLineWidth(line, 0, e) : (this._lines[line].width + this._charWidth));
+                    if (this._lines[line].indent)
+                        cr += this._indent * this._charWidth;
                     //cr = fl(eL === line ? this.textWidth(tLine.substring(0, e)) : (this._lines[line].width + this._charWidth));
                     if (line > sL) {
-                        let pl = 0;
+                        let plIndent = this._lines[line - 1].indent ? this._indent * this._charWidth : 0;
+                        let pl = plIndent;
                         if (sL === line - 1) {
-                            if (this.lines[line - 1].formats[0].hr)
+                            if (this._lines[line - 1].hr)
                                 pl = 0;
-                            else if (fl(this.lineWidth(sL, 0, s)) >= fl(this._lines[line - 1].width + this._charWidth))
+                            else if (fl(this.wrapLineWidth(sL, 0, s) + plIndent) >= fl(this._lines[line - 1].width + this._charWidth + plIndent))
                                 //else if (fl(this.textWidth(this.lines[sL].substr(0, s).replace(/ /g, '\u00A0'))) >= fl(this._lines[line - 1].width + this._charWidth))
-                                pl = fl(this._lines[line - 1].width) + this._charWidth;
+                                pl = fl(this._lines[line - 1].width + plIndent) + this._charWidth;
                             else
-                                pl = fl(this.lineWidth(sL, 0, s));
+                                pl = fl(this.wrapLineWidth(sL, 0, s) + plIndent);
                             //pl = fl(this.textWidth(this.lines[sL].substring(0, s).replace(/ /g, '\u00A0')));
                         }
-                        const pr = this.lines[line - 1].formats[0].hr ? mw : fl(this._lines[line - 1].width + this._charWidth);
+                        const pr = this._lines[line - 1].hr ? mw : fl(this._lines[line - 1].width + this._charWidth + plIndent);
 
                         if (fl(cl) === pl)
                             startStyle.top = CornerType.Flat;
@@ -2265,14 +2310,15 @@ export class Display extends EventEmitter {
 
                     if (line < eL) {
                         let nr;
-                        if (this.lines[line + 1].formats[0].hr)
+                        let nrIndent = this._lines[line + 1].indent ? this._indent * this._charWidth : 0;
+                        if (this._lines[line + 1].hr)
                             nr = mw;
                         else
-                            nr = fl(eL === line + 1 ? this.lineWidth(line + 1, 0, e) : (this._lines[line + 1].width + this._charWidth));
+                            nr = fl(eL === line + 1 ? (this.wrapLineWidth(line + 1, 0, e) + nrIndent) : (this._lines[line + 1].width + this._charWidth + nrIndent));
                         //nr = fl(eL === line + 1 ? this.textWidth(this.lines[line + 1].substring(0, e).replace(/ /g, '\u00A0')) : (this._lines[line + 1].width + this._charWidth));
-                        if (fl(cl) === 0)
+                        if (fl(cl) === nrIndent)
                             startStyle.bottom = CornerType.Flat;
-                        else if (0 < fl(cl) && fl(cl) < nr)
+                        else if (nrIndent < fl(cl) && fl(cl) < nr)
                             startStyle.bottom = CornerType.Intern;
 
                         if (cr === nr)
@@ -2282,28 +2328,30 @@ export class Display extends EventEmitter {
                     }
 
                     if (startStyle.top === CornerType.Extern) {
-                        rCls += ' tlc';
+                        cls += ' tlc';
                     }
                     if (startStyle.bottom === CornerType.Extern) {
-                        rCls += ' blc';
+                        cls += ' blc';
                     }
                     if (endStyle.top === CornerType.Extern) {
-                        rCls += ' trc';
+                        cls += ' trc';
                     }
                     if (endStyle.bottom === CornerType.Extern) {
-                        rCls += ' brc';
+                        cls += ' brc';
                     }
                 }
 
                 if (!this._overlays[type][line])
                     this._overlays[type][line] = [];
-                this._overlays[type][line].push(`<span id="${type}-${r}" class="${rCls}" style="left:${(this._timestamp ? this._timestampWidth : 0) + cl * this._charWidth}px;width: ${w}px;"></span>`);
-                if (startStyle.top === CornerType.Intern || startStyle.bottom === CornerType.Intern)
-                    this._overlays[type][line].push(`<span class="${cls} isb" style="top:${this._charHeight - 7}px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl * this._charWidth - 7)}px;"></span>`);
+                this._overlays[type][line].push(`<span id="${type}-${r}" class="${cls}" style="left:${(this._timestamp ? this._timestampWidth : 0) + cl}px;width: ${w}px;"></span>`);
+                if (startStyle.top === CornerType.Intern)
+                    this._overlays[type][line].push(`<span class="${cls} ist" style="top:$0px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl - 7)}px;"></span>`);
+                if (startStyle.bottom === CornerType.Intern)
+                    this._overlays[type][line].push(`<span class="${cls} isb" style="top:${this._charHeight - 7}px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl - 7)}px;"></span>`);
                 if (endStyle.top === CornerType.Intern)
-                    this._overlays[type][line].push(`<span class="${cls} iet" style="top:0px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl * this._charWidth) + w}px;"></span>`);
+                    this._overlays[type][line].push(`<span class="${cls} iet" style="top:0px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl) + w}px;"></span>`);
                 if (endStyle.bottom === CornerType.Intern)
-                    this._overlays[type][line].push(`<span class="${cls} ieb" style="top:${this._charHeight - 7}px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl * this._charWidth) + w}px;"></span>`);
+                    this._overlays[type][line].push(`<span class="${cls} ieb" style="top:${this._charHeight - 7}px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl) + w}px;"></span>`);
             }
         }
         let ol;
@@ -2311,7 +2359,7 @@ export class Display extends EventEmitter {
             if (!this._overlays[type].hasOwnProperty(ol))
                 continue;
             this._overlays[type][ol] = `<div style="top: ${(+ol || 0) * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${this._overlays[type][ol].join('')}</div>`;
-            if (this.split && ol >= this.split._viewRange.start) {
+            if (this.split) { //&& ol >= this.split._viewRange.start) {
                 this.split.dirty = true;
                 this.doUpdate(UpdateType.scrollViewOverlays);
             }
@@ -2321,289 +2369,7 @@ export class Display extends EventEmitter {
 
     //TODO add font support, as different blocks of text could have different font formats, need to not just measure with but measure based on format block data
     private updateSelection() {
-        const sel = this._currentSelection;
-        let s;
-        let e;
-        let sL;
-        let eL;
-        let parts;
-        let w;
-        let text;
-        this._overlays.selection = [];
-        if (sel.start.y > sel.end.y) {
-            sL = sel.end.y;
-            eL = sel.start.y;
-            s = sel.end.x;
-            e = sel.start.x;
-        }
-        else if (sel.start.y < sel.end.y) {
-            sL = sel.start.y;
-            eL = sel.end.y;
-            s = sel.start.x;
-            e = sel.end.x;
-        }
-        else if (sel.start.x === sel.end.x) {
-            if (this.split && (sel.start.y >= this.split._viewRange.start || this._prevSelection.start.y >= this.split._viewRange.start)) {
-                this.split.dirty = true;
-                this.doUpdate(UpdateType.scrollViewOverlays);
-            }
-            this.doUpdate(UpdateType.overlays);
-            this._prevSelection = {
-                start: { x: sel.end.x, y: sel.end.y },
-                end: { x: sel.end.x, y: sel.end.y }
-            };
-            return;
-        }
-        else {
-            sL = sel.start.y;
-            if (sL < 0 || sL >= this._lines.length) {
-                this._prevSelection = {
-                    start: { x: sel.end.x, y: sel.end.y },
-                    end: { x: sel.end.x, y: sel.end.y }
-                };
-                return;
-            }
-            /*
-                        w = e;
-                        while (w >= s) {
-                            if (!CONTAINS_RTL.test(text[w])) {
-                                break;
-                            }
-                            w--;
-                        }
-                        if (w !== e) {
-                            eL = e;
-                            e = this.textWidth(text.substring(s, w));
-                            s = this.textWidth(text.substring(0, s));
-                            parts = [`<span class="select-text" style="left: ${s}px;width: ${e}px"></span>`];
-                            w = this.textWidth(text.substring(w, eL));
-                            s += e - w;
-                            parts.push(`<span class="select-text" style="left: ${s}px;width: ${w}px"></span>`);
-                        }
-                        else {
-                            e = this.textWidth(text.substring(s, e));
-                            s = this.textWidth(text.substring(0, s));
-                            if (this._roundedRanges)
-                                parts = [`<span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span>`];
-                            else
-                                parts = [`<span class="select-text" style="left: ${s}px;width: ${e}px"></span>`];
-                        }
-                        this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
-            */
-            /*
-             w = this.textWidth(text.substring(0, s));
-             parts = [];
-             while (s <= e) {
-                 eL = this.textWidth(text.substr(s, 1));
-                 if (CONTAINS_RTL.test(text[s]))
-                     parts.push(`<span class="select-text" style="background-color:red !important;left: ${w}px;width: ${eL}px"></span>`);
-                 else
-                     parts.push(`<span class="select-text" style="left: ${w}px;width: ${eL}px"></span>`);
-                 s++;
-                 w += eL;
-             }
-             this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
-    */
-            if (this.lines[sL].formats[0].hr) {
-                s = 0;
-                e = Math.max(this._maxWidth, this._maxView);
-            }
-            else {
-                s = Math.min(sel.start.x, sel.end.x);
-                e = Math.max(sel.start.x, sel.end.x);
-                text = this.lines[sL].text;
-                if (s < 0) s = 0;
-                if (e > text.length)
-                    e = text.length;
-                e = this.lineWidth(sL, s, e);
-                s = this.lineWidth(sL, 0, s);
-                //e = this.textWidth(text.substring(s, e).replace(/ /g, '\u00A0'));
-                //s = this.textWidth(text.substring(0, s).replace(/ /g, '\u00A0'));
-            }
-            s += (this._timestamp ? this._timestampWidth : 0);
-            if (this._roundedRanges)
-                this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`;
-            else
-                this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text" style="left: ${s}px;width: ${e}px"></span></div>`;
-
-            /*
-                        const ranges = [];
-                        let range = { start: s, end: s, direction: CONTAINS_RTL.test(text[w]) ? 1 : 0 };
-                        ranges.push(range);
-                        let state = range.direction;
-                        w = s + 1;
-                        while (w <= e) {
-                            if (state === 0 && CONTAINS_RTL.test(text[w])) {
-                                range.end++;
-                                range = { start: w, end: w, direction: 1 };
-                                ranges.push(range);
-                                state = 1;
-                            }
-                            else if (state === 1 && CONTAINS_LTR.test(text[w])) {
-                                range.end++;
-                                range = { start: w, end: w, direction: 0 };
-                                ranges.push(range);
-                                state = 0;
-                            }
-                            range.end = w;
-                            w++;
-                        }
-                        console.log(ranges);
-                        s = this.textWidth(text.substring(0, s));
-                        eL = ranges.length;
-                        parts = [];
-                        for (w = 0; w < eL; w++) {
-                            e = this.textWidth(text.substring(ranges[w].start, ranges[w].end));
-                            if (ranges[w].direction)
-                                parts.push(`<span class="select-text" style="background-color:red; left: ${s}px;width: ${e}px"></span>`);
-                            else
-                                parts.push(`<span class="select-text" style="left: ${s}px;width: ${e}px"></span>`);
-                            s += e;
-                        }
-                        this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
-            */
-            if (this.split && (sL >= this.split._viewRange.start || this._prevSelection.start.y >= this.split._viewRange.start)) {
-                this.split.dirty = true;
-                this.doUpdate(UpdateType.scrollViewOverlays);
-            }
-            this.doUpdate(UpdateType.overlays);
-            this._prevSelection = {
-                start: { x: sel.end.x, y: sel.end.y },
-                end: { x: sel.end.x, y: sel.end.y }
-            };
-            return;
-        }
-        const len = this._lines.length;
-        const mw = Math.max(this._maxWidth, this._maxView);
-
-        if (sL < 0)
-            sL = 0;
-        if (eL >= len) {
-            eL = len - 1;
-            e = this.lines[eL].text.length;
-        }
-        if (s < 0)
-            s = 0;
-        if (e > this.lines[eL].text.length)
-            e = this.lines[eL].text.length;
-        const fl = Math.trunc;
-        for (let line = sL; line < eL + 1; line++) {
-            const startStyle = {
-                top: CornerType.Extern,
-                bottom: CornerType.Extern
-            };
-            const endStyle = {
-                top: CornerType.Extern,
-                bottom: CornerType.Extern
-            };
-            parts = [];
-            let cls = 'select-text';
-            let cl = 0;
-            if (sL === line) {
-                const tLine = this.lines[line].text.replace(/ /g, '\u00A0');
-                if (s >= tLine.length)
-                    cl = tLine.length;
-                else
-                    cl = s;
-            }
-            if (this.lines[line].formats[0].hr)
-                w = mw;
-            else if (sL === line)
-                w = this.lineWidth(line, s) + this._charWidth;
-            //w = this.textWidth(this.lines[sL].substr(s).replace(/ /g, '\u00A0')) + this._charWidth;
-            else if (eL === line)
-                w = this.lineWidth(line, 0, e);
-            //w = this.textWidth(tLine.substring(0, e));
-            else
-                w = this._lines[line].width + this._charWidth;
-            cl = this.lineWidth(line, 0, cl);
-            //cl = this.textWidth(tLine.substring(0, cl));
-
-            if (this._roundedRanges) {
-                let cr;
-                if (this.lines[line].formats[0].hr)
-                    cr = mw;
-                else
-                    cr = fl(eL === line ? this.lineWidth(line, 0, e) : (this._lines[line].width + this._charWidth));
-                //cr = fl(eL === line ? this.textWidth(tLine.substring(0, e)) : (this._lines[line].width + this._charWidth));
-                if (line > sL) {
-                    let pl = 0;
-                    if (sL === line - 1) {
-                        if (this.lines[line - 1].formats[0].hr)
-                            pl = 0;
-                        else if (fl(this.lineWidth(sL, 0, s)) >= fl(this._lines[line - 1].width + this._charWidth))
-                            //else if (fl(this.textWidth(this.lines[sL].substr(0, s).replace(/ /g, '\u00A0'))) >= fl(this._lines[line - 1].width + this._charWidth))
-                            pl = fl(this._lines[line - 1].width) + this._charWidth;
-                        else
-                            pl = fl(this.lineWidth(sL, 0, s));
-                        //pl = fl(this.textWidth(this.lines[sL].substring(0, s).replace(/ /g, '\u00A0')));
-                    }
-                    const pr = this.lines[line - 1].formats[0].hr ? mw : fl(this._lines[line - 1].width + this._charWidth);
-
-                    if (fl(cl) === pl)
-                        startStyle.top = CornerType.Flat;
-                    else if (fl(cl) > pl)
-                        startStyle.top = CornerType.Intern;
-                    if (cr === pr)
-                        endStyle.top = CornerType.Flat;
-                    else if (pl < cr && cr < pr)
-                        endStyle.top = CornerType.Intern;
-                    else if (cr === 0 && line === eL)
-                        endStyle.top = CornerType.Intern;
-                }
-
-                if (line < eL) {
-                    let nr;
-                    if (this.lines[line + 1].formats[0].hr)
-                        nr = mw;
-                    else
-                        nr = fl(eL === line + 1 ? this.lineWidth(line + 1, 0, e) : (this._lines[line + 1].width + this._charWidth));
-                    //nr = fl(eL === line + 1 ? this.textWidth(this.lines[line + 1].substring(0, e).replace(/ /g, '\u00A0')) : (this._lines[line + 1].width + this._charWidth));
-                    if (fl(cl) === 0)
-                        startStyle.bottom = CornerType.Flat;
-                    else if (0 < fl(cl) && fl(cl) < nr)
-                        startStyle.bottom = CornerType.Intern;
-
-                    if (cr === nr)
-                        endStyle.bottom = CornerType.Flat;
-                    else if (cr < nr)
-                        endStyle.bottom = CornerType.Intern;
-                }
-
-                if (startStyle.top === CornerType.Extern) {
-                    cls += ' tlc';
-                }
-                if (startStyle.bottom === CornerType.Extern) {
-                    cls += ' blc';
-                }
-                if (endStyle.top === CornerType.Extern) {
-                    cls += ' trc';
-                }
-                if (endStyle.bottom === CornerType.Extern) {
-                    cls += ' brc';
-                }
-            }
-
-            parts.push(`<span class="${cls}" style="left:${(this._timestamp ? this._timestampWidth : 0) + cl}px;width: ${w}px;"></span>`);
-
-            if (startStyle.top === CornerType.Intern || startStyle.bottom === CornerType.Intern)
-                parts.push(`<span class="select-text isb" style="top:${this._charHeight - 7}px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl - 7)}px;"></span>`);
-            if (endStyle.top === CornerType.Intern)
-                parts.push(`<span class="select-text iet" style="top:0px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl) + w}px;"></span>`);
-            if (endStyle.bottom === CornerType.Intern)
-                parts.push(`<span class="select-text ieb" style="top:${this._charHeight - 7}px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl) + w}px;"></span>`);
-
-            this._overlays.selection[line] = `<div style="top: ${line * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
-        }
-        if (this.split && (sL >= this.split._viewRange.start || eL >= this.split._viewRange.start || this._prevSelection.start.y >= this.split._viewRange.start || this._prevSelection.end.y >= this.split._viewRange.start)) {
-            this.split.dirty = true;
-            this.doUpdate(UpdateType.scrollViewOverlays);
-        }
-        this.doUpdate(UpdateType.overlays);
-        this._prevSelection = {
-            start: { x: sel.end.x, y: sel.end.y },
-            end: { x: sel.end.x, y: sel.end.y }
-        };
+        this.addOverlays([{ start: this._currentSelection.start, end: this._currentSelection.end }], 'select-text', 'selection');
     }
 
     get hasSelection(): boolean {
@@ -2635,12 +2401,12 @@ export class Display extends EventEmitter {
         else if (sel.start.x === sel.end.x) {
             return '';
         }
-        else if (sel.start.y > 0 && sel.start.y < this._lines.length && this.lines[sel.start.y].formats[0].hr)
+        else if (sel.start.y > 0 && sel.start.y < this._lines.length && this._lines[sel.start.y].hr)
             return '---';
         else {
             s = Math.min(sel.start.x, sel.end.x);
             e = Math.max(sel.start.x, sel.end.x);
-            return this.lines[sel.start.y].text.substring(s, e);
+            return this.getLineText(sel.start.y).substring(s, e);
         }
         const len = this._lines.length;
 
@@ -2652,26 +2418,26 @@ export class Display extends EventEmitter {
         }
         if (s < 0)
             s = 0;
-        if (e > this.lines[eL].text.length)
-            e = this.lines[eL].text.length;
+        if (e > this.getLineText(eL).length)
+            e = this.getLineText(eL).length;
 
         const txt = [];
-        if (this.lines[sL].formats[0].hr)
+        if (this._lines[sL].hr)
             txt.push('---');
         else
-            txt.push(this.lines[sL].text.substring(s));
+            txt.push(this.getLineText(sL).substring(s));
         sL++;
         while (sL < eL) {
-            if (this.lines[sL].formats[0].hr)
+            if (this._lines[sL].hr)
                 txt.push('---');
             else
                 txt.push(this.lines[sL].text);
             sL++;
         }
-        if (this.lines[eL].formats[0].hr)
+        if (this._lines[eL].hr)
             txt.push('---');
         else
-            txt.push(this.lines[eL].text.substring(0, e));
+            txt.push(this.getLineText(eL).substring(0, e));
         return txt.join('\n');
     }
 
@@ -2708,12 +2474,12 @@ export class Display extends EventEmitter {
             sL = 0;
         if (eL >= len) {
             eL = len - 1;
-            e = this.lines[eL].text.length;
+            e = this.getLineText(eL).length;
         }
         if (s < 0)
             s = 0;
-        if (e > this.lines[eL].text.length)
-            e = this.lines[eL].text.length;
+        if (e > this.getLineText(eL).length)
+            e = this.getLineText(eL).length;
 
         const txt = [this.getLineHTML(sL, s)];
         sL++;
@@ -2729,13 +2495,15 @@ export class Display extends EventEmitter {
         let ll = this._lines.length;
         if (ll === 0) return;
         ll--;
+        /*
         this._prevSelection = {
-            start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
-            end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
+            start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset },
+            end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset }
         };
+        */
         this._currentSelection = {
-            start: { x: 0, y: 0 },
-            end: { x: this.lines[ll].text.length, y: ll },
+            start: { x: 0, y: 0, lineID: this._lines[0].id, lineOffset: 0 },
+            end: { x: this.getLineText(ll).length, y: ll, lineID: this._lines[ll].id, lineOffset: this._lines[ll].endOffset },
             scrollTimer: null,
             drag: false
         };
@@ -2745,13 +2513,15 @@ export class Display extends EventEmitter {
     }
 
     public clearSelection() {
+        /*
         this._prevSelection = {
-            start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
-            end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
+            start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset },
+            end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset }
         };
+        */
         this._currentSelection = {
-            start: { x: null, y: null },
-            end: { x: null, y: null },
+            start: { x: null, y: null, lineID: null, lineOffset: null },
+            end: { x: null, y: null, lineID: null, lineOffset: null },
             scrollTimer: null,
             drag: false
         };
@@ -2764,6 +2534,7 @@ export class Display extends EventEmitter {
         if (this.split) this.split.dirty = true;
         this._os = this.offset(this._el);
         this._maxView = this._el.clientWidth - this._padding[1] - this._padding[3] - this._VScroll.size;
+        this._maxViewHeight = this._el.clientHeight - this._padding[0] - this._padding[2] - this._HScroll.size;
         //resized so new width needs a recalculate
         this._viewCache = {};
         if (this.split) {
@@ -2788,8 +2559,11 @@ export class Display extends EventEmitter {
             idx = this._lines.length - 1;
         const back = [];
         const fore = [];
-        const text = this.lines[idx].text.replace(/ /g, '\u00A0');
-        const formats = this.lines[idx].formats;
+        //const text = this.getLineText(idx).replace(/ /g, '\u00A0');
+        const id = this._lines[idx].id;
+        const line = this._model.getLineFromID(id);
+        const text = this.lines[line].text.replace(/ /g, '\u00A0');
+        const formats = this.lines[line].formats;
         let offset = 0;
         let bStyle: any = '';
         let fStyle: any = '';
@@ -2797,15 +2571,27 @@ export class Display extends EventEmitter {
         const ch = this._charHeight;
         const cw = this._charWidth;
         const len = formats.length;
+        const endFormat = this._lines[idx].endFormat
+        const endOffset = this._lines[idx].endOffset;
+        const startOffset = this._lines[idx].startOffset;
+        const startFormat = this._lines[idx].startFormat;
         let left = 0;
-        const id = this._model.getLineID(idx);
+        let links = 0;
         let right = false;
         if (this._timestamp) {
             back.push('<span style="float: left;left:0;width:', this._timestampWidth, 'px;background:', this._model.GetColor(-8), ';"></span>');
-            fore.push('<span style="float: left;left:0;width:', this._timestampWidth, 'px;color:', this._model.GetColor(-7), ';">', moment(this.lines[idx].timestamp).format(this._timestampFormat), '</span>');
+            if (this._lines[idx].indent)
+                fore.push('<span style="float: left;left:0;width:', this._timestampWidth, 'px;color:', this._model.GetColor(-7), ';"></span>');
+            else
+                fore.push('<span style="float: left;left:0;width:', this._timestampWidth, 'px;color:', this._model.GetColor(-7), ';">', moment(this.lines[line].timestamp).format(this._timestampFormat), '</span>');
             left += this._timestampWidth;
         }
-        for (let f = 0; f < len; f++) {
+        if (this._lines[idx].indent) {
+            back.push('<span style="float: left;left:0;width:', (this._indent || 0) * cw, 'px;"></span>');
+            fore.push('<span style="float: left;left:0;width:', (this._indent || 0) * cw, 'px;"></span>');
+            left += (this._indent || 0) * cw;
+        }
+        for (let f = 0; f <= endFormat; f++) {
             const format = formats[f];
             let nFormat;
             let end;
@@ -2820,6 +2606,11 @@ export class Display extends EventEmitter {
             else
                 end = text.length;
             offset = format.offset;
+            if (offset < startOffset)
+                offset = startOffset;
+            if (end > endOffset)
+                end = endOffset;
+            let width = this._lines[idx].formatWidths[f] || format.width;
             if (format.formatType === FormatType.Normal) {
                 eText = text.substring(offset, end);
                 if (format.bStyle) {
@@ -2876,50 +2667,61 @@ export class Display extends EventEmitter {
                     else
                         format.fCls = fCls = '';
                 }
+                if (f < startFormat) continue;
                 if (format.hr) {
                     back.push('<span style="left:0;width:', mw, 'px;', bStyle, '"></span>');
                     fore.push('<span style="left:0;width:', mw, 'px;', fStyle, '"', fCls, '><div class="hr" style="background-color:', (typeof format.color === 'number' ? this._model.GetColor(format.color) : format.color), '"></div></span>');
                 }
                 else if (end - offset !== 0) {
-                    back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
-                    fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
-                    left += format.width;
+                    back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle, '"></span>');
+                    fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
+                    left += width;
                 }
             }
             else if (format.formatType === FormatType.Link) {
+                if (f < startFormat) continue;
+                links++;
                 fore.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="', format.href.replace(/"/g, '&quot;'), '" onclick="', this.linkFunction, '(\'', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), '\');return false;">');
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
-                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
-                left += format.width;
+                back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle, '"></span>');
+                fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
+                left += width;
             }
             else if (format.formatType === FormatType.LinkEnd || format.formatType === FormatType.MXPLinkEnd || format.formatType === FormatType.MXPSendEnd) {
+                if (f < startFormat) continue;
+                links--;
                 fore.push('</a>');
             }
             else if (format.formatType === FormatType.MXPLink) {
+                if (f < startFormat) continue;
+                links++;
                 fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" data-href="', format.href, '" href="javascript:void(0);" title="', format.hint.replace(/"/g, '&quot;'), '" onclick="', this.mxpLinkFunction, '(this, \'', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), '\');return false;">');
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
-                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
-                left += format.width;
+                back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle, '"></span>');
+                fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
+                left += width;
             }
             else if (format.formatType === FormatType.MXPSend) {
+                if (f < startFormat) continue;
+                links++;
                 fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" href="javascript:void(0);" title="', format.hint.replace(/"/g, '&quot;'), '" onmouseover="', this.mxpTooltipFunction, '(this);"', ' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ', ', format.prompt ? 1 : 0, ', ', format.tt.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ');return false;">');
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '" ></span>');
-                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
-                left += format.width;
+                back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle, '" ></span>');
+                fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
+                left += width;
             }
             else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
+                if (f < startFormat) continue;
                 eText = text.substring(offset, end);
-                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
-                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
-                left += format.width;
+                back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle, '"></span>');
+                fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
+                left += width;
             }
             else if (format.formatType === FormatType.Image) {
+                if (f < startFormat) continue;
                 eText = '';
                 const tmp = ['<img style="'];
                 if (format.url.length > 0) {
@@ -2933,8 +2735,8 @@ export class Display extends EventEmitter {
                         eText += '/';
                 }
                 eText += format.name;
-                if (format.width)
-                    tmp.push('width:', format.width, 'px;');
+                if (width)
+                    tmp.push('width:', width, 'px;');
                 else if (format.w.length > 0)
                     tmp.push('width:', formatUnit(format.w, cw), ';');
 
@@ -2970,6 +2772,9 @@ export class Display extends EventEmitter {
                 fore.push(tmp.join(''), ` src="${eText}"/>`);
             }
         }
+        //close any open links
+        while (links--)
+            fore.push('</a>');
         if (right)
             return [`<span data-id="${id}" style="top:${idx * ch}px;min-width:${mv}px;">${fore.join('')}<br></span>`, `<span style="top:${idx * ch}px;min-width:${mv}px;">${back.join('')}<br></span>`];
         return [`<span data-id="${id}" style="top:${idx * ch}px;">${fore.join('')}<br></span>`, `<span style="top:${idx * ch}px;">${back.join('')}<br></span>`];
@@ -2988,7 +2793,7 @@ export class Display extends EventEmitter {
         let offset = 0;
         let style: any = '';
         let fCls: any = '';
-        const text = this.lines[idx].text.replace(/ /g, '\u00A0');
+        const text = this.getLineText(idx).replace(/ /g, '\u00A0');
         const formats = this.lines[idx].formats;
         const fLen = formats.length;
         let right = false;
@@ -3173,23 +2978,114 @@ export class Display extends EventEmitter {
                 parts.push(`src="${tmp}"/>`);
             }
         }
-        if (right && len < this.lines[idx].text.length)
+        if (right && len < this.getLineText(idx).length)
             return `<span class="line" style="min-width:100%">${parts.join('')}</span>`;
         if (right)
             return `<span class="line" style="min-width:100%">${parts.join('')}<br></span>`;
-        if (len < this.lines[idx].text.length)
+        if (len < this.getLineText(idx).length)
             return `<span class="line">${parts.join('')}</span>`;
         return `<span class="line">${parts.join('')}<br></span>`;
     }
 
     public reCalculateLines() {
-        let t;
         const ll = this.lines.length;
-        for (let l = 0; l < ll; l++) {
-            t = this.calculateSize(l, true);
-            this._lines[l].width = t.width;
-            this._lines[l].height = t.height;
+        this._lines = [];
+        this._linesMap.clear();
+        this._maxWidth = 0;
+        this._maxHeight = 0
+        //only recalculate if have lines
+        if (ll === 0) return;
+        let t: WrapLine[] = this.calculateWrapLines(0, 0, this._indent, (this._timestamp ? this._timestampWidth : 0), true);
+        if (this.lines[0].formats[0].hr) {
+            t[0].hr = true;
+            this._maxWidth = Math.max(this._maxWidth, this._maxView);
+            this._maxHeight = Math.max(this._maxHeight, this._charHeight);
         }
+        else {
+            this._maxWidth = Math.max(this._maxWidth, t[0].width);
+            this._maxHeight = Math.max(this._maxHeight, t[0].height);
+        }
+        for (let l = 1, ll = t.length; l < ll; l++) {
+            t[l].top = t[l - 1].top + t[l - 1].height;
+            this._maxWidth = Math.max(this._maxWidth, t[l].width);
+            this._maxHeight = Math.max(this._maxHeight, t[l].height);
+        }
+        this._linesMap.set(t[0].id, t);
+        this._lines.push(...t);
+        this._maxWidth = Math.max(this._maxWidth, this._lines[0].width);
+        this._maxHeight = Math.max(this._maxHeight, this._lines[0].height);
+
+        for (let l = 1; l < ll; l++) {
+            const t = this.calculateWrapLines(l, 0, this._indent, (this._timestamp ? this._timestampWidth : 0), true);
+            if (this.lines[l].formats[0].hr) {
+                t[0].hr = true;
+                this._maxWidth = Math.max(this._maxWidth, this._maxView);
+                this._maxHeight = Math.max(this._maxHeight, this._charHeight);
+            }
+            else {
+                this._maxWidth = Math.max(this._maxWidth, t[0].width);
+                this._maxHeight = Math.max(this._maxHeight, t[0].height);
+            }
+            this._linesMap.set(t[0].id, t);
+            t[0].top = this._lines[l - 1].top + this._lines[l - 1].height;
+            for (let l = 1, ll = t.length; l < ll; l++) {
+                t[l].top = t[l - 1].top + t[l - 1].height;
+                this._maxWidth = Math.max(this._maxWidth, t[l].width);
+                this._maxHeight = Math.max(this._maxHeight, t[l].height);
+            }
+            this._lines.push(...t);
+        }
+        let offset;
+        if (this._currentSelection.start.y !== null) {
+            offset = this.getWrapOffsetByLineID(this._currentSelection.start.lineID, this._currentSelection.start.lineOffset)
+            this._currentSelection.start.y = offset.y;
+            this._currentSelection.start.x = offset.x;
+            this.doUpdate(UpdateType.selection);
+        }
+        if (this._currentSelection.end.y !== null) {
+            offset = this.getWrapOffsetByLineID(this._currentSelection.end.lineID, this._currentSelection.end.lineOffset)
+            this._currentSelection.end.y = offset.y;
+            this._currentSelection.end.x = offset.x;
+            this.doUpdate(UpdateType.selection);
+        }
+        /*
+        if (this._prevSelection.start.y !== null) {
+            offset = this.getWrapOffsetByLineID(this._prevSelection.start.lineID, this._prevSelection.start.lineOffset)
+            this._prevSelection.start.y = offset.y;
+            this._prevSelection.start.x = offset.x;
+            this.doUpdate(UpdateType.selection);
+        }
+        if (this._prevSelection.end.y !== null) {
+            offset = this.getWrapOffsetByLineID(this._prevSelection.end.lineID, this._prevSelection.end.lineOffset)
+            this._prevSelection.end.y = offset.y;
+            this._prevSelection.end.x = offset.x;
+            this.doUpdate(UpdateType.selection);
+        }
+        */
+
+        let ol;
+        for (ol in this._overlayRanges) {
+            //skip selection as that is custom handled, find/find-current are handled by the finder refresh call
+            if (!this._overlayRanges.hasOwnProperty(ol) || !this._overlayRanges[ol] || ol === 'selection' || ol === 'find' || ol === 'find-current')
+                continue;
+            const ranges = this._overlayRanges[ol].ranges;
+            const rangesLength = ranges.length;
+            for (let r = 0; r < rangesLength; r++) {
+                const range = ranges[r];
+                if (range.start.y !== null) {
+                    offset = this.getWrapOffsetByLineID(range.start.lineID, range.start.lineOffset);
+                    range.start.y = offset.y;
+                    range.start.x = offset.x;
+                }
+                if (range.end.y !== null) {
+                    offset = this.getWrapOffsetByLineID(range.end.lineID, range.end.lineOffset);
+                    range.end.y = offset.y;
+                    range.end.x = offset.x;
+                }
+            }
+            this.addOverlays(this._overlayRanges[ol].ranges, this._overlayRanges[ol].cls, ol);
+        }
+        this._finder.refresh();
     }
 
     public scrollDisplay(force?: boolean) {
@@ -3231,8 +3127,11 @@ export class Display extends EventEmitter {
             this._scrollCorner = document.createElement('div');
             if (this._showSplitButton && this.split) {
                 this._scrollCorner.classList.add('scroll-corner', 'scroll-split-button');
+                this._scrollCorner.title = 'Toggle split view';
                 this._scrollCorner.innerHTML = '<i class="fa fa-minus"></i>';
-                this._scrollCorner.addEventListener('click', () => {
+                this._scrollCorner.addEventListener('click', e => {
+                    e.cancelBubble = true;
+                    e.stopPropagation();
                     this.scrollLock = !this.scrollLock;
                     if (this.split.shown)
                         this.scrollDisplay(true);
@@ -3375,11 +3274,32 @@ export class Display extends EventEmitter {
         this._HScroll.updateLayout();
     }
 
-    public getLineText(line) {
+    public getLineText(line, full?: boolean) {
         if (line < 0 || line >= this._lines.length) return '';
-        //const idx = this.lineIDs.indexOf(this._lines[line].id);
-        //return this.lines[line].text.substring(this._lines[line].startOffset, this._lines[line].endOffset);
-        return this.lines[line].text;
+        //get line from id in case lines where removed
+        const idx = this._model.getLineFromID(this._lines[line].id);
+        if (full)
+            return this.lines[idx].text;
+        return this.lines[idx].text.substring(this._lines[line].startOffset, this._lines[line].endOffset);
+    }
+
+    public reCalculateWrapLines(line: number, width?: number, indent?: number, left?: number, force?: boolean) {
+        const wraps = this.calculateWrapLines(line, width, indent, left, force);
+        const lineID = this._model.getLineID(line);
+        const wrapIndex = this._lines.findIndex(l => l.id === lineID);
+        const wrapAmount = this._linesMap.get(lineID).length;
+        this._lines.splice(wrapIndex, wrapAmount, ...wraps);
+        this._linesMap.delete(lineID);
+        this._linesMap.set(lineID, wraps);
+        //clear cache
+        for (let a = 0; a < wrapAmount; a++) {
+            if (this._viewCache[wrapIndex + a])
+                delete this._viewCache[wrapIndex + a];
+            if (this.split && this.split.viewCache[wrapIndex + a])
+                delete this.split.viewCache[wrapIndex + a];
+        }
+        if (this.split) this.split.dirty = true;
+        this.doUpdate(UpdateType.view | UpdateType.scrollView);
     }
 
     /**
@@ -3392,13 +3312,17 @@ export class Display extends EventEmitter {
      * @param {boolean=} force force the recalculate of each fragment's width
      * @returns {wrapLine[]}
      */
-    public calculateWrapLines(line: number, width?: number, indent?: number, left?: number, force?: boolean) {
+    public calculateWrapLines(line: number, width?: number, indent?: number, left?: number, force?: boolean): WrapLine[] {
         if (line === undefined || line < 0)
             line = 0;
         if (line >= this.lines.length)
             line = this.lines.length - 1;
-        if (!width || typeof width !== 'number')
-            width = this._maxView;
+        if (!width || typeof width !== 'number') {
+            if (this._wrapAt)
+                width = this._wrapAt * this._charWidth;
+            else
+                width = this._maxView;
+        }
         if (width < 200)
             width = 200;
         left = left || 0;
@@ -3408,6 +3332,7 @@ export class Display extends EventEmitter {
         //calculate the indent with
         indent = (indent || 0) * charWidth;
         const wrapLines: WrapLine[] = [];
+        const lineID = this._model.getLineID(line);
         let currentLine: WrapLine = {
             line: line,
             height: charHeight,
@@ -3415,10 +3340,13 @@ export class Display extends EventEmitter {
             top: 0,
             images: 0,
             startOffset: 0,
-            startFragment: 0,
+            startFormat: 0,
             endOffset: 0,
-            endFragment: 0,
-            indent: false
+            endFormat: 0,
+            indent: false,
+            id: lineID,
+            formatWidths: [],
+            hr: false
         };
         const formats = this.lines[line].formats;
         const formatsLength = formats.length;
@@ -3434,10 +3362,10 @@ export class Display extends EventEmitter {
         let lineHeight = charHeight;
         let formatIdx;
         let currentWidth;
-        let previousWidth;
         let breakOffset = -1;
         for (formatIdx = 0; formatIdx < formatsLength; formatIdx++) {
             const currentFormat = formats[formatIdx];
+            const currentIdx = formatIdx;
             let nextFormat;
             if (formatIdx < formatsLength - 1) {
                 nextFormat = formats[formatIdx + 1];
@@ -3461,10 +3389,13 @@ export class Display extends EventEmitter {
                     top: 0,
                     images: 0,
                     startOffset: startOffset,
-                    startFragment: formatIdx,
+                    startFormat: formatIdx,
                     endOffset: 0,
-                    endFragment: 0,
-                    indent: true
+                    endFormat: 0,
+                    indent: true,
+                    id: lineID,
+                    formatWidths: [],
+                    hr: false
                 }
             }
             switch (currentFormat.formatType) {
@@ -3491,15 +3422,22 @@ export class Display extends EventEmitter {
                         lineHeight = Math.max(lineHeight, currentFormat.height || charHeight);
                         let currentOffset = startOffset + 1;
                         currentWidth = 0;
-                        previousWidth = 0;
-                        for (; currentOffset < endOffset; currentOffset++) {
+                        let formatEnd = -1;
+                        for (; currentOffset <= endOffset; currentOffset++) {
                             //if unicode in block make sure to include any unicode modifiers if they are right after current char
                             //also make sure surrogate pair are included
                             if (currentFormat.unicode)
-                                while (currentOffset < endOffset && ((text.charCodeAt(currentOffset + 1) >= 0xD800 && text.charCodeAt(currentOffset + 1) <= 0xDBFF) || this.isUnicodeModifierCode(text.charCodeAt(currentOffset + 1))))
+                                //FIXME does not work correctly when the last character in the text is surrogate pair it will wrap but it will wrap 2 chars instead of just the one
+                                //https://dmitripavlutin.com/what-every-javascript-developer-should-know-about-unicode/#24-surrogate-pairs
+                                if ((text.charCodeAt(currentOffset) >= 0xD800 && text.charCodeAt(currentOffset) <= 0xDBFF)) {
                                     currentOffset++;
+                                    if (currentOffset === endOffset - 1)
+                                        currentOffset++;
+                                }
+                                else
+                                    while (currentOffset <= endOffset && (this.isUnicodeModifierCode(text.charCodeAt(currentOffset + 1))))
+                                        currentOffset++;
                             measureText = text.substring(startOffset, currentOffset);
-                            previousWidth = currentWidth;
                             if (currentFormat.unicode)
                                 currentWidth = this.textWidth(measureText, 0, currentFormat.style);
                             else
@@ -3508,7 +3446,18 @@ export class Display extends EventEmitter {
                             if (char === ' ' || char === '-')
                                 breakOffset = currentOffset;
                             if (lineWidth + currentWidth > width) {
-                                currentOffset--;
+                                if (currentOffset === endOffset) {
+                                    currentOffset--;
+                                    while (currentOffset > 0 && this.isUnicodeModifierCode(text.charCodeAt(currentOffset)))
+                                        currentOffset--;
+                                }
+                                else {
+                                    while (currentOffset > 0 && this.isUnicodeModifierCode(text.charCodeAt(currentOffset)))
+                                        currentOffset--;
+                                    if ((text.charCodeAt(currentOffset) >= 0xD800 && text.charCodeAt(currentOffset) <= 0xDBFF))
+                                        currentOffset--;
+                                    currentOffset--;
+                                }
                                 //found a break point in current fragment use it to prevent extra searching
                                 if (breakOffset !== -1 && breakOffset <= currentOffset) {
                                     currentOffset = breakOffset + 1;
@@ -3517,24 +3466,37 @@ export class Display extends EventEmitter {
                                         currentWidth = this.textWidth(measureText, 0, currentFormat.style);
                                     else
                                         currentWidth = measureText.length * charWidth;
-                                    currentLine.width = lineWidth + currentWidth;
+                                    currentLine.width = lineWidth + currentWidth - left;
                                 }
                                 //no break point and still in fragment so just leave it whole to speed things up
-                                else if (breakOffset === -1 && currentLine.startFragment === formatIdx) {
+                                else if (breakOffset === -1 && currentLine.startFormat === formatIdx) {
                                     measureText = text.substring(startOffset, currentOffset);
                                     if (currentFormat.unicode)
                                         currentWidth = this.textWidth(measureText, 0, currentFormat.style);
                                     else
                                         currentWidth = measureText.length * charWidth;
-                                    currentLine.width = lineWidth + currentWidth;
+                                    currentLine.width = lineWidth + currentWidth - left;
                                 }
                                 else {
-                                    const wordBreak = this.findLineBreak(line, currentLine.startFragment, currentLine.startOffset, formatIdx, currentOffset);
+                                    const wordBreak = this.findLineBreak(line, currentLine.startFormat, currentLine.startOffset, formatIdx, currentOffset);
                                     currentOffset = wordBreak.offset;
                                     //format block changed so remeasure the entire section to get correct width
                                     if (formatIdx !== wordBreak.fragment) {
                                         formatIdx = wordBreak.fragment;
+                                        formatEnd = 0;
+                                        if (formatIdx < formatsLength - 1) {
+                                            nextFormat = formats[formatIdx + 1];
+                                            //empty format block so move on until a new block to process
+                                            //if (currentFormat.offset === nextFormat.offset && nextFormat.formatType === currentFormat.formatType)
+                                            //continue;
+                                            formatEnd = nextFormat.offset;
+                                        }
+                                        else
+                                            formatEnd = text.length;
                                         currentLine.width = this.lineWidth(line, currentLine.startOffset, currentOffset - currentLine.startOffset);
+                                        if (currentLine.indent)
+                                            currentLine.width += indent;
+                                        currentWidth = 0;
                                     }
                                     //if same block measure the adjusted string width
                                     else {
@@ -3543,13 +3505,18 @@ export class Display extends EventEmitter {
                                             currentWidth = this.textWidth(measureText, 0, currentFormat.style);
                                         else
                                             currentWidth = measureText.length * charWidth;
-                                        currentLine.width = lineWidth + currentWidth;
+                                        currentLine.width = lineWidth + currentWidth - left;
                                     }
                                 }
+                                if (formatEnd === currentOffset && currentFormat.formatType !== FormatType.Normal)
+                                    formatIdx++;
+                                currentLine.formatWidths[formatIdx] = currentWidth;
                                 breakOffset = -1;
-                                currentLine.endFragment = formatIdx;
+                                currentLine.endFormat = formatIdx;
                                 currentLine.endOffset = currentOffset;
                                 currentLine.height = lineHeight;
+                                if (currentLine.indent)
+                                    currentLine.width -= indent;
                                 wrapLines.push(currentLine);
                                 //start at left column + indent width
                                 lineWidth = left + indent;
@@ -3564,17 +3531,29 @@ export class Display extends EventEmitter {
                                     top: 0,
                                     images: 0,
                                     startOffset: startOffset,
-                                    startFragment: formatIdx,
+                                    //if start and end same use next format
+                                    startFormat: formatIdx,
                                     endOffset: 0,
-                                    endFragment: 0,
-                                    indent: true
+                                    endFormat: 0,
+                                    indent: true,
+                                    id: lineID,
+                                    formatWidths: [],
+                                    hr: false
                                 }
                             }
+                            else {
+                                currentLine.formatWidths[formatIdx] = currentWidth;
+                                //last char so it does not wrap here so add to line width for next block
+                                if (currentOffset === endOffset && startOffset !== currentFormat.offset && formatIdx >= currentIdx)
+                                    lineWidth += currentWidth;
+                            }
                         }
-                        lineWidth += currentWidth;
                     }
-                    else
+                    else {
                         lineWidth += currentFormat.width || 0;
+                        //new fragment so reset breakOffset
+                        breakOffset = -1;
+                    }
                     break;
                 case FormatType.Image:
                     if (!currentFormat.width || !currentFormat.height) {
@@ -3594,6 +3573,7 @@ export class Display extends EventEmitter {
                         img.src = measureText;
                         img.dataset.id = '' + this._model.getLineID(line);
                         img.dataset.f = '' + formatIdx;
+                        img.dataset.line = '' + line;
                         this._el.appendChild(img);
                         Object.assign(img.style, {
                             position: 'absolute',
@@ -3639,9 +3619,9 @@ export class Display extends EventEmitter {
                         if (!currentFormat.width || !currentFormat.height) {
                             //only append if needing to calculate otherwise just let it be garbage collected
                             img.onload = () => {
-                                //TODO make work once convert to wrapped line format
-                                return;
+                                //get index from id as lines could have been removed
                                 const lIdx = this._model.getLineFromID(+img.dataset.id);
+                                //if index not found or larger then current lines, line probably was removed
                                 if (lIdx === -1 || lIdx >= this.lines.length) return;
                                 this._lines[lIdx].images--;
                                 const fIdx = +img.dataset.f;
@@ -3650,12 +3630,9 @@ export class Display extends EventEmitter {
                                 fmt.width = bounds.width || img.width;
                                 fmt.height = bounds.height || img.height;
                                 this._el.removeChild(img);
-                                if (this._viewCache[lIdx])
-                                    delete this._viewCache[lIdx];
                                 if (this._lines[lIdx].images !== 0) return;
-                                //TODO update wrapped lines with new mage widths
-                                const wraps = this.calculateWrapLines(lIdx);
-                                //this.updateTops(lIdx);
+                                this.reCalculateWrapLines(lIdx, width, indent, left, force);
+                                this.updateTops(lIdx);
                                 if (lIdx >= this._viewRange.start && lIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._model.busy) {
                                     if (this.split) this.split.dirty = true;
                                     this.doUpdate(UpdateType.display);
@@ -3679,18 +3656,20 @@ export class Display extends EventEmitter {
                                 currentLine.height = Math.max(lineHeight, currentFormat.height || charHeight);
                             currentLine.width = currentFormat.width;
                             currentLine.endOffset = endOffset;
-                            currentLine.endFragment = formatIdx;
+                            currentLine.endFormat = formatIdx;
                             wrapLines.push(currentLine);
                             currentLine = null;
-                            lineWidth = 0;
+                            lineWidth = left + indent
                             continue;
                         }
                         else {
-                            currentLine.width = lineWidth;
+                            currentLine.width = lineWidth - left;
                             currentLine.endOffset = startOffset;
-                            currentLine.endFragment = formatIdx - 1;
+                            currentLine.endFormat = formatIdx - 1;
+                            if (currentLine.indent)
+                                currentLine.width -= indent;
                             wrapLines.push(currentLine);
-                            lineWidth = 0;
+                            lineWidth = left + indent
                             //new line start with image
                             currentLine = {
                                 line: line,
@@ -3699,10 +3678,13 @@ export class Display extends EventEmitter {
                                 top: 0,
                                 images: 0,
                                 startOffset: startOffset,
-                                startFragment: formatIdx,
+                                startFormat: formatIdx,
                                 endOffset: 0,
-                                endFragment: 0,
-                                indent: true
+                                endFormat: 0,
+                                indent: true,
+                                id: lineID,
+                                formatWidths: [],
+                                hr: false
                             }
                         }
                     }
@@ -3717,9 +3699,11 @@ export class Display extends EventEmitter {
         }
         if (currentLine) {
             currentLine.height = lineHeight
-            currentLine.width = lineWidth;
-            currentLine.endFragment = formatIdx - 1;
+            currentLine.width = lineWidth - left;
+            currentLine.endFormat = formatIdx - 1;
             currentLine.endOffset = endOffset;
+            if (currentLine.indent)
+                currentLine.width -= indent;
             wrapLines.push(currentLine);
         }
         return wrapLines;
@@ -4591,11 +4575,6 @@ export class DisplayModel extends EventEmitter {
         this.lines.splice(line, 1);
         this.lineIDs.splice(line, 1);
         this._expire2.splice(line, 1);
-        for (let ol in this._expire) {
-            if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0 || line >= this._expire[ol].length)
-                continue;
-            this._expire[ol].splice(line, 1);
-        }
     }
 
     public removeLines(line: number, amt: number) {
@@ -4612,6 +4591,10 @@ export class DisplayModel extends EventEmitter {
     public getLineID(line: number) {
         if (line < 0 || line >= this.lineIDs.length) return -1;
         return this.lineIDs[line];
+    }
+
+    public get getNextLineID() {
+        return this._lineID;
     }
 
     public getLineFromID(id) {

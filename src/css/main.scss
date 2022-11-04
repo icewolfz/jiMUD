@@ -530,6 +530,12 @@ body {
     border-bottom-left-radius: 4px;
 }
 
+.ist {
+    height: 7px;
+    width: 7px;
+    -webkit-mask-image: radial-gradient(circle 9px at 0 100%, transparent 0, transparent 7px, black 7px);
+}
+
 .isb {
     height: 7px;
     width: 7px;

@@ -35,24 +35,20 @@ Reset - Resetting will revert all settings back to default values
 
 ## Display
 
+- `Buffer size` How many lines to keep in the display before removing them, **note** the higher this is the more memory or slower things might get.
 - `Enable flashing text` Enable ansi flashing/blinking text, when disabled flashing text appears as underlined text **note** this can cause a performance hit when enabled.
 - `Auto copy selected to clipboard` This will copy selected text to the clipboard automatically when mouse released and then clear selection
+- `Word wrap` enable word wrap for long lines when possible
+- `Word wrap column` set a fixed text column to attempt to wrap when word wrap enabled, set to 0 to wrap based on window size
+- `Word wrap indent` amount of spaces to indent wrapped lines
 - `Echo commands` Will display commands as they are sent to the mud
 - `Enable URL detection` Attempt to detect urls and convert them into links that can be clicked to.
 - `Focus to command input on click` Will auto focus to the command input when the display area is clicked.
-- `Enable rounded overlays` disable or enable rounded corner effect for selection and find highlighting
 - `Split scroll` Enable split screen scroll, this will allow you to scroll while displaying the most recent lines at the bottom, has known issues with text selection and find system scroll to view
 - `Split scroll live update` determines how the split screen updates as resize bar is adjusted, if on it will update once resize bar released, if slow resizing enable this as it should reduce cpu load during drag
 - `Show split button` Show or hide split toggle button in split scroll to allow for quick toggling
-- `Buffer size` How many lines to keep in the display before removing them, **note** the higher this is the more memory or slower things might get.
-- `Hide trailing line`  Hide trailing empty line, **note** if more then one it will only hide the final line
 - `Enable colors` disable or enable all colors
 - `Enable background colors` disable or enable just background colors
-- `Show invalid MXP tags` display any MXP tags as normal text if they are not standard or custom elements
-- `Display control codes` Display unreadable characters, code < 32 || 127 as visual characters
-- `Emulate terminal extended characters` Enable/disable Terminal IBM/OEM (code page 437) extended characters, will convert them to the correct unicode character in an attempt to display like classic terminal
-- `Emulate control codes` Emulate control codes: bell, tab, backspace, escape
-- `Tab width` How many spaces in a tab
 - `Show timestamp` display the timestamp for when line of text was added
 - `Timestamp format` the timestamp display format**Note** Supports all moment time formats
 
@@ -60,6 +56,16 @@ Reset - Resetting will revert all settings back to default values
 
 - `Font` The font for the display area, mono spaced fonts work the best.
 - `Font size` The font size for the display area
+
+## Display > Advanced
+
+- `Tab width` How many spaces in a tab
+- `Enable rounded overlays` disable or enable rounded corner effect for selection and find highlighting
+- `Show invalid MXP tags` display any MXP tags as normal text if they are not standard or custom elements
+- `Display control codes` Display unreadable characters, code < 32 || 127 as visual characters
+- `Emulate terminal extended characters` Enable/disable Terminal IBM/OEM (code page 437) extended characters, will convert them to the correct unicode character in an attempt to display like classic terminal
+- `Emulate control codes` Emulate control codes: bell, tab, backspace, escape
+- `Hide trailing line` Hide trailing empty line, **note** if more then one it will only hide the final line
 
 ## Colors
 
@@ -159,18 +165,24 @@ Controls what is captured into the chat window
 
 - `Font` The font for the display area, mono spaced fonts work the best.
 - `Font size` The font size for the display area
+- `Word wrap` enable word wrap for long lines when possible
+- `Word wrap column` set a fixed text column to attempt to wrap when word wrap enabled, set to 0 to wrap based on window size
+- `Word wrap indent` amount of spaces to indent wrapped lines
 - `Enable flashing text` Enable ansi flashing/blinking text, when disabled flashing text appears as underlined text **note** this can cause a performance hit when enabled.
-- `Enable rounded overlays` disable or enable rounded corner effect for selection and find highlighting
 - `Split scroll` Enable split screen scroll, this will allow you to scroll while displaying the most recent lines at the bottom, has known issues with text selection and find system scroll to view
 - `Split scroll live update` determines how the split screen updates as resize bar is adjusted, if on it will update as resize bar is moved, if slow resizing disable this as it should reduce cpu load during drag
 - `Show split button` Show or hide split toggle button in split scroll to allow for quick toggling
+- `Buffer size` How many lines to keep in the display before removing them, **note** the higher this is the more memory or slower things might get.
+- `Show timestamp` display the timestamp for when line of text was added
+- `Timestamp format` the timestamp display format**Note** Supports all moment time formats
+
+## Chat > Display > Advanced
+
+- `Tab width` How many spaces in a tab
+- `Enable rounded overlays` disable or enable rounded corner effect for selection and find highlighting
 - `Display control codes` Display unreadable characters, code < 32 || 127 as visual characters
 - `Emulate terminal extended characters` Enable/disable Terminal IBM/OEM (code page 437) extended characters, will convert them to the correct unicode character in an attempt to display like classic terminal
 - `Emulate control codes` Emulate control codes: bell, tab, backspace, escape
-- `Buffer size` How many lines to keep in the display before removing them, **note** the higher this is the more memory or slower things might get.
-- `Tab width` How many spaces in a tab
-- `Show timestamp` display the timestamp for when line of text was added
-- `Timestamp format` the timestamp display format**Note** Supports all moment time formats
 
 ## Chat > Window
 

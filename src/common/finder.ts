@@ -81,7 +81,7 @@ export class Finder extends EventEmitter {
     set RegularExpression(value: boolean) {
         if (value !== this._regex) {
             this._regex = value;
-            if (this._case)
+            if (this._regex)
                 $('#' + this._display.id + '-find-regex', this._control).addClass('active');
             else
                 $('#' + this._display.id + '-find-regex', this._control).removeClass('active');
@@ -218,6 +218,7 @@ export class Finder extends EventEmitter {
         let id = 0;
         let items;
         const ranges: OverlayRange[] = [];
+        const model = this._display.model;
         for (let l = lines.length - 1; l >= 0; l--) {
             items = [];
             m = re.exec(lines[l].text);
@@ -227,17 +228,23 @@ export class Finder extends EventEmitter {
                 if (m.index === re.lastIndex) {
                     re.lastIndex++;
                 }
+                const startOffset = this._display.getWrapOffset(l, m.index);
+                const endOffset = this._display.getWrapOffset(l, m.index + m[0].length);
+                const lineID = model.getLineID(l);
                 items.push({
                     line: l,
                     index: m.index,
                     length: m[0].length,
-                    range: ranges.length
+                    range: ranges.length,
+                    start: startOffset,
+                    end: endOffset,
+                    lineID: lineID
                 });
                 if (this._all) {
                     ranges.push(
                         {
-                            start: { x: m.index, y: l },
-                            end: { x: m.index + m[0].length, y: l }
+                            start: { x: startOffset.x, y: startOffset.y, lineID: lineID, lineOffset: m.index },
+                            end: { x: endOffset.x, y: endOffset.y, lineID: lineID, lineOffset: m.index + m[0].length }
                         }
                     );
                 }
@@ -278,14 +285,40 @@ export class Finder extends EventEmitter {
         if (this._results.length > 0) {
             const r = this._results[idx];
             this._display.addOverlays([{
-                start: { x: r.index, y: r.line },
-                end: { x: r.index + r.length, y: r.line }
+                start: { x: r.start.x, y: r.start.y, lineID: r.lineID, lineOffset: r.index },
+                end: { x: r.end.x, y: r.end.y, lineID: r.lineID, lineOffset: r.index + r.length }
             }], 'find-highlight current', 'find-current');
             if (focus)
-                this._display.scrollToCharacter(r.index, r.line);
+                this._display.scrollToCharacter(r.start.x, r.start.y);
         }
         setTimeout(() => { this.emit('moved', this._position, idx); }, 0);
         this.updateButtons();
+    }
+
+    public refresh() {
+        if (this._results.length == 0) return;
+        const ranges: OverlayRange[] = [];
+        const model = this._display.model;
+        for (let r = 0, rl = this._results.length; r < rl; r++) {
+            const m = this._results[r];
+            m.start = this._display.getWrapOffset(m.line, m.index);
+            m.end = this._display.getWrapOffset(m.line, m.index + m.length);
+            if (this._all) {
+                ranges.push(
+                    {
+                        start: { x: m.start.x, y: m.start.y, lineID: m.lineID, lineOffset: m.index },
+                        end: { x: m.end.x, y: m.end.y, lineID: m.lineID, lineOffset: m.index + m.length }
+                    }
+                );
+            }
+        }
+        if (ranges.length)
+            this._display.addOverlays(ranges, 'find-highlight', 'find');
+        const r = this._results[this._position];
+        this._display.addOverlays([{
+            start: { x: r.start.x, y: r.start.y, lineID: r.lineID, lineOffset: r.index },
+            end: { x: r.end.x, y: r.end.y, lineID: r.lineID, lineOffset: r.index + r.length }
+        }], 'find-highlight current', 'find-current');
     }
 
     public clear() {

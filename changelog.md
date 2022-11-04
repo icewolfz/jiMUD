@@ -34,7 +34,10 @@
     - `Emulate terminal extended characters` Enable/disable Terminal IBM/OEM (code page 437) extended characters, will convert them to the correct unicode character in an attempt to display like classic terminal
     - `Emulate control codes` Emulate control codes: bell, tab, backspace, escape
     - `Clear advanced editor on send` clear the advanced editor after sending text to the mud
-    - `Close advanced editor on send` close the advanced editor after sending text to the mud, **Note** If Persistent is enabled this will merely hide the editor until next use    
+    - `Close advanced editor on send` close the advanced editor after sending text to the mud, **Note** If Persistent is enabled this will merely hide the editor until next use
+    - `Word wrap` wrap long lines of text, added for chat and main display
+    - `Word wrap column` wrap lines at a fixed character column, added for chat and main display
+    - `word wrap indent` indent wrapped line with the set amount of spaces, added for chat and main display
   - `#connecttime` now displays last disconnect time when possible if disconnected
   - Chat:
     - Window display now uses global theme for display scroll bars
@@ -91,6 +94,7 @@
     - Fixed display control character unicode symbol being wrong ones
     - Fixed finder current overlay to display correctly when highlight all enabled
     - Fixed finder regular expression button being set to active in correctly
+    - Fixed toggle split view button/scroll corner losing text selection when clicked
   - Logging:
     - Fixed logger not enabling/disabling when changed from settings dialog
     - Fixed logger not enabling/disabling on load

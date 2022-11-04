@@ -140,6 +140,7 @@
                     text: 'Display',
                     nodes: [
                         { text: 'Fonts', dataAttr: { title: 'Display > Fonts', pane: 'display-fonts' } },
+                        { text: 'Advanced', dataAttr: { title: 'Display > Advanced', pane: 'display-advanced' } },
                     ]
                 },
                 { text: 'Command line' },
@@ -160,7 +161,12 @@
                 {
                     text: 'Chat',
                     nodes: [
-                        { text: 'Display', dataAttr: { title: 'Chat > Display', pane: 'chat-display' } },
+                        {
+                            text: 'Display', dataAttr: { title: 'Chat > Display', pane: 'chat-display' },
+                            nodes: [
+                                { text: 'Advanced', dataAttr: { title: 'Chat > Display > Advanced', pane: 'chat-display-advanced' } }
+                            ]
+                        },
                         { text: 'Window', dataAttr: { title: 'Chat > Window', pane: 'chat-window' } },
                     ]
                 },
@@ -1530,7 +1536,7 @@
                                 <input type="checkbox" id="editorCloseOnSend" /> Close advanced editor on send
                             </label>
                         </div>
-                    </fieldset>                                                           
+                    </fieldset>
                 </div>
                 <div role="tabpanel" class="pref-pane global" id="interface">
                     <div class="col-sm-6 form-group global">
@@ -1588,23 +1594,31 @@
 
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
+                            <input type="checkbox" id="display-wordWrap" /> Word wrap
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
                             <input type="checkbox" id="enableURLDetection" /> Enable URL detection
                         </label>
                     </div>
 
+
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            Word wrap column
+                            <input type="number" id="display-wrapAt" class="input-sm form-control" min="0" max="1000" />
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            Word wrap indent
+                            <input type="number" id="display-indent" class="input-sm form-control" min="0" max="500" />
+                        </label>
+                    </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="CommandonClick" /> Focus to command input on click
-                        </label>
-                    </div>
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">
-                            <input type="checkbox" id="flashing" /> Enable flashing text
-                        </label>
-                    </div>
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">
-                            <input type="checkbox" id="display-roundedOverlays" /> Enable rounded overlays
                         </label>
                     </div>
 
@@ -1618,14 +1632,15 @@
                             <input type="checkbox" id="display-splitLive" /> Split scroll live update
                         </label>
                     </div>
+
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
-                            <input type="checkbox" id="display-hideTrailingEmptyLine" /> Hide trailing line
+                            <input type="checkbox" id="display-showSplitButton" /> Show split button
                         </label>
                     </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
-                            <input type="checkbox" id="display-showSplitButton" /> Show split button
+                            <input type="checkbox" id="flashing" /> Enable flashing text
                         </label>
                     </div>
                     <div class="col-sm-6 form-group">
@@ -1636,32 +1651,6 @@
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="display-enableBackgroundColors" /> Enable background colors
-                        </label>
-                    </div>
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">
-                            <input type="checkbox" id="display-showInvalidMXPTags" /> Show invalid MXP tags
-                        </label>
-                    </div>
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">
-                            <input type="checkbox" id="display-displayControlCodes" /> Display control codes
-                        </label>
-                    </div>   
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">
-                            <input type="checkbox" id="display-emulateTerminal" /> Emulate terminal extended characters
-                        </label>
-                    </div>  
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">
-                            <input type="checkbox" id="display-emulateControlCodes" /> Emulate control codes
-                        </label>
-                    </div>                   
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">
-                            Tab width
-                            <input type="number" id="display-tabWidth" class="input-sm form-control" min="0" max="200" />
                         </label>
                     </div>
                     <div class="col-sm-6 form-group">
@@ -1713,6 +1702,45 @@
                         </label>
                     </div>
                 </div>
+                <div role="tabpanel" class="pref-pane" id="display-advanced">
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            Tab width
+                            <input type="number" id="display-tabWidth" class="input-sm form-control" min="0" max="200" />
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="display-roundedOverlays" /> Enable rounded overlays
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="display-showInvalidMXPTags" /> Show invalid MXP tags
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="display-displayControlCodes" /> Display control codes
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="display-emulateTerminal" /> Emulate terminal extended characters
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="display-emulateControlCodes" /> Emulate control codes
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="display-hideTrailingEmptyLine" /> Hide trailing line
+                        </label>
+                    </div>
+                </div>
+
                 <div role="tabpanel" class="pref-pane" id="colors">
                     <div class="col-sm-4 form-group">
                         <label>Color scheme
@@ -2295,12 +2323,24 @@
                     </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
-                            <input type="checkbox" id="chat-flashing" /> Enable flashing text
+                            <input type="checkbox" id="chat-wordWrap" /> Word wrap
                         </label>
                     </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
-                            <input type="checkbox" id="chat-roundedOverlays" /> Enable rounded overlays
+                            Word wrap column
+                            <input type="number" id="chat-wrapAt" class="input-sm form-control" min="0" max="1000" />
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            Word wrap indent
+                            <input type="number" id="chat-indent" class="input-sm form-control" min="0" max="500" />
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="chat-flashing" /> Enable flashing text
                         </label>
                     </div>
                     <div class="col-sm-6 form-group">
@@ -2320,27 +2360,6 @@
                     </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
-                            <input type="checkbox" id="chat-displayControlCodes" /> Display control codes
-                        </label>
-                    </div>   
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">
-                            <input type="checkbox" id="chat-emulateTerminal" /> Emulate terminal extended characters
-                        </label>
-                    </div>  
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">
-                            <input type="checkbox" id="chat-emulateControlCodes" /> Emulate control codes
-                        </label>
-                    </div>                     
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">
-                            Tab width
-                            <input type="number" id="chat-tabWidth" class="input-sm form-control" min="0" max="200" />
-                        </label>
-                    </div>
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">
                             <input type="checkbox" id="chat-showTimestamp" /> Show timestamp
                         </label>
                     </div>
@@ -2350,6 +2369,35 @@
                             <input type="text" id="chat-timestampFormat" class="input-sm form-control" />
                         </label>
                         <span class="help-block" style="float: left;font-size: 0.8em;margin:0;padding:0">Supports all moment time formats</span>
+                    </div>
+                </div>
+
+                <div role="tabpanel" class="pref-pane" id="chat-display-advanced">
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            Tab width
+                            <input type="number" id="chat-tabWidth" class="input-sm form-control" min="0" max="200" />
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="chat-roundedOverlays" /> Enable rounded overlays
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="chat-displayControlCodes" /> Display control codes
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="chat-emulateTerminal" /> Emulate terminal extended characters
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="chat-emulateControlCodes" /> Emulate control codes
+                        </label>
                     </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="chat-window">
