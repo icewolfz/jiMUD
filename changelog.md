@@ -42,6 +42,7 @@
   - Chat:
     - Window display now uses global theme for display scroll bars
     - Title bar now displays connected character name when possible
+    - All internal errors should now be logged to error log file
   - Add [#WINDOW](docs/commands.md) close and new argument support
   - Add [#CLOSE](docs/commands.md) close an open window
   - Add [#ALL](docs/commands.md) send commands to all client windows as if sent from command line
