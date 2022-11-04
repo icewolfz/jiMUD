@@ -5429,9 +5429,9 @@ export class Input extends EventEmitter {
                         throw new Error('Invalid number \'' + i + '\' for wrap');
                     if (i < 0)
                         throw new Error('Must be greater then or equal to zero for wrap');
-                    this.client.options.display.wordWrap = !this.client.options.display.wordWrap;
+                    this.client.options.display.wordWrap = true;
                     this.client.options.display.wrapAt = i;
-                    this.client.display.wordWrap = this.client.options.display.wordWrap;
+                    this.client.display.wordWrap = true;
                     this.client.display.wrapAt = i;
                     this.client.saveOptions();
                 }
