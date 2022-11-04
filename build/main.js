@@ -2602,9 +2602,9 @@ async function canCloseClient(id, warn, all, allWindows) {
     for (let w = 0; w < wl; w++) {
         //check each child window just to be safe
         close = await executeScript(`if(typeof closeable === "function") closeable(${all}, ${allWindows}); else (function() { return true; })();`, client.windows[w].window);
-        if (client.windows[w].window.isModal()) {
+        if (client.windows[w].window && client.windows[w].window.isModal()) {
             if (warn) {
-                dialog.showMessageBox(mWindow, {
+                dialog.showMessageBox(client.parent, {
                     type: 'info',
                     message: `All modal dialogs must be closed before you can exit.`
                 });
