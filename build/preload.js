@@ -18,6 +18,7 @@ window.setGlobal = (variable, value) => ipcRenderer.send('set-global', variable,
 window.getSetting = (variable) => ipcRenderer.sendSync('get-setting', variable);
 window.setSetting = (variable, value) => ipcRenderer.send('set-setting', variable, value);
 window.error = (error) => ipcRenderer.send('error', error);
+window.logError = (error, skipClient) => ipcRenderer.send('log-error', error, skipClient);
 window.debug = (message) => ipcRenderer.send('debug', message);
 
 window.addContext = func => ipcRenderer.addListener('context-menu', func);

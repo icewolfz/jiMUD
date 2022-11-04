@@ -32,6 +32,17 @@
 
         var display, _logger, _zoom = 1.0;
 
+        window.addEventListener('error', (e) => {
+            const { message, filename, lineno, colno, error } = e;
+            window.logError(error, true);
+            console.error('Message: ' + message);
+            console.error('Url: ' + filename);
+            console.error('Line: ' + lineno);
+            console.error('Column: ' + colno);
+            console.error(error);
+            return true;
+        });
+
         function loadOptions() {
             options = window.opener.client.options;
             if (display) {
