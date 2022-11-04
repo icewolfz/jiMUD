@@ -5412,6 +5412,30 @@ export class Input extends EventEmitter {
                 this.createTrigger(item.pattern, item.commands, item.profile, item.options, item.name);
                 //#endregion
                 return null;
+            case 'wrap':
+            case 'wr':
+                //filter out empty arguments to avoid trailing spaces
+                args = args.filter(a => a);
+                if (args.length > 1)
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'wr\x1b[0;-11;-12map or \x1b[4m' + cmdChar + 'wr\x1b[0;-11;-12map number');
+                if (args.length === 0) {
+                    this.client.options.display.wordWrap = !this.client.options.display.wordWrap;
+                    this.client.display.wordWrap = this.client.options.display.wordWrap;
+                    this.client.saveOptions();
+                }
+                else {
+                    i = parseInt(this.parseInline(args[0]), 10);
+                    if (isNaN(i))
+                        throw new Error('Invalid number \'' + i + '\' for wrap');
+                    if (i < 0)
+                        throw new Error('Must be greater then or equal to zero for wrap');
+                    this.client.options.display.wordWrap = !this.client.options.display.wordWrap;
+                    this.client.options.display.wrapAt = i;
+                    this.client.display.wordWrap = this.client.options.display.wordWrap;
+                    this.client.display.wrapAt = i;
+                    this.client.saveOptions();
+                }
+                return null;
         }
         if (fun.match(/^[-|+]?\d+$/)) {
             i = parseInt(fun, 10);

@@ -50,6 +50,7 @@
   - Add [#ID](docs/commands.md) Display client id
   - Add [#CLEARNAME](docs/commands.md) clear current tab or client id's name
   - Add [#TO](docs/commands.md) Send commands to target client name/id
+  - Add [#WRAP](docs/commands.md) Toggle word wrap and set the wrap column to number if supplied, if number is 0 disables wrap at column
   - Add [client.id](docs/scripting.md) return client id
   - Add [client.setName](docs/scripting.md) set client name
   - Add [client.getName](docs/scripting.md) return client name

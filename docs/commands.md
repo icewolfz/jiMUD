@@ -50,6 +50,9 @@ Display text to the screen, and the display text will not fire triggers
 <u>#UNG</u>AG
 >clear previous #gag command settings
 
+<u>#WR</u>AP *number*
+>Toggle word wrap and set the wrap column to number if supplied, if number is 0 disables wrap at column
+
 ## **Conditionals**
 
 <u>#CA</u>SE index {command 1} *{command n}*
