@@ -3145,10 +3145,11 @@ export class Display extends EventEmitter {
         }
         if (this.split) {
             this.split.dirty = true;
-            if (this._VScroll.scrollSize >= 0)
-                this._scrollCorner.classList.remove('disabled');
-            else
-                this._scrollCorner.classList.add('disabled');
+            if (this._scrollCorner)
+                if (this._VScroll.scrollSize >= 0)
+                    this._scrollCorner.classList.remove('disabled');
+                else
+                    this._scrollCorner.classList.add('disabled');
         }
     }
 
