@@ -37,6 +37,7 @@
             if (display) {
                 display.updateFont(options.chat.font, options.chat.fontSize);
                 display.maxLines = options.chat.bufferSize;
+                display.enableSplit = options.chat.split;
                 display.splitLive = options.chat.splitLive;
                 display.splitHeight = options.chat.splitHeight;
                 display.roundedRanges = options.chat.roundedOverlays;
