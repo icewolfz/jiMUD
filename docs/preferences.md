@@ -144,7 +144,7 @@ Settings to control how to handle telnet options and emulation
 - `Persistent` causes the mapper window to remain in memory to help speed up load times on future uses, note this setting only has effect if mapper is not enabled
 - `Always on top of the main window` Force mapper window to always be above main client window, when ever client window is focused it will bring the mapper along with it. **Requires restart on windows**
 - `Always on top of all windows` Force mapper to always be on top of all windows
-- `Show in taskbar` Always show mapper window in taskbar **Ignored when Always on top enabled in windows**
+- `Show in taskbar` Always show mapper window in taskbar **Ignored when Always on top enabled in windows**, . __Mac__, __Windows__
 
 ## Chat
 
@@ -189,14 +189,14 @@ Controls what is captured into the chat window
 - `Always on top of the main window` Force chat window to always be above main client window, when ever client window is focused it will bring the chat window along with it. **Requires restart on windows**
 - `Always on top of all windows` Force chat window to always be on top of all windows
 - `Persistent` causes the chat window to remain in memory to help speed up load times on future uses, note this setting only has effect if capture settings are off
-- `Show in taskbar` Always show mapper window in taskbar **Ignored when Always on top enabled in windows**
+- `Show in taskbar` Always show mapper window in taskbar **Ignored when Always on top enabled in windows**. __Mac__, __Windows__
 
 ## Code Editor
 
 - `Persistent` causes the code editor window to remain in memory to help speed up load times on future uses
 - `Always on top of the main window` Force code editor window to always be above main client window, when ever client window is focused it will bring the code editor along with it. **Requires restart on windows**
 - `Always on top of all windows` Force code editor to always be on top of all windows
-- `Show in taskbar` Always show code editor window in taskbar **Ignored when Always on top enabled in windows**
+- `Show in taskbar` Always show code editor window in taskbar **Ignored when Always on top enabled in windows**. __Mac__, __Windows__
 
 ## Status
 
@@ -272,7 +272,7 @@ Controls what is captured into the chat window
 - `Show extended error messages` Display extended stack information for errors
 - `Fix hidden windows` Move windows that have been hidden off screen to on onscreen <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
 - `Hide when minimized` will hide the main window and any window set as a child **note** due to bugs in linux this feature may not work <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
-- `Show in taskbar` will show or hide the main window from the system's taskbar <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
+- `Show in taskbar` will show or hide the main window from the system's taskbar <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>. __Mac__, __Windows__
 - `Enable Background Throttling` disable or enable throttling when a window is in the background or hidden <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
 - `Enable Background Throttling for Clients` disable or enable throttling when a client is in the background or hidden <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
 - `Enable warning dialog when connected and closing client` disable or enable warning check when closing mud and connected

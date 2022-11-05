@@ -9,17 +9,17 @@ A mud client using electron for [ShadowMUD](http://www.shadowmud.com) based on i
 
 ### Windows
 
-1. npm install - install all the node modules
+1. npm install - install all the node modules, **Note** you will need to rerun this only if modules have been updated in the package.json
 1. npm run release:win - build installer and portable exe
 
 ### Linux
 
-1. npm install - install all the node modules
+1. npm install - install all the node modules, **Note** you will need to rerun this only if modules have been updated in the package.json
 1. npm run release:linux - build tar, deb, appImage, and rpm packages
 
 ### Mac
 
-1. npm install - install node modules
+1. npm install - install node modules, **Note** you will need to rerun this only if modules have been updated in the package.json
 1. npm run release:mac - build Mac packages
 
 Build and package files are all saved to dist folder
@@ -33,6 +33,7 @@ Build and package files are all saved to dist folder
 
 This will allow you to run jiMUD directly from this folder with out the need to
 package into a self contained folder or building an installer.
+
 **Note** you only need to run the install, rebuild, and compile steps the first 
 time or any time you update the packages.
 
@@ -75,7 +76,7 @@ Usage: `jiMUD [arguments...]`
 - `-nw, --new-window` Open a new window
 - `-nw=[id], --new-window=[id]` Open a new window with and load a character
 - `-nt, --new-tab` Open a new tab
-- `-nt=[id], --new-tab=[id]` Open a new tab and load a character, similar to --character but will not replace current active connection if it exist
+- `-nt=[id], --new-tab=[id]` Open a new tab and load a character, similar to --character but will not replace current active tab if it exist
 - `-el=[file], --error-log=[file]` Set a custom error log path
 
 ## References
@@ -97,9 +98,9 @@ Usage: `jiMUD [arguments...]`
 ## Known Issues
 
 - Linux:
-  - The minimize event does not correctly fire, thus `Hide when minimized` may not work
   - Tray icon: When app indicator is used on Linux, the click event is ignored, see [Electron docs for more limits](https://www.electronjs.org/docs/api/tray)
   - Auto updating is only supported by Appimage
+  - Show in task bar is no longer supported because Electron removed support due to wayland
 - Display:
   - Unicode RTL text selection display is not correct
   - MXP Image height is limited to line height
@@ -118,7 +119,6 @@ Usage: `jiMUD [arguments...]`
   - Reverse style has weird results with heavy nesting of reverse tags and colors, suggest to just use normal background colors.
   - Correction from context menu may remove applied styles depending on if they are just that word
   - Complex color codes may be returned due to nesting and other complex style choices
-
 - General slow performance, do not use --disable-gpu it can impact overall performance
 - [Mapper](mapper.md#know-issues)
 - [Code editor](codeeditor.md#know-issues)
