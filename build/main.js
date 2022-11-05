@@ -1180,8 +1180,8 @@ ipcMain.on('log', (event, raw) => {
     console.log(raw);
 });
 
-ipcMain.on('log-error', (event, err, skipClient) => {
-    logError(err, skipClient);
+ipcMain.on('log-error', (event, err, skipClient, title) => {
+    logError(err, skipClient, title);
 });
 
 ipcMain.on('debug', (event, msg, id) => {
@@ -2985,14 +2985,16 @@ function isFileSync(aPath) {
 }
 //#endregion
 
-function logError(err, skipClient) {
+function logError(err, skipClient, title) {
     if (!err) {
         if (!global.debug) return;
         err = new Error('Empty error');
     }
+    title = title || '';
+    if (title && title.length) title += '\n';
     var msg = '';
     if (global.debug || _settings.enableDebug)
-        console.error(err);
+        console.error(title + err);
     if (err.stack && _settings.showErrorsExtended)
         msg = err.stack;
     else if (err instanceof TypeError)
@@ -3005,7 +3007,7 @@ function logError(err, skipClient) {
         msg = err;
     if (!global.editorOnly && !skipClient) {
         //found a client else fallback to global settings
-        if (sendClient('error', msg))
+        if (sendClient('error', title + msg))
             return;
     }
     if (_settings.logErrors) {
@@ -3021,7 +3023,7 @@ function logError(err, skipClient) {
             err = new Error(err);
             msg = err.stack;
         }
-        fs.writeFileSync(errorLog, `${new Date().toLocaleString()}\n${msg}\n`, { flag: 'a' });
+        fs.writeFileSync(errorLog, `${new Date().toLocaleString()}\n${title}${msg}\n`, { flag: 'a' });
     }
 }
 

@@ -137,6 +137,17 @@
         const { EditorType } = require('./js/value.editors');
         const fs = require('fs');
 
+        window.addEventListener('error', (e) => {
+            const { message, filename, lineno, colno, error } = e;
+            window.logError(error, true, 'Mapper window');
+            console.error('Message: ' + message);
+            console.error('Url: ' + filename);
+            console.error('Line: ' + lineno);
+            console.error('Column: ' + colno);
+            console.error(error);
+            return true;
+        });        
+
         var importType = ImportType.Replace;
         var _progress;
         var _enableDebug = false;

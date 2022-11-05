@@ -69,12 +69,15 @@
   - Mapper:
     - Room editor panel is now resizable
     - Title bar now displays connected character name when possible
+    - All internal errors should now be logged to error log file
   - Immortal tools:
     - File overwrite system has been added for all but uploading paths
     - Title bar now displays connected character name when possible
   - Advanced editor, Skills, Profile manager, Command history:
     - Title bar now displays connected character name when possible
   - Add tab character width control for main and chat display
+  - Profile manager: All internal errors should now be logged to error log file
+  - Log viewer: All internal errors should now be logged to error log file
 - **Fixed:**
   - Fixed a bug in parsing #command arguments and quotes
   - Immortal tools:

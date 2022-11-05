@@ -89,6 +89,17 @@
     const fs = require('fs');
     ipcRenderer.invoke('window', 'setEnabled', false);
 
+    window.addEventListener('error', (e) => {
+        const { message, filename, lineno, colno, error } = e;
+        window.logError(error, true, 'Log viewer');
+        console.error('Message: ' + message);
+        console.error('Url: ' + filename);
+        console.error('Line: ' + lineno);
+        console.error('Column: ' + colno);
+        console.error(error);
+        return true;
+    });
+
     var menubar, options;
     let $closeWindow = false;
     var _recent = [];
