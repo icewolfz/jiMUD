@@ -673,6 +673,13 @@
             }, 0);
         }
         //#region Interface functions
+        function toggleWrap() {
+            client.options.display.wordWrap = !client.options.display.wordWrap;
+            client.display.wordWrap = client.options.display.wordWrap;
+            doUpdate(32);
+            ipcRenderer.send('update-menuitem', { menu: ['view', 'word wrap'], options: { checked: client.options.display.wordWrap } });
+        }
+
         function toggleView(view) {
             switch (view) {
                 case 'button.connect':
@@ -2874,6 +2881,7 @@
                 { menu: ['view', 'buttons', 'mailbutton'], options: { checked: client.options.buttons.mail } },
                 { menu: ['view', 'buttons', 'composebutton'], options: { checked: client.options.buttons.compose } },
                 { menu: ['view', 'buttons', 'userbutton'], options: { checked: client.options.buttons.user } },
+                { menu: ['view', 'word wrap'], options: { checked: client.options.display.wordWrap } },
                 { menu: ['file', 'connect'], options: { enabled: !client.connected } },
                 { menu: ['file', 'disconnect'], options: { enabled: client.connected } },
                 { menu: ['file', 'enableParsing'], options: { checked: client.enableParsing } },

@@ -110,6 +110,7 @@ export class Chat {
     public wordWrap: boolean = false;
     public wrapAt: number = 0;
     public indent: number = 4;
+    public scrollLocked: boolean = false;
 }
 
 export class CodeEditor {

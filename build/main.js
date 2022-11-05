@@ -4658,6 +4658,14 @@ function createMenu(window) {
                     type: 'separator'
                 },
                 {
+                    label: '&Word wrap',
+                    type: 'checkbox',
+                    accelerator: 'Alt+Z',
+                    click: (item, mWindow) => {
+                        executeScriptClient('toggleWrap()', window || mWindow, true);
+                    }
+                },
+                {
                     role: 'togglefullscreen'
                 }
             ]

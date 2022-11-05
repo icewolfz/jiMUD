@@ -69,7 +69,12 @@
                 display.wordWrap = options.chat.wordWrap;
                 display.wrapAt = options.chat.wrapAt;
                 display.indent = options.chat.indent;
+                display.scrollLock = options.chat.scrollLocked;
+                display.scrollDisplay();
             }
+            if (options.chat.wordWrap)
+                $('#btn-wrap').addClass('active');
+            updateScrollLockButton();
             initLogger();
             if (_logger) {
                 _logger.postMessage({
@@ -157,6 +162,14 @@
             display = new Display('chat-display');
             events['set-title'](window.opener.getCharacterName());
 
+            display.on('scroll-lock', lock => {
+                window.opener.client.options.chat.scrollLocked = lock;
+                display.scrollLock = lock;
+                if (display.split)
+                    display.scrollDisplay(true);
+                updateScrollLockButton();
+            });
+
             display.on('split-move-done', (h) => {
                 window.opener.client.options.chat.splitHeight = h;
                 window.opener.client.saveOptions();
@@ -191,6 +204,10 @@
                     display.scrollByCharacter(-1, 0);
                 else if (e.which === 40) //down
                     display.scrollDown();
+                else if (!event.ctrlKey && !event.metaKey && event.altKey && event.key === 'z')
+                    toggleWrap();
+                else if (event.key === 'ScrollLock')
+                    toggleScrollLock();                    
             });
         });
 
@@ -272,6 +289,42 @@
             _logger.postMessage({ action: 'toggle' });
         }
 
+        function toggleWrap() {
+            window.opener.client.options.chat.wordWrap = !window.opener.client.options.chat.wordWrap;
+            if (window.opener.client.options.chat.wordWrap)
+                $('#btn-wrap').addClass('active');
+            else
+                $('#btn-wrap').removeClass('active');
+            display.wordWrap = options.chat.wordWrap;
+            window.opener.client.saveOptions();
+            $('#btn-wrap').blur();
+        }
+
+        function toggleScrollLock() {
+            window.opener.client.options.chat.scrollLocked = !window.opener.client.options.chat.scrollLocked;
+            display.scrollLock = window.opener.client.options.chat.scrollLocked ;
+            if (display.split)
+                display.scrollDisplay(true);
+            updateScrollLockButton();
+        }
+
+        function updateScrollLockButton() {
+            const lock = document.getElementById('btn-lock');
+            if (window.opener.client.options.chat.scrollLocked) {
+                lock.title = 'Unlock display';
+                lock.firstElementChild.classList.remove('fa-lock');
+                lock.firstElementChild.classList.add('fa-unlock');
+                lock.classList.add('active');
+            }
+            else {
+                lock.classList.remove('active');
+                lock.title = 'Lock display';
+                lock.firstElementChild.classList.add('fa-lock');
+                lock.firstElementChild.classList.remove('fa-unlock');
+            }
+            lock.blur();
+        }
+
         // eslint-disable-next-line no-unused-vars
         function clearDisplaySelection() {
             display.clear();
@@ -333,6 +386,14 @@
         <button id="btn-copy" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Copy" onclick="doCopy()">
             <i class="fa fa-copy"></i>
         </button>
+        <div class="btn-group" role="group">
+            <button id="btn-lock" type="button" class="btn btn-default btn-xs" title="Toggle scroll lock" onclick="toggleScrollLock()">
+                <i class="fa fa-lock"></i>
+            </button>
+            <button id="btn-wrap" type="button" class="btn btn-default btn-xs" title="Toggle word wrap" onclick="toggleWrap()">
+                <img src="../assets/icons/png/wrap.png">
+            </button>
+        </div>
         <div class="btn-group" role="group">
             <button id="btn-zoom-in" type="button" class="btn btn-default btn-xs" title="Zoom out" onclick="updateZoom(_zoom - 0.05);">
                 <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
