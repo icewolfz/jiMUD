@@ -264,6 +264,20 @@ body {
     z-index: 100;
 }
 
+.find-drag-grip {
+    text-decoration: none;
+    cursor: grab;
+}
+
+.find-drag-grip.dragging {
+    cursor: grabbing;
+}
+
+.find-drag-grip svg {
+    height: 14px;
+    padding-top: 2px;
+}
+
 .find input,
 .findlay-find input:focus {
     outline: none;

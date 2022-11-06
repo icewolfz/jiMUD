@@ -44,6 +44,7 @@
     - Title bar now displays connected character name when possible
     - All internal errors should now be logged to error log file
     - Add ability to scroll lock the screen using a toggle button or scroll lock key
+    - Find dialog settings are now saved and restored
   - Add [#WINDOW](docs/commands.md) close and new argument support
   - Add [#CLOSE](docs/commands.md) close an open window
   - Add [#ALL](docs/commands.md) send commands to all client windows as if sent from command line
@@ -78,6 +79,7 @@
   - Add tab character width control for main and chat display
   - Profile manager: All internal errors should now be logged to error log file
   - Log viewer: All internal errors should now be logged to error log file
+  - Find dialog is now movable to allow you to see text under it if need be
 - **Fixed:**
   - Fixed a bug in parsing #command arguments and quotes
   - Immortal tools:

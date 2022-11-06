@@ -17,6 +17,9 @@ export class Finder extends EventEmitter {
     private _regex;
     private _all = false;
     private _key;
+    private _location = [5, 20];
+
+    public visible: boolean = false;
 
     constructor(display) {
         super();
@@ -145,8 +148,98 @@ export class Finder extends EventEmitter {
             this.emit('highlight');
         }
     }
+
+    get height() {
+        return this._control.outerHeight();
+    }
+
+    get location() {
+        return this._location;
+    }
+
+    set location(value) {
+        if (!Array.isArray(value)) return;
+        if (value.length === 0) {
+            this.location = [5, 20];
+        }
+        if (value.length === 1) {
+            this.location[0] = value[0];
+            this.location[1] = value[0];
+        }
+        else {
+            this.location[0] = value[0];
+            this.location[1] = value[1];
+        }
+        this._control.css('top', this._location[0]);
+        this._control.css('right', this._location[1]);
+    }
+
+    private dragElement(elmnt) {
+        var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        if (document.getElementById(elmnt.id + "-drag")) {
+            // if present, the header is where you move the DIV from:
+            document.getElementById(elmnt.id + "-drag").onmousedown = dragMouseDown.bind(this);
+        } else {
+            // otherwise, move the DIV from anywhere inside the DIV:
+            elmnt.onmousedown = dragMouseDown.bind(this);
+        }
+
+        function dragMouseDown(e) {
+            e = e || window.event;
+            e.preventDefault();
+            // get the mouse cursor position at startup:
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            document.onmouseup = closeDragElement.bind(this);
+            // call a function whenever the cursor moves:
+            document.onmousemove = elementDrag.bind(this);
+            document.getElementById(elmnt.id + "-drag").style.cursor = 'grabbing';
+        }
+
+        function elementDrag(e) {
+            e = e || window.event;
+            e.preventDefault();
+            // calculate the new cursor position:
+            pos1 = pos3 - e.clientX;
+            pos2 = pos4 - e.clientY;
+            pos3 = e.clientX;
+            pos4 = e.clientY;
+            let bounds = elmnt.getBoundingClientRect();
+            let top = (elmnt.offsetTop - pos2);
+            let right = document.body.clientWidth - ((elmnt.offsetLeft - pos1) + bounds.width);
+            if (top < 2)
+                top = 2;
+            if (top > document.body.clientHeight - bounds.height - 2)
+                top = document.body.clientHeight - bounds.height - 2;
+            if (right > document.body.clientWidth - bounds.width - 2)
+                right = document.body.clientWidth - bounds.width - 2;
+            if (right < 2)
+                right = 2;
+            // set the element's new position:
+            elmnt.style.top = top + "px";
+            //elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+            elmnt.style.right = right + 'px';
+            this.emit('moving', [top, right]);
+        }
+
+        function closeDragElement() {
+            // stop moving when mouse button is released:
+            document.onmouseup = null;
+            document.onmousemove = null;
+            document.getElementById(elmnt.id + "-drag").style.cursor = '';
+            this._location[0] = parseInt(elmnt.style.top, 10);
+            this._location[1] = parseInt(elmnt.style.right, 10);
+            this.emit('moved', this.location);
+        }
+    }
+
     private createControl() {
-        this._control = $('<div id="' + this._display.id + '-find" class="find"><input placeholder="Find" /><button id="' + this._display.id + '-find-case" title="Match Case" class="find-case">Aa</button><button id="' + this._display.id + '-find-word" title="Match Whole Word" class="find-word">Aa|</button><button id="' + this._display.id + '-find-regex" title="Use Regular Expression" class="find-regex">.*</button><button id="' + this._display.id + '-find-all" title="Highlight all matches" class="find-all"><i class="fa fa-paint-brush"></i></button><div id="' + this._display.id + '-find-count" class="find-count"></div><button id="' + this._display.id + '-find-prev" title="Previous Match" disabled="disabled" class="find-prev"><i class="fa fa-arrow-down"></i></button><button id="' + this._display.id + '-find-next" title="Next Match" disabled="disabled" class="find-next"><i class="fa fa-arrow-up"></i></button><button id="' + this._display.id + '-find-selection" title="Find in selection" disabled="disabled" class="find-selection"><i class="fa fa-align-left"></i></button><button id="' + this._display.id + '-find-reverse" title="Search Down" class="find-reverse"><i class="fa fa-caret-down"></i></button><button id="' + this._display.id + '-find-close" title="Close" class="find-close"><i class="fa fa-close"></i></button></div>');
+        this._control = $('<div id="' + this._display.id + '-find" class="find">' + `<a href="javascript:void(0)" id="${this._display.id}-find-drag" title="Drag grip" draggable="true" class="find-drag-grip">
+        <svg class="svg-icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M384 64H256C220.66 64 192 92.66 192 128v128c0 35.34 28.66 64 64 64h128c35.34 0 64-28.66 64-64V128c0-35.34-28.66-64-64-64z m0 320H256c-35.34 0-64 28.66-64 64v128c0 35.34 28.66 64 64 64h128c35.34 0 64-28.66 64-64v-128c0-35.34-28.66-64-64-64z m0 320H256c-35.34 0-64 28.66-64 64v128c0 35.34 28.66 64 64 64h128c35.34 0 64-28.66 64-64v-128c0-35.34-28.66-64-64-64zM768 64h-128c-35.34 0-64 28.66-64 64v128c0 35.34 28.66 64 64 64h128c35.34 0 64-28.66 64-64V128c0-35.34-28.66-64-64-64z m0 320h-128c-35.34 0-64 28.66-64 64v128c0 35.34 28.66 64 64 64h128c35.34 0 64-28.66 64-64v-128c0-35.34-28.66-64-64-64z m0 320h-128c-35.34 0-64 28.66-64 64v128c0 35.34 28.66 64 64 64h128c35.34 0 64-28.66 64-64v-128c0-35.34-28.66-64-64-64z" fill="" /></svg>
+        </a>`+ '<input placeholder="Find" /><button id="' + this._display.id + '-find-case" title="Match Case" class="find-case">Aa</button><button id="' + this._display.id + '-find-word" title="Match Whole Word" class="find-word">Aa|</button><button id="' + this._display.id + '-find-regex" title="Use Regular Expression" class="find-regex">.*</button><button id="' + this._display.id + '-find-all" title="Highlight all matches" class="find-all"><i class="fa fa-paint-brush"></i></button><div id="' + this._display.id + '-find-count" class="find-count"></div><button id="' + this._display.id + '-find-prev" title="Previous Match" disabled="disabled" class="find-prev"><i class="fa fa-arrow-down"></i></button><button id="' + this._display.id + '-find-next" title="Next Match" disabled="disabled" class="find-next"><i class="fa fa-arrow-up"></i></button><button id="' + this._display.id + '-find-selection" title="Find in selection" disabled="disabled" class="find-selection"><i class="fa fa-align-left"></i></button><button id="' + this._display.id + '-find-reverse" title="Search Down" class="find-reverse"><i class="fa fa-caret-down"></i></button><button id="' + this._display.id + '-find-close" title="Close" class="find-close"><i class="fa fa-close"></i></button></div>');
+        this._control.css('top', this._location[0]);
+        this._control.css('right', this._location[1]);
+
         $('#' + this._display.id + '-find-close', this._control).on('click', () => {
             this.hide();
         });
@@ -172,6 +265,7 @@ export class Finder extends EventEmitter {
             this.RegularExpression = !this.RegularExpression;
         });
         window.document.body.appendChild(this._control[0]);
+        this.dragElement(this._control[0]);
     }
 
     public show() {
@@ -181,6 +275,7 @@ export class Finder extends EventEmitter {
             $('input', this._control).val(sel);
         $('input', this._control).focus().select();
         this.find();
+        this.visible = true;
         this.emit('shown');
     }
 
@@ -188,6 +283,7 @@ export class Finder extends EventEmitter {
         this._control.slideUp(() => {
             $('input', this._control).val('');
             this.clear();
+            this.visible = false;
             this.emit('closed');
         });
     }

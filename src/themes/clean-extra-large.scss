@@ -249,6 +249,14 @@ body {
     background-color: rgb(40, 0, 0);
 }
 
+.find-drag-grip svg {
+    fill: #bbb ;
+}
+
+.find-drag-grip:hover svg {
+    fill: wheat;
+}
+
 .find input,
 .find input:focus {
     border: 1px solid #{$borderColor};

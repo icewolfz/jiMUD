@@ -946,6 +946,14 @@ export class Display extends EventEmitter {
             this.emit('highlight');
         });
 
+        this._finder.on('moving', location => {
+            this.emit('finder-moving', location);
+        });
+
+        this._finder.on('moved', location => {
+            this.emit('finder-moved', location);
+        });
+
         this._finder.on('found-results', () => {
             this.doUpdate(UpdateType.scrollView);
             this.emit('found-results');
@@ -1033,6 +1041,14 @@ export class Display extends EventEmitter {
     }
     set Highlight(value: boolean) {
         this._finder.Highlight = value;
+    }
+
+    get finderLocation() { 
+        return this._finder.location;
+    }
+
+    set finderLocation(value) { 
+        this._finder.location = value;
     }
 
     private doUpdate(type?: UpdateType) {

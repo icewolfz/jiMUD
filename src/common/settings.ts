@@ -106,11 +106,22 @@ export class Chat {
     public tabWidth: number = 8;
     public displayControlCodes: boolean = false;
     public emulateTerminal: boolean = false;
-    public emulateControlCodes: boolean = true;    
+    public emulateControlCodes: boolean = true;
     public wordWrap: boolean = false;
     public wrapAt: number = 0;
     public indent: number = 4;
     public scrollLocked: boolean = false;
+
+    public find = {
+        case: false,
+        word: false,
+        reverse: false,
+        regex: false,
+        selection: false,
+        show: false,
+        highlight: false,
+        location: [5, 20]
+    }
 }
 
 export class CodeEditor {
@@ -542,6 +553,7 @@ export class Settings {
         selection: false,
         show: false,
         highlight: false,
+        location: [5, 20]
     };
 
     public display = {

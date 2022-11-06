@@ -1966,6 +1966,10 @@
                 client.options.find.highlight = client.display.Highlight;
                 doUpdate(32);
             });
+            client.display.on('finder-moved', location => {
+                client.options.find.location = location;
+                doUpdate(32);
+            });
 
         }
 
@@ -2626,6 +2630,7 @@
             client.display.Reverse = client.options.find.reverse;
             client.display.RegularExpression = client.options.find.regex;
             client.display.Highlight = client.options.find.highlight;
+            client.display.finderLocation = client.options.find.location;
             updateTitle();
             updateIcon(client.port === 1035 ? 3 : 0);
             if (client.options.find.show)

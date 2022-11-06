@@ -71,6 +71,14 @@
                 display.indent = options.chat.indent;
                 display.scrollLock = options.chat.scrollLocked;
                 display.scrollDisplay();
+                display.MatchCase = options.chat.find.case;
+                display.MatchWord = options.chat.find.word;
+                display.Reverse = options.chat.find.reverse;
+                display.RegularExpression = options.chat.find.regex;
+                display.Highlight = options.chat.find.highlight;
+                display.finderLocation = options.chat.find.location;
+                if (options.chat.find.show)
+                    display.showFind();
             }
             if (options.chat.wordWrap)
                 $('#btn-wrap').addClass('active');
@@ -107,12 +115,12 @@
                     case 'started':
                         $('#btn-enable').button('toggle');
                         window.opener.client.options.chat.log = e.data.args;
-                        window.opener.client.saveOptions();
+                        window.opener.doUpdate(32);
                         break;
                     case 'stopped':
                         $('#btn-enable').button('toggle');
                         window.opener.client.options.chat.log = e.data.args;
-                        window.opener.client.saveOptions();
+                        window.opener.doUpdate(32);
                         break;
                     case 'logging':
                         break;
@@ -126,7 +134,7 @@
                     case 'toggled':
                         options.chat.log = e.data.args;
                         window.opener.client.options.chat.log = e.data.args;
-                        window.opener.client.saveOptions();
+                        window.opener.doUpdate(32);
                         break;
                     case 'startInternal':
                     case 'start':
@@ -172,7 +180,7 @@
 
             display.on('split-move-done', (h) => {
                 window.opener.client.options.chat.splitHeight = h;
-                window.opener.client.saveOptions();
+                window.opener.doUpdate(32);
             });
 
             display.on('selection-done', () => {
@@ -181,6 +189,41 @@
                     display.clearSelection();
                 }
                 document.getElementById('btn-copy').disabled = !display.hasSelection;
+            });
+
+            display.on('word', () => {
+                window.opener.client.options.chat.find.word = display.MatchWord;
+                window.opener.doUpdate(32);
+            });
+            display.on('case', () => {
+                window.opener.client.options.chat.find.case = display.MatchCase;
+                window.opener.doUpdate(32);
+
+            });
+            display.on('reverse', () => {
+                window.opener.client.options.chat.find.reverse = display.Reverse;
+                window.opener.doUpdate(32);
+            });
+            display.on('regex', () => {
+                window.opener.client.options.chat.find.regex = display.RegularExpression;
+                window.opener.doUpdate(32);
+            });
+
+            display.on('shown', () => {
+                window.opener.client.options.chat.find.show = true;
+                window.opener.doUpdate(32);
+            });
+            display.on('closed', () => {
+                window.opener.client.options.chat.find.show = false;
+                window.opener.doUpdate(32);
+            });
+            display.on('highlight', () => {
+                window.opener.client.options.chat.find.highlight = display.Highlight;
+                window.opener.doUpdate(32);
+            });
+            display.on('finder-moved', location => {
+                window.opener.client.options.chat.find.location = location;
+                window.opener.doUpdate(32);
             });
 
             loadOptions();
@@ -207,7 +250,9 @@
                 else if (!event.ctrlKey && !event.metaKey && event.altKey && event.key === 'z')
                     toggleWrap();
                 else if (event.key === 'ScrollLock')
-                    toggleScrollLock();                    
+                    toggleScrollLock();
+                else if (event.ctrlKey && !event.metaKey && !event.altKey && event.key === 'f')
+                    doFind();
             });
         });
 
@@ -296,13 +341,13 @@
             else
                 $('#btn-wrap').removeClass('active');
             display.wordWrap = options.chat.wordWrap;
-            window.opener.client.saveOptions();
+            window.opener.doUpdate(32);
             $('#btn-wrap').blur();
         }
 
         function toggleScrollLock() {
             window.opener.client.options.chat.scrollLocked = !window.opener.client.options.chat.scrollLocked;
-            display.scrollLock = window.opener.client.options.chat.scrollLocked ;
+            display.scrollLock = window.opener.client.options.chat.scrollLocked;
             if (display.split)
                 display.scrollDisplay(true);
             updateScrollLockButton();
@@ -340,7 +385,7 @@
             _zoom = z;
             webFrame.setZoomFactor(z);
             window.opener.client.options.chat.zoom = z;
-            window.opener.client.saveOptions();
+            window.opener.doUpdate(32);
         }
 
         window.onbeforeunload = e => {

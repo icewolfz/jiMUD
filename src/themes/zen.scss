@@ -243,6 +243,17 @@ body {
     background-color: #{$buttonColor};
 }
 
+.find-drag-grip svg {
+    fill: #bbb ;
+}
+.find-drag-grip:hover  {
+    background: #{$buttonActiveBack};
+}
+
+.find-drag-grip:hover svg {
+    fill: #{$buttonTextHoverColor};
+}
+
 .find input,
 .find input:focus {
     border: 1px solid #{$borderColor};

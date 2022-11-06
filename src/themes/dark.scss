@@ -223,6 +223,14 @@ body {
     background-color: #{$panelBackground};
 }
 
+.find-drag-grip svg {
+    fill: #bbb ;
+}
+
+.find-drag-grip:hover svg {
+    fill: #{$color};
+}
+
 .find input,
 .find input:focus {
     border: 1px solid #{$borderColor};
