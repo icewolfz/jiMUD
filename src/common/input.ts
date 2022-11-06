@@ -166,7 +166,6 @@ export class Input extends EventEmitter {
                 scope[a.substr(1)] = window[a];
             });
         scope['clientid'] = getId();
-        scope['clientname'] = getName();
         //if no stack use direct for some performance
         if (this._stack.length === 0)
             return scope;
@@ -196,7 +195,6 @@ export class Input extends EventEmitter {
                 continue;
             switch (name) {
                 case 'clientid':
-                case 'clientname':
                 case '$selectedword':
                 case '$selword':
                 case '$selectedurl':
@@ -391,8 +389,6 @@ export class Input extends EventEmitter {
          */
         _mathjs = create(allWithCustomFunctions, {});
         const funs = {
-            //clientid: getId(),
-            //clientname: () => getName(),
             esc: '\x1b',
             cr: '\n',
             lf: '\r',
@@ -1356,6 +1352,24 @@ export class Input extends EventEmitter {
                 notes = getCharacterNotes();
                 args[0] = args[0].compile().evaluate(scope).toString();
                 fs.writeFileSync(notes, args[0]);
+                return;
+            },
+            //clientid: getId(),
+            clientname: (args, math, scope) => {
+                let notes;
+                if (args.length === 0) {
+                    return getName();
+                }
+                else if (args.length == 1)
+                    this.client.emit('set-name', args[0].compile().evaluate(scope).toString());
+                else if (args.length == 2) {
+                    let i = args[1].compile().evaluate(scope);
+                    if (isNaN(i))
+                        throw new Error('Invalid argument 2 \'' + args[1].toString() + '\' must be a number for clientname');
+                    this.client.emit('set-name', args[0].compile().evaluate(scope).toString(), i);
+                }
+                else
+                    throw new Error('Too many arguments for clientname');
                 return;
             }
         };
@@ -6744,8 +6758,6 @@ export class Input extends EventEmitter {
         switch (text) {
             case 'clientid':
                 return getId();
-            case 'clientname':
-                return getName();
             case 'esc':
                 return '\x1b';
             case 'cr':
@@ -6814,6 +6826,8 @@ export class Input extends EventEmitter {
                 if (isFileSync(notes))
                     return fs.readFileSync(notes, 'utf-8');
                 return '';
+            case 'clientname':
+                return getName();
         }
         if (this.loops.length && text.length === 1) {
             let i = text.charCodeAt(0) - 105;
@@ -7710,6 +7724,21 @@ export class Input extends EventEmitter {
                 notes = getCharacterNotes();
                 args[0] = this.stripQuotes(args[0], true);
                 fs.writeFileSync(notes, args[0]);
+                return null;
+            case 'clientname':
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
+                if (args.length === 0)
+                    return getName();
+                else if (args.length === 1)
+                    this.client.emit('set-name', args[0]);
+                else if (args.length === 2) {
+                    c = parseInt(args[1], 10);
+                    if (isNaN(1))
+                        throw new Error('Invalid argument 2 \'' + args[0] + '\' must be a number for clientname');
+                    this.client.emit('set-name', args[0], args[1]);
+                }
+                else
+                    throw new Error('Too many arguments for clientname');
                 return null;
         }
         return null;

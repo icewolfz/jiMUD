@@ -69,6 +69,7 @@
   - Add [client.closeWindow](docs/scripting.md) for scripting to close an open window/tab
   - Add [${clientid}](docs/functions#predefined-variables) return current client id
   - Add [${clientname}](docs/functions#predefined-variables) return current client name
+  - Add [%clientname(*name*, *id*)](docs/functions.md#miscellaneous) Return or set the client name
   - Mapper:
     - Room editor panel is now resizable
     - Title bar now displays connected character name when possible
@@ -308,7 +309,7 @@
       - Parsing of speed paths now allows you to use ( ) or { } to group a command, eg !2(n;w) would send n;w twice
   - Character manager: Notes field has been added to allow you to add notes that can be edited, they are saved directly to a file in character folder named character.notes, by saving directly to file it avoids keeping large amounts of text loaded into memory 
   - Add [%charcomment(text)](docs/functions.md#miscellaneous) to allow appending comments to character notes or getting notes field
-  - Add [%charnotes](docs/functions.md#miscellaneous) to allow setting notes or getting notes field
+  - Add [%charnotes(*string*)](docs/functions.md#miscellaneous) to allow setting notes or getting notes field
   - Profile manager: double clicking an item in treeview will now toggle expand or collapse state
 - **Fixed:**
   - Try to make sure window size is sent to the mud more accurately
