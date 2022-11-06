@@ -4,12 +4,13 @@
 //spell-checker:ignore togglecl raiseevent raisedelayed raisede diceavg dicemin dicemax zdicedev dicedev zmud
 //spell-checker:ignore testfile testspeedfile testspeedfiler nosend printprompt printp pcol forall stringlist zcolor ipos trimleft trimright
 //spell-checker:ignore bitand bitnot bitor bitshift bittest bitnum bitxor isfloat isnumber
+/// <reference types="mathjs" />
 import EventEmitter = require('events');
 import { MacroModifiers, MacroDisplay, Alias, Trigger, Button, Profile, TriggerType, TriggerTypes, SubTriggerTypes, convertPattern } from './profile';
 import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync, splitQuoted, isValidIdentifier, fileSizeSync } from './library';
 import { Client } from './client';
 import { Tests } from './test';
-import { NewLineType, ProfileSaveType } from './types';
+import { NewLineType, ProfileSaveType, ScriptEngineType } from './types';
 import { SettingList } from './settings';
 import { getAnsiColorCode, getColorCode, isMXPColor, getAnsiCode } from './ansi';
 
@@ -328,7 +329,16 @@ export class Input extends EventEmitter {
 
     private initMathJS() {
         //use minified mathjs instead of default module for performance loading
-        const { create, all, factory } = require('mathjs');
+        let create, all, factory, mathEngine;
+        if (this.client.options.scriptEngineType === ScriptEngineType.Full)
+            mathEngine = require('mathjs');
+        else if (this.client.options.scriptEngineType === ScriptEngineType.Simple)
+            mathEngine = require('mathjs/number');
+        else
+            mathEngine = require('./../../node_modules/mathjs/lib/browser/math');
+        create = mathEngine.create;
+        all = mathEngine.all;
+        factory = mathEngine.factory;
         //const { create, all, factory } = require('./../../node_modules/mathjs/lib/browser/math'); //slow but overall fastest version and kept up today
         //import {create, all, factory} from 'mathjs'; //nearly 4.5 times slower then browser version
 

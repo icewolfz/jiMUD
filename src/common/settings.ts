@@ -1,6 +1,6 @@
 //spell-checker:words vscroll, hscroll, askoncancel, askonclose,commandon, cmdfont
 //spell-checker:ignore emoteto, emotetos askonchildren YYYYMMDD Hmmss
-import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect, ProfileSortOrder, OnProfileChange, OnProfileDeleted, TrayMenu, OnSecondInstance } from './types';
+import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect, ProfileSortOrder, OnProfileChange, OnProfileDeleted, TrayMenu, OnSecondInstance, ScriptEngineType } from './types';
 const path = require('path');
 const fs = require('fs');
 
@@ -525,6 +525,8 @@ export class Settings {
 
     public alwaysShowTabs: boolean = false;
     public migrate: number = 0;
+
+    public scriptEngineType: ScriptEngineType = ScriptEngineType.Simple;
 
     /**
      * @depreciated Allow window states have been moved to a separate layout system

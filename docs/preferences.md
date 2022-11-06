@@ -219,6 +219,10 @@ Controls what is captured into the chat window
 - `Save Trigger State Changes` When a trigger state changes save profile
 - `Delay between path commands` The amount of milliseconds between sending of path commands for speed paths.
 - `Amount of path commands to send` the # of commands to send between speed path delay
+- `Expression engine` Which expression engine to use when executing expressions
+  - `Full` Full engine takes the longest to load and will add a delay on first use, supports all complex types, numbers and string operations
+  - `Fast` Fast engine is the fastest to load, supports all complex types and numbers but string operations are not supported, eg "a" == "a" will error
+  - `Simple` A simpler version of the full engine that loads faster but only supports basic numbers and string operations
 
 ## Scripting > Special characters
 

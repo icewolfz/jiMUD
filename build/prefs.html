@@ -651,6 +651,18 @@
                         if (this.checked)
                             _settings.onSecondInstance = 4;
                         break;
+                    case 'scriptEngineType-1':
+                        if (this.checked)
+                            _settings.scriptEngineType = 1;
+                        break;
+                    case 'scriptEngineType-2':
+                        if (this.checked)
+                            _settings.scriptEngineType = 2;
+                        break;
+                    case 'scriptEngineType-4':
+                        if (this.checked)
+                            _settings.scriptEngineType = 4;
+                        break;
                 }
             });
 
@@ -919,6 +931,10 @@
             $('#onSecondInstance-2').prop('checked', _settings.onSecondInstance === 2);
             $('#onSecondInstance-4').prop('checked', _settings.onSecondInstance === 4);
 
+            $('#scriptEngineType-1').prop('checked', _settings.scriptEngineType === 1);
+            $('#scriptEngineType-2').prop('checked', _settings.scriptEngineType === 2);
+            $('#scriptEngineType-4').prop('checked', _settings.scriptEngineType === 4);
+            
             $('#profiles-sortOrder-alpha').prop('checked', (_settings.profiles.sortOrder & 2) === 2);
             $('#profiles-sortOrder-priority').prop('checked', (_settings.profiles.sortOrder & 4) === 4);
             $('#profiles-sortOrder-index').prop('checked', (_settings.profiles.sortOrder & 8) === 8);
@@ -2576,6 +2592,20 @@
                             <label class="control-label">
                                 Amount of path commands to send
                                 <input type="number" id="pathDelayCount" class="input-sm form-control" min="1" />
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 form-group global">
+                        <label class="control-label">Expression engine:</label>
+                        <div class="btn-group" data-toggle="buttons">
+                            <label class="btn btn-default btn-xs">
+                                <input type="radio" name="scriptEngineType" id="scriptEngineType-1"> Full
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="radio" name="scriptEngineType" id="scriptEngineType-2"> Fast
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="radio" name="scriptEngineType" id="scriptEngineType-4"> Simple
                             </label>
                         </div>
                     </div>

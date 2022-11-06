@@ -115,7 +115,7 @@
     - Fixed capturing of immortal tells when hidden
     - Fixed bug in display breaking when zoomed
   - [#LOOP](docs/commands.md) now throws an error when an invalid range is supplied
-  - Switch mathjs from script to module as script version break string support due script and docs did not mention the limitation
+  - `Expression engine` Which expression engine to use when executing expressions, this changes how mathjs library is executed
 - **Changed:**
   - All dark icons now have a white stroke to make them work better with dark mode and dark colors
   - Preferences that are now global:

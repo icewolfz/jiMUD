@@ -57,6 +57,12 @@ export enum NewLineType {
   CtrlAndShift = 8
 }
 
+export enum ScriptEngineType {
+  Full = 1,
+  Fast = 2,
+  Simple = 4
+}
+
 export enum Log {
   None = 0,
   Html = 1,
