@@ -4364,10 +4364,16 @@ export class Input extends EventEmitter {
                     args = args.substr(1, args.length - 2);
                 if (n.length === 1) {
                     tmp = parseInt(n[0], 10);
+                    if (isNaN(tmp))
+                        throw new Error('Invalid loop range \'' + n[0] + '\' must be a number');
                     return this.executeForLoop(0, tmp, args);
                 }
                 tmp = parseInt(n[0], 10);
+                if (isNaN(tmp))
+                    throw new Error('Invalid loop min \'' + n[0] + '\' must be a number');
                 i = parseInt(n[1], 10);
+                if (isNaN(i))
+                    throw new Error('Invalid loop max \'' + n[1] + '\' must be a number');
                 if (tmp > i) tmp++;
                 else tmp--;
                 return this.executeForLoop(tmp, i, args);

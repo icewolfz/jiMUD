@@ -112,6 +112,7 @@
     - Fixed copy button always being disabled
     - Fixed capturing of immortal tells when hidden
     - Fixed bug in display breaking when zoomed
+  - [#LOOP](docs/commands.md) now throws an error when an invalid range is supplied
 - **Changed:**
   - All dark icons now have a white stroke to make them work better with dark mode and dark colors
   - Preferences that are now global:
