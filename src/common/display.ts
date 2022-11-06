@@ -3292,9 +3292,12 @@ export class Display extends EventEmitter {
     }
 
     public getLineText(line, full?: boolean) {
-        if (line < 0 || line >= this._lines.length) return '';
+        //if line out of range, or if for what ever reason the line is missing data return empty string
+        if (line < 0 || line >= this._lines.length || !this._lines[line]) return '';
         //get line from id in case lines where removed
         const idx = this._model.getLineFromID(this._lines[line].id);
+        //line id not found, removed some how return empty string
+        if(idx === -1) return '';
         if (full)
             return this.lines[idx].text;
         return this.lines[idx].text.substring(this._lines[line].startOffset, this._lines[line].endOffset);
