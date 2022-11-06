@@ -2430,7 +2430,7 @@ export class Display extends EventEmitter {
             sL = 0;
         if (eL >= len) {
             eL = len - 1;
-            e = this.lines[eL].text.length;
+            e = this.getLineText(eL).length;
         }
         if (s < 0)
             s = 0;
@@ -2447,7 +2447,7 @@ export class Display extends EventEmitter {
             if (this._lines[sL].hr)
                 txt.push('---');
             else
-                txt.push(this.lines[sL].text);
+                txt.push(this.getLineText(sL));
             sL++;
         }
         if (this._lines[eL].hr)
