@@ -111,6 +111,7 @@
   - Chat:
     - Fixed copy button always being disabled
     - Fixed capturing of immortal tells when hidden
+    - Fixed bug in display breaking when zoomed
 - **Changed:**
   - All dark icons now have a white stroke to make them work better with dark mode and dark colors
   - Preferences that are now global:

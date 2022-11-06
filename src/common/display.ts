@@ -4110,7 +4110,7 @@ export class ScrollBar extends EventEmitter {
             this.track.classList.remove('scroll-disabled');
         else
             this.track.classList.add('scroll-disabled');
-        this._thumbSize = Math.ceil(1 / this._percentView * this.trackSize);
+        this._thumbSize = Math.ceil(1 / this._percentView * this.trackSize) || 0;
         if (this._thumbSize > this.trackSize)
             this._thumbSize = this.trackSize;
         if (this._thumbSize < 15)
