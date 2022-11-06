@@ -67,6 +67,8 @@
   - Add [client.sendToCommand](docs/scripting.md) for scripting to send command to all client windows
   - Add [client.sendToBackground](docs/scripting.md) for scripting to send command to all client windows  
   - Add [client.closeWindow](docs/scripting.md) for scripting to close an open window/tab
+  - Add [${clientid}](docs/functions#predefined-variables) return current client id
+  - Add [${clientname}](docs/functions#predefined-variables) return current client name
   - Mapper:
     - Room editor panel is now resizable
     - Title bar now displays connected character name when possible
@@ -113,6 +115,7 @@
     - Fixed capturing of immortal tells when hidden
     - Fixed bug in display breaking when zoomed
   - [#LOOP](docs/commands.md) now throws an error when an invalid range is supplied
+  - Switch mathjs from script to module as script version break string support due script and docs did not mention the limitation
 - **Changed:**
   - All dark icons now have a white stroke to make them work better with dark mode and dark colors
   - Preferences that are now global:

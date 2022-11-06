@@ -94,6 +94,12 @@ expression
 random
 >a random number between 0 and 99
 
+clientid
+>return current client id
+
+clientname
+>return the current client name if set
+
 ## Post fixes
 
 selected, selectedword, selectedline, selectedurl, selword, selline, selurl, character, or copied allow the following post fixes:

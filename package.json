@@ -63,9 +63,9 @@
     "electron": "^19.1.4",
     "electron-builder": "^23.6.0",
     "electron-rebuild": "^3.2.9",
-    "eslint": "^8.26.0",
+    "eslint": "^8.27.0",
     "eslint-plugin-html": "^7.1.0",
-    "sass": "^1.55.0"
+    "sass": "^1.56.0"
   },
   "build": {
     "appId": "jiMUD",
@@ -106,7 +106,6 @@
       "!node_modules/moment/min/*",
       "!node_modules/spellchecker/vendor/hunspell/*",
       "!node_modules/{tar,strip-ansi,string-width,wide-align,signal-exit,has-unicode,console-control-strings,aproba,gauge,end-of-stream,xtend,prebuild-install,detect-libc,expand-template,github-from-package,node-abi,noop-logger,npmlog,os-homedir,tar-fs,pump,rc,simple-get,tunnel-agent,which-pm-runs,tar-stream,tar-stream/readable-stream}${/*}",
-      "!node_modules/mathjs/**/*",
       "!node_modules/rxjs/**/*",
       "!node_modules/typed-emitter/rxjs/**/*",
       "!node_modules/@babel/**/*",
@@ -118,7 +117,6 @@
       "!node_modules/seedrandom/**/*",
       "!node_modules/tiny-emitter/**/*",
       "!node_modules/typed-function/**/*",
-      "./node_modules/mathjs/lib/browser/math.js",
       "node_modules/monaco-editor/min/**/*",
       "node_modules/@electron/remote/**/*"
     ],

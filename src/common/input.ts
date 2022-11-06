@@ -164,6 +164,8 @@ export class Input extends EventEmitter {
                 scope[a] = window[a];
                 scope[a.substr(1)] = window[a];
             });
+        scope['clientid'] = getId();
+        scope['clientname'] = getName();
         //if no stack use direct for some performance
         if (this._stack.length === 0)
             return scope;
@@ -192,6 +194,8 @@ export class Input extends EventEmitter {
             if (!Object.prototype.hasOwnProperty.call(scope, name) || name === 'i' || name === 'repeatnum')
                 continue;
             switch (name) {
+                case 'clientid':
+                case 'clientname':
                 case '$selectedword':
                 case '$selword':
                 case '$selectedurl':
@@ -324,8 +328,8 @@ export class Input extends EventEmitter {
 
     private initMathJS() {
         //use minified mathjs instead of default module for performance loading
-        //const { create, all, factory } =  require('./../../lib/math');
-        const { create, all, factory } = require('./../../node_modules/mathjs/lib/browser/math'); //slow but overall fastest version and kept up today
+        const { create, all, factory } = require('mathjs');
+        //const { create, all, factory } = require('./../../node_modules/mathjs/lib/browser/math'); //slow but overall fastest version and kept up today
         //import {create, all, factory} from 'mathjs'; //nearly 4.5 times slower then browser version
 
         /**
@@ -377,6 +381,8 @@ export class Input extends EventEmitter {
          */
         _mathjs = create(allWithCustomFunctions, {});
         const funs = {
+            //clientid: getId(),
+            //clientname: () => getName(),
             esc: '\x1b',
             cr: '\n',
             lf: '\r',
@@ -6726,6 +6732,10 @@ export class Input extends EventEmitter {
         let notes;
         let c;
         switch (text) {
+            case 'clientid':
+                return getId();
+            case 'clientname':
+                return getName();
             case 'esc':
                 return '\x1b';
             case 'cr':
