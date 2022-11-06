@@ -38,6 +38,8 @@
     - `Word wrap` wrap long lines of text, added for chat and main display
     - `Word wrap column` wrap lines at a fixed character column, added for chat and main display
     - `word wrap indent` indent wrapped line with the set amount of spaces, added for chat and main display
+    - `Expression engine` Which expression engine to use when executing expressions, this changes how mathjs library is executed
+    - `Initialize expression engine on load` Initialize the expression engine on client load instead of on first use, enabling this can cause client to load slower but can speed up first use of an expression
   - `#connecttime` now displays last disconnect time when possible if disconnected
   - Chat:
     - Window display now uses global theme for display scroll bars
@@ -116,7 +118,6 @@
     - Fixed capturing of immortal tells when hidden
     - Fixed bug in display breaking when zoomed
   - [#LOOP](docs/commands.md) now throws an error when an invalid range is supplied
-  - `Expression engine` Which expression engine to use when executing expressions, this changes how mathjs library is executed
 - **Changed:**
   - All dark icons now have a white stroke to make them work better with dark mode and dark colors
   - Preferences that are now global:

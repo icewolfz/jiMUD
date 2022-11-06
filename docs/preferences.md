@@ -223,6 +223,7 @@ Controls what is captured into the chat window
   - `Full` Full engine takes the longest to load and will add a delay on first use, supports all complex types, numbers and string operations
   - `Fast` Fast engine is the fastest to load, supports all complex types and numbers but string operations are not supported, eg "a" == "a" will error
   - `Simple` A simpler version of the full engine that loads faster but only supports basic numbers and string operations
+- `Initialize expression engine on load` Initialize the expression engine on client load instead of on first use, enabling this can cause client to load slower but can speed up first use of an expression
 
 ## Scripting > Special characters
 

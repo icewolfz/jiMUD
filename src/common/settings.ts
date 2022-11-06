@@ -527,6 +527,7 @@ export class Settings {
     public migrate: number = 0;
 
     public scriptEngineType: ScriptEngineType = ScriptEngineType.Simple;
+    public initializeScriptEngineOnLoad: boolean = false;
 
     /**
      * @depreciated Allow window states have been moved to a separate layout system

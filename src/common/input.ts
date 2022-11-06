@@ -1393,6 +1393,8 @@ export class Input extends EventEmitter {
             this.initMathJS();
             return _mathjs;
         }
+        if(this.client.options.initializeScriptEngineOnLoad)
+            this.initMathJS();
         this._tests = new Tests(client);
         this._commandHistory = [];
         document.addEventListener('keydown', (event) => {
