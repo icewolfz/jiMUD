@@ -907,6 +907,14 @@ export class Display extends EventEmitter {
                 this._currentSelection.scrollTimer = null;
                 this._currentSelection.drag = false;
                 this._currentSelection.end = this.getLineOffset(e.pageX, e.pageY);
+                if (this._currentSelection.end.y < 0)  {
+                    this._currentSelection.end.y = 0;
+                    this._currentSelection.end.x = 0;
+                }
+                if (this._currentSelection.end.y >= this._lines.length) {
+                    this._currentSelection.end.y = this._lines.length - 1;
+                    this._currentSelection.end.x = this.getLineText( this._lines.length - 1).length;
+                }
                 this.emit('selection-done');
                 this.doUpdate(UpdateType.selection);
             }
@@ -2291,6 +2299,7 @@ export class Display extends EventEmitter {
                 cl = this.wrapLineWidth(line, 0, cl);
                 if (this._lines[line].indent)
                     cl += this._indent * this._charWidth;
+                cl = fl(cl);
                 //cl = this.textWidth(tLine.substring(0, cl));
                 if (this._roundedRanges) {
                     let cr;
@@ -2303,7 +2312,7 @@ export class Display extends EventEmitter {
                     //cr = fl(eL === line ? this.textWidth(tLine.substring(0, e)) : (this._lines[line].width + this._charWidth));
                     if (line > sL) {
                         let plIndent = this._lines[line - 1].indent ? this._indent * this._charWidth : 0;
-                        let pl = plIndent;
+                        let pl = fl(plIndent);
                         if (sL === line - 1) {
                             if (this._lines[line - 1].hr)
                                 pl = 0;
@@ -2316,9 +2325,9 @@ export class Display extends EventEmitter {
                         }
                         const pr = this._lines[line - 1].hr ? mw : fl(this._lines[line - 1].width + this._charWidth + plIndent);
 
-                        if (fl(cl) === pl)
+                        if (cl === pl)
                             startStyle.top = CornerType.Flat;
-                        else if (fl(cl) > pl)
+                        else if (cl > pl)
                             startStyle.top = CornerType.Intern;
                         if (cr === pr)
                             endStyle.top = CornerType.Flat;
@@ -2336,9 +2345,9 @@ export class Display extends EventEmitter {
                         else
                             nr = fl(eL === line + 1 ? (this.wrapLineWidth(line + 1, 0, e) + nrIndent) : (this._lines[line + 1].width + this._charWidth + nrIndent));
                         //nr = fl(eL === line + 1 ? this.textWidth(this.lines[line + 1].substring(0, e).replace(/ /g, '\u00A0')) : (this._lines[line + 1].width + this._charWidth));
-                        if (fl(cl) === nrIndent)
+                        if (cl === fl(nrIndent))
                             startStyle.bottom = CornerType.Flat;
-                        else if (nrIndent < fl(cl) && fl(cl) < nr)
+                        else if (fl(nrIndent) < cl && cl < nr)
                             startStyle.bottom = CornerType.Intern;
 
                         if (cr === nr)
@@ -2365,13 +2374,13 @@ export class Display extends EventEmitter {
                     this._overlays[type][line] = [];
                 this._overlays[type][line].push(`<span id="${type}-${r}" class="${cls}" style="left:${(this._timestamp ? this._timestampWidth : 0) + cl}px;width: ${w}px;"></span>`);
                 if (startStyle.top === CornerType.Intern)
-                    this._overlays[type][line].push(`<span class="${cls} ist" style="top:$0px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl - 7)}px;"></span>`);
+                    this._overlays[type][line].push(`<span class="${rangeCls} ist" style="top:$0px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl - 7)}px;"></span>`);
                 if (startStyle.bottom === CornerType.Intern)
-                    this._overlays[type][line].push(`<span class="${cls} isb" style="top:${this._charHeight - 7}px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl - 7)}px;"></span>`);
+                    this._overlays[type][line].push(`<span class="${rangeCls} isb" style="top:${this._charHeight - 7}px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl - 7)}px;"></span>`);
                 if (endStyle.top === CornerType.Intern)
-                    this._overlays[type][line].push(`<span class="${cls} iet" style="top:0px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl) + w}px;"></span>`);
+                    this._overlays[type][line].push(`<span class="${rangeCls} iet" style="top:0px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl) + w}px;"></span>`);
                 if (endStyle.bottom === CornerType.Intern)
-                    this._overlays[type][line].push(`<span class="${cls} ieb" style="top:${this._charHeight - 7}px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl) + w}px;"></span>`);
+                    this._overlays[type][line].push(`<span class="${rangeCls} ieb" style="top:${this._charHeight - 7}px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl) + w}px;"></span>`);
             }
         }
         let ol;
