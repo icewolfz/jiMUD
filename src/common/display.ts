@@ -2871,7 +2871,7 @@ export class Display extends EventEmitter {
         let offset = 0;
         let style: any = '';
         let fCls: any = '';
-        const text = this.getLineText(idx).replace(/ /g, '\u00A0');
+        const text = this.lines[idx].text;
         const formats = this.lines[idx].formats;
         const fLen = formats.length;
         let right = false;
@@ -3056,11 +3056,11 @@ export class Display extends EventEmitter {
                 parts.push(`src="${tmp}"/>`);
             }
         }
-        if (right && len < this.getLineText(idx).length)
+        if (right && len < this.lines[idx].text.length)
             return `<span class="line" style="min-width:100%">${parts.join('')}</span>`;
         if (right)
             return `<span class="line" style="min-width:100%">${parts.join('')}<br></span>`;
-        if (len < this.getLineText(idx).length)
+        if (len < this.lines[idx].text.length)
             return `<span class="line">${parts.join('')}</span>`;
         return `<span class="line">${parts.join('')}<br></span>`;
     }
