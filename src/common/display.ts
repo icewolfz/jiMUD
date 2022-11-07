@@ -674,7 +674,7 @@ export class Display extends EventEmitter {
         this._ruler.style.visibility = 'hidden';
         this._el.appendChild(this._character);
 
-        this._charHeight = parseFloat(window.getComputedStyle(this._character).height)
+        this._charHeight = parseFloat(window.getComputedStyle(this._character).height);
         this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
         this.buildStyleSheet();
 
@@ -913,10 +913,10 @@ export class Display extends EventEmitter {
                 }
                 if (this._currentSelection.end.y >= this._lines.length) {
                     this._currentSelection.end.y = this._lines.length - 1;
-                    this._currentSelection.end.x = 0;
+                    this._currentSelection.end.x = this.getLineText(this._currentSelection.end.y).length;
                 }
-                else if(this._currentSelection.end.y === this._lines.length - 1 && this._currentSelection.end.x > this.getLineText(this._currentSelection.end.y).length) {
-                    this._currentSelection.end.x = 0;
+                else if (this._currentSelection.end.y === this._lines.length - 1 && this._currentSelection.end.x > this.getLineText(this._currentSelection.end.y).length) {
+                    this._currentSelection.end.x = this.getLineText(this._currentSelection.end.y).length;
                 }
                 this.emit('selection-done');
                 this.doUpdate(UpdateType.selection);
@@ -1359,7 +1359,7 @@ export class Display extends EventEmitter {
             this._contextFont = `${size} ${font}`;
             this._context.font = this._contextFont;
             //recalculate height/width of characters so display can be calculated
-            this._charHeight = parseFloat(window.getComputedStyle(this._character).height)
+            this._charHeight = parseFloat(window.getComputedStyle(this._character).height);
             this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
             this.buildStyleSheet();
             this.reCalculateLines();
@@ -1488,13 +1488,13 @@ export class Display extends EventEmitter {
     }
 
     get WindowWidth(): number {
-        return Math.trunc(this._maxView / parseFloat(window.getComputedStyle(this._character).width));
+        return Math.trunc(this._maxView / this._charWidth);
     }
 
     get WindowHeight(): number {
         if (this._HScroll.visible)
-            return Math.trunc((this._innerHeight - this._HScroll.size - this._padding[0] - this._padding[2]) / parseFloat(window.getComputedStyle(this._character).height));
-        return Math.trunc((this._innerHeight - this._padding[0] - this._padding[2]) / parseFloat(window.getComputedStyle(this._character).height));
+            return Math.trunc((this._innerHeight - this._HScroll.size - this._padding[0] - this._padding[2]) / this._charHeight);
+        return Math.trunc((this._innerHeight - this._padding[0] - this._padding[2]) / this._charHeight);
     }
 
     public click(callback) {
@@ -3387,7 +3387,7 @@ export class Display extends EventEmitter {
             if (this._wrapAt)
                 width = this._wrapAt * this._charWidth;
             else
-                width = this._maxView;
+                width = this.WindowWidth * this._charWidth;//this._maxView;
         }
         if (width < 200)
             width = 200;
@@ -3484,7 +3484,7 @@ export class Display extends EventEmitter {
                         currentFormat.width = currentFormat.width || this.textWidth(measureText, font, currentFormat.style);
                     else
                         currentFormat.width = currentFormat.width || measureText.length * charWidth;
-                    if (wrapText && lineWidth + currentFormat.width >= width) {
+                    if (wrapText && lineWidth + currentFormat.width > width) {
                         lineHeight = Math.max(lineHeight, currentFormat.height || charHeight);
                         let currentOffset = startOffset + 1;
                         currentWidth = 0;
@@ -3526,7 +3526,7 @@ export class Display extends EventEmitter {
                                 }
                                 //found a break point in current fragment use it to prevent extra searching
                                 if (breakOffset !== -1 && breakOffset <= currentOffset) {
-                                    currentOffset = breakOffset + 1;
+                                    currentOffset = breakOffset;
                                     measureText = text.substring(startOffset, currentOffset);
                                     if (currentFormat.unicode)
                                         currentWidth = this.textWidth(measureText, 0, currentFormat.style);
@@ -3563,6 +3563,8 @@ export class Display extends EventEmitter {
                                         if (currentLine.indent)
                                             currentLine.width += indent;
                                         currentWidth = 0;
+                                        //changed format so new end offset
+                                        endOffset = formatEnd;
                                     }
                                     //if same block measure the adjusted string width
                                     else {
