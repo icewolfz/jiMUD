@@ -2587,7 +2587,8 @@ export class Parser extends EventEmitter {
                 _MXPComment = this.display.lines[lines.length - 1].raw;
                 formatBuilder.push.apply(formatBuilder, this.display.lines[lines.length - 1].formats);
                 lineLength = this.display.lines[lines.length - 1].length;
-                this.display.removeLine(lines.length - 1);
+                //remove line but do not change selection as line will be re-added back at the end
+                this.display.removeLine(lines.length - 1, true);
                 format = formatBuilder[formatBuilder.length - 1];
                 if (format.formatType === FormatType.Link) {
                     formatBuilder.pop();

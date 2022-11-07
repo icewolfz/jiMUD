@@ -907,13 +907,16 @@ export class Display extends EventEmitter {
                 this._currentSelection.scrollTimer = null;
                 this._currentSelection.drag = false;
                 this._currentSelection.end = this.getLineOffset(e.pageX, e.pageY);
-                if (this._currentSelection.end.y < 0)  {
+                if (this._currentSelection.end.y < 0) {
                     this._currentSelection.end.y = 0;
                     this._currentSelection.end.x = 0;
                 }
                 if (this._currentSelection.end.y >= this._lines.length) {
                     this._currentSelection.end.y = this._lines.length - 1;
-                    this._currentSelection.end.x = this.getLineText( this._lines.length - 1).length;
+                    this._currentSelection.end.x = 0;
+                }
+                else if(this._currentSelection.end.y === this._lines.length - 1 && this._currentSelection.end.x > this.getLineText(this._currentSelection.end.y).length) {
+                    this._currentSelection.end.x = 0;
                 }
                 this.emit('selection-done');
                 this.doUpdate(UpdateType.selection);
@@ -1498,7 +1501,7 @@ export class Display extends EventEmitter {
         this._el.addEventListener('click', callback);
     }
 
-    public removeLine(line: number) {
+    public removeLine(line: number, noSelectionChange?: boolean) {
         if (line < 0 || line >= this.lines.length) return;
         this.emit('line-removed', line, this.lines[line].text);
         const lineID = this._model.getLineID(line);
@@ -1515,8 +1518,7 @@ export class Display extends EventEmitter {
         this._lines.splice(wrapIndex, amt);
         this._model.removeLine(line);
         this._linesMap.delete(lineID);
-
-        if (!this._currentSelection.drag) {
+        if (!noSelectionChange && !this._currentSelection.drag) {
             for (let l = wrapIndex; l < wrapIndex + amt; l++) {
                 if (this._currentSelection.start.y >= l && this._currentSelection.end.y >= l) {
                     this._currentSelection.start.y = null;
