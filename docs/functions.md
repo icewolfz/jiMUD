@@ -69,6 +69,12 @@ copied
 character
 >return current character name from GMCP, falls back to character manager login name, or empty string
 
+action
+>last triggered action executed
+
+trigger
+>last text, event, or pattern that caused last trigger to fire
+
 repeatnum
 >returns the current index during [#nnn](commands.md#repeating-and-loops) or string from [#FORALL](commands.md#repeating-and-loops), supports #{repeatnum}/${repeatnum} only
 

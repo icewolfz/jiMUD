@@ -14,6 +14,8 @@ To use scripting you just have to select script as the type from the type dropdo
 - `$selword` same as $selectedword
 - `$selline` sane as $selline
 - `$selurl` same as $selected url
+- `$action` last triggered action executed
+- `$trigger` last text, event, or pattern that caused last trigger to fire
 - `$contextMenu` access to the context menu item array, manipulating this will effect the displayed context menu, **WARNING** this could break the context menu, if broken you can refresh by causing a profile to be re-saved
 
 ## User variables

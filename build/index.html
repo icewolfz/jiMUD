@@ -420,6 +420,20 @@
             },
             configurable: true
         });
+        Object.defineProperty(window, '$action', {
+            get: function() {
+                if (!client) return '';
+                return client._input.vStack['$action'] || (client._input.lastTriggerExecuted ? client._input.lastTriggerExecuted.value : '') || '';
+            },
+            configurable: true
+        });
+        Object.defineProperty(window, '$trigger', {
+            get: function() {
+                if (!client) return '';
+                return client._input.vStack['$trigger'] || client._input.lastTriggered || '';
+            },
+            configurable: true
+        });
 
         //#endregion
 
@@ -2666,7 +2680,9 @@
                 $selline: _selline,
                 $selectedword: _selword,
                 $selectedurl: _selurl,
-                $selectedline: _selline
+                $selectedline: _selline,
+                $action: window.$action,
+                $trigger: window.$trigger
             });
             if (item.value.length)
                 switch (item.style) {

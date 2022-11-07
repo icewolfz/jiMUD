@@ -136,6 +136,7 @@ export class Input extends EventEmitter {
     private _TriggerStates = {};
     private _TriggerFunctionCache = {};
     private _TriggerRegExCache = {};
+    private _LastTriggered = '';
     private _LastTrigger = null;
     private _scrollLock: boolean = false;
     private _gag: number = 0;
@@ -161,7 +162,7 @@ export class Input extends EventEmitter {
         let scope: any = {};
         Object.assign(scope, this.client.variables);
         ['$selectedword', '$selword', '$selectedurl', '$selurl', '$selectedline',
-            '$selline', '$selected', '$character', '$copied'].forEach((a) => {
+            '$selline', '$selected', '$character', '$copied', '$action', '$trigger', '$caption'].forEach((a) => {
                 scope[a] = window[a];
                 scope[a.substr(1)] = window[a];
             });
@@ -213,6 +214,10 @@ export class Input extends EventEmitter {
                 case 'selected':
                 case 'character':
                 case 'copied':
+                case '$action':
+                case 'action':
+                case '$trigger':
+                case 'trigger':
                     continue;
             }
             //if i to z and the loop exist skip it
@@ -301,6 +306,14 @@ export class Input extends EventEmitter {
 
     get lastTriggerExecuted() {
         return this._LastTrigger;
+    }
+
+    get lastTriggered() {
+        return this._LastTriggered;
+    }
+
+    set lastTriggered(value) {
+        this._LastTriggered = value;
     }
 
     private getDiceArguments(arg, scope, fun) {
@@ -1393,8 +1406,6 @@ export class Input extends EventEmitter {
             this.initMathJS();
             return _mathjs;
         }
-        if(this.client.options.initializeScriptEngineOnLoad)
-            this.initMathJS();
         this._tests = new Tests(client);
         this._commandHistory = [];
         document.addEventListener('keydown', (event) => {
@@ -1430,6 +1441,8 @@ export class Input extends EventEmitter {
 
         this.client.on('options-loaded', () => {
             this.updatePads();
+            if (!_mathjs && this.client.options.initializeScriptEngineOnLoad)
+                this.initMathJS();            
         });
 
         this.client.commandInput.addEventListener('keyup', event => {
@@ -5016,8 +5029,10 @@ export class Input extends EventEmitter {
                 else {
                     this.client.echo('Trigger state ' + n + ' fired state set to ' + trigger.triggers[n - 1].fired + '.', -7, -8, true, true);
                     //manual trigger fire it using set type
-                    if (trigger.enabled && trigger.triggers[n - 1].enabled && trigger.triggers[n - 1].type === SubTriggerTypes.Manual)
+                    if (trigger.enabled && trigger.triggers[n - 1].enabled && trigger.triggers[n - 1].type === SubTriggerTypes.Manual) {
+                        this._LastTriggered = '';
                         this.ExecuteTrigger(trigger, [], false, this._TriggerCache.indexOf(trigger), 0, 0, trigger);
+                    }
                 }
                 return null;
             case 'condition':
@@ -6795,6 +6810,8 @@ export class Input extends EventEmitter {
             case 'selurl':
             case 'selline':
             case 'selword':
+            case 'action':
+            case 'trigger':
                 return this.vStack['$' + text] || window['$' + text] || '';
             case 'selected.lower':
             case 'selectedurl.lower':
@@ -8262,7 +8279,8 @@ export class Input extends EventEmitter {
                         }
                         else if (states[t].loop !== -1 && states[t].lineCount < 1)
                             continue;
-                        val = this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], ret, t, [(trigger.raw ? raw : line)], 0, parent);
+                        this._LastTriggered = (trigger.raw ? raw : line);
+                        val = this.ExecuteTrigger(trigger, [this._LastTriggered], ret, t, [this._LastTriggered], 0, parent);
                     }
                     else {
                         //this.updateTriggerState(trigger, t);
@@ -8287,7 +8305,8 @@ export class Input extends EventEmitter {
                         }
                         continue;
                     }
-                    val = this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], ret, t, [(trigger.raw ? raw : line)], 0, parent);
+                    this._LastTriggered = (trigger.raw ? raw : line);
+                    val = this.ExecuteTrigger(trigger, [this._LastTriggered], ret, t, [this._LastTriggered], 0, parent);
                 }
                 else {
                     let re;
@@ -8311,15 +8330,16 @@ export class Input extends EventEmitter {
                         continue;
                     }
                     let args;
+                    this._LastTriggered = trigger.raw ? raw : line;
                     if ((trigger.raw ? raw : line) === res[0] || !this.client.options.prependTriggeredLine)
                         args = res;
                     else {
-                        args = [(trigger.raw ? raw : line), ...res];
+                        args = [this._LastTriggered, ...res];
                         args.indices = [[0, args[0].length], ...res.indices];
                     }
                     if (res.groups)
                         Object.keys(res.groups).map(v => this.client.variables[v] = res.groups[v]);
-                    val = this.ExecuteTrigger(trigger, args, ret, t, [trigger.raw ? raw : line, re], res.groups, parent);
+                    val = this.ExecuteTrigger(trigger, args, ret, t, [this._LastTriggered, re], res.groups, parent);
                 }
                 if (states[t] && states[t].reParse) {
                     if (!states[t].type || states[t].type === SubTriggerTypes.ReParse || states[t].type === SubTriggerTypes.ReParsePattern)
@@ -8368,7 +8388,8 @@ export class Input extends EventEmitter {
                     }
                     return t;
                 }
-                val = this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], false, t, [(trigger.raw ? raw : line)], 0, parent);
+                this._LastTriggered = (trigger.raw ? raw : line);
+                val = this.ExecuteTrigger(trigger, [this._LastTriggered], false, t, [this._LastTriggered], 0, parent);
             }
             else {
                 let re;
@@ -8392,15 +8413,16 @@ export class Input extends EventEmitter {
                     return t;
                 }
                 let args;
+                this._LastTriggered = (trigger.raw ? raw : line);
                 if ((trigger.raw ? raw : line) === res[0] || !this.client.options.prependTriggeredLine)
                     args = res;
                 else {
-                    args = [(trigger.raw ? raw : line), ...res];
+                    args = [this._LastTriggered, ...res];
                     args.indices = [[0, args[0].length], ...res.indices];
                 }
                 if (res.groups)
                     Object.keys(res.groups).map(v => this.client.variables[v] = res.groups[v]);
-                val = this.ExecuteTrigger(trigger, args, false, t, [trigger.raw ? raw : line, re], res.groups, parent);
+                val = this.ExecuteTrigger(trigger, args, false, t, [this._LastTriggered, re], res.groups, parent);
             }
             t = this.cleanUpTriggerState(t);
         }
@@ -8888,6 +8910,7 @@ export class Input extends EventEmitter {
             if (trigger.type !== TriggerType.Event) continue;
             if (trigger.caseSensitive && event !== trigger.pattern) continue;
             if (!trigger.caseSensitive && event.toLowerCase() !== trigger.pattern.toLowerCase()) continue;
+            this._LastTriggered = event;
             this.ExecuteTrigger(trigger, args, false, t, 0, 0, parent);
             t = this.cleanUpTriggerState(t);
         }

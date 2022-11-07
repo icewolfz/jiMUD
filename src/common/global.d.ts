@@ -30,6 +30,8 @@ declare let $selurl: string;
 declare let $selline: string;
 declare let $selword: string;
 declare let $copied: string;
+declare let $action: string;
+declare let $trigger: string;
 
 interface JQuery {
 	treeview: any;

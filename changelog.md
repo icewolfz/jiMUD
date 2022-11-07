@@ -72,6 +72,8 @@
   - Add [${clientid}](docs/functions#predefined-variables) return current client id
   - Add [${clientname}](docs/functions#predefined-variables) return current client name
   - Add [%clientname(*name*, *id*)](docs/functions.md#miscellaneous) Return or set the client name
+  - Add [$action](docs/functions#predefined-variables) Last triggered action executed
+  - Add [$trigger](docs/functions#predefined-variables) Last text, event, or pattern that caused last trigger to fire  
   - Mapper:
     - Room editor panel is now resizable
     - Title bar now displays connected character name when possible
