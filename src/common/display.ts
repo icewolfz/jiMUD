@@ -243,7 +243,7 @@ export class Display extends EventEmitter {
                 t[0].top = this._lines[idx - 1].top + this._lines[idx - 1].height;
             for (let l = 1, ll = t.length; l < ll; l++) {
                 t[l].top = t[l - 1].top + t[l - 1].height;
-                this._maxWidth = Math.max(this._maxWidth, t[l].width);
+                this._maxWidth = Math.max(this._maxWidth, t[l].width + ((this._indent || 0) * this._charWidth));
                 this._maxHeight = Math.max(this._maxHeight, t[l].height);
             }
             this._lines.push(...t);
@@ -1771,6 +1771,10 @@ export class Display extends EventEmitter {
                     m = Math.max(m, ww);
                     mh = Math.max(mh, this._charHeight);
                 }
+                else if (lines[l].indent) {
+                    m = Math.max(m, this._lines[l].width + ((this._indent || 0) * this._charWidth));
+                    mh = Math.max(mh, this._lines[l].height);
+                }
                 else {
                     m = Math.max(m, this._lines[l].width);
                     mh = Math.max(mh, this._lines[l].height);
@@ -2402,13 +2406,13 @@ export class Display extends EventEmitter {
         let e = sel.end.x;
         let sL = sel.start.y;
         let eL = sel.end.y;
-        if(sL < 0) 
+        if (sL < 0)
             sL = 0;
-        else if(sL >= this._lines.length)
+        else if (sL >= this._lines.length)
             sL = this._lines.length - 1;
-        if(eL < 0) 
+        if (eL < 0)
             eL = 0;
-        else if(eL >= this._lines.length)
+        else if (eL >= this._lines.length)
             eL = this._lines.length - 1;
         //convert wrap offset to text offsets
         s = this._lines[sL].startOffset + s;
@@ -2482,14 +2486,14 @@ export class Display extends EventEmitter {
         let e = sel.end.x;
         let sL = sel.start.y;
         let eL = sel.end.y;
-        if(sL < 0) 
+        if (sL < 0)
             sL = 0;
-        else if(sL >= this._lines.length)
+        else if (sL >= this._lines.length)
             sL = this._lines.length - 1;
-        if(eL < 0) 
+        if (eL < 0)
             eL = 0;
-        else if(eL >= this._lines.length)
-            eL = this._lines.length - 1;        
+        else if (eL >= this._lines.length)
+            eL = this._lines.length - 1;
         //convert wrap offset to text offsets
         s = this._lines[sL].startOffset + s;
         e = this._lines[eL].startOffset + e;
@@ -2520,7 +2524,7 @@ export class Display extends EventEmitter {
             s = this._lines[sL].startOffset + s;
             e = this._lines[eL].startOffset + e;
             s = Math.min(sel.start.x, sel.end.x);
-            e = Math.max(sel.start.x, sel.end.x);            
+            e = Math.max(sel.start.x, sel.end.x);
             //convert wrap lines to text lines
             sL = this._model.getLineFromID(this._lines[sel.start.y].id);
             return this.getLineHTML(sL, s, e);
@@ -3070,13 +3074,11 @@ export class Display extends EventEmitter {
         }
         for (let l = 1, ll = t.length; l < ll; l++) {
             t[l].top = t[l - 1].top + t[l - 1].height;
-            this._maxWidth = Math.max(this._maxWidth, t[l].width);
+            this._maxWidth = Math.max(this._maxWidth, t[l].width + ((this._indent || 0) * this._charWidth));
             this._maxHeight = Math.max(this._maxHeight, t[l].height);
         }
         this._linesMap.set(t[0].id, t);
         this._lines.push(...t);
-        this._maxWidth = Math.max(this._maxWidth, this._lines[0].width);
-        this._maxHeight = Math.max(this._maxHeight, this._lines[0].height);
 
         for (let l = 1; l < ll; l++) {
             const t = this.calculateWrapLines(l, 0, this._indent, (this._timestamp ? this._timestampWidth : 0), true);
@@ -3093,7 +3095,7 @@ export class Display extends EventEmitter {
             t[0].top = this._lines[l - 1].top + this._lines[l - 1].height;
             for (let l = 1, ll = t.length; l < ll; l++) {
                 t[l].top = t[l - 1].top + t[l - 1].height;
-                this._maxWidth = Math.max(this._maxWidth, t[l].width);
+                this._maxWidth = Math.max(this._maxWidth, t[l].width + ((this._indent || 0) * this._charWidth));
                 this._maxHeight = Math.max(this._maxHeight, t[l].height);
             }
             this._lines.push(...t);
@@ -3111,20 +3113,6 @@ export class Display extends EventEmitter {
             this._currentSelection.end.x = offset.x;
             this.doUpdate(UpdateType.selection);
         }
-        /*
-        if (this._prevSelection.start.y !== null) {
-            offset = this.getWrapOffsetByLineID(this._prevSelection.start.lineID, this._prevSelection.start.lineOffset)
-            this._prevSelection.start.y = offset.y;
-            this._prevSelection.start.x = offset.x;
-            this.doUpdate(UpdateType.selection);
-        }
-        if (this._prevSelection.end.y !== null) {
-            offset = this.getWrapOffsetByLineID(this._prevSelection.end.lineID, this._prevSelection.end.lineOffset)
-            this._prevSelection.end.y = offset.y;
-            this._prevSelection.end.x = offset.x;
-            this.doUpdate(UpdateType.selection);
-        }
-        */
 
         let ol;
         for (ol in this._overlayRanges) {
