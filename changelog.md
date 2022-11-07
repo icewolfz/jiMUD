@@ -112,6 +112,7 @@
     - Fixed finder current overlay to display correctly when highlight all enabled
     - Fixed finder regular expression button being set to active in correctly
     - Fixed toggle split view button/scroll corner losing text selection when clicked
+    - Fixed link not styling overline, strike-though, and related combinations
   - Logging:
     - Fixed logger not enabling/disabling when changed from settings dialog
     - Fixed logger not enabling/disabling on load
