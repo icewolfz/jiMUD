@@ -1043,11 +1043,11 @@ export class Display extends EventEmitter {
         this._finder.Highlight = value;
     }
 
-    get finderLocation() { 
+    get finderLocation() {
         return this._finder.location;
     }
 
-    set finderLocation(value) { 
+    set finderLocation(value) {
         this._finder.location = value;
     }
 
@@ -2398,32 +2398,43 @@ export class Display extends EventEmitter {
     get selection(): string {
         if (this._lines.length === 0) return '';
         const sel = this._currentSelection;
-        let s;
-        let e;
-        let sL;
-        let eL;
-        if (sel.start.y > sel.end.y) {
+        let s = sel.start.x;
+        let e = sel.end.x;
+        let sL = sel.start.y;
+        let eL = sel.end.y;
+        if(sL < 0) 
+            sL = 0;
+        else if(sL >= this._lines.length)
+            sL = this._lines.length - 1;
+        if(eL < 0) 
+            eL = 0;
+        else if(eL >= this._lines.length)
+            eL = this._lines.length - 1;
+        //convert wrap offset to text offsets
+        s = this._lines[sL].startOffset + s;
+        e = this._lines[eL].startOffset + e;
+        //convert wrap lines to text lines
+        sL = this._model.getLineFromID(this._lines[sL].id);
+        eL = this._model.getLineFromID(this._lines[eL].id);
+        if (sL > eL) {
             sL = sel.end.y;
             eL = sel.start.y;
             s = sel.end.x;
             e = sel.start.x;
         }
-        else if (sel.start.y < sel.end.y) {
+        else if (sL < eL) {
             sL = sel.start.y;
             eL = sel.end.y;
             s = sel.start.x;
             e = sel.end.x;
         }
-        else if (sel.start.x === sel.end.x) {
+        else if (s === e) {
             return '';
         }
         else if (sel.start.y > 0 && sel.start.y < this._lines.length && this._lines[sel.start.y].hr)
             return '---';
-        else {
-            s = Math.min(sel.start.x, sel.end.x);
-            e = Math.max(sel.start.x, sel.end.x);
-            return this.getLineText(sel.start.y).substring(s, e);
-        }
+        else
+            return this._model.getText(sL, Math.min(s, e), Math.max(s, e));
         const len = this._lines.length;
 
         if (sL < 0)
@@ -2437,40 +2448,61 @@ export class Display extends EventEmitter {
         if (e > this.getLineText(eL).length)
             e = this.getLineText(eL).length;
 
+        //convert wrap offset to text offsets
+        s = this._lines[sL].startOffset + s;
+        e = this._lines[eL].startOffset + e;
+        //convert wrap lines to text lines
+        sL = this._model.getLineFromID(this._lines[sL].id);
+        eL = this._model.getLineFromID(this._lines[eL].id);
         const txt = [];
-        if (this._lines[sL].hr)
+        const lines = this._model.lines;
+        if (this.lines[sL].formats[0].hr)
             txt.push('---');
         else
-            txt.push(this.getLineText(sL).substring(s));
+            txt.push(lines[sL].text.substring(s));
         sL++;
         while (sL < eL) {
-            if (this._lines[sL].hr)
+            if (lines[sL].formats[0].hr)
                 txt.push('---');
             else
-                txt.push(this.getLineText(sL));
+                txt.push(lines[sL].text);
             sL++;
         }
-        if (this._lines[eL].hr)
+        if (lines[eL].formats[0].hr)
             txt.push('---');
         else
-            txt.push(this.getLineText(eL).substring(0, e));
+            txt.push(lines[eL].text.substring(0, e));
         return txt.join('\n');
     }
 
     get selectionAsHTML(): string {
         if (this._lines.length === 0) return '';
         const sel = this._currentSelection;
-        let s;
-        let e;
-        let sL;
-        let eL;
-        if (sel.start.y > sel.end.y) {
+        let s = sel.start.x;
+        let e = sel.end.x;
+        let sL = sel.start.y;
+        let eL = sel.end.y;
+        if(sL < 0) 
+            sL = 0;
+        else if(sL >= this._lines.length)
+            sL = this._lines.length - 1;
+        if(eL < 0) 
+            eL = 0;
+        else if(eL >= this._lines.length)
+            eL = this._lines.length - 1;        
+        //convert wrap offset to text offsets
+        s = this._lines[sL].startOffset + s;
+        e = this._lines[eL].startOffset + e;
+        //convert wrap lines to text lines
+        sL = this._model.getLineFromID(this._lines[sL].id);
+        eL = this._model.getLineFromID(this._lines[eL].id);
+        if (sL > eL) {
             sL = sel.end.y;
             eL = sel.start.y;
             s = sel.end.x;
             e = sel.start.x;
         }
-        else if (sel.start.y < sel.end.y) {
+        else if (sL < eL) {
             sL = sel.start.y;
             eL = sel.end.y;
             s = sel.start.x;
@@ -2480,9 +2512,18 @@ export class Display extends EventEmitter {
             return '';
         }
         else {
+            sL = sel.start.y;
+            if (sL < 0) sL = 0;
+            if (sL >= this._lines.length)
+                sL = this._lines.length - 1;
+            //convert wrap offset to text offsets
+            s = this._lines[sL].startOffset + s;
+            e = this._lines[eL].startOffset + e;
             s = Math.min(sel.start.x, sel.end.x);
-            e = Math.max(sel.start.x, sel.end.x);
-            return this.getLineHTML(sel.start.y, s, e);
+            e = Math.max(sel.start.x, sel.end.x);            
+            //convert wrap lines to text lines
+            sL = this._model.getLineFromID(this._lines[sel.start.y].id);
+            return this.getLineHTML(sL, s, e);
         }
         const len = this._lines.length;
 
@@ -2496,6 +2537,12 @@ export class Display extends EventEmitter {
             s = 0;
         if (e > this.getLineText(eL).length)
             e = this.getLineText(eL).length;
+        //convert wrap offset to text offsets
+        s = this._lines[sL].startOffset + s;
+        e = this._lines[eL].startOffset + e;
+        //convert wrap lines to text lines
+        sL = this._model.getLineFromID(this._lines[sL].id);
+        eL = this._model.getLineFromID(this._lines[eL].id);
 
         const txt = [this.getLineHTML(sL, s)];
         sL++;
@@ -3297,7 +3344,7 @@ export class Display extends EventEmitter {
         //get line from id in case lines where removed
         const idx = this._model.getLineFromID(this._lines[line].id);
         //line id not found, removed some how return empty string
-        if(idx === -1) return '';
+        if (idx === -1) return '';
         if (full)
             return this.lines[idx].text;
         return this.lines[idx].text.substring(this._lines[line].startOffset, this._lines[line].endOffset);
@@ -5121,10 +5168,10 @@ export class DisplayModel extends EventEmitter {
         return this.lines.map(line => line.raw).join('');
     }
 
-    public getText(line, start, end) {
+    public getText(line, start, end?) {
         if (line < 0 || line >= this.lines.length) return '';
         if (start < 0) start = 0;
-        if (end > this.lines[line].text.length)
+        if (typeof end === 'undefined' || end > this.lines[line].text.length)
             return this.lines[line].text.substring(start);
         return this.lines[line].text.substring(start, end);
     }
