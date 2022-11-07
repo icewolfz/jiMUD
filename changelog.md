@@ -74,6 +74,8 @@
   - Add [%clientname(*name*, *id*)](docs/functions.md#miscellaneous) Return or set the client name
   - Add [$action](docs/functions#predefined-variables) Last triggered action executed
   - Add [$trigger](docs/functions#predefined-variables) Last text, event, or pattern that caused last trigger to fire  
+  - Add [$caption](docs/functions#predefined-variables) returns the executing item's caption, only set for buttons and context menu items
+  - Add [$characterid](docs/functions#predefined-variables) returns current character id for client
   - Mapper:
     - Room editor panel is now resizable
     - Title bar now displays connected character name when possible
@@ -120,6 +122,7 @@
     - Fixed capturing of immortal tells when hidden
     - Fixed bug in display breaking when zoomed
   - [#LOOP](docs/commands.md) now throws an error when an invalid range is supplied
+  - Fixed a bug when executing context menus and corrupting script variable stack
 - **Changed:**
   - All dark icons now have a white stroke to make them work better with dark mode and dark colors
   - Preferences that are now global:

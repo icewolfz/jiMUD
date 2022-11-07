@@ -32,6 +32,8 @@ declare let $selword: string;
 declare let $copied: string;
 declare let $action: string;
 declare let $trigger: string;
+declare let $caption: string;
+declare let $characterid: number;
 
 interface JQuery {
 	treeview: any;

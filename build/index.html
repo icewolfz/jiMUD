@@ -343,6 +343,13 @@
             configurable: true
         });
 
+        Object.defineProperty(window, '$characterid', {
+            get: function () {
+                return _windowState.data.characterId || -1;
+            },
+            configurable: true
+        });
+
         Object.defineProperty(window, '$copied', {
             get: function () {
                 return clipboard.readText('selection') || '';
@@ -421,16 +428,23 @@
             configurable: true
         });
         Object.defineProperty(window, '$action', {
-            get: function() {
+            get: function () {
                 if (!client) return '';
                 return client._input.vStack['$action'] || (client._input.lastTriggerExecuted ? client._input.lastTriggerExecuted.value : '') || '';
             },
             configurable: true
         });
         Object.defineProperty(window, '$trigger', {
-            get: function() {
+            get: function () {
                 if (!client) return '';
                 return client._input.vStack['$trigger'] || client._input.lastTriggered || '';
+            },
+            configurable: true
+        });
+        Object.defineProperty(window, '$caption', {
+            get: function () {
+                if (!client) return '';
+                return client._input.vStack['$caption'] || '';
             },
             configurable: true
         });
@@ -2673,18 +2687,19 @@
             if (!item) return;
             if (!item.enabled) return false;
             var ret;// = '';
-            client._input.vStackPush({
-                $repeatnum: window.repeatnum,
-                $selword: _selword,
-                $selurl: _selurl,
-                $selline: _selline,
-                $selectedword: _selword,
-                $selectedurl: _selurl,
-                $selectedline: _selline,
-                $action: window.$action,
-                $trigger: window.$trigger
-            });
-            if (item.value.length)
+            if (item.value.length) {
+                client._input.vStackPush({
+                    $repeatnum: window.repeatnum,
+                    $selword: _selword,
+                    $selurl: _selurl,
+                    $selline: _selline,
+                    $selectedword: _selword,
+                    $selectedurl: _selurl,
+                    $selectedline: _selline,
+                    $action: window.$action,
+                    $trigger: window.$trigger,
+                    $caption: item.caption
+                });
                 switch (item.style) {
                     case 1:
                         try {
@@ -2719,6 +2734,7 @@
                         client._input.vStackPop();
                         break;
                 }
+            }
             if (ret == null)
                 return true;
             if (typeof ret !== 'string')
@@ -2747,7 +2763,11 @@
             button = client.buttons[idx];
             if (!button.enabled) return false;
             var ret;// = '';
-            if (button.value.length)
+            if (button.value.length) {
+                client._input.vStackPush({
+                    $repeatnum: window.repeatnum,
+                    $caption: item.caption
+                });
                 switch (button.style) {
                     case 1:
                         client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
@@ -2759,6 +2779,7 @@
                         }
                         finally {
                             client._input._stack.pop();
+                            client._input.vStackPop();
                         }
                         break;
                     case 2:
@@ -2773,14 +2794,17 @@
                         }
                         finally {
                             client._input._stack.pop();
+                            client._input.vStackPop();
                         }
                         if (typeof ret === 'string')
                             ret = client.parseOutgoing(ret);
                         break;
                     default:
                         ret = button.value;
+                        client._input.vStackPop();
                         break;
                 }
+            }
             if (ret == null) {
                 setTimeout(() => {
                     if (client.options.CommandonClick)
@@ -3680,6 +3704,10 @@
             if (!_windowState.data.character && _windowState.data.characterId > 0)
                 _windowState.data.character = ipcRenderer.sendSync('get-character', _windowState.data.characterId, 'Name');
             return _windowState.data.character;
+        }
+
+        function getCharacterId() {
+            return _windowState.data.characterId || -1;
         }
 
         function getCharacterNotes(createName) {

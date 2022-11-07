@@ -66,8 +66,14 @@ selurl
 copied
 >return clipboard text
 
+caption
+>returns the executing item's caption, only set for buttons and context menu items
+
 character
 >return current character name from GMCP, falls back to character manager login name, or empty string
+
+characterid
+>returns current character id for client, -1 if no character set
 
 action
 >last triggered action executed

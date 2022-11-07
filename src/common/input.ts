@@ -51,6 +51,8 @@ const moment = require('moment');
  */
 const fs = require('fs');
 
+const WindowVariables = ['$selectedword', '$selword', '$selectedurl', '$selurl', '$selectedline', '$selline', '$selected', '$character', '$copied', '$action', '$trigger', '$caption', '$characterid'];
+
 /**
  * Return the proper case of a string for each word
  * @param {string} str - The string to proper capitalize each word of
@@ -161,11 +163,10 @@ export class Input extends EventEmitter {
     public getScope() {
         let scope: any = {};
         Object.assign(scope, this.client.variables);
-        ['$selectedword', '$selword', '$selectedurl', '$selurl', '$selectedline',
-            '$selline', '$selected', '$character', '$copied', '$action', '$trigger', '$caption'].forEach((a) => {
-                scope[a] = window[a];
-                scope[a.substr(1)] = window[a];
-            });
+        WindowVariables.forEach((a) => {
+            scope[a] = window[a];
+            scope[a.substr(1)] = window[a];
+        });
         scope['clientid'] = getId();
         //if no stack use direct for some performance
         if (this._stack.length === 0)
@@ -194,30 +195,10 @@ export class Input extends EventEmitter {
             //not a property, i or repeatnum
             if (!Object.prototype.hasOwnProperty.call(scope, name) || name === 'i' || name === 'repeatnum')
                 continue;
+            if (WindowVariables.indexOf(name) !== -1 || WindowVariables.indexOf('$' + name) !== -1)
+                continue;
             switch (name) {
                 case 'clientid':
-                case '$selectedword':
-                case '$selword':
-                case '$selectedurl':
-                case '$selurl':
-                case '$selectedline':
-                case '$selline':
-                case '$selected':
-                case '$character':
-                case '$copied':
-                case 'selectedword':
-                case 'selword':
-                case 'selectedurl':
-                case 'selurl':
-                case 'selectedline':
-                case 'selline':
-                case 'selected':
-                case 'character':
-                case 'copied':
-                case '$action':
-                case 'action':
-                case '$trigger':
-                case 'trigger':
                     continue;
             }
             //if i to z and the loop exist skip it
@@ -1442,7 +1423,7 @@ export class Input extends EventEmitter {
         this.client.on('options-loaded', () => {
             this.updatePads();
             if (!_mathjs && this.client.options.initializeScriptEngineOnLoad)
-                this.initMathJS();            
+                this.initMathJS();
         });
 
         this.client.commandInput.addEventListener('keyup', event => {
@@ -6848,6 +6829,8 @@ export class Input extends EventEmitter {
             case 'clientname':
                 return getName();
         }
+        if (WindowVariables.indexOf(text) !== -1)
+            return this.vStack['$' + text] || window['$' + text] || '';
         if (this.loops.length && text.length === 1) {
             let i = text.charCodeAt(0) - 105;
             if (i >= 0 && i < 18 && i < this.loops.length)
@@ -9347,5 +9330,4 @@ export class Input extends EventEmitter {
             }
         }
     }
-
 }
