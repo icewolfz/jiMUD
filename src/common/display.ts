@@ -2306,10 +2306,10 @@ export class Display extends EventEmitter {
                     let cr;
                     if (this._lines[line].hr)
                         cr = mw;
+                    else if (this._lines[line].indent)
+                        cr = fl((eL === line ? this.wrapLineWidth(line, 0, e) : (this._lines[line].width + this._charWidth)) + this._indent * this._charWidth);
                     else
                         cr = fl(eL === line ? this.wrapLineWidth(line, 0, e) : (this._lines[line].width + this._charWidth));
-                    if (this._lines[line].indent)
-                        cr += this._indent * this._charWidth;
                     //cr = fl(eL === line ? this.textWidth(tLine.substring(0, e)) : (this._lines[line].width + this._charWidth));
                     if (line > sL) {
                         let plIndent = this._lines[line - 1].indent ? this._indent * this._charWidth : 0;
