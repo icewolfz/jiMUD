@@ -424,9 +424,10 @@ export class Finder extends EventEmitter {
 
     public clear() {
         //no results so no need to clear
-        if(this._results.length === 0) return;
-        this._results = [];
-        this._position = 0;        
+        if (!this._results)
+            this._results = [];
+        if (this._results.length === 0) return;        
+        this._position = 0;
         this._display.clearOverlay('find');
         this._display.clearOverlay('find-current');
         this.updateButtons();
