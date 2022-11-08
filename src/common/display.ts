@@ -239,15 +239,14 @@ export class Display extends EventEmitter {
                 this._maxWidth = Math.max(this._maxWidth, t[0].width);
                 this._maxHeight = Math.max(this._maxHeight, t[0].height);
             }
-            if (idx - 1 >= 0)
-                t[0].top = this._lines[idx - 1].top + this._lines[idx - 1].height;
+            if (this._lines.length > 0)
+                t[0].top = this._lines[this._lines.length - 1].top + this._lines[this._lines.length - 1].height;
             for (let l = 1, ll = t.length; l < ll; l++) {
                 t[l].top = t[l - 1].top + t[l - 1].height;
                 this._maxWidth = Math.max(this._maxWidth, t[l].width + ((this._indent || 0) * this._charWidth));
                 this._maxHeight = Math.max(this._maxHeight, t[l].height);
             }
             this._lines.push(...t);
-
 
             if (this.split) this.split.dirty = true;
             if (!noUpdate)
@@ -3103,7 +3102,7 @@ export class Display extends EventEmitter {
                 this._maxHeight = Math.max(this._maxHeight, t[0].height);
             }
             this._linesMap.set(t[0].id, t);
-            t[0].top = this._lines[l - 1].top + this._lines[l - 1].height;
+            t[0].top = this._lines[this._lines.length - 1].top + this._lines[this._lines.length - 1].height;
             for (let l = 1, ll = t.length; l < ll; l++) {
                 t[l].top = t[l - 1].top + t[l - 1].height;
                 this._maxWidth = Math.max(this._maxWidth, t[l].width + ((this._indent || 0) * this._charWidth));
