@@ -276,8 +276,8 @@ export class Finder extends EventEmitter {
         if (sel.length)
             this._input.val(sel);
         this._input.focus().select();
-        this.find();
         this.visible = true;
+        this.find();
         this.emit('shown');
     }
 
