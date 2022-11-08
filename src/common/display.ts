@@ -3223,9 +3223,7 @@ export class Display extends EventEmitter {
     }
 
     public find(focus?: boolean) {
-        {
-            this._finder.find(false);
-        }
+        this._finder.find(false);
     }
 
     public scrollTo(x: number, y: number) {

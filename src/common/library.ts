@@ -15,7 +15,6 @@ declare global {
         trimLeft(): string;
         trimRight(): string;
         rtrim(): string;
-        ltrim(): string;
     }
 }
 
@@ -668,16 +667,16 @@ if (typeof String.prototype.splice !== 'function') {
     };
 }
 
-if (typeof String.prototype.paddingLeft !== 'function') {
-    String.prototype.paddingLeft = function (this: string, paddingValue: (string | number)) {
+if (typeof String.prototype.padStart !== 'function') {
+    String.prototype.padStart = function (this: string, paddingValue: (string | number)) {
         if (typeof paddingValue === 'number')
             paddingValue = ' '.repeat(paddingValue);
         return String(paddingValue + this).slice(-paddingValue.length);
     };
 }
 
-if (typeof String.prototype.paddingRight !== 'function') {
-    String.prototype.paddingRight = function (this: string, paddingValue: (string | number)) {
+if (typeof String.prototype.padEnd !== 'function') {
+    String.prototype.padEnd = function (this: string, paddingValue: (string | number)) {
         if (typeof paddingValue === 'number') {
             if (paddingValue <= this.length) return this;
             paddingValue = ' '.repeat(paddingValue - this.length);
@@ -695,10 +694,6 @@ String.prototype.rtrim = function (this: string) {
             break;
     }
     return this.slice(0, e + 1);
-};
-
-String.prototype.ltrim = function (this: string) {
-    return this.replace(/^\h\h*/, '');
 };
 
 /*

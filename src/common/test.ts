@@ -105,15 +105,15 @@ export class Tests extends EventEmitter {
                     if (a === 'Rapid') continue;
                     //-16
                     if (a === 'None')
-                        sample += '\x1B[0m ' + AnsiColorCode[(bg - 10)].toString().paddingRight(16) + ' | ';
+                        sample += '\x1B[0m ' + AnsiColorCode[(bg - 10)].toString().padEnd(16) + ' | ';
                     else
-                        sample += '\x1B[0m ' + a.paddingRight(16) + ' | ';
+                        sample += '\x1B[0m ' + a.padEnd(16) + ' | ';
                     //-7
                     for (let fg = 30; fg <= 37; fg++) {
                         if (a === 'None')
-                            sample += '\x1B[' + bg + 'm\x1B[' + fg + 'm ' + ('[' + fg + 'm').paddingRight(7);
+                            sample += '\x1B[' + bg + 'm\x1B[' + fg + 'm ' + ('[' + fg + 'm').padEnd(7);
                         else
-                            sample += '\x1B[' + bg + 'm\x1B[' + Ansi[a] + ';' + fg + 'm ' + ('[' + Ansi[a] + ';' + fg + 'm').paddingRight(7);
+                            sample += '\x1B[' + bg + 'm\x1B[' + Ansi[a] + ';' + fg + 'm ' + ('[' + Ansi[a] + ';' + fg + 'm').padEnd(7);
                     }
                     sample += '\x1B[0m\n';
                 }

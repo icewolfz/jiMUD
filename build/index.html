@@ -1769,7 +1769,7 @@
             });
 
             client.on('parse-done', () => {
-                client.display.find(false);
+                this.doUpdate(512);
             });
 
             client.on('received-GMCP', (mod, obj) => {
@@ -3960,6 +3960,10 @@
                         client.UpdateWindow();
                     }, 1);
                     $updating &= ~256;
+                }
+                if (($updating & 512) === 512) {
+                    client.display.find(false);
+                    $updating &= ~512;
                 }
                 _rTimeout = 0;
                 this.doUpdate($updating);

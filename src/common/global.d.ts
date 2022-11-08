@@ -12,8 +12,8 @@ interface CanvasRenderingContext2D {
 interface String {
 
 	splice(idx: number, s: string, rem?: number): string;
-	paddingLeft(paddingvalue: (string | number)): string;
-	paddingRight(paddingvalue: (string | number)): string;
+	padStart(paddingvalue: (string | number)): string;
+	padEnd(paddingvalue: (string | number)): string;
 	splitQuote(sep: string, type?, escape?): string[];
 }
 
