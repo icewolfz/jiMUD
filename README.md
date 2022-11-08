@@ -7,6 +7,10 @@ A mud client using electron for [ShadowMUD](http://www.shadowmud.com) based on i
   To build jiMUD you must have node, npm, typescript 2.3+, cPython installed
   Steps to build:
 
+### Clone repository or use archive zip
+
+1. `git clone https://github.com/icewolfz/jiMUD.git` or `git pull` if already ready cloned, or you can download and unzip the source archive
+
 ### Windows
 
 1. npm install - install all the node modules, **Note** you will need to rerun this only if modules have been updated in the package.json
