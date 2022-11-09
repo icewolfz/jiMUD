@@ -1237,7 +1237,7 @@ export class Client extends EventEmitter {
     public setOption(name, value) {
         if (name === -1 || name === '-1')
             return;
-        let opt = this.options;
+        let opt: any = this.options;
         let o;
         name = name.split('.');
         const ol = name.length - 1;
@@ -1252,10 +1252,13 @@ export class Client extends EventEmitter {
             return null;
         let opt = this.options;
         let o;
-        name = name.split('.');
-        const ol = name.length;
+        const opts = name.split('.');
+        const ol = opts.length;
         for (o = 0; o < ol; o++)
-            opt = opt[name[o]];
+            opt = opt[opts[o]];
+        //TODO add fall back to global setting
+        //if (typeof opt === 'undefined')
+            //return window.getSetting(name);
         return opt;
     }
 

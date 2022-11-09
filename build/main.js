@@ -1292,78 +1292,43 @@ ipcMain.on('get-setting', (event, key) => {
         event.returnValue = null;
         return;
     }
-    switch (key) {
-        case 'theme':
-            event.returnValue = _settings.theme;
-            break;
-        case 'askonloadCharacter':
-            event.returnValue = _settings.askonloadCharacter;
-            break;
-        case 'spellchecking':
-            event.returnValue = _settings.spellchecking;
-            break;
-        case 'alwaysShowTabs':
-            event.returnValue = _settings.alwaysShowTabs;
-            break;
-        case 'enableBackgroundThrottling':
-            event.returnValue = _settings.enableBackgroundThrottling;
-            return;
-        case 'showTabsAddNewButton':
-            event.returnValue = _settings.showTabsAddNewButton;
-            return;
-        case 'askOnCloseAll':
-            event.returnValue = _settings.askOnCloseAll;
-            return;
-        case 'characterManagerDblClick':
-            event.returnValue = _settings.characterManagerDblClick;
-            return;
-        default:
-            if (key in _settings)
-                event.returnValue = _settings[key];
-            else
-                event.returnValue = null;
-            break;
+    if (key in _settings)
+        event.returnValue = _settings[key];
+    else {
+        const keys = key.split('.');
+        const kl = keys.length;
+        let settings = _settings;
+        for (let k = 0; k < kl; k++) {
+            settings = settings[keys[k]];
+            //TODO add fall back to default
+            if (typeof settings === 'undefined')
+                break;
+        }
+        //TODO add fall back to default setting
+        if (typeof settings === 'undefined')
+            event.returnValue = null;
+        else
+            event.returnValue = settings;
     }
 });
 
 ipcMain.on('set-setting', (event, key, value) => {
     if (!_settings)
         return;
-    switch (key) {
-        case 'theme':
-            _settings.theme = value;
+    if (key in _settings && typeof value === typeof _settings[key]) {
+        _settings[key] = value;
+        _settings.save(global.settingsFile);
+    }
+    else {
+        const keys = key.split('.');
+        const kl = keys.length - 1;
+        let settings = _settings;
+        for (let k = 0; k < kl; k++)
+            settings = settings[keys[k]];
+        if (keys[kl] in settings) {
+            settings[keys[kl]] = value;
             _settings.save(global.settingsFile);
-            break;
-        case 'askonloadCharacter':
-            _settings.askonloadCharacter = value;
-            _settings.save(global.settingsFile);
-            break;
-        case 'spellchecking':
-            _settings.spellchecking = value;
-            _settings.save(global.settingsFile);
-            break;
-        case 'alwaysShowTabs':
-            _settings.alwaysShowTabs = value;
-            _settings.save(global.settingsFile);
-            break;
-        case 'enableBackgroundThrottling':
-            _settings.enableBackgroundThrottling = value;
-            _settings.save(global.settingsFile);
-            break;
-        case 'showTabsAddNewButton':
-            _settings.showTabsAddNewButton = value;
-            _settings.save(global.settingsFile);
-            break
-        case 'askOnCloseAll':
-            _settings.askOnCloseAll = value;
-            _settings.save(global.settingsFile);
-            break
-        default:
-            if (key in _settings && typeof value === typeof _settings[key]) {
-                _settings[key] = value;
-                _settings.save(global.settingsFile);
-            }
-            break;
+        }
     }
 });
 
