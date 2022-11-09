@@ -209,7 +209,17 @@
             _charactersDataGrid.on('row-dblclick', e => {
                 e.preventDefault();
                 updateCurrent();
-                if (load() === 0)
+                if (window.opener.client) {
+                    if (window.opener.client.options.characterManagerDblClick === 1) {
+                        if (load() === 0)
+                            doClose();
+                    }
+                    else if (window.opener.client.options.characterManagerDblClick === 2)
+                        newConnection();
+                    else if (window.opener.client.options.characterManagerDblClick === 4)
+                        newWindow();
+                }
+                else if (load() === 0)
                     doClose();
             });
             _charactersDataGrid.on('row-click', e => {
@@ -1086,7 +1096,7 @@
             window.opener.send('new-client', null, { characterId: character.ID, settings: parseTemplate(character.Preferences), port: character.Port });
         }
 
-        function newWindow(index) {
+        function newWindow(ID) {
             if (ID === undefined) {
                 if (_charactersDataGrid.selectedCount === 0) return;
                 character = _charactersDataGrid.selected[0].data;

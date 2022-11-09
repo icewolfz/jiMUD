@@ -663,6 +663,18 @@
                         if (this.checked)
                             _settings.scriptEngineType = 4;
                         break;
+                    case 'characterManagerDblClick-1':
+                        if (this.checked)
+                            _settings.characterManagerDblClick = 1;
+                        break;
+                    case 'characterManagerDblClick-2':
+                        if (this.checked)
+                            _settings.characterManagerDblClick = 2;
+                        break;
+                    case 'characterManagerDblClick-4':
+                        if (this.checked)
+                            _settings.characterManagerDblClick = 4;
+                        break;
                 }
             });
 
@@ -934,7 +946,11 @@
             $('#scriptEngineType-1').prop('checked', _settings.scriptEngineType === 1);
             $('#scriptEngineType-2').prop('checked', _settings.scriptEngineType === 2);
             $('#scriptEngineType-4').prop('checked', _settings.scriptEngineType === 4);
-            
+
+            $('#characterManagerDblClick-1').prop('checked', _settings.characterManagerDblClick === 1);
+            $('#characterManagerDblClick-2').prop('checked', _settings.characterManagerDblClick === 2);
+            $('#characterManagerDblClick-4').prop('checked', _settings.characterManagerDblClick === 4);
+
             $('#profiles-sortOrder-alpha').prop('checked', (_settings.profiles.sortOrder & 2) === 2);
             $('#profiles-sortOrder-priority').prop('checked', (_settings.profiles.sortOrder & 4) === 4);
             $('#profiles-sortOrder-index').prop('checked', (_settings.profiles.sortOrder & 8) === 8);
@@ -2716,7 +2732,20 @@
                             <input type="checkbox" id="externalHelp" /> Open ShadowMUD help in web browser
                         </label>
                     </div>
-
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">Character manager on row double click load in:</label>
+                        <div class="btn-group" data-toggle="buttons">
+                            <label class="btn btn-default btn-xs">
+                                <input type="radio" name="characterManagerDblClick" id="characterManagerDblClick-1"> Opened tab
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="radio" name="characterManagerDblClick" id="characterManagerDblClick-2"> New tab
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="radio" name="characterManagerDblClick" id="characterManagerDblClick-4"> New window
+                            </label>
+                        </div>
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="backup">
                     <div class="col-sm-12 form-group" style="padding: 0px;">

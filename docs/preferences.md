@@ -286,6 +286,10 @@ Controls what is captured into the chat window
 - `Enable warning dialog when loading a character from manager` disable or enable warning dialog when loading a character
 - `Open 'Who is on' in web browser` Open the 'Who is on?' in a web browser, if disabled will open in a child window of jiMUD
 - `Open ShadowMUD help in web browser` Open the ShadowMUD help in a web browser, if disabled will open in a child window of jiMUD
+- `Character manager on row double click load in:` Determine how to load a character when a row is doubled clicked in character manager
+  - `Opened tab` load selected character in tab that opened character manager and close manager based on ask on load setting
+  - `New tab` load selected character in new tab in opened window
+  - `New window` load selected character in new window
 
 ## Advanced > Backup
 

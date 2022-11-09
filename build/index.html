@@ -4136,7 +4136,7 @@
         }
 
         function updateTitle(title) {
-            var name = getCharacterName();
+            var name = title || getCharacterName();
             if (client.connecting)
                 title = 'Connecting';
             else if (client.connected)

@@ -130,7 +130,7 @@
                         tabstrip.setTabTitle(options.title, t);
                         if (!options.tooltip)
                             tabstrip.setTabTooltip(options.title, t);
-                        if (tabstrip.active === tabs[t])
+                        if (!tabstrip.active || tabstrip.active === tabs[t])
                             setTitle(options.title);
                     }
                     if (typeof options.icon === 'number') {

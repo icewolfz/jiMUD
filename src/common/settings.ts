@@ -628,6 +628,8 @@ export class Settings {
     public useSingleInstance: boolean = true;
     public onSecondInstance: OnSecondInstance = OnSecondInstance.Show;
 
+    public characterManagerDblClick: number = 1;
+
     public static load(file) {
         try {
             if (!fs.statSync(file).isFile())

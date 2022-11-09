@@ -40,6 +40,7 @@
     - `word wrap indent` indent wrapped line with the set amount of spaces, added for chat and main display
     - `Expression engine` Which expression engine to use when executing expressions, this changes how mathjs library is executed
     - `Initialize expression engine on load` Initialize the expression engine on client load instead of on first use, enabling this can cause client to load slower but can speed up first use of an expression
+    - `Character manager on row double click load in:` Determine how to load a character when a row is doubled clicked in character manager
   - `#connecttime` now displays last disconnect time when possible if disconnected
   - Chat:
     - Window display now uses global theme for display scroll bars
