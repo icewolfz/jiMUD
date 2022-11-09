@@ -290,6 +290,7 @@ Controls what is captured into the chat window
   - `Opened tab` load selected character in tab that opened character manager and close manager based on ask on load setting
   - `New tab` load selected character in new tab in opened window
   - `New window` load selected character in new window
+  - `Use global preference` load based on global preference setting, **per mud only**
 
 ## Advanced > Backup
 

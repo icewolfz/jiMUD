@@ -1314,6 +1314,9 @@ ipcMain.on('get-setting', (event, key) => {
         case 'askOnCloseAll':
             event.returnValue = _settings.askOnCloseAll;
             return;
+        case 'characterManagerDblClick':
+            event.returnValue = _settings.characterManagerDblClick;
+            return;
         default:
             if (key in _settings)
                 event.returnValue = _settings[key];

@@ -209,18 +209,23 @@
             _charactersDataGrid.on('row-dblclick', e => {
                 e.preventDefault();
                 updateCurrent();
+                var action;
                 if (window.opener.client) {
-                    if (window.opener.client.options.characterManagerDblClick === 1) {
-                        if (load() === 0)
-                            doClose();
-                    }
-                    else if (window.opener.client.options.characterManagerDblClick === 2)
-                        newConnection();
-                    else if (window.opener.client.options.characterManagerDblClick === 4)
-                        newWindow();
+                    action = window.opener.client.options.characterManagerDblClick;
+                    if (action === 8)
+                        action = window.getSetting('characterManagerDblClick');
                 }
-                else if (load() === 0)
-                    doClose();
+                else
+                    action = window.getSetting('characterManagerDblClick');
+
+                if (action === 1 || action === 8) {
+                    if (load() === 0)
+                        doClose();
+                }
+                else if (action === 2)
+                    newConnection();
+                else if (action === 4)
+                    newWindow();
             });
             _charactersDataGrid.on('row-click', e => {
                 updateCurrent();

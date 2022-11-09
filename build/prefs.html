@@ -233,10 +233,14 @@
                 $('.linux').css('display', 'inline-block');
             else
                 $('.linux').css('display', 'none');
-            if (_settingsFile === _globalFile)
+            if (_settingsFile === _globalFile) {
                 $('.global').css('display', '');
-            else
+                $('.notGlobal').css('display', 'none');
+            }
+            else {
                 $('.global').css('display', 'none');
+                $('.notGlobal').css('display', '');
+            }
             fontList.getFonts()
                 .then(fonts => {
                     var fl = fonts.length;
@@ -675,6 +679,10 @@
                         if (this.checked)
                             _settings.characterManagerDblClick = 4;
                         break;
+                    case 'characterManagerDblClick-8':
+                        if (this.checked)
+                            _settings.characterManagerDblClick = 8;
+                        break;
                 }
             });
 
@@ -947,7 +955,13 @@
             $('#scriptEngineType-2').prop('checked', _settings.scriptEngineType === 2);
             $('#scriptEngineType-4').prop('checked', _settings.scriptEngineType === 4);
 
-            $('#characterManagerDblClick-1').prop('checked', _settings.characterManagerDblClick === 1);
+            if (_settingsFile === _globalFile) {
+                $('#characterManagerDblClick-1').prop('checked', _settings.characterManagerDblClick === 1 || _settings.characterManagerDblClick === 8);
+            }
+            else {
+                $('#characterManagerDblClick-1').prop('checked', _settings.characterManagerDblClick === 1);
+                $('#characterManagerDblClick-8').prop('checked', _settings.characterManagerDblClick === 8);
+            }
             $('#characterManagerDblClick-2').prop('checked', _settings.characterManagerDblClick === 2);
             $('#characterManagerDblClick-4').prop('checked', _settings.characterManagerDblClick === 4);
 
@@ -2743,6 +2757,9 @@
                             </label>
                             <label class="btn btn-default btn-xs">
                                 <input type="radio" name="characterManagerDblClick" id="characterManagerDblClick-4"> New window
+                            </label>
+                            <label class="btn btn-default btn-xs notGlobal">
+                                <input type="radio" name="characterManagerDblClick" id="characterManagerDblClick-8"> Use global preference
                             </label>
                         </div>
                     </div>

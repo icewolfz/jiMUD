@@ -628,7 +628,7 @@ export class Settings {
     public useSingleInstance: boolean = true;
     public onSecondInstance: OnSecondInstance = OnSecondInstance.Show;
 
-    public characterManagerDblClick: number = 1;
+    public characterManagerDblClick: number = 8;
 
     public static load(file) {
         try {
