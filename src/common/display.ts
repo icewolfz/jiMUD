@@ -249,8 +249,8 @@ export class Display extends EventEmitter {
             this._lines.push(...t);
 
             if (this.split) this.split.dirty = true;
-            if (!noUpdate)
-                this.doUpdate(UpdateType.display);
+            //if (!noUpdate)
+                //this.doUpdate(UpdateType.display);
             this.doUpdate(UpdateType.display);
         });
 
