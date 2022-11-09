@@ -240,7 +240,7 @@ export class Finder extends EventEmitter {
         </a>`+ '<input placeholder="Find" /><button id="' + this._display.id + '-find-case" title="Match Case" class="find-case">Aa</button><button id="' + this._display.id + '-find-word" title="Match Whole Word" class="find-word">Aa|</button><button id="' + this._display.id + '-find-regex" title="Use Regular Expression" class="find-regex">.*</button><button id="' + this._display.id + '-find-all" title="Highlight all matches" class="find-all"><i class="fa fa-paint-brush"></i></button><div id="' + this._display.id + '-find-count" class="find-count"></div><button id="' + this._display.id + '-find-prev" title="Previous Match" disabled="disabled" class="find-prev"><i class="fa fa-arrow-down"></i></button><button id="' + this._display.id + '-find-next" title="Next Match" disabled="disabled" class="find-next"><i class="fa fa-arrow-up"></i></button><button id="' + this._display.id + '-find-selection" title="Find in selection" disabled="disabled" class="find-selection"><i class="fa fa-align-left"></i></button><button id="' + this._display.id + '-find-reverse" title="Search Down" class="find-reverse"><i class="fa fa-caret-down"></i></button><button id="' + this._display.id + '-find-close" title="Close" class="find-close"><i class="fa fa-close"></i></button></div>');
         this._control.css('top', this._location[0]);
         this._control.css('right', this._location[1]);
-        this._input = $('input', this._control);
+        this._input = $('input', this._control)[0];
 
         $('#' + this._display.id + '-find-close', this._control).on('click', () => {
             this.hide();
@@ -274,8 +274,9 @@ export class Finder extends EventEmitter {
         this._control.slideDown();
         const sel = this._display.selection;
         if (sel.length)
-            this._input.val(sel);
-        this._input.focus().select();
+            this._input.value = sel;
+        this._input.focus();
+        this._input.select();
         this.visible = true;
         this.find();
         this.emit('shown');
@@ -283,7 +284,7 @@ export class Finder extends EventEmitter {
 
     public hide() {
         this._control.slideUp(() => {
-            this._input.val('');
+            this._input.value = '';
             this.clear();
             this.visible = false;
             this.emit('closed');
@@ -293,7 +294,7 @@ export class Finder extends EventEmitter {
     public find(focus?: boolean) {
         //not visible so just bail
         if (!this.visible) return;
-        const val = <string>this._input.val();
+        const val = <string>this._input.value;
         this.clear();
         if (val.length === 0) {
             $('#' + this._display.id + '-find-count', this._control).html('No Results');
