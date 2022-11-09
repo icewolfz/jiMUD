@@ -905,18 +905,8 @@ export class Display extends EventEmitter {
                 clearInterval(this._currentSelection.scrollTimer);
                 this._currentSelection.scrollTimer = null;
                 this._currentSelection.drag = false;
-                this._currentSelection.end = this.getLineOffset(e.pageX, e.pageY);
-                if (this._currentSelection.end.y < 0) {
-                    this._currentSelection.end.y = 0;
-                    this._currentSelection.end.x = 0;
-                }
-                if (this._currentSelection.end.y >= this._lines.length) {
-                    this._currentSelection.end.y = this._lines.length - 1;
-                    this._currentSelection.end.x = this.getLineText(this._currentSelection.end.y).length;
-                }
-                else if (this._currentSelection.end.y === this._lines.length - 1 && this._currentSelection.end.x > this.getLineText(this._currentSelection.end.y).length) {
-                    this._currentSelection.end.x = this.getLineText(this._currentSelection.end.y).length;
-                }
+                this._currentSelection.end = this.clampPosition(this.getLineOffset(e.pageX, e.pageY));
+                this._currentSelection.start = this.clampPosition(this._currentSelection.start);
                 this.emit('selection-done');
                 this.doUpdate(UpdateType.selection);
             }
@@ -2566,6 +2556,21 @@ export class Display extends EventEmitter {
         }
         txt.push(this.getLineHTML(eL, 0, e));
         return txt.join('\n');
+    }
+
+    private clampPosition(point: Point): Point {
+        if (point.y < 0) {
+            point.y = 0;
+            point.x = 0;
+        }
+        if (point.y >= this._lines.length) {
+            point.y = this._lines.length - 1;
+            point.x = this.getLineText(point.y).length;
+        }
+        else if (point.y === this._lines.length - 1 && point.x > this.getLineText(point.y).length) {
+            point.x = this.getLineText(point.y).length;
+        }
+        return point;
     }
 
     public selectAll() {
