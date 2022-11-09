@@ -1,6 +1,6 @@
 //spell-checker:words vscroll, hscroll, askoncancel, askonclose,commandon, cmdfont
 //spell-checker:ignore emoteto, emotetos askonchildren YYYYMMDD Hmmss
-import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect, ProfileSortOrder, OnProfileChange, OnProfileDeleted, TrayMenu, OnSecondInstance, ScriptEngineType } from './types';
+import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect, ProfileSortOrder, OnProfileChange, OnProfileDeleted, TrayMenu, OnSecondInstance, ScriptEngineType, SettingType } from './types';
 const path = require('path');
 const fs = require('fs');
 
@@ -27,15 +27,14 @@ export class Mapper {
     public alwaysOnTopClient: boolean = true;
     public memory: boolean = false;
     public memorySavePeriod: number = 900000;
-    public active =
-        {
-            ID: null,
-            x: 0,
-            y: 0,
-            z: 0,
-            area: null,
-            zone: 0
-        };
+    public active = {
+        ID: null,
+        x: 0,
+        y: 0,
+        z: 0,
+        area: null,
+        zone: 0
+    };
     public persistent: boolean = true;
     public showInTaskBar: boolean = false;
 }
@@ -375,7 +374,103 @@ export let SettingList: any[] = [
     ['display.enableColors', 0, 1, true],
     ['display.enableBackgroundColors', 0, 1, true],
     ['enableSound', 0, 1, true],
-    ['allowHalfOpen', 0, 1, true]
+    ['allowHalfOpen', 0, 1, true],
+    ['editorClearOnSend', 0, 1, true],
+    ['editorCloseOnSend', 0, 1, true],
+    ['askOnCloseAll', 0, 1, true],
+    ['askonloadCharacter', 0, 1, true],
+    ['mapper.roomWidth', 0, 2, 200],
+    ['mapper.roomGroups', 0, 2, 1 | 2 | 4],
+    ['mapper.showInTaskBar', 0, 1, false],
+    ['profiles.enabled', 0, 4, []],
+    ['profiles.sortOrder', 0, 2, ProfileSortOrder.Priority | ProfileSortOrder.Index],
+    ['profiles.sortDirection', 0, 2, 1],
+    ['profiles.showInTaskBar', 0, 1, false],
+    ['profiles.profileSelected', 0, 0, 'default'],
+    ['profiles.profileExpandSelected', 0, 1, true],
+    ['chat.lines', 0, 4, []],
+    ['chat.showInTaskBar', 0, 1, false],
+    ['chat.showTimestamp', 0, 1, false],
+    ['chat.timestampFormat', 0, 0, '[[]MM-DD HH:mm:ss.SSS[]] '],
+    ['chat.tabWidth', 0, 2, 8],
+    ['chat.displayControlCodes', 0, 1, false],
+    ['chat.emulateTerminal', 0, 1, false],
+    ['chat.emulateControlCodes', 0, 1, true],
+    ['chat.wordWrap', 0, 1, false],
+    ['chat.wrapAt', 0, 2, 0],
+    ['chat.indent', 0, 2, 4],
+    ['chat.scrollLocked', 0, 1, false],
+    ['chat.find.case', 0, 1, false],
+    ['chat.find.word', 0, 1, false],
+    ['chat.find.reverse', 0, 1, false],
+    ['chat.find.regex', 0, 1, false],
+    ['chat.find.selection', 0, 1, false],
+    ['chat.find.show', 0, 1, false],
+    ['chat.find.highlight', 0, 1, false],
+    ['chat.find.location', 0, 4, [5, 20]],
+    ['codeEditor.showInTaskBar', 0, 1, false],
+    ['codeEditor.persistent', 0, 1, false],
+    ['codeEditor.alwaysOnTop', 0, 1, false],
+    ['codeEditor.alwaysOnTopClient', 0, 1, true],
+    ['autoTakeoverLogin', 0, 1, false],
+    ['fixHiddenWindows', 0, 1, true],
+    ['maxReconnectDelay', 0, 2, 3600],
+    ['enableBackgroundThrottling', 0, 1, true],
+    ['enableBackgroundThrottlingClients', 0, 1, false],
+    ['showInTaskBar', 0, 1, true],
+    ['showLagInTitle', 0, 1, false],
+    ['mspMaxRetriesOnError', 0, 2, 0],
+    ['logTimestamp', 0, 1, false],
+    ['logTimestampFormat', 0, 0, '[[]MM-DD HH:mm:ss.SSS[]] '],
+    ['disableTriggerOnError', 0, 1, true],
+    ['prependTriggeredLine', 0, 1, true],
+    ['enableParameters', 0, 1, true],
+    ['parametersChar', 0, 0, '#', 1],
+    ['enableNParameters', 0, 1, true],
+    ['nParametersChar', 0, 0, '#', 1],
+    ['enableParsing', 0, 1, true],
+    ['externalWho', 0, 1, true],
+    ['externalHelp', 0, 1, true],
+    ['watchForProfilesChanges', 0, 1, false],
+    ['maxReonProfileChangeconnectDelay', 0, 2, OnProfileChange.Nothing],
+    ['onProfileDeleted', 0, 2, OnProfileDeleted.Nothing],
+    ['enableDoubleParameterEscaping', 0, 1, false],
+    ['ignoreEvalUndefined', 0, 1, true],
+    ['enableInlineComments', 0, 1, true],
+    ['enableBlockComments', 0, 1, true],
+    ['inlineCommentString', 0, 0, '//'],
+    ['blockCommentString', 0, 0, '/*'],
+    ['allowCommentsFromCommand', 0, 1, false],
+    ['saveTriggerStateChanges', 0, 1, true],
+    ['groupProfileSaves', 0, 1, false],
+    ['groupProfileSaveDelay', 0, 2, 20000],
+    ['returnNewlineOnEmptyValue', 0, 1, false],
+    ['pathDelay', 0, 2, 0],
+    ['pathDelayCount', 0, 2, 1],
+    ['echoSpeedpaths', 0, 1, false],
+    ['alwaysShowTabs', 0, 1, false],
+    ['scriptEngineType', 0, 2, ScriptEngineType.Simple],
+    ['initializeScriptEngineOnLoad', 0, 1, false],
+    ['find.highlight', 0, 1, false],
+    ['find.location', 0, 4, [5, 20]],
+    ['display.showInvalidMXPTags', 0, 1, false],
+    ['display.showTimestamp', 0, 1, false],
+    ['display.timestampFormat', 0, 0, '[[]MM-DD HH:mm:ss.SSS[]] '],
+    ['display.displayControlCodes', 0, 1, false],
+    ['display.emulateTerminal', 0, 1, false],
+    ['display.emulateControlCodes', 0, 1, true],
+    ['display.wordWrap', 0, 1, false],
+    ['display.tabWidth', 0, 2, 8],
+    ['display.wrapAt', 0, 2, 0],
+    ['display.indent', 0, 2, 4],
+    ['statusWidth', 0, 2, -1],
+    ['showEditorInTaskBar', 0, 1, true],
+    ['trayMenu', 0, 2, TrayMenu.simple],
+    ['lockLayout', 0, 1, false],
+    ['loadLayout', 0, 0, ''],
+    ['useSingleInstance', 0, 1, true],
+    ['statusWidth', 0, 2, OnSecondInstance.Show],
+    ['characterManagerDblClick', 0, 2, 8]
 ];
 
 /**

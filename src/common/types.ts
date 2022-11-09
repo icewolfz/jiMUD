@@ -125,6 +125,15 @@ export enum FontStyle {
   Overline = 1024
 }
 
+export enum SettingType {
+  String = 0,
+  Boolean = 1,
+  Number = 2,
+  Raw = 3,
+  Custom = 4,
+  ComboBox = 5
+}
+
 export interface LineFormat {
   formatType: FormatType;
   offset: number;
