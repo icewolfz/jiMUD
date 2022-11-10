@@ -771,6 +771,529 @@ export class Settings {
         fs.writeFileSync(file, data);
     }
 
+    public getValue(setting: string) {
+        switch (setting) {
+            case 'mapFollow':
+            case 'mapper.follow': return this.mapper.follow;
+            case 'mapEnabled':
+            case 'mapper.enabled': return this.mapper.enabled;
+            case 'MapperSplitArea':
+            case 'mapper.split': return this.mapper.split;
+            case 'MapperFillWalls':
+            case 'mapper.fill': return this.mapper.fill;
+            case 'MapperOpen':
+            case 'showMapper': return this.showMapper;
+            case 'chat.captureLines': return this.chat.captureLines;
+            case 'chat.captureAllLines': return this.chat.captureAllLines;
+            case 'chat.captureReviews': return this.chat.captureReviews;
+            case 'chat.captureTells': return this.chat.captureTells;
+            case 'chat.captureTalk': return this.chat.captureTalk;
+            case 'chat.gag': return this.chat.gag;
+            case 'chat.CaptureOnlyOpen': return this.chat.CaptureOnlyOpen;
+            case 'mapper.legend': return this.mapper.legend;
+            case 'mapper.room': return this.mapper.room;
+            case 'mapper.importType': return this.mapper.importType;
+            case 'mapper.vscroll': return this.mapper.vscroll;
+            case 'mapper.hscroll': return this.mapper.hscroll;
+            case 'mapper.scale': return this.mapper.scale;
+            case 'mapper.alwaysOnTop': return this.mapper.alwaysOnTop;
+            case 'mapper.alwaysOnTopClient': return this.mapper.alwaysOnTopClient;
+            case 'mapper.memory': return this.mapper.memory;
+            case 'mapper.memorySavePeriod': return this.mapper.memorySavePeriod;
+            case 'mapper.active.ID': return this.mapper.active.ID;
+            case 'mapper.active.x': return this.mapper.active.x;
+            case 'mapper.active.y': return this.mapper.active.y;
+            case 'mapper.active.z': return this.mapper.active.z;
+            case 'mapper.active.area': return this.mapper.active.area;
+            case 'mapper.active.zone': return this.mapper.active.zone;
+            case 'mapper.persistent': return this.mapper.persistent;
+            case 'profiles.split': return this.profiles.split;
+            case 'profiles.askoncancel': return this.profiles.askoncancel;
+            case 'profiles.triggersAdvanced': return this.profiles.triggersAdvanced;
+            case 'profiles.aliasesAdvanced': return this.profiles.aliasesAdvanced;
+            case 'profiles.buttonsAdvanced': return this.profiles.buttonsAdvanced;
+            case 'profiles.macrosAdvanced': return this.profiles.macrosAdvanced;
+            case 'profiles.contextsAdvanced': return this.profiles.contextsAdvanced;
+            case 'profiles.codeEditor': return this.profiles.codeEditor;
+            case 'profiles.watchFiles': return this.profiles.watchFiles;
+            case 'chat.alwaysOnTop': return this.chat.alwaysOnTop;
+            case 'chat.alwaysOnTopClient': return this.chat.alwaysOnTopClient;
+            case 'chat.log': return this.chat.log;
+            case 'chat.persistent': return this.chat.persistent;
+            case 'chat.zoom': return this.chat.zoom;
+            case 'chat.font': return this.chat.font;
+            case 'chat.fontSize': return this.chat.fontSize;
+            case 'buttons.connect': return this.buttons.connect;
+            case 'buttons.characters': return this.buttons.characters;
+            case 'buttons.preferences': return this.buttons.preferences;
+            case 'buttons.log': return this.buttons.log;
+            case 'buttons.clear': return this.buttons.clear;
+            case 'buttons.lock': return this.buttons.lock;
+            case 'buttons.map': return this.buttons.map;
+            case 'buttons.user': return this.buttons.user;
+            case 'buttons.mail': return this.buttons.mail;
+            case 'buttons.compose': return this.buttons.compose;
+            case 'buttons.immortal': return this.buttons.immortal;
+            case 'buttons.codeEditor': return this.buttons.codeEditor;
+            case 'find.case': return this.find.case;
+            case 'find.word': return this.find.word;
+            case 'find.reverse': return this.find.reverse;
+            case 'find.regex': return this.find.regex;
+            case 'find.selection': return this.find.selection;
+            case 'find.show': return this.find.show;
+            case 'display.split': return this.display.split;
+            case 'display.splitHeight': return this.display.splitHeight;
+            case 'display.splitLive': return this.display.splitLive;
+            case 'display.roundedOverlays': return this.display.roundedOverlays;
+
+            case 'display.showSplitButton': return this.display.showSplitButton;
+            case 'chat.split': return this.chat.split;
+            case 'chat.splitHeight': return this.chat.splitHeight;
+            case 'chat.splitLive': return this.chat.splitLive;
+            case 'chat.roundedOverlays': return this.chat.roundedOverlays;
+            case 'chat.showSplitButton': return this.chat.showSplitButton;
+            case 'chat.bufferSize': return this.chat.bufferSize;
+            case 'chat.flashing': return this.chat.flashing;
+            case 'display.hideTrailingEmptyLine': return this.display.hideTrailingEmptyLine;
+            case 'display.enableColors': return this.display.enableColors;
+            case 'display.enableBackgroundColors': return this.display.enableBackgroundColors;
+
+            case 'mapper.roomWidth': return this.mapper.roomWidth;
+            case 'mapper.roomGroups': return this.mapper.roomGroups;
+            case 'mapper.showInTaskBar': return this.mapper.showInTaskBar;
+            case 'profiles.enabled': return this.profiles.enabled;
+            case 'profiles.sortOrder': return this.profiles.sortOrder;
+            case 'profiles.sortDirection': return this.profiles.sortDirection;
+            case 'profiles.showInTaskBar': return this.profiles.showInTaskBar;
+            case 'profiles.profileSelected': return this.profiles.profileSelected;
+            case 'profiles.profileExpandSelected': return this.profiles.profileExpandSelected;
+            case 'chat.lines': return this.chat.lines;
+            case 'chat.showInTaskBar': return this.chat.showInTaskBar;
+            case 'chat.showTimestamp': return this.chat.showTimestamp;
+            case 'chat.timestampFormat': return this.chat.timestampFormat;
+            case 'chat.tabWidth': return this.chat.tabWidth;
+            case 'chat.displayControlCodes': return this.chat.displayControlCodes;
+            case 'chat.emulateTerminal': return this.chat.emulateTerminal;
+            case 'chat.emulateControlCodes': return this.chat.emulateControlCodes;
+            case 'chat.wordWrap': return this.chat.wordWrap;
+            case 'chat.wrapAt': return this.chat.wrapAt;
+            case 'chat.indent': return this.chat.indent;
+            case 'chat.scrollLocked': return this.chat.scrollLocked;
+            case 'chat.find.case': return this.chat.find.case;
+            case 'chat.find.word': return this.chat.find.word;
+            case 'chat.find.reverse': return this.chat.find.reverse;
+            case 'chat.find.regex': return this.chat.find.regex;
+            case 'chat.find.selection': return this.chat.find.selection;
+            case 'chat.find.show': return this.chat.find.show;
+            case 'chat.find.highlight': return this.chat.find.highlight;
+            case 'chat.find.location': return this.chat.find.location;
+            case 'codeEditor.showInTaskBar': return this.codeEditor.showInTaskBar;
+            case 'codeEditor.persistent': return this.codeEditor.persistent;
+            case 'codeEditor.alwaysOnTop': return this.codeEditor.alwaysOnTop;
+            case 'codeEditor.alwaysOnTopClient': return this.codeEditor.alwaysOnTopClient;
+            case 'find.highlight': return this.find.highlight;
+            case 'find.location': return this.find.location;
+            case 'display.showInvalidMXPTags': return this.display.showInvalidMXPTags;
+            case 'display.showTimestamp': return this.display.showTimestamp;
+            case 'display.timestampFormat': return this.display.timestampFormat;
+            case 'display.displayControlCodes': return this.display.displayControlCodes;
+            case 'display.emulateTerminal': return this.display.emulateTerminal;
+            case 'display.emulateControlCodes': return this.display.emulateControlCodes;
+            case 'display.wordWrap': return this.display.wordWrap;
+            case 'display.tabWidth': return this.display.tabWidth;
+            case 'display.wrapAt': return this.display.wrapAt;
+            case 'display.indent': return this.display.indent;
+        }
+        return this[setting];
+    }
+
+    public setValue(setting: string, value) {
+        switch (setting) {
+            case 'mapFollow':
+            case 'mapper.follow':
+                this.mapper.follow = value;
+                return true;
+            case 'mapEnabled':
+            case 'mapper.enabled':
+                this.mapper.enabled = value;
+                return true;
+            case 'MapperSplitArea':
+            case 'mapper.split':
+                this.mapper.split = value;
+                return true;
+            case 'MapperFillWalls':
+            case 'mapper.fill':
+                this.mapper.fill = value;
+                return true;
+            case 'MapperOpen':
+            case 'showMapper':
+                this.showMapper = value;
+                return true;
+            case 'chat.captureLines':
+                this.chat.captureLines = value;
+                return true;
+            case 'chat.captureAllLines':
+                this.chat.captureAllLines = value;
+                return true;
+            case 'chat.captureReviews':
+                this.chat.captureReviews = value;
+                return true;
+            case 'chat.captureTells':
+                this.chat.captureTells = value;
+                return true;
+            case 'chat.captureTalk':
+                this.chat.captureTalk = value;
+                return true;
+            case 'chat.gag':
+                this.chat.gag = value;
+                return true;
+            case 'chat.CaptureOnlyOpen':
+                this.chat.CaptureOnlyOpen = value;
+                return true;
+            case 'mapper.legend':
+                this.mapper.legend = value;
+                return true;
+            case 'mapper.room':
+                this.mapper.room = value;
+                return true;
+            case 'mapper.importType':
+                this.mapper.importType = value;
+                return true;
+            case 'mapper.vscroll':
+                this.mapper.vscroll = value;
+                return true;
+            case 'mapper.hscroll':
+                this.mapper.hscroll = value;
+                return true;
+            case 'mapper.scale':
+                this.mapper.scale = value;
+                return true;
+            case 'mapper.alwaysOnTop':
+                this.mapper.alwaysOnTop = value;
+                return true;
+            case 'mapper.alwaysOnTopClient':
+                this.mapper.alwaysOnTopClient = value;
+                return true;
+            case 'mapper.memory':
+                this.mapper.memory = value;
+                return true;
+            case 'mapper.memorySavePeriod':
+                this.mapper.memorySavePeriod = value;
+                return true;
+            case 'mapper.active.ID':
+                this.mapper.active.ID = value;
+                return true;
+            case 'mapper.active.x':
+                this.mapper.active.x = value;
+                return true;
+            case 'mapper.active.y':
+                this.mapper.active.y = value;
+                return true;
+            case 'mapper.active.z':
+                this.mapper.active.z = value;
+                return true;
+            case 'mapper.active.area':
+                this.mapper.active.area = value;
+                return true;
+            case 'mapper.active.zone':
+                this.mapper.active.zone = value;
+                return true;
+            case 'mapper.persistent':
+                this.mapper.persistent = value;
+                return true;
+            case 'profiles.split':
+                this.profiles.split = value;
+                return true;
+            case 'profiles.askoncancel':
+                this.profiles.askoncancel = value;
+                return true;
+            case 'profiles.triggersAdvanced':
+                this.profiles.triggersAdvanced = value;
+                return true;
+            case 'profiles.aliasesAdvanced':
+                this.profiles.aliasesAdvanced = value;
+                return true;
+            case 'profiles.buttonsAdvanced':
+                this.profiles.buttonsAdvanced = value;
+                return true;
+            case 'profiles.macrosAdvanced':
+                this.profiles.macrosAdvanced = value;
+                return true;
+            case 'profiles.contextsAdvanced':
+                this.profiles.contextsAdvanced = value;
+                return true;
+            case 'profiles.codeEditor':
+                this.profiles.codeEditor = value;
+                return true;
+            case 'profiles.watchFiles':
+                this.profiles.watchFiles = value;
+                return true;
+            case 'chat.alwaysOnTop':
+                this.chat.alwaysOnTop = value;
+                return true;
+            case 'chat.alwaysOnTopClient':
+                this.chat.alwaysOnTopClient = value;
+                return true;
+            case 'chat.log':
+                this.chat.log = value;
+                return true;
+            case 'chat.persistent':
+                this.chat.persistent = value;
+                return true;
+            case 'chat.zoom':
+                this.chat.zoom = value;
+                return true;
+            case 'chat.font':
+                this.chat.font = value;
+                return true;
+            case 'chat.fontSize':
+                this.chat.fontSize = value;
+                return true;
+
+            case 'buttons.connect':
+                this.buttons.connect = value;
+                return true;
+            case 'buttons.characters':
+                this.buttons.characters = value;
+                return true;
+            case 'buttons.preferences':
+                this.buttons.preferences = value;
+                return true;
+            case 'buttons.log':
+                this.buttons.log = value;
+                return true;
+            case 'buttons.clear':
+                this.buttons.clear = value;
+                return true;
+            case 'buttons.lock':
+                this.buttons.lock = value;
+                return true;
+            case 'buttons.map':
+                this.buttons.map = value;
+                return true;
+            case 'buttons.user':
+                this.buttons.user = value;
+                return true;
+            case 'buttons.mail':
+                this.buttons.mail = value;
+                return true;
+            case 'buttons.compose':
+                this.buttons.compose = value;
+                return true;
+            case 'buttons.immortal':
+                this.buttons.immortal = value;
+                return true;
+            case 'buttons.codeEditor':
+                this.buttons.codeEditor = value;
+                return true;
+            case 'find.case':
+                this.find.case = value;
+                return true;
+            case 'find.word':
+                this.find.word = value;
+                return true;
+            case 'find.reverse':
+                this.find.reverse = value;
+                return true;
+            case 'find.regex':
+                this.find.regex = value;
+                return true;
+            case 'find.selection':
+                this.find.selection = value;
+                return true;
+            case 'find.show':
+                this.find.show = value;
+                return true;
+            case 'display.split':
+                this.display.split = value;
+                return true;
+            case 'display.splitHeight':
+                this.display.splitHeight = value;
+                return true;
+            case 'display.splitLive':
+                this.display.splitLive = value;
+                return true;
+            case 'display.roundedOverlays':
+                this.display.roundedOverlays = value;
+                return true;
+
+            case 'display.showSplitButton':
+                this.display.showSplitButton = value;
+                return true;
+            case 'chat.split':
+                this.chat.split = value;
+                return true;
+            case 'chat.splitHeight':
+                this.chat.splitHeight = value;
+                return true;
+            case 'chat.splitLive':
+                this.chat.splitLive = value;
+                return true;
+            case 'chat.roundedOverlays':
+                this.chat.roundedOverlays = value;
+                return true;
+            case 'chat.showSplitButton':
+                this.chat.showSplitButton = value;
+                return true;
+            case 'chat.bufferSize':
+                this.chat.bufferSize = value;
+                return true;
+            case 'chat.flashing':
+                this.chat.flashing = value;
+                return true;
+            case 'display.hideTrailingEmptyLine':
+                this.display.hideTrailingEmptyLine = value;
+                return true;
+            case 'display.enableColors':
+                this.display.enableColors = value;
+                return true;
+            case 'display.enableBackgroundColors':
+                this.display.enableBackgroundColors = value;
+                return true;
+            case 'mapper.roomWidth':
+                this.mapper.roomWidth = value;
+                return true;
+            case 'mapper.roomGroups':
+                this.mapper.roomGroups = value;
+                return true;
+            case 'mapper.showInTaskBar':
+                this.mapper.showInTaskBar = value;
+                return true;
+            case 'profiles.enabled':
+                this.profiles.enabled = value;
+                return true;
+            case 'profiles.sortOrder':
+                this.profiles.sortOrder = value;
+                return true;
+            case 'profiles.sortDirection':
+                this.profiles.sortDirection = value;
+                return true;
+            case 'profiles.showInTaskBar':
+                this.profiles.showInTaskBar = value;
+                return true;
+            case 'profiles.profileSelected':
+                this.profiles.profileSelected = value;
+                return true;
+            case 'profiles.profileExpandSelected':
+                this.profiles.profileExpandSelected = value;
+                return true;
+            case 'chat.lines':
+                this.chat.lines = value;
+                return true;
+            case 'chat.showInTaskBar':
+                this.chat.showInTaskBar = value;
+                return true;
+            case 'chat.showTimestamp':
+                this.chat.showTimestamp = value;
+                return true;
+            case 'chat.timestampFormat':
+                this.chat.timestampFormat = value;
+                return true;
+            case 'chat.tabWidth':
+                this.chat.tabWidth = value;
+                return true;
+            case 'chat.displayControlCodes':
+                this.chat.displayControlCodes = value;
+                return true;
+            case 'chat.emulateTerminal':
+                this.chat.emulateTerminal = value;
+                return true;
+            case 'chat.emulateControlCodes':
+                this.chat.emulateControlCodes = value;
+                return true;
+            case 'chat.wordWrap':
+                this.chat.wordWrap = value;
+                return true;
+            case 'chat.wrapAt':
+                this.chat.wrapAt = value;
+                return true;
+            case 'chat.indent':
+                this.chat.indent = value;
+                return true;
+            case 'chat.scrollLocked':
+                this.chat.scrollLocked = value;
+                return true;
+            case 'chat.find.case':
+                this.chat.find.case = value;
+                return true;
+            case 'chat.find.word':
+                this.chat.find.word = value;
+                return true;
+            case 'chat.find.reverse':
+                this.chat.find.reverse = value;
+                return true;
+            case 'chat.find.regex':
+                this.chat.find.regex = value;
+                return true;
+            case 'chat.find.selection':
+                this.chat.find.selection = value;
+                return true;
+            case 'chat.find.show':
+                this.chat.find.show = value;
+                return true;
+            case 'chat.find.highlight':
+                this.chat.find.highlight = value;
+                return true;
+            case 'chat.find.location':
+                this.chat.find.location = value;
+                return true;
+            case 'codeEditor.showInTaskBar':
+                this.codeEditor.showInTaskBar = value;
+                return true;
+            case 'codeEditor.persistent':
+                this.codeEditor.persistent = value;
+                return true;
+            case 'codeEditor.alwaysOnTop':
+                this.codeEditor.alwaysOnTop = value;
+                return true;
+            case 'codeEditor.alwaysOnTopClient':
+                this.codeEditor.alwaysOnTopClient = value;
+                return true;
+            case 'find.highlight':
+                this.find.highlight = value;
+                return true;
+            case 'find.location':
+                this.find.location = value;
+                return true;
+            case 'display.showInvalidMXPTags':
+                this.display.showInvalidMXPTags = value;
+                return true;
+            case 'display.showTimestamp':
+                this.display.showTimestamp = value;
+                return true;
+            case 'display.timestampFormat':
+                this.display.timestampFormat = value;
+                return true;
+            case 'display.displayControlCodes':
+                this.display.displayControlCodes = value;
+                return true;
+            case 'display.emulateTerminal':
+                this.display.emulateTerminal = value;
+                return true;
+            case 'display.emulateControlCodes':
+                this.display.emulateControlCodes = value;
+                return true;
+            case 'display.wordWrap':
+                this.display.wordWrap = value;
+                return true;
+            case 'display.tabWidth':
+                this.display.tabWidth = value;
+                return true;
+            case 'display.wrapAt':
+                this.display.wrapAt = value;
+                return true;
+            case 'display.indent':
+                this.display.indent = value;
+                return true;
+            default:
+                if (setting in this) {
+                    this[setting] = value;
+                    return true;
+                }
+                return false;
+        }
+    }
+
     public static defaultValue(setting) {
         switch (setting) {
             case 'bufferSize': return 5000;

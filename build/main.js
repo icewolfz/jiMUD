@@ -1292,42 +1292,18 @@ ipcMain.on('get-setting', (event, key) => {
         event.returnValue = null;
         return;
     }
-    if (key in _settings)
-        event.returnValue = _settings[key];
-    else {
-        const keys = key.split('.');
-        const kl = keys.length;
-        let setting = _settings;
-        for (let k = 0; k < kl; k++) {
-            setting = setting[keys[k]];
-            if (typeof setting === 'undefined')
-                break;
-        }
-        if (typeof setting === 'undefined')
-            event.returnValue = settings.Settings.defaultValue(key);
-        else
-            event.returnValue = setting;
-    }
+    let setting;
+    setting = _settings.getValue(key)
+    if (typeof setting === 'undefined')
+        setting = settings.Settings.defaultValue(key);
+    event.returnValue = setting;
 });
 
 ipcMain.on('set-setting', (event, key, value) => {
     if (!_settings)
         return;
-    if (key in _settings && typeof value === typeof _settings[key]) {
-        _settings[key] = value;
+    if (_settings.setValue(key, value))
         _settings.save(global.settingsFile);
-    }
-    else {
-        const keys = key.split('.');
-        const kl = keys.length - 1;
-        let settings = _settings;
-        for (let k = 0; k < kl; k++)
-            settings = settings[keys[k]];
-        if (keys[kl] in settings) {
-            settings[keys[kl]] = value;
-            _settings.save(global.settingsFile);
-        }
-    }
 });
 
 ipcMain.on('get-pid', (event) => {

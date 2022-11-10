@@ -1244,25 +1244,15 @@ export class Client extends EventEmitter {
     public setOption(name, value) {
         if (name === -1 || name === '-1')
             return;
-        let opt: any = this.options;
-        let o;
-        name = name.split('.');
-        const ol = name.length - 1;
-        for (o = 0; o < ol; o++)
-            opt = opt[name[o]];
-        opt[name[name.length - 1]] = value;
-        this.saveOptions();
+        if (this.options.setValue(name, value))
+            this.saveOptions();
     }
 
     public getOption(name) {
         if (name === -1 || name === '-1')
             return null;
-        let opt = this.options;
-        let o;
-        const opts = name.split('.');
-        const ol = opts.length;
-        for (o = 0; o < ol; o++)
-            opt = opt[opts[o]];
+        let opt = this.options.getValue(name);
+        //check for undefined as !opt could be a valid setting
         if (typeof opt === 'undefined')
             return window.getSetting(name);
         return opt;
