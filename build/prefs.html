@@ -104,7 +104,9 @@
         const fs = require('fs');
         const fontList = require('font-list');
         var currentColors;
+        var globalColors;
         var archiver, archive;
+        var loading = 0;
 
         var _settingsFile;
         var _globalFile = window.getGlobal('settingsFile');
@@ -259,19 +261,19 @@
 
                     el = $('#font');
                     el.selectpicker('refresh');
-                    el.val(_settings.font);
+                    el.val(getSettingValue('font'));
                     el.selectpicker('render');
                     el.change();
 
                     el = $('#cmdfont');
                     el.selectpicker('refresh');
-                    el.val(_settings.cmdfont);
+                    el.val(getSettingValue('cmdfont'));
                     el.selectpicker('render');
                     el.change();
 
                     el = $('#chat-font');
                     el.selectpicker('refresh');
-                    el.val(_settings.chat.font);
+                    el.val(getSettingValue('chat.font'));
                     el.selectpicker('render');
                     el.change();
                 })
@@ -331,6 +333,7 @@
 
             $('input[type="checkbox"]').change(function () {
                 var id;
+                if (loading > 0) return;
                 switch ($(this).attr('id')) {
                     case 'logging-viewer-reopen':
                         if (!_settings.extensions['log-viewer'])
@@ -356,12 +359,6 @@
                         id = $(this).attr('id').split('-');
                         _settings.windows['log-viewer'].options[id[2]] = this.checked;
                         break;
-                    case 'chat-alwaysOnTop':
-                        _settings.chat.alwaysOnTop = this.checked;
-                        break;
-                    case 'chat-alwaysOnTopClient':
-                        _settings.chat.alwaysOnTopClient = this.checked;
-                        break;
                     case 'chat-captureLines':
                         _settings.chat.captureLines = this.checked;
                         $('#chat-lines').prop('readonly', !_settings.chat.captureLines || _settings.chat.captureAllLines);
@@ -369,47 +366,11 @@
                         $('#chat-selective').prop('disabled', !_settings.chat.captureLines);
                         $('#chat-captureAllLines').prop('disabled', !_settings.chat.captureLines);
                         break;
-                    case 'chat-captureReviews':
-                        _settings.chat.captureReviews = this.checked;
-                        break;
-                    case 'chat-captureTells':
-                        _settings.chat.captureTells = this.checked;
-                        break;
-                    case 'chat-captureTalk':
-                        _settings.chat.captureTalk = this.checked;
-                        break;
-                    case 'chat-persistent':
-                        _settings.chat.persistent = this.checked;
-                        break;
-                    case 'mapper-persistent':
-                        _settings.mapper.persistent = this.checked;
-                        break;
-                    case 'mapper-alwaysOnTop':
-                        _settings.mapper.alwaysOnTop = this.checked;
-                        break;
-                    case 'mapper-alwaysOnTopClient':
-                        _settings.mapper.alwaysOnTopClient = this.checked;
-                        break;
                     case 'mapper-importTypeReplace':
                         _settings.mapper.importType = 1;
                         break;
                     case 'mapper-importTypMerge':
                         _settings.mapper.importType = 0;
-                        break;
-                    case 'MapperSplitArea':
-                        _settings.mapper.split = this.checked;
-                        break;
-                    case 'mapFollow':
-                        _settings.mapper.follow = this.checked;
-                        break;
-                    case 'mapEnabled':
-                        _settings.mapper.enabled = this.checked;
-                        break;
-                    case 'MapperFillWalls':
-                        _settings.mapper.fill = this.checked;
-                        break;
-                    case 'mapLegend':
-                        _settings.mapper.legend = this.checked;
                         break;
                     case 'mapper-memory':
                         _settings.mapper.memory = this.checked;
@@ -472,16 +433,13 @@
                             _settings.profiles.sortOrder |= 8;
                         break;
                     default:
-                        id = $(this).attr('id').split('-');
-                        if (id.length === 2)
-                            _settings[id[0]][id[1]] = this.checked;
-                        else
-                            _settings[id[0]] = this.checked;
+                        setValue($(this).attr('id'), this.checked);
                         break;
                 }
             });
 
             $('input[type="radio"]').change(function () {
+                if (loading > 0) return;
                 switch ($(this).attr('id')) {
                     case 'newlineShortcut-0':
                         if (this.checked)
@@ -687,20 +645,15 @@
             });
 
             $('input[type="text"]').change(function () {
-                id = $(this).attr('id').split('-');
-                if (id.length === 2)
-                    _settings[id[0]][id[1]] = $(this).val();
-                else
-                    _settings[id[0]] = $(this).val();
+                if (loading > 0) return;
+                setValue($(this).attr('id'), $(this).val());
             });
             $('input[type="number"]').change(function () {
-                id = $(this).attr('id').split('-');
-                if (id.length === 2)
-                    _settings[id[0]][id[1]] = parseInt($(this).val(), 10);
-                else
-                    _settings[id[0]] = parseInt($(this).val(), 10);
+                if (loading > 0) return;
+                setValue($(this).attr('id'), parseInt($(this).val(), 10));
             });
             $('input[type="color"]').change(function () {
+                if (loading > 0) return;
                 var idx = parseInt($(this).attr('id').match(/\d+/)[0], 10);
                 var color = new RGBColor($(this).val());
                 if (color.ok)
@@ -708,6 +661,7 @@
             });
 
             $('.selectpicker').change(function () {
+                if (loading > 0) return;
                 switch ($(this).attr('id')) {
                     case 'colorScheme':
                         updateScheme(parseInt($(this).val()));
@@ -725,7 +679,7 @@
                         _settings.profiles.profileSelected = $(this).val();
                         break;
                     default:
-                        _settings[$(this).attr('id')] = $(this).val();
+                        setValue($(this).attr('id'), $(this).val());
                         break;
                 }
             });
@@ -794,12 +748,14 @@
 
         // eslint-disable-next-line no-unused-vars
         function setValue(option, value) {
+            /*
             if (value == 'false') value = false;
             if (value == 'true') value = true;
             if (value == 'null') value = null;
             if (value == 'undefined') value = undefined;
             if (typeof value == 'string' && parseFloat(value).toString() == value)
                 value = parseFloat(value);
+            */
             option = option.split('-');
             if (option.length === 3)
                 _settings[option[0]][option[1]][option[2]] = value;
@@ -811,6 +767,7 @@
 
         function setSettings(obj, root) {
             let option;
+            let value;
             for (option in obj) {
                 if (!Object.prototype.hasOwnProperty.call(obj, option))
                     continue;
@@ -818,161 +775,164 @@
                     setSettings(obj[option], root + option + '-');
                     continue;
                 }
-                if (typeof (obj[option]) === 'string' || typeof (obj[option]) === 'number')
-                    $('#' + root + option).val(obj[option]);
-                else if (typeof (obj[option]) !== 'boolean')
+                value = obj[option];
+                //if not defined get global value
+                if (typeof (obj[option]) === 'undefined') {
+                    if (_settingsFile === _globalFile)
+                        value = Settings.defaultValue(name);
+                    else
+                        value = window.getSetting(root.replace(/\-/g, '.') + option)
+                }
+                if (typeof (value) === 'string' || typeof (value) === 'number')
+                    $('#' + root + option).val(value);
+                else if (typeof (value) !== 'boolean')
                     continue;
-                $('#' + root + option).prop('checked', obj[option]);
+                $('#' + root + option).prop('checked', value);
             }
         }
 
+        function getSettingValue(name) {
+            if (name === -1 || name === '-1')
+                return null;
+            let opt = _settings;
+            let o;
+            const opts = name.split('.');
+            const ol = opts.length;
+            for (o = 0; o < ol; o++)
+                opt = opt[opts[o]];
+            if (typeof opt === 'undefined') {
+                if (_settingsFile === _globalFile)
+                    return Settings.defaultValue(name);
+                else
+                    return window.getSetting(name);
+            }
+            return opt;
+        }
+
         function loadSettings() {
+            loading++;
             setSettings(_settings, '');
 
-            //$('#font').selectpicker('val', _settings.font);
-            $('#font').val(_settings.font);
+            $('#font').val(getSettingValue('font'));
             $('#font').selectpicker('render');
-            $('#fontSize').val(_settings.fontSize);
+            $('#fontSize').val(getSettingValue('fontSize'));
             $('#font').change();
-            //$('#cmdfont').selectpicker('val', _settings.cmdfont);
-            $('#cmdfont').val(_settings.font);
+
+            $('#cmdfont').val(getSettingValue('cmdfont'));
             $('#cmdfont').selectpicker('render');
-            $('#cmdfontSize').val(_settings.cmdfontSize);
+            $('#cmdfontSize').val(getSettingValue('cmdfontSize'));
             $('#cmdfont').change();
-            //$('#font').selectpicker('val', _settings.font);
-            $('#chat-font').val(_settings.chat.font);
+
+            $('#chat-font').val(getSettingValue('chat.font'));
             $('#chat-font').selectpicker('render');
-            $('#chat-fontSize').val(_settings.chat.fontSize);
+            $('#chat-fontSize').val(getSettingValue('chat.fontSize'));
             $('#chat-font').change();
 
-            $('#profiles-sortDirection').val(_settings.profiles.sortDirection);
+            $('#profiles-sortDirection').val(getSettingValue('profiles.sortDirection'));
             $('#profiles-sortDirection').selectpicker('render');
             $('#profiles-sortDirection').change();
 
-            $('#profiles-profileSelected').val(_settings.profiles.profileSelected);
+            $('#profiles-profileSelected').val(getSettingValue('profiles.profileSelected'));
             $('#profiles-profileSelected').selectpicker('render');
             $('#profiles-profileSelected').change();
 
             LoadColors();
 
-            $('#MapperSplitArea').prop('checked', _settings.mapper.split);
-            $('#mapFollow').prop('checked', _settings.mapper.follow);
-            $('#mapEnabled').prop('checked', _settings.mapper.enabled);
-            $('#mapLegend').prop('checked', _settings.mapper.legend);
-            $('#MapperFillWalls').prop('checked', _settings.mapper.fill);
+            $('#mapper-importTypeReplace').prop('checked', getSettingValue('mapper.importType') === 1);
+            $('#mapper-importTypeMerge').prop('checked', getSettingValue('mapper.importType') === 0);
 
-            $('#mapper-alwaysOnTop').prop('checked', _settings.mapper.alwaysOnTop);
-            $('#mapper-memory').prop('checked', _settings.mapper.memory);
-            $('#mapper-memorySavePeriod').val(_settings.mapper.memorySavePeriod);
-            $('#mapper-alwaysOnTopClient').prop('checked', _settings.mapper.alwaysOnTopClient);
+            $('#chat-selective').prop('checked', !getSettingValue('chat.captureAllLines'));
+            $('#chat-lines').prop('readonly', !getSettingValue('chat.captureLines') || getSettingValue('chat.captureAllLines'));
+            $('#chat-selective').prop('disabled', !getSettingValue('chat.captureLines'));
+            $('#chat-captureAllLines').prop('disabled', !getSettingValue('chat.captureLines'));
 
-            $('#mapper-importTypeReplace').prop('checked', _settings.mapper.importType === 1);
-            $('#mapper-importTypeMerge').prop('checked', _settings.mapper.importType === 0);
+            $('#chat-lines').val(getSettingValue('chat.lines').join(','));
 
-            $('#mapper-persistent').prop('checked', _settings.mapper.persistent);
-            $('#chat-persistent').prop('checked', _settings.chat.persistent);
-            $('#chat-gag').prop('checked', _settings.chat.gag);
-            $('#chat-CaptureOnlyOpen').prop('checked', _settings.chat.CaptureOnlyOpen);
+            $('#backup-load-map').prop('checked', (getSettingValue('backupLoad') & 2) === 2);
+            $('#backup-load-profiles').prop('checked', (getSettingValue('backupLoad') & 4) === 4);
+            $('#backup-load-settings').prop('checked', (getSettingValue('backupLoad') & 8) === 8);
+            $('#backup-load-windows').prop('checked', (getSettingValue('backupLoad') & 16) === 16);
 
-            $('#chat-alwaysOnTop').prop('checked', _settings.chat.alwaysOnTop);
-            $('#chat-alwaysOnTopClient').prop('checked', _settings.chat.alwaysOnTopClient);
-            $('#chat-captureLines').prop('checked', _settings.chat.captureLines);
-            $('#chat-captureReviews').prop('checked', _settings.chat.captureReviews);
-            $('#chat-captureTells').prop('checked', _settings.chat.captureTells);
-            $('#chat-captureTalk').prop('checked', _settings.chat.captureTalk);
-            $('#chat-captureAllLines').prop('checked', _settings.chat.captureAllLines);
-            $('#chat-selective').prop('checked', !_settings.chat.captureAllLines);
-            $('#chat-lines').prop('readonly', !_settings.chat.captureLines || _settings.chat.captureAllLines);
-            $('#chat-selective').prop('disabled', !_settings.chat.captureLines);
-            $('#chat-captureAllLines').prop('disabled', !_settings.chat.captureLines);
+            $('#backup-save-map').prop('checked', (getSettingValue('backupSave') & 2) === 2);
+            $('#backup-save-profiles').prop('checked', (getSettingValue('backupSave') & 4) === 4);
+            $('#backup-save-settings').prop('checked', (getSettingValue('backupSave') & 8) === 8);
+            $('#backup-save-windows').prop('checked', (getSettingValue('backupSave') & 16) === 16);
 
-            $('#chat-lines').val(_settings.chat.lines.join(','));
+            $('#logWhat-html').prop('checked', (getSettingValue('logWhat') & 1) === 1);
+            $('#logWhat-text').prop('checked', (getSettingValue('logWhat') & 2) === 2);
+            $('#logWhat-raw').prop('checked', (getSettingValue('logWhat') & 4) === 4);
 
-            $('#backup-load-map').prop('checked', (_settings.backupLoad & 2) === 2);
-            $('#backup-load-profiles').prop('checked', (_settings.backupLoad & 4) === 4);
-            $('#backup-load-settings').prop('checked', (_settings.backupLoad & 8) === 8);
-            $('#backup-load-windows').prop('checked', (_settings.backupLoad & 16) === 16);
+            $('#newlineShortcut-0').prop('checked', getSettingValue('newlineShortcut') === 0);
+            $('#newlineShortcut-1').prop('checked', getSettingValue('newlineShortcut') === 1);
+            $('#newlineShortcut-2').prop('checked', getSettingValue('newlineShortcut') === 2);
+            $('#newlineShortcut-4').prop('checked', getSettingValue('newlineShortcut') === 4);
+            $('#newlineShortcut-8').prop('checked', getSettingValue('newlineShortcut') === 8);
 
-            $('#backup-save-map').prop('checked', (_settings.backupSave & 2) === 2);
-            $('#backup-save-profiles').prop('checked', (_settings.backupSave & 4) === 4);
-            $('#backup-save-settings').prop('checked', (_settings.backupSave & 8) === 8);
-            $('#backup-save-windows').prop('checked', (_settings.backupSave & 16) === 16);
+            $('#onDisconnect-0').prop('checked', getSettingValue('onDisconnect') === 0);
+            $('#onDisconnect-1').prop('checked', getSettingValue('onDisconnect') === 1);
+            $('#onDisconnect-2').prop('checked', getSettingValue('onDisconnect') === 2);
+            $('#onDisconnect-4').prop('checked', getSettingValue('onDisconnect') === 4);
+            $('#onDisconnect-8').prop('checked', getSettingValue('onDisconnect') === 8);
 
-            $('#logWhat-html').prop('checked', (_settings.logWhat & 1) === 1);
-            $('#logWhat-text').prop('checked', (_settings.logWhat & 2) === 2);
-            $('#logWhat-raw').prop('checked', (_settings.logWhat & 4) === 4);
+            $('#onProfileChange-0').prop('checked', getSettingValue('onProfileChange') === 0);
+            $('#onProfileChange-1').prop('checked', getSettingValue('onProfileChange') === 1);
+            $('#onProfileChange-2').prop('checked', getSettingValue('onProfileChange') === 2);
+            $('#onProfileChange-4').prop('checked', getSettingValue('onProfileChange') === 4);
 
-            $('#newlineShortcut-0').prop('checked', _settings.newlineShortcut === 0);
-            $('#newlineShortcut-1').prop('checked', _settings.newlineShortcut === 1);
-            $('#newlineShortcut-2').prop('checked', _settings.newlineShortcut === 2);
-            $('#newlineShortcut-4').prop('checked', _settings.newlineShortcut === 4);
-            $('#newlineShortcut-8').prop('checked', _settings.newlineShortcut === 8);
+            $('#onProfileDeleted-0').prop('checked', getSettingValue('onProfileDeleted') === 0);
+            $('#onProfileDeleted-1').prop('checked', getSettingValue('onProfileDeleted') === 1);
+            $('#onProfileDeleted-2').prop('checked', getSettingValue('onProfileDeleted') === 2);
+            $('#onProfileDeleted-4').prop('checked', getSettingValue('onProfileDeleted') === 4);
 
-            $('#onDisconnect-0').prop('checked', _settings.onDisconnect === 0);
-            $('#onDisconnect-1').prop('checked', _settings.onDisconnect === 1);
-            $('#onDisconnect-2').prop('checked', _settings.onDisconnect === 2);
-            $('#onDisconnect-4').prop('checked', _settings.onDisconnect === 4);
-            $('#onDisconnect-8').prop('checked', _settings.onDisconnect === 8);
+            $('#trayMenu-simple').prop('checked', getSettingValue('trayMenu') === TrayMenu.simple);
+            $('#trayMenu-full').prop('checked', getSettingValue('trayMenu') === TrayMenu.full);
+            $('#trayMenu-compact').prop('checked', getSettingValue('trayMenu') === TrayMenu.compact);
 
-            $('#onProfileChange-0').prop('checked', _settings.onProfileChange === 0);
-            $('#onProfileChange-1').prop('checked', _settings.onProfileChange === 1);
-            $('#onProfileChange-2').prop('checked', _settings.onProfileChange === 2);
-            $('#onProfileChange-4').prop('checked', _settings.onProfileChange === 4);
+            $('#trayClick-none').prop('checked', getSettingValue('trayClick') === TrayClick.none);
+            $('#trayClick-show').prop('checked', getSettingValue('trayClick') === TrayClick.show);
+            $('#trayClick-hide').prop('checked', getSettingValue('trayClick') === TrayClick.hide);
+            $('#trayClick-toggle').prop('checked', getSettingValue('trayClick') === TrayClick.toggle);
+            $('#trayClick-menu').prop('checked', getSettingValue('trayClick') === TrayClick.menu);
+            $('#trayClick-showAll').prop('checked', getSettingValue('trayClick') === TrayClick.showAll);
+            $('#trayClick-hideAll').prop('checked', getSettingValue('trayClick') === TrayClick.hideAll);
+            $('#trayClick-toggleAll').prop('checked', getSettingValue('trayClick') === TrayClick.toggleAll);
 
-            $('#onProfileDeleted-0').prop('checked', _settings.onProfileDeleted === 0);
-            $('#onProfileDeleted-1').prop('checked', _settings.onProfileDeleted === 1);
-            $('#onProfileDeleted-2').prop('checked', _settings.onProfileDeleted === 2);
-            $('#onProfileDeleted-4').prop('checked', _settings.onProfileDeleted === 4);
+            $('#trayDblClick-none').prop('checked', getSettingValue('trayDblClick') === TrayClick.none);
+            $('#trayDblClick-show').prop('checked', getSettingValue('trayDblClick') === TrayClick.show);
+            $('#trayDblClick-hide').prop('checked', getSettingValue('trayDblClick') === TrayClick.hide);
+            $('#trayDblClick-toggle').prop('checked', getSettingValue('trayDblClick') === TrayClick.toggle);
+            $('#trayDblClick-menu').prop('checked', getSettingValue('trayDblClick') === TrayClick.menu);
+            $('#trayDblClick-showAll').prop('checked', getSettingValue('trayDblClick') === TrayClick.showAll);
+            $('#trayDblClick-hideAll').prop('checked', getSettingValue('trayDblClick') === TrayClick.hideAll);
+            $('#trayDblClick-toggleAll').prop('checked', getSettingValue('trayDblClick') === TrayClick.toggleAll);
 
-            $('#trayMenu-simple').prop('checked', _settings.trayMenu === TrayMenu.simple);
-            $('#trayMenu-full').prop('checked', _settings.trayMenu === TrayMenu.full);
-            $('#trayMenu-compact').prop('checked', _settings.trayMenu === TrayMenu.compact);
+            $('#onSecondInstance-0').prop('checked', getSettingValue('onSecondInstance') === 0);
+            $('#onSecondInstance-1').prop('checked', getSettingValue('onSecondInstance') === 1);
+            $('#onSecondInstance-2').prop('checked', getSettingValue('onSecondInstance') === 2);
+            $('#onSecondInstance-4').prop('checked', getSettingValue('onSecondInstance') === 4);
 
-            $('#trayClick-none').prop('checked', _settings.trayClick === TrayClick.none);
-            $('#trayClick-show').prop('checked', _settings.trayClick === TrayClick.show);
-            $('#trayClick-hide').prop('checked', _settings.trayClick === TrayClick.hide);
-            $('#trayClick-toggle').prop('checked', _settings.trayClick === TrayClick.toggle);
-            $('#trayClick-menu').prop('checked', _settings.trayClick === TrayClick.menu);
-            $('#trayClick-showAll').prop('checked', _settings.trayClick === TrayClick.showAll);
-            $('#trayClick-hideAll').prop('checked', _settings.trayClick === TrayClick.hideAll);
-            $('#trayClick-toggleAll').prop('checked', _settings.trayClick === TrayClick.toggleAll);
-
-            $('#trayDblClick-none').prop('checked', _settings.trayDblClick === TrayClick.none);
-            $('#trayDblClick-show').prop('checked', _settings.trayDblClick === TrayClick.show);
-            $('#trayDblClick-hide').prop('checked', _settings.trayDblClick === TrayClick.hide);
-            $('#trayDblClick-toggle').prop('checked', _settings.trayDblClick === TrayClick.toggle);
-            $('#trayDblClick-menu').prop('checked', _settings.trayDblClick === TrayClick.menu);
-            $('#trayDblClick-showAll').prop('checked', _settings.trayDblClick === TrayClick.showAll);
-            $('#trayDblClick-hideAll').prop('checked', _settings.trayDblClick === TrayClick.hideAll);
-            $('#trayDblClick-toggleAll').prop('checked', _settings.trayDblClick === TrayClick.toggleAll);
-
-            $('#onSecondInstance-0').prop('checked', _settings.onSecondInstance === 0);
-            $('#onSecondInstance-1').prop('checked', _settings.onSecondInstance === 1);
-            $('#onSecondInstance-2').prop('checked', _settings.onSecondInstance === 2);
-            $('#onSecondInstance-4').prop('checked', _settings.onSecondInstance === 4);
-
-            $('#scriptEngineType-1').prop('checked', _settings.scriptEngineType === 1);
-            $('#scriptEngineType-2').prop('checked', _settings.scriptEngineType === 2);
-            $('#scriptEngineType-4').prop('checked', _settings.scriptEngineType === 4);
+            $('#scriptEngineType-1').prop('checked', getSettingValue('scriptEngineType') === 1);
+            $('#scriptEngineType-2').prop('checked', getSettingValue('scriptEngineType') === 2);
+            $('#scriptEngineType-4').prop('checked', getSettingValue('scriptEngineType') === 4);
 
             if (_settingsFile === _globalFile) {
-                $('#characterManagerDblClick-1').prop('checked', _settings.characterManagerDblClick === 1 || _settings.characterManagerDblClick === 8);
+                $('#characterManagerDblClick-1').prop('checked', getSettingValue('characterManagerDblClick') === 1 || getSettingValue('characterManagerDblClick') === 8);
             }
             else {
-                $('#characterManagerDblClick-1').prop('checked', _settings.characterManagerDblClick === 1);
-                $('#characterManagerDblClick-8').prop('checked', _settings.characterManagerDblClick === 8);
+                $('#characterManagerDblClick-1').prop('checked', getSettingValue('characterManagerDblClick') === 1);
+                $('#characterManagerDblClick-8').prop('checked', getSettingValue('characterManagerDblClick') === 8);
             }
-            $('#characterManagerDblClick-2').prop('checked', _settings.characterManagerDblClick === 2);
-            $('#characterManagerDblClick-4').prop('checked', _settings.characterManagerDblClick === 4);
+            $('#characterManagerDblClick-2').prop('checked', getSettingValue('characterManagerDblClick') === 2);
+            $('#characterManagerDblClick-4').prop('checked', getSettingValue('characterManagerDblClick') === 4);
 
-            $('#profiles-sortOrder-alpha').prop('checked', (_settings.profiles.sortOrder & 2) === 2);
-            $('#profiles-sortOrder-priority').prop('checked', (_settings.profiles.sortOrder & 4) === 4);
-            $('#profiles-sortOrder-index').prop('checked', (_settings.profiles.sortOrder & 8) === 8);
+            $('#profiles-sortOrder-alpha').prop('checked', (getSettingValue('profiles.sortOrder') & 2) === 2);
+            $('#profiles-sortOrder-priority').prop('checked', (getSettingValue('profiles.sortOrder') & 4) === 4);
+            $('#profiles-sortOrder-index').prop('checked', (getSettingValue('profiles.sortOrder') & 8) === 8);
 
             $('.btn-group input').parent().removeClass('active');
             $('.btn-group input:checked').parent().addClass('active');
 
-            $('#theme').val(_settings.theme);
+            $('#theme').val(getSettingValue('theme'));
             $('#theme').selectpicker('render');
 
             if (!_settings.windows['log-viewer'] || !_settings.windows['log-viewer'].options) {
@@ -990,17 +950,23 @@
                 $('#logging-viewer-reopen').prop('checked', true);
             else
                 $('#logging-viewer-reopen').prop('checked', _settings.extensions['log-viewer'].reopen);
+            loading--;
         }
 
         function LoadColors() {
             $('#colorScheme').val('0');
+            let colors;
             currentColors = _settings.colors.slice();
+            if (_globalFile === _settingsFile)
+                globalColors = [];
+            else
+                globalColors = window.getSetting('colors').slice();
             var _colors = getColors();
             var c;
             for (c = 0; c < 16; c++)
-                setColor('color' + c, currentColors[c] || _colors[c], true);
+                setColor('color' + c, currentColors[c] || globalColors[c] || _colors[c], true);
             for (c = 256; c < 280; c++)
-                setColor('color' + c, currentColors[c] || _colors[c], true);
+                setColor('color' + c, currentColors[c] || globalColors[c] || _colors[c], true);
         }
 
         // eslint-disable-next-line no-unused-vars
@@ -1075,9 +1041,9 @@
                 case 0:
                     _colors = getColors();
                     for (c = 0; c < 16; c++)
-                        setColor('color' + c, currentColors[c] || _colors[c]);
+                        setColor('color' + c, currentColors[c] || globalColors[c] || _colors[c]);
                     for (c = 256; c < 280; c++)
-                        setColor('color' + c, currentColors[c] || _colors[c]);
+                        setColor('color' + c, currentColors[c] || globalColors[c] || _colors[c]);
                     break;
                 case 2://Classic
                     setColor('color0', 'rgb(0,0,0)'); //black fore
@@ -2163,28 +2129,28 @@
                 <div role="tabpanel" class="pref-pane" id="mapper">
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
-                            <input type="checkbox" id="mapEnabled" /> Enable mapper
+                            <input type="checkbox" id="mapper.enabled" /> Enable mapper
                         </label>
                     </div>
 
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
-                            <input type="checkbox" id="mapFollow" /> Follow player
+                            <input type="checkbox" id="mapper-follow" /> Follow player
                         </label>
                     </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
-                            <input type="checkbox" id="mapLegend" /> Show legend
+                            <input type="checkbox" id="mapper-legend" /> Show legend
                         </label>
                     </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
-                            <input type="checkbox" id="MapperSplitArea" /> Split areas
+                            <input type="checkbox" id="mapper-split" /> Split areas
                         </label>
                     </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
-                            <input type="checkbox" id="MapperFillWalls" /> Display walls
+                            <input type="checkbox" id="mapper-fill" /> Display walls
                         </label>
                     </div>
                     <div class="col-sm-6 form-group">
