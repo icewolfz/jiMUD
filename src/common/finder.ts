@@ -428,6 +428,7 @@ export class Finder extends EventEmitter {
         if (!this._results)
             this._results = [];
         if (this._results.length === 0) return;        
+        this._results = [];
         this._position = 0;
         this._display.clearOverlay('find');
         this._display.clearOverlay('find-current');
