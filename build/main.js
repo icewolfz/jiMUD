@@ -5,7 +5,7 @@ const { app, BrowserWindow, BrowserView, shell, screen, Tray, dialog, Menu, Menu
 const path = require('path');
 const fs = require('fs');
 const URL = require('url');
-const settings = require('./js/settings');
+const { Settings } = require('./js/settings');
 const { TrayClick, TrayMenu, OnSecondInstance } = require('./js/types');
 const { Menubar } = require('./js/menubar');
 const { Characters } = require('./js/characters');
@@ -114,7 +114,7 @@ global.mapFile = parseTemplate(path.join('{data}', 'map.sqlite'));
 global.debug = false;
 global.editorOnly = false;
 global.updating = false;
-let _settings = settings.Settings.load(global.settingsFile);
+let _settings = Settings.load(global.settingsFile);
 let _checkingUpdates = false;
 let _layout = parseTemplate(path.join('{data}', 'window.layout'));
 
@@ -706,11 +706,11 @@ if (argv['disable-gpu'])
 global.debug = argv.debug;
 if (Array.isArray(argv.s)) {
     global.settingsFile = parseTemplate(argv.s[0]);
-    _settings = settings.Settings.load(global.settingsFile);
+    _settings = Settings.load(global.settingsFile);
 }
 else if (argv.s) {
     global.settingsFile = parseTemplate(argv.s);
-    _settings = settings.Settings.load(global.settingsFile);
+    _settings = Settings.load(global.settingsFile);
 }
 
 if (Array.isArray(argv.m))
@@ -1295,7 +1295,7 @@ ipcMain.on('get-setting', (event, key) => {
     let setting;
     setting = _settings.getValue(key)
     if (typeof setting === 'undefined')
-        setting = settings.Settings.defaultValue(key);
+        setting = Settings.defaultValue(key);
     event.returnValue = setting;
 });
 
@@ -2095,7 +2095,7 @@ ipcMain.on('set-preference', (event, preference, value) => {
 
 ipcMain.on('reload-options', (events, preferences, clientId) => {
     if (preferences === global.settingsFile) {
-        _settings = settings.Settings.load(global.settingsFile);
+        _settings = Settings.load(global.settingsFile);
         for (window in windows) {
             if (!Object.prototype.hasOwnProperty.call(windows, window))
                 continue;
@@ -3275,10 +3275,10 @@ function buildOptions(details, window, settings) {
             nodeIntegrationInWorker: true,
             webviewTag: false,
             sandbox: false,
-            spellcheck: settings ? settings.spellchecking : false,
+            spellcheck: _settings ? _settings.spellchecking : false,
             enableRemoteModule: true,
             contextIsolation: false,
-            backgroundThrottling: settings ? settings.enableBackgroundThrottling : true,
+            backgroundThrottling: _settings ? _settings.enableBackgroundThrottling : true,
             preload: path.join(__dirname, 'preload.js')
         }
     };
