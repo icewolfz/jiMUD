@@ -1223,6 +1223,13 @@ export class Client extends EventEmitter {
         this.display.wordWrap = this.options.display.wordWrap;
         this.display.wrapAt = this.options.display.wrapAt;
         this.display.indent = this.options.display.indent;
+        this.display.MatchCase = this.options.find.case;
+        this.display.MatchWord = this.options.find.word;
+        this.display.Reverse = this.options.find.reverse;
+        this.display.RegularExpression = this.options.find.regex;
+        this.display.Highlight = this.options.find.highlight;
+        this.display.finderLocation = this.options.find.location;
+
         this.UpdateFonts();
         this.display.scrollDisplay();
         this.loadProfiles();

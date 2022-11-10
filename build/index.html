@@ -972,8 +972,7 @@
         //#endregion
         async function initBackup() {
             _backup = new (require('./js/backup.js').Backup)(client, _windowState.data.map);
-            _backup.loadSelection = client.options.backupLoad;
-            _backup.saveSelection = client.options.backupSave;
+            loadBackupOptions();
 
             _backup.on('progress-start', (title) => {
                 updateProgress(0);
@@ -1545,31 +1544,14 @@
             });
 
             client.on('options-loaded', () => {
-                _backup.loadSelection = client.options.backupLoad;
-                _backup.saveSelection = client.options.backupSave;
+                loadBackupOptions();
                 _status.splitterDistance = client.options.statusWidth;
                 doUpdate(3);
                 client.port = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.options.dev ? 1035 : 1030);
                 updateTitle();
                 reloadIcon();
                 createWatcher();
-                if (_logger)
-                    _logger.postMessage({
-                        action: 'options', args: {
-                            path: parseTemplate(client.options.logPath),
-                            offline: client.options.logOffline,
-                            gagged: client.options.logGagged,
-                            enabled: client.options.logEnabled,
-                            unique: client.options.logUniqueOnConnect,
-                            prepend: client.options.logPrepend,
-                            what: client.options.logWhat,
-                            debug: client.options.enableDebug,
-                            format: client.options.logTimeFormat,
-                            colors: client.options.colors,
-                            timestamp: client.options.logTimestamp,
-                            timestampFormat: client.options.logTimestampFormat
-                        }
-                    });
+                loadLoggerOptions();
             });
 
             client.on('scroll-lock', (lock) => {
@@ -1971,7 +1953,6 @@
             client.display.on('case', () => {
                 client.options.find.case = client.display.MatchCase;
                 doUpdate(32);
-
             });
             client.display.on('reverse', () => {
                 client.options.find.reverse = client.display.Reverse;
@@ -1998,7 +1979,6 @@
                 client.options.find.location = location;
                 doUpdate(32);
             });
-
         }
 
         async function initWindowEvents() {
@@ -2452,27 +2432,7 @@
 
         }
 
-        async function init() {
-            //FIXME need to redo this if upgrade to newer bootstrap and move away from jquery but as of current used bootstrap impossible to remove
-            $('.dropdown').on('show.bs.dropdown', () => {
-                $('.command-history ul').css('max-height', $('#display').outerHeight() + 'px');
-                $('.command-history ul').css('max-width', ($('#command').outerWidth() - 100) + 'px');
-                var lst = '';
-                var l = client.commandHistory.length;
-                for (var i = 0; i < l; i++) {
-                    lst += `<li><a class="truncate" href="#" data-index="${i}" onclick="var cmd = client.commandHistory[parseInt(this.dataset.index, 10)];client.AddCommandToHistory(cmd,);client.sendCommand(cmd, null, client.options.allowCommentsFromCommand);" title="${client.commandHistory[i]}">${client.commandHistory[i]}</a></li>`;
-                }
-                if (l === 0)
-                    lst = '<li><a href="#">No history</a></li><li role="separator" class="divider"></li>';
-                else
-                    lst += '<li role="separator" class="divider"></li><li><a href="#" onclick="client.clearCommandHistory();">Clear</a></li>';
-                lst += '<li><a href="#" onclick="openWindow(\'history\');">Show history window...</a></li>';
-                $('.command-history ul').html(lst);
-            });
-            initWindowEvents();
-            initDocumentEvents();
-
-
+        async function initLogger() {
             //#region setup logger
             _logger = new Worker('./js/logging.js');
             _logger.onmessage = (e) => {
@@ -2516,6 +2476,54 @@
                     client.error(e);
             };
             //#endregion
+        }
+
+        async function loadLoggerOptions() {
+            if (!_logger) return;
+            _logger.postMessage({
+                action: 'options', args: {
+                    path: parseTemplate(client.options.logPath),
+                    offline: client.options.logOffline,
+                    gagged: client.options.logGagged,
+                    enabled: client.options.logEnabled,
+                    unique: client.options.logUniqueOnConnect,
+                    prepend: client.options.logPrepend,
+                    what: client.options.logWhat,
+                    debug: client.options.enableDebug,
+                    format: client.options.logTimeFormat,
+                    colors: client.options.colors,
+                    timestamp: client.options.logTimestamp,
+                    timestampFormat: client.options.logTimestampFormat
+                }
+            });
+        }
+
+        async function loadBackupOptions() {
+            _backup.loadSelection = client.options.backupLoad;
+            _backup.saveSelection = client.options.backupSave;
+        }
+
+        async function init() {
+            //FIXME need to redo this if upgrade to newer bootstrap and move away from jquery but as of current used bootstrap impossible to remove
+            $('.dropdown').on('show.bs.dropdown', () => {
+                $('.command-history ul').css('max-height', $('#display').outerHeight() + 'px');
+                $('.command-history ul').css('max-width', ($('#command').outerWidth() - 100) + 'px');
+                var lst = '';
+                var l = client.commandHistory.length;
+                for (var i = 0; i < l; i++) {
+                    lst += `<li><a class="truncate" href="#" data-index="${i}" onclick="var cmd = client.commandHistory[parseInt(this.dataset.index, 10)];client.AddCommandToHistory(cmd,);client.sendCommand(cmd, null, client.options.allowCommentsFromCommand);" title="${client.commandHistory[i]}">${client.commandHistory[i]}</a></li>`;
+                }
+                if (l === 0)
+                    lst = '<li><a href="#">No history</a></li><li role="separator" class="divider"></li>';
+                else
+                    lst += '<li role="separator" class="divider"></li><li><a href="#" onclick="client.clearCommandHistory();">Clear</a></li>';
+                lst += '<li><a href="#" onclick="openWindow(\'history\');">Show history window...</a></li>';
+                $('.command-history ul').html(lst);
+            });
+            initWindowEvents();
+            initDocumentEvents();
+            initLogger();
+
             //#region Setup client
             //client = new Client('display', 'commandInput', _windowState.data.settings);  
             client = new (require('./js/client.js').Client)('display', 'commandInput', _windowState.data.settings);
@@ -2557,7 +2565,6 @@
             client.sendToRaw = (id, text) => ipcRenderer.send('execute-client', id, `client.raw(${JSON.stringify(text)});`);
             client.sendToCommand = (id, text, noEcho, comments) => ipcRenderer.send('execute-client', id, `client.sendCommand(${JSON.stringify(text)},${noEcho}, ${comments});`);
             client.sendToBackground = (id, text, noEcho, comments) => ipcRenderer.send('execute-client', id, `client.sendBackground(${JSON.stringify(text)},${noEcho}, ${comments});`);
-
 
             client.closeWindow = window => {
                 switch (window) {
@@ -2637,28 +2644,7 @@
                 document.title = name;
             }
             updateInterface();
-            _logger.postMessage({
-                action: 'options', args: {
-                    path: parseTemplate(client.options.logPath),
-                    offline: client.options.logOffline,
-                    gagged: client.options.logGagged,
-                    enabled: client.options.logEnabled,
-                    unique: client.options.logUniqueOnConnect,
-                    prepend: client.options.logPrepend,
-                    what: client.options.logWhat,
-                    debug: client.options.enableDebug,
-                    format: client.options.logTimeFormat,
-                    colors: client.options.colors,
-                    timestamp: client.options.logTimestamp,
-                    timestampFormat: client.options.logTimestampFormat
-                }
-            });
-            client.display.MatchCase = client.options.find.case;
-            client.display.MatchWord = client.options.find.word;
-            client.display.Reverse = client.options.find.reverse;
-            client.display.RegularExpression = client.options.find.regex;
-            client.display.Highlight = client.options.find.highlight;
-            client.display.finderLocation = client.options.find.location;
+            loadLoggerOptions();
             updateTitle();
             updateIcon(client.port === 1035 ? 3 : 0);
             if (client.options.find.show)
@@ -3168,22 +3154,6 @@
         ipcRenderer.on('reload-profiles', () => {
             //client.loadProfiles();
             client.loadOptions();
-            _logger.postMessage({
-                action: 'options', args: {
-                    path: parseTemplate(client.options.logPath),
-                    offline: client.options.logOffline,
-                    gagged: client.options.logGagged,
-                    enabled: client.options.logEnabled,
-                    unique: client.options.logUniqueOnConnect,
-                    prepend: client.options.logPrepend,
-                    what: client.options.logWhat,
-                    debug: client.options.enableDebug,
-                    format: client.options.logTimeFormat,
-                    colors: client.options.colors,
-                    timestamp: client.options.logTimestamp,
-                    timestampFormat: client.options.logTimestampFormat
-                }
-            });
             doUpdate(76);
         });
 
@@ -3207,22 +3177,6 @@
             }
             if (settings !== _windowState.data.settings) return;
             client.loadOptions();
-            _logger.postMessage({
-                action: 'options', args: {
-                    path: parseTemplate(client.options.logPath),
-                    offline: client.options.logOffline,
-                    gagged: client.options.logGagged,
-                    enabled: client.options.logEnabled,
-                    unique: client.options.logUniqueOnConnect,
-                    prepend: client.options.logPrepend,
-                    what: client.options.logWhat,
-                    debug: client.options.enableDebug,
-                    format: client.options.logTimeFormat,
-                    colors: client.options.colors,
-                    timestamp: client.options.logTimestamp,
-                    timestampFormat: client.options.logTimestampFormat
-                }
-            });
             doUpdate(76);
             client.sendGMCP('Core.Hello { "client": "' + client.telnet.terminal + '", "version": "' + client.telnet.version + '" }');
             initWindows();
