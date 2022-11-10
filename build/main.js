@@ -1288,23 +1288,26 @@ ipcMain.on('set-global', (event, key, value) => {
 });
 
 ipcMain.on('get-setting', (event, key) => {
-    if (!_settings) {
-        event.returnValue = null;
-        return;
-    }
-    let setting;
-    setting = _settings.getValue(key)
-    if (typeof setting === 'undefined')
-        setting = Settings.defaultValue(key);
-    event.returnValue = setting;
+    event.returnValue = getSetting(key);
 });
 
-ipcMain.on('set-setting', (event, key, value) => {
+function getSetting(key) {
     if (!_settings)
-        return;
-    if (_settings.setValue(key, value))
-        _settings.save(global.settingsFile);
+        return null;
+    const setting = _settings.getValue(key)
+    if (typeof setting === 'undefined')
+        return Settings.defaultValue(key);
+    return setting;
+}
+
+ipcMain.on('set-setting', (event, key, value) => {
+    setSetting(key, value);
 });
+
+function setSetting(key, value) {
+    if (_settings && _settings.setValue(key, value))
+        _settings.save(global.settingsFile);
+}
 
 ipcMain.on('get-pid', (event) => {
     event.returnValue = process.pid;
