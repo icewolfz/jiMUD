@@ -1297,18 +1297,16 @@ ipcMain.on('get-setting', (event, key) => {
     else {
         const keys = key.split('.');
         const kl = keys.length;
-        let settings = _settings;
+        let setting = _settings;
         for (let k = 0; k < kl; k++) {
-            settings = settings[keys[k]];
-            //TODO add fall back to default
-            if (typeof settings === 'undefined')
+            setting = setting[keys[k]];
+            if (typeof setting === 'undefined')
                 break;
         }
-        //TODO add fall back to default setting
-        if (typeof settings === 'undefined')
-            event.returnValue = null;
+        if (typeof setting === 'undefined')
+            event.returnValue = settings.Settings.defaultValue(key);
         else
-            event.returnValue = settings;
+            event.returnValue = setting;
     }
 });
 

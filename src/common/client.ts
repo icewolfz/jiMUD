@@ -1256,9 +1256,8 @@ export class Client extends EventEmitter {
         const ol = opts.length;
         for (o = 0; o < ol; o++)
             opt = opt[opts[o]];
-        //TODO add fall back to global setting
-        //if (typeof opt === 'undefined')
-            //return window.getSetting(name);
+        if (typeof opt === 'undefined')
+            return window.getSetting(name);
         return opt;
     }
 

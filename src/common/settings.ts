@@ -425,14 +425,14 @@ export let SettingList: any[] = [
     ['disableTriggerOnError', 0, 1, true],
     ['prependTriggeredLine', 0, 1, true],
     ['enableParameters', 0, 1, true],
-    ['parametersChar', 0, 0, '#', 1],
+    ['parametersChar', 0, 0, '%', 1],
     ['enableNParameters', 0, 1, true],
-    ['nParametersChar', 0, 0, '#', 1],
+    ['nParametersChar', 0, 0, '$', 1],
     ['enableParsing', 0, 1, true],
     ['externalWho', 0, 1, true],
     ['externalHelp', 0, 1, true],
     ['watchForProfilesChanges', 0, 1, false],
-    ['maxReonProfileChangeconnectDelay', 0, 2, OnProfileChange.Nothing],
+    ['onProfileChange', 0, 2, OnProfileChange.Nothing],
     ['onProfileDeleted', 0, 2, OnProfileDeleted.Nothing],
     ['enableDoubleParameterEscaping', 0, 1, false],
     ['ignoreEvalUndefined', 0, 1, true],
@@ -769,5 +769,295 @@ export class Settings {
         if (!data || data.length === 0)
             throw new Error('Could not serialize settings');
         fs.writeFileSync(file, data);
+    }
+
+    public static defaultValue(setting) {
+        switch (setting) {
+            case 'bufferSize': return 5000;
+            case 'commandDelay': return 500;
+            case 'commandDelayCount': return 5;
+            case 'commandHistorySize': return 20;
+            case 'fontSize': return '1em';
+            case 'cmdfontSize': return '1em';
+            case 'commandEcho': return true;
+            case 'flashing': return false;
+            case 'autoConnect': return true;
+            case 'enableAliases': return true;
+            case 'enableTriggers': return true;
+            case 'enableMacros': return true;
+            case 'showScriptErrors': return false;
+            case 'commandStacking': return true;
+            case 'commandStackingChar': return ';';
+            case 'htmlLog': return true;
+            case 'keepLastCommand': return true;
+            case 'enableMCCP': return true;
+            case 'enableUTF8': return true;
+            case 'font': return '\'Courier New\', Courier, monospace';
+            case 'cmdfont': return '\'Courier New\', Courier, monospace';
+            case 'mapFollow':
+            case 'mapper.follow': return true;
+            case 'mapEnabled':
+            case 'mapper.enabled': return true;
+            case 'MapperSplitArea':
+            case 'mapper.split': return false;
+            case 'MapperFillWalls':
+            case 'mapper.fill': return false;
+            case 'MapperOpen':
+            case 'showMapper': return false;
+            case 'fullScreen': return false;
+            case 'enableMXP': return true;
+            case 'enableMSP': return true;
+            case 'parseCommands': return true;
+            case 'lagMeter': return false;
+            case 'enablePing': return false;
+            case 'enableEcho': return true;
+            case 'enableSpeedpaths': return true;
+            case 'speedpathsChar': return '!';
+            case 'parseSpeedpaths': return true;
+            case 'profile': return 'Default';
+            case 'parseSingleQuotes': return false;
+            case 'parseDoubleQuotes': return true;
+            case 'logEnabled': return false;
+            case 'logPrepend': return false;
+            case 'logOffline': return false;
+            case 'logUniqueOnConnect': return true;
+            case 'enableURLDetection': return true;
+            case 'notifyMSPPlay': return false;
+            case 'CommandonClick': return true;
+            case 'allowEval': return true;
+            case 'allowEscape': return true;
+            case 'AutoCopySelectedToClipboard': return false;
+            case 'enableDebug': return false;
+            case 'editorPersistent': return false;
+            case 'askonclose': return true;
+            case 'dev': return false;
+            //New settings
+            case 'chat.captureLines': return false;
+            case 'chat.captureAllLines': return false;
+            case 'chat.captureReviews': return false;
+            case 'chat.captureTells': return false;
+            case 'chat.captureTalk': return false;
+            case 'chat.gag': return false;
+            case 'chat.CaptureOnlyOpen': return false;
+            case 'checkForUpdates': return false;
+            case 'autoCreateCharacter': return false;
+            case 'askonchildren': return true;
+            case 'mapper.legend': return false;
+            case 'mapper.room': return false;
+            case 'mapper.importType': return 1;
+            case 'mapper.vscroll': return 0;
+            case 'mapper.hscroll': return 0;
+            case 'mapper.scale': return 1.0;
+            case 'mapper.alwaysOnTop': return false;
+            case 'mapper.alwaysOnTopClient': return true;
+            case 'mapper.memory': return false;
+            case 'mapper.memorySavePeriod': return 900000;
+            case 'mapper.active.ID': return null;
+            case 'mapper.active.x': return 0;
+            case 'mapper.active.y': return 0;
+            case 'mapper.active.z': return 0;
+            case 'mapper.active.area': return null;
+            case 'mapper.active.zone': return 0;
+            case 'mapper.persistent': return true;
+            case 'profiles.split': return -1;
+            case 'profiles.askoncancel': return true;
+            case 'profiles.triggersAdvanced': return false;
+            case 'profiles.aliasesAdvanced': return false;
+            case 'profiles.buttonsAdvanced': return false;
+            case 'profiles.macrosAdvanced': return false;
+            case 'profiles.contextsAdvanced': return false;
+            case 'profiles.codeEditor': return true;
+            case 'profiles.watchFiles': return true;
+            case 'chat.alwaysOnTop': return false;
+            case 'chat.alwaysOnTopClient': return true;
+            case 'chat.log': return false;
+            case 'chat.persistent': return false;
+            case 'chat.zoom': return 1;
+            case 'chat.font': return '\'Courier New\', Courier, monospace';
+            case 'chat.fontSize': return '1em';
+            case 'title': return '$t';
+            case 'logGagged': return false;
+            case 'logTimeFormat': return 'YYYYMMDD-HHmmss';
+            case 'autoConnectDelay': return 600;
+            case 'autoLogin': return true;
+            case 'onDisconnect': return OnDisconnect.ReconnectDialog;
+            case 'enableKeepAlive': return false;
+            case 'keepAliveDelay': return 0;
+            case 'newlineShortcut': return NewLineType.Ctrl;
+            case 'logWhat': return Log.Html;
+            case 'logErrors': return true;
+            case 'showErrorsExtended': return false;
+            case 'reportCrashes': return false;
+            case 'enableCommands': return true;
+            case 'commandChar': return '#';
+            case 'escapeChar': return '\\';
+            case 'enableVerbatim': return true;
+            case 'verbatimChar': return '`';
+            case 'soundPath': return '{data}\\sounds';
+            case 'logPath': return '{data}\\logs';
+            case 'theme': return '{themes}\\default';
+            case 'gamepads': return false;
+            case 'buttons.connect': return true;
+            case 'buttons.characters': return true;
+            case 'buttons.preferences': return true;
+            case 'buttons.log': return true;
+            case 'buttons.clear': return true;
+            case 'buttons.lock': return true;
+            case 'buttons.map': return true;
+            case 'buttons.user': return true;
+            case 'buttons.mail': return true;
+            case 'buttons.compose': return true;
+            case 'buttons.immortal': return true;
+            case 'buttons.codeEditor': return false;
+            case 'find.case': return false;
+            case 'find.word': return false;
+            case 'find.reverse': return false;
+            case 'find.regex': return false;
+            case 'find.selection': return false;
+            case 'find.show': return false;
+            case 'display.split': return false;
+            case 'display.splitHeight': return -1;
+            case 'display.splitLive': return true;
+            case 'display.roundedOverlays': return true;
+            case 'backupLoad': return BackupSelection.All;
+            case 'backupSave': return BackupSelection.All;
+            case 'backupAllProfiles': return true;
+            case 'scrollLocked': return false;
+            case 'showStatus': return true;
+            case 'showCharacterManager': return false;
+            case 'showChat': return false;
+            case 'showEditor': return false;
+            case 'showArmor': return false;
+            case 'showStatusWeather': return true;
+            case 'showStatusLimbs': return true;
+            case 'showStatusHealth': return true;
+            case 'showStatusExperience': return true;
+            case 'showStatusPartyHealth': return true;
+            case 'showStatusCombatHealth': return true;
+            case 'showButtonBar': return true;
+            case 'allowNegativeNumberNeeded': return false;
+            case 'spellchecking': return true;
+            case 'hideOnMinimize': return false;
+            case 'showTrayIcon': return false;
+            case 'statusExperienceNeededProgressbar': return false;
+            case 'trayClick': return TrayClick.show;
+            case 'trayDblClick': return TrayClick.none;
+            case 'pasteSpecialPrefix': return '';
+            case 'pasteSpecialPostfix': return '';
+            case 'pasteSpecialReplace': return '';
+            case 'pasteSpecialPrefixEnabled': return true;
+            case 'pasteSpecialPostfixEnabled': return true;
+            case 'pasteSpecialReplaceEnabled': return true;
+            case 'display.showSplitButton': return true;
+            case 'chat.split': return false;
+            case 'chat.splitHeight': return -1;
+            case 'chat.splitLive': return true;
+            case 'chat.roundedOverlays': return true;
+            case 'chat.showSplitButton': return true;
+            case 'chat.bufferSize': return 5000;
+            case 'chat.flashing': return false;
+            case 'display.hideTrailingEmptyLine': return true;
+            case 'display.enableColors': return true;
+            case 'display.enableBackgroundColors': return true;
+            case 'enableSound': return true;
+            case 'allowHalfOpen': return true;
+            case 'editorClearOnSend': return true;
+            case 'editorCloseOnSend': return true;
+            case 'askOnCloseAll': return true;
+            case 'askonloadCharacter': return true;
+            case 'mapper.roomWidth': return 200;
+            case 'mapper.roomGroups': return 1 | 2 | 4;
+            case 'mapper.showInTaskBar': return false;
+            case 'profiles.enabled': return [];
+            case 'profiles.sortOrder': return ProfileSortOrder.Priority | ProfileSortOrder.Index;
+            case 'profiles.sortDirection': return 1;
+            case 'profiles.showInTaskBar': return false;
+            case 'profiles.profileSelected': return 'default';
+            case 'profiles.profileExpandSelected': return true;
+            case 'chat.lines': return [];
+            case 'chat.showInTaskBar': return false;
+            case 'chat.showTimestamp': return false;
+            case 'chat.timestampFormat': return '[[]MM-DD HH:mm:ss.SSS[]] ';
+            case 'chat.tabWidth': return 8;
+            case 'chat.displayControlCodes': return false;
+            case 'chat.emulateTerminal': return false;
+            case 'chat.emulateControlCodes': return true;
+            case 'chat.wordWrap': return false;
+            case 'chat.wrapAt': return 0;
+            case 'chat.indent': return 4;
+            case 'chat.scrollLocked': return false;
+            case 'chat.find.case': return false;
+            case 'chat.find.word': return false;
+            case 'chat.find.reverse': return false;
+            case 'chat.find.regex': return false;
+            case 'chat.find.selection': return false;
+            case 'chat.find.show': return false;
+            case 'chat.find.highlight': return false;
+            case 'chat.find.location': return [5, 20];
+            case 'codeEditor.showInTaskBar': return false;
+            case 'codeEditor.persistent': return false;
+            case 'codeEditor.alwaysOnTop': return false;
+            case 'codeEditor.alwaysOnTopClient': return true;
+            case 'autoTakeoverLogin': return false;
+            case 'fixHiddenWindows': return true;
+            case 'maxReconnectDelay': return 3600;
+            case 'enableBackgroundThrottling': return true;
+            case 'enableBackgroundThrottlingClients': return false;
+            case 'showInTaskBar': return true;
+            case 'showLagInTitle': return false;
+            case 'mspMaxRetriesOnError': return 0;
+            case 'logTimestamp': return false;
+            case 'logTimestampFormat': return '[[]MM-DD HH:mm:ss.SSS[]] ';
+            case 'disableTriggerOnError': return true;
+            case 'prependTriggeredLine': return true;
+            case 'enableParameters': return true;
+            case 'parametersChar': return '%';
+            case 'enableNParameters': return true;
+            case 'nParametersChar': return '$';
+            case 'enableParsing': return true;
+            case 'externalWho': return true;
+            case 'externalHelp': return true;
+            case 'watchForProfilesChanges': return false;
+            case 'onProfileChange': return OnProfileChange.Nothing;
+            case 'onProfileDeleted': return OnProfileDeleted.Nothing;
+            case 'enableDoubleParameterEscaping': return false;
+            case 'ignoreEvalUndefined': return true;
+            case 'enableInlineComments': return true;
+            case 'enableBlockComments': return true;
+            case 'inlineCommentString': return '//';
+            case 'blockCommentString': return '/*';
+            case 'allowCommentsFromCommand': return false;
+            case 'saveTriggerStateChanges': return true;
+            case 'groupProfileSaves': return false;
+            case 'groupProfileSaveDelay': return 20000;
+            case 'returnNewlineOnEmptyValue': return false;
+            case 'pathDelay': return 0;
+            case 'pathDelayCount': return 1;
+            case 'echoSpeedpaths': return false;
+            case 'alwaysShowTabs': return false;
+            case 'scriptEngineType': return ScriptEngineType.Simple;
+            case 'initializeScriptEngineOnLoad': return false;
+            case 'find.highlight': return false;
+            case 'find.location': return [5, 20];
+            case 'display.showInvalidMXPTags': return false;
+            case 'display.showTimestamp': return false;
+            case 'display.timestampFormat': return '[[]MM-DD HH:mm:ss.SSS[]] ';
+            case 'display.displayControlCodes': return false;
+            case 'display.emulateTerminal': return false;
+            case 'display.emulateControlCodes': return true;
+            case 'display.wordWrap': return false;
+            case 'display.tabWidth': return 8;
+            case 'display.wrapAt': return 0;
+            case 'display.indent': return 4;
+            case 'statusWidth': return -1;
+            case 'showEditorInTaskBar': return true;
+            case 'trayMenu': return TrayMenu.simple;
+            case 'lockLayout': return false;
+            case 'loadLayout': return '';
+            case 'useSingleInstance': return true;
+            case 'statusWidth': return OnSecondInstance.Show;
+            case 'characterManagerDblClick': return 8;
+        }
+        return null;
     }
 }
