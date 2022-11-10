@@ -798,6 +798,7 @@ export class Settings {
             case 'mapper.scale': return this.mapper.scale;
             case 'mapper.alwaysOnTop': return this.mapper.alwaysOnTop;
             case 'mapper.alwaysOnTopClient': return this.mapper.alwaysOnTopClient;
+            case 'mapperMemory':
             case 'mapper.memory': return this.mapper.memory;
             case 'mapper.memorySavePeriod': return this.mapper.memorySavePeriod;
             case 'mapper.active.ID': return this.mapper.active.ID;
@@ -974,6 +975,7 @@ export class Settings {
             case 'mapper.alwaysOnTopClient':
                 this.mapper.alwaysOnTopClient = value;
                 return true;
+            case 'mapperMemory':
             case 'mapper.memory':
                 this.mapper.memory = value;
                 return true;
@@ -1373,6 +1375,7 @@ export class Settings {
             case 'mapper.scale': return 1.0;
             case 'mapper.alwaysOnTop': return false;
             case 'mapper.alwaysOnTopClient': return true;
+            case 'mapperMemory':
             case 'mapper.memory': return false;
             case 'mapper.memorySavePeriod': return 900000;
             case 'mapper.active.ID': return null;

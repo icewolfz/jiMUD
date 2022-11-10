@@ -149,9 +149,6 @@ export class Backup extends EventEmitter {
             map: {}
         };
 
-        let prop;
-        let prop2;
-
         if (this.client.options.backupAllProfiles) {
             const profiles = new ProfileCollection();
             profiles.loadPath(path.join(parseTemplate('{data}'), 'profiles'));
@@ -160,21 +157,19 @@ export class Backup extends EventEmitter {
         else
             data.profiles = this.client.profiles.clone(2);
 
-        for (prop in this.client.options) {
-            if (!this.client.options.hasOwnProperty(prop)) {
+        let prop;
+        //make sure a value is set in case it inherits from global or default
+        for (prop in data.settings) {
+            if (!data.settings.hasOwnProperty(prop))
                 continue;
-            }
-            if (prop === 'extensions' || prop === 'mapper' || prop === 'profiles' || prop === 'buttons' || prop === 'chat' || prop === 'find' || prop === 'display') {
-                if (!data.settings[prop]) data.settings[prop] = {};
-                for (prop2 in this.client.options[prop]) {
-                    if (!this.client.options[prop].hasOwnProperty(prop2)) {
-                        continue;
-                    }
-                    data.settings[prop][prop2] = this.client.options[prop][prop2];
-                }
-            }
-            else
-                data.settings[prop] = this.client.options[prop];
+            if (typeof data.settings[prop] === 'undefined')
+                data.settings[prop] = window.getSetting(prop);
+        }
+
+        for (prop in this.client.options) {
+            if (!this.client.options.hasOwnProperty(prop))
+                continue;
+            this.setProperties(this.client.options, data.settings, prop, '');
         }
 
         const rooms = {};
@@ -444,7 +439,7 @@ export class Backup extends EventEmitter {
                                 for (let i = 0; i < il; i++) {
                                     item.triggers.push(new Trigger(data.profiles[keys[k]].triggers[m].triggers[i]));
                                 }
-                            }                            
+                            }
                             p.triggers.push(item);
                         }
                     }
@@ -598,4 +593,20 @@ export class Backup extends EventEmitter {
         this.close();
     }
 
+    private setProperties(source, target, property, root) {
+        if (typeof source[property] === 'object') {
+            for (let child in source[property]) {
+                if (!source[property].hasOwnProperty(child))
+                    continue;
+                if (!target[property])
+                    target[property] = {};
+                this.setProperties(source[property], target[property], child, root + property + '.');
+            }
+        }
+        else {
+            target[property] = source[property];
+            if (typeof target[property] === 'undefined')
+                target[property] = window.getSetting(root + property);
+        }
+    }
 }
