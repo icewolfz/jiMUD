@@ -3275,10 +3275,10 @@ function buildOptions(details, window, settings) {
             nodeIntegrationInWorker: true,
             webviewTag: false,
             sandbox: false,
-            spellcheck: _settings ? _settings.spellchecking : false,
+            spellcheck: settings ? settings.spellchecking : false,
             enableRemoteModule: true,
             contextIsolation: false,
-            backgroundThrottling: _settings ? _settings.enableBackgroundThrottling : true,
+            backgroundThrottling: settings ? settings.enableBackgroundThrottling : true,
             preload: path.join(__dirname, 'preload.js')
         }
     };
