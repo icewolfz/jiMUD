@@ -113,7 +113,7 @@
     - Fixed finder current overlay to display correctly when highlight all enabled
     - Fixed finder regular expression button being set to active in correctly
     - Fixed toggle split view button/scroll corner losing text selection when clicked
-    - Fixed link not styling overline, strike-though, and related combinations
+    - Fixed link not styling overline, strike-though, and related combinations  
   - Logging:
     - Fixed logger not enabling/disabling when changed from settings dialog
     - Fixed logger not enabling/disabling on load
@@ -139,6 +139,8 @@
     - Removed -mf argument to keep argument name scheme flowing
     - Removed -pf/--profiles as no longer supported, use character manager with per user settings  
   - Mapper: Switch room editor to property grid control
+  - Fixed issue with corrupted ansi codes when displaying local text
+  - Ansi Parser: Add safety checks for malformed ansi codes
   - Update electron 19.1.1 to 19.1.5
   - Update electron-updater 5.2.1 to 5.3.0
   - Update mathjs 11.2.1 to 11.3.3
