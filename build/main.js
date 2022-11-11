@@ -385,6 +385,8 @@ function createWindow(options) {
         let file = url;
         if (url.startsWith('file:///' + __dirname.replace(/\\/g, '/')))
             file = url.substring(__dirname.length + 9);
+        else if (file.startsWith('file://' + __dirname))
+            file = file.substring(__dirname.length + 8);
         initializeChildWindow(childWindow, url, details);
 
         childWindow.on('closed', e => {
@@ -2318,6 +2320,8 @@ function createClient(options) {
         let file = url;
         if (url.startsWith('file:///' + __dirname.replace(/\\/g, '/')))
             file = url.substring(__dirname.length + 9);
+        else if (file.startsWith('file://' + __dirname))
+            file = file.substring(__dirname.length + 8);
         initializeChildWindow(childWindow, url, details, false);
 
         childWindow.on('resize', () => {
@@ -2627,6 +2631,8 @@ function initializeChildWindow(window, link, details, noClose) {
     let file = link;
     if (link.startsWith('file:///' + __dirname.replace(/\\/g, '/')))
         file = link.substring(__dirname.length + 9);
+    else if (file.startsWith('file://' + __dirname))
+        file = file.substring(__dirname.length + 8);
     require("@electron/remote/main").enable(window.webContents);
     window.removeMenu();
     window.once('ready-to-show', () => {
@@ -3268,6 +3274,8 @@ function buildOptions(details, window, settings) {
     let file = details.url;
     if (file.startsWith('file:///' + __dirname.replace(/\\/g, '/')))
         file = file.substring(__dirname.length + 9);
+    else if (file.startsWith('file://' + __dirname))
+        file = file.substring(__dirname.length + 8);
     options = {
         file: file,
         backgroundColor: '#000',
