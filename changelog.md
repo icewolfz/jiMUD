@@ -125,6 +125,8 @@
     - Fixed bug in display breaking when zoomed
   - [#LOOP](docs/commands.md) now throws an error when an invalid range is supplied
   - Fixed a bug when executing context menus and corrupting script variable stack
+  - Fixed issue with corrupted ansi codes when displaying local text
+  - Ansi Parser: Add safety checks for malformed ansi codes
 - **Changed:**
   - All dark icons now have a white stroke to make them work better with dark mode and dark colors
   - Preferences that are now global:
@@ -139,8 +141,6 @@
     - Removed -mf argument to keep argument name scheme flowing
     - Removed -pf/--profiles as no longer supported, use character manager with per user settings  
   - Mapper: Switch room editor to property grid control
-  - Fixed issue with corrupted ansi codes when displaying local text
-  - Ansi Parser: Add safety checks for malformed ansi codes
   - Update electron 19.1.1 to 19.1.5
   - Update electron-updater 5.2.1 to 5.3.0
   - Update mathjs 11.2.1 to 11.3.3
