@@ -383,10 +383,8 @@ function createWindow(options) {
         let frameName = details.frameName;
         let url = details.url;
         let file = url;
-        if (url.startsWith('file:///' + __dirname.replace(/\\/g, '/')))
-            file = url.substring(__dirname.length + 9);
-        else if (file.startsWith('file://' + __dirname))
-            file = file.substring(__dirname.length + 8);
+        if (file.startsWith(URL.pathToFileURL(__dirname).href))
+            file = file.substring(URL.pathToFileURL(__dirname).href.length + 1);
         initializeChildWindow(childWindow, url, details);
 
         childWindow.on('closed', e => {
@@ -2318,10 +2316,8 @@ function createClient(options) {
         let frameName = details.frameName;
         let url = details.url;
         let file = url;
-        if (url.startsWith('file:///' + __dirname.replace(/\\/g, '/')))
-            file = url.substring(__dirname.length + 9);
-        else if (file.startsWith('file://' + __dirname))
-            file = file.substring(__dirname.length + 8);
+        if (file.startsWith(URL.pathToFileURL(__dirname).href))
+            file = file.substring(URL.pathToFileURL(__dirname).href.length + 1);
         initializeChildWindow(childWindow, url, details, false);
 
         childWindow.on('resize', () => {
@@ -2629,10 +2625,8 @@ async function canCloseAllWindows(warn) {
 
 function initializeChildWindow(window, link, details, noClose) {
     let file = link;
-    if (link.startsWith('file:///' + __dirname.replace(/\\/g, '/')))
-        file = link.substring(__dirname.length + 9);
-    else if (file.startsWith('file://' + __dirname))
-        file = file.substring(__dirname.length + 8);
+    if (file.startsWith(URL.pathToFileURL(__dirname).href))
+        file = file.substring(URL.pathToFileURL(__dirname).href.length + 1);    
     require("@electron/remote/main").enable(window.webContents);
     window.removeMenu();
     window.once('ready-to-show', () => {
@@ -3272,10 +3266,8 @@ function getWindowY(y, h) {
 
 function buildOptions(details, window, settings) {
     let file = details.url;
-    if (file.startsWith('file:///' + __dirname.replace(/\\/g, '/')))
-        file = file.substring(__dirname.length + 9);
-    else if (file.startsWith('file://' + __dirname))
-        file = file.substring(__dirname.length + 8);
+    if (file.startsWith(URL.pathToFileURL(__dirname).href))
+        file = file.substring(URL.pathToFileURL(__dirname).href.length + 1);    
     options = {
         file: file,
         backgroundColor: '#000',
