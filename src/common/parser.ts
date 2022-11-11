@@ -2795,6 +2795,17 @@ export class Parser extends EventEmitter {
                             _AnsiParams = null;
                             state = ParserState.None;
                         }
+                        else if (c === '\n' || c === '\x1b') {
+                            //malformed code
+                            idx--;
+                            rawBuilder.pop();
+                            this.rawLength--;
+                            //Abnormal end, discard
+                            state = ParserState.None;
+                            this._SplitBuffer = '';
+                            if (this.mxpState.on && c === '\n')
+                                this.ClearMXPOpen();
+                        }
                         else {
                             this._SplitBuffer += c;
                             _AnsiParams += c;
