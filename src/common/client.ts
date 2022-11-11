@@ -1324,7 +1324,7 @@ export class Client extends EventEmitter {
         if (forceLine == null) forceLine = false;
         if (fore == null) fore = AnsiColorCode.LocalEcho;
         if (back == null) back = AnsiColorCode.LocalEchoBack;
-        const codes = '\x1b[0,' + this.display.CurrentAnsiCode() + '\n';
+        const codes = '\x1b[0m' + this.display.CurrentAnsiCode() + '\n';
         //make its a string in case raw js passes number or something else
         str = '' + str;
         if (str.endsWith('\n'))
