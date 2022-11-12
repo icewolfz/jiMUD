@@ -211,21 +211,19 @@
                 updateCurrent();
                 var action;
                 if (window.opener.client) {
-                    action = window.opener.client.options.characterManagerDblClick;
+                    action = window.opener.client.getOption('characterManagerDblClick');
                     if (action === 8)
                         action = window.getSetting('characterManagerDblClick');
                 }
                 else
                     action = window.getSetting('characterManagerDblClick');
 
-                if (action === 1 || action === 8) {
-                    if (load() === 0)
-                        doClose();
-                }
-                else if (action === 2)
+                if (action === 2)
                     newConnection();
                 else if (action === 4)
                     newWindow();
+                else if (load() === 0)
+                    doClose();
             });
             _charactersDataGrid.on('row-click', e => {
                 updateCurrent();
@@ -502,13 +500,14 @@
             showGetName(name, function (event, name) {
                 const nextID = ipcRenderer.sendSync('get-character-next-id');
                 const character = {
-                    Title: name.replace(/[^a-zA-Z0-9]+/g, ''),
+                    Title: name,
                     Preferences: path.join('{characters}', nextID + '.json'),
                     Map: path.join('{characters}', nextID + '.Map'),
                     Notes: path.join('{characters}', nextID + '.notes')
                 };
                 var sf = parseTemplate(character.Preferences);
                 var response, d;
+                /*
                 if (isFileSync(sf)) {
                     response = dialog.showMessageBoxSync({
                         type: 'warning',
@@ -527,6 +526,7 @@
                     d = Settings.load(window.getGlobal('settingsFile'));
                     d.save(sf);
                 }
+                */
                 sf = parseTemplate(character.Map);
                 if (isFileSync(sf)) {
                     response = dialog.showMessageBoxSync({
@@ -549,7 +549,7 @@
                 else
                     fs.closeSync(fs.openSync(sf, 'w'));
                 character.ID = ipcRenderer.sendSync('add-character', character);
-                //                _charactersDataGrid.addRow(character);
+                _charactersDataGrid.addRow(character);
                 saveCharacters();
             });
         }
@@ -558,13 +558,14 @@
             showGetName(function (event, name) {
                 const nextID = ipcRenderer.sendSync('get-character-next-id');
                 const character = {
-                    Title: name.replace(/[^a-zA-Z0-9]+/g, ''),
+                    Title: name,
                     Preferences: path.join('{characters}', nextID + '.json'),
                     Map: path.join('{characters}', nextID + '.Map'),
                     Notes: path.join('{characters}', nextID + '.notes')
                 };
                 var sf = parseTemplate(character.Preferences);
                 var response, d;
+                /*
                 if (isFileSync(sf)) {
                     response = dialog.showMessageBoxSync({
                         type: 'warning',
@@ -583,6 +584,7 @@
                     d = new Settings();
                     d.save(sf);
                 }
+                */
                 sf = parseTemplate(character.Map);
                 if (isFileSync(sf)) {
                     response = dialog.showMessageBoxSync({
@@ -616,12 +618,14 @@
                 character = ipcRenderer.sendSync('get-character', ID);
             showGetName(character.Title, character.Title, 1, function (event, name, oldName) {
                 changes = { ID: ID, Title: name };
+                //cleanup for file names
+                oldName = oldName.replace(/[^a-zA-Z0-9]+/g, '');
                 const nameId = parseInt(oldName, 10) === character.ID;
                 //only replace if it matches the name.json format
                 if (!nameId && character.Preferences === path.join(parseTemplate('{characters}'), oldName + '.json')) {
                     var f = path.join(parseTemplate('{characters}'), oldName + '.json');
-                    var sf = parseTemplate(path.join(parseTemplate('{characters}'), name + '.json'));
-                    changes.Preferences = path.join('{characters}', name + '.json');
+                    var sf = parseTemplate(path.join(parseTemplate('{characters}'), name.replace(/[^a-zA-Z0-9]+/g, '') + '.json'));
+                    changes.Preferences = path.join('{characters}', name.replace(/[^a-zA-Z0-9]+/g, '') + '.json');
                     var response;
                     if (isFileSync(sf)) {
                         response = dialog.showMessageBoxSync({
@@ -640,8 +644,8 @@
                 }
                 if (!nameId && character.Notes === path.join(parseTemplate('{characters}'), oldName + '.notes')) {
                     f = path.join(parseTemplate('{characters}'), oldName + '.notes');
-                    sf = path.join(parseTemplate('{characters}'), name + '.notes');
-                    changes.Notes = path.join('{characters}', name + '.notes');
+                    sf = path.join(parseTemplate('{characters}'), name.replace(/[^a-zA-Z0-9]+/g, '') + '.notes');
+                    changes.Notes = path.join('{characters}', name.replace(/[^a-zA-Z0-9]+/g, '') + '.notes');
                     if (isFileSync(sf)) {
                         response = dialog.showMessageBoxSync({
                             type: 'warning',
@@ -660,8 +664,8 @@
                 }
                 if (!nameId && character.Map === path.join(parseTemplate('{characters}'), oldName + '.map')) {
                     f = path.join(parseTemplate('{characters}'), oldName + '.map');
-                    sf = path.join(parseTemplate('{characters}'), name + '.map');
-                    changes.Map = path.join('{characters}', name + '.map');
+                    sf = path.join(parseTemplate('{characters}'), name.replace(/[^a-zA-Z0-9]+/g, '') + '.map');
+                    changes.Map = path.join('{characters}', name.replace(/[^a-zA-Z0-9]+/g, '') + '.map');
                     if (isFileSync(sf)) {
                         response = dialog.showMessageBoxSync({
                             type: 'warning',
@@ -800,21 +804,24 @@
             });
 
             if (response === 0) {
-                if (_charactersDataGrid.selectedCount !== 0 && _charactersDataGrid.selected.filter(s => s.data.ID === ID).length !== 0) {
+                if (_charactersDataGrid.selectedCount !== 0 && _charactersDataGrid.selected.filter(s => s.data.ID === character.ID).length !== 0) {
                     _charactersDataGrid.clearSelection();
                     clearEditor();
                 }
                 var sf = parseTemplate(character.Preferences);
-                if (isFileSync(sf))
+                var characters = ipcRenderer.sendSync('get-characters', { fields: ['ID'], filter: { 'Preferences': character.Preferences } }).filter(char => char.ID !== character.ID);
+                if (isFileSync(sf) && characters.length === 0)
                     ipcRenderer.send('trash-item', sf);
                 sf = parseTemplate(character.Map);
-                if (isFileSync(sf))
+                characters = ipcRenderer.sendSync('get-characters', { fields: ['ID'], filter: { 'Map': character.Map } }).filter(char => char.ID !== character.ID);
+                if (isFileSync(sf) && characters.length === 0)
                     ipcRenderer.send('trash-item', sf);
                 sf = parseTemplate(character.Notes);
-                if (isFileSync(sf))
+                characters = ipcRenderer.sendSync('get-characters', { fields: ['ID'], filter: { 'Notes': character.Notes } }).filter(char => char.ID !== character.ID);
+                if (isFileSync(sf) && characters.length === 0)
                     ipcRenderer.send('trash-item', sf);
                 ipcRenderer.send('remove-character', character.ID)
-                _charactersDataGrid.removeRows(_charactersDataGrid.rows.filter(r => r.ID == ID));
+                _charactersDataGrid.removeRows(_charactersDataGrid.rows.filter(r => r.ID == character.ID));
                 saveCharacters();
             }
         }
@@ -1089,7 +1096,6 @@
                 _charactersDataGrid.updateRow(rows[0], character);
         }
 
-
         function newConnection(ID) {
             if (ID === undefined) {
                 if (_charactersDataGrid.selectedCount === 0) return;
@@ -1110,6 +1116,10 @@
                 character = ipcRenderer.sendSync('get-character', ID);
             saveCharacters();
             window.opener.send('new-window', null, { characterId: character.ID, settings: parseTemplate(character.Preferences), port: character.Port });
+        }
+
+        function openFolder(folder) {
+            shell.openPath(parseTemplate(folder));
         }
 
         function doClose() {
@@ -1195,12 +1205,26 @@
             <button id="btn-refresh" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="refresh()">
                 <i class="fa fa-refresh"></i>
             </button>
-            <button id="btn-save" type="button" class="btn btn-default btn-xs" title="Backup to zip" onclick="backup()">
+            <button id="btn-save" type="button" class="btn btn-default btn-xs" title="Backup to zip..." onclick="backup()">
                 <i class="fa fa-upload"></i>
             </button>
-            <button id="btn-import" type="button" class="btn btn-default btn-xs" title="Import" onclick="importData()">
+            <button id="btn-import" type="button" class="btn btn-default btn-xs" title="Import..." onclick="importData()">
                 <i class="fa fa-download"></i>
             </button>
+        </div>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-default btn-xs" title="Open characters folder..." onclick="openFolder('{characters}')">
+                <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
+                    <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1em"></i>
+                    <i class="fa fa-user fa-stack-1x" style="font-size: 0.8em;margin-top: -2px;left:5px;"></i>
+                </span>
+            </button>
+            <button type="button" class="btn btn-default btn-xs" title="Open profiles folder..." onclick="openFolder('{profiles}')">
+                <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
+                    <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1em"></i>
+                    <i class="fa fa-users fa-stack-1x" style="font-size: 0.8em;margin-top: -2px;left:5px;"></i>
+                </span>
+            </button>            
         </div>
         <div class="btn-group" role="group">
             <button type="button" class="btn btn-default btn-xs" title="Add" onclick="add()">

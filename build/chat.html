@@ -28,7 +28,7 @@
         const { Settings } = require('./js/settings');
         const { Display } = require('./js/display');
         const { AnsiColorCode } = require('./js/ansi');
-        var options;
+        var client;
 
         var display, _logger, _zoom = 1.0;
 
@@ -44,66 +44,66 @@
         });
 
         function loadOptions() {
-            options = window.opener.client.options;
+            client = window.opener.client;
             if (display) {
-                display.updateFont(options.chat.font, options.chat.fontSize);
-                display.maxLines = options.chat.bufferSize;
-                display.enableSplit = options.chat.split;
-                display.splitLive = options.chat.splitLive;
-                display.splitHeight = options.chat.splitHeight;
-                display.roundedRanges = options.chat.roundedOverlays;
-                display.showSplitButton = options.chat.showSplitButton;
-                display.enableFlashing = options.chat.flashing;
-                display.showTimestamp = options.chat.showTimestamp;
-                display.timestampFormat = options.chat.timestampFormat;
-                display.enableMXP = options.enableMXP;
-                display.enableURLDetection = options.enableURLDetection;
-                display.showInvalidMXPTags = options.display.showInvalidMXPTags;
-                display.hideTrailingEmptyLine = options.display.hideTrailingEmptyLine;
-                display.enableColors = options.display.enableColors;
-                display.enableBackgroundColors = options.display.enableBackgroundColors;
-                display.tabWidth = options.chat.tabWidth;
-                display.displayControlCodes = options.chat.displayControlCodes;
-                display.emulateTerminal = options.chat.emulateTerminal;
-                display.emulateControlCodes = options.chat.emulateControlCodes;
-                display.wordWrap = options.chat.wordWrap;
-                display.wrapAt = options.chat.wrapAt;
-                display.indent = options.chat.indent;
-                display.scrollLock = options.chat.scrollLocked;
+                display.updateFont(client.getOption('chat.font'), client.getOption('chat.fontSize'));
+                display.maxLines = client.getOption('chat.bufferSize');
+                display.enableSplit = client.getOption('chat.split');
+                display.splitLive = client.getOption('chat.splitLive');
+                display.splitHeight = client.getOption('chat.splitHeight');
+                display.roundedRanges = client.getOption('chat.roundedOverlays');
+                display.showSplitButton = client.getOption('chat.showSplitButton');
+                display.enableFlashing = client.getOption('chat.flashing');
+                display.showTimestamp = client.getOption('chat.showTimestamp');
+                display.timestampFormat = client.getOption('chat.timestampFormat');
+                display.enableMXP = client.getOption('enableMXP');
+                display.enableURLDetection = client.getOption('enableURLDetection');
+                display.showInvalidMXPTags = client.getOption('display.showInvalidMXPTags');
+                display.hideTrailingEmptyLine = client.getOption('display.hideTrailingEmptyLine');
+                display.enableColors = client.getOption('display.enableColors');
+                display.enableBackgroundColors = client.getOption('display.enableBackgroundColors');
+                display.tabWidth = client.getOption('chat.tabWidth');
+                display.displayControlCodes = client.getOption('chat.displayControlCodes');
+                display.emulateTerminal = client.getOption('chat.emulateTerminal');
+                display.emulateControlCodes = client.getOption('chat.emulateControlCodes');
+                display.wordWrap = client.getOption('chat.wordWrap');
+                display.wrapAt = client.getOption('chat.wrapAt');
+                display.indent = client.getOption('chat.indent');
+                display.scrollLock = client.getOption('chat.scrollLocked');
                 display.scrollDisplay();
-                display.MatchCase = options.chat.find.case;
-                display.MatchWord = options.chat.find.word;
-                display.Reverse = options.chat.find.reverse;
-                display.RegularExpression = options.chat.find.regex;
-                display.Highlight = options.chat.find.highlight;
-                display.finderLocation = options.chat.find.location;
-                if (options.chat.find.show)
+                display.MatchCase = client.getOption('chat.find.case');
+                display.MatchWord = client.getOption('chat.find.word');
+                display.Reverse = client.getOption('chat.find.reverse');
+                display.RegularExpression = client.getOption('chat.find.regex');
+                display.Highlight = client.getOption('chat.find.highlight');
+                display.finderLocation = client.getOption('chat.find.location');
+                if (client.getOption('chat.find.show'))
                     display.showFind();
             }
-            if (options.chat.wordWrap)
+            if (client.getOption('wordWrap'))
                 $('#btn-wrap').addClass('active');
             updateScrollLockButton();
             initLogger();
             if (_logger) {
                 _logger.postMessage({
                     action: 'options', args: {
-                        path: parseTemplate(options.logPath),
-                        offline: options.logOffline,
-                        gagged: options.logGagged,
-                        enabled: options.chat.log,
-                        unique: options.logUniqueOnConnect,
-                        prepend: options.logPrepend,
-                        what: options.logWhat,
-                        debug: options.enableDebug,
+                        path: parseTemplate(client.getOption('logPath')),
+                        offline: client.getOption('logOffline'),
+                        gagged: client.getOption('logGagged'),
+                        enabled: client.getOption('chat.log'),
+                        unique: client.getOption('logUniqueOnConnect'),
+                        prepend: client.getOption('logPrepend'),
+                        what: client.getOption('logWhat'),
+                        debug: client.getOption('enableDebug'),
                         postfix: '.chat',
-                        format: options.logTimeFormat,
-                        timestamp: options.logTimestamp,
-                        timestampFormat: options.logTimestampFormat
+                        format: client.getOption('logTimeFormat'),
+                        timestamp: client.getOption('logTimestamp'),
+                        timestampFormat: client.getOption('logTimestampFormat')
                     }
                 });
                 _logger.postMessage({ action: 'start', args: { lines: display.lines, fragment: display.EndOfLine } });
             }
-            _zoom = options.chat.zoom;
+            _zoom = client.getOption('chat.zoom');
             webFrame.setZoomFactor(_zoom);
         }
 
@@ -128,11 +128,10 @@
                         error(e.data.args);
                         break;
                     case 'debug':
-                        if (options.enableDebug)
+                        if (client.getOption('enableDebug'))
                             console.debug(e.data.args);
                         break;
                     case 'toggled':
-                        options.chat.log = e.data.args;
                         window.opener.client.options.chat.log = e.data.args;
                         window.opener.doUpdate(32);
                         break;
@@ -184,7 +183,7 @@
             });
 
             display.on('selection-done', () => {
-                if (options.AutoCopySelectedToClipboard && display.hasSelection) {
+                if (client.getOption('AutoCopySelectedToClipboard') && display.hasSelection) {
                     doCopy();
                     display.clearSelection();
                 }
@@ -286,15 +285,15 @@
             }
             else
                 display.model.addParserLine(data);
-            if (!options)
+            if (!client)
                 loadOptions();
-            if (_logger && options.chat.log)
+            if (_logger && client.getOption('chat.log'))
                 _logger.postMessage({ action: 'add-line', args: data });
         }
 
         var events = {
             'set-title': (title, lag) => {
-                if (!options)
+                if (!client)
                     loadOptions();
                 if (_logger)
                     _logger.postMessage({ action: 'name', args: title || '' });
@@ -310,7 +309,7 @@
                 window.loadTheme();
             },
             'connecting': () => {
-                if (!options)
+                if (!client)
                     loadOptions();
                 if (_logger)
                     _logger.postMessage({ action: 'connected', args: window.opener.client.connected });
@@ -335,19 +334,19 @@
         }
 
         function toggleWrap() {
-            window.opener.client.options.chat.wordWrap = !window.opener.client.options.chat.wordWrap;
-            if (window.opener.client.options.chat.wordWrap)
+            window.opener.client.options.chat.wordWrap = !window.opener.client.getOption('chat.wordWrap');
+            if (window.opener.client.getOption('chat.wordWrap'))
                 $('#btn-wrap').addClass('active');
             else
                 $('#btn-wrap').removeClass('active');
-            display.wordWrap = options.chat.wordWrap;
+            display.wordWrap = client.getOption('chat.wordWrap');
             window.opener.doUpdate(32);
             $('#btn-wrap').blur();
         }
 
         function toggleScrollLock() {
-            window.opener.client.options.chat.scrollLocked = !window.opener.client.options.chat.scrollLocked;
-            display.scrollLock = window.opener.client.options.chat.scrollLocked;
+            window.opener.client.options.chat.scrollLocked = !window.opener.client.getOption('chat.scrollLocked');
+            display.scrollLock = window.opener.client.getOption('chat.scrollLocked');
             if (display.split)
                 display.scrollDisplay(true);
             updateScrollLockButton();
@@ -355,7 +354,7 @@
 
         function updateScrollLockButton() {
             const lock = document.getElementById('btn-lock');
-            if (window.opener.client.options.chat.scrollLocked) {
+            if (window.opener.client.getOption('chat.scrollLocked')) {
                 lock.title = 'Unlock display';
                 lock.firstElementChild.classList.remove('fa-lock');
                 lock.firstElementChild.classList.add('fa-unlock');
@@ -389,7 +388,7 @@
         }
 
         window.onbeforeunload = e => {
-            if (window.opener.client.options.chat.persistent || window.opener.client.options.chat.captureTells || window.opener.client.options.chat.captureTalk || window.opener.client.options.chat.captureLines) {
+            if (window.opener.client.getOption('chat.persistent') || window.opener.client.getOption('chat.captureTells') || window.opener.client.getOption('chat.captureTalk') || window.opener.client.getOption('chat.captureLines')) {
                 window.hide();
                 e.returnValue = false;
                 return 'no';
@@ -404,7 +403,7 @@
         };
 
         function skipSaveWindow() {
-            if (window.opener.client.options.chat.persistent || window.opener.client.options.chat.captureTells || window.opener.client.options.chat.captureTalk || window.opener.client.options.chat.captureLines)
+            if (window.opener.client.getOption('chat.persistent') || window.opener.client.getOption('chat.captureTells') || window.opener.client.getOption('chat.captureTalk') || window.opener.client.getOption('chat.captureLines'))
                 return false;
             //if not visible do not save this window as it was probably preserved due to a setting change
             return !window.isVisible();

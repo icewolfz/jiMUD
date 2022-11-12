@@ -570,7 +570,7 @@
                     client.error(`${message.substr(16)}`);
                 else
                     client.error(`${message}`);
-                if (client.options.enableDebug) {
+                if (client.getOption('enableDebug')) {
                     client.error('Url: ' + filename);
                     client.error('Line: ' + lineno);
                     client.error('Column: ' + colno);
@@ -604,7 +604,7 @@
             }) === 0)
                 shell.openExternal(encodeURI(url));
             setTimeout(() => {
-                if (client.options.CommandonClick)
+                if (client.getOption('CommandonClick'))
                     client.commandInput.focus();
             }, 0);
         }
@@ -623,7 +623,7 @@
             }) === 0)
                 shell.openExternal(encodeURI(url.replace('&text;', el.textContent)));
             setTimeout(() => {
-                if (client.options.CommandonClick)
+                if (client.getOption('CommandonClick'))
                     client.commandInput.focus();
             }, 0);
         }
@@ -670,7 +670,7 @@
             else
                 client.send(url.replace('&text;', el.textContent) + extra + '\n', true);
             setTimeout(() => {
-                if (client.options.CommandonClick)
+                if (client.getOption('CommandonClick'))
                     client.commandInput.focus();
             }, 0);
         }
@@ -683,7 +683,7 @@
             else
                 client.send(cmd, true);
             setTimeout(() => {
-                if (client.options.CommandonClick)
+                if (client.getOption('CommandonClick'))
                     client.commandInput.focus();
             }, 0);
         }
@@ -696,16 +696,16 @@
         function selectAll() {
             client.display.selectAll();
             setTimeout(() => {
-                if (client.options.CommandonClick)
+                if (client.getOption('CommandonClick'))
                     client.commandInput.focus();
             }, 0);
         }
         //#region Interface functions
         function toggleWrap() {
-            client.options.display.wordWrap = !client.options.display.wordWrap;
-            client.display.wordWrap = client.options.display.wordWrap;
+            client.options.display.wordWrap = !client.getOption('display.wordWrap');
+            client.display.wordWrap = client.getOption('display.wordWrap');
             doUpdate(32);
-            ipcRenderer.send('update-menuitem', { menu: ['view', 'word wrap'], options: { checked: client.options.display.wordWrap } });
+            ipcRenderer.send('update-menuitem', { menu: ['view', 'word wrap'], options: { checked: client.getOption('display.wordWrap') } });
         }
 
         function toggleView(view) {
@@ -723,54 +723,54 @@
                 case 'button.codeEditor':
                 case 'button.immortal':
                     view = view.split('.');
-                    client.options.buttons[view[1]] = !client.options.buttons[view[1]];
+                    client.options.buttons[view[1]] = !client.getOption('buttons')[view[1]];
                     doUpdate(33);
-                    ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', view[1] + 'button'], options: { checked: client.options.buttons[view[1]] } });
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', view[1] + 'button'], options: { checked: client.getOption('buttons')[view[1]] } });
                     break;
                 case 'buttons':
-                    client.options.showButtonBar = !client.options.showButtonBar;
+                    client.options.showButtonBar = !client.getOption('showButtonBar');
                     doUpdate(33);
-                    ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'buttonsvisible'], options: { checked: client.options.showButtonBar } });
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'buttonsvisible'], options: { checked: client.getOption('showButtonBar') } });
                     break;
                 case 'status':
-                    client.options.showStatus = !client.options.showStatus;
+                    client.options.showStatus = !client.getOption('showStatus');
                     doUpdate(33);
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'statusvisible'], options: { checked: client.options.showStatus } });
                     break;
                 case 'lagmeter':
-                    client.options.lagMeter = !client.options.lagMeter;
+                    client.options.lagMeter = !client.getOption('lagMeter');
                     doUpdate(33);
-                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'lagmeter'], options: { checked: client.options.lagMeter } });
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'lagmeter'], options: { checked: client.getOption('lagMeter') } });
                     break;
                 case 'weather':
-                    client.options.showStatusWeather = !client.options.showStatusWeather;
+                    client.options.showStatusWeather = !client.getOption('showStatusWeather');
                     doUpdate(33);
-                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'weather'], options: { checked: client.options.showStatusWeather } });
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'weather'], options: { checked: client.getOption('showStatusWeather') } });
                     break;
                 case 'limbs':
-                    client.options.showStatusLimbs = !client.options.showStatusLimbs;
+                    client.options.showStatusLimbs = !client.getOption('showStatusLimbs');
                     doUpdate(33);
-                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbs'], options: { checked: client.options.showStatusLimbs } });
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'limbsmenu', 'limbs'], options: { checked: client.getOption('showStatusLimbs') } });
                     break;
                 case 'health':
-                    client.options.showStatusHealth = !client.options.showStatusHealth;
+                    client.options.showStatusHealth = !client.getOption('showStatusHealth');
                     doUpdate(33);
-                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'health'], options: { checked: client.options.showStatusHealth } });
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'health'], options: { checked: client.getOption('showStatusHealth') } });
                     break;
                 case 'experience':
-                    client.options.showStatusExperience = !client.options.showStatusExperience;
+                    client.options.showStatusExperience = !client.getOption('showStatusExperience');
                     doUpdate(33);
-                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'experience'], options: { checked: client.options.showStatusExperience } });
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'experience'], options: { checked: client.getOption('showStatusExperience') } });
                     break;
                 case 'partyhealth':
-                    client.options.showStatusPartyHealth = !client.options.showStatusPartyHealth;
+                    client.options.showStatusPartyHealth = !client.getOption('showStatusPartyHealth');
                     doUpdate(33);
-                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'partyhealth'], options: { checked: client.options.showStatusPartyHealth } });
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'partyhealth'], options: { checked: client.getOption('showStatusPartyHealth') } });
                     break;
                 case 'combathealth':
-                    client.options.showStatusCombatHealth = !client.options.showStatusCombatHealth;
+                    client.options.showStatusCombatHealth = !client.getOption('showStatusCombatHealth');
                     doUpdate(33);
-                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'combathealth'], options: { checked: client.options.showStatusCombatHealth } });
+                    ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'combathealth'], options: { checked: client.getOption('showStatusCombatHealth') } });
                     break;
                 case 'limbhealth':
                     _status.ac = false;
@@ -787,7 +787,7 @@
             display.style.left = '';
             document.getElementById('command').style.left = '';
             document.getElementById('buttonbar').style.display = '';
-            if (!client.options.showButtonBar) {
+            if (!client.getOption('showButtonBar')) {
                 const buttonBar = document.getElementById('buttonbar');
                 var w = parseInt(buttonBar.style.left, 10);
                 if (isNaN(w)) w = 0;
@@ -797,7 +797,7 @@
                 document.getElementById('command').style.left = offset(document.getElementById('command')).left - w;
             }
             const lock = document.getElementById('lock');
-            if (client.options.scrollLocked) {
+            if (client.getOption('scrollLocked')) {
                 lock.title = 'Unlock display';
                 lock.firstElementChild.classList.remove('fa-lock');
                 lock.firstElementChild.classList.add('fa-unlock');
@@ -809,7 +809,7 @@
                 lock.firstElementChild.classList.add('fa-lock');
                 lock.firstElementChild.classList.remove('fa-unlock');
             }
-            if (!client.options.buttons.connect) {
+            if (!client.getOption('buttons.connect')) {
                 document.getElementById('connect').style.display = 'none';
                 document.getElementById('disconnect').style.display = 'none';
             }
@@ -821,16 +821,16 @@
                 document.getElementById('connect').style.display = '';
                 document.getElementById('disconnect').style.display = 'none';
             }
-            document.getElementById('characters').style.display = client.options.buttons.characters ? '' : 'none';
-            document.getElementById('preferences').style.display = client.options.buttons.preferences ? '' : 'none';
-            document.getElementById('log').style.display = client.options.buttons.log ? '' : 'none';
-            document.getElementById('clear').style.display = client.options.buttons.clear ? '' : 'none';
-            document.getElementById('lock').style.display = client.options.buttons.lock ? '' : 'none';
-            document.getElementById('map').style.display = client.options.buttons.map ? '' : 'none';
-            //document.getElementById('mail').style.display = client.options.buttons.mail ? '' : 'none';
-            //document.getElementById('compose').style.display = client.options.buttons.compose ? '' : 'none';
-            document.getElementById('codeEditor').style.display = client.options.buttons.codeEditor ? '' : 'none';
-            document.getElementById('immortal').style.display = client.options.buttons.immortal && document.getElementById('immortal').dataset.show === 'true' ? '' : 'none';
+            document.getElementById('characters').style.display = client.getOption('buttons.characters') ? '' : 'none';
+            document.getElementById('preferences').style.display = client.getOption('buttons.preferences') ? '' : 'none';
+            document.getElementById('log').style.display = client.getOption('buttons.log') ? '' : 'none';
+            document.getElementById('clear').style.display = client.getOption('buttons.clear') ? '' : 'none';
+            document.getElementById('lock').style.display = client.getOption('buttons.lock') ? '' : 'none';
+            document.getElementById('map').style.display = client.getOption('buttons.map') ? '' : 'none';
+            //document.getElementById('mail').style.display = client.getOption('buttons.mail') ? '' : 'none';
+            //document.getElementById('compose').style.display = client.getOption('buttons.compose') ? '' : 'none';
+            document.getElementById('codeEditor').style.display = client.getOption('buttons.codeEditor') ? '' : 'none';
+            document.getElementById('immortal').style.display = client.getOption('buttons.immortal') && document.getElementById('immortal').dataset.show === 'true' ? '' : 'none';
             if (client.enableParsing)
                 document.getElementById('btnParsing').classList.add('on');
             else
@@ -870,7 +870,7 @@
                     menu.click = (item) => {
                         executeContext(item.item);
                         setTimeout(() => {
-                            if (client.options.CommandonClick)
+                            if (client.getOption('CommandonClick'))
                                 client.commandInput.focus();
                         }, 0);
                     };
@@ -906,7 +906,7 @@
                         menu.click = (item) => {
                             executeContext(item.item);
                             setTimeout(() => {
-                                if (client.options.CommandonClick)
+                                if (client.getOption('CommandonClick'))
                                     client.commandInput.focus();
                             }, 0);
                         };
@@ -1078,7 +1078,7 @@
             });
 
             client.display.on('selection-done', () => {
-                if (client.options.AutoCopySelectedToClipboard && client.display.hasSelection) {
+                if (client.getOption('AutoCopySelectedToClipboard') && client.display.hasSelection) {
                     window.writeClipboard(client.display.selection, client.display.selectionAsHTML);
                     client.display.clearSelection();
                 }
@@ -1144,7 +1144,7 @@
                                                     message: 'Could not save image'
                                                 });
                                             setTimeout(() => {
-                                                if (client.options.CommandonClick)
+                                                if (client.getOption('CommandonClick'))
                                                     client.commandInput.focus();
                                             }, 0);
                                         });
@@ -1166,7 +1166,7 @@
                                     context.drawImage(base_image, 0, 0);
                                     clipboard.writeImage(nativeImage.createFromDataURL(canvas.toDataURL()));
                                     setTimeout(() => {
-                                        if (client.options.CommandonClick)
+                                        if (client.getOption('CommandonClick'))
                                             client.commandInput.focus();
                                     }, 0);
                                 };
@@ -1176,7 +1176,7 @@
                             label: 'Copy image link', click: () => {
                                 window.writeClipboard(e.srcElement.src);
                                 setTimeout(() => {
-                                    if (client.options.CommandonClick)
+                                    if (client.getOption('CommandonClick'))
                                         client.commandInput.focus();
                                 }, 0);
                             }
@@ -1188,7 +1188,7 @@
                         c.append(new MenuItem({
                             label: 'Copy url', click: () => {
                                 window.writeClipboard(encodeURI(parent.title)); setTimeout(() => {
-                                    if (client.options.CommandonClick)
+                                    if (client.getOption('CommandonClick'))
                                         client.commandInput.focus();
                                 }, 0);
                             }
@@ -1197,7 +1197,7 @@
                             c.append(new MenuItem({
                                 label: 'Copy url text', click: () => {
                                     window.writeClipboard(parent.textContent); setTimeout(() => {
-                                        if (client.options.CommandonClick)
+                                        if (client.getOption('CommandonClick'))
                                             client.commandInput.focus();
                                     }, 0);
                                 }
@@ -1210,7 +1210,7 @@
                         c.append(new MenuItem({
                             label: 'Copy url', click: () => {
                                 window.writeClipboard(encodeURI(parent.dataset.href)); setTimeout(() => {
-                                    if (client.options.CommandonClick)
+                                    if (client.getOption('CommandonClick'))
                                         client.commandInput.focus();
                                 }, 0);
                             }
@@ -1219,7 +1219,7 @@
                             c.append(new MenuItem({
                                 label: 'Copy url text', click: () => {
                                     window.writeClipboard(parent.textContent); setTimeout(() => {
-                                        if (client.options.CommandonClick)
+                                        if (client.getOption('CommandonClick'))
                                             client.commandInput.focus();
                                     }, 0);
                                 }
@@ -1232,7 +1232,7 @@
                         c.append(new MenuItem({
                             label: 'Copy mxp url text', click: () => {
                                 window.writeClipboard(parent.textContent); setTimeout(() => {
-                                    if (client.options.CommandonClick)
+                                    if (client.getOption('CommandonClick'))
                                         client.commandInput.focus();
                                 }, 0);
                             }
@@ -1247,7 +1247,7 @@
                             label: 'Copy as HTML', accelerator: 'CmdOrCtrl+Alt+C', click: () => {
                                 copyAsHTML();
                                 setTimeout(() => {
-                                    if (client.options.CommandonClick)
+                                    if (client.getOption('CommandonClick'))
                                         client.commandInput.focus();
                                 }, 0);
                             }
@@ -1263,12 +1263,12 @@
                         label: 'Clear', click: () => {
                             client.clear();
                             setTimeout(() => {
-                                if (client.options.CommandonClick)
+                                if (client.getOption('CommandonClick'))
                                     client.commandInput.focus();
                             }, 0);
                         }
                     }));
-                    if (client.options.enableDebug || window.getGlobal('debug')) {
+                    if (client.getOption('enableDebug') || window.getGlobal('debug')) {
                         c.append(new MenuItem({ type: 'separator' }));
                         c.append(new MenuItem({
                             label: 'Inspect', click: () => {
@@ -1329,7 +1329,7 @@
             client.on('add-line', (data) => {
                 var res, c, cl;
                 //no more then 3 tries
-                if (autoLoginCounter < 3 && client.options.autoLogin) {
+                if (autoLoginCounter < 3 && client.getOption('autoLogin')) {
                     if (!_windowState.data.character && _windowState.data.characterId > 0)
                         _windowState.data.character = ipcRenderer.sendSync('get-character', _windowState.data.characterId, 'Name');
                     if (_windowState.data.character && _windowState.data.character.length > 0) {
@@ -1351,12 +1351,12 @@
                         }
                     }
                 }
-                if (client.options.autoTakeoverLogin && data.line === 'Do you want to take over this login? (y/n)' && data.fragment)
+                if (client.getOption('autoTakeoverLogin') && data.line === 'Do you want to take over this login? (y/n)' && data.fragment)
                     client.send('y\n');
                 /*
                 if (_captureComm) {
                   updateChat(data);
-                  data.gagged = client.options.chat.gag;
+                  data.gagged = client.getOption('chat.gag');
                   return;
                 }
                 */
@@ -1420,7 +1420,7 @@
 
                 if (_noCapture || _noCaptureStore > 0) return;
 
-                if (client.options.chat.CaptureOnlyOpen) {
+                if (client.getOption('chat.CaptureOnlyOpen')) {
                     if (!_windows['chat.html'] || !_windows['chat.html'].isVisible() || _windows['chat.html'].isMinimized())
                         return;
                 }
@@ -1428,7 +1428,7 @@
                 //capture indented text
                 if (capture > 0 && data.line.startsWith('    ')) {
                     updateChat(data);
-                    data.gagged = client.options.chat.gag;
+                    data.gagged = client.getOption('chat.gag');
                     return;
                 }
                 //search capture review blocks
@@ -1439,13 +1439,13 @@
                         continue;
                     captureReview = 1;
                     updateChat(data);
-                    data.gagged = client.options.chat.gag;
+                    data.gagged = client.getOption('chat.gag');
                     return;
                 }
                 //if in a review capture until end review
                 if (captureReview > 0) {
                     updateChat(data);
-                    data.gagged = client.options.chat.gag;
+                    data.gagged = client.getOption('chat.gag');
                     if (data.line == '-=-=- End Review -=-=-')
                         captureReview = -1;
                     /*
@@ -1458,7 +1458,7 @@
                 //review requires 1 extra capture to get the current date/time
                 if (captureReview === -1) {
                     updateChat(data);
-                    data.gagged = client.options.chat.gag;
+                    data.gagged = client.getOption('chat.gag');
                     captureReview = 0;
                     return;
                 }
@@ -1473,7 +1473,7 @@
                         capture--;
                     capture++;
                     updateChat(data);
-                    data.gagged = client.options.chat.gag;
+                    data.gagged = client.getOption('chat.gag');
                     return;
                 }
                 //no matching capture so if in capture mode reduce
@@ -1483,9 +1483,9 @@
 
             /*
             client.on('MXP-tag-reply', (e) => {
-                if (client.options.autoLogin && e.tag === 'USER' && _windowState.data.character && _windowState.data.character.length > 0)
+                if (client.getOption('autoLogin') && e.tag === 'USER' && _windowState.data.character && _windowState.data.character.length > 0)
                     client.send(_windowState.data.character + '\r\n');
-                else if (client.options.autoLogin && e.tag === 'PASSWORD') {
+                else if (client.getOption('autoLogin') && e.tag === 'PASSWORD') {
                     var pass = window.getGlobal('characterPass');
                     if (pass && pass.length > 0) {
                     pass = pass.split(':');
@@ -1505,7 +1505,7 @@
             });
 
             client.on('hide', () => {
-                if (client.options.hideOnMinimize)
+                if (client.getOption('hideOnMinimize'))
                     window.hide();
                 else
                     window.minimize();
@@ -1545,9 +1545,9 @@
 
             client.on('options-loaded', () => {
                 loadBackupOptions();
-                _status.splitterDistance = client.options.statusWidth;
+                _status.splitterDistance = client.getOption('statusWidth');
                 doUpdate(3);
-                client.port = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.options.dev ? 1035 : 1030);
+                client.port = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.getOption('dev') ? 1035 : 1030);
                 updateTitle();
                 reloadIcon();
                 createWatcher();
@@ -1575,7 +1575,7 @@
 
             client.on('connecting', () => {
                 autoLoginCounter = 0;
-                if (client.options.buttons.connect) {
+                if (client.getOption('buttons.connect')) {
                     document.getElementById('connect').style.display = 'none';
                     document.getElementById('disconnect').style.display = '';
                 }
@@ -1604,7 +1604,7 @@
                         client.disconnectTime = Date.now();
                     ipcRenderer.send('update-character-time', { ID: _windowState.data.characterId, LastDisconnected: client.disconnectTime, TotalMilliseconds: client.disconnectTime - (client.connectTime || Date.now()) });
                 }
-                if (client.options.buttons.connect) {
+                if (client.getOption('buttons.connect')) {
                     document.getElementById('connect').style.display = '';
                     document.getElementById('disconnect').style.display = 'none';
                 }
@@ -1618,7 +1618,7 @@
                 _logger.postMessage({ action: 'connected', args: client.connected });
                 _logger.postMessage({ action: 'stop' });
                 if (_skipDisconnect) return;
-                switch (client.options.onDisconnect) {
+                switch (client.getOption('onDisconnect')) {
                     case 1: //reconnect
                         autoConnect();
                         break;
@@ -1632,8 +1632,8 @@
                             _disconnectTimer = 10;
                         else if (_disconnectCounter === 10)
                             _disconnectTimer = 30;
-                        else if (client.options.maxReconnectDelay > 0 && _disconnectCounter >= client.options.maxReconnectDelay)
-                            _disconnectTimer = client.options.maxReconnectDelay;
+                        else if (client.getOption('maxReconnectDelay') > 0 && _disconnectCounter >= client.getOption('maxReconnectDelay'))
+                            _disconnectTimer = client.getOption('maxReconnectDelay');
                         else
                             _disconnectTimer = _disconnectCounter * 2;
                         _disconnectCounter = _disconnectTimer;
@@ -1691,7 +1691,7 @@
             client.on('reconnect', () => {
                 if (client.errored || client.connected)
                     return;
-                switch (client.options.onDisconnect) {
+                switch (client.getOption('onDisconnect')) {
                     case 1: //reconnect
                         autoConnect();
                         break;
@@ -1737,9 +1737,9 @@
                 }
             });
 
-            client.on('add-line-done', (data) => {
+            client.on('add-line-done', async (data) => {
                 //lets skip logging if not enabled tp save some cpu on serlizing data
-                if (client.options.logEnabled)
+                if (client.getOption('logEnabled'))
                     _logger.postMessage({ action: 'add-line', args: data });
             });
 
@@ -1759,11 +1759,11 @@
                     /*
                     case 'Comm.Channel.Start':
                       if (obj.match(/^tell .*$/) || obj === 'shout' || obj === 'tell' || obj === 'emoteto' || obj.match(/^emoteto .*$/))
-                        _captureComm = client.options.chat.captureTells;
+                        _captureComm = client.getOption('chat.captureTells');
                       else if (obj === 'say' || obj.match(/^whisper .*$/) || obj === 'speak' || obj === 'whisper')
-                        _captureComm = client.options.chat.captureTalk;
-                      else if (client.options.chat.captureLines)
-                        _captureComm = client.options.chat.captureAllLines || client.options.chat.lines.indexOf(obj) !== -1;
+                        _captureComm = client.getOption('chat.captureTalk');
+                      else if (client.getOption('chat.captureLines'))
+                        _captureComm = client.getOption('chat.captureAllLines') || client.getOption('chat.lines').indexOf(obj) !== -1;
                       break;
                     case 'Comm.Channel.End':
                       setTimeout(() => { _captureComm = false; }, 0);
@@ -1775,7 +1775,7 @@
                             { menu: ['view', 'buttons', 'immortalbutton'], options: { visible: true } }
                         ]);
                         document.getElementById('immortal').dataset.show = 'true';
-                        if (client.options.buttons.immortal)
+                        if (client.getOption('buttons.immortal'))
                             document.getElementById('immortal').style.display = 'block';
                         else
                             document.getElementById('immortal').style.display = 'none';
@@ -2101,7 +2101,7 @@
                 c.append(new MenuItem({
                     label: 'Visible',
                     type: 'checkbox',
-                    checked: client.options.showButtonBar,
+                    checked: client.getOption('showButtonBar'),
                     click: () => {
                         toggleView('buttons');
                     }
@@ -2110,7 +2110,7 @@
                 c.append(new MenuItem({
                     label: 'Connect',
                     type: 'checkbox',
-                    checked: client.options.buttons.connect,
+                    checked: client.getOption('buttons.connect'),
                     click: () => {
                         toggleView('button.connect');
                     }
@@ -2118,7 +2118,7 @@
                 c.append(new MenuItem({
                     label: 'Characters',
                     type: 'checkbox',
-                    checked: client.options.buttons.characters,
+                    checked: client.getOption('buttons.characters'),
                     click: () => {
                         toggleView('button.characters');
                     }
@@ -2126,7 +2126,7 @@
                 c.append(new MenuItem({
                     label: 'Code Editor',
                     type: 'checkbox',
-                    checked: client.options.buttons.codeEditor,
+                    checked: client.getOption('buttons.codeEditor'),
                     click: () => {
                         toggleView('button.codeEditor');
                     }
@@ -2135,7 +2135,7 @@
                     c.append(new MenuItem({
                         label: 'Immortal tools',
                         type: 'checkbox',
-                        checked: client.options.buttons.immortal,
+                        checked: client.getOption('buttons.immortal'),
                         click: () => {
                             toggleView('button.immortal');
                         }
@@ -2143,7 +2143,7 @@
                 c.append(new MenuItem({
                     label: 'Preferences',
                     type: 'checkbox',
-                    checked: client.options.buttons.preferences,
+                    checked: client.getOption('buttons.preferences'),
                     click: () => {
                         toggleView('button.preferences');
                     }
@@ -2151,7 +2151,7 @@
                 c.append(new MenuItem({
                     label: 'Log',
                     type: 'checkbox',
-                    checked: client.options.buttons.log,
+                    checked: client.getOption('buttons.log'),
                     click: () => {
                         toggleView('button.log');
                     }
@@ -2159,7 +2159,7 @@
                 c.append(new MenuItem({
                     label: 'Clear',
                     type: 'checkbox',
-                    checked: client.options.buttons.clear,
+                    checked: client.getOption('buttons.clear'),
                     click: () => {
                         toggleView('button.clear');
                     }
@@ -2167,7 +2167,7 @@
                 c.append(new MenuItem({
                     label: 'Lock',
                     type: 'checkbox',
-                    checked: client.options.buttons.lock,
+                    checked: client.getOption('buttons.lock'),
                     click: () => {
                         toggleView('button.lock');
                     }
@@ -2175,7 +2175,7 @@
                 c.append(new MenuItem({
                     label: 'Map',
                     type: 'checkbox',
-                    checked: client.options.buttons.map,
+                    checked: client.getOption('buttons.map'),
                     click: () => {
                         toggleView('button.map');
                     }
@@ -2184,7 +2184,7 @@
                 c.append(new MenuItem({
                   label: 'Mail',
                   type: 'checkbox',
-                  checked: client.options.buttons.mail,
+                  checked: client.getOption('buttons.mail'),
                   click: () => {
                     toggleView("button.mail");
                   }
@@ -2192,7 +2192,7 @@
                 c.append(new MenuItem({
                   label: 'Compose mail',
                   type: 'checkbox',
-                  checked: client.options.buttons.compose,
+                  checked: client.getOption('buttons.compose'),
                   click: () => {
                     toggleView("button.compose");
                   }
@@ -2201,7 +2201,7 @@
                 c.append(new MenuItem({
                     label: 'User buttons',
                     type: 'checkbox',
-                    checked: client.options.buttons.user,
+                    checked: client.getOption('buttons.user'),
                     click: () => {
                         toggleView('button.user');
                     }
@@ -2227,7 +2227,7 @@
                         }
                     }));
                 }
-                if (client.options.enableDebug || window.getGlobal('debug')) {
+                if (client.getOption('enableDebug') || window.getGlobal('debug')) {
                     c.append(new MenuItem({ type: 'separator' }));
                     c.append(new MenuItem({
                         label: 'Inspect', click: () => {
@@ -2250,7 +2250,7 @@
                         e.stopPropagation();
                     }
                     setTimeout(() => {
-                        if (client.options.CommandonClick)
+                        if (client.getOption('CommandonClick'))
                             client.commandInput.focus();
                     }, 0);
                 });
@@ -2285,17 +2285,17 @@
                     document.getElementById('health').classList.add('on');
                     document.getElementById('armor').classList.remove('on');
                 }
-                if (client.options.showArmor != _status.ac) {
+                if (client.getOption('showArmor') != _status.ac) {
                     client.options.showArmor = _status.ac;
                     doUpdate(32);
                     ipcRenderer.send('update-menuitems', [
-                        { menu: ['view', 'status', 'limbsmenu', 'limbhealth'], options: { checked: !client.options.showArmor } },
-                        { menu: ['view', 'status', 'limbsmenu', 'limbarmor'], options: { checked: client.options.showArmor } }
+                        { menu: ['view', 'status', 'limbsmenu', 'limbhealth'], options: { checked: !client.getOption('showArmor') } },
+                        { menu: ['view', 'status', 'limbsmenu', 'limbarmor'], options: { checked: client.getOption('showArmor') } }
                     ]);
                 }
             });
             _status.on('split-moved', value => {
-                if (value === client.options.statusWidth) return;
+                if (value === client.getOption('statusWidth')) return;
                 client.options.statusWidth = value;
                 doUpdate(32 | 256);
             });
@@ -2309,7 +2309,7 @@
 
             _status.on('set-title', (title, lag) => {
                 //TODO Add setting to control empty/defaults
-                if (client.options.autoCreateCharacter)
+                if (client.getOption('autoCreateCharacter'))
                     ipcRenderer.send('change-char', title, true);
                 _logger.postMessage({ action: 'name', args: title });
                 _windowState.data.character = title;
@@ -2328,7 +2328,7 @@
                 c.append(new MenuItem({
                     label: '&Visible',
                     type: 'checkbox',
-                    checked: client.options.showStatus,
+                    checked: client.getOption('showStatus'),
                     click: () => {
                         toggleView('status');
                     }
@@ -2343,7 +2343,7 @@
                 c.append(new MenuItem({
                     label: '&Weather',
                     type: 'checkbox',
-                    checked: client.options.showStatusWeather,
+                    checked: client.getOption('showStatusWeather'),
                     click: () => {
                         toggleView('weather');
                     }
@@ -2355,7 +2355,7 @@
                         {
                             label: '&Visible',
                             type: 'checkbox',
-                            checked: client.options.showStatusLimbs,
+                            checked: client.getOption('showStatusLimbs'),
                             click: () => {
                                 toggleView('limbs');
                             }
@@ -2364,7 +2364,7 @@
                         {
                             label: '&Health',
                             type: 'checkbox',
-                            checked: !client.options.showArmor,
+                            checked: !client.getOption('showArmor'),
                             click: () => {
                                 toggleView('limbhealth');
                             }
@@ -2372,7 +2372,7 @@
                         {
                             label: '&Armor',
                             type: 'checkbox',
-                            checked: client.options.showArmor,
+                            checked: client.getOption('showArmor'),
                             click: () => {
                                 toggleView('limbarmor');
                             }
@@ -2382,7 +2382,7 @@
                 c.append(new MenuItem({
                     label: '&Health',
                     type: 'checkbox',
-                    checked: client.options.showStatusHealth,
+                    checked: client.getOption('showStatusHealth'),
                     click: () => {
                         toggleView('health');
                     }
@@ -2390,7 +2390,7 @@
                 c.append(new MenuItem({
                     label: '&Experience',
                     type: 'checkbox',
-                    checked: client.options.showStatusExperience,
+                    checked: client.getOption('showStatusExperience'),
                     click: () => {
                         toggleView('experience');
                     }
@@ -2398,7 +2398,7 @@
                 c.append(new MenuItem({
                     label: '&Party Health',
                     type: 'checkbox',
-                    checked: client.options.showStatusPartyHealth,
+                    checked: client.getOption('showStatusPartyHealth'),
                     click: () => {
                         toggleView('partyhealth');
                     }
@@ -2406,7 +2406,7 @@
                 c.append(new MenuItem({
                     label: '&Combat Health',
                     type: 'checkbox',
-                    checked: client.options.showStatusCombatHealth,
+                    checked: client.getOption('showStatusCombatHealth'),
                     click: () => {
                         toggleView('combathealth');
                     }
@@ -2414,12 +2414,12 @@
                 c.append(new MenuItem({
                     label: '&Lag meter',
                     type: 'checkbox',
-                    checked: client.options.lagMeter,
+                    checked: client.getOption('lagMeter'),
                     click: () => {
                         toggleView('lagmeter');
                     }
                 }));
-                if (client.options.enableDebug || window.getGlobal('debug')) {
+                if (client.getOption('enableDebug') || window.getGlobal('debug')) {
                     c.append(new MenuItem({ type: 'separator' }));
                     c.append(new MenuItem({
                         label: 'Inspect', click: () => {
@@ -2454,7 +2454,7 @@
                     case 'debug':
                         if (!client)
                             console.log(e.data.args);
-                        if (client.options.enableDebug)
+                        if (client.getOption('enableDebug'))
                             client.debug(e.data.args);
                         break;
                     case 'toggled':
@@ -2482,25 +2482,25 @@
             if (!_logger) return;
             _logger.postMessage({
                 action: 'options', args: {
-                    path: parseTemplate(client.options.logPath),
-                    offline: client.options.logOffline,
-                    gagged: client.options.logGagged,
-                    enabled: client.options.logEnabled,
-                    unique: client.options.logUniqueOnConnect,
-                    prepend: client.options.logPrepend,
-                    what: client.options.logWhat,
-                    debug: client.options.enableDebug,
-                    format: client.options.logTimeFormat,
-                    colors: client.options.colors,
-                    timestamp: client.options.logTimestamp,
-                    timestampFormat: client.options.logTimestampFormat
+                    path: parseTemplate(client.getOption('logPath')),
+                    offline: client.getOption('logOffline'),
+                    gagged: client.getOption('logGagged'),
+                    enabled: client.getOption('logEnabled'),
+                    unique: client.getOption('logUniqueOnConnect'),
+                    prepend: client.getOption('logPrepend'),
+                    what: client.getOption('logWhat'),
+                    debug: client.getOption('enableDebug'),
+                    format: client.getOption('logTimeFormat'),
+                    colors: client.getOption('colors'),
+                    timestamp: client.getOption('logTimestamp'),
+                    timestampFormat: client.getOption('logTimestampFormat')
                 }
             });
         }
 
         async function loadBackupOptions() {
-            _backup.loadSelection = client.options.backupLoad;
-            _backup.saveSelection = client.options.backupSave;
+            _backup.loadSelection = client.getOption('backupLoad');
+            _backup.saveSelection = client.getOption('backupSave');
         }
 
         async function init() {
@@ -2511,7 +2511,7 @@
                 var lst = '';
                 var l = client.commandHistory.length;
                 for (var i = 0; i < l; i++) {
-                    lst += `<li><a class="truncate" href="#" data-index="${i}" onclick="var cmd = client.commandHistory[parseInt(this.dataset.index, 10)];client.AddCommandToHistory(cmd,);client.sendCommand(cmd, null, client.options.allowCommentsFromCommand);" title="${client.commandHistory[i]}">${client.commandHistory[i]}</a></li>`;
+                    lst += `<li><a class="truncate" href="#" data-index="${i}" onclick="var cmd = client.commandHistory[parseInt(this.dataset.index, 10)];client.AddCommandToHistory(cmd,);client.sendCommand(cmd, null, client.getOption('allowCommentsFromCommand'));" title="${client.commandHistory[i]}">${client.commandHistory[i]}</a></li>`;
                 }
                 if (l === 0)
                     lst = '<li><a href="#">No history</a></li><li role="separator" class="divider"></li>';
@@ -2624,7 +2624,7 @@
 
             client.version = version;
             client.host = ('host' in _windowState.data) ? (_windowState.data.host || 'www.shadowmud.com') : 'www.shadowmud.com';
-            client.port = ('port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.options.dev ? 1035 : 1030);
+            client.port = ('port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.getOption('dev') ? 1035 : 1030);
             client.telnet.GMCPSupports.push('Room 1');
             client.telnet.GMCPSupports.push('IED 1');
             client.telnet.GMCPSupports.push('Client.Media 1');
@@ -2634,7 +2634,7 @@
             initBackup();
 
             //_status = new Status(client);
-            _status = new (require('./js/status.js').Status)(client, { ac: client.options.showArmor, splitterDistance: client.options.statusWidth });
+            _status = new (require('./js/status.js').Status)(client, { ac: client.getOption('showArmor'), splitterDistance: client.getOption('statusWidth') });
             initStatusEvents();
             let name = getCharacterName();
             if (name && name.length > 0) {
@@ -2647,7 +2647,7 @@
             loadLoggerOptions();
             updateTitle();
             updateIcon(client.port === 1035 ? 3 : 0);
-            if (client.options.find.show)
+            if (client.getOption('find.show'))
                 client.display.showFind();
             if (_windowState.windows.length) {
                 const _dir = 'file:///' + __dirname.replace(/\\/g, '/');
@@ -2659,7 +2659,7 @@
                     openWindow(file, _windowState.windows[w]);
                 }
             }
-            if (client.options.showCharacterManager)
+            if (client.getOption('showCharacterManager'))
                 openWindow('characters');
             initWindows();
             createWatcher();
@@ -2701,7 +2701,7 @@
                         break;
                     case 2:
                         /*jslint evil: true */
-                        var f = new Function('try { ' + item.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                        var f = new Function('try { ' + item.value + '\n} catch (e) { if(this.getOption(\'showScriptErrors\') this.error(e);}');
                         try {
                             ret = f.apply(client);
                         }
@@ -2725,14 +2725,14 @@
                 return true;
             if (typeof ret !== 'string')
                 ret = ret.toString();
-            if (ret.length === 0 && !client.options.returnNewlineOnEmptyValue)
+            if (ret.length === 0 && !client.getOption('returnNewlineOnEmptyValue'))
                 return true;
             if (item.send) {
                 if (!ret.endsWith('\n'))
                     ret += '\n';
                 if (item.chain && client.commandInput.value.endsWith(' ')) {
                     client.commandInput.value += ret;
-                    client.sendCommand(null, null, client.options.allowCommentsFromCommand);
+                    client.sendCommand(null, null, client.getOption('allowCommentsFromCommand'));
                 }
                 else
                     client.send(ret, true);
@@ -2770,7 +2770,7 @@
                         break;
                     case 2:
                         /*jslint evil: true */
-                        var f = new Function('try { ' + button.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                        var f = new Function('try { ' + button.value + '\n} catch (e) { if(this.getOption(\'showScriptErrors\') this.error(e);}');
                         client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
                         try {
                             ret = f.apply(client);
@@ -2793,16 +2793,16 @@
             }
             if (ret == null) {
                 setTimeout(() => {
-                    if (client.options.CommandonClick)
+                    if (client.getOption('CommandonClick'))
                         client.commandInput.focus();
                 }, 0);
                 return true;
             }
             if (typeof ret !== 'string')
                 ret = ret.toString();
-            if (ret.length === 0 && !client.options.returnNewlineOnEmptyValue) {
+            if (ret.length === 0 && !client.getOption('returnNewlineOnEmptyValue')) {
                 setTimeout(() => {
-                    if (client.options.CommandonClick)
+                    if (client.getOption('CommandonClick'))
                         client.commandInput.focus();
                 }, 0);
                 return true;
@@ -2812,7 +2812,7 @@
                     ret += '\n';
                 if (button.chain && client.commandInput.value.endsWith(' ')) {
                     client.commandInput.value += ret;
-                    client.sendCommand(null, null, client.options.allowCommentsFromCommand);
+                    client.sendCommand(null, null, client.getOption('allowCommentsFromCommand'));
                 }
                 else
                     client.send(ret, true);
@@ -2820,7 +2820,7 @@
             else if (button.append)
                 client.commandInput.value += ret;
             setTimeout(() => {
-                if (client.options.CommandonClick)
+                if (client.getOption('CommandonClick'))
                     client.commandInput.focus();
             }, 0);
             return true;
@@ -2829,7 +2829,7 @@
         async function buildButtons() {
             var buttons = document.getElementById('user-buttons');
             buttons.replaceChildren();
-            if (!client.options.buttons.user)
+            if (!client.getOption('buttons.user'))
                 return;
             var pButtons = client.buttons;
             //pButtons.sort(SortArrayByPriority);
@@ -2887,32 +2887,32 @@
             if (!client || !client.options) return;
             doUpdate(16);
             var menu = [
-                { menu: ['view', 'buttons', 'buttonsvisible'], options: { checked: client.options.showButtonBar } },
-                { menu: ['view', 'status', 'statusvisible'], options: { checked: client.options.showStatus } },
-                { menu: ['view', 'status', 'weather'], options: { checked: client.options.showStatusWeather } },
-                { menu: ['view', 'status', 'lagmeter'], options: { checked: client.options.lagMeter } },
-                { menu: ['view', 'status', 'limbsmenu', 'limbs'], options: { checked: client.options.showStatusLimbs } },
-                { menu: ['view', 'status', 'limbsmenu', 'limbhealth'], options: { checked: !client.options.showArmor } },
-                { menu: ['view', 'status', 'limbsmenu', 'limbarmor'], options: { checked: client.options.showArmor } },
-                { menu: ['view', 'status', 'health'], options: { checked: client.options.showStatusHealth } },
-                { menu: ['view', 'status', 'experience'], options: { checked: client.options.showStatusExperience } },
-                { menu: ['view', 'status', 'partyhealth'], options: { checked: client.options.showStatusPartyHealth } },
-                { menu: ['view', 'status', 'combathealth'], options: { checked: client.options.showStatusCombatHealth } },
-                { menu: ['view', 'status', 'lagmeter'], options: { checked: client.options.lagMeter } },
-                { menu: ['view', 'buttons'], options: { checked: client.options.showButtonBar } },
-                { menu: ['view', 'lock'], options: { checked: client.options.scrollLocked } },
-                { menu: ['view', 'buttons', 'connectbutton'], options: { checked: client.options.buttons.connect } },
-                { menu: ['view', 'buttons', 'preferencesbutton'], options: { checked: client.options.buttons.preferences } },
-                { menu: ['view', 'buttons', 'codeEditorbutton'], options: { checked: client.options.buttons.codeEditor } },
-                { menu: ['view', 'buttons', 'immortalbutton'], options: { checked: client.options.buttons.immortal } },
-                { menu: ['view', 'buttons', 'logbutton'], options: { checked: client.options.buttons.log } },
-                { menu: ['view', 'buttons', 'clearbutton'], options: { checked: client.options.buttons.clear } },
-                { menu: ['view', 'buttons', 'lockbutton'], options: { checked: client.options.buttons.lock } },
-                { menu: ['view', 'buttons', 'mapbutton'], options: { checked: client.options.buttons.map } },
-                { menu: ['view', 'buttons', 'mailbutton'], options: { checked: client.options.buttons.mail } },
-                { menu: ['view', 'buttons', 'composebutton'], options: { checked: client.options.buttons.compose } },
-                { menu: ['view', 'buttons', 'userbutton'], options: { checked: client.options.buttons.user } },
-                { menu: ['view', 'word wrap'], options: { checked: client.options.display.wordWrap } },
+                { menu: ['view', 'buttons', 'buttonsvisible'], options: { checked: client.getOption('showButtonBar') } },
+                { menu: ['view', 'status', 'statusvisible'], options: { checked: client.getOption('showStatus') } },
+                { menu: ['view', 'status', 'weather'], options: { checked: client.getOption('showStatusWeather') } },
+                { menu: ['view', 'status', 'lagmeter'], options: { checked: client.getOption('lagMeter') } },
+                { menu: ['view', 'status', 'limbsmenu', 'limbs'], options: { checked: client.getOption('showStatusLimbs') } },
+                { menu: ['view', 'status', 'limbsmenu', 'limbhealth'], options: { checked: !client.getOption('showArmor') } },
+                { menu: ['view', 'status', 'limbsmenu', 'limbarmor'], options: { checked: client.getOption('showArmor') } },
+                { menu: ['view', 'status', 'health'], options: { checked: client.getOption('showStatusHealth') } },
+                { menu: ['view', 'status', 'experience'], options: { checked: client.getOption('showStatusExperience') } },
+                { menu: ['view', 'status', 'partyhealth'], options: { checked: client.getOption('showStatusPartyHealth') } },
+                { menu: ['view', 'status', 'combathealth'], options: { checked: client.getOption('showStatusCombatHealth') } },
+                { menu: ['view', 'status', 'lagmeter'], options: { checked: client.getOption('lagMeter') } },
+                { menu: ['view', 'buttons'], options: { checked: client.getOption('showButtonBar') } },
+                { menu: ['view', 'lock'], options: { checked: client.getOption('scrollLocked') } },
+                { menu: ['view', 'buttons', 'connectbutton'], options: { checked: client.getOption('buttons.connect') } },
+                { menu: ['view', 'buttons', 'preferencesbutton'], options: { checked: client.getOption('buttons.preferences') } },
+                { menu: ['view', 'buttons', 'codeEditorbutton'], options: { checked: client.getOption('buttons.codeEditor') } },
+                { menu: ['view', 'buttons', 'immortalbutton'], options: { checked: client.getOption('buttons.immortal') } },
+                { menu: ['view', 'buttons', 'logbutton'], options: { checked: client.getOption('buttons.log') } },
+                { menu: ['view', 'buttons', 'clearbutton'], options: { checked: client.getOption('buttons.clear') } },
+                { menu: ['view', 'buttons', 'lockbutton'], options: { checked: client.getOption('buttons.lock') } },
+                { menu: ['view', 'buttons', 'mapbutton'], options: { checked: client.getOption('buttons.map') } },
+                { menu: ['view', 'buttons', 'mailbutton'], options: { checked: client.getOption('buttons.mail') } },
+                { menu: ['view', 'buttons', 'composebutton'], options: { checked: client.getOption('buttons.compose') } },
+                { menu: ['view', 'buttons', 'userbutton'], options: { checked: client.getOption('buttons.user') } },
+                { menu: ['view', 'word wrap'], options: { checked: client.getOption('display.wordWrap') } },
                 { menu: ['file', 'connect'], options: { enabled: !client.connected } },
                 { menu: ['file', 'disconnect'], options: { enabled: client.connected } },
                 { menu: ['file', 'enableParsing'], options: { checked: client.enableParsing } },
@@ -2945,7 +2945,7 @@
         async function buildCaptures() {
             _captures = [];
             _captureReviews = [];
-            if (client.options.chat.captureTells) {
+            if (client.getOption('chat.captureTells')) {
                 _captures.push(new RegExp('^([a-zA-Z\'\\s_-]*) tells you:(.*)$'),
                     new RegExp('^(\\([a-zA-Z\'\\s_-]*\\)) tells you:(.*)$'),
                     new RegExp('^You tell ([a-zA-Z\'\\s_-]*):(.*)$'),
@@ -2958,10 +2958,10 @@
                     new RegExp('^([a-zA-Z\'\\s_-]*) shouts in ([a-zA-Z\'\\s_-]*):(.*)$'),
                     new RegExp('^You shout in ([a-zA-Z\'\\s_-]*):(.*)$')
                 );
-                if (client.options.chat.captureReviews)
+                if (client.getOption('chat.captureReviews'))
                     _captureReviews.push(new RegExp('^-=-=- Tell Review -=-=-$'));
             }
-            if (client.options.chat.captureTalk) {
+            if (client.getOption('chat.captureTalk')) {
                 _captures.push(new RegExp('^([a-zA-Z\'\\s_-]*) says:(.*)$'),
                     new RegExp('^You say:(.*)$'),
                     new RegExp('^([a-zA-Z\'\\s_-]*) whispers to you:(.*)$'),
@@ -2971,21 +2971,23 @@
                     new RegExp('You say in (.*):(.*)'),
                     new RegExp('([a-zA-Z\'\\s_-]*) says something in (.*).'),
                     new RegExp('([a-zA-Z\'\\s_-]*) says in (.*):(.*)'));
-                if (client.options.chat.captureReviews)
+                if (client.getOption('chat.captureReviews'))
                     _captureReviews.push(new RegExp('^-=-=- Say Review -=-=-$'));
             }
-            if (client.options.chat.captureLines) {
-                if (client.options.chat.captureAllLines) {
+            if (client.getOption('chat.captureLines')) {
+                if (client.getOption('chat.captureAllLines')) {
                     _captures.push(new RegExp('^\\[(.*)\\](.*)$'));
-                    if (client.options.chat.captureReviews)
+                    if (client.getOption('chat.captureReviews'))
                         _captureReviews.push(new RegExp('^-=-=- ((?:(?!\\b(Say|Tell|End)\\b).)+) Review -=-=-$'));
                 }
-                else
-                    for (var l = 0, ll = client.options.chat.lines.length; l < ll; l++) {
-                        _captures.push(new RegExp('\\[' + client.options.chat.lines[l].trim() + '\\](.*)'));
-                        if (client.options.chat.captureReviews)
-                            _captureReviews.push(new RegExp('^-=-=- ' + client.options.chat.lines[l].trim() + ' Review -=-=-$'));
+                else {
+                    const lines = client.getOption('chat.lines');
+                    for (var l = 0, ll = lines.length; l < ll; l++) {
+                        _captures.push(new RegExp('\\[' + lines[l].trim() + '\\](.*)'));
+                        if (client.getOption('chat.captureReviews'))
+                            _captureReviews.push(new RegExp('^-=-=- ' + lines[l].trim() + ' Review -=-=-$'));
                     }
+                }
             }
         }
 
@@ -3009,12 +3011,12 @@
             client.settingsFile = _windowState.data.settings;
             _backup.mapFile = _windowState.data.map;
             client.host = (_windowState && 'host' in _windowState.data) ? (_windowState.data.host || character.Host || 'www.shadowmud.com') : (character.Host || 'www.shadowmud.com');
-            client.port = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.options.dev ? 1035 : 1030);
+            client.port = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.getOption('dev') ? 1035 : 1030);
             updateTitle();
             reloadIcon();
             if (_reload) {
                 closeWindows();
-                if (client.options.showCharacterManager)
+                if (client.getOption('showCharacterManager'))
                     openWindow('characters');
                 initWindows();
             }
@@ -3055,7 +3057,7 @@
             }
             _skipDisconnect = 0;
             client.host = (_windowState && 'host' in _windowState.data) ? (_windowState.data.host || 'www.shadowmud.com') : 'www.shadowmud.com';
-            var newPort = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.options.dev ? 1035 : 1030);
+            var newPort = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.getOption('dev') ? 1035 : 1030);
             if (newPort !== client.port) {
                 client.port = newPort;
                 updateTitle();
@@ -3064,7 +3066,7 @@
             }
             if (_reload) {
                 closeWindows();
-                if (client.options.showCharacterManager)
+                if (client.getOption('showCharacterManager'))
                     openWindow('characters');
                 initWindows();
                 if (!client.connected) {
@@ -3105,7 +3107,7 @@
             if (character.Port !== _windowState.data.port)
                 _windowState.data.port = character.Port;
             client.host = (_windowState && 'host' in _windowState.data) ? (_windowState.data.host || character.Host || 'www.shadowmud.com') : (character.Host || 'www.shadowmud.com');
-            var newPort = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.options.dev ? 1035 : 1030);
+            var newPort = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.getOption('dev') ? 1035 : 1030);
             if (newPort !== client.port) {
                 client.port = newPort;
                 updateTitle();
@@ -3114,7 +3116,7 @@
             }
             if (_reload) {
                 closeWindows();
-                if (client.options.showCharacterManager)
+                if (client.getOption('showCharacterManager'))
                     openWindow('characters');
                 initWindows();
             }
@@ -3158,7 +3160,7 @@
         });
 
         ipcRenderer.on('debug', (event, msg) => {
-            if (client.options.enableDebug)
+            if (client.getOption('enableDebug'))
                 client.debug(msg);
         });
 
@@ -3174,6 +3176,7 @@
             if (global) {
                 window.loadTheme();
                 client.emit('load-theme');
+                this.clearOptionCache();
             }
             if (settings !== _windowState.data.settings) return;
             client.loadOptions();
@@ -3219,7 +3222,7 @@
                         { type: 'separator' },
                         { role: 'selectAll' },
                     ]);
-                if (client.options.enableDebug || window.getGlobal('debug')) {
+                if (client.getOption('enableDebug') || window.getGlobal('debug')) {
                     inputMenu.append(new MenuItem({ type: 'separator' }));
                     inputMenu.append(new MenuItem({
                         label: 'Inspect', click: () => {
@@ -3278,13 +3281,13 @@
         function connectionSettings(options) {
             if ('defaultConnect' in options) {
                 delete _windowState.data.port;
-                client.port = client.options.dev ? 1035 : 1030;
+                client.port = client.getOption('dev') ? 1035 : 1030;
                 updateTitle();
                 reloadIcon();
             }
             else if ('port' in options) {
                 _windowState.data.port = options.port;
-                client.port = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.options.dev ? 1035 : 1030);
+                client.port = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.getOption('dev') ? 1035 : 1030);
                 updateTitle();
                 reloadIcon();
             }
@@ -3300,13 +3303,13 @@
             if (!options) return;
             if ('defaultConnect' in options) {
                 delete _windowState.data.port;
-                client.port = client.options.port ? 1035 : 1030;
+                client.port = client.getOption('port') ? 1035 : 1030;
                 updateTitle();
                 reloadIcon();
             }
             else if ('port' in options) {
                 _windowState.data.port = options.port;
-                client.port = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.options.dev ? 1035 : 1030);
+                client.port = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.getOption('dev') ? 1035 : 1030);
                 updateTitle();
                 reloadIcon();
             }
@@ -3369,17 +3372,17 @@
                 case 'mapper':
                     if (data && data.details)
                         _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent', 'defaultX', 'defaultY', 'alwaysOnTop', 'showInTaskBar', ...Object.keys(data.state || {})]);
-                    _windows['mapper.html'] = window.open('mapper.html', 'Mapper-' + getId(), `defaultY=center,defaultX=center,persistent=${client.options.mapper.persistent},alwaysOnTopClient=${client.options.mapper.alwaysOnTopClient},alwaysOnTop=${client.options.mapper.alwaysOnTop},showInTaskBar=${client.options.mapper.showInTaskBar},defaultHeight=600,defaultWidth=800,backgroundColor=#eae4d6,icon=${path.join(__dirname, '../assets/icons/png/map.png')}${_options}`);
+                    _windows['mapper.html'] = window.open('mapper.html', 'Mapper-' + getId(), `defaultY=center,defaultX=center,persistent=${client.getOption('mapper.persistent')},alwaysOnTopClient=${client.getOption('mapper.alwaysOnTopClient')},alwaysOnTop=${client.getOption('mapper.alwaysOnTop')},showInTaskBar=${client.getOption('mapper.showInTaskBar')},defaultHeight=600,defaultWidth=800,backgroundColor=#eae4d6,icon=${path.join(__dirname, '../assets/icons/png/map.png')}${_options}`);
                     break;
                 case 'editor':
                     if (data && data.details)
                         _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'persistent', 'defaultX', 'defaultY', 'defaultWidth', 'defaultHeight', 'showInTaskBar', 'noInputContext', ...Object.keys(data.state || {})]);
-                    _windows['editor.html'] = window.open('editor.html', 'Advanced Editor-' + getId(), `defaultY=center,defaultX=center,noInputContext=true,alwaysOnTopClient=true,showInTaskBar=${client.options.showEditorInTaskBar},persistent=${client.options.editorPersistent},defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/edit.png')}${_options}`);
+                    _windows['editor.html'] = window.open('editor.html', 'Advanced Editor-' + getId(), `defaultY=center,defaultX=center,noInputContext=true,alwaysOnTopClient=true,showInTaskBar=${client.getOption('showEditorInTaskBar')},persistent=${client.getOption('editorPersistent')},defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/edit.png')}${_options}`);
                     break;
                 case 'chat':
                     if (data && data.details)
                         _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultX', 'defaultY', 'persistent', 'alwaysOnTop', 'showInTaskBar', ...Object.keys(data.state || {})]);
-                    _windows['chat.html'] = window.open('chat.html', 'Chat-' + getId(), `defaultY=center,defaultX=center,persistent=${client.options.chat.persistent},alwaysOnTopClient=${client.options.chat.alwaysOnTopClient},alwaysOnTop=${client.options.chat.alwaysOnTop},showInTaskBar=${client.options.chat.showInTaskBar},defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/chat.png')}${_options}`);
+                    _windows['chat.html'] = window.open('chat.html', 'Chat-' + getId(), `defaultY=center,defaultX=center,persistent=${client.getOption('chat.persistent')},alwaysOnTopClient=${client.getOption('chat.alwaysOnTopClient')},alwaysOnTop=${client.getOption('chat.alwaysOnTop')},showInTaskBar=${client.getOption('chat.showInTaskBar')},defaultHeight=225,defaultWidth=300,backgroundColor=#000,icon=${path.join(__dirname, '../assets/icons/png/chat.png')}${_options}`);
                     break;
                 case 'prefs':
                     if (window.getGlobal('settingsFile') === _windowState.data.settings)
@@ -3407,7 +3410,7 @@
                     _windows['help.html'] = window.open('help.html', 'Help-' + getId(), `defaultY=center,defaultX=center,defaultWidth=800,defaultHeight=600,alwaysOnTopClient=true,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/help.png')}${_options}`);
                     break;
                 case 'smhelp':
-                    if (client.options.externalHelp)
+                    if (client.getOption('externalHelp'))
                         shell.openExternal('http://www.shadowmud.com/help.php', '_blank');
                     else {
                         if (data && data.details)
@@ -3420,7 +3423,7 @@
                     }, 0);
                     break;
                 case 'who':
-                    if (client.options.externalWho)
+                    if (client.getOption('externalWho'))
                         shell.openExternal('http://www.shadowmud.com/who.php', '_blank');
                     else {
                         if (data && data.details)
@@ -3445,12 +3448,12 @@
                 case 'profiles':
                     if (data && data.details)
                         _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultX', 'defaultY', 'showInTaskBar', 'noInputContext', ...Object.keys(data.state || {})]);
-                    _windows['profiles.html'] = window.open('profiles.html', 'Profiles-' + getId(), `noInputContext=true,defaultY=center,defaultX=center,alwaysOnTopClient=true,showInTaskBar=${client.options.profiles.showInTaskBar},defaultHeight=600,defaultWidth=800,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/profiles.png')}${_options}`);
+                    _windows['profiles.html'] = window.open('profiles.html', 'Profiles-' + getId(), `noInputContext=true,defaultY=center,defaultX=center,alwaysOnTopClient=true,showInTaskBar=${client.getOption('profiles.showInTaskBar')},defaultHeight=600,defaultWidth=800,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/profiles.png')}${_options}`);
                     break;
                 case 'code.editor':
                     if (data && data.details)
                         _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultX', 'defaultY', 'persistent', 'alwaysOnTop', 'showInTaskBar', 'overlayIcon', 'title', ...Object.keys(data.state || {})]);
-                    _windows['code.editor.html'] = window.open('code.editor.html', 'Code editor-' + getId(), `defaultY=center,defaultX=center,persistent=${client.options.codeEditor.persistent},alwaysOnTopClient=${client.options.codeEditor.alwaysOnTopClient},alwaysOnTop=${client.options.codeEditor.alwaysOnTop},showInTaskBar=${client.options.codeEditor.showInTaskBar},defaultHeight=600,defaultWidth=800,backgroundColor=gray,icon=${path.join(__dirname, '../assets/icons/png/code.png')},overlayIcon=${path.join(__dirname, '../assets/icons/png/code.png')},title=Code editor${_options}`);
+                    _windows['code.editor.html'] = window.open('code.editor.html', 'Code editor-' + getId(), `defaultY=center,defaultX=center,persistent=${client.getOption('codeEditor.persistent')},alwaysOnTopClient=${client.getOption('codeEditor.alwaysOnTopClient')},alwaysOnTop=${client.getOption('codeEditor.alwaysOnTop')},showInTaskBar=${client.getOption('codeEditor.showInTaskBar')},defaultHeight=600,defaultWidth=800,backgroundColor=gray,icon=${path.join(__dirname, '../assets/icons/png/code.png')},overlayIcon=${path.join(__dirname, '../assets/icons/png/code.png')},title=Code editor${_options}`);
                     break;
             }
             if (data && data.data && typeof _windows[name + '.html'].restoreWindow !== 'undefined')
@@ -3532,66 +3535,66 @@
         async function initWindows(close) {
             var enableBackgroundThrottling = window.getSetting('enableBackgroundThrottling');
             if (!_windows['mapper.html']) {
-                if (client.options.showMapper)
+                if (client.getOption('showMapper'))
                     openWindow('mapper');
-                else if (client.options.mapper.enabled || client.options.mapper.persistent)
+                else if (client.getOption('mapper.enabled') || client.getOption('mapper.persistent'))
                     openWindow('mapper', { state: { visible: false } });
             }
-            else if (close && !client.options.showMapper && !client.options.mapper.enabled && !client.options.mapper.persistent)
+            else if (close && !client.getOption('showMapper') && !client.getOption('mapper.enabled') && !client.getOption('mapper.persistent'))
                 _windows['mapper.html'].close();
             else {
                 updateWindow(_windows['mapper.html'], {
-                    alwaysOnTopClient: client.options.mapper.alwaysOnTopClient,
-                    alwaysOnTop: client.options.mapper.alwaysOnTop,
-                    showInTaskBar: client.options.mapper.showInTaskBar,
+                    alwaysOnTopClient: client.getOption('mapper.alwaysOnTopClient'),
+                    alwaysOnTop: client.getOption('mapper.alwaysOnTop'),
+                    showInTaskBar: client.getOption('mapper.showInTaskBar'),
                     enableBackgroundThrottling: enableBackgroundThrottling,
-                    persistent: client.options.mapper.persistent
+                    persistent: client.getOption('mapper.persistent')
                 });
             }
             if (!_windows['editor.html']) {
-                if (client.options.showEditor)
+                if (client.getOption('showEditor'))
                     openWindow('editor');
-                else if (client.options.editorPersistent)
+                else if (client.getOption('editorPersistent'))
                     openWindow('editor', { state: { visible: false } });
             }
-            else if (close && !client.options.showEditor && !client.options.editorPersistent)
+            else if (close && !client.getOption('showEditor') && !client.getOption('editorPersistent'))
                 _windows['editor.html'].close();
             else
                 updateWindow(_windows['editor.html'], {
                     enableBackgroundThrottling: enableBackgroundThrottling,
-                    persistent: client.options.editorPersistent
+                    persistent: client.getOption('editorPersistent')
                 });
             if (!_windows['chat.html']) {
-                if (client.options.showChat)
+                if (client.getOption('showChat'))
                     openWindow('chat');
-                else if (client.options.chat.persistent || client.options.chat.captureTells || client.options.chat.captureTalk || client.options.chat.captureLines)
+                else if (client.getOption('chat.persistent') || client.getOption('chat.captureTells') || client.getOption('chat.captureTalk') || client.getOption('chat.captureLines'))
                     openWindow('chat', { state: { visible: false } });
             }
-            else if (close && !client.options.showChat && !client.options.chat.persistent && !client.options.chat.captureTells && client.options.chat.captureTalk && client.options.chat.captureLines)
+            else if (close && !client.getOption('showChat') && !client.getOption('chat.persistent') && !client.getOption('chat.captureTells') && client.getOption('chat.captureTalk') && client.getOption('chat.captureLines'))
                 _windows['chat.html'].close();
             else
                 updateWindow(_windows['chat.html'], {
-                    alwaysOnTopClient: client.options.mapper.alwaysOnTopClient,
-                    alwaysOnTop: client.options.mapper.alwaysOnTop,
-                    showInTaskBar: client.options.chat.showInTaskBar,
+                    alwaysOnTopClient: client.getOption('chat.alwaysOnTopClient'),
+                    alwaysOnTop: client.getOption('chat.alwaysOnTop'),
+                    showInTaskBar: client.getOption('chat.showInTaskBar'),
                     enableBackgroundThrottling: enableBackgroundThrottling,
-                    persistent: client.options.chat.persistent
+                    persistent: client.getOption('chat.persistent')
                 });
             if (!_windows['code.editor.html']) {
-                if (client.options.showCodeEditor)
+                if (client.getOption('showCodeEditor'))
                     openWindow('code.editor');
-                else if (client.options.codeEditor.persistent)
+                else if (client.getOption('codeEditor.persistent'))
                     openWindow('code.editor', { state: { visible: false } });
             }
-            else if (close && !client.options.showCodeEditor && !client.options.codeEditor.persistent)
+            else if (close && !client.getOption('showCodeEditor') && !client.getOption('codeEditor.persistent'))
                 _windows['code.editor.html'].close();
             else
                 updateWindow(_windows['code.editor.html'], {
-                    alwaysOnTopClient: client.options.codeEditor.alwaysOnTopClient,
-                    alwaysOnTop: client.options.codeEditor.alwaysOnTop,
-                    showInTaskBar: client.options.codeEditor.showInTaskBar,
+                    alwaysOnTopClient: client.getOption('codeEditor.alwaysOnTopClient'),
+                    alwaysOnTop: client.getOption('codeEditor.alwaysOnTop'),
+                    showInTaskBar: client.getOption('codeEditor.showInTaskBar'),
                     enableBackgroundThrottling: enableBackgroundThrottling,
-                    persistent: client.options.codeEditor.persistent
+                    persistent: client.getOption('codeEditor.persistent')
                 });
             if (client.options.windows)
                 for (name in client.options.windows) {
@@ -3728,15 +3731,15 @@
             if (clipboard.readText().length === 0)
                 return;
             if (!noDialog) {
-                document.getElementById('pasteSpecial-prefix').disabled = !client.options.pasteSpecialPrefixEnabled;
-                document.getElementById('pasteSpecial-postfix').disabled = !client.options.pasteSpecialPostfixEnabled;
-                document.getElementById('pasteSpecial-prefix').value = client.options.pasteSpecialPrefix;
-                document.getElementById('pasteSpecial-postfix').value = client.options.pasteSpecialPostfix;
-                document.getElementById('pasteSpecial-prefix-enable').checked = client.options.pasteSpecialPrefixEnabled;
-                document.getElementById('pasteSpecial-postfix-enable').checked = client.options.pasteSpecialPostfixEnabled;
-                document.getElementById('pasteSpecial-replace').value = client.options.pasteSpecialReplace;
-                document.getElementById('pasteSpecial-replace').disabled = !client.options.pasteSpecialReplaceEnabled;
-                document.getElementById('pasteSpecial-replace-enable').checked = client.options.pasteSpecialReplaceEnabled;
+                document.getElementById('pasteSpecial-prefix').disabled = !client.getOption('pasteSpecialPrefixEnabled');
+                document.getElementById('pasteSpecial-postfix').disabled = !client.getOption('pasteSpecialPostfixEnabled');
+                document.getElementById('pasteSpecial-prefix').value = client.getOption('pasteSpecialPrefix');
+                document.getElementById('pasteSpecial-postfix').value = client.getOption('pasteSpecialPostfix');
+                document.getElementById('pasteSpecial-prefix-enable').checked = client.getOption('pasteSpecialPrefixEnabled');
+                document.getElementById('pasteSpecial-postfix-enable').checked = client.getOption('pasteSpecialPostfixEnabled');
+                document.getElementById('pasteSpecial-replace').value = client.getOption('pasteSpecialReplace');
+                document.getElementById('pasteSpecial-replace').disabled = !client.getOption('pasteSpecialReplaceEnabled');
+                document.getElementById('pasteSpecial-replace-enable').checked = client.getOption('pasteSpecialReplaceEnabled');
                 if (!document.getElementById('pasteSpecial').open)
                     document.getElementById('pasteSpecial').showModal();
                 if (!document.getElementById('pasteSpecial-replace').disabled)
@@ -3764,9 +3767,9 @@
                 doUpdate(32);
                 document.getElementById('pasteSpecial').close();
             }
-            var post = client.options.pasteSpecialPostfixEnabled ? client.options.pasteSpecialPostfix : 0;
-            var pre = client.options.pasteSpecialPrefixEnabled ? client.options.pasteSpecialPrefix : 0;
-            var replace = client.options.pasteSpecialReplaceEnabled ? client.options.pasteSpecialReplace : 0;
+            var post = client.getOption('pasteSpecialPostfixEnabled') ? client.getOption('pasteSpecialPostfix') : 0;
+            var pre = client.getOption('pasteSpecialPrefixEnabled') ? client.getOption('pasteSpecialPrefix') : 0;
+            var replace = client.getOption('pasteSpecialReplaceEnabled') ? client.getOption('pasteSpecialReplace') : 0;
 
             //changed while in dialog so bail
             if (clipboard.readText().length === 0)
@@ -3790,7 +3793,7 @@
             client.commandInput.selectionStart = startPos;
             client.commandInput.selectionEnd = startPos + txt.length;
             setTimeout(() => {
-                if (client.options.CommandonClick)
+                if (client.getOption('CommandonClick'))
                     client.commandInput.focus();
             }, 0);
         }
@@ -3806,14 +3809,14 @@
             client.commandInput.selectionStart = startPos;
             client.commandInput.selectionEnd = startPos + clipboard.readText().length;
             setTimeout(() => {
-                if (client.options.CommandonClick)
+                if (client.getOption('CommandonClick'))
                     client.commandInput.focus();
             }, 0);
         }
 
         function autoConnect() {
-            if (!autoConnectID && client.options.autoConnect && !client.connected && !client.errored)
-                autoConnectID = setTimeout(function () { client.connect(); autoConnectID = null; }, client.options.autoConnectDelay);
+            if (!autoConnectID && client.getOption('autoConnect') && !client.connected && !client.errored)
+                autoConnectID = setTimeout(function () { client.connect(); autoConnectID = null; }, client.getOption('autoConnectDelay'));
         }
 
         function closeDisconnectDialog(resetTimers) {
@@ -3899,7 +3902,7 @@
                 }
                 if (($updating & 64) === 64) {
                     client.saveOptions();
-                    ipcRenderer.invoke('window', 'clearCache').then(() => { if (client.options.enableDebug) console.log('Cache cleared'); });
+                    ipcRenderer.invoke('window', 'clearCache').then(() => { if (client.getOption('enableDebug')) console.log('Cache cleared'); });
                     webFrame.clearCache();
                     $updating &= ~64;
                 }
@@ -3932,7 +3935,7 @@
 
         async function createWatcher() {
             clearWatcher();
-            if (!client.options.watchForProfilesChanges)
+            if (!client.getOption('watchForProfilesChanges'))
                 return;
             _watcher = require('chokidar').watch(path.join(parseTemplate('{data}'), 'profiles'), {
                 persistent: true,
@@ -3943,7 +3946,7 @@
                 if (path.extname(file) !== '.json')
                     return;
                 const profile = path.basename(file, '.json');
-                switch (client.options.onProfileChange) {
+                switch (client.getOption('onProfileChange')) {
                     case 1: //reload
                         client.loadProfile(profile);
                         break;
@@ -3968,7 +3971,7 @@
                     if (path.extname(file) !== '.json')
                         return;
                     const profile = path.basename(file, '.json');
-                    switch (client.options.onProfileChange) {
+                    switch (client.getOption('onProfileChange')) {
                         case 1: //reload
                             client.loadProfile(profile);
                             break;
@@ -3993,7 +3996,7 @@
                     if (path.extname(file) !== '.json')
                         return;
                     const profile = path.basename(file, '.json');
-                    switch (client.options.onProfileDeleted) {
+                    switch (client.getOption('onProfileDeleted')) {
                         case 1:
                             client.removeProfile(profile);
                             break;
@@ -4187,7 +4190,7 @@
                         else
                             _closeWindow = true;
                     }
-                    else if ((!all || (_clients.clients === 1 && _clients.windows === 1)) && client.options.askonclose) {
+                    else if ((!all || (_clients.clients === 1 && _clients.windows === 1)) && client.getOption('askonclose')) {
                         choice = dialog.showMessageBoxSync({
                             type: 'warning',
                             title: 'Connected',

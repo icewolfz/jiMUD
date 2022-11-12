@@ -146,7 +146,7 @@
             console.error('Column: ' + colno);
             console.error(error);
             return true;
-        });        
+        });
 
         var importType = ImportType.Replace;
         var _progress;
@@ -321,14 +321,14 @@
         }
 
         function skipSaveWindow() {
-            if (window.opener.client.options.mapper.enabled || window.opener.client.options.mapper.persistent)
+            if (window.opener.client.getOption('mapper.enabled') || window.opener.client.getOption('mapper.persistent'))
                 return false;
             //if not visible do not save this window as it was probably preserved due to a setting change
             return !window.isVisible();
         }
 
         function removeEvents(e) {
-            if (window.opener.client.options.mapper.enabled || window.opener.client.options.mapper.persistent) {
+            if (window.opener.client.getOption('mapper.enabled') || window.opener.client.getOption('mapper.persistent')) {
                 window.hide();
                 e.returnValue = false;
                 return 'no';
@@ -346,8 +346,8 @@
         $(document).ready(() => {
             try {
                 setTitle(window.opener.getCharacterName());
-                const options = window.opener.client.options;
-                mapper = new Mapper(document.getElementById('MapperCanvas'), options.mapper.memory, options.mapper.memorySavePeriod, window.opener.getMapFile());
+                const client = window.opener.client;
+                mapper = new Mapper(document.getElementById('MapperCanvas'), client.getOption('mapper.memory'), client.getOption('mapper.memorySavePeriod'), window.opener.getMapFile());
 
                 document.getElementById('MapperCanvas').addEventListener('wheel', (e) => {
                     if (e.deltaY >= 0)
@@ -576,22 +576,22 @@
 
                 $('#mapper-body').css('top', $('#mapper-toolbar').outerHeight() + 'px');
 
-                mapper.active = options.mapper.active;
-                mapper.commandDelay = options.commandDelay;
-                mapper.commandDelayCount = options.commandDelayCount;
-                importType = options.mapper.importType;
-                _enableDebug = options.enableDebug;
+                mapper.active = client.getOption('mapper.active');
+                mapper.commandDelay = client.getOption('commandDelay');
+                mapper.commandDelayCount = client.getOption('commandDelayCount');
+                importType = client.getOption('mapper.importType');
+                _enableDebug = client.getOption('enableDebug');
 
-                $('#MapLevel').val(options.mapper.active.z);
-                $('#MapZone').val(options.mapper.active.zone);
-                $splitterEditor.panel2Collapsed = options.mapper.room;
+                $('#MapLevel').val(client.getOption('mapper.active.z'));
+                $('#MapZone').val(client.getOption('mapper.active.zone'));
+                $splitterEditor.panel2Collapsed = client.getOption('mapper.room');
                 toggleRooms();
-                $splitterEditor.SplitterDistance = options.mapper.roomWidth;
-                if ((options.mapper.roomGroups & 1) === 0)
+                $splitterEditor.SplitterDistance = client.getOption('mapper.roomWidth');
+                if ((client.getOption('mapper.roomGroups') & 1) === 0)
                     $roomEditor.collapseGroup('General');
-                if ((options.mapper.roomGroups & 2) === 0)
+                if ((client.getOption('mapper.roomGroups') & 2) === 0)
                     $roomEditor.collapseGroup('Location');
-                if ((options.mapper.roomGroups & 4) === 0)
+                if ((client.getOption('mapper.roomGroups') & 4) === 0)
                     $roomEditor.collapseGroup('Details');
                 mapper.on('debug', msg => {
                     if (_enableDebug)
@@ -817,23 +817,23 @@
                         $('#export .dropdown-menu').removeClass('dropdown-menu-right');
                 });
 
-                if (options.mapper.enabled) {
+                if (client.getOption('mapper.enabled')) {
                     mapper.enabled = false;
                     toggleEnabled();
                 }
-                if (options.mapper.legend) {
+                if (client.getOption('mapper.legend')) {
                     mapper.showLegend = false;
                     toggleLegend();
                 }
-                if (options.mapper.follow) {
+                if (client.getOption('mapper.follow')) {
                     mapper.follow = false;
                     toggleFollow();
                 }
-                if (options.mapper.split) {
+                if (client.getOption('mapper.split')) {
                     mapper.splitArea = false;
                     toggleSplitArea();
                 }
-                if (options.mapper.fill) {
+                if (client.getOption('mapper.fill')) {
                     mapper.fillWalls = false;
                     toggleFillWalls();
                 }
@@ -906,8 +906,8 @@
 
 
                 updateAreas();
-                zoomMap(options.mapper.scale);
-                mapper.scrollTo(options.mapper.vscroll, options.mapper.hscroll);
+                zoomMap(client.getOption('mapper.scale'));
+                mapper.scrollTo(client.getOption('mapper.vscroll'), client.getOption('mapper.hscroll'));
                 window.opener.client.sendGMCP('Room.Info');
                 window.opener.client.on('received-GMCP', processGMCP);
                 window.opener.client.on('options-loaded', optionsLoaded);
@@ -934,14 +934,14 @@
         function optionsLoaded() {
             save(function () {
                 try {
-                    var options = window.opener.client.options;
-                    mapper.memorySavePeriod = options.mapper.memorySavePeriod;
-                    mapper.memory = options.mapper.memory;
+                    const client = window.opender.client;
+                    mapper.memorySavePeriod = client.getOption('mapper.memorySavePeriod');
+                    mapper.memory = client.getOption('mapper.memory');
                     mapper.mapFile = window.opener.getMapFile();
-                    mapper.commandDelay = options.commandDelay;
-                    mapper.commandDelayCount = options.commandDelayCount;
-                    importType = options.mapper.importType;
-                    _enableDebug = options.enableDebug;
+                    mapper.commandDelay = client.getOption('commandDelay');
+                    mapper.commandDelayCount = client.getOption('commandDelayCount');
+                    importType = client.getOption('mapper.importType');
+                    _enableDebug = client.getOption('enableDebug');
                 }
                 catch (err) {
                     if (typeof err === 'string')

@@ -428,18 +428,18 @@
             };
             saveOptions();
         }
-        font = set.font;
-        fontSize = set.fontSize;
+        font = window.opener.getOption('font');
+        fontSize = window.opener.getOption('fontSize');
         if (!font || font.length === 0)
             font = '\'Courier New\', Courier, monospace';
         else //fall back just incase
             font += ', monospace';
         if (!fontSize || fontSize.length === 0)
             fontSize = '1em';
-        logPath = parseTemplate(set.logPath);
+        logPath = parseTemplate(window.opener.getOption('logPath'));
         if (display) {
             display.updateFont(font, fontSize);
-            display.enableDebug = set.enableDebug;
+            display.enableDebug = window.opener.getOption('enableDebug');
         }
 
         var keys = Object.keys(_viewers);

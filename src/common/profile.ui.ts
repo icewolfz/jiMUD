@@ -224,6 +224,8 @@ const menubar: Menubar = new Menubar([
             { type: 'separator' },
             { label: '&Import...', click: importProfiles },
             { type: 'separator' },
+            { label: '&Open profiles folder...', click: ()=> openFolder('{profiles}')},
+            { type: 'separator' },
             { label: '&Close', click: doClose }
         ]
     },
@@ -2760,6 +2762,13 @@ function getProfileData() {
     return data;
 }
 
+
+function getOption(option) {
+    if (window.opener)
+        return window.opener.client.getOption(option);
+    return options.getValue(option);
+}
+
 function getOptions() {
     if (window.opener)
         return window.opener.client.options;
@@ -2778,46 +2787,46 @@ function saveOptions() {
 
 function loadOptions() {
     options = getOptions();
-    _never = options.profiles.askoncancel;
-    _enabled = options.profiles.enabled;
-    _ide = options.profiles.codeEditor;
-    _gamepads = options.gamepads;
-    _watch = options.profiles.watchFiles;
-    _sort = options.profiles.sortOrder;
-    _sortDir = options.profiles.sortDirection || 1;
+    _never = getOption('profiles.askoncancel');
+    _enabled = getOption('profiles.enabled');
+    _ide = getOption('profiles.codeEditor');
+    _gamepads = getOption('gamepads');
+    _watch = getOption('profiles.watchFiles');
+    _sort = getOption('profiles.sortOrder');
+    _sortDir = getOption('profiles.sortDirection') || 1;
     _spellchecker = window.getSetting('spellchecking') || true;
-    _prependTrigger = options.prependTriggeredLine;
-    _parameter = options.parametersChar;
-    _nParameter = options.nParametersChar;
-    _command = options.commandChar;
-    _stacking = options.commandStackingChar;
-    _speed = options.speedpathsChar;
-    _verbatim = options.verbatimChar;
-    _iComments = options.enableInlineComments;
-    _bComments = options.enableBlockComments;
-    _iCommentsStr = options.inlineCommentString.split('');
-    _bCommentsStr = options.blockCommentString.split('');
-    _profileLoadExpand = options.profiles.profileExpandSelected;
-    _profileLoadSelect = options.profiles.profileSelected;
+    _prependTrigger = getOption('prependTriggeredLine');
+    _parameter = getOption('parametersChar');
+    _nParameter = getOption('nParametersChar');
+    _command = getOption('commandChar');
+    _stacking = getOption('commandStackingChar');
+    _speed = getOption('speedpathsChar');
+    _verbatim = getOption('verbatimChar');
+    _iComments = getOption('enableInlineComments');
+    _bComments = getOption('enableBlockComments');
+    _iCommentsStr = getOption('inlineCommentString').split('');
+    _bCommentsStr = getOption('blockCommentString').split('');
+    _profileLoadExpand = getOption('profiles.profileExpandSelected');
+    _profileLoadSelect = getOption('profiles.profileSelected');
     if (!profiles.contains(_profileLoadSelect))
         _profileLoadSelect = 'default';
     updatePads();
 
-    let theme = parseTemplate(options.theme) + '.css';
+    let theme = parseTemplate(window.getSetting('theme')) + '.css';
     if (!isFileSync(theme))
         theme = parseTemplate(path.join('{themes}', 'default')) + '.css';
     if ($('#theme').attr('href') !== theme)
         $('#theme').attr('href', theme);
 
-    if (options.profiles.split > 200) {
-        $('#sidebar').css('width', options.profiles.split);
-        $('#content').css('left', options.profiles.split);
+    if (getOption('profiles.split') > 200) {
+        $('#sidebar').css('width', getOption('profiles.split'));
+        $('#content').css('left', getOption('profiles.split'));
     }
-    setAdvancedPanel('trigger', options.profiles.triggersAdvanced);
-    setAdvancedPanel('alias', options.profiles.aliasesAdvanced);
-    setAdvancedPanel('button', options.profiles.buttonsAdvanced);
-    setAdvancedPanel('macro', options.profiles.macrosAdvanced);
-    setAdvancedPanel('context', options.profiles.contextsAdvanced);
+    setAdvancedPanel('trigger', getOption('profiles.triggersAdvanced'));
+    setAdvancedPanel('alias', getOption('profiles.aliasesAdvanced'));
+    setAdvancedPanel('button', getOption('profiles.buttonsAdvanced'));
+    setAdvancedPanel('macro', getOption('profiles.macrosAdvanced'));
+    setAdvancedPanel('context', getOption('profiles.contextsAdvanced'));
 }
 
 function optionsLoaded() {
@@ -3547,6 +3556,10 @@ export function closed() {
     }
 };
 
+export function openFolder(folder) {
+    require('electron').shell.openPath(parseTemplate(folder));
+}
+
 function startWatcher(p: string) {
     if (watcher) {
         watcher.close();
@@ -3668,7 +3681,7 @@ export function doRefresh() {
                         profiles.add(Profile.Default);
                     startWatcher(p);
                 }
-                _enabled = options.profiles.enabled;
+                _enabled = getOption('profiles.enabled');
                 buildTreeview(getProfileData());
             }
         });
@@ -3687,7 +3700,7 @@ export function doRefresh() {
                 profiles.add(Profile.Default);
             startWatcher(p);
         }
-        _enabled = options.profiles.enabled;
+        _enabled = getOption('profiles.enabled');
         buildTreeview(getProfileData());
     }
 }

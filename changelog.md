@@ -12,7 +12,8 @@
     - Remembers all last open clients and child windows
     - Can save current layout to be loaded as it was saved
     - Changed how child windows interact with clients to improve between window lag
-  - Character manager now uses sqlite as backend
+  - Character manager:
+    - Now uses sqlite as backend
     - Reduced memory and load times
     - Tracks connection time
     - Keeps last connected date
@@ -20,11 +21,13 @@
       - Name is now the only way to set login name, the text displayed in the list is now just a display title for easy sorting
       - Notes is now a tracked file path like settings and map and can be changed by the user
       - All new characters will use a unique generated id number instead of title or name for data files to prevent sharing files by default
+    - New toolbar buttons to open characters or profiles folder
   - Command line arguments:
     - Added [-l/--layout](docs/README.md) to allow loading of a saved layout
     - Added [-il/--ignore-layout](docs/README.md) to ignore loading last used layout or --layout
     - Added [-el/--error-log](docs/README.md) to allow setting custom error log files
   - Preferences:
+    - Preferences now uses an inherit system of Default < Global < Client, where it will drill down to default depending if the client or global values are not set, this system allows you to set the global value and all clients will use that setting unless they have already set it
     - `Show add new button next to tabs` add a button to allow creation of new connections from tab strip, *Global preference* 
     - `Lock layout` saving only the last known global window states and preserve the previous saved windows and clients opened, *Global preference*
     - `Load layout on open` set a layout file to use when loading client, *Global preference*
@@ -87,10 +90,15 @@
   - Advanced editor, Skills, Profile manager, Command history:
     - Title bar now displays connected character name when possible
   - Add tab character width control for main and chat display
-  - Profile manager: All internal errors should now be logged to error log file
+  - Profile manager:
+    - All internal errors should now be logged to error log file
+    - File item to open profile folder
   - Log viewer: All internal errors should now be logged to error log file
   - Find dialog is now movable to allow you to see text under it if need be
+  - Add `{profiles}` to path parsing to allow using profiles folder easier
+  - About: Add path tab that list data, profiles, and character paths with buttons to directly open them
 - **Fixed:**
+  - Fixed --data-dir by normalizing the path to ensure all / and \ are correct for target os
   - Fixed a bug in parsing #command arguments and quotes
   - Immortal tools:
     - Fixed issue with multiple events not correctly working

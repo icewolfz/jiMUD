@@ -4537,7 +4537,7 @@
     function cleanUp(e) {
         //clean up
         if (window.opener) {
-            if (window.opener.client.options.codeEditor.persistent) {
+            if (window.opener.client.getOption('codeEditor.persistent')) {
                 window.hide();
                 e.returnValue = false;
                 return 'no';
@@ -4556,7 +4556,7 @@
 
     function skipSaveWindow() {
         if (window.opener) {
-            if (window.opener.client.options.codeEditor.persistent)
+            if (window.opener.client.getOption('codeEditor.persistent'))
                 return false;
             //if not visible do not save this window as it was probably preserved due to a setting change
             return !window.isVisible();

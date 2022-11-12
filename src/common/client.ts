@@ -52,6 +52,7 @@ export class Client extends EventEmitter {
     private _alarm: NodeJS.Timer;
     private _profileSaves = {}; //store profile to save/change flag
     private _profileSaveTimeout: NodeJS.Timer = null; //track timeout
+    private _optionCache = {};
 
     public MSP: MSP;
 
@@ -95,7 +96,7 @@ export class Client extends EventEmitter {
     }
 
     get enabledProfiles(): string[] {
-        if (this.options.profiles.enabled.length === 0) {
+        if (this.getOption('profiles.enabled').length === 0) {
             const a = [];
             let profile;
             for (profile in this.profiles.items) {
@@ -108,7 +109,7 @@ export class Client extends EventEmitter {
             this.options.profiles.enabled = a;
             this.saveOptions();
         }
-        return this.options.profiles.enabled;
+        return this.getOption('profiles.enabled');
     }
 
     set enableParsing(value) {
@@ -117,7 +118,7 @@ export class Client extends EventEmitter {
         this.saveOptions();
     }
 
-    get enableParsing() { return this.options.enableParsing; }
+    get enableParsing() { return this.getOption('enableParsing'); }
 
     set enableTriggers(value) {
         this.options.enableTriggers = value;
@@ -126,7 +127,7 @@ export class Client extends EventEmitter {
         this.saveOptions();
     }
 
-    get enableTriggers() { return this.options.enableTriggers; }
+    get enableTriggers() { return this.getOption('enableTriggers'); }
 
     set settingsFile(val: string) {
         if (this._settingsFile !== val) {
@@ -400,15 +401,15 @@ export class Client extends EventEmitter {
         }
         //backward compat, if no enabled one just load all so enabled profile setting can be scanned
         //use direct setting instead of wrapper as wrapper assumes profiles are loaded if empty
-        if (this.options.profiles.enabled.length === 0)
+        if (this.getOption('profiles.enabled').length === 0)
             this.profiles.loadPath(p);
-        else if (this.options.profiles.enabled.indexOf('default') === -1) {
-            this.profiles.load(this.options.profiles.enabled, p);
+        else if (this.getOption('profiles.enabled').indexOf('default') === -1) {
+            this.profiles.load(this.getOption('profiles.enabled'), p);
             //always load default just incase
             this.profiles.load('default', p);
         }
         else
-            this.profiles.load(this.options.profiles.enabled, p);
+            this.profiles.load(this.getOption('profiles.enabled'), p);
         //ensure default exist and is loaded
         if (!this.profiles.contains('default'))
             this.profiles.add(Profile.Default);
@@ -462,7 +463,7 @@ export class Client extends EventEmitter {
         if (!existsSync(p))
             fs.mkdirSync(p);
         //if group add to  save tracker and store change flag
-        if (this.options.groupProfileSaves) {
+        if (this.getOption('groupProfileSaves')) {
             //minor update that does not effect caching
             if (!noChanges) {
                 this.clearCache();
@@ -496,7 +497,7 @@ export class Client extends EventEmitter {
             }
             this._profileSaves = {};
             this._profileSaveTimeout = null;
-        }, this.options.groupProfileSaveDelay);
+        }, this.getOption('groupProfileSaveDelay'));
     }
 
     public clearProfileSaves() {
@@ -531,7 +532,7 @@ export class Client extends EventEmitter {
 
     public startAlarms() {
         const al = this.alarms.length;
-        if ((al === 0 || !this.options.enableTriggers) && this._alarm) {
+        if ((al === 0 || !this.getOption('enableTriggers')) && this._alarm) {
             clearInterval(this._alarm);
             this._alarm = null;
         }
@@ -688,7 +689,7 @@ export class Client extends EventEmitter {
     }
 
     private process_alarms() {
-        if (!this.options.enableTriggers)
+        if (!this.getOption('enableTriggers'))
             return;
         let a = 0;
         let changed = false;
@@ -733,7 +734,7 @@ export class Client extends EventEmitter {
                     changed = true;
                 }
                 if (changed) {
-                    if (this.options.saveTriggerStateChanges)
+                    if (this.getOption('saveTriggerStateChanges'))
                         this.saveProfile(parent.profile.name, true, ProfileSaveType.Trigger);
                     this.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent));
                 }
@@ -763,7 +764,7 @@ export class Client extends EventEmitter {
                 }
                 catch (e) {
                     patterns[a] = null;
-                    if (this.options.disableTriggerOnError) {
+                    if (this.getOption('disableTriggerOnError')) {
                         trigger.enabled = false;
                         setTimeout(() => {
                             this.saveProfile(parent.profile.name, false, ProfileSaveType.Trigger);
@@ -898,7 +899,7 @@ export class Client extends EventEmitter {
         this.display = new Display(display);
 
         this.display.click((event) => {
-            if (this.options.CommandonClick)
+            if (this.getOption('CommandonClick'))
                 this.commandInput.focus();
         });
 
@@ -919,8 +920,8 @@ export class Client extends EventEmitter {
         this.MSP = new MSP({ forcedDefaultMusicURL: '', forcedDefaultSoundURL: '' });
         this.MSP.on('playing', (data) => {
             if (this.enableDebug) this.debug('MSP ' + (data.type ? 'Music' : 'Sound') + ' Playing ' + data.file + ' for ' + data.duration);
-            if (!this.options.notifyMSPPlay) return;
-            if (this.options.enableDebug)
+            if (!this.getOption('notifyMSPPlay')) return;
+            if (this.getOption('enableDebug'))
                 this.debug(data);
             this.echo((data.type ? 'Music' : 'Sound') + ' Playing ' + data.file + ' for ' + data.duration, AnsiColorCode.InfoText, AnsiColorCode.InfoBackground, true, true);
         });
@@ -1121,7 +1122,7 @@ export class Client extends EventEmitter {
             if (typeof title === 'undefined' || title == null || title.length === 0)
                 this.emit('set-title', this.defaultTitle);
             else if (type !== 1)
-                this.emit('set-title', this.options.title.replace('$t', title))
+                this.emit('set-title', this.getOption('title').replace('$t', title))
         });
         this.display.on('music', (data) => {
             this.MSP.music(data);
@@ -1167,20 +1168,20 @@ export class Client extends EventEmitter {
     }
 
     public loadOptions() {
+        this._optionCache = {};
         this.options = Settings.load(this._settingsFile);
 
-        this.enableDebug = this.options.enableDebug;
-        this.display.maxLines = this.options.bufferSize;
-        this.display.enableFlashing = this.options.flashing;
-        this.display.enableMXP = this.options.enableMXP;
-        this.display.showInvalidMXPTags = this.options.display.showInvalidMXPTags;
-        this.display.enableURLDetection = this.options.enableURLDetection;
-        this.display.enableMSP = this.options.enableMSP;
-        this.display.enableColors = this.options.display.enableColors;
-        this.display.enableBackgroundColors = this.options.display.enableBackgroundColors;
-
-        if (this.options.colors.length > 0) {
-            const colors = this.options.colors;
+        this.enableDebug = this.getOption('enableDebug');
+        this.display.maxLines = this.getOption('bufferSize');
+        this.display.enableFlashing = this.getOption('flashing');
+        this.display.enableMXP = this.getOption('enableMXP');
+        this.display.showInvalidMXPTags = this.getOption('display.showInvalidMXPTags');
+        this.display.enableURLDetection = this.getOption('enableURLDetection');
+        this.display.enableMSP = this.getOption('enableMSP');
+        this.display.enableColors = this.getOption('display.enableColors');
+        this.display.enableBackgroundColors = this.getOption('display.enableBackgroundColors');
+        const colors = this.getOption('colors');
+        if (colors.length > 0) {
             let c;
             const cl = colors.length;
             for (c = 0; c < cl; c++) {
@@ -1189,46 +1190,46 @@ export class Client extends EventEmitter {
             }
         }
 
-        this.telnet.options.MCCP = this.options.enableMCCP;
-        this.telnet.options.MXP = this.options.enableMXP;
-        this.telnet.UTF8 = this.options.enableUTF8;
-        this.telnet.options.ECHO = this.options.enableEcho;
-        this.telnet.enableLatency = this.options.lagMeter;
-        this.telnet.enablePing = this.options.enablePing;
-        this.telnet.keepAlive = this.options.enableKeepAlive;
-        this.telnet.keepAliveDelay = this.options.keepAliveDelay;
-        this.telnet.allowHalfOpen = this.options.allowHalfOpen;
+        this.telnet.options.MCCP = this.getOption('enableMCCP');
+        this.telnet.options.MXP = this.getOption('enableMXP');
+        this.telnet.UTF8 = this.getOption('enableUTF8');
+        this.telnet.options.ECHO = this.getOption('enableEcho');
+        this.telnet.enableLatency = this.getOption('lagMeter');
+        this.telnet.enablePing = this.getOption('enablePing');
+        this.telnet.keepAlive = this.getOption('enableKeepAlive');
+        this.telnet.keepAliveDelay = this.getOption('keepAliveDelay');
+        this.telnet.allowHalfOpen = this.getOption('allowHalfOpen');
 
-        this.MSP.enabled = this.options.enableMSP;
-        this.MSP.enableSound = this.options.enableSound;
-        this.MSP.savePath = parseTemplate(this.options.soundPath);
-        this.MSP.maxErrorRetries = this.options.mspMaxRetriesOnError;
+        this.MSP.enabled = this.getOption('enableMSP');
+        this.MSP.enableSound = this.getOption('enableSound');
+        this.MSP.savePath = parseTemplate(this.getOption('soundPath'));
+        this.MSP.maxErrorRetries = this.getOption('mspMaxRetriesOnError');
 
-        this._input.scrollLock = this.options.scrollLocked;
-        this._input.enableParsing = this.options.enableParsing;
-        this._input.enableTriggers = this.options.enableTriggers;
-        this.display.scrollLock = this.options.scrollLocked;
-        this.display.enableSplit = this.options.display.split;
-        this.display.hideTrailingEmptyLine = this.options.display.hideTrailingEmptyLine;
-        this.display.showTimestamp = this.options.display.showTimestamp;
-        this.display.timestampFormat = this.options.display.timestampFormat;
-        this.display.splitLive = this.options.display.splitLive;
-        this.display.splitHeight = this.options.display.splitHeight;
-        this.display.roundedRanges = this.options.display.roundedOverlays;
-        this.display.showSplitButton = this.options.display.showSplitButton;
-        this.display.tabWidth = this.options.display.tabWidth;
-        this.display.displayControlCodes = this.options.display.displayControlCodes;
-        this.display.emulateTerminal = this.options.display.emulateTerminal;
-        this.display.emulateControlCodes = this.options.display.emulateControlCodes;
-        this.display.wordWrap = this.options.display.wordWrap;
-        this.display.wrapAt = this.options.display.wrapAt;
-        this.display.indent = this.options.display.indent;
-        this.display.MatchCase = this.options.find.case;
-        this.display.MatchWord = this.options.find.word;
-        this.display.Reverse = this.options.find.reverse;
-        this.display.RegularExpression = this.options.find.regex;
-        this.display.Highlight = this.options.find.highlight;
-        this.display.finderLocation = this.options.find.location;
+        this._input.scrollLock = this.getOption('scrollLocked');
+        this._input.enableParsing = this.getOption('enableParsing');
+        this._input.enableTriggers = this.getOption('enableTriggers');
+        this.display.scrollLock = this.getOption('scrollLocked');
+        this.display.enableSplit = this.getOption('display.split');
+        this.display.hideTrailingEmptyLine = this.getOption('display.hideTrailingEmptyLine');
+        this.display.showTimestamp = this.getOption('display.showTimestamp');
+        this.display.timestampFormat = this.getOption('display.timestampFormat');
+        this.display.splitLive = this.getOption('display.splitLive');
+        this.display.splitHeight = this.getOption('display.splitHeight');
+        this.display.roundedRanges = this.getOption('display.roundedOverlays');
+        this.display.showSplitButton = this.getOption('display.showSplitButton');
+        this.display.tabWidth = this.getOption('display.tabWidth');
+        this.display.displayControlCodes = this.getOption('display.displayControlCodes');
+        this.display.emulateTerminal = this.getOption('display.emulateTerminal');
+        this.display.emulateControlCodes = this.getOption('display.emulateControlCodes');
+        this.display.wordWrap = this.getOption('display.wordWrap');
+        this.display.wrapAt = this.getOption('display.wrapAt');
+        this.display.indent = this.getOption('display.indent');
+        this.display.MatchCase = this.getOption('find.case');
+        this.display.MatchWord = this.getOption('find.word');
+        this.display.Reverse = this.getOption('find.reverse');
+        this.display.RegularExpression = this.getOption('find.regex');
+        this.display.Highlight = this.getOption('find.highlight');
+        this.display.finderLocation = this.getOption('find.location');
 
         this.UpdateFonts();
         this.display.scrollDisplay();
@@ -1244,26 +1245,36 @@ export class Client extends EventEmitter {
     public setOption(name, value) {
         if (name === -1 || name === '-1')
             return;
-        if (this.options.setValue(name, value))
+        if (this.options.setValue(name, value)) {
+            //remove cache to free up some memory
+            delete this._optionCache[name];
             this.saveOptions();
+        }
     }
 
     public getOption(name) {
         if (name === -1 || name === '-1')
             return null;
         let opt = this.options.getValue(name);
-        //check for undefined as !opt could be a valid setting
-        if (typeof opt === 'undefined')
-            return window.getSetting(name);
+        //check for undefined as !opt could be a valid setting, cache settings locally for speed boost as global settings only change if pref edited
+        if (typeof opt === 'undefined') {
+            if(name in  this._optionCache)
+                return this._optionCache[name]    
+            return this._optionCache[name] = window.getSetting(name);
+        }
         return opt;
+    }
+
+    public clearOptionCache() {
+        this._optionCache = {};
     }
 
     public UpdateFonts() {
         //can only update if display has been setup
         if (!this.display) return;
-        this.display.updateFont(this.options.font, this.options.fontSize);
-        this.commandInput.style.fontSize = this.options.cmdfontSize;
-        this.commandInput.style.fontFamily = this.options.cmdfont + ', monospace';
+        this.display.updateFont(this.getOption('font'), this.getOption('fontSize'));
+        this.commandInput.style.fontSize = this.getOption('cmdfontSize');
+        this.commandInput.style.fontFamily = this.getOption('cmdfont') + ', monospace';
     }
 
     public parse(txt: string) {
@@ -1281,7 +1292,7 @@ export class Client extends EventEmitter {
             err = new Error('Unknown');
         else if (typeof err === 'string' && err.length === 0)
             err = new Error('Unknown');
-        if (err.stack && this.options.showErrorsExtended)
+        if (err.stack && this.getOption('showErrorsExtended'))
             msg = err.stack;
         else if (err instanceof Error || err instanceof TypeError)
             msg = err.name + ': ' + err.message;
@@ -1295,8 +1306,8 @@ export class Client extends EventEmitter {
         else
             this.echo('Error: ' + msg, AnsiColorCode.ErrorText, AnsiColorCode.ErrorBackground, true, true);
 
-        if (this.options.logErrors) {
-            if (!this.options.showErrorsExtended) {
+        if (this.getOption('logErrors')) {
+            if (!this.getOption('showErrorsExtended')) {
                 if (err.stack)
                     msg = err.stack;
                 else {
@@ -1353,7 +1364,7 @@ export class Client extends EventEmitter {
     public send(data, echo?: boolean) {
         this.telnet.sendData(data);
         this.lastSendTime = Date.now();
-        if (echo && this.telnet.echo && this.options.commandEcho)
+        if (echo && this.telnet.echo && this.getOption('commandEcho'))
             this.echo(data);
         else if (echo)
             this.echo('\n');
@@ -1400,7 +1411,7 @@ export class Client extends EventEmitter {
         if (data.handled || data.value == null || typeof data.value === 'undefined') return;
         if (data.value.length > 0)
             this.send(data.value, !noEcho);
-        if (this.options.keepLastCommand)
+        if (this.getOption('keepLastCommand'))
             this.commandInput.select();
         else
             this.commandInput.value = '';

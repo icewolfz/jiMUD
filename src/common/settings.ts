@@ -4,6 +4,61 @@ import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect, ProfileSort
 const path = require('path');
 const fs = require('fs');
 
+interface MapperActive {
+    ID?: string;
+    x?: number;
+    y?: number;
+    z?: number;
+    area?: string;
+    zone?: number
+}
+
+interface FindOptions {
+    case?: boolean;
+    word?: boolean;
+    reverse?: boolean;
+    regex?: boolean;
+    selection?: boolean;
+    show?: boolean;
+    highlight?: boolean;
+    location?: number[];
+}
+
+interface ButtonOptions {
+    connect?: boolean;
+    characters?: boolean;
+    preferences?: boolean;
+    log?: boolean;
+    clear?: boolean;
+    lock?: boolean;
+    map?: boolean;
+    user?: boolean;
+    mail?: boolean;
+    compose?: boolean;
+    immortal?: boolean;
+    codeEditor?: boolean;
+}
+
+interface DisplayOptions {
+    split?: boolean;
+    splitHeight?: number;
+    splitLive?: boolean;
+    roundedOverlays?: boolean;
+    showSplitButton?: boolean;
+    hideTrailingEmptyLine?: boolean;
+    enableColors?: boolean;
+    enableBackgroundColors?: boolean;
+    showInvalidMXPTags?: boolean;
+    showTimestamp?: boolean;
+    timestampFormat?: string;
+    tabWidth?: number;
+    displayControlCodes?: boolean;
+    emulateTerminal?: boolean;
+    emulateControlCodes?: boolean;
+    wordWrap?: boolean;
+    wrapAt?: number;
+    indent?: number;
+}
 /**
  * Class that contains all mapper related options
  *
@@ -11,32 +66,25 @@ const fs = require('fs');
  * @class Mapper
  */
 export class Mapper {
-    public enabled: boolean = true;
-    public follow: boolean = true;
-    public legend: boolean = false;
-    public split: boolean = false;
-    public fill: boolean = false;
-    public room: boolean = false;
-    public roomWidth: number = 200;
-    public roomGroups: number = 1 | 2 | 4;
-    public importType = 1;
-    public vscroll: number = 0;
-    public hscroll: number = 0;
-    public scale: number = 100;
-    public alwaysOnTop: boolean = false;
-    public alwaysOnTopClient: boolean = true;
-    public memory: boolean = false;
-    public memorySavePeriod: number = 900000;
-    public active = {
-        ID: null,
-        x: 0,
-        y: 0,
-        z: 0,
-        area: null,
-        zone: 0
-    };
-    public persistent: boolean = true;
-    public showInTaskBar: boolean = false;
+    public enabled: boolean;
+    public follow: boolean;
+    public legend: boolean;
+    public split: boolean;
+    public fill: boolean;
+    public room: boolean;
+    public roomWidth: number;
+    public roomGroups: number;
+    public importType;
+    public vscroll: number;
+    public hscroll: number;
+    public scale: number;
+    public alwaysOnTop: boolean;
+    public alwaysOnTopClient: boolean;
+    public memory: boolean;
+    public memorySavePeriod: number;
+    public active: MapperActive = {};
+    public persistent: boolean;
+    public showInTaskBar: boolean;
 }
 
 /**
@@ -46,21 +94,21 @@ export class Mapper {
  * @class Profiles
  */
 export class Profiles {
-    public split: number = -1;
-    public askoncancel: boolean = true;
-    public triggersAdvanced: boolean = false;
-    public aliasesAdvanced: boolean = false;
-    public buttonsAdvanced: boolean = false;
-    public macrosAdvanced: boolean = false;
-    public contextsAdvanced: boolean = false;
-    public enabled: string[] = [];
-    public codeEditor: boolean = true;
-    public watchFiles: boolean = true;
-    public sortOrder: ProfileSortOrder = ProfileSortOrder.Priority | ProfileSortOrder.Index;
-    public sortDirection: number = 1;
-    public showInTaskBar: boolean = false;
-    public profileSelected: string = 'default';
-    public profileExpandSelected: boolean = true;
+    public split: number;
+    public askoncancel: boolean;
+    public triggersAdvanced: boolean;
+    public aliasesAdvanced: boolean;
+    public buttonsAdvanced: boolean;
+    public macrosAdvanced: boolean;
+    public contextsAdvanced: boolean;
+    public enabled: string[];
+    public codeEditor: boolean;
+    public watchFiles: boolean;
+    public sortOrder: ProfileSortOrder;
+    public sortDirection: number;
+    public showInTaskBar: boolean;
+    public profileSelected: string;
+    public profileExpandSelected: boolean;
 }
 
 /**
@@ -71,63 +119,54 @@ export class Profiles {
  */
 export class Chat {
     //chat lines
-    public captureLines: boolean = false;
-    public captureAllLines: boolean = false;
+    public captureLines: boolean;
+    public captureAllLines: boolean;
     //reviews for lines, tell or talking
-    public captureReviews: boolean = false;
+    public captureReviews: boolean;
     //tell and emotetos
-    public captureTells: boolean = false;
+    public captureTells: boolean;
     //Say, whisper, yells, and speak
-    public captureTalk: boolean = false;
+    public captureTalk: boolean;
     //list of lines to capture
-    public lines: string[] = [];
+    public lines: string[];
     //don't capture when window hidden
-    public CaptureOnlyOpen: boolean = false;
-    public alwaysOnTop: boolean = false;
-    public alwaysOnTopClient: boolean = true;
-    public log: boolean = false;
-    public persistent: boolean = false;
-    public gag: boolean = true;
-    public zoom: number = 1.0;
-    public font: string = '\'Courier New\', Courier, monospace';
-    public fontSize: string = '1em';
+    public CaptureOnlyOpen: boolean;
+    public alwaysOnTop: boolean;
+    public alwaysOnTopClient: boolean;
+    public log: boolean;
+    public persistent: boolean;
+    public gag: boolean;
+    public zoom: number;
+    public font: string;
+    public fontSize: string;
 
-    public split: boolean = false;
-    public splitHeight: number = -1;
-    public splitLive: boolean = true;
-    public roundedOverlays: boolean = true;
-    public showSplitButton: boolean = true;
-    public bufferSize: number = 5000;
-    public flashing: boolean = false;
-    public showInTaskBar: boolean = false;
-    public showTimestamp: boolean = false;
-    public timestampFormat: string = '[[]MM-DD HH:mm:ss.SSS[]] ';
-    public tabWidth: number = 8;
-    public displayControlCodes: boolean = false;
-    public emulateTerminal: boolean = false;
-    public emulateControlCodes: boolean = true;
-    public wordWrap: boolean = false;
-    public wrapAt: number = 0;
-    public indent: number = 4;
-    public scrollLocked: boolean = false;
+    public split: boolean;
+    public splitHeight: number;
+    public splitLive: boolean;
+    public roundedOverlays: boolean;
+    public showSplitButton: boolean;
+    public bufferSize: number;
+    public flashing: boolean;
+    public showInTaskBar: boolean;
+    public showTimestamp: boolean;
+    public timestampFormat: string;
+    public tabWidth: number;
+    public displayControlCodes: boolean;
+    public emulateTerminal: boolean;
+    public emulateControlCodes: boolean;
+    public wordWrap: boolean;
+    public wrapAt: number;
+    public indent: number;
+    public scrollLocked: boolean;
 
-    public find = {
-        case: false,
-        word: false,
-        reverse: false,
-        regex: false,
-        selection: false,
-        show: false,
-        highlight: false,
-        location: [5, 20]
-    }
+    public find: FindOptions = {};
 }
 
 export class CodeEditor {
-    public showInTaskBar: boolean = false;
-    public persistent: boolean = false;
-    public alwaysOnTop: boolean = false;
-    public alwaysOnTopClient: boolean = true;
+    public showInTaskBar: boolean;
+    public persistent: boolean;
+    public alwaysOnTop: boolean;
+    public alwaysOnTopClient: boolean;
 }
 
 /*
@@ -449,28 +488,28 @@ export let SettingList: any[] = [
     ['pathDelayCount', 0, 2, 1],
     ['echoSpeedpaths', 0, 1, false],
     ['alwaysShowTabs', 0, 1, false],
-    ['scriptEngineType', 0, 2, ScriptEngineType.Simple],
-    ['initializeScriptEngineOnLoad', 0, 1, false],
-    ['find.highlight', 0, 1, false],
-    ['find.location', 0, 4, [5, 20]],
-    ['display.showInvalidMXPTags', 0, 1, false],
-    ['display.showTimestamp', 0, 1, false],
-    ['display.timestampFormat', 0, 0, '[[]MM-DD HH:mm:ss.SSS[]] '],
-    ['display.displayControlCodes', 0, 1, false],
-    ['display.emulateTerminal', 0, 1, false],
-    ['display.emulateControlCodes', 0, 1, true],
-    ['display.wordWrap', 0, 1, false],
-    ['display.tabWidth', 0, 2, 8],
-    ['display.wrapAt', 0, 2, 0],
-    ['display.indent', 0, 2, 4],
-    ['statusWidth', 0, 2, -1],
-    ['showEditorInTaskBar', 0, 1, true],
-    ['trayMenu', 0, 2, TrayMenu.simple],
-    ['lockLayout', 0, 1, false],
-    ['loadLayout', 0, 0, ''],
-    ['useSingleInstance', 0, 1, true],
-    ['statusWidth', 0, 2, OnSecondInstance.Show],
-    ['characterManagerDblClick', 0, 2, 8]
+    ['scriptEngineType', 0, SettingType.Number, ScriptEngineType.Simple],
+    ['initializeScriptEngineOnLoad', 0, SettingType.Boolean, false],
+    ['find.highlight', 0, SettingType.Boolean, false],
+    ['find.location', 0, SettingType.Custom, [5, 20]],
+    ['display.showInvalidMXPTags', 0, SettingType.Boolean, false],
+    ['display.showTimestamp', 0, SettingType.Boolean, false],
+    ['display.timestampFormat', 0, SettingType.String, '[[]MM-DD HH:mm:ss.SSS[]] '],
+    ['display.displayControlCodes', 0, SettingType.Boolean, false],
+    ['display.emulateTerminal', 0, SettingType.Boolean, false],
+    ['display.emulateControlCodes', 0, SettingType.Boolean, true],
+    ['display.wordWrap', 0, SettingType.Boolean, false],
+    ['display.tabWidth', 0, SettingType.Number, 8],
+    ['display.wrapAt', 0, SettingType.Number, 0],
+    ['display.indent', 0, SettingType.Number, 4],
+    ['statusWidth', 0, SettingType.Number, -1],
+    ['showEditorInTaskBar', 0, SettingType.Boolean, true],
+    ['trayMenu', 0, SettingType.Number, TrayMenu.simple],
+    ['lockLayout', 0, SettingType.Boolean, false],
+    ['loadLayout', 0, SettingType.String, ''],
+    ['useSingleInstance', 0, SettingType.Boolean, true],
+    ['statusWidth', 0, SettingType.Number, OnSecondInstance.Show],
+    ['characterManagerDblClick', 0, SettingType.Number, 8]
 ];
 
 /**
@@ -480,250 +519,207 @@ export let SettingList: any[] = [
  * @class Settings
  */
 export class Settings {
-    public checkForUpdates: boolean = false;
-    public editorPersistent: boolean = false;
-    public editorClearOnSend: boolean = false;
-    public editorCloseOnSend: boolean = false;
-    public AutoCopySelectedToClipboard: boolean = false;
-    public autoCreateCharacter: boolean = false;
-    public askonclose: boolean = true;
-    public askOnCloseAll: boolean = true;
-    public askonloadCharacter: boolean = true;
-    public askonchildren: boolean = true;
-    public dev: boolean = false;
+    public checkForUpdates: boolean;
+    public editorPersistent: boolean;
+    public editorClearOnSend: boolean;
+    public editorCloseOnSend: boolean;
+    public AutoCopySelectedToClipboard: boolean;
+    public autoCreateCharacter: boolean;
+    public askonclose: boolean;
+    public askOnCloseAll: boolean;
+    public askonloadCharacter: boolean;
+    public askonchildren: boolean;
+    public dev: boolean;
     public mapper: Mapper = new Mapper();
     public profiles: Profiles = new Profiles();
     public chat: Chat = new Chat();
     public codeEditor: CodeEditor = new CodeEditor();
-    public showScriptErrors: boolean = false;
-    public title: string = '$t';
-    public flashing: boolean = false;
-    public lagMeter: boolean = true;
-    public enablePing: boolean = true;
-    public parseSingleQuotes: boolean = false;
-    public logEnabled: boolean = false;
-    public logOffline: boolean = false;
-    public logPrepend: boolean = false;
-    public logGagged: boolean = false;
-    public logTimeFormat: string = 'YYYYMMDD-HHmmss';
-    public notifyMSPPlay: boolean = false;
-    public bufferSize: number = 5000;
-    public commandHistorySize: number = 20;
-    public enableEcho: boolean = true;
-    public autoConnect: boolean = true;
-    public autoConnectDelay: number = 600;
-    public autoLogin: boolean = true;
-    public autoTakeoverLogin: boolean = false;
-    public onDisconnect: OnDisconnect = OnDisconnect.ReconnectDialog;
-    public commandEcho: boolean = true;
-    public enableSound: boolean = true;
-    public fixHiddenWindows: boolean = true;
-    public maxReconnectDelay: number = 3600;
-    public enableBackgroundThrottling: boolean = true;
-    public enableBackgroundThrottlingClients: boolean = false;
-    public showInTaskBar: boolean = true;
-    public showLagInTitle: boolean = false;
+    public showScriptErrors: boolean;
+    public title: string;
+    public flashing: boolean;
+    public lagMeter: boolean;
+    public enablePing: boolean;
+    public parseSingleQuotes: boolean;
+    public logEnabled: boolean;
+    public logOffline: boolean;
+    public logPrepend: boolean;
+    public logGagged: boolean;
+    public logTimeFormat: string;
+    public notifyMSPPlay: boolean;
+    public bufferSize: number;
+    public commandHistorySize: number;
+    public enableEcho: boolean;
+    public autoConnect: boolean;
+    public autoConnectDelay: number;
+    public autoLogin: boolean;
+    public autoTakeoverLogin: boolean;
+    public onDisconnect: OnDisconnect;
+    public commandEcho: boolean;
+    public enableSound: boolean;
+    public fixHiddenWindows: boolean;
+    public maxReconnectDelay: number;
+    public enableBackgroundThrottling: boolean;
+    public enableBackgroundThrottlingClients: boolean;
+    public showInTaskBar: boolean;
+    public showLagInTitle: boolean;
 
-    public mspMaxRetriesOnError: number = 0;
+    public mspMaxRetriesOnError: number;
 
-    public enableKeepAlive: boolean = false;
-    public keepAliveDelay: number = 0;
-    public allowHalfOpen: boolean = true;
+    public enableKeepAlive: boolean;
+    public keepAliveDelay: number;
+    public allowHalfOpen: boolean;
 
-    public newlineShortcut: NewLineType = NewLineType.Ctrl;
+    public newlineShortcut: NewLineType;
 
-    public logWhat: Log = Log.Html;
-    public logTimestamp: boolean = false;
-    public logTimestampFormat: string = '[[]MM-DD HH:mm:ss.SSS[]] ';
-    public keepLastCommand: boolean = true;
-    public enableMXP: boolean = true;
-    public enableMSP: boolean = true;
-    public enableMCCP: boolean = true;
-    public enableUTF8: boolean = true;
-    public enableDebug: boolean = false;
-    public parseCommands: boolean = true;
+    public logWhat: Log;
+    public logTimestamp: boolean;
+    public logTimestampFormat: string;
+    public keepLastCommand: boolean;
+    public enableMXP: boolean;
+    public enableMSP: boolean;
+    public enableMCCP: boolean;
+    public enableUTF8: boolean;
+    public enableDebug: boolean;
+    public parseCommands: boolean;
 
-    public logErrors: boolean = true;
-    public showErrorsExtended: boolean = false;
-    public disableTriggerOnError: boolean = true;
-    public prependTriggeredLine: boolean = true;
-    public reportCrashes: boolean = false;
+    public logErrors: boolean;
+    public showErrorsExtended: boolean;
+    public disableTriggerOnError: boolean;
+    public prependTriggeredLine: boolean;
+    public reportCrashes: boolean;
 
-    public parseDoubleQuotes: boolean = true;
-    public logUniqueOnConnect: boolean = true;
-    public enableURLDetection: boolean = true;
-    public CommandonClick: boolean = true;
-    public cmdfontSize: string = '1em';
-    public fontSize: string = '1em';
-    public cmdfont: string = '\'Courier New\', Courier, monospace';
-    public font: string = '\'Courier New\', Courier, monospace';
+    public parseDoubleQuotes: boolean;
+    public logUniqueOnConnect: boolean;
+    public enableURLDetection: boolean;
+    public CommandonClick: boolean;
+    public cmdfontSize: string;
+    public fontSize: string;
+    public cmdfont: string;
+    public font: string;
 
-    public commandStacking: boolean = true;
-    public commandStackingChar: string = ';';
+    public commandStacking: boolean;
+    public commandStackingChar: string;
 
-    public enableSpeedpaths: boolean = true;
-    public parseSpeedpaths: boolean = true;
-    public speedpathsChar: string = '!';
+    public enableSpeedpaths: boolean;
+    public parseSpeedpaths: boolean;
+    public speedpathsChar: string;
 
-    public enableCommands: boolean = true;
-    public commandChar: string = '#';
+    public enableCommands: boolean;
+    public commandChar: string;
 
-    public allowEscape: boolean = true;
-    public escapeChar: string = '\\';
+    public allowEscape: boolean;
+    public escapeChar: string;
 
-    public enableVerbatim: boolean = true;
-    public verbatimChar: string = '`';
+    public enableVerbatim: boolean;
+    public verbatimChar: string;
 
-    public enableParameters: boolean = true;
-    public parametersChar: string = '%';
+    public enableParameters: boolean;
+    public parametersChar: string;
 
-    public enableNParameters: boolean = true;
-    public nParametersChar: string = '$';
+    public enableNParameters: boolean;
+    public nParametersChar: string;
 
-    public commandDelay: number = 500;
-    public commandDelayCount: number = 5;
+    public commandDelay: number;
+    public commandDelayCount: number;
 
-    public enableParsing: boolean = true;
-    public enableTriggers: boolean = true;
+    public enableParsing: boolean;
+    public enableTriggers: boolean;
 
-    public colors: string[] = [];
+    public colors: string[];
 
-    public soundPath = path.join('{data}', 'sounds');
-    public logPath = path.join('{data}', 'logs');
-    public theme = path.join('{themes}', 'default');
+    public soundPath;
+    public logPath;
+    public theme;
 
-    public gamepads: boolean = false;
+    public gamepads: boolean;
 
-    public allowEval: boolean = true;
-    public externalWho: boolean = true;
-    public externalHelp: boolean = true;
-    public watchForProfilesChanges = false;
-    public onProfileChange: OnProfileChange = OnProfileChange.Nothing;
-    public onProfileDeleted: OnProfileDeleted = OnProfileDeleted.Nothing;
-    public enableDoubleParameterEscaping = false;
+    public allowEval: boolean;
+    public externalWho: boolean;
+    public externalHelp: boolean;
+    public watchForProfilesChanges;
+    public onProfileChange: OnProfileChange;
+    public onProfileDeleted: OnProfileDeleted;
+    public enableDoubleParameterEscaping;
 
-    public ignoreEvalUndefined: boolean = true;
-    public enableInlineComments: boolean = true;
-    public enableBlockComments: boolean = true;
-    public inlineCommentString: string = '//';
-    public blockCommentString: string = '/*';
+    public ignoreEvalUndefined: boolean;
+    public enableInlineComments: boolean;
+    public enableBlockComments: boolean;
+    public inlineCommentString: string;
+    public blockCommentString: string;
 
-    public allowCommentsFromCommand: boolean = false;
-    public saveTriggerStateChanges: boolean = true;
-    public groupProfileSaves: boolean = false;
-    public groupProfileSaveDelay: number = 20000;
-    public returnNewlineOnEmptyValue: boolean = false;
+    public allowCommentsFromCommand: boolean;
+    public saveTriggerStateChanges: boolean;
+    public groupProfileSaves: boolean;
+    public groupProfileSaveDelay: number;
+    public returnNewlineOnEmptyValue: boolean;
 
-    public pathDelay: number = 0;
-    public pathDelayCount: number = 1;
-    public echoSpeedpaths: boolean = false;
+    public pathDelay: number;
+    public pathDelayCount: number;
+    public echoSpeedpaths: boolean;
 
-    public alwaysShowTabs: boolean = false;
-    public migrate: number = 0;
+    public alwaysShowTabs: boolean;
+    public migrate: number;
 
-    public scriptEngineType: ScriptEngineType = ScriptEngineType.Simple;
-    public initializeScriptEngineOnLoad: boolean = false;
+    public scriptEngineType: ScriptEngineType;
+    public initializeScriptEngineOnLoad: boolean;
 
     /**
      * @depreciated Allow window states have been moved to a separate layout system
      */
     public windows = {};
-    public buttons = {
-        connect: true,
-        characters: true,
-        preferences: true,
-        log: true,
-        clear: true,
-        lock: true,
-        map: true,
-        user: true,
-        mail: true,
-        compose: true,
-        immortal: true,
-        codeEditor: false
-    };
+    public buttons: ButtonOptions = {};
 
-    public find = {
-        case: false,
-        word: false,
-        reverse: false,
-        regex: false,
-        selection: false,
-        show: false,
-        highlight: false,
-        location: [5, 20]
-    };
+    public find: FindOptions = {};
 
-    public display = {
-        split: false,
-        splitHeight: -1,
-        splitLive: true,
-        roundedOverlays: true,
-        showSplitButton: true,
-        hideTrailingEmptyLine: true,
-        enableColors: true,
-        enableBackgroundColors: true,
-        showInvalidMXPTags: false,
-        showTimestamp: false,
-        timestampFormat: '[[]MM-DD HH:mm:ss.SSS[]] ',
-        tabWidth: 8,
-        displayControlCodes: false,
-        emulateTerminal: false,
-        emulateControlCodes: true,
-        wordWrap: false,
-        wrapAt: 0,
-        indent: 4
-    };
+    public display: DisplayOptions = {};
 
-    public extensions = {
+    public extensions = {};
 
-    };
+    public backupLoad: BackupSelection;
+    public backupSave: BackupSelection;
+    public backupAllProfiles;
 
-    public backupLoad: BackupSelection = BackupSelection.All;
-    public backupSave: BackupSelection = BackupSelection.All;
-    public backupAllProfiles = true;
+    public scrollLocked: boolean;
+    public showStatus: boolean;
+    public showMapper: boolean;
+    public showCharacterManager: boolean;
+    public showChat: boolean;
+    public showEditor: boolean;
+    public showArmor: boolean;
+    public showCodeEditor: boolean;
+    public showStatusWeather: boolean;
+    public showStatusLimbs: boolean;
+    public showStatusHealth: boolean;
+    public showStatusExperience: boolean;
+    public showStatusPartyHealth: boolean;
+    public showStatusCombatHealth: boolean;
+    public showButtonBar: boolean;
+    public allowNegativeNumberNeeded;
+    public spellchecking: boolean;
+    public hideOnMinimize: boolean;
+    public showTrayIcon: boolean;
+    public statusExperienceNeededProgressbar: boolean;
+    public statusWidth: number;
+    public showEditorInTaskBar: boolean;
 
-    public scrollLocked: boolean = false;
-    public showStatus: boolean = true;
-    public showMapper: boolean = false;
-    public showCharacterManager: boolean = false;
-    public showChat: boolean = false;
-    public showEditor: boolean = false;
-    public showArmor: boolean = false;
-    public showCodeEditor: boolean = false;
-    public showStatusWeather: boolean = true;
-    public showStatusLimbs: boolean = true;
-    public showStatusHealth: boolean = true;
-    public showStatusExperience: boolean = true;
-    public showStatusPartyHealth: boolean = true;
-    public showStatusCombatHealth: boolean = true;
-    public showButtonBar: boolean = true;
-    public allowNegativeNumberNeeded = false;
-    public spellchecking: boolean = true;
-    public hideOnMinimize: boolean = false;
-    public showTrayIcon: boolean = false;
-    public statusExperienceNeededProgressbar: boolean = false;
-    public statusWidth: number = -1;
-    public showEditorInTaskBar: boolean = true;
+    public trayClick: TrayClick;
+    public trayDblClick: TrayClick;
+    public trayMenu: TrayMenu;
 
-    public trayClick: TrayClick = TrayClick.show;
-    public trayDblClick: TrayClick = TrayClick.none;
-    public trayMenu: TrayMenu = TrayMenu.simple;
+    public pasteSpecialPrefix: string;
+    public pasteSpecialPostfix: string;
+    public pasteSpecialReplace: string;
+    public pasteSpecialPrefixEnabled: boolean;
+    public pasteSpecialPostfixEnabled: boolean;
+    public pasteSpecialReplaceEnabled: boolean;
 
-    public pasteSpecialPrefix: string = '';
-    public pasteSpecialPostfix: string = '';
-    public pasteSpecialReplace: string = '';
-    public pasteSpecialPrefixEnabled: boolean = true;
-    public pasteSpecialPostfixEnabled: boolean = true;
-    public pasteSpecialReplaceEnabled: boolean = true;
+    public lockLayout: boolean;
+    public loadLayout: string;
 
-    public lockLayout: boolean = false;
-    public loadLayout: string = '';
+    public useSingleInstance: boolean;
+    public onSecondInstance: OnSecondInstance;
 
-    public useSingleInstance: boolean = true;
-    public onSecondInstance: OnSecondInstance = OnSecondInstance.Show;
-
-    public characterManagerDblClick: number = 8;
+    public characterManagerDblClick: number;
 
     public static load(file) {
         try {

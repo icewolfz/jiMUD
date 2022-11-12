@@ -63,7 +63,7 @@ argv = require('yargs-parser')(argv, {
 });
 
 if (argv['data-dir'] && argv['data-dir'].length > 0)
-    app.setPath('userData', argv['data-dir']);
+    app.setPath('userData', path.normalize(argv['data-dir']));
 else if (process.env.PORTABLE_EXECUTABLE_DIR && !argv['no-pd'] && !argv['no-portable-dir'])
     app.setPath('userData', process.env.PORTABLE_EXECUTABLE_DIR);
 
@@ -138,12 +138,12 @@ const stateMap = new Map();
 process.on('uncaughtException', logError);
 process.on('unhandledRejection', (reason, promise) => {
     logError(reason);
-    if (global.debug || _settings.enableDebug)
+    if (global.debug || getSetting('enableDebug'))
         console.error(promise);
 });
 
 process.on('warning', warning => {
-    if (global.debug || _settings.enableDebug)
+    if (global.debug || getSetting('enableDebug'))
         console.warn(warning);
 });
 
@@ -161,7 +161,7 @@ function addInputContext(window, spellcheck) {
                 { type: 'separator' },
                 { role: 'selectAll' },
             ]);
-            if (global.debug || _settings.enableDebug) {
+            if (global.debug || getSetting('enableDebug')) {
                 inputMenu.append(new MenuItem({ type: 'separator' }));
                 inputMenu.append(new MenuItem({
                     label: 'Inspect',
@@ -266,7 +266,7 @@ function createWindow(options) {
             height: 600,
         };
     let backgroundColor = '#000';
-    switch (path.basename(_settings.theme, path.extname(_settings.theme))) {
+    switch (path.basename(getSetting('theme'), path.extname(getSetting('theme')))) {
         case 'zen':
             backgroundColor = '#dad2ba';
             break;
@@ -288,16 +288,16 @@ function createWindow(options) {
         backgroundColor: options.backgroundColor || backgroundColor,
         show: false,
         icon: path.join(__dirname, options.icon || '../assets/icons/png/64x64.png'),
-        skipTaskbar: !_settings.showInTaskBar,
+        skipTaskbar: !getSetting('showInTaskBar'),
         webPreferences: {
             nodeIntegration: true,
             nodeIntegrationInWorker: true,
             webviewTag: false,
             sandbox: false,
-            spellcheck: _settings ? _settings.spellchecking : false,
+            spellcheck: _settings ? getSetting('spellchecking') : false,
             enableRemoteModule: 'remote' in options ? options.remote : true,
             contextIsolation: false,
-            backgroundThrottling: _settings ? _settings.enableBackgroundThrottling : true,
+            backgroundThrottling: _settings ? getSetting('enableBackgroundThrottling') : true,
             preload: path.join(__dirname, 'preload.js')
         },
         //titleBarStyle: 'hidden',
@@ -347,7 +347,7 @@ function createWindow(options) {
     });
 
     window.on('minimize', () => {
-        if (_settings.hideOnMinimize && !global.editorOnly)
+        if (getSetting('hideOnMinimize') && !global.editorOnly)
             window.hide();
     });
 
@@ -479,7 +479,7 @@ function createWindow(options) {
             stateMap.set(window, states[options.file]);
             //if _loaded and not saved and the last window open save as its the final state
             if (_loaded && !_saved && Object.keys(windows).length === 1) {
-                await saveWindowLayout(null, _settings.lockLayout);
+                await saveWindowLayout(null, getSetting('lockLayout'));
                 _saved = true;
             }
             window.close();
@@ -631,10 +631,10 @@ function createDialog(options) {
             nodeIntegration: true,
             webviewTag: false,
             sandbox: false,
-            spellcheck: _settings ? _settings.spellchecking : false,
+            spellcheck: _settings ? getSetting('spellchecking') : false,
             enableRemoteModule: true,
             contextIsolation: false,
-            backgroundThrottling: _settings ? _settings.enableBackgroundThrottling : true,
+            backgroundThrottling: _settings ? getSetting('enableBackgroundThrottling') : true,
             preload: path.join(__dirname, 'preload.js')
         }
     });
@@ -690,7 +690,7 @@ function createDialog(options) {
         if (global.debug)
             openDevtools(window.webContents, { activate: false });
     });
-    addInputContext(window, _settings.spellchecking);
+    addInputContext(window, getSetting('spellchecking'));
     return window;
 }
 
@@ -725,7 +725,7 @@ if (argv.eo)
 if (argv.nls)
     _saved = true;
 
-if (_settings.useSingleInstance && !global.editorOnly && !argv.f) {
+if (getSetting('useSingleInstance') && !global.editorOnly && !argv.f) {
     var lock = app.requestSingleInstanceLock();
     if (!lock) {
         app.quit();
@@ -865,16 +865,16 @@ if (_settings.useSingleInstance && !global.editorOnly && !argv.f) {
             }
             //if no connection or window do onSecondInstance setting
             else if (fWindow == -1) {
-                if (_settings.onSecondInstance === OnSecondInstance.Show) {
+                if (getSetting('onSecondInstance') === OnSecondInstance.Show) {
                     restoreWindowState(active.window, stateMap.get(active.window), 2);
                     active.window.focus();
                 }
-                else if (_settings.onSecondInstance === OnSecondInstance.NewConnection) {
+                else if (getSetting('onSecondInstance') === OnSecondInstance.NewConnection) {
                     newConnection(active.window);
                     restoreWindowState(active.window, stateMap.get(active.window), 2);
                     active.window.focus();
                 }
-                else if (_settings.onSecondInstance === OnSecondInstance.NewWindow) {
+                else if (getSetting('onSecondInstance') === OnSecondInstance.NewWindow) {
                     newClientWindow(active.window);
                 }
             }
@@ -887,8 +887,8 @@ else if (argv.l)
     _layout = argv.l;
 else if (global.editorOnly)
     _layout = parseTemplate(path.join('{data}', 'editor.layout'));
-else if (_settings.loadLayout)
-    _layout = parseTemplate(_settings.loadLayout);
+else if (getSetting('loadLayout'))
+    _layout = parseTemplate(getSetting('loadLayout'));
 
 app.on('render-process-gone', (event, webContents, details) => {
     logError(`Render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
@@ -1169,7 +1169,7 @@ app.on('before-quit', async (e) => {
     //wait until save is done before continue just to be safe
     //only saved if not already been saved somewhere else and was loaded with no errors
     if (_loaded && !_saved) {
-        await saveWindowLayout(null, _settings.lockLayout);
+        await saveWindowLayout(null, getSetting('lockLayout'));
         _saved = true;
     }
     if (app.hasSingleInstanceLock())
@@ -1245,12 +1245,6 @@ ipcMain.on('get-global', (event, key) => {
             break;
         case 'layout':
             event.returnValue = _layout;
-            break;
-        case 'theme':
-            event.returnValue = _settings ? _settings.theme : '';
-            break;
-        case 'askonloadCharacter':
-            event.returnValue = _settings ? _settings.askonloadCharacter : true;
             break;
         case 'errorLog':
             event.returnValue = errorLog;
@@ -2023,7 +2017,7 @@ ipcMain.on('quit', quitApp)
 async function quitApp() {
     if (await canCloseAllWindows(true)) {
         if (_loaded && !_saved) {
-            await saveWindowLayout(null, _settings.lockLayout);
+            await saveWindowLayout(null, getSetting('lockLayout'));
             _saved = true;
         }
         app.quit();
@@ -2103,17 +2097,17 @@ ipcMain.on('reload-options', (events, preferences, clientId) => {
             if (!Object.prototype.hasOwnProperty.call(windows, window))
                 continue;
             windows[window].window.webContents.send('reload-options');
-            updateWebContents(windows[window].window.webContents, { enableBackgroundThrottling: _settings.enableBackgroundThrottling });
+            updateWebContents(windows[window].window.webContents, { enableBackgroundThrottling: getSetting('enableBackgroundThrottling') });
         }
         for (id in clients) {
             if (!Object.prototype.hasOwnProperty.call(clients, id) || getClientId(clients[id].view) === clientId)
                 continue;
             clients[id].view.webContents.send('reload-options', preferences, preferences === global.settingsFile);
-            updateWebContents(clients[id].view.webContents, { enableBackgroundThrottling: _settings.enableBackgroundThrottlingClients });
+            updateWebContents(clients[id].view.webContents, { enableBackgroundThrottling: getSetting('enableBackgroundThrottlingClients') });
         }
-        if (_settings.showTrayIcon && !tray)
+        if (getSetting('showTrayIcon') && !tray)
             createTray();
-        else if (!_settings.showTrayIcon && tray) {
+        else if (!getSetting('showTrayIcon') && tray) {
             tray.destroy();
             tray = null;
         }
@@ -2253,14 +2247,14 @@ function createClient(options) {
             nodeIntegrationInWorker: true,
             webviewTag: false,
             sandbox: false,
-            spellcheck: _settings ? _settings.spellchecking : false,
+            spellcheck: _settings ? getSetting('spellchecking') : false,
             enableRemoteModule: true,
             contextIsolation: false,
-            backgroundThrottling: _settings ? _settings.enableBackgroundThrottlingClients : true,
+            backgroundThrottling: _settings ? getSetting('enableBackgroundThrottlingClients') : true,
             preload: path.join(__dirname, 'preload.js')
         }
     });
-    switch (path.basename(_settings.theme, path.extname(_settings.theme))) {
+    switch (path.basename(getSetting('theme'), path.extname(getSetting('theme')))) {
         case 'zen':
             view.setBackgroundColor(options.backgroundColor || '#dad2ba');
             break;
@@ -2452,7 +2446,7 @@ function createClient(options) {
     //win.setTopBrowserView(view)    
     //addBrowserView
     //setBrowserView  
-    //addInputContext(view, _settings.spellchecking);
+    //addInputContext(view, getSetting('spellchecking'));
     return options.id;
 }
 
@@ -2638,7 +2632,7 @@ function initializeChildWindow(window, link, details, noClose) {
         else
             loadWindowScripts(window, details.frameName);
         if (!details.options.noInputContext)
-            addInputContext(window, _settings.spellchecking);
+            addInputContext(window, getSetting('spellchecking'));
         if ('visible' in details.options && !details.options.visible)
             window.hide();
         else
@@ -2882,6 +2876,7 @@ function parseTemplate(str, data) {
     str = str.replace(/{pictures}/g, app.getPath('pictures'));
     str = str.replace(/{videos}/g, app.getPath('videos'));
     str = str.replace(/{characters}/g, path.join(app.getPath('userData'), 'characters'));
+    str = str.replace(/{profiles}/g, path.join(app.getPath('userData'), 'profiles'));
     str = str.replace(/{themes}/g, path.join(__dirname, '..', 'build', 'themes'));
     str = str.replace(/{assets}/g, path.join(__dirname, '..', 'assets'));
     if (data) {
@@ -2938,9 +2933,9 @@ function logError(err, skipClient, title) {
     title = title || '';
     if (title && title.length) title += '\n';
     var msg = '';
-    if (global.debug || _settings.enableDebug)
+    if (global.debug || getSetting('enableDebug'))
         console.error(title + err);
-    if (err.stack && _settings.showErrorsExtended)
+    if (err.stack && getSetting('showErrorsExtended'))
         msg = err.stack;
     else if (err instanceof TypeError)
         msg = err.name + ': ' + err.message;
@@ -2955,8 +2950,8 @@ function logError(err, skipClient, title) {
         if (sendClient('error', title + msg))
             return;
     }
-    if (_settings.logErrors) {
-        if (!_settings.showErrorsExtended) {
+    if (getSetting('logErrors')) {
+        if (!getSetting('showErrorsExtended')) {
             if (err.stack)
                 msg = err.stack;
             else {
@@ -3004,7 +2999,7 @@ function updateJumpList() {
             }
         ]
     });
-    if (_settings.useSingleInstance)
+    if (getSetting('useSingleInstance'))
         list[0].items.push(...[
             {
                 type: 'task',
@@ -3044,7 +3039,7 @@ function hideAllWindows() {
     for (window in windows) {
         if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window] || windows[window].window.isDestroyed())
             continue;
-        if (_settings.hideOnMinimize)
+        if (getSetting('hideOnMinimize'))
             windows[window].window.hide();
         else
             windows[window].window.minimize();
@@ -3056,7 +3051,7 @@ function toggleAllWindows() {
         if (!Object.prototype.hasOwnProperty.call(windows, window) || !windows[window] || windows[window].window.isDestroyed())
             continue;
         if (windows[window].window.isVisible()) {
-            if (_settings.hideOnMinimize)
+            if (getSetting('hideOnMinimize'))
                 windows[window].window.hide();
             else
                 windows[window].window.minimize();
@@ -3095,7 +3090,7 @@ async function allWindowsClosed() {
 //#region Auto updates
 function createUpdater(window) {
     const autoUpdater = require('electron-updater').autoUpdater;
-    autoUpdater.on('download-progress', progressObj => {
+    autoUpdater.on('downloafd-progress', progressObj => {
         window.setProgressBar(progressObj.percent / 100);
         const progress = progressMap.get(window);
         if (progress)
@@ -3106,7 +3101,7 @@ function createUpdater(window) {
 
 function checkForUpdates() {
     const window = getActiveWindow().window;
-    if (_settings.checkForUpdates && !_checkingUpdates) {
+    if (getSetting('checkForUpdates') && !_checkingUpdates) {
         _checkingUpdates = true;
         //resources/app-update.yml
         if (!isFileSync(path.join(app.getAppPath(), '..', 'app-update.yml'))) {
@@ -3243,7 +3238,7 @@ ipcMain.on('check-for-updates', checkForUpdatesManual);
 
 //#region Window build/position functions
 function getWindowX(x, w) {
-    if (_settings.fixHiddenWindows) {
+    if (getSetting('fixHiddenWindows')) {
         const { width } = screen.getPrimaryDisplay().workAreaSize;
         if (x + w >= width)
             return width - w;
@@ -3254,7 +3249,7 @@ function getWindowX(x, w) {
 }
 
 function getWindowY(y, h) {
-    if (_settings.fixHiddenWindows) {
+    if (getSetting('fixHiddenWindows')) {
         const { height } = screen.getPrimaryDisplay().workAreaSize;
         if (y + h >= height)
             return height - h;
@@ -5223,7 +5218,7 @@ function openProfileManager(parent) {
         window.focus();
     else {
         window = createWindow({ id: 'profiles', file: 'profiles.html', parent: parent, icon: '../assets/icons/png/profiles.png', title: 'Profile Manger' });
-        window.setSkipTaskbar(!_settings.profiles.showInTaskBar);
+        window.setSkipTaskbar(!getSetting('profiles.showInTaskBar'));
     }
 }
 //#endregion
@@ -5234,15 +5229,15 @@ async function openDevtools(window, options) {
 
 //#region Tray functions
 async function createTray() {
-    if (!_settings.showTrayIcon)
+    if (!getSetting('showTrayIcon'))
         return;
     tray = new Tray(path.join(__dirname, '../assets/icons/png/disconnected2.png'));
     updateTray();
-    if (_settings.trayMenu === TrayMenu.simple)
+    if (getSetting('trayMenu') === TrayMenu.simple)
         _updateTrayContext();
     tray.on('click', () => {
         const active = getActiveWindow();
-        switch (_settings.trayClick) {
+        switch (getSetting('trayClick')) {
             case TrayClick.show:
                 if (active)
                     restoreWindowState(active.window, states[active.file || 'manager.html'], 2);
@@ -5250,7 +5245,7 @@ async function createTray() {
             case TrayClick.toggle:
                 if (active) {
                     if (active.window.isVisible()) {
-                        if (_settings.hideOnMinimize)
+                        if (getSetting('hideOnMinimize'))
                             active.window.hide();
                         else
                             active.window.minimize();
@@ -5261,7 +5256,7 @@ async function createTray() {
                 break;
             case TrayClick.hide:
                 if (active) {
-                    if (_settings.hideOnMinimize)
+                    if (getSetting('hideOnMinimize'))
                         active.window.hide();
                     else
                         active.window.minimize();
@@ -5284,7 +5279,7 @@ async function createTray() {
 
     tray.on('double-click', () => {
         const active = getActiveWindow();
-        switch (_settings.trayClick) {
+        switch (getSetting('trayClick')) {
             case TrayClick.show:
                 if (active)
                     restoreWindowState(active.window, states[active.file || 'manager.html'], 2);
@@ -5292,7 +5287,7 @@ async function createTray() {
             case TrayClick.toggle:
                 if (active) {
                     if (active.window.isVisible()) {
-                        if (_settings.hideOnMinimize)
+                        if (getSetting('hideOnMinimize'))
                             active.window.hide();
                         else
                             active.window.minimize();
@@ -5303,7 +5298,7 @@ async function createTray() {
                 break;
             case TrayClick.hide:
                 if (active) {
-                    if (_settings.hideOnMinimize)
+                    if (getSetting('hideOnMinimize'))
                         active.window.hide();
                     else
                         active.window.minimize();
@@ -5463,7 +5458,7 @@ function getTrayWindowContext(window, windowId, noNew) {
         {
             label: 'H&ide window...', click: () => {
                 if (!window) return;
-                if (_settings.hideOnMinimize)
+                if (getSetting('hideOnMinimize'))
                     window.hide();
                 else
                     window.minimize();
@@ -5471,7 +5466,7 @@ function getTrayWindowContext(window, windowId, noNew) {
         },
         { type: 'separator' }
     ]);
-    if (_settings.trayMenu === TrayMenu.compact)
+    if (getSetting('trayMenu') === TrayMenu.compact)
         return contextMenu;
     const cl = windows[windowId].clients.length;
     if (cl === 1) {
@@ -5527,7 +5522,7 @@ function getOverlayIcon(overlay) {
 //debounce the context updater to improve performance
 let _trayContextTimer;
 function updateTrayContext() {
-    if (_trayContextTimer || _settings.trayMenu === TrayMenu.simple) return;
+    if (_trayContextTimer || getSetting('trayMenu') === TrayMenu.simple) return;
     _trayContextTimer = setTimeout(_updateTrayContext, 250);
 }
 
@@ -5537,7 +5532,7 @@ async function _updateTrayContext() {
     const activeID = active ? getWindowId(active.window) : 0;
     let contextMenu = [];
 
-    if (_settings.trayMenu === TrayMenu.simple) {
+    if (getSetting('trayMenu') === TrayMenu.simple) {
         contextMenu.push(...[
             {
                 label: 'New &Tab',
@@ -5587,7 +5582,7 @@ async function _updateTrayContext() {
             {
                 label: 'H&ide window...', click: () => {
                     if (!active) return;
-                    if (_settings.hideOnMinimize)
+                    if (getSetting('hideOnMinimize'))
                         active.window.hide();
                     else
                         active.window.minimize();
@@ -5674,7 +5669,7 @@ async function _updateTrayContext() {
                 {
                     label: 'H&ide window...', click: () => {
                         if (!active) return;
-                        if (_settings.hideOnMinimize)
+                        if (getSetting('hideOnMinimize'))
                             active.window.hide();
                         else
                             active.window.minimize();

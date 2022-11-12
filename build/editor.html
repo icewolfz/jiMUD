@@ -239,7 +239,7 @@
                         classes.push('overline');
                         break;
                     case 'FLASH':
-                        if (options.flashing)
+                        if (getOption('flashing'))
                             classes.push('flash');
                         else
                             classes.push('noflash');
@@ -460,7 +460,7 @@
             var buffer = [];
             var codes = [];
             var color, d, dl, rgb;
-            if (options.enableDebug)
+            if (getOption('enableDebug'))
                 window.opener.client.debug('Advanced Editor Get Raw HTML: ' + tinymce.activeEditor.getContent({ format: 'raw' }));
             for (d = data.length - 1; d >= 0; d--) {
                 if (!data[d].startsWith('"') && data[d] != 'BR' && data[d] != 'RESET')
@@ -869,67 +869,67 @@
                         tooltip: 'Send to mud',
                         onAction: function () {
                             window.opener.client.sendCommand(getFormattedText().replace(/(?:\r)/g, ''));
-                            if (window.opener.client.options.editorClearOnSend)
+                            if (getOption('editorClearOnSend'))
                                 tinymce.activeEditor.setContent('');
-                            if (window.opener.client.options.editorCloseOnSend)
+                            if (getOption('editorCloseOnSend'))
                                 window.close();
                         },
                         onItemAction: function (api, value) {
                             switch (value) {
                                 case 'formatted':
                                     window.opener.client.sendCommand(getFormattedText().replace(/(?:\r)/g, ''));
-                                    if (window.opener.client.options.editorClearOnSend)
+                                    if (getOption('editorClearOnSend'))
                                         tinymce.activeEditor.setContent('');
-                                    if (window.opener.client.options.editorCloseOnSend)
+                                    if (getOption('editorCloseOnSend'))
                                         window.close();
                                     break;
                                 case 'text':
                                     window.opener.client.sendCommand(getText().replace(/(?:\r)/g, ''));
-                                    if (window.opener.client.options.editorClearOnSend)
+                                    if (getOption('editorClearOnSend'))
                                         tinymce.activeEditor.setContent('');
-                                    if (window.opener.client.options.editorCloseOnSend)
+                                    if (getOption('editorCloseOnSend'))
                                         window.close();
                                     break;
                                 case 'formattednoecho':
                                     window.opener.client.sendBackground(getFormattedText().replace(/(?:\r)/g, ''), true);
-                                    if (window.opener.client.options.editorClearOnSend)
+                                    if (getOption('editorClearOnSend'))
                                         tinymce.activeEditor.setContent('');
-                                    if (window.opener.client.options.editorCloseOnSend)
+                                    if (getOption('editorCloseOnSend'))
                                         window.close();
                                     break;
                                 case 'textnoecho':
                                     window.opener.client.sendBackground(getText().replace(/(?:\r)/g, ''), true);
-                                    if (window.opener.client.options.editorClearOnSend)
+                                    if (getOption('editorClearOnSend'))
                                         tinymce.activeEditor.setContent('');
-                                    if (window.opener.client.options.editorCloseOnSend)
+                                    if (getOption('editorCloseOnSend'))
                                         window.close();
                                     break;
                                 case 'formattedverbatim':
                                     window.opener.client.send(getFormattedText().replace(/(?:\r)/g, ''));
-                                    if (window.opener.client.options.editorClearOnSend)
+                                    if (getOption('editorClearOnSend'))
                                         tinymce.activeEditor.setContent('');
-                                    if (window.opener.client.options.editorCloseOnSend)
+                                    if (getOption('editorCloseOnSend'))
                                         window.close();
                                     break;
                                 case 'textverbatim':
                                     window.opener.client.send(getText().replace(/(?:\r)/g, ''));
-                                    if (window.opener.client.options.editorClearOnSend)
+                                    if (getOption('editorClearOnSend'))
                                         tinymce.activeEditor.setContent('');
-                                    if (window.opener.client.options.editorCloseOnSend)
+                                    if (getOption('editorCloseOnSend'))
                                         window.close();
                                     break;
                                 case 'rawformatted':
                                     window.opener.client.sendRaw(getFormattedText().replace(/(?:\r)/g, ''));
-                                    if (window.opener.client.options.editorClearOnSend)
+                                    if (getOption('editorClearOnSend'))
                                         tinymce.activeEditor.setContent('');
-                                    if (window.opener.client.options.editorCloseOnSend)
+                                    if (getOption('editorCloseOnSend'))
                                         window.close();
                                     break;
                                 case 'rawtext':
                                     window.opener.client.sendRaw(getText().replace(/(?:\r)/g, ''));
-                                    if (window.opener.client.options.editorClearOnSend)
+                                    if (getOption('editorClearOnSend'))
                                         tinymce.activeEditor.setContent('');
-                                    if (window.opener.client.options.editorCloseOnSend)
+                                    if (getOption('editorCloseOnSend'))
                                         window.close();
                                     break;
                                 case 'codeeditor':
@@ -945,9 +945,9 @@
                                     }
                                     else
                                         window.opener._windows['code.editor.html'].updateValue(getFormattedText().replace(/(?:\r)/g, ''));
-                                    if (window.opener.client.options.editorClearOnSend)
+                                    if (getOption('editorClearOnSend'))
                                         tinymce.activeEditor.setContent('');
-                                    if (window.opener.client.options.editorCloseOnSend)
+                                    if (getOption('editorCloseOnSend'))
                                         window.close();
                                     break;
                             }
@@ -1173,7 +1173,7 @@
                         insertFormatted(clipboard.readText('selection') || '');
                     });
                     editor.on('PastePreProcess', function (e) {
-                        if (options.enableDebug)
+                        if (getOption('enableDebug'))
                             window.opener.client.debug('Advanced Before Editor PastePreProcess: ' + e.content);
                         clearReverse($('.reverse', $(editor.getDoc()).contents()));
                         e.content = e.content.replace(/<\/p>/g, '<br>');
@@ -1187,7 +1187,7 @@
                             }
                             e.content = e.content.substring(0, m.index) + e.content.substring(m.index, regex.lastIndex).replace(/\n/g, '<br>') + e.content.substring(regex.lastIndex);
                         }
-                        if (options.enableDebug)
+                        if (getOption('enableDebug'))
                             window.opener.client.debug('Advanced After Editor PastePreProcess: ' + e.content);
                     });
                     editor.on('PastePreProcess', function () {
@@ -1256,65 +1256,65 @@
             var c, color, r, g, b, idx, _bold = [], bl;
             _ColorTable = [];
             _colors = {};
-
-            color = new rgbcolor(options.colors[0] || _dColors[0]).toHex().substr(1).toUpperCase();
+            var clientColors = getOption('colors');
+            color = new rgbcolor(clientColors[0] || _dColors[0]).toHex().substr(1).toUpperCase();
             _colors[color] = 'BLACK';
             _ColorTable.push(color, 'BLACK');
 
-            color = new rgbcolor(options.colors[1] || _dColors[1]).toHex().substr(1).toUpperCase();
+            color = new rgbcolor(clientColors[1] || _dColors[1]).toHex().substr(1).toUpperCase();
             _colors[color] = 'RED';
             _ColorTable.push(color, 'RED');
 
-            color = new rgbcolor(options.colors[2] || _dColors[2]).toHex().substr(1).toUpperCase();
+            color = new rgbcolor(clientColors[2] || _dColors[2]).toHex().substr(1).toUpperCase();
             _colors[color] = 'GREEN';
             _ColorTable.push(color, 'GREEN');
 
-            color = new rgbcolor(options.colors[3] || _dColors[3]).toHex().substr(1).toUpperCase();
+            color = new rgbcolor(clientColors[3] || _dColors[3]).toHex().substr(1).toUpperCase();
             _colors[color] = 'ORANGE';
             _ColorTable.push(color, 'ORANGE');
 
-            color = new rgbcolor(options.colors[4] || _dColors[4]).toHex().substr(1).toUpperCase();
+            color = new rgbcolor(clientColors[4] || _dColors[4]).toHex().substr(1).toUpperCase();
             _colors[color] = 'BLUE';
             _ColorTable.push(color, 'BLUE');
-            color = new rgbcolor(options.colors[5] || _dColors[5]).toHex().substr(1).toUpperCase();
+            color = new rgbcolor(clientColors[5] || _dColors[5]).toHex().substr(1).toUpperCase();
             _colors[color] = 'MAGENTA';
             _ColorTable.push(color, 'MAGENTA');
-            color = new rgbcolor(options.colors[6] || _dColors[6]).toHex().substr(1).toUpperCase();
+            color = new rgbcolor(clientColors[6] || _dColors[6]).toHex().substr(1).toUpperCase();
             _colors[color] = 'CYAN';
             _ColorTable.push(color, 'CYAN');
-            color = new rgbcolor(options.colors[7] || _dColors[7]).toHex().substr(1).toUpperCase();
+            color = new rgbcolor(clientColors[7] || _dColors[7]).toHex().substr(1).toUpperCase();
             _colors[color] = 'WHITE';
             _ColorTable.push(color, 'WHITE');
 
-            color = new rgbcolor(options.colors[8] || _dColors[8]).toHex().substr(1).toUpperCase();
+            color = new rgbcolor(clientColors[8] || _dColors[8]).toHex().substr(1).toUpperCase();
             _colors[color] = 'mono11';
             _ColorTable.push(color, 'BOLD BLACK');
             _bold.push(color);
-            color = new rgbcolor(options.colors[9] || _dColors[9]).toHex().substr(1).toUpperCase();
+            color = new rgbcolor(clientColors[9] || _dColors[9]).toHex().substr(1).toUpperCase();
             _colors[color] = 'BOLD%^%^RED';
             _ColorTable.push(color, 'BOLD RED');
             _bold.push(color);
-            color = new rgbcolor(options.colors[10] || _dColors[10]).toHex().substr(1).toUpperCase();
+            color = new rgbcolor(clientColors[10] || _dColors[10]).toHex().substr(1).toUpperCase();
             _colors[color] = 'BOLD%^%^GREEN';
             _ColorTable.push(color, 'BOLD GREEN');
             _bold.push(color);
-            color = new rgbcolor(options.colors[11] || _dColors[11]).toHex().substr(1).toUpperCase();
+            color = new rgbcolor(clientColors[11] || _dColors[11]).toHex().substr(1).toUpperCase();
             _colors[color] = 'YELLOW';
             _ColorTable.push(color, 'YELLOW');
             _bold.push(color);
-            color = new rgbcolor(options.colors[12] || _dColors[12]).toHex().substr(1).toUpperCase();
+            color = new rgbcolor(clientColors[12] || _dColors[12]).toHex().substr(1).toUpperCase();
             _colors[color] = 'BOLD%^%^BLUE';
             _ColorTable.push(color, 'BOLD BLUE');
             _bold.push(color);
-            color = new rgbcolor(options.colors[13] || _dColors[13]).toHex().substr(1).toUpperCase();
+            color = new rgbcolor(clientColors[13] || _dColors[13]).toHex().substr(1).toUpperCase();
             _colors[color] = 'BOLD%^%^MAGENTA';
             _ColorTable.push(color, 'BOLD MAGENTA');
             _bold.push(color);
-            color = new rgbcolor(options.colors[14] || _dColors[14]).toHex().substr(1).toUpperCase();
+            color = new rgbcolor(clientColors[14] || _dColors[14]).toHex().substr(1).toUpperCase();
             _colors[color] = 'BOLD%^%^CYAN';
             _ColorTable.push(color, 'BOLD CYAN');
             _bold.push(color);
-            color = new rgbcolor(options.colors[15] || _dColors[15]).toHex().substr(1).toUpperCase();
+            color = new rgbcolor(clientColors[15] || _dColors[15]).toHex().substr(1).toUpperCase();
             _colors[color] = 'BOLD%^%^WHITE';
             _ColorTable.push(color, 'BOLD WHITE');
             //_bold.push(color);
@@ -1383,13 +1383,19 @@
                 options = Settings.load(window.getGlobal('settingsFile'));
             else if (window.opener.client)
                 options = window.opener.client.options;
-            $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-size', options.cmdfontSize);
-            $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-family', options.cmdfont + ', monospace');
+            $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-size', getOption('cmdfontSize'));
+            $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-family', getOption('cmdfont') + ', monospace');
             if (tinymce.activeEditor.formatter)
-                tinymce.activeEditor.formatter.register('flash', { inline: 'span', 'classes': options.flashing ? 'flash' : 'noflash', links: true, remove_similar: true });
+                tinymce.activeEditor.formatter.register('flash', { inline: 'span', 'classes': getOption('flashing') ? 'flash' : 'noflash', links: true, remove_similar: true });
             else
-                tinymce.activeEditor.settings.formats['flash'] = { inline: 'span', 'classes': options.flashing ? 'flash' : 'noflash', links: true, remove_similar: true };
+                tinymce.activeEditor.settings.formats['flash'] = { inline: 'span', 'classes': getOption('flashing') ? 'flash' : 'noflash', links: true, remove_similar: true };
             loadColors();
+        }
+
+        function getOption(key) {
+            if (editorOnly || !window.opener.client)
+                return options.getValue(key);
+            return window.opener.client.getOption(key);
         }
 
         function openColorDialog(type, color) {
@@ -1422,7 +1428,7 @@
 
         window.onbeforeunload = () => {
             if (!editorOnly && window.opener.client) {
-                if (window.opener.client.options.editorPersistent) {
+                if (getOption('editorPersistent')) {
                     window.hide();
                     e.returnValue = false;
                     return 'no';
@@ -1431,13 +1437,13 @@
                 window.opener._status.off('set-title', setTitle);
                 window.opener.removeEventListener('loadCharacter', updateCharacter);
                 window.opener.removeEventListener('updateCharacter', updateCharacter);
-                window.opener.removeEventListener('resetCharacter', updateCharacter);                
+                window.opener.removeEventListener('resetCharacter', updateCharacter);
             }
         }
 
         function skipSaveWindow() {
             if (!editorOnly && window.opener.client) {
-                if (window.opener.client.options.editorPersistent)
+                if (getOption('editorPersistent'))
                     return false;
             }
             //if not visible do not save this window as it was probably preserved due to a setting change

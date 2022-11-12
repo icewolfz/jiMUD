@@ -383,11 +383,11 @@
             //settings only apply if child window
             if (window.opener.opener) {
                 window.opener.update({
-                    alwaysOnTopClient: window.opener.opener.client.options.codeEditor.alwaysOnTopClient,
-                    alwaysOnTop: window.opener.opener.client.options.codeEditor.alwaysOnTop,
-                    showInTaskBar: window.opener.opener.client.options.codeEditor.showInTaskBar,
+                    alwaysOnTopClient: window.opener.opener.client.getOption('codeEditor.alwaysOnTopClient'),
+                    alwaysOnTop: window.opener.opener.client.getOption('codeEditor.alwaysOnTop'),
+                    showInTaskBar: window.opener.opener.client.getOption('codeEditor.showInTaskBar'),
                     enableBackgroundThrottling: window.getSetting('enableBackgroundThrottling'),
-                    persistent: window.opener.opener.client.options.codeEditor.persistent
+                    persistent: window.opener.opener.client.getOption('codeEditor.persistent')
                 });
             }
             window.opener.reloadOptions();

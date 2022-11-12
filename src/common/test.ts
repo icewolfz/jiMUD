@@ -45,11 +45,11 @@ export class Tests extends EventEmitter {
             let t;
             for (t in this.TestFunctions) {
                 if (!this.TestFunctions.hasOwnProperty(t)) continue;
-                sample += `\t${this.Client.options.commandChar + t}\n`;
+                sample += `\t${this.Client.getOption('commandChar') + t}\n`;
             }
-            sample += `\t${this.Client.options.commandChar}testfile file\n`;
-            sample += `\t${this.Client.options.commandChar}testspeedfile file\n`;
-            sample += `\t${this.Client.options.commandChar}testspeedfiler file\n`;
+            sample += `\t${this.Client.getOption('commandChar')}testfile file\n`;
+            sample += `\t${this.Client.getOption('commandChar')}testspeedfile file\n`;
+            sample += `\t${this.Client.getOption('commandChar')}testspeedfiler file\n`;
             this.Client.print(sample, true);
         };
 
@@ -634,8 +634,8 @@ export class Tests extends EventEmitter {
 
         this.TestFunctions['testspeed'] = function () {
             const sample = [];
-            const commands = this.Client.options.commandChar + ['testmxpcolors', 'testmxp', 'testcolors', 'testcolorsdetails', 'testxterm', 'testxtermrgb'].join('\n' + this.Client.options.commandChar);
-            const e = this.Client.options.enableCommands;
+            const commands = this.Client.getOption('commandChar') + ['testmxpcolors', 'testmxp', 'testcolors', 'testcolorsdetails', 'testxterm', 'testxtermrgb'].join('\n' + this.Client.getOption('commandChar'));
+            const e = this.Client.getOption('enableCommands');
             this.Client.options.enableCommands = true;
             let avg = 0;
             let max = 0;

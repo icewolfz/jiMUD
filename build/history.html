@@ -58,7 +58,7 @@
     list.addEventListener('dblclick', () => {
         const cmd = list.value;
         window.opener.client.AddCommandToHistory(cmd);
-        window.opener.client.sendCommand(cmd, false, window.opener.client.options.allowCommentsFromCommand);
+        window.opener.client.sendCommand(cmd, false, window.opener.client.getOption('allowCommentsFromCommand'));
         window.close();
     });
     list.addEventListener('change', () => {
@@ -92,7 +92,7 @@
             loadHistory();
         else if (action === 'add') {
             window.opener.client.AddCommandToHistory(list.value);
-            window.opener.client.sendCommand(list.value, false, window.opener.client.options.allowCommentsFromCommand);
+            window.opener.client.sendCommand(list.value, false, window.opener.client.getOption('allowCommentsFromCommand'));
         }
     }
 
