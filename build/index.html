@@ -3176,7 +3176,7 @@
             if (global) {
                 window.loadTheme();
                 client.emit('load-theme');
-                this.clearOptionCache();
+                client.clearOptionCache();
             }
             if (settings !== _windowState.data.settings) return;
             client.loadOptions();

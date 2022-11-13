@@ -95,7 +95,7 @@
     <script src="../lib/bootstrap-treeview.min.js"></script>
     <script type="text/javascript">
         //spell-checker:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
-        const { parseTemplate, templatePath, existsSync, getColors, isFileSync, isDirSync, walkSync } = require('./js/library');
+        const { parseTemplate, templatePath, existsSync, getColors, isFileSync, isDirSync, walkSync, isArrayEqual } = require('./js/library');
         const { TrayClick, TrayMenu } = require('./js/types');
         const Settings = require('./js/settings').Settings;
         const { ipcRenderer } = require('electron');
@@ -103,6 +103,7 @@
         const path = require('path');
         const fs = require('fs');
         const fontList = require('font-list');
+        const SettingProperties = ['bufferSize', 'commandDelay', 'commandDelayCount', 'commandHistorySize', 'fontSize', 'cmdfontSize', 'commandEcho', 'flashing', 'autoConnect', 'enableAliases', 'enableTriggers', 'enableMacros', 'showScriptErrors', 'commandStacking', 'commandStackingChar', 'htmlLog', 'keepLastCommand', 'enableMCCP', 'enableUTF8', 'font', 'cmdfont', 'mapper.follow', 'mapper.enabled', 'mapper.split', 'mapper.fill', 'showMapper', 'fullScreen', 'enableMXP', 'enableMSP', 'parseCommands', 'lagMeter', 'enablePing', 'enableEcho', 'enableSpeedpaths', 'speedpathsChar', 'parseSpeedpaths', 'profile', 'parseSingleQuotes', 'parseDoubleQuotes', 'logEnabled', 'logPrepend', 'logOffline', 'logUniqueOnConnect', 'enableURLDetection', 'notifyMSPPlay', 'CommandonClick', 'allowEval', 'allowEscape', 'AutoCopySelectedToClipboard', 'enableDebug', 'editorPersistent', 'askonclose', 'dev', 'chat.captureLines', 'chat.captureAllLines', 'chat.captureReviews', 'chat.captureTells', 'chat.captureTalk', 'chat.gag', 'chat.CaptureOnlyOpen', 'checkForUpdates', 'autoCreateCharacter', 'askonchildren', 'mapper.legend', 'mapper.room', 'mapper.importType', 'mapper.vscroll', 'mapper.hscroll', 'mapper.scale', 'mapper.alwaysOnTop', 'mapper.alwaysOnTopClient', 'mapper.memory', 'mapper.memorySavePeriod', 'mapper.active.ID', 'mapper.active.x', 'mapper.active.y', 'mapper.active.z', 'mapper.active.area', 'mapper.active.zone', 'mapper.persistent', 'profiles.split', 'profiles.askoncancel', 'profiles.triggersAdvanced', 'profiles.aliasesAdvanced', 'profiles.buttonsAdvanced', 'profiles.macrosAdvanced', 'profiles.contextsAdvanced', 'profiles.codeEditor', 'profiles.watchFiles', 'chat.alwaysOnTop', 'chat.alwaysOnTopClient', 'chat.log', 'chat.persistent', 'chat.zoom', 'chat.font', 'chat.fontSize', 'title', 'logGagged', 'logTimeFormat', 'autoConnectDelay', 'autoLogin', 'onDisconnect', 'enableKeepAlive', 'keepAliveDelay', 'newlineShortcut', 'logWhat', 'logErrors', 'showErrorsExtended', 'reportCrashes', 'enableCommands', 'commandChar', 'escapeChar', 'enableVerbatim', 'verbatimChar', 'soundPath', 'logPath', 'theme', 'gamepads', 'buttons.connect', 'buttons.characters', 'buttons.preferences', 'buttons.log', 'buttons.clear', 'buttons.lock', 'buttons.map', 'buttons.user', 'buttons.mail', 'buttons.compose', 'buttons.immortal', 'buttons.codeEditor', 'find.case', 'find.word', 'find.reverse', 'find.regex', 'find.selection', 'find.show', 'display.split', 'display.splitHeight', 'display.splitLive', 'display.roundedOverlays', 'backupLoad', 'backupSave', 'backupAllProfiles', 'scrollLocked', 'showStatus', 'showCharacterManager', 'showChat', 'showEditor', 'showArmor', 'showStatusWeather', 'showStatusLimbs', 'showStatusHealth', 'showStatusExperience', 'showStatusPartyHealth', 'showStatusCombatHealth', 'showButtonBar', 'allowNegativeNumberNeeded', 'spellchecking', 'hideOnMinimize', 'showTrayIcon', 'statusExperienceNeededProgressbar', 'trayClick', 'trayDblClick', 'pasteSpecialPrefix', 'pasteSpecialPostfix', 'pasteSpecialReplace', 'pasteSpecialPrefixEnabled', 'pasteSpecialPostfixEnabled', 'pasteSpecialReplaceEnabled', 'display.showSplitButton', 'chat.split', 'chat.splitHeight', 'chat.splitLive', 'chat.roundedOverlays', 'chat.showSplitButton', 'chat.bufferSize', 'chat.flashing', 'display.hideTrailingEmptyLine', 'display.enableColors', 'display.enableBackgroundColors', 'enableSound', 'allowHalfOpen', 'editorClearOnSend', 'editorCloseOnSend', 'askOnCloseAll', 'askonloadCharacter', 'mapper.roomWidth', 'mapper.roomGroups', 'mapper.showInTaskBar', 'profiles.enabled', 'profiles.sortOrder', 'profiles.sortDirection', 'profiles.showInTaskBar', 'profiles.profileSelected', 'profiles.profileExpandSelected', 'chat.lines', 'chat.showInTaskBar', 'chat.showTimestamp', 'chat.timestampFormat', 'chat.tabWidth', 'chat.displayControlCodes', 'chat.emulateTerminal', 'chat.emulateControlCodes', 'chat.wordWrap', 'chat.wrapAt', 'chat.indent', 'chat.scrollLocked', 'chat.find.case', 'chat.find.word', 'chat.find.reverse', 'chat.find.regex', 'chat.find.selection', 'chat.find.show', 'chat.find.highlight', 'chat.find.location', 'codeEditor.showInTaskBar', 'codeEditor.persistent', 'codeEditor.alwaysOnTop', 'codeEditor.alwaysOnTopClient', 'autoTakeoverLogin', 'fixHiddenWindows', 'maxReconnectDelay', 'enableBackgroundThrottling', 'enableBackgroundThrottlingClients', 'showInTaskBar', 'showLagInTitle', 'mspMaxRetriesOnError', 'logTimestamp', 'logTimestampFormat', 'disableTriggerOnError', 'prependTriggeredLine', 'enableParameters', 'parametersChar', 'enableNParameters', 'nParametersChar', 'enableParsing', 'externalWho', 'externalHelp', 'watchForProfilesChanges', 'onProfileChange', 'onProfileDeleted', 'enableDoubleParameterEscaping', 'ignoreEvalUndefined', 'enableInlineComments', 'enableBlockComments', 'inlineCommentString', 'blockCommentString', 'allowCommentsFromCommand', 'saveTriggerStateChanges', 'groupProfileSaves', 'groupProfileSaveDelay', 'returnNewlineOnEmptyValue', 'pathDelay', 'pathDelayCount', 'echoSpeedpaths', 'alwaysShowTabs', 'scriptEngineType', 'initializeScriptEngineOnLoad', 'find.highlight', 'find.location', 'display.showInvalidMXPTags', 'display.showTimestamp', 'display.timestampFormat', 'display.displayControlCodes', 'display.emulateTerminal', 'display.emulateControlCodes', 'display.wordWrap', 'display.tabWidth', 'display.wrapAt', 'display.indent', 'statusWidth', 'showEditorInTaskBar', 'trayMenu', 'lockLayout', 'loadLayout', 'useSingleInstance', 'statusWidth', 'characterManagerDblClick'];
         var currentColors;
         var globalColors;
         var archiver, archive;
@@ -135,6 +136,7 @@
         });
 
         $(document).ready(() => {
+            loading++;
             _settings = Settings.load(_settingsFile);
             data = [
                 { text: 'General' },
@@ -245,6 +247,7 @@
             }
             fontList.getFonts()
                 .then(fonts => {
+                    loading++;
                     var fl = fonts.length;
                     var f = 0;
                     var ops = [];
@@ -276,6 +279,7 @@
                     el.val(getSettingValue('chat.font'));
                     el.selectpicker('render');
                     el.change();
+                    loading--;
                 })
                 .catch(err => {
                     window.error(err);
@@ -361,10 +365,9 @@
                         break;
                     case 'chat-captureLines':
                         _settings.chat.captureLines = this.checked;
-                        $('#chat-lines').prop('readonly', !_settings.chat.captureLines || _settings.chat.captureAllLines);
-
-                        $('#chat-selective').prop('disabled', !_settings.chat.captureLines);
-                        $('#chat-captureAllLines').prop('disabled', !_settings.chat.captureLines);
+                        $('#chat-lines').prop('readonly', !getSettingValue('chat.captureLines') || getSettingValue('chat.captureAllLines'));
+                        $('#chat-selective').prop('disabled', !getSettingValue('chat.captureLines'));
+                        $('#chat-captureAllLines').prop('disabled', !getSettingValue('chat.captureLines'));
                         break;
                     case 'mapper-importTypeReplace':
                         _settings.mapper.importType = 1;
@@ -591,11 +594,11 @@
                         break;
                     case 'chat-selective':
                         _settings.chat.captureAllLines = !this.checked;
-                        $('#chat-lines').prop('readonly', !_settings.chat.captureLines || !this.checked);
+                        $('#chat-lines').prop('readonly', !getSettingValue('chat.captureLines') || !this.checked);
                         break;
                     case 'chat-captureAllLines':
                         _settings.chat.captureAllLines = this.checked;
-                        $('#chat-lines').prop('readonly', !_settings.chat.captureLines || this.checked);
+                        $('#chat-lines').prop('readonly', !getSettingValue('chat.captureLines') || this.checked);
                         break;
                     case 'onSecondInstance-0':
                         if (this.checked)
@@ -711,6 +714,7 @@
                     $('#loadLayout').val(_settings.loadLayout);
                 });
             });
+            loading--;
         });
 
         function sortFiles(a, b) {
@@ -765,41 +769,29 @@
                 _settings[option[0]] = value;
         }
 
-        function setSettings(obj, root) {
-            let option;
-            let value;
-            for (option in obj) {
-                if (!Object.prototype.hasOwnProperty.call(obj, option))
-                    continue;
-                if (typeof (obj[option]) === 'object') {
-                    setSettings(obj[option], root + option + '-');
-                    continue;
-                }
-                value = obj[option];
+        function setSettings() {
+            const sl = SettingProperties.length;
+            for (var s = 0; s < sl; s++) {
+                value = _settings[SettingProperties[s]];
                 //if not defined get global value
-                if (typeof (obj[option]) === 'undefined') {
+                if (typeof value === 'undefined') {
                     if (_settingsFile === _globalFile)
-                        value = Settings.defaultValue(name);
+                        value = Settings.defaultValue(SettingProperties[s]);
                     else
-                        value = window.getSetting(root.replace(/\-/g, '.') + option)
+                        value = window.getSetting(SettingProperties[s])
                 }
                 if (typeof (value) === 'string' || typeof (value) === 'number')
-                    $('#' + root + option).val(value);
+                    $('#' + SettingProperties[s].replace(/\./g, '-')).val(value);
                 else if (typeof (value) !== 'boolean')
                     continue;
-                $('#' + root + option).prop('checked', value);
+                $('#' + SettingProperties[s].replace(/\./g, '-')).prop('checked', value);
             }
         }
 
         function getSettingValue(name) {
             if (name === -1 || name === '-1')
                 return null;
-            let opt = _settings;
-            let o;
-            const opts = name.split('.');
-            const ol = opts.length;
-            for (o = 0; o < ol; o++)
-                opt = opt[opts[o]];
+            let opt = _settings.getValue(name);
             if (typeof opt === 'undefined') {
                 if (_settingsFile === _globalFile)
                     return Settings.defaultValue(name);
@@ -811,7 +803,7 @@
 
         function loadSettings() {
             loading++;
-            setSettings(_settings, '');
+            setSettings();
 
             $('#font').val(getSettingValue('font'));
             $('#font').selectpicker('render');
@@ -842,6 +834,7 @@
             $('#mapper-importTypeMerge').prop('checked', getSettingValue('mapper.importType') === 0);
 
             $('#chat-selective').prop('checked', !getSettingValue('chat.captureAllLines'));
+            $('#chat-captureAllLines').prop('checked', getSettingValue('chat.captureAllLines'));
             $('#chat-lines').prop('readonly', !getSettingValue('chat.captureLines') || getSettingValue('chat.captureAllLines'));
             $('#chat-selective').prop('disabled', !getSettingValue('chat.captureLines'));
             $('#chat-captureAllLines').prop('disabled', !getSettingValue('chat.captureLines'));
@@ -993,6 +986,38 @@
                     'reopen': true
                 };
             loadSettings();
+        }
+
+        function syncSettings() {
+            let prop;
+            for (prop in _settings) {
+                if (!_settings.hasOwnProperty(prop) || prop === 'windows' || prop === 'extensions')
+                    continue;
+                syncProperty(_settings, prop, '');
+            }
+        }
+
+        function syncProperty(obj, property, root) {
+            if (typeof obj[property] === 'object' && !Array.isArray(obj[property])) {
+                for (let child in obj[property]) {
+                    if (!obj[property].hasOwnProperty(child))
+                        continue;
+                    syncProperty(obj[property], child, root + property + '.');
+                }
+            }
+            else {
+                let syncValue;
+                if (_settingsFile === _globalFile)
+                    syncValue = Settings.defaultValue(root + property);
+                else
+                    syncValue = window.getSetting(root + property);
+                if (Array.isArray(syncValue)) {
+                    if (isArrayEqual(syncValue, _settings.getValue(root + property)))
+                        _settings.clearValue(root + property);
+                }
+                else if (_settings.getValue(root + property) === syncValue)
+                    _settings.clearValue(root + property);
+            }
         }
 
         function resetWindows() {
@@ -1351,7 +1376,10 @@
 
         // eslint-disable-next-line no-unused-vars
         function saveSettings() {
-            _settings.chat.lines = $('#chat-lines').val().split(',');
+            var oldLines = getSettingValue('chat.lines').join(',');
+            var newLines = $('#chat-lines').val();
+            if (oldLines !== newLines)
+                _settings.chat.lines = newLines.split(',');
             _settings.save(_settingsFile);
             ipcRenderer.send('reload-options', _settingsFile, window.opener && typeof window.opener.getId === 'function' ? window.opener.getId() : 0);
             if (window.opener && typeof window.opener.reloadOptions === 'function')
@@ -3134,6 +3162,7 @@
         </div>
     </div>
     <div class="dialog-footer">
+        <button style="float: left" type="button" class="btn btn-default" onclick="syncSettings()">Sync</button>
         <button style="float: left" type="button" class="btn btn-default" onclick="resetSettings()">Reset</button>
         <button style="float: left" type="button" class="btn btn-default" onclick="backup()">Backup</button>
         <button style="float: left" type="button" class="btn btn-default" onclick="resetWindows()">Reset client windows</button>

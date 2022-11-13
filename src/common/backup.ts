@@ -1,7 +1,7 @@
 //spell-checker:words vscroll, hscroll, Commandon, cmdfont, isdoor, isclosed, triggernewline, triggerprompt
 import EventEmitter = require('events');
 import { Client } from './client';
-import { parseTemplate, existsSync } from './library';
+import { parseTemplate, existsSync, isArrayEqual } from './library';
 import { BackupSelection, Log } from './types';
 import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, Context } from './profile';
 const fs = require('fs');
@@ -628,7 +628,7 @@ export class Backup extends EventEmitter {
      * @param inherited The optional inherited data, if inherited the value will be deleted and assumed to be inherited
      */
     private setProperty(source, target, property, root, inherited?) {
-        if (typeof source[property] === 'object') {
+        if (typeof source[property] === 'object' && !Array.isArray(source[property])) {
             for (let child in source[property]) {
                 if (!source[property].hasOwnProperty(child))
                     continue;
@@ -644,8 +644,14 @@ export class Backup extends EventEmitter {
             else
                 target[property] = source[property];
             //if inherited and the value is the same as the inherited value delete it
-            if (inherited && inherited[root + property] && window.getSetting(root + property) === target[property])
-                delete target[property];
+            if (inherited && inherited[root + property]) {
+                if (Array.isArray(target[property])) {
+                    if (isArrayEqual(window.getSetting(root + property), target[property]))
+                        delete target[property];
+                }
+                else if (window.getSetting(root + property) === target[property])
+                    delete target[property];
+            }
         }
     }
 }
