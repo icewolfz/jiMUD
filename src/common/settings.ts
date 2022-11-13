@@ -797,6 +797,7 @@ export class Settings {
             case 'mapperMemory':
             case 'mapper.memory': return this.mapper.memory;
             case 'mapper.memorySavePeriod': return this.mapper.memorySavePeriod;
+            case 'mapper.active': return this.mapper.active;
             case 'mapper.active.ID': return this.mapper.active.ID;
             case 'mapper.active.x': return this.mapper.active.x;
             case 'mapper.active.y': return this.mapper.active.y;
@@ -977,6 +978,9 @@ export class Settings {
                 return true;
             case 'mapper.memorySavePeriod':
                 this.mapper.memorySavePeriod = value;
+                return true;
+            case 'mapper.active':
+                this.mapper.active = value;
                 return true;
             case 'mapper.active.ID':
                 this.mapper.active.ID = value;
@@ -1365,6 +1369,9 @@ export class Settings {
                 return true;
             case 'mapper.memorySavePeriod':
                 delete this.mapper.memorySavePeriod;
+                return true;
+            case 'mapper.active':
+                this.mapper.active = {};
                 return true;
             case 'mapper.active.ID':
                 delete this.mapper.active.ID;
@@ -1760,6 +1767,14 @@ export class Settings {
             case 'mapperMemory':
             case 'mapper.memory': return false;
             case 'mapper.memorySavePeriod': return 900000;
+            case 'mapper.active': return {
+                ID: null,
+                x: 0,
+                y: 0,
+                z: 0,
+                area: null,
+                zone: 0
+            };
             case 'mapper.active.ID': return null;
             case 'mapper.active.x': return 0;
             case 'mapper.active.y': return 0;
