@@ -11,6 +11,8 @@
     <link href="../lib/bootstrap-treeview.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
     <link href="css/form.css" rel="stylesheet" type="text/css" />
+    <link href="css/datagrid.css" rel="stylesheet" type="text/css" />
+    <link href="css/propertygrid.css" rel="stylesheet" type="text/css" />
     <style>
         body {
             -webkit-user-select: none;
@@ -84,6 +86,20 @@
 
         .bootstrap-select .dropdown-menu {
             max-height: 200px !important;
+        }
+
+        .property-grid-item-label {
+            width: 250px;
+        }
+
+        .property-grid-item-value {
+            left: 250px;
+        }
+
+        .property-grid {
+            bottom: 0;
+            right: 0;
+            border: 0px solid #ccc;
         }
     </style>
     <script type="text/javascript">
@@ -1469,15 +1485,32 @@
                 archive.abort();
             closeProgressDialog();
         }
+
+        function showListView() {
+            const { PropertyGrid } = require('./js/propertygrid');
+            _settingGrid = new PropertyGrid({ parent: document.getElementById('list-container') });
+            document.getElementById('list-container').style.display = 'block';
+            const data = {};
+            const defaults = {};
+            const isGlobal = _settingsFile === _globalFile;
+            SettingProperties.map(m => {
+                data[m] = getSettingValue(m);
+                defaults[m] = isGlobal ? Settings.defaultValue(m) : window.getSetting(m);
+            });
+            _settingGrid.defaults = defaults;
+            _settingGrid.object = data;
+        }
     </script>
 </head>
 
 <body>
     <div class="dialog-body">
+        <div id="list-container" class="panel panel-default datagrid-standard" style="display:none;z-index: 1000;position: absolute;right:0px;left: 0px;top: 0px;bottom:55px;margin:0"></div>
         <div id="pref-tree" class="panel panel-default"></div>
         <div id="content" class="panel panel-default">
             <div class="panel-heading">
                 <span id="pref-title">General</span>
+                <!--<button style="float: right" type="button" class="btn btn-default btn-xs" onclick="showListView()"><i class="fa fa-list" aria-hidden="true"></i></button>-->
             </div>
             <div class="panel-body" id="pref-editor">
                 <div role="tabpanel" class="pref-pane" id="general">
@@ -3163,7 +3196,7 @@
     </div>
     <div class="dialog-footer">
         <button style="float: left" type="button" class="btn btn-default" onclick="syncSettings()">Sync</button>
-        <button style="float: left" type="button" class="btn btn-default" onclick="resetSettings()">Reset</button>
+        <button style="float: left" type="button" class="btn btn-warning" onclick="resetSettings()">Reset</button>
         <button style="float: left" type="button" class="btn btn-default" onclick="backup()">Backup</button>
         <button style="float: left" type="button" class="btn btn-default" onclick="resetWindows()">Reset client windows</button>
         <button style="float: left" type="button" class="btn btn-default" onclick="resetAllWindows()">Reset all windows</button>

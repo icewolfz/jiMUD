@@ -70,7 +70,7 @@ export class PropertyGrid extends EventEmitter {
                 return true;
             if (this.$options[prop].editor && this.$options[prop].editor.type === EditorType.readonly)
                 return true;
-            if (this.$groupOptions && this.$groupOptions[this.$options[prop].group || 'Misc'].readonly)
+            if (this.$groupOptions && this.$groupOptions[this.$options[prop].group || 'Misc'] && this.$groupOptions[this.$options[prop].group || 'Misc'].readonly)
                 return true;
         }
         if (this.$groupOptions && this.$groupOptions['Misc'] && this.$groupOptions['Misc'].readonly)
@@ -281,8 +281,10 @@ export class PropertyGrid extends EventEmitter {
     }
 
     private defaultValue(prop) {
-        if (!prop || !this.$options[prop])
+        if (!prop)
             return null;
+        if (!this.$options[prop])
+            return this.defaults ? this.defaults[prop] : null;
         if (this.defaults)
             return this.$options[prop].default || this.defaults[prop];
         return this.$options[prop].default;

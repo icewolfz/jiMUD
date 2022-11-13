@@ -472,7 +472,7 @@ export class TextValueEditor extends ValueEditor {
         const b = this.parent.getBoundingClientRect();
         const c = this.container.getBoundingClientRect();
         let left = 0;
-        let width = this.options.minWidth || 300;
+        let width = this.options?.minWidth || 300;
         let top = b.bottom - c.top;
         if (b.width < width) {
             left = (b.left - width + b.width - c.left);
