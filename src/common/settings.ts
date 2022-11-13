@@ -902,7 +902,16 @@ export class Settings {
             case 'display.wrapAt': return this.display.wrapAt;
             case 'display.indent': return this.display.indent;
         }
-        return this[setting];
+        if (setting in this)
+            return this[setting];
+        const keys = setting.split('.');
+        const kl = keys.length;
+        let value = this;
+        for (let k = 0; k < kl; k++) {
+            value = value[keys[k]];
+            if (!value) return value;
+        }
+        return value;
     }
 
     public setValue(setting: string, value) {
@@ -1292,7 +1301,16 @@ export class Settings {
                     this[setting] = value;
                     return true;
                 }
-                return false;
+                const keys = setting.split('.');
+                const kl = keys.length - 1;
+                let settings = this;
+                for (let k = 0; k < kl; k++) {
+                    if (!settings[keys[k]])
+                        settings[keys[k]] = {};
+                    settings = settings[keys[k]];
+                }
+                settings[keys[kl]] = value;
+                return true;
         }
     }
 
@@ -1681,6 +1699,18 @@ export class Settings {
                     delete this[setting];
                     return true;
                 }
+                const keys = setting.split('.');
+                const kl = keys.length - 1;
+                let settings = this;
+                for (let k = 0; k < kl; k++) {
+                    if (!settings[keys[k]])
+                        settings[keys[k]] = {};
+                    settings = settings[keys[k]];
+                }
+                if (keys[kl] in settings) {
+                    delete settings[keys[kl]]
+                    return true;
+                }
                 return false;
         }
     }
@@ -1980,6 +2010,8 @@ export class Settings {
             case 'useSingleInstance': return true;
             case 'statusWidth': return OnSecondInstance.Show;
             case 'characterManagerDblClick': return 8;
+            case 'windows':
+            case 'extensions': return {};
         }
         return null;
     }
