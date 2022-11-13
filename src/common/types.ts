@@ -1,6 +1,8 @@
 export interface Point {
   x: number;
   y: number;
+  lineID: number;
+  lineOffset: number;
 }
 
 export interface DisplayOptions extends ParserOptions {
@@ -55,6 +57,12 @@ export enum NewLineType {
   CtrlAndShift = 8
 }
 
+export enum ScriptEngineType {
+  Full = 1,
+  Fast = 2,
+  Simple = 4
+}
+
 export enum Log {
   None = 0,
   Html = 1,
@@ -92,6 +100,10 @@ export enum ProfileSortOrder {
   None = 0, Alpha = 2, Priority = 4, Index = 8
 }
 
+export enum OnSecondInstance {
+  Nothing = 0, Show = 1, NewConnection = 2, NewWindow = 4
+}
+
 /**
    * Enum flag for Font styles.
    * @readonly
@@ -111,6 +123,15 @@ export enum FontStyle {
   Strikeout = 256,
   DoubleUnderline = 512,
   Overline = 1024
+}
+
+export enum SettingType {
+  String = 0,
+  Boolean = 1,
+  Number = 2,
+  Raw = 3,
+  Custom = 4,
+  ComboBox = 5
 }
 
 export interface LineFormat {
@@ -151,6 +172,7 @@ export interface ParserLine {
   gagged: boolean;
   formats: LineFormat[];
   remote: boolean;
+  timestamp?: number;
 }
 
 export interface ParserOptions {
@@ -250,7 +272,16 @@ export enum TrayClick {
   show = 1,
   hide = 2,
   toggle = 3,
-  menu = 4
+  menu = 4,
+  showAll = 5,
+  hideAll = 6,
+  toggleAll = 7
+}
+
+export enum TrayMenu {
+  simple = 0,
+  full = 1,
+  compact = 2
 }
 
 export enum MailStatus {

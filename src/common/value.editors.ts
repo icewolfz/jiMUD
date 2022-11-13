@@ -2,7 +2,6 @@
 import EventEmitter = require('events');
 import { capitalize, resetCursor, stringToEnum, enumToString } from './library';
 import { DataGrid } from './datagrid';
-const { ipcRenderer } = require('electron');
 
 export enum EditorType {
     default,
@@ -136,6 +135,8 @@ export class TextValueEditor extends ValueEditor {
         this.$el = document.createElement('div');
         this.$el.dataset.editor = 'true';
         this.$el.classList.add('property-grid-editor-dropdown-fill');
+        if (this.options && this.options.noDropdown)
+            this.$el.classList.add('property-grid-no-dropdown');
         const el = document.createElement('div');
         el.classList.add('property-grid-editor-dropdown-fill-container');
         this.$el.appendChild(el);
@@ -258,39 +259,39 @@ export class TextValueEditor extends ValueEditor {
         });
 
         el.appendChild(this.$editor);
+        if (!this.options || !this.options.noDropdown) {
+            const vl = document.createElement('button');
+            vl.title = 'Open editor...';
+            vl.innerHTML = '<span class="caret"></span>';
+            vl.dataset.editor = 'dropdown';
+            vl.addEventListener('click', (e) => {
+                if (this.options && this.options.dialog) {
+                    e.stopPropagation();
+                    e.cancelBubble = true;
+                    this.$clicked = true;
+                    const notes: HTMLDialogElement = <HTMLDialogElement>document.createElement('dialog');
+                    notes.id = 'text-' + new Date().getTime();
+                    notes.addEventListener('open', () => this.control.emit('dialog-open'));
+                    notes.addEventListener('close', () => {
+                        if (notes.open)
+                            notes.close();
+                        notes.remove();
+                        this.control.emit('dialog-close');
+                    });
+                    notes.addEventListener('cancel', () => {
+                        if (notes.open)
+                            notes.close();
+                        notes.remove();
+                        this.control.emit('dialog-cancel');
+                    });
 
-        const vl = document.createElement('button');
-        vl.title = 'Open editor...';
-        vl.innerHTML = '<span class="caret"></span>';
-        vl.dataset.editor = 'dropdown';
-        vl.addEventListener('click', (e) => {
-            if (this.options && this.options.dialog) {
-                e.stopPropagation();
-                e.cancelBubble = true;
-                this.$clicked = true;
-                const notes: HTMLDialogElement = <HTMLDialogElement>document.createElement('dialog');
-                notes.id = 'text-' + new Date().getTime();
-                notes.addEventListener('open', () => this.control.emit('dialog-open'));
-                notes.addEventListener('close', () => {
-                    if (notes.open)
-                        notes.close();
-                    notes.remove();
-                    this.control.emit('dialog-close');
-                });
-                notes.addEventListener('cancel', () => {
-                    if (notes.open)
-                        notes.close();
-                    notes.remove();
-                    this.control.emit('dialog-cancel');
-                });
-
-                notes.style.width = '400px';
-                notes.style.height = '450px';
-                notes.style.padding = '0px';
-                notes.innerHTML = `
+                    notes.style.width = '400px';
+                    notes.style.height = '450px';
+                    notes.style.padding = '0px';
+                    notes.innerHTML = `
                 <div class="dialog-header" style="font-weight: bold">
                     <button title="close" type="button" class="close" data-dismiss="modal" onclick="document.getElementById('${notes.id}').close();">&times;</button>
-                    <button title="Open advanced editor..." type="button" class="close" style="font-size: 16px;padding-top: 3px;padding-right: 4px;" onclick="ipcRenderer.send('send-editor', document.getElementById('${notes.id}-value').value, 'editor', true);document.getElementById('${notes.id}-value').focus();"><i class="fa fa-edit"></i></button>
+                    <button title="Open advanced editor..." type="button" class="close" style="font-size: 16px;padding-top: 3px;padding-right: 4px;" onclick="openAdvancedEditor(document.getElementById('${notes.id}-value').value);document.getElementById('${notes.id}-value').focus();"><i class="fa fa-edit"></i></button>
                     <div style="padding-top: 2px;">${this.options ? this.options.title || 'Edit&hellip;' : 'Edit&hellip;'}</div>
                 </div>
                 <div class="dialog-body" style="padding-top:33px">
@@ -301,148 +302,149 @@ export class TextValueEditor extends ValueEditor {
                     <button style="float: right" type="button" class="btn btn-default" onclick="document.getElementById('${notes.id}').close();">Cancel</button>
                     <button style="float: right" type="button" class="btn btn-primary">Ok</button>
                 </div>`;
-                document.body.appendChild(notes);
-                notes.lastElementChild.lastElementChild.addEventListener('click', () => {
-                    this.value = notes.children[1].querySelector('textarea').value;
-                    if (notes.open)
-                        notes.close();
-                    notes.remove();
+                    document.body.appendChild(notes);
+                    notes.lastElementChild.lastElementChild.addEventListener('click', () => {
+                        this.value = notes.children[1].querySelector('textarea').value;
+                        if (notes.open)
+                            notes.close();
+                        notes.remove();
+                        this.$editor.focus();
+                    });
+                    notes.showModal();
+                    return;
+                }
+                this.$cancel = false;
+                if (this.$editor.dataset.aOpen === 'true') {
+                    this.$editor.dataset.aOpen = null;
                     this.$editor.focus();
+                    resetCursor(this.$editor);
+                    return;
+                }
+                this.$dropdown = document.createElement('textarea');
+                this.$dropdown.classList.add('grid-editor-dropdown');
+                if (this.$noEnter)
+                    this.$dropdown.classList.add('single');
+                (<any>this.$dropdown).editor = this.$editor;
+                if (!this.$wrap)
+                    this.$dropdown.classList.add('no-wrap');
+                this.$dropdown.value = this.value;
+                this.$dropdown.addEventListener('keydown', (e2) => {
+                    if (e2.keyCode === 27) {
+                        e2.preventDefault();
+                        e2.stopPropagation();
+                        return false;
+                    }
+                    else if (!this.$noEnter && e2.keyCode === 13 && e2.ctrlKey) {
+                        const start = this.$dropdown.selectionStart;
+                        const end = this.$dropdown.selectionEnd;
+                        const value = this.$dropdown.value;
+                        this.$dropdown.value = value.substring(0, start) + '\n' + value.substring(end);
+                        this.$dropdown.selectionStart = start + 1;
+                        this.$dropdown.selectionEnd = start + 1;
+                        this.$dropdown.setSelectionRange(start + 1, start + 1);
+                        this.$ignore = true;
+                        this.$dropdown.blur();
+                        this.$dropdown.focus();
+                        this.$ignore = false;
+                        e2.preventDefault();
+                        e2.stopPropagation();
+                        return false;
+                    }
+                    else if (this.$noEnter && e2.keyCode === 13) {
+                        e2.preventDefault();
+                        e2.cancelBubble = true;
+                        e2.stopPropagation();
+                        return false;
+                    }
                 });
-                notes.showModal();
-                return;
-            }
-            this.$cancel = false;
-            if (this.$editor.dataset.aOpen === 'true') {
-                this.$editor.dataset.aOpen = null;
-                this.$editor.focus();
-                resetCursor(this.$editor);
-                return;
-            }
-            this.$dropdown = document.createElement('textarea');
-            this.$dropdown.classList.add('grid-editor-dropdown');
-            if (this.$noEnter)
-                this.$dropdown.classList.add('single');
-            (<any>this.$dropdown).editor = this.$editor;
-            if (!this.$wrap)
-                this.$dropdown.classList.add('no-wrap');
-            this.$dropdown.value = this.value;
-            this.$dropdown.addEventListener('keydown', (e2) => {
-                if (e2.keyCode === 27) {
-                    e2.preventDefault();
+                this.$dropdown.addEventListener('keypress', (e2) => {
+                    if (e2.keyCode === 13) {
+                        e2.preventDefault();
+                        e2.stopPropagation();
+                        return false;
+                    }
+                    if (e2.keyCode === 27) {
+                        e2.preventDefault();
+                        e2.stopPropagation();
+                        return false;
+                    }
+                });
+                this.$dropdown.addEventListener('keyup', (e2) => {
+                    if (!this.$noEnter && e2.keyCode === 13 && e2.ctrlKey) {
+                        e2.preventDefault();
+                        e2.stopPropagation();
+                        return;
+                    }
+                    if (e2.keyCode === 13) {
+                        this.focus();
+                        this.$editor.dataset.aOpen = null;
+                        e2.preventDefault();
+                    }
+                    else if (e2.keyCode === 27) {
+                        this.$cancel = true;
+                        this.focus();
+                        this.$editor.dataset.aOpen = null;
+                        e2.preventDefault();
+                        e2.stopPropagation();
+                        return false;
+                    }
+                    return;
+                });
+                this.positionDropdown();
+                this.$dropdown.style.height = '150px';
+                this.$dropdown.style.zIndex = '100';
+                this.$dropdown.style.position = 'absolute';
+                this.$dBlur = (e2) => {
+                    if (this.$ignore) {
+                        this.$dropdown.addEventListener('blur', this.$dBlur.bind(this), { once: true });
+                        return;
+                    }
+                    const ec = this.editorClick;
+                    if (!this.$cancel)
+                        this.value = this.$dropdown.value;
+                    this.$editor.dataset.aOpen = 'true';
+                    this.$dropdown.remove();
+                    this.$dropdown = null;
+                    if (ec)
+                        this.control.createEditor(ec);
+                    else if (e2 && e2.relatedTarget && (<any>e2.relatedTarget).tagNAME === 'BUTTON' && e2.relatedTarget !== e2.currentTarget) {
+                        (<HTMLButtonElement>e2.relatedTarget).click();
+                        this.$editor.dataset.aOpen = null;
+                    }
+                    else if (e2 && e.relatedTarget && this.control.parent.contains(e2.relatedTarget) && !this.$el.contains(<HTMLElement>e2.relatedTarget)) {
+                        this.$editor.dataset.aOpen = null;
+                    }
+                    else {
+                        this.focus();
+                    }
+                };
+                this.$dropdown.addEventListener('blur', this.$dBlur.bind(this), { once: true });
+                this.$dropdown.addEventListener('click', (e2) => {
                     e2.stopPropagation();
-                    return false;
-                }
-                else if (!this.$noEnter && e2.keyCode === 13 && e2.ctrlKey) {
-                    const start = this.$dropdown.selectionStart;
-                    const end = this.$dropdown.selectionEnd;
-                    const value = this.$dropdown.value;
-                    this.$dropdown.value = value.substring(0, start) + '\n' + value.substring(end);
-                    this.$dropdown.selectionStart = start + 1;
-                    this.$dropdown.selectionEnd = start + 1;
-                    this.$dropdown.setSelectionRange(start + 1, start + 1);
-                    this.$ignore = true;
-                    this.$dropdown.blur();
-                    this.$dropdown.focus();
-                    this.$ignore = false;
-                    e2.preventDefault();
-                    e2.stopPropagation();
-                    return false;
-                }
-                else if (this.$noEnter && e2.keyCode === 13) {
-                    e2.preventDefault();
                     e2.cancelBubble = true;
+                });
+                this.$dropdown.addEventListener('dblclick', (e2) => {
                     e2.stopPropagation();
-                    return false;
-                }
-            });
-            this.$dropdown.addEventListener('keypress', (e2) => {
-                if (e2.keyCode === 13) {
-                    e2.preventDefault();
+                    e2.cancelBubble = true;
+                });
+                this.$dropdown.addEventListener('mousedown', (e2) => {
                     e2.stopPropagation();
-                    return false;
-                }
-                if (e2.keyCode === 27) {
-                    e2.preventDefault();
+                    e2.cancelBubble = true;
+                });
+                this.$dropdown.addEventListener('mouseup', (e2) => {
                     e2.stopPropagation();
-                    return false;
-                }
+                    e2.cancelBubble = true;
+                });
+                this.container.appendChild(this.$dropdown);
+                if (this.$noEnter)
+                    this.$dropdown.placeholder = 'Press enter to accept text.';
+                else
+                    this.$dropdown.placeholder = 'Press ctrl+enter to begin a new line.\nPress enter to accept text.';
+                this.$dropdown.focus();
+                resetCursor(this.$dropdown);
             });
-            this.$dropdown.addEventListener('keyup', (e2) => {
-                if (!this.$noEnter && e2.keyCode === 13 && e2.ctrlKey) {
-                    e2.preventDefault();
-                    e2.stopPropagation();
-                    return;
-                }
-                if (e2.keyCode === 13) {
-                    this.focus();
-                    this.$editor.dataset.aOpen = null;
-                    e2.preventDefault();
-                }
-                else if (e2.keyCode === 27) {
-                    this.$cancel = true;
-                    this.focus();
-                    this.$editor.dataset.aOpen = null;
-                    e2.preventDefault();
-                    e2.stopPropagation();
-                    return false;
-                }
-                return;
-            });
-            this.positionDropdown();
-            this.$dropdown.style.height = '150px';
-            this.$dropdown.style.zIndex = '100';
-            this.$dropdown.style.position = 'absolute';
-            this.$dBlur = (e2) => {
-                if (this.$ignore) {
-                    this.$dropdown.addEventListener('blur', this.$dBlur.bind(this), { once: true });
-                    return;
-                }
-                const ec = this.editorClick;
-                if (!this.$cancel)
-                    this.value = this.$dropdown.value;
-                this.$editor.dataset.aOpen = 'true';
-                this.$dropdown.remove();
-                this.$dropdown = null;
-                if (ec)
-                    this.control.createEditor(ec);
-                else if (e2 && e2.relatedTarget && (<any>e2.relatedTarget).tagNAME === 'BUTTON' && e2.relatedTarget !== e2.currentTarget) {
-                    (<HTMLButtonElement>e2.relatedTarget).click();
-                    this.$editor.dataset.aOpen = null;
-                }
-                else if (e2 && e.relatedTarget && this.control.parent.contains(e2.relatedTarget) && !this.$el.contains(<HTMLElement>e2.relatedTarget)) {
-                    this.$editor.dataset.aOpen = null;
-                }
-                else {
-                    this.focus();
-                }
-            };
-            this.$dropdown.addEventListener('blur', this.$dBlur.bind(this), { once: true });
-            this.$dropdown.addEventListener('click', (e2) => {
-                e2.stopPropagation();
-                e2.cancelBubble = true;
-            });
-            this.$dropdown.addEventListener('dblclick', (e2) => {
-                e2.stopPropagation();
-                e2.cancelBubble = true;
-            });
-            this.$dropdown.addEventListener('mousedown', (e2) => {
-                e2.stopPropagation();
-                e2.cancelBubble = true;
-            });
-            this.$dropdown.addEventListener('mouseup', (e2) => {
-                e2.stopPropagation();
-                e2.cancelBubble = true;
-            });
-            this.container.appendChild(this.$dropdown);
-            if (this.$noEnter)
-                this.$dropdown.placeholder = 'Press enter to accept text.';
-            else
-                this.$dropdown.placeholder = 'Press ctrl+enter to begin a new line.\nPress enter to accept text.';
-            this.$dropdown.focus();
-            resetCursor(this.$dropdown);
-        });
-        this.$el.appendChild(vl);
+            this.$el.appendChild(vl);
+        }
         this.parent.appendChild(this.$el);
     }
     public focus() {
@@ -470,10 +472,10 @@ export class TextValueEditor extends ValueEditor {
         const b = this.parent.getBoundingClientRect();
         const c = this.container.getBoundingClientRect();
         let left = 0;
-        let width = 300;
+        let width = this.options.minWidth || 300;
         let top = b.bottom - c.top;
-        if (b.width < 300) {
-            left = (b.left - 300 + b.width - c.left);
+        if (b.width < width) {
+            left = (b.left - width + b.width - c.left);
         }
         else {
             left = b.left - c.left;
@@ -1086,9 +1088,12 @@ export class DropDownEditValueEditor extends ValueEditor {
             if (height < 160) {
                 this.$dropdown.style.height = height + 'px';
                 this.$dropdown.style.overflow = 'hidden';
+                this.positionDropdown(height);
             }
-            else
+            else {
                 this.$dropdown.style.height = '160px';
+                this.positionDropdown(160);
+            }
             this.$dropdown.addEventListener('click', (e2) => {
                 e2.stopPropagation();
                 e2.cancelBubble = true;
@@ -1105,7 +1110,6 @@ export class DropDownEditValueEditor extends ValueEditor {
                 e2.stopPropagation();
                 e2.cancelBubble = true;
             });
-            this.positionDropdown();
             this.container.appendChild(this.$dropdown);
             this.$dropdown.focus();
         });
@@ -1131,12 +1135,12 @@ export class DropDownEditValueEditor extends ValueEditor {
 
     public openAdvanced() { /**/ }
 
-    private positionDropdown() {
+    private positionDropdown(height?) {
         const b = this.parent.getBoundingClientRect();
         const c = this.container.getBoundingClientRect();
         let left = 0;
         let width = 150;
-        let top = b.top + this.$editor.parentElement.offsetHeight - c.top;
+        let top = b.bottom - c.top;
         if (b.width < 150) {
             left = (b.left - 150 + b.width - c.left);
         }
@@ -1150,9 +1154,10 @@ export class DropDownEditValueEditor extends ValueEditor {
             width = document.body.clientWidth;
         if (Math.abs(left) + width > document.body.clientWidth)
             left = document.body.clientWidth - width;
+        height = height || this.$dropdown.offsetHeight;
         //extends past bottom so open up
-        if (top + this.$dropdown.offsetHeight > document.body.clientHeight)
-            top = b.top - this.$dropdown.offsetHeight;
+        if (top + height > document.body.clientHeight)
+            top = b.top - height;
 
         this.$dropdown.style.left = left + 'px';
         this.$dropdown.style.width = width + 'px';
@@ -1345,14 +1350,14 @@ export class CollectionValueEditor extends ValueEditor {
                 }
             });
             dg.on('delete', (e2) => {
-                if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                    {
-                        type: 'warning',
-                        title: 'Delete',
-                        message: 'Delete selected ' + (this.options ? this.options.type + (dg.selectedCount > 1 ? 's' : '') : '') + '?',
-                        buttons: ['Yes', 'No'],
-                        defaultId: 1
-                    })
+                if (dialog.showMessageBoxSync({
+                    type: 'warning',
+                    title: 'Delete',
+                    message: 'Delete selected ' + (this.options ? this.options.type + (dg.selectedCount > 1 ? 's' : '') : '') + '?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1,
+                    noLink: true
+                })
                     === 1)
                     e2.preventDefault = true;
             });
@@ -1518,7 +1523,6 @@ export class CollectionValueEditor extends ValueEditor {
         resetCursor(this.$editor);
     }
 }
-
 export class SelectValueEditor extends ValueEditor {
     private $el: HTMLSelectElement;
 
@@ -1617,7 +1621,6 @@ export class SelectValueEditor extends ValueEditor {
         this.$el.value = value;
     }
 }
-
 export class ButtonValueEditor extends ValueEditor {
     private $el: HTMLButtonElement;
     private $val;

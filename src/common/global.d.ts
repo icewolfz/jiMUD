@@ -12,8 +12,8 @@ interface CanvasRenderingContext2D {
 interface String {
 
 	splice(idx: number, s: string, rem?: number): string;
-	paddingLeft(paddingvalue: (string | number)): string;
-	paddingRight(paddingvalue: (string | number)): string;
+	padStart(paddingvalue: (string | number)): string;
+	padEnd(paddingvalue: (string | number)): string;
 	splitQuote(sep: string, type?, escape?): string[];
 }
 
@@ -30,6 +30,10 @@ declare let $selurl: string;
 declare let $selline: string;
 declare let $selword: string;
 declare let $copied: string;
+declare let $action: string;
+declare let $trigger: string;
+declare let $caption: string;
+declare let $characterid: number;
 
 interface JQuery {
 	treeview: any;

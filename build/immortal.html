@@ -31,13 +31,13 @@
         const { Settings } = require('./js/settings');
         const { Menubar } = require('./js/menubar');
         const fs = require('fs-extra');
-        const child_process = require('child_process');
         const path = require('path');
         const nodeDiskInfo = require('node-disk-info');
         const moment = require('moment');
 
         var chokidar = require('chokidar');
 
+        //#region Variables
         var _ied, options;
         var _local = {}, _remote = {}, _downloads = {};
         var info = { localDirs: 0, localFiles: 0, remoteDirs: 0, remoteFiles: 0, uploads: 0, downloads: 0, active: 0 };
@@ -51,7 +51,9 @@
         var _qUpdate, _qUpdateID;
         var _qUpdateTracker;
         var _focusRemote, _focusLocal;
-
+        var _prefs;
+        var _queue = 0;
+        //#endregion
         var menubar = new Menubar([
             {
                 label: '&File',
@@ -74,7 +76,7 @@
                         label: '&Preferences...',
                         accelerator: 'CmdOrCtrl+Comma',
                         click: () => {
-                            window.open('immortal.prefs.html', 'modal', 'backgroundColor=#fff,height=320,width=600,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
+                            _prefs = window.open('immortal.prefs.html', 'modal-immortal-' + window.opener.getId(), 'backgroundColor=#fff,height=320,width=600,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
                         }
                     },
                     { type: 'separator' },
@@ -210,9 +212,9 @@
                                     var data = localTable.rows({ selected: true }).data().pluck('path');
                                     for (var d = 0, dl = data.length; d < dl; d++) {
                                         if (_remote[path.basename(data[d])])
-                                            ipcRenderer.send('open-editor', data[d], options.remote + '/' + path.basename(data[d]));
+                                            openEditor(data[d], options.remote + '/' + path.basename(data[d]));
                                         else
-                                            ipcRenderer.send('open-editor', data[d]);
+                                            openEditor(data[d]);
                                     }
                                 }
                             },
@@ -222,6 +224,7 @@
                                 accelerator: 'CmdOrCtrl+Alt+E',
                                 click: () => {
                                     var data = localTable.rows({ selected: true }).data().pluck('path');
+                                    const child_process = require('child_process');
                                     for (var d = 0, dl = data.length; d < dl; d++) {
                                         var p = child_process.spawn(options.editor, [data[d]], { detached: true, stdio: ['ignore', 'ignore', 'ignore'] });
                                         p.unref();
@@ -256,9 +259,9 @@
                                     var selected = remoteTable.rows({ selected: true }).data();
                                     if (!selected.length) return;
                                     if (selected[0].size === -2)
-                                        ipcRenderer.send('send-command', `cd ${selected[0].path}`);
+                                        window.opener.client.sendCommand(`cd ${selected[0].path}`);
                                     else
-                                        ipcRenderer.send('send-command', `cd ${path.dirname(selected[0].path)}`);
+                                        window.opener.client.sendCommand(`cd ${path.dirname(selected[0].path)}`);
                                 }
                             },
                             { type: 'separator' },
@@ -365,7 +368,7 @@
                         label: '&Editor',
                         accelerator: 'CmdOrCtrl+E',
                         click: () => {
-                            ipcRenderer.send('open-editor', '');
+                            openEditor();
                         }
                     },
                     {
@@ -379,7 +382,7 @@
                     {
                         label: '&Toggle Developer Tools',
                         click: () => {
-                            ipcRenderer.invoke('window', 'toggleDevTools');
+                            window.toggleDevTools();
                         }
                     },
                     {
@@ -563,10 +566,8 @@
         }());
 
         function loadOptions(data) {
-            if (!data) {
-                var set = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
-                options = set.extensions['immortal'];
-            }
+            if (!data)
+                options = window.opener.client.options.extensions.immortal;
             else
                 options = data;
             if (!options) {
@@ -643,7 +644,8 @@
                 _ied.compressDownload = options.compress;
                 _ied.compressDir = options.compress;
             }
-            ipcRenderer.send('setting-changed', { type: 'extensions', name: 'immortal', value: options });
+            window.opener.client.options.extensions.immortal = options;
+            window.opener.client.saveOptions();
         }
 
         function updateLocal(p) {
@@ -849,110 +851,86 @@
             if (options.debug)
                 console.error(error);
             if (options.logErrors) {
-                if (!options.showErrorsExtended && error.stack)
+                if (!options.showErrorsExtended) {
+                    if (error.stack)
+                        msg = error.stack;
+                    else {
+                        error = new Error(error || 'Unknown');
+                        msg = error.stack;
+                    }
+                }
+                else if (!err.stack) {
+                    error = new Error(error || 'Unknown');
                     msg = error.stack;
-                fs.writeFileSync(parseTemplate(path.join('{data}', 'jimud.error.log')), 'Immortal Tools: ' + new Date().toLocaleString() + '\n', { flag: 'a' });
-                fs.writeFileSync(parseTemplate(path.join('{data}', 'jimud.error.log')), msg + '\n', { flag: 'a' });
+                }
+                fs.writeFileSync(window.getGlobal('errorLog'), `Immortal Tools: ${new Date().toLocaleString()}\n${msg}\n`, { flag: 'a' });
             }
         }
 
         var updatingMenu = false;
 
-        function updateMenu() {
+        async function updateMenu() {
             if (updatingMenu) return;
             updatingMenu = true;
             key = '';
-            setTimeout(() => {
-                //var remote = $("#remote-list").hasClass("focused");
-                //var local = $("#local-list").hasClass("focused");
-                //var queue = $("#queue-list").hasClass("focused");
-                //var either = remote || local;
-                //var localFilesOnly = false;
-                //var localFoldersOnly = false;
-                var localSelected = false;
-                //var remoteSelectedFiles = false;
-                //var remoteFoldersOnly = false;
-                var remoteSelected = false;
-                var queueSelected = false;
 
-                var data = localTable.rows({ selected: true }).data().pluck('size');
-                localSelected = data.length != 0;
-                /*
-                var dirs = 0;
-                var d, dl;
-                for (d = 0, dl = data.length; d < data.length; d++) {
-                    if (data[d] === -2) {
-                        dirs++;
-                    }
-                }
-                */
-                //localFilesOnly = dirs != data.length;
-                //localFoldersOnly = dirs === data.length;
+            var localSelected = false;
+            var remoteSelected = false;
+            var queueSelected = false;
 
-                data = remoteTable.rows({ selected: true }).data().pluck('size');
-                remoteSelected = data.length !== 0;
-                //remoteSelectedFiles = data.filter(f => f !== -2).length !== 0;
-                /*
-                dirs = 0;
-                for (d = 0; d < data.length; d++) {
-                    if (data[d] === -2) {
-                        dirs++;
-                    }
-                }
-                */
-                //remoteFilesOnly = dirs != data.length;
-                //remoteFoldersOnly = dirs === data.length;
+            var data = localTable.rows({ selected: true }).data().pluck('size');
+            localSelected = data.length != 0;
+            data = remoteTable.rows({ selected: true }).data().pluck('size');
+            remoteSelected = data.length !== 0;
 
-                data = queueTable.rows({ selected: true }).data();
-                queueSelected = data.length != 0;
+            data = queueTable.rows({ selected: true }).data();
+            queueSelected = data.length != 0;
 
-                menubar.updateItem('file|upload', { enabled: localSelected });
-                menubar.updateItem('file|download', { enabled: remoteSelected });
+            menubar.updateItem('file|upload', { enabled: localSelected });
+            menubar.updateItem('file|download', { enabled: remoteSelected });
 
-                menubar.updateItem('queue|start', { enabled: queueSelected });
-                menubar.updateItem('queue|pause', { enabled: queueSelected });
-                menubar.updateItem('queue|stop', { enabled: queueSelected });
+            menubar.updateItem('queue|start', { enabled: queueSelected });
+            menubar.updateItem('queue|pause', { enabled: queueSelected });
+            menubar.updateItem('queue|stop', { enabled: queueSelected });
 
-                menubar.updateItem('edit|local|rename', { enabled: localSelected });
-                menubar.updateItem('edit|local|delete', { enabled: localSelected });
+            menubar.updateItem('edit|local|rename', { enabled: localSelected });
+            menubar.updateItem('edit|local|delete', { enabled: localSelected });
 
-                menubar.updateItem('edit|local|reveal in explorer...', { enabled: localSelected });
-                menubar.updateItem('edit|local|open...', { enabled: localSelected });
-                menubar.updateItem('edit|local|open with editor...', { enabled: localSelected });
-                menubar.updateItem('edit|local|open with external editor...', { enabled: localSelected && options.editor && options.editor.length > 0 });
+            menubar.updateItem('edit|local|reveal in explorer...', { enabled: localSelected });
+            menubar.updateItem('edit|local|open...', { enabled: localSelected });
+            menubar.updateItem('edit|local|open with editor...', { enabled: localSelected });
+            menubar.updateItem('edit|local|open with external editor...', { enabled: localSelected && options.editor && options.editor.length > 0 });
 
-                menubar.updateItem('edit|remote|goto', { enabled: remoteSelected });
-                menubar.updateItem('edit|remote|change to directory', { enabled: remoteSelected });
-                menubar.updateItem('edit|remote|update', { enabled: remoteSelected });
-                menubar.updateItem('edit|remote|renew', { enabled: remoteSelected });
-                menubar.updateItem('edit|remote|clone', { enabled: remoteSelected });
-                menubar.updateItem('edit|remote|dest', { enabled: remoteSelected });
-                menubar.updateItem('edit|remote|backup', { enabled: remoteSelected });
-                menubar.updateItem('edit|remote|copy full path', { enabled: remoteSelected });
-                menubar.updateItem('edit|remote|edit...', { enabled: remoteSelected });
+            menubar.updateItem('edit|remote|goto', { enabled: remoteSelected });
+            menubar.updateItem('edit|remote|change to directory', { enabled: remoteSelected });
+            menubar.updateItem('edit|remote|update', { enabled: remoteSelected });
+            menubar.updateItem('edit|remote|renew', { enabled: remoteSelected });
+            menubar.updateItem('edit|remote|clone', { enabled: remoteSelected });
+            menubar.updateItem('edit|remote|dest', { enabled: remoteSelected });
+            menubar.updateItem('edit|remote|backup', { enabled: remoteSelected });
+            menubar.updateItem('edit|remote|copy full path', { enabled: remoteSelected });
+            menubar.updateItem('edit|remote|edit...', { enabled: remoteSelected });
 
-                menubar.updateItem('edit|remote|rename', { enabled: remoteSelected });
-                menubar.updateItem('edit|remote|delete', { enabled: remoteSelected });
+            menubar.updateItem('edit|remote|rename', { enabled: remoteSelected });
+            menubar.updateItem('edit|remote|delete', { enabled: remoteSelected });
 
-                $('#btn-rename-local').prop('disabled', !localSelected);
-                $('#btn-delete-local').prop('disabled', !localSelected);
-                $('#btn-upload-local').prop('disabled', !localSelected);
-                $('#btn-reveal-local').prop('disabled', !localSelected);
-                $('#btn-open-local').prop('disabled', !localSelected);
-                $('#btn-editor-local').prop('disabled', !localSelected);
-                //$("#btn-editor-local").prop('disabled', !(localSelected && options.editor && options.editor.length > 0));
+            $('#btn-rename-local').prop('disabled', !localSelected);
+            $('#btn-delete-local').prop('disabled', !localSelected);
+            $('#btn-upload-local').prop('disabled', !localSelected);
+            $('#btn-reveal-local').prop('disabled', !localSelected);
+            $('#btn-open-local').prop('disabled', !localSelected);
+            $('#btn-editor-local').prop('disabled', !localSelected);
 
-                $('#btn-rename-remote').prop('disabled', !remoteSelected);
-                $('#btn-delete-remote').prop('disabled', !remoteSelected);
-                $('#btn-download-remote').prop('disabled', !remoteSelected);
-                $('#btn-edit-remote').prop('disabled', !remoteSelected);
+            $('#btn-rename-remote').prop('disabled', !remoteSelected);
+            $('#btn-delete-remote').prop('disabled', !remoteSelected);
+            $('#btn-download-remote').prop('disabled', !remoteSelected);
+            $('#btn-edit-remote').prop('disabled', !remoteSelected);
 
-                $('#btn-start').prop('disabled', !queueSelected);
-                $('#btn-pause').prop('disabled', !queueSelected);
-                $('#btn-stop').prop('disabled', !queueSelected);
-                doUpdate(1);
-                updatingMenu = false;
-            }, 0);
+            $('#btn-start').prop('disabled', !queueSelected);
+            $('#btn-pause').prop('disabled', !queueSelected);
+            $('#btn-stop').prop('disabled', !queueSelected);
+            doUpdate(1);
+            updatingMenu = false;
         }
 
         function renderFile(data, type, full) {
@@ -1035,7 +1013,7 @@
         }
 
         $(document).ready(() => {
-
+            setTitle(window.opener.getCharacterName());
             $('#local-list').DataTable({
                 keys: true,
                 paging: false,
@@ -1243,6 +1221,13 @@
                 ]
             });
             loadOptions();
+            window.opener.client.on('options-loaded', optionsLoaded);
+            window.opener.client.on('received-GMCP', processGMCP);
+            window.opener._status.on('set-title', setTitle);
+            window.opener.addEventListener('loadCharacter', updateCharacter);
+            window.opener.addEventListener('updateCharacter', updateCharacter);
+            window.opener.addEventListener('resetCharacter', updateCharacter);
+            //#region IED set up
             _ied = new IED(options.local, options.remote);
             _ied.prefix = 'manager-';
             _ied.local = options.local;
@@ -1258,25 +1243,28 @@
                 else
                     _ied.getDir(options.remote);
             });
+            _ied.on('send-gmcp', (data) => {
+                window.opener.client.sendGMCP(data);
+            })
             _ied.on('error', (error) => {
                 if (error && error.code) {
                     switch (error.code) {
                         case IEDError.USER_DENIED:
-                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                            dialog.showMessageBox({
                                 type: 'error',
                                 title: 'Permission denied',
                                 message: 'Permission denied'
                             });
                             break;
                         case IEDError.RESET:
-                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                            dialog.showMessageBox({
                                 type: 'error',
                                 title: 'Reset',
                                 message: 'Server reset: ' + error.msg
                             });
                             break;
                         case IEDError.USERRESET:
-                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                            dialog.showMessageBox({
                                 type: 'error',
                                 title: 'Reset',
                                 message: error.msg
@@ -1285,13 +1273,13 @@
                         case IEDError.CMD_EXIST:
                             if (error && !error.tag.startsWith(_ied.prefix + 'mkdirIgnore') && !error.tag.startsWith(_ied.prefix + 'mkdirPIgnore')) {
                                 if (error.path && error.file)
-                                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                                    dialog.showMessageBox({
                                         type: 'error',
                                         title: 'Already exist',
                                         message: `File or directory already exist: '${error.path}/${error.file}`
                                     });
                                 else
-                                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                                    dialog.showMessageBox({
                                         type: 'error',
                                         title: 'Already exist',
                                         message: error.msg
@@ -1299,28 +1287,28 @@
                             }
                             break;
                         case IEDError.CMD_DIRECTORY:
-                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                            dialog.showMessageBox({
                                 type: 'error',
                                 title: 'Is a directory',
                                 message: `File is a directory: '${error.path}/${error.file}`
                             });
                             break;
                         case IEDError.CMD_NOEXIST:
-                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                            dialog.showMessageBox({
                                 type: 'error',
                                 title: 'Does not exist',
                                 message: `File or directory does not exist: '${error.path}/${error.file}`
                             });
                             break;
                         case IEDError.CMD_FILE:
-                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                            dialog.showMessageBox({
                                 type: 'error',
                                 title: 'Not a directory',
                                 message: `File not a directory: '${error.path}/${error.file}`
                             });
                             break;
                         case IEDError.DIR_CANTREAD:
-                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                            dialog.showMessageBox({
                                 type: 'error',
                                 title: 'Can not read',
                                 message: 'Can not read or permission denied'
@@ -1350,10 +1338,10 @@
                 info.active = 0;
                 queueTable.rows().remove();
                 doUpdate(9);
-                ipcRenderer.send('set-progress-window', 'immortal', { value: -1 });
-                ipcRenderer.send('set-progress', { value: -1 });
+                window.setProgressBar(-1);
+                window.opener.updateProgress(-1);
             });
-            _ied.on('dir', (dir, files, tag, local) => {
+            _ied.on('dir', async (dir, files, tag, local) => {
                 var f, fl, file;
                 if (tag.startsWith('manager-dir:browse'))
                     updateRemote(dir, files);
@@ -1382,13 +1370,9 @@
                         logMessage("Creating directory: " + path.join(local, path.basename(dir)));
                     }
                     */
-                    console.log(files);
                     for (f = 0, fl = files.length; f < fl; f++) {
                         file = (dir === '/' ? '' : dir) + '/' + files[f].file;
                         if (files[f].size == -2) {
-                            console.log(file);
-                            console.log(local);
-                            console.log(path.basename(file));
                             //create local
                             if (local && !existsSync(path.join(local, path.basename(file)))) {
                                 fs.mkdirSync(path.join(local, path.basename(file)));
@@ -1398,7 +1382,10 @@
                             _ied.getDir(file, true, 'download:' + file, path.join(local, path.basename(file)));
                         }
                         else
-                            downNext(file, path.join(options.local, r));
+                            if (!await downNext(file, path.join(options.local, r), files[f])) {
+                                _progressCancel = true;
+                                break;
+                            }
                     }
                     pTotal--;
                     if (pTotal <= 0) {
@@ -1535,7 +1522,7 @@
                     }
                     else {
                         logMessage(`Failed to delete: ${obj.path}/${obj.file}`);
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'Could not delete',
                             message: 'Could not delete: ' + obj.path + '/' + obj.file,
@@ -1571,7 +1558,7 @@
                     }
                     else {
                         logMessage(`Failed to rename: ${obj.path}/${obj.file}`);
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'Could not rename',
                             message: 'Could not rename: ' + obj.file,
@@ -1610,7 +1597,7 @@
                     }
                     else {
                         logMessage(`Failed to create directory: ${obj.path}`);
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'Could not create directory',
                             message: 'Could not create: ' + path.basename(obj.path),
@@ -1637,7 +1624,7 @@
                     }
                     else {
                         logMessage(`Failed to remove directory: ${obj.path}`);
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'Could not remove directory',
                             message: 'Could not remove: ' + path.basename(obj.path),
@@ -1645,7 +1632,7 @@
                     }
                 }
             });
-
+            //#endregion
             localTable = $('#local-list').DataTable();
             remoteTable = $('#remote-list').DataTable();
             queueTable = $('#queue-list').DataTable();
@@ -1669,7 +1656,7 @@
                 }
             });
 
-            $('#local-list tbody').on('contextmenu', 'tr', function () {
+            $('#local-list tbody').on('contextmenu', 'tr', function (event) {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
@@ -1681,14 +1668,14 @@
                 showLocalContextMenu();
             });
 
-            $('#local-list-container').on('contextmenu', function () {
+            $('#local-list-container').on('contextmenu', function (event) {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
                 showLocalContextMenu();
             });
 
-            $('#remote-list tbody').on('contextmenu', 'tr', function () {
+            $('#remote-list tbody').on('contextmenu', 'tr', function (event) {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
@@ -1700,14 +1687,14 @@
                 showRemoteContextMenu();
             });
 
-            $('#remote-list-container').on('contextmenu', function () {
+            $('#remote-list-container').on('contextmenu', function (event) {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
                 showRemoteContextMenu();
             });
 
-            $('#queue-list tbody').on('contextmenu', 'tr', function () {
+            $('#queue-list tbody').on('contextmenu', 'tr', function (event) {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
@@ -1719,14 +1706,14 @@
                 showQueueContextMenu();
             });
 
-            $('#queue-list-container').on('contextmenu', function () {
+            $('#queue-list-container').on('contextmenu', function (event) {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
                 showQueueContextMenu();
             });
 
-            logView.on('contextmenu', function () {
+            logView.on('contextmenu', function (event) {
                 event.preventDefault();
                 event.stopPropagation();
                 event.cancelBubble = true;
@@ -1906,7 +1893,7 @@
                     updateLocal(data.path);
                 }
                 else
-                    _ied.upload(data.path);
+                    uploadFile(data.path);
             });
 
             $('#remote-list tbody').on('dblclick', 'tr', function () {
@@ -1920,13 +1907,13 @@
                     _ied.getDir(data.path, true);
                 }
                 else
-                    _ied.download(data.path);
+                    downloadFile(data.path);
             });
 
             $('#queue-list tbody').on('dblclick', 'tr', function () {
                 var data = queueTable.row(this).data();
                 if (!data) return;
-                if (data.state === ItemState.paused)
+                if (data.state === ItemState.paused || data.state === ItemState.error)
                     _ied.startItem(data.id);
                 else
                     _ied.pauseItem(data.id);
@@ -1982,7 +1969,10 @@
             });
 
             $('#local-path').change(function () {
-                updateLocal($('#local-path').val());
+                const p = $('#local-path').val();
+                //was cut or removed so do not update
+                if (!p || p.length === 0) return;
+                updateLocal(p);
             });
             $('#local-path').keyup(function (e) {
                 if (e.which === 27)
@@ -2014,7 +2004,10 @@
             });
 
             $('#remote-path').change(function () {
-                _ied.getDir($('#remote-path').val());
+                const p = $('#remote-path').val();
+                //was cut or removed so do not update
+                if (!p || p.length === 0) return;
+                _ied.getDir(p);
             });
             $('#remote-path').keyup(function (e) {
                 if (e.which === 27)
@@ -2238,11 +2231,15 @@
             };
 
             window.onmouseout = () => {
+                if (document.getElementById('FileExist').open) return;
                 _localDrag = 0;
                 _remoteDrag = 0;
             };
 
-            $('#local')[0].ondragenter = (event) => {
+            //#region drag and drop support
+            let element = document.getElementById('local');
+
+            element.ondragenter = (event) => {
                 event.preventDefault();
                 event.cancelBubble = true;
                 event.stopPropagation();
@@ -2264,7 +2261,7 @@
                 return false;
             };
 
-            $('#local')[0].ondragover = (event) => {
+            element.ondragover = (event) => {
                 event.preventDefault();
                 event.cancelBubble = true;
                 event.stopPropagation();
@@ -2286,7 +2283,7 @@
                 return false;
             };
 
-            $('#local')[0].ondrop = (event) => {
+            element.ondrop = async (event) => {
                 event.preventDefault();
                 event.cancelBubble = true;
                 event.stopPropagation();
@@ -2324,10 +2321,11 @@
                         if (_remote[path.basename(_remoteDrag[f])].size === -2)
                             downloadPath(_remoteDrag[f], options.local);
                         else
-                            _ied.download(_remoteDrag[f]);
+                            if (!await downloadFile(_remoteDrag[f])) break;
                     }
                     _ied.end();
                     _remoteDrag = 0;
+                    _queue = 0;
                 }
                 else {
                     _ied.begin();
@@ -2339,28 +2337,28 @@
                             if (_remote[path.basename(p)].size === -2)
                                 downloadPath(p, options.local);
                             else
-                                _ied.download(p);
+                                if (!await downloadFile(p)) break;
                         }
                         else if (event.dataTransfer.files[f].path.startsWith('jiMUD://')) {
                             p = event.dataTransfer.files[f].path.substring(8);
                             if (_remote[path.basename(p)].size === -2)
                                 downloadPath(p, options.local);
                             else
-                                _ied.download(p);
+                                if (!await downloadFile(p)) break;
                         }
                         else if (event.dataTransfer.files[f].path.startsWith('/jiMUDPath:')) {
                             p = event.dataTransfer.files[f].path.substring(11);
                             if (_remote[path.basename(p)].size === -2)
                                 downloadPath(p, options.local);
                             else
-                                _ied.download(p);
+                                if (!await downloadFile(p)) break;
                         }
                         else if (event.dataTransfer.files[f].path.startsWith('/jiMUD:')) {
                             p = event.dataTransfer.files[f].path.substring(7);
                             if (_remote[path.basename(p)].size === -2)
                                 downloadPath(p, options.local);
                             else
-                                _ied.download(p);
+                                if (!await downloadFile(p)) break;
                         }
                         else if (type === 1) {
                             if (path.dirname(event.dataTransfer.files[f].path) === options.local) continue;
@@ -2371,10 +2369,13 @@
                         }
                     }
                     _ied.end();
+                    _queue = 0;
                 }
             };
 
-            $('#remote')[0].ondragenter = (event) => {
+            element = document.getElementById('remote');
+
+            element.ondragenter = (event) => {
                 if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path.startsWith('jiMUD://') || event.dataTransfer.files[0].path.startsWith('/jiMUD:') || event.dataTransfer.files[0].path.startsWith('jiMUDPath://') || event.dataTransfer.files[0].path.startsWith('/jiMUDPath:'))) {
                     event.dataTransfer.dropEffect = 'none';
                     event.dataTransfer.effectAllowed = 'none';
@@ -2389,7 +2390,7 @@
                 return false;
             };
 
-            $('#remote')[0].ondragover = (event) => {
+            element.ondragover = (event) => {
                 if (event.dataTransfer.files.length && (event.dataTransfer.files[0].path.startsWith('jiMUD://') || event.dataTransfer.files[0].path.startsWith('/jiMUD:') || event.dataTransfer.files[0].path.startsWith('jiMUDPath://') || event.dataTransfer.files[0].path.startsWith('/jiMUDPath:'))) {
                     event.dataTransfer.dropEffect = 'none';
                     event.dataTransfer.effectAllowed = 'none';
@@ -2404,7 +2405,7 @@
                 return false;
             };
 
-            $('#remote')[0].ondrop = (event) => {
+            element.ondrop = async (event) => {
                 event.preventDefault();
                 if (_localDrag) {
                     _ied.begin();
@@ -2412,10 +2413,11 @@
                         if (_local[path.basename(_localDrag[f])].size === -2)
                             uploadPath(_localDrag[f]);
                         else
-                            _ied.upload(_localDrag[f]);
+                            if (!await uploadFile(_localDrag[f])) break;
                     }
                     _ied.end();
                     _localDrag = 0;
+                    _queue = 0;
                 }
                 else if (_remoteDrag) {
                     _remoteDrag = 0;
@@ -2432,17 +2434,19 @@
                             if (stat.isDirectory())
                                 uploadPath(event.dataTransfer.files[f].path);
                             else
-                                _ied.upload(event.dataTransfer.files[f].path);
-
+                                if (!await uploadFile(event.dataTransfer.files[f].path)) break;
                         }
                         else
-                            _ied.upload(event.dataTransfer.files[f].path);
+                            if (!await uploadFile(event.dataTransfer.files[f].path)) break;
                     }
                     _ied.end();
+                    _queue = 0;
                 }
             };
 
-            $('#local-list')[0].ondragstart = (event) => {
+            element = document.getElementById('local-list');
+
+            element.ondragstart = (event) => {
                 var row = $(document.elementFromPoint(event.pageX, event.pageY)).parent();
                 if (!$(row).hasClass('selected')) {
                     localTable.rows().deselect();
@@ -2462,21 +2466,23 @@
                 return false;
             };
 
-            $('#local-list')[0].ondragend = (event) => {
+            element.ondragend = (event) => {
                 event.preventDefault();
                 _localDrag = 0;
                 _remoteDrag = 0;
                 return false;
             };
 
-            $('#remote-list')[0].ondragend = (event) => {
+            element = document.getElementById('remote-list');
+
+            element.ondragend = (event) => {
                 event.preventDefault();
                 _localDrag = 0;
                 _remoteDrag = 0;
                 return false;
             };
 
-            $('#remote-list')[0].ondragstart = (event) => {
+            element.ondragstart = (event) => {
                 var row = $(document.elementFromPoint(event.pageX, event.pageY)).parent();
                 if (!$(row).hasClass('selected')) {
                     remoteTable.rows().deselect();
@@ -2498,7 +2504,8 @@
                     ipcRenderer.send('ondragstart', files, path.join(__dirname, '../assets/icons/png/drag2.png'));
             };
 
-            $('#queue-list-container')[0].ondragenter = (event) => {
+            element = document.getElementById('queue-list-container');
+            element.ondragenter = (event) => {
                 event.dataTransfer.dropEffect = 'copy';
                 event.dataTransfer.effectAllowed = 'copy';
                 event.preventDefault();
@@ -2507,7 +2514,7 @@
                 return false;
             };
 
-            $('#queue-list-container')[0].ondragover = (event) => {
+            element.ondragover = (event) => {
                 event.dataTransfer.dropEffect = 'copy';
                 event.dataTransfer.effectAllowed = 'copy';
                 event.preventDefault();
@@ -2516,7 +2523,7 @@
                 return false;
             };
 
-            $('#queue-list-container')[0].ondrop = (event) => {
+            element.ondrop = async (event) => {
                 event.preventDefault();
                 if (_localDrag) {
                     _ied.begin();
@@ -2524,10 +2531,11 @@
                         if (_local[path.basename(_localDrag[f])].size === -2)
                             uploadPath(_localDrag[f]);
                         else
-                            _ied.upload(_localDrag[f]);
+                            if (!await uploadFile(_localDrag[f])) break;
                     }
                     _ied.end();
                     _localDrag = 0;
+                    _queue = 0;
                 }
                 else if (_remoteDrag) {
                     _ied.begin();
@@ -2535,10 +2543,11 @@
                         if (_remote[path.basename(_remoteDrag[f])].size === -2)
                             downloadPath(_remoteDrag[f], options.local);
                         else
-                            _ied.download(_remoteDrag[f]);
+                            if (!await downloadFile(_remoteDrag[f])) break;
                     }
                     _ied.end();
                     _remoteDrag = 0;
+                    _queue = 0;
                 }
                 else {
                     _ied.begin();
@@ -2549,50 +2558,68 @@
                             if (_remote[path.basename(p)].size === -2)
                                 downloadPath(p, options.local);
                             else
-                                _ied.download(p);
+                                if (!await downloadFile(p)) break;
                         }
                         else if (event.dataTransfer.files[f].path.startsWith('jiMUD://')) {
                             p = event.dataTransfer.files[f].path.substring(8);
                             if (_remote[path.basename(p)].size === -2)
                                 downloadPath(p, options.local);
                             else
-                                _ied.download(p);
+                                if (!await downloadFile(p)) break;
                         }
                         else if (event.dataTransfer.files[f].path.startsWith('/jiMUDPath:')) {
                             p = event.dataTransfer.files[f].path.substring(11);
                             if (_remote[path.basename(p)].size === -2)
                                 downloadPath(p, options.local);
                             else
-                                _ied.download(p);
+                                if (!await downloadFile(p)) break;
                         }
                         else if (event.dataTransfer.files[f].path.startsWith('/jiMUD:')) {
                             p = event.dataTransfer.files[f].path.substring(7);
                             if (_remote[path.basename(p)].size === -2)
                                 downloadPath(p, options.local);
                             else
-                                _ied.download(p);
+                                if (!await downloadFile(p)) break;
                         }
                         else if (event.dataTransfer.files[f].size < 1) {
                             var stat = fs.statSync(event.dataTransfer.files[f].path);
                             if (stat.isDirectory())
                                 uploadPath(event.dataTransfer.files[f].path);
                             else
-                                _ied.upload(event.dataTransfer.files[f].path);
+                                if (!await uploadFile(event.dataTransfer.files[f].path)) break;
                         }
                         else
-                            _ied.upload(event.dataTransfer.files[f].path);
+                            if (!await uploadFile(event.dataTransfer.files[f].path)) break;
                     }
                     _ied.end();
+                    _queue = 0;
                 }
             };
-
+            //#endregion
             $(window).trigger('resize');
-
-            window.onbeforeunload = function () {
-                clearWatcher();
-            };
         });
 
+        function optionsLoaded() {
+            loadOptions();
+        }
+
+        async function processGMCP(mod, obj) {
+            if (options && options.debug)
+                console.log({ mod: mod, obj: obj });
+            if (_ied)
+                _ied.processGMCP(mod, obj);
+        }
+
+        function setTitle(title, lag) {
+            if (title && title.length > 0)
+                document.title = 'Immortal tools - ' + title + (window.opener.client.port === 1035 ? ' - Development' : '');
+            else
+                document.title = 'Immortal tools' + (window.opener.client.port === 1035 ? ' - Development' : '');
+        }
+
+        function updateCharacter(e) {
+            setTitle(window.opener.getCharacterName());
+        }
 
         function showLocalContextMenu() {
             var selected = localTable.rows({ selected: true }).data().pluck('size');
@@ -2713,9 +2740,9 @@
                         var selected = remoteTable.rows({ selected: true }).data();
                         if (!selected.length) return;
                         if (selected[0].size === -2)
-                            ipcRenderer.send('send-command', `cd ${selected[0].path}`);
+                            window.opener.client.sendCommand(`cd ${selected[0].path}`);
                         else
-                            ipcRenderer.send('send-command', `cd ${path.dirname(selected[0].path)}`);
+                            window.opener.client.sendCommand(`cd ${path.dirname(selected[0].path)}`);
                     }
                 }));
                 c.append(new MenuItem({ type: 'separator' }));
@@ -2762,7 +2789,7 @@
                 c.append(new MenuItem({
                     label: 'Change to directory',
                     click: () => {
-                        ipcRenderer.send('send-command', `cd ${options.remote}`);
+                        window.opener.client.sendCommand(`cd ${options.remote}`);
                     }
                 }));
             }
@@ -2904,35 +2931,115 @@
             shell.openPath(path);
         }
 
-        function download() {
+        function openEditor(file, remote, remoteEdit) {
+            if (!window.opener._windows['code.editor.html']) {
+                window.opener.openWindow('code.editor').then(() => {
+                    //not opened for what ever reason
+                    if (!window.opener._windows['code.editor.html']) return;
+                    window.opener._windows['code.editor.html'].addEventListener('load', () => {
+                        window.opener._windows['code.editor.html'].openEditor(file, remote, remoteEdit);
+                        window.opener._windows['code.editor.html'].focus();
+                    });
+                });
+            }
+            else {
+                window.opener._windows['code.editor.html'].openEditor(file, remote, remoteEdit);
+                window.opener._windows['code.editor.html'].focus();
+            }
+        }
+
+        async function download() {
             var data = remoteTable.rows({ selected: true }).data();
             _ied.begin();
             for (var d = 0, dl = data.length; d < dl; d++) {
                 if (data[d].size === -2)
                     downloadPath(data[d].path, options.local);
                 else
-                    _ied.download(data[d].path);
+                    if (!await downloadFile(data[d].path)) break;
             }
             _ied.end();
+            _queue = 0;
         }
 
-        function upload() {
+        async function upload() {
             var data = localTable.rows({ selected: true }).data();
             _ied.begin();
             for (var d = 0, dl = data.length; d < dl; d++) {
                 if (data[d].size === -2)
                     uploadPath(data[d].path);
                 else
-                    _ied.upload(data[d].path);
+                    if (!await uploadFile(data[d].path)) break;
             }
             _ied.end();
+            _queue = 0;
         }
 
+        async function uploadFile(file) {
+            if (_remote[path.basename(file)]) {
+                //if not applied to queue or always ask
+                if (_queue !== 4 && options.fileExistAlways !== 2) {
+                    const result = await fileExist(_local[path.basename(file)], _remote[path.basename(file)]);
+                    if (!result) return false;
+                }
+
+                if (options.fileExistOverwrite === 2 || options.fileExistOverwrite === 6) {
+                    //source older so skip
+                    if (_local[path.basename(file)].date <= _remote[path.basename(file)].date)
+                        return true;
+                }
+                if (options.fileExistOverwrite === 4 || options.fileExistOverwrite === 6) {
+                    //same size so skip
+                    if (_local[path.basename(file)].size === _remote[path.basename(file)].size)
+                        return true;
+                }
+                //rename
+                if (options.fileExistOverwrite === 8) {
+                    name = getNewName(path.basename(file), _remote);
+                    _ied.uploadTo(file, options.remote + '/' + name, false, 0, true);
+                }
+                //skip
+                if (options.fileExistOverwrite === 16)
+                    return true;
+            }
+            _ied.upload(file);
+            return true;
+        }
+
+        async function downloadFile(file) {
+            if (_local[path.basename(file)]) {
+                //if not applied to queue or always ask
+                if (_queue !== 4 && options.fileExistAlways !== 2) {
+                    const result = await fileExist(_remote[path.basename(file)], _local[path.basename(file)]);
+                    if (!result) return false;
+                }
+
+                if (options.fileExistOverwrite === 2 || options.fileExistOverwrite === 6) {
+                    //source older so skip
+                    if (_remote[path.basename(file)].date <= _local[path.basename(file)].date)
+                        return true;
+                }
+                if (options.fileExistOverwrite === 4 || options.fileExistOverwrite === 6) {
+                    //same size so skip
+                    if (_remote[path.basename(file)].size === _local[path.basename(file)].size)
+                        return true;
+                }
+                //rename
+                if (options.fileExistOverwrite === 8) {
+                    name = getNewName(path.basename(file), _local);
+                    _ied.downloadTo(file, path.join(options.local, name), false, 0, true);
+                }
+                //skip
+                if (options.fileExistOverwrite === 16)
+                    return true;
+            }
+            _ied.download(file);
+            return true;
+        }
 
         var pFiles;
         var pTotal = 0;
 
-        function uploadPath(p) {
+        async function uploadPath(p) {
             _progressCancel = false;
             if (!pTotal && !$('#Progress')[0].open) {
                 $('#Progressbar').html('<progress max="100"></progress>');
@@ -2988,9 +3095,148 @@
                 r = r.substr(0, r.length - 1);
             var p = path.dirname(file);
             p = r + p.substr(s).replace(/\\/g, '/');
-            _ied.uploadTo(file, p + '/' + path.basename(file), false, 0, true);
-            $('#Progress progress').val(Math.ceil((pTotal - pFiles.length) * 100 / pTotal));
-            setTimeout(upNext, 0);
+            //minor optimizing if just overwrite and queue/always just skip the server round trip
+            if (options.fileExistOverwrite === 1 && (_queue === 4 || options.fileExistAlways === 2)) {
+                _ied.uploadTo(file, p + '/' + path.basename(file), false, 0, true);
+                $('#Progress progress').val(Math.ceil((pTotal - pFiles.length) * 100 / pTotal));
+                setTimeout(upNext, 0);
+            }
+            else
+                _ied.exist(p + '/' + path.basename(file), false, 'upload', async (target, data) => {
+                    if (data === -2) {
+                        logMessage('Remote name is a directory');
+                        return true;
+                    }
+                    //file exist if it returns an array of data, 0 is size, 1 is date
+                    if (Array.isArray(data)) {
+                        var remoteData = {
+                            name: path.basename(target),
+                            size: data[0],
+                            date: data[1],
+                            path: target,
+                        }
+                        var localData = IED.getFileInfo(file);
+                        //if not applied to queue or always ask
+                        if (_queue !== 4 && options.fileExistAlways !== 2) {
+                            const result = await fileExist(localData, remoteData);
+                            if (!result) {
+                                _progressCancel = true;
+                                pFiles = null;
+                                pTotal = 0;
+                                if ($('#Progress')[0].open)
+                                    $('#Progress')[0].close();
+                                return false;
+                            }
+                        }
+
+                        if (options.fileExistOverwrite === 2 || options.fileExistOverwrite === 6) {
+                            //source older so skip
+                            if (remoteData.date <= localData.date)
+                                return true;
+                        }
+                        if (options.fileExistOverwrite === 4 || options.fileExistOverwrite === 6) {
+                            //same size so skip
+                            if (remoteData.size === localData.size)
+                                return true;
+                        }
+                        //rename
+                        if (options.fileExistOverwrite === 8) {
+                            name = getNewNameRemote(path.basename(file), p);
+                            _ied.uploadTo(file, p + '/' + name, false, 0, true);
+                            $('#Progress progress').val(Math.ceil((pTotal - pFiles.length) * 100 / pTotal));
+                            setTimeout(upNext, 0);
+                            return true;
+                        }
+                        //skip
+                        if (options.fileExistOverwrite === 16)
+                            return true;
+                    }
+                    _ied.uploadTo(file, p + '/' + path.basename(file), false, 0, true);
+                    $('#Progress progress').val(Math.ceil((pTotal - pFiles.length) * 100 / pTotal));
+                    setTimeout(upNext, 0);
+                });
+        }
+
+        async function getNewNameRemote(name, p) {
+            return new Promise(async (resolve, reject) => {
+                var ext = path.extname(name);
+                var o = path.basename(name, ext);
+                if (!p) p = options.remote;
+                resolve(await _getNewNameRemote(o + ` (1)` + ext, name, p, 1));
+            });
+        }
+
+        async function _getNewNameRemote(newName, name, p, i) {
+            i = i || 0;
+            return new Promise(async (resolve, reject) => {
+                if (window.opener && !window.opener.client.connected) {
+                    resolve();
+                    return;
+                }
+                _ied.exist(p + '/' + newName, false, 'upload', async (target, data) => {
+                    //array file exist, -2 directory
+                    if (data === -1) {
+                        resolve(newName);
+                        return;
+                    }
+                    i++;
+                    var ext = path.extname(name);
+                    var o = path.basename(name, ext);
+                    if (!p) p = options.remote;
+                    resolve(await _getNewNameRemote(o + ` (${i})` + ext, name, p, i++));
+                });
+            });
+        }
+
+        function uploadAgain(item) {
+            //minor optimizing if just overwrite and queue/always just skip the server round trip
+            if (options.fileExistOverwrite === 1 && (_queue === 4 || options.fileExistAlways === 2))
+                _ied.startItem(item.id);
+            else
+                _ied.exist(item.remote, false, 'upload', async (target, data) => {
+                    if (data === -2) {
+                        logMessage('Remote name is a directory');
+                        return true;
+                    }
+                    //file exist if it returns an array of data, 0 is size, 1 is date
+                    if (Array.isArray(data)) {
+                        var remoteData = {
+                            name: path.basename(target),
+                            size: data[0],
+                            date: data[1],
+                            path: target,
+                        }
+                        var localData = IED.getFileInfo(item.local);
+                        //if not applied to queue or always ask
+                        if (_queue !== 4 && options.fileExistAlways !== 2)
+                            if (!await fileExist(localData, remoteData)) return false;
+
+                        if (options.fileExistOverwrite === 2 || options.fileExistOverwrite === 6) {
+                            //source older so skip
+                            if (remoteData.date <= localData.date)
+                                return true;
+                        }
+                        if (options.fileExistOverwrite === 4 || options.fileExistOverwrite === 6) {
+                            //same size so skip
+                            if (remoteData.size === localData.size)
+                                return true;
+                        }
+                        //rename
+                        if (options.fileExistOverwrite === 8) {
+                            name = getNewNameRemote(path.basename(item.remote), path.dirname(item.remote));
+                            item.remote = path.dirname(item.remote) + '/' + name;
+                            var row = queueTable.row(function (idx, data) {
+                                return data.ID === item.ID;
+                            });
+                            row.data(item);
+                            doUpdate(8);
+                        }
+                        //skip
+                        if (options.fileExistOverwrite === 16)
+                            return true;
+                    }
+                    _ied.startItem(item.id);
+                });
         }
 
         // eslint-disable-next-line no-unused-vars
@@ -3002,7 +3248,7 @@
                 $('#Progress')[0].close();
         }
 
-        function downloadPath(p, local) {
+        async function downloadPath(p, local) {
             _progressCancel = false;
             if (!pTotal && !$('#Progress')[0].open) {
                 $('#Progressbar').html('<progress max="100"></progress>');
@@ -3019,8 +3265,46 @@
             _ied.getDir(p, true, 'download:' + p, path.join(local, path.basename(p)));
         }
 
-        function downNext(file, local) {
-            setTimeout(() => { _ied.downloadTo(file, local, false, 0, true); }, 0);
+        async function downNext(file, local, remoteData) {
+            try {
+                if (existsSync(local)) {
+                    var localData = IED.getFileInfo(local);
+                    //if not applied to queue or always ask
+                    if (_queue !== 4 && options.fileExistAlways !== 2) {
+                        const result = await fileExist(remoteData, localData);
+                        if (!result) return false;
+                    }
+
+                    if (options.fileExistOverwrite === 2 || options.fileExistOverwrite === 6) {
+                        //source older so skip
+                        if (remoteData.date <= localData.date)
+                            return true;
+                    }
+                    if (options.fileExistOverwrite === 4 || options.fileExistOverwrite === 6) {
+                        //same size so skip
+                        if (remoteData.size === localData.size)
+                            return true;
+                    }
+                    //rename
+                    if (options.fileExistOverwrite === 8) {
+                        const localPath = path.dirname(local);
+                        name = getNewNamePath(path.basename(file), localPath);
+                        setTimeout(async () => {
+                            _ied.downloadTo(file, path.join(localPath, name), false, 0, true);
+                        }, 0);
+                        return true;
+                    }
+                    //skip
+                    if (options.fileExistOverwrite === 16)
+                        return true;
+                }
+            }
+            catch (error) {
+                logError(error);
+            }
+            setTimeout(async () => {
+                _ied.downloadTo(file, local, false, 0, true);
+            }, 0);
         }
 
         // eslint-disable-next-line no-unused-vars
@@ -3029,9 +3313,41 @@
         }
 
         // eslint-disable-next-line no-unused-vars
-        function closeHidden() {
-            ipcRenderer.invoke('window', 'hide');
+        function closeHidden(hidden) {
+            if (hidden) return true;
+            //if (!closeable()) return false;
         }
+
+        $closeWindow = false;
+        function closeable(all) {
+            if (!$closeWindow) {
+                if (_prefs && !_prefs.closed) {
+                    dialog.showMessageBox({
+                        type: 'error',
+                        title: 'Preferences dialog open',
+                        message: 'You must close the Preferences dialog before you can close immortal tools.',
+                        defaultId: 1,
+                        noLink: true
+                    });
+                    $closeWindow = false;
+                }
+                else
+                    $closeWindow = true;
+            }
+            return $closeWindow;
+        }
+
+        window.onbeforeunload = () => {
+            if (window.opener) {
+                window.opener.client.off('options-loaded', optionsLoaded);
+                window.opener.client.off('received-GMCP', processGMCP);
+                window.opener._status.off('set-title', setTitle);
+                window.opener.removeEventListener('loadCharacter', updateCharacter);
+                window.opener.removeEventListener('updateCharacter', updateCharacter);
+                window.opener.removeEventListener('resetCharacter', updateCharacter);
+            }
+            clearWatcher();
+        };
 
         function clearWatcher() {
             if (watcher)
@@ -3094,7 +3410,7 @@
                 });
         }
 
-        function updateLocalFile(p) {
+        async function updateLocalFile(p) {
             try {
                 var file = IED.getFileInfo(p);
             }
@@ -3131,7 +3447,7 @@
             if (file.size === -2)
                 uploadPath(p);
             else if (!_downloads[p] && options.uploadOnChange)
-                _ied.upload(p);
+                await uploadFile(p);
             if (_downloads[p]) {
                 if (options.focusOnFinished)
                     _focusLocal = row;
@@ -3149,15 +3465,17 @@
                     true : false;
             });
             row.remove();
-            if (_local[path.basename(p)].size === -2)
-                info.localDirs--;
-            else
-                info.localFiles--;
-            delete _local[path.basename(p)];
+            if (_local[path.basename(p)]) {
+                if (_local[path.basename(p)].size === -2)
+                    info.localDirs--;
+                else
+                    info.localFiles--;
+                delete _local[path.basename(p)];
+            }
             doUpdate(3);
         }
 
-        function addLocalFile(p) {
+        async function addLocalFile(p) {
             try {
                 var file = IED.getFileInfo(p);
             }
@@ -3176,7 +3494,7 @@
             if (options.debug)
                 console.log(_downloads[p]);
             if (file.size != -2 && !_downloads[p] && options.uploadOnChange)
-                _ied.upload(p);
+                await uploadFile(p);
 
             if (_downloads[p]) {
                 var row = localTable.row(function (idx, data) {
@@ -3205,12 +3523,13 @@
 
         function deleteRemote() {
             var data = remoteTable.rows({ selected: true }).data();
-            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+            dialog.showMessageBox({
                 type: 'warning',
                 title: 'Delete?',
                 message: data.length > 1 ? 'Delete remote?' : 'Delete remote: ' + data[0].name + '?',
                 buttons: ['Yes', 'No'],
                 defaultId: 1,
+                noLink: true
             }).then((result) => {
                 if (result.response === 0) {
 
@@ -3259,7 +3578,7 @@
         function newFolderOk() {
             var n = $('#newFolder-name').val();
             if (!n || n.length === 0) {
-                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                dialog.showMessageBox({
                     type: 'error',
                     title: 'Name required',
                     message: 'You must supply a valid name!'
@@ -3267,7 +3586,7 @@
                 return;
             }
             if (IED.invalidFile(n)) {
-                ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                dialog.showMessageBox({
                     type: 'error',
                     title: 'Invalid folder name',
                     message: 'The name you supplied contains invalid characters!'
@@ -3277,12 +3596,13 @@
             if ($('#newFolder').data('type') === 'local') {
                 if (_local[n]) {
                     n = getNewName(n, _local);
-                    if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                    if (dialog.showMessageBoxSync({
                         type: 'warning',
                         title: 'File or folder exist?',
                         message: `Do you want to rename to "${n}"?`,
                         buttons: ['Yes', 'No'],
                         defaultId: 1,
+                        noLink: true,
                         detail: 'There is already a file or folder with the same name in this location.',
                     }) != 0) {
                         return;
@@ -3294,12 +3614,13 @@
             else if ($('#newFolder').data('type') === 'remote') {
                 if (_remote[n]) {
                     n = getNewName(n, _remote);
-                    if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                    if (dialog.showMessageBoxSync({
                         type: 'warning',
                         title: 'File or folder exist?',
                         message: `Do you want to rename to "${n}"?`,
                         buttons: ['Yes', 'No'],
                         defaultId: 1,
+                        noLink: true,
                         detail: 'There is already a file or folder with the same name in this location.',
                     }) != 0) {
                         return;
@@ -3339,12 +3660,13 @@
                 }
                 else if (editor.val() != editor.original) {
                     var n = getNewName(editor.val(), list);
-                    if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                    if (dialog.showMessageBoxSync({
                         type: 'warning',
                         title: 'Rename file?',
                         message: `Do you want to rename "${editor.original}" to "${n}"?`,
                         buttons: ['Yes', 'No'],
                         defaultId: 1,
+                        noLink: true,
                         detail: 'There is already a file with the same name in this location.',
                     }) === 0 && callback) {
                         callback(editor.path, n);
@@ -3361,7 +3683,7 @@
                 editor = null;
             };
             editor.on('blur', editor.close);
-            editor.on('click', function () {
+            editor.on('click', function (event) {
                 event.cancelable = true;
                 event.stopPropagation();
             });
@@ -3381,17 +3703,17 @@
             $(window).on('click', editor.update);
             editor.context = e => {
                 if (e && e.target === editor[0]) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    event.cancelBubble = true;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.cancelBubble = true;
                     return;
                 }
                 editor.close();
             };
             editor.on('contextmenu', e => {
-                event.preventDefault();
-                event.stopPropagation();
-                event.cancelBubble = true;
+                e.preventDefault();
+                e.stopPropagation();
+                e.cancelBubble = true;
 
                 let menu = [
                     { role: 'undo' },
@@ -3403,11 +3725,11 @@
                     { type: 'separator' },
                     { role: 'selectAll' },
                 ];
-                if (ipcRenderer.sendSync('get-global', 'debug')) {
+                if (window.getGlobal('debug')) {
                     menu.push({ type: 'separator' });
-                    menu.push({ label: 'Inspect', click: `ipcRenderer.send('inspect', ${e.pageX}, ${e.pageY})` });
+                    menu.push({ label: 'Inspect', click: `ipcRenderer.invoke('contents', 'inspectElement', ${e.pageX}, ${e.pageY})` });
                 }
-                ipcRenderer.invoke('show-context', menu);
+                window.showContext(menu);
             })
             list.on('contextmenu', 'tr', editor.context);
             el.append(editor);
@@ -3435,15 +3757,31 @@
             return n;
         }
 
+        function getNewNamePath(name, p) {
+            if (!existsSync(path.join(p, name))) return name;
+            var i = 1;
+            var ext = path.extname(name);
+            var o = path.basename(name, ext);
+            if (!p) p = options.local;
+            var n = o + ` (${i})` + ext;
+            while (existsSync(path.join(p, n))) {
+                i++;
+                n = o + ` (${i})` + ext;
+            }
+            return n;
+        }
+
         function queueStart() {
             var selected = queueTable.rows({ selected: true }).data().pluck('id');
-            for (var q = 0, ql = selected.length; q < ql; q++)
+            for (var q = 0, ql = selected.length; q < ql; q++) {
                 _ied.startItem(selected[q]);
+            }
         }
         function queuePause() {
             var selected = queueTable.rows({ selected: true }).data().pluck('id');
-            for (var q = 0, ql = selected.length; q < ql; q++)
+            for (var q = 0, ql = selected.length; q < ql; q++) {
                 _ied.pauseItem(selected[q]);
+            }
         }
         function queueStop() {
             var selected = queueTable.rows({ selected: true }).data().pluck('id');
@@ -3458,10 +3796,10 @@
                 if (selected[s].size === -2) continue;
                 if (noExt) {
                     var name = path.basename(selected[s].name, selected[s].type);
-                    ipcRenderer.send('send-command', `${cmd} ${options.remote}/${name}`);
+                    window.opener.client.sendCommand(`${cmd} ${options.remote}/${name}`);
                 }
                 else
-                    ipcRenderer.send('send-command', `${cmd} ${selected[s].path}`);
+                    window.opener.client.sendCommand(`${cmd} ${selected[s].path}`);
             }
         }
 
@@ -3470,7 +3808,7 @@
             var selected = remoteTable.rows({ selected: true }).data();
             for (var s = 0, sl = selected.length; s < sl; s++) {
                 if (selected[s].size === -2) continue;
-                ipcRenderer.send('send-command', `${cmd} ${selected[s].path}`);
+                window.opener.client.sendCommand(`${cmd} ${selected[s].path}`);
                 break;
             }
         }
@@ -3512,10 +3850,6 @@
                 body.scrollTop = top;
         }
 
-        // eslint-disable-next-line no-unused-vars
-        function childClosed(url, name) {
-        }
-
         function newLocalFile() {
             var file = path.join(options.local, getNewName('newfile', _local));
             fs.closeSync(fs.openSync(file, 'w'));
@@ -3537,32 +3871,6 @@
             }, 500);
         }
 
-        ipcRenderer.on('GMCP-received', (event, data) => {
-            if (options && options.debug)
-                console.log(data);
-            if (_ied)
-                _ied.processGMCP(data.mod, data.obj);
-        });
-
-        ipcRenderer.on('reload-options', () => {
-            loadOptions();
-        });
-
-        ipcRenderer.on('setting-changed', (event, data) => {
-            if (data.type === 'extensions' && data.name === 'immortal') {
-                loadOptions(data.value);
-                if (_ied) {
-                    _ied.local = options.local;
-                    _ied.remote = options.remote;
-                    _ied.bufferSize = options.bufferSize;
-                    _ied.useTemp = options.tempFile;
-                    _ied.compressUpload = options.compress;
-                    _ied.compressDownload = options.compress;
-                    _ied.compressDir = options.compress;
-                }
-            }
-        });
-
         function bulkQueueRemove() {
             if (!_remove || _remove.length === 0) {
                 _removeID = null;
@@ -3575,6 +3883,7 @@
                 return ids.indexOf(data.id) !== -1;
             }).remove();
             var rc = _remove.length;
+            const child_process = require('child_process');
             for (var r = 0; r < rc; r++) {
                 var item = _remove[r];
                 if (item.download) {
@@ -3589,7 +3898,7 @@
                             }
                         }
                         else
-                            ipcRenderer.send('open-editor', item.local, item.remote);
+                            openEditor(item.local, item.remote);
                     }
                     info.downloads--;
                 }
@@ -3660,16 +3969,7 @@
             info.active = rows.count();
             */
             doUpdate(25);
-            if (info.downloads + info.uploads === 0)
-                info.active = 0;
-            if (info.active > 0) {
-                ipcRenderer.send('set-progress-window', 'immortal', { value: 1.0 - (info.downloads + info.uploads) / info.active });
-                ipcRenderer.send('set-progress', { value: 1.0 - (info.downloads + info.uploads) / info.active });
-            }
-            else {
-                ipcRenderer.send('set-progress-window', 'immortal', { value: -1 });
-                ipcRenderer.send('set-progress', { value: -1 });
-            }
+            updateQueueProgress();
             _remove = null;
             _removeID = null;
         }
@@ -3679,8 +3979,8 @@
                 _qUpdate = null;
                 _qUpdateTracker = null;
                 _qUpdateID = null;
-                ipcRenderer.send('set-progress-window', 'immortal', { value: -1 });
-                ipcRenderer.send('set-progress', { value: -1 });
+                window.setProgressBar(-1);
+                window.opener.updateProgress(-1);
                 return;
             }
             var uc = _qUpdate.length;
@@ -3709,19 +4009,45 @@
             });
             info.active = rows.count();
             */
-            if (info.downloads + info.uploads === 0)
-                info.active = 0;
-            if (info.active > 0) {
-                ipcRenderer.send('set-progress-window', 'immortal', { value: 1.0 - (info.downloads + info.uploads) / info.active });
-                ipcRenderer.send('set-progress', { value: 1.0 - (info.downloads + info.uploads) / info.active });
-            }
-            else {
-                ipcRenderer.send('set-progress-window', 'immortal', { value: -1 });
-                ipcRenderer.send('set-progress', { value: -1 });
-            }
+            updateQueueProgress();
             _qUpdate = null;
             _qUpdateTracker = null;
             _qUpdateID = null;
+        }
+
+        function updateQueueProgress() {
+            //var rows = localTable.rows().data().pluck('progress');
+            var progress = 0;
+            var count = 0;
+            queueTable.rows().every(function (rowIdx, tableLoop, rowLoop) {
+                var data = this.data();
+                if (!data.error || data.error.length === 0) {
+                    progress += data.progress;
+                    count++;
+                }
+            });
+
+            if (count === 0) {
+                window.setProgressBar(-1);
+                window.opener.updateProgress(-1);
+            }
+            else {
+                progress /= count;
+                window.setProgressBar(progress);
+                window.opener.updateProgress(progress);
+            }
+            /*
+                if (info.downloads + info.uploads === 0)
+                    info.active = 0;
+                if (info.active > 0) {
+                    window.setProgressBar(1.0 - (info.downloads + info.uploads) / info.active);
+                    window.opener.updateProgress(1.0 - (info.downloads + info.uploads) / info.active);
+                }
+                else {
+                    window.setProgressBar(-1);
+                    window.opener.updateProgress(-1);
+                }
+                */
         }
 
         var _rTimeout = 0;
@@ -3804,9 +4130,9 @@
             for (var d = 0, dl = selected.length; d < dl; d++) {
                 if (selected[d].size === -2) continue;
                 if (_remote[path.basename(selected[d].path)])
-                    ipcRenderer.send('open-editor', selected[d].path, options.remote + '/' + path.basename(selected[d].path));
+                    openEditor(selected[d].path, options.remote + '/' + path.basename(selected[d].path));
                 else
-                    ipcRenderer.send('open-editor', selected[d].path);
+                    openEditor(selected[d].path);
             }
         }
 
@@ -3814,12 +4140,13 @@
             var selected = remoteTable.rows({ selected: true }).data();
             for (var d = 0, dl = selected.length; d < dl; d++) {
                 if (selected[d].size === -2) continue;
-                ipcRenderer.send('open-editor', null, options.remote + '/' + path.basename(selected[d].path), true);
+                openEditor(null, options.remote + '/' + path.basename(selected[d].path), true);
             }
         }
 
         function openWithExternalEditor() {
             var selected = localTable.rows({ selected: true }).data().pluck('path');
+            const child_process = require('child_process');
             for (var d = 0, dl = selected.length; d < dl; d++) {
                 var p = child_process.spawn(options.editor, [selected[d]], { detached: true, stdio: ['ignore', 'ignore', 'ignore'] });
                 p.unref();
@@ -3830,6 +4157,73 @@
             var selected = localTable.rows({ selected: true }).data().pluck('path');
             for (var d = 0, dl = selected.length; d < dl; d++)
                 shell.showItemInFolder(selected[d]);
+        }
+
+        async function fileExist(source, target) {
+            return new Promise((resolve, reject) => {
+                const feDialog = document.getElementById('FileExist');
+                const fnClose = () => {
+                    menubar.enabled = true;
+                    feDialog.close();
+                    feDialog.replaceWith(feDialog.cloneNode(true));
+                    resolve(null);
+                }
+                feDialog.addEventListener('close', fnClose);
+                feDialog.addEventListener('cancel', fnClose);
+                document.getElementById('FileExist-cancel').addEventListener('click', fnClose);
+                document.getElementById('FileExist-header-close').addEventListener('click', fnClose);
+                document.getElementById('FileExist-ok').addEventListener('click', () => {
+                    feDialog.close();
+                    options.fileExistOverwrite = 1;
+                    if (document.getElementById('action-Overwrite-2').checked)
+                        options.fileExistOverwrite = 2;
+                    else if (document.getElementById('action-Overwrite-4').checked)
+                        options.fileExistOverwrite = 4;
+                    else if (document.getElementById('action-Overwrite-6').checked)
+                        options.fileExistOverwrite = 6;
+                    else if (document.getElementById('action-Overwrite-8').checked)
+                        options.fileExistOverwrite = 8;
+                    else if (document.getElementById('action-Overwrite-16').checked)
+                        options.fileExistOverwrite = 16;
+                    options.fileExistAlways = 0;
+                    if (document.getElementById('always-2').checked)
+                        options.fileExistAlways = 2;
+                    else if (document.getElementById('always-4').checked) {
+                        options.fileExistAlways = 4;
+                        _queue = 4;
+                    }
+                    resolve({
+                        action: options.fileExistOverwrite,
+                        always: options.fileExistAlways
+                    });
+                    saveOptions();
+                    feDialog.replaceWith(feDialog.cloneNode(true));
+                });
+                document.getElementById('always-1').checked = options.fileExistAlways === 0;
+                document.getElementById('always-2').checked = options.fileExistAlways === 2;
+                document.getElementById('always-4').checked = !('fileExistAlways' in options) || options.fileExistAlways === 4;
+                document.getElementById('action-Overwrite-' + (options.fileExistOverwrite || 1)).checked = true;
+                if (source) {
+                    document.getElementById('FileExist-source').style.display = '';
+                    document.getElementById('FileExist-source-name').textContent = source.path || source.name || '';
+                    document.getElementById('FileExist-source-name').title = source.path || source.name || '';
+                    document.getElementById('FileExist-source-date').textContent = source.date ? new moment(source.date).format('MM/DD/YYYY hh:mm:ss A') : '';
+                    document.getElementById('FileExist-source-size').textContent = formatSize(source.size || 0);
+                }
+                else
+                    document.getElementById('FileExist-source').style.display = 'none';
+                if (target) {
+                    document.getElementById('FileExist-target').style.display = '';
+                    document.getElementById('FileExist-target-name').textContent = target.path || target.name || '';
+                    document.getElementById('FileExist-target-name').title = target.path || target.name || '';
+                    document.getElementById('FileExist-target-date').textContent = target.date ? new moment(target.date).format('MM/DD/YYYY hh:mm:ss A') : '';
+                    document.getElementById('FileExist-target-size').textContent = formatSize(target.size || 0);
+                }
+                else
+                    document.getElementById('FileExist-target').style.display = 'none';
+                menubar.enabled = false;
+                feDialog.showModal();
+            });
         }
     </script>
 </head>
@@ -4073,6 +4467,89 @@
             <button onclick="progressCancel()">
                 Cancel
             </button>
+        </div>
+    </dialog>
+    <dialog id="FileExist" style="z-index:1000;height:393px;width:600px;">
+        <div class="dialog-header" style="font-weight: bold">
+            <button id="FileExist-header-close" type="button" class="close" data-dismiss="modal">&times;</button>
+            <div style="padding-top: 2px;">File exists...</div>
+        </div>
+        <div class="dialog-body" style="margin-top:23px">
+            <fieldset id="FileExist-source" class="col-sm-6 form-group" style="overflow: hidden">
+                <legend style="margin:0">Source:</legend>
+                <div id="FileExist-source-name" style="width: 100%;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;"></div>
+                <div id="FileExist-source-date"></div>
+                <div id="FileExist-source-size"></div>
+            </fieldset>
+            <fieldset id="FileExist-target" class="col-sm-6 form-group" style="overflow: hidden">
+                <legend style="margin:0">Target:</legend>
+                <div id="FileExist-target-name" style="width: 100%;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;"></div>
+                <div id="FileExist-target-date"></div>
+                <div id="FileExist-target-size"></div>
+            </fieldset>
+            <div class="col-sm-8 form-group">
+                <fieldset>
+                    <legend style="margin:0">Action</legend>
+                    <ul style="list-style-type: none; margin: 0;padding: 0;">
+                        <li>
+                            <label>
+                                <input type="radio" name="action-Overwrite" id="action-Overwrite-1"> Overwrite
+                            </label>
+                        </li>
+                        <li>
+                            <label>
+                                <input type="radio" name="action-Overwrite" id="action-Overwrite-2"> Overwrite if source newer
+                            </label>
+                        </li>
+                        <li>
+                            <label>
+                                <input type="radio" name="action-Overwrite" id="action-Overwrite-4"> Overwrite if different sizes
+                            </label>
+                        </li>
+                        <li>
+                            <label>
+                                <input type="radio" name="action-Overwrite" id="action-Overwrite-6"> Overwrite if source newer or different sizes
+                            </label>
+                        </li>
+                        <li>
+                            <label>
+                                <input type="radio" name="action-Overwrite" id="action-Overwrite-8"> Rename
+                            </label>
+                        </li>
+                        <li>
+                            <label>
+                                <input type="radio" name="action-Overwrite" id="action-Overwrite-16"> Skip
+                            </label>
+                        </li>
+                    </ul>
+                </fieldset>
+            </div>
+            <div class="col-sm-4 form-group">
+                <fieldset>
+                    <legend style="margin:0">Apply</legend>
+                    <ul style="list-style-type: none; margin: 0;padding: 0;">
+                        <li>
+                            <label>
+                                <input type="radio" name="always" id="always-1"> Just this file
+                            </label>
+                        </li>
+                        <li>
+                            <label>
+                                <input type="radio" name="always" id="always-2"> Always
+                            </label>
+                        </li>
+                        <li>
+                            <label>
+                                <input type="radio" name="always" id="always-4"> Just for this queue
+                            </label>
+                        </li>
+                    </ul>
+                </fieldset>
+            </div>
+        </div>
+        <div class="dialog-footer">
+            <button id="FileExist-cancel" style="float: right" type="button" class="btn btn-default">Cancel</button>
+            <button id="FileExist-ok" style="float: right" type="button" class="btn btn-primary">Ok</button>
         </div>
     </dialog>
 </body>

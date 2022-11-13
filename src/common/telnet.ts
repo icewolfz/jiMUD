@@ -67,7 +67,8 @@ export interface TelnetOptionsServer {
  * @todo add ATCP support similar to GMCP
  * @todo add MSDP table/array support
  * @todo add MCP (Mud client protocol) - encodes protocol in text that is processed out and separates into an in bound (normal text), and out of bound (protocol data) see http://www.moo.mud.org/mcp/
- *
+ * @todo add CHARSET ttable support
+ * 
  * @property {Object}  options						- The telnet options to enable or disable
  * @property {Boolean} [options.ECHO=1]				- Enable/disable Echo (1)
  * @property {Boolean} [options.TTYPE=1]			- Enable/disable Terminal Type - Does MTTS (http://tintin.sourceforge.net/mtts/) (TTYPE) (24)
@@ -1499,7 +1500,8 @@ export class Telnet extends EventEmitter {
                             state = 18;
                             msdp_val = '';
                         }
-                        //TODO add table support
+                        //TODO add ttable support
+                        //https://www.rfc-editor.org/rfc/rfc2066.html
                         else if (i === 255) {
                             if (this.enableDebug) debugOp += '<IAC>';
                             _sb.push(i);
@@ -1769,9 +1771,10 @@ export class Telnet extends EventEmitter {
                     this.close();
             });
             _socket.on('connect', () => {
+                //set first ot ensure event has correct value
+                this._connected = true;
                 _socket.setKeepAlive(this._keepAlive, this._keepAliveDelay * 1000);
                 this.emit('connect');
-                this._connected = true;
             });
             _socket.on('data', data => {
                 if (this.enableDebug) this.emit('debug', 'Data received: ' + data, 1);

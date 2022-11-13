@@ -66,8 +66,20 @@ selurl
 copied
 >return clipboard text
 
+caption
+>returns the executing item's caption, only set for buttons and context menu items
+
 character
 >return current character name from GMCP, falls back to character manager login name, or empty string
+
+characterid
+>returns current character id for client, -1 if no character set
+
+action
+>last triggered action executed
+
+trigger
+>last text, event, or pattern that caused last trigger to fire
 
 repeatnum
 >returns the current index during [#nnn](commands.md#repeating-and-loops) or string from [#FORALL](commands.md#repeating-and-loops), supports #{repeatnum}/${repeatnum} only
@@ -93,6 +105,9 @@ expression
 
 random
 >a random number between 0 and 99
+
+clientid
+>return current client id
 
 ## Post fixes
 
@@ -243,8 +258,13 @@ stripansi(string)
 
 ### **Miscellaneous**
 
-clip(string)
+clip(*string*)
 >Return or set text to the clipboard
+
+clientname(*name*, *id*)
+>Return or set the client name
+  - `name` the name to set the client to, has to be globally unique, if a client already named it will remove that client's name then set it for the supplied id/current client
+  - `id` the client id to set the name for, if not supplied it will use current client id
 
 [time(format)](functions/time.md)
 >Display current time in format, if format omitted displays YYYY-MM-DDTHH:mm:ss[Z]

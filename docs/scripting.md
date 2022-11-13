@@ -14,6 +14,8 @@ To use scripting you just have to select script as the type from the type dropdo
 - `$selword` same as $selectedword
 - `$selline` sane as $selline
 - `$selurl` same as $selected url
+- `$action` last triggered action executed
+- `$trigger` last text, event, or pattern that caused last trigger to fire
 - `$contextMenu` access to the context menu item array, manipulating this will effect the displayed context menu, **WARNING** this could break the context menu, if broken you can refresh by causing a profile to be re-saved
 
 ## [User variables](variables.md)
@@ -52,6 +54,12 @@ this.print(name + ' says ' + message);
 
 ## Basic function list
 
+- `client.id()` return current client id
+- `client.setName(name, id?)` set name for id or if no id set current client name
+- `client.getName(id?)` return name for id, if no id return current client name
+- `client.clearName(id?)` clears client name of supplied if, if no id clears current client id
+- `client.closeWindow(name|id)` Close an open window or tab
+  - `name|id` if no name or id will attempt to close current tab/window, otherwise will attempt to close named window or by id
 - `client.beep()` play system beep sound
 - `client.readClipboard()` read text from clipboard, can also access from window.readClipboard()
 - `client.writeClipboard(text, html)` write text to clipboard, can also access from window.writeClipboard(text), html argument is optional, allows formatted html markup of text for applications that support pasting html
@@ -59,15 +67,44 @@ this.print(name + ' says ' + message);
 - `client.send(text, echo?)` send text directly to the mud, telnet code IAC is escaped, note you should always try and append a new line as most muds require it to process any text.
   - `text` the text to send
   - `echo` echo text to display
+- `client.sendAll(text, echo?)` send text directly to the mud, telnet code IAC is escaped, note you should always try and append a new line as most muds require it to process any text to all clients
+  - `text` the text to send
+  - `echo` echo text to display
+- `client.sendTo(name|id, text, echo?)` send text directly to the mud, telnet code IAC is escaped, note you should always try and append a new line as most muds require it to process any text to all clients
+  - `name|id` the client name or id of the mud to send to
+  - `text` the text to send
+  - `echo` echo text to display  
 - `client.sendRaw(text)` sends raw text directly to the mud as is
+- `client.sendAllRaw(text)` sends raw text directly to the mud as is for all clients
+- `client.sendToRaw(name|id, text)` sends raw text directly to the client name or id
+  - `name|id` the client name or id of the mud to send to
+  - `text` the text to send
 - `client.sendCommand(text, noEcho?, comments?)` sends a command as if sent from the command line
   - `text` the text to send
   - `noEcho` do not echo text to screen
   - `comments` parse inline and block comments
+- `client.sendAllCommand(text, noEcho?, comments?)` send a command to all client windows
+  - `text` the text to send
+  - `noEcho` do not echo text to screen
+  - `comments` parse inline and block comments
+- `client.sendToCommand(name|id, text, noEcho?, comments?)` send a command to all client windows
+  - `name|id` the client name or id of the mud to send to
+  - `text` the text to send
+  - `noEcho` do not echo text to screen
+  - `comments` parse inline and block comments  
 - `client.sendBackground(text, noEcho?, comments?)` sends a command as if sent from the command line with out modifying the current command line
   - `text` the text to send
   - `noEcho` do not echo text to screen
   - `comments` parse inline and block comments
+- `client.sendAllBackground(text, noEcho?, comments?)` send a command to all client windows with out modifying current command line
+  - `text` the text to send
+  - `noEcho` do not echo text to screen
+  - `comments` parse inline and block comments
+- `client.sendToBackground(name|id, text, noEcho?, comments?)` send a command to all client windows with out modifying current command line
+  - `name|id` the client name or id of the mud to send to
+  - `text` the text to send
+  - `noEcho` do not echo text to screen
+  - `comments` parse inline and block comments    
 - `client.print(text, newline)` print text to screen, newline argument is optional and controls weather to start a newline if last line was a fragment/prompt
 - `client.echo(text, fore, back, newline, forceline)` echo text to the screen
   - `test` the text to echo
@@ -89,8 +126,8 @@ this.print(name + ' says ' + message);
   - `args` an optional array of arguments to pass to the event, if you do not want to pass arguments but want a delay just pass 0 or []
   - `delay` the number of milliseconds to wait before firing event
   - Example" `client.raise('get all', [], 2000);`
-- `client.show()` show client
-- `client.hide()` hide client
+- `client.show()` show client's parent window
+- `client.hide()` hide client's parent window
 - `client.toggle()` toggle hide and show
 - `client.sendChat(text)` send text to chat window
 - `client.indices` return the current indices for trigger or an empty array same as [%x1..$x99](functions.md)

@@ -1,13 +1,14 @@
 //spell-checker:words vscroll, hscroll, Commandon, cmdfont, isdoor, isclosed, triggernewline, triggerprompt
 import EventEmitter = require('events');
 import { Client } from './client';
-import { parseTemplate, existsSync } from './library';
+import { parseTemplate, existsSync, isArrayEqual } from './library';
 import { BackupSelection, Log } from './types';
 import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, Context } from './profile';
 const fs = require('fs');
 const path = require('path');
 const sqlite3 = require('better-sqlite3');
 const LZString = require('lz-string');
+import { Settings } from './settings';
 
 /**
  * Control loading and saving system for ShadowMUD remote storage protocols
@@ -146,11 +147,9 @@ export class Backup extends EventEmitter {
                 logErrors: this.client.options.logErrors,
                 showErrorsExtended: this.client.options.showErrorsExtended
             },
-            map: {}
+            map: {},
+            inherited: {}
         };
-
-        let prop;
-        let prop2;
 
         if (this.client.options.backupAllProfiles) {
             const profiles = new ProfileCollection();
@@ -160,21 +159,19 @@ export class Backup extends EventEmitter {
         else
             data.profiles = this.client.profiles.clone(2);
 
-        for (prop in this.client.options) {
-            if (!this.client.options.hasOwnProperty(prop)) {
+        let prop;
+        //make sure a value is set in case it inherits from global or default
+        for (prop in data.settings) {
+            if (!data.settings.hasOwnProperty(prop))
                 continue;
-            }
-            if (prop === 'extensions' || prop === 'mapper' || prop === 'profiles' || prop === 'buttons' || prop === 'chat' || prop === 'find' || prop === 'display') {
-                if (!data.settings[prop]) data.settings[prop] = {};
-                for (prop2 in this.client.options[prop]) {
-                    if (!this.client.options[prop].hasOwnProperty(prop2)) {
-                        continue;
-                    }
-                    data.settings[prop][prop2] = this.client.options[prop][prop2];
-                }
-            }
-            else
-                data.settings[prop] = this.client.options[prop];
+            if (typeof data.settings[prop] === 'undefined')
+                data.settings[prop] = window.getSetting(prop);
+        }
+
+        for (prop in this.client.options) {
+            if (!this.client.options.hasOwnProperty(prop))
+                continue;
+            this.getProperty(this.client.options, data.settings, prop, '', data.inherited);
         }
 
         const rooms = {};
@@ -444,7 +441,7 @@ export class Backup extends EventEmitter {
                                 for (let i = 0; i < il; i++) {
                                     item.triggers.push(new Trigger(data.profiles[keys[k]].triggers[m].triggers[i]));
                                 }
-                            }                            
+                            }
                             p.triggers.push(item);
                         }
                     }
@@ -556,18 +553,10 @@ export class Backup extends EventEmitter {
                         if ((this.loadSelection & BackupSelection.Windows) === BackupSelection.Windows)
                             this.client.options[prop] = data.settings[prop];
                     }
-                    else if (prop === 'extensions' || prop === 'mapper' || prop === 'profiles' || prop === 'buttons' || prop === 'chat' || prop === 'find' || prop === 'display') {
-                        for (prop2 in this.client.options[prop]) {
-                            if (!this.client.options[prop].hasOwnProperty(prop2)) {
-                                continue;
-                            }
-                            this.client.options[prop][prop2] = data.settings[prop][prop2];
-                        }
-                    }
-                    else if (typeof this.client.options[prop] === 'boolean')
-                        this.client.options[prop] = data.settings[prop] ? true : false;
+                    else if (prop === 'extensions')
+                        this.setProperty(data.settings, this.client.options, prop, '');
                     else
-                        this.client.options[prop] = data.settings[prop];
+                        this.setProperty(data.settings, this.client.options, prop, '', data.inherited);
                 }
                 //attempt to normalize paths with windows vs linux
                 if (process.platform.indexOf('win') === 0) {
@@ -598,4 +587,71 @@ export class Backup extends EventEmitter {
         this.close();
     }
 
+    /**
+     * Get property and set in target
+     * 
+     * @param source The source of the property to copy
+     * @param target The target object to store the copied value
+     * @param property The property to copy
+     * @param root The root dot notation of property
+     * @param inherited Track inherited state
+     */
+    private getProperty(source, target, property, root, inherited) {
+        if (typeof source[property] === 'object') {
+            for (let child in source[property]) {
+                if (!source[property].hasOwnProperty(child))
+                    continue;
+                if (!target[property])
+                    target[property] = {};
+                this.getProperty(source[property], target[property], child, root + property + '.', inherited);
+            }
+        }
+        else {
+            target[property] = source[property];
+            //if property not defined it is an inherited state so get the inherited value and enable inherited flag
+            if (typeof target[property] === 'undefined') {
+                target[property] = window.getSetting(root + property);
+                inherited[root + property] = 1;
+            }
+            else
+                inherited[root + property] = 0;
+        }
+    }
+
+    /**
+     *  Set property in target from source, oppisite of getProperty
+     * 
+     * @param source The source of the property to set
+     * @param target The target of where the property will be set
+     * @param property The property
+     * @param root The property's root dot notation
+     * @param inherited The optional inherited data, if inherited the value will be deleted and assumed to be inherited
+     */
+    private setProperty(source, target, property, root, inherited?) {
+        if (typeof source[property] === 'object' && !Array.isArray(source[property])) {
+            for (let child in source[property]) {
+                if (!source[property].hasOwnProperty(child))
+                    continue;
+                if (!target[property])
+                    target[property] = {};
+                this.setProperty(source[property], target[property], child, root + property + '.', inherited);
+            }
+        }
+        else {
+            //insure booleans are converted to boolean type and not just 1/0
+            if (typeof Settings.defaultValue(root + property) === 'boolean')
+                target[property] = source[property] ? true : false;
+            else
+                target[property] = source[property];
+            //if inherited and the value is the same as the inherited value delete it
+            if (inherited && inherited[root + property]) {
+                if (Array.isArray(target[property])) {
+                    if (isArrayEqual(window.getSetting(root + property), target[property]))
+                        delete target[property];
+                }
+                else if (window.getSetting(root + property) === target[property])
+                    delete target[property];
+            }
+        }
+    }
 }

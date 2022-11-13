@@ -141,12 +141,6 @@ body {
     z-index: 10;
 }
 
-#display-border {
-    position: absolute;
-    z-index: 1;
-    box-sizing: border-box;
-}
-
 .overlay-line {
     position: absolute;
     clear: both;
@@ -189,13 +183,13 @@ body {
     box-sizing: border-box;
 }
 
-#commandinput {
+#commandInput {
     outline: none;
     resize: none;
     overflow: hidden;
 }
 
-#commandinput:focus {
+#commandInput:focus {
     outline: none;
 }
 
@@ -268,6 +262,20 @@ body {
     position: absolute;
     display: none;
     z-index: 100;
+}
+
+.find-drag-grip {
+    text-decoration: none;
+    cursor: grab;
+}
+
+.find-drag-grip.dragging {
+    cursor: grabbing;
+}
+
+.find-drag-grip svg {
+    height: 14px;
+    padding-top: 2px;
 }
 
 .find input,
@@ -534,6 +542,12 @@ body {
 
 .select-text.blc, .find-highlight.blc {
     border-bottom-left-radius: 4px;
+}
+
+.ist {
+    height: 7px;
+    width: 7px;
+    -webkit-mask-image: radial-gradient(circle 9px at 0 100%, transparent 0, transparent 7px, black 7px);
 }
 
 .isb {

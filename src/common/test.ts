@@ -28,7 +28,7 @@ export class Tests extends EventEmitter {
      * @type {object}
      * @memberof Tests
      */
-    public Client: object;
+    public Client: Client;
 
     /**
      * Creates an instance of Tests.
@@ -45,11 +45,11 @@ export class Tests extends EventEmitter {
             let t;
             for (t in this.TestFunctions) {
                 if (!this.TestFunctions.hasOwnProperty(t)) continue;
-                sample += `\t${this.Client.options.commandChar + t}\n`;
+                sample += `\t${this.Client.getOption('commandChar') + t}\n`;
             }
-            sample += `\t${this.Client.options.commandChar}testfile file\n`;
-            sample += `\t${this.Client.options.commandChar}testspeedfile file\n`;
-            sample += `\t${this.Client.options.commandChar}testspeedfiler file\n`;
+            sample += `\t${this.Client.getOption('commandChar')}testfile file\n`;
+            sample += `\t${this.Client.getOption('commandChar')}testspeedfile file\n`;
+            sample += `\t${this.Client.getOption('commandChar')}testspeedfiler file\n`;
             this.Client.print(sample, true);
         };
 
@@ -105,15 +105,15 @@ export class Tests extends EventEmitter {
                     if (a === 'Rapid') continue;
                     //-16
                     if (a === 'None')
-                        sample += '\x1B[0m ' + AnsiColorCode[(bg - 10)].toString().paddingRight(16) + ' | ';
+                        sample += '\x1B[0m ' + AnsiColorCode[(bg - 10)].toString().padEnd(16) + ' | ';
                     else
-                        sample += '\x1B[0m ' + a.paddingRight(16) + ' | ';
+                        sample += '\x1B[0m ' + a.padEnd(16) + ' | ';
                     //-7
                     for (let fg = 30; fg <= 37; fg++) {
                         if (a === 'None')
-                            sample += '\x1B[' + bg + 'm\x1B[' + fg + 'm ' + ('[' + fg + 'm').paddingRight(7);
+                            sample += '\x1B[' + bg + 'm\x1B[' + fg + 'm ' + ('[' + fg + 'm').padEnd(7);
                         else
-                            sample += '\x1B[' + bg + 'm\x1B[' + Ansi[a] + ';' + fg + 'm ' + ('[' + Ansi[a] + ';' + fg + 'm').paddingRight(7);
+                            sample += '\x1B[' + bg + 'm\x1B[' + Ansi[a] + ';' + fg + 'm ' + ('[' + Ansi[a] + ';' + fg + 'm').padEnd(7);
                     }
                     sample += '\x1B[0m\n';
                 }
@@ -396,153 +396,134 @@ export class Tests extends EventEmitter {
         };
 
         this.TestFunctions['testmapper'] = () => {
-            const { ipcRenderer } = require('electron');
-            ipcRenderer.send('GMCP-received', {
-                mod: 'Room.Info', obj: {
-                    details: [],
-                    doors: {},
-                    prevroom: { num: 0, dir: '', area: '' },
-                    area: 'Doc Build Samples Area',
-                    exits: {
-                        south: { num: 87723359, dir: 'south', area: 'Doc Build Samples Area', isdoor: 0 },
-                        east: { num: -329701270, dir: 'east', area: 'Doc Build Samples Area', isdoor: 0 }
-                    },
-                    name: 'Sample room 1',
-                    num: 1968208336,
-                    indoors: 0
-                }
+            this.Client.emit('received-GMCP', 'Room.Info', {
+                details: [],
+                doors: {},
+                prevroom: { num: 0, dir: '', area: '' },
+                area: 'Doc Build Samples Area',
+                exits: {
+                    south: { num: 87723359, dir: 'south', area: 'Doc Build Samples Area', isdoor: 0 },
+                    east: { num: -329701270, dir: 'east', area: 'Doc Build Samples Area', isdoor: 0 }
+                },
+                name: 'Sample room 1',
+                num: 1968208336,
+                indoors: 0
             });
-            ipcRenderer.send('GMCP-received', {
-                mod: 'Room.Info', obj: {
-                    details: [],
-                    doors: {},
-                    prevroom: { num: 1968208336, dir: 'east', area: 'Doc Build Samples Area' },
-                    area: 'Doc Build Samples Area',
-                    environment: 'wood',
-                    exits: {
-                        south: { num: 1916648905, dir: 'south', area: 'Doc Build Samples Area', isdoor: 0 },
-                        east: { num: -1688332036, dir: 'east', area: 'Doc Build Samples Area', isdoor: 0 },
-                        west: { num: 1968208336, dir: 'west', area: 'Doc Build Samples Area', isdoor: 0 }
-                    },
-                    name: 'Sample room 2',
-                    num: -329701270,
-                    indoors: 0
-                }
+            this.Client.emit('received-GMCP', 'Room.Info', {
+                details: [],
+                doors: {},
+                prevroom: { num: 1968208336, dir: 'east', area: 'Doc Build Samples Area' },
+                area: 'Doc Build Samples Area',
+                environment: 'wood',
+                exits: {
+                    south: { num: 1916648905, dir: 'south', area: 'Doc Build Samples Area', isdoor: 0 },
+                    east: { num: -1688332036, dir: 'east', area: 'Doc Build Samples Area', isdoor: 0 },
+                    west: { num: 1968208336, dir: 'west', area: 'Doc Build Samples Area', isdoor: 0 }
+                },
+                name: 'Sample room 2',
+                num: -329701270,
+                indoors: 0
             });
-            ipcRenderer.send('GMCP-received', {
-                mod: 'Room.Info', obj: {
-                    details: [],
-                    doors: {},
-                    prevroom: { num: -329701270, dir: 'east', area: 'Doc Build Samples Area' },
-                    area: 'Doc Build Samples Area',
-                    environment: 'jungle',
-                    exits: {
-                        south: { num: -348853133, dir: 'south', area: 'Doc Build Samples Area', isdoor: 0 },
-                        west: { num: -329701270, dir: 'west', area: 'Doc Build Samples Area', isdoor: 0 }
-                    },
-                    name: 'Sample room 3',
-                    num: -1688332036,
-                    indoors: 0
-                }
+            this.Client.emit('received-GMCP', 'Room.Info', {
+                details: [],
+                doors: {},
+                prevroom: { num: -329701270, dir: 'east', area: 'Doc Build Samples Area' },
+                area: 'Doc Build Samples Area',
+                environment: 'jungle',
+                exits: {
+                    south: { num: -348853133, dir: 'south', area: 'Doc Build Samples Area', isdoor: 0 },
+                    west: { num: -329701270, dir: 'west', area: 'Doc Build Samples Area', isdoor: 0 }
+                },
+                name: 'Sample room 3',
+                num: -1688332036,
+                indoors: 0
             });
-            ipcRenderer.send('GMCP-received', {
-                mod: 'Room.Info', obj: {
-                    details: [],
-                    doors: {},
-                    prevroom: { num: -1688332036, dir: 'south', area: 'Doc Build Samples Area' },
-                    area: 'Doc Build Samples Area',
-                    environment: 'grass',
-                    exits: {
-                        north: { num: -1688332036, dir: 'north', area: 'Doc Build Samples Area', isdoor: 0 },
-                        south: { num: 2072768994, dir: 'south', area: 'Doc Build Samples Area', isdoor: 0 },
-                        west: { num: 1916648905, dir: 'west', area: 'Doc Build Samples Area', isdoor: 0 }
-                    }, name: 'Sample room 6',
-                    num: -348853133,
-                    indoors: 0
-                }
+            this.Client.emit('received-GMCP', 'Room.Info', {
+                details: [],
+                doors: {},
+                prevroom: { num: -1688332036, dir: 'south', area: 'Doc Build Samples Area' },
+                area: 'Doc Build Samples Area',
+                environment: 'grass',
+                exits: {
+                    north: { num: -1688332036, dir: 'north', area: 'Doc Build Samples Area', isdoor: 0 },
+                    south: { num: 2072768994, dir: 'south', area: 'Doc Build Samples Area', isdoor: 0 },
+                    west: { num: 1916648905, dir: 'west', area: 'Doc Build Samples Area', isdoor: 0 }
+                }, name: 'Sample room 6',
+                num: -348853133,
+                indoors: 0
             });
-            ipcRenderer.send('GMCP-received', {
-                mod: 'Room.Info', obj: {
-                    details: [],
-                    doors: {},
-                    prevroom: { num: -348853133, dir: 'west', area: 'Doc Build Samples Area' },
-                    area: 'Doc Build Samples Area',
-                    environment: 'desert',
-                    exits: {
-                        north: { num: -329701270, dir: 'north', area: 'Doc Build Samples Area', isdoor: 0 },
-                        south: { num: 210551156, dir: 'south', area: 'Doc Build Samples Area', isdoor: 0 },
-                        east: { num: -348853133, dir: 'east', area: 'Doc Build Samples Area', isdoor: 0 },
-                        west: { num: 87723359, dir: 'west', area: 'Doc Build Samples Area', isdoor: 0 }
-                    },
-                    name: 'Sample room 5',
-                    num: 1916648905,
-                    indoors: 1
-                }
+            this.Client.emit('received-GMCP', 'Room.Info', {
+                details: [],
+                doors: {},
+                prevroom: { num: -348853133, dir: 'west', area: 'Doc Build Samples Area' },
+                area: 'Doc Build Samples Area',
+                environment: 'desert',
+                exits: {
+                    north: { num: -329701270, dir: 'north', area: 'Doc Build Samples Area', isdoor: 0 },
+                    south: { num: 210551156, dir: 'south', area: 'Doc Build Samples Area', isdoor: 0 },
+                    east: { num: -348853133, dir: 'east', area: 'Doc Build Samples Area', isdoor: 0 },
+                    west: { num: 87723359, dir: 'west', area: 'Doc Build Samples Area', isdoor: 0 }
+                },
+                name: 'Sample room 5',
+                num: 1916648905,
+                indoors: 1
             });
-            ipcRenderer.send('GMCP-received', {
-                mod: 'Room.Info', obj: {
-                    details: [],
-                    doors: {},
-                    prevroom: { num: 1916648905, dir: 'west', area: 'Doc Build Samples Area' },
-                    area: 'Doc Build Samples Area',
-                    environment: 'tundra',
-                    exits: {
-                        north: { num: 1968208336, dir: 'north', area: 'Doc Build Samples Area', isdoor: 0 },
-                        south: { num: -1674322715, dir: 'south', area: 'Doc Build Samples Area', isdoor: 0 },
-                        east: { num: 87723359, dir: 'east', area: 'Doc Build Samples Area', isdoor: 0 }
-                    },
-                    name: 'Sample room 4',
-                    num: 87723359,
-                    indoors: 0
-                }
+            this.Client.emit('received-GMCP', 'Room.Info', {
+                details: [],
+                doors: {},
+                prevroom: { num: 1916648905, dir: 'west', area: 'Doc Build Samples Area' },
+                area: 'Doc Build Samples Area',
+                environment: 'tundra',
+                exits: {
+                    north: { num: 1968208336, dir: 'north', area: 'Doc Build Samples Area', isdoor: 0 },
+                    south: { num: -1674322715, dir: 'south', area: 'Doc Build Samples Area', isdoor: 0 },
+                    east: { num: 87723359, dir: 'east', area: 'Doc Build Samples Area', isdoor: 0 }
+                },
+                name: 'Sample room 4',
+                num: 87723359,
+                indoors: 0
             });
-            ipcRenderer.send('GMCP-received', {
-                mod: 'Room.Info', obj: {
-                    details: [],
-                    doors: {},
-                    prevroom: { num: 87723359, dir: 'south', area: 'Doc Build Samples Area' },
-                    area: 'Doc Build Samples Area',
-                    environment: 'water',
-                    exits: {
-                        north: { num: 87723359, dir: 'north', area: 'Doc Build Samples Area', isdoor: 0 },
-                        east: { num: 210551156, dir: 'east', area: 'Doc Build Samples Area', isdoor: 0 }
-                    },
-                    name: 'Sample room 7',
-                    num: -1674322715,
-                    indoors: 0
-                }
+            this.Client.emit('received-GMCP', 'Room.Info', {
+                details: [],
+                doors: {},
+                prevroom: { num: 87723359, dir: 'south', area: 'Doc Build Samples Area' },
+                area: 'Doc Build Samples Area',
+                environment: 'water',
+                exits: {
+                    north: { num: 87723359, dir: 'north', area: 'Doc Build Samples Area', isdoor: 0 },
+                    east: { num: 210551156, dir: 'east', area: 'Doc Build Samples Area', isdoor: 0 }
+                },
+                name: 'Sample room 7',
+                num: -1674322715,
+                indoors: 0
             });
-            ipcRenderer.send('GMCP-received', {
-                mod: 'Room.Info', obj: {
-                    details: [],
-                    doors: {},
-                    prevroom: { num: -1674322715, dir: 'east', area: 'Doc Build Samples Area' },
-                    area: 'Doc Build Samples Area',
-                    environment: 'jungle',
-                    exits: {
-                        north: { num: 1916648905, dir: 'north', area: 'Doc Build Samples Area', isdoor: 0 },
-                        east: { num: 2072768994, dir: 'east', area: 'Doc Build Samples Area', isdoor: 0 },
-                        west: { num: -1674322715, dir: 'west', area: 'Doc Build Samples Area', isdoor: 0 }
-                    },
-                    name: 'Sample room 8',
-                    num: 210551156,
-                    indoors: 0
-                }
+            this.Client.emit('received-GMCP', 'Room.Info', {
+                details: [],
+                doors: {},
+                prevroom: { num: -1674322715, dir: 'east', area: 'Doc Build Samples Area' },
+                area: 'Doc Build Samples Area',
+                environment: 'jungle',
+                exits: {
+                    north: { num: 1916648905, dir: 'north', area: 'Doc Build Samples Area', isdoor: 0 },
+                    east: { num: 2072768994, dir: 'east', area: 'Doc Build Samples Area', isdoor: 0 },
+                    west: { num: -1674322715, dir: 'west', area: 'Doc Build Samples Area', isdoor: 0 }
+                },
+                name: 'Sample room 8',
+                num: 210551156,
+                indoors: 0
             });
-            ipcRenderer.send('GMCP-received', {
-                mod: 'Room.Info', obj: {
-                    details: [],
-                    doors: {},
-                    prevroom: { num: 210551156, dir: 'east', area: 'Doc Build Samples Area' },
-                    area: 'Doc Build Samples Area',
-                    exits: {
-                        north: { num: -348853133, dir: 'north', area: 'Doc Build Samples Area', isdoor: 0 },
-                        west: { num: 210551156, dir: 'west', area: 'Doc Build Samples Area', isdoor: 0 }
-                    },
-                    name: 'Sample room 9',
-                    num: 2072768994,
-                    indoors: 0
-                }
+            this.Client.emit('received-GMCP', 'Room.Info', {
+                details: [],
+                doors: {},
+                prevroom: { num: 210551156, dir: 'east', area: 'Doc Build Samples Area' },
+                area: 'Doc Build Samples Area',
+                exits: {
+                    north: { num: -348853133, dir: 'north', area: 'Doc Build Samples Area', isdoor: 0 },
+                    west: { num: 210551156, dir: 'west', area: 'Doc Build Samples Area', isdoor: 0 }
+                },
+                name: 'Sample room 9',
+                num: 2072768994,
+                indoors: 0
             });
         };
 
@@ -575,6 +556,24 @@ export class Tests extends EventEmitter {
             }
             this.Client.display.displayControlCodes = dcc;
         };
+
+        this.TestFunctions['testcontrolchars'] = function () {
+            let i;
+            let sample = '1:  ' + String.fromCharCode(1) + ',';
+            for (i = 3; i <= 9; i++)
+                sample += `${i}: ${String.fromCharCode(i)},`;
+            for (i = 11; i <= 27; i++)
+                sample += `${i}: ${String.fromCharCode(i)},`;
+            for (i = 28; i <= 31; i++)
+                sample += `${i}: ${String.fromCharCode(i)},`;
+            for (i = 127; i <= 254; i++)
+                sample += `${i}: ${String.fromCharCode(i)},`;
+            sample += '\n';
+            const dcc = this.Client.display.displayControlCodes;
+            this.Client.display.displayControlCodes = true;
+            this.Client.print(sample, true)
+            this.Client.display.displayControlCodes = dcc;
+        }
 
         //spell-checker:disable
         this.TestFunctions['testurldetect'] = function () {
@@ -635,8 +634,8 @@ export class Tests extends EventEmitter {
 
         this.TestFunctions['testspeed'] = function () {
             const sample = [];
-            const commands = this.Client.options.commandChar + ['testmxpcolors', 'testmxp', 'testcolors', 'testcolorsdetails', 'testxterm', 'testxtermrgb'].join('\n' + this.Client.options.commandChar);
-            const e = this.Client.options.enableCommands;
+            const commands = this.Client.getOption('commandChar') + ['testmxpcolors', 'testmxp', 'testcolors', 'testcolorsdetails', 'testxterm', 'testxtermrgb'].join('\n' + this.Client.getOption('commandChar'));
+            const e = this.Client.getOption('enableCommands');
             this.Client.options.enableCommands = true;
             let avg = 0;
             let max = 0;
@@ -718,7 +717,7 @@ Devanagari
                 for (var x = range[0]; x < range[1]; x++) {
                     sample += String.fromCodePoint(x);
                     n++;
-                    if(n == 36) {
+                    if (n == 36) {
                         sample += '\n';
                         n = 0;
                     }
@@ -726,7 +725,7 @@ Devanagari
                 sample += '\x1B[4z<hr>';
                 n = 0
             }
-            let sample2 ='\x1B[4z<hr>' + `©®‼⁉#⃣8⃣9⃣7⃣0⃣6⃣5⃣4⃣3⃣2⃣1⃣™ℹ↔↕↖↗↘↙↩↪⌚⌛⏩⏪⏫⏬⏰⏳▪▫▶◀◻◼◽◾☀☁☎☑☔☕
+            let sample2 = '\x1B[4z<hr>' + `©®‼⁉#⃣8⃣9⃣7⃣0⃣6⃣5⃣4⃣3⃣2⃣1⃣™ℹ↔↕↖↗↘↙↩↪⌚⌛⏩⏪⏫⏬⏰⏳▪▫▶◀◻◼◽◾☀☁☎☑☔☕
 ☝☺♈♉♊♋♌♍♎♏♐♑♒♓♠♣♥♦♨♻♿⚓⚠⚡⚪⚫⚽⚾⛄⛅⛎⛔⛪⛲⛳⛵
 ⛺⛽⤴⤵⬅⬆⬇⬛⬜⭐⭕〰〽㊗㊙🀄🃏🌀🌁🌂🌃🌄🌅🌆🌇🌈🌉🌊🌋🌌🌏🌑🌓🌔🌕
 🌙🌛🌟🌠🌰🌱🌴🌵🌷🌸🌹🌺🌻🌼🌽🌾🌿🍀🍁🍂🍃🍄🍅🍆🍇🍈🍉🍊🍌🍍🍎🍏🍑
@@ -745,6 +744,15 @@ Devanagari
 🕖🕗🕘🕙🕚🕛🗻🗼🗽🗾🗿`
             this.Client.print(sample, true);
             this.Client.print(sample2, true);
+        };
+
+        this.TestFunctions['testlines'] = function () {
+            const maxLines = this.Client.display.maxLines;
+            let sample = '';
+            const id = this.Client.display.model.getNextLineID;
+            for (let h = 0; h < maxLines; h++)
+                sample += `Line: ${h}, LineID: ${id + h}\n`;
+            this.Client.print(sample, true);
         };
     }
 }

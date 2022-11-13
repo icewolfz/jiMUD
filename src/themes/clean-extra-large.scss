@@ -14,11 +14,6 @@ body {
     border: 1px solid #{$borderColor};
 }
 
-#display-border {
-    display: none;
-    right: 168px;
-}
-
 #display-split-bar {
     -webkit-border-radius: 10px;
     border-radius: 10px;
@@ -71,7 +66,7 @@ body {
     display: none;
 }
 
-#commandinput {
+#commandInput {
     width: 100%;
     height: 100%;
     margin: 0px;
@@ -83,14 +78,16 @@ body {
 }
 
 #buttonbar {
-    top: 2px;
+    top: 36px;
     left: 2px;
     bottom: 2px;
     width: 64px;
 }
-
-#bb-scroll-down,
 #bb-scroll-up {
+    top: 36px;
+}
+
+#bb-scroll-down, #bb-scroll-up {
     width: 64px;
 }
 
@@ -252,6 +249,14 @@ body {
     background-color: rgb(40, 0, 0);
 }
 
+.find-drag-grip svg {
+    fill: #bbb ;
+}
+
+.find-drag-grip:hover svg {
+    fill: wheat;
+}
+
 .find input,
 .find input:focus {
     border: 1px solid #{$borderColor};
@@ -335,6 +340,7 @@ body {
 .find-highlight.current {
     border-radius: 4px;
     background: rgb(116, 192, 114);
+    z-index: 10;
 }
 
 
@@ -822,7 +828,7 @@ body {
 }
 
 .progressbar .progressbar-text {
-    left: 20px;
+    left: 0px;
     right: 0px;
     text-align: center;
     background-color: transparent;
@@ -1074,4 +1080,54 @@ body {
 
 #status-ghost-bar {
     background-color: #d70000;
+}
+
+/** Grip button */
+.drag-grip {
+    color: #{$color};
+    background-color: maroon;
+    left: 2px;
+    top: 2px;    
+    height: 32px;
+}
+
+.drag-grip:hover {
+    background-color: #d70000;
+    color: #{$color};
+}
+
+.drag-grip:active {
+    background-color: #790000;
+    color: #{$color};
+}
+
+.drag-grip:focus {
+    color: #{$color};
+}
+
+.drag-grip span {
+    left: 8px;
+    top: -6px;
+}
+
+.drag-grip svg {
+    height: 28px;
+    top: 0px;
+}
+
+.drag-grip[style*='display: none']~#bb-scroll-up,
+.drag-grip[style*='display: none']~#buttonbar {
+    top: 2px;
+}
+
+#loader {
+    color: wheat;
+    background-color: black;
+}
+
+.loader {
+    border: 16px solid #790000;
+    /* Light grey */
+    border-top: 16px solid #d70000;
+    /* Blue */
 }

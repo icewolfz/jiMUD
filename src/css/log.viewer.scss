@@ -466,6 +466,7 @@ pre.viewer {
 .line {
     /*display: block !important;*/
     position: relative;
+    min-width: 99%;
 }
 
 /*
@@ -595,4 +596,5 @@ pre.viewer {
 .find-highlight.current {
     border-radius: 4px;
     background: rgb(116, 192, 114);
+    z-index: 10;
 }

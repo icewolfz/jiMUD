@@ -89,6 +89,17 @@
     const fs = require('fs');
     ipcRenderer.invoke('window', 'setEnabled', false);
 
+    window.addEventListener('error', (e) => {
+        const { message, filename, lineno, colno, error } = e;
+        window.logError(error, true, 'Log viewer');
+        console.error('Message: ' + message);
+        console.error('Url: ' + filename);
+        console.error('Line: ' + lineno);
+        console.error('Column: ' + colno);
+        console.error(error);
+        return true;
+    });
+
     var menubar, options;
     let $closeWindow = false;
     var _recent = [];
@@ -107,6 +118,8 @@
         { name: 'Supported files (*.txt, *.htm, *.html)', extensions: ['txt', 'htm', 'html'] },
         { name: 'All files (*.*)', extensions: ['*'] },
     ];
+
+    var prefs;
 
     menubar = new Menubar([
         {
@@ -127,7 +140,10 @@
                     label: '&Preferences...',
                     accelerator: 'CmdOrCtrl+Comma',
                     click: () => {
-                        ipcRenderer.send('show-window', 'prefs');
+                        if (window.getGlobal('settingsFile') === window.opener._windowState.data.settings)
+                            ipcRenderer.send('show-window', 'global-preferences');
+                        else
+                            prefs = window.open('prefs.html', 'modal-' + window.opener.getId(), 'width=800,height=460,backgroundColor=#fff,icon=' + path.join(__dirname, '../assets/icons/png/preferences.png'));
                     }
                 },
                 { type: 'separator' },
@@ -198,7 +214,7 @@
                 {
                     label: '&Toggle Developer Tools',
                     click: () => {
-                        ipcRenderer.invoke('window', 'toggleDevTools');
+                        window.toggleDevTools();
                     },
                     enabled: true
                 },
@@ -401,11 +417,8 @@
     }
 
     function loadOptions(data) {
-        var set = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
-        if (!data)
-            options = set.extensions['log-viewer'];
-        else
-            options = data;
+        var set = window.opener.client.options;
+        options = data || set.extensions['log-viewer'];
         if (!options) {
             options = {
                 'opened': [],
@@ -415,18 +428,18 @@
             };
             saveOptions();
         }
-        font = set.font;
-        fontSize = set.fontSize;
+        font = window.opener.getOption('font');
+        fontSize = window.opener.getOption('fontSize');
         if (!font || font.length === 0)
             font = '\'Courier New\', Courier, monospace';
         else //fall back just incase
             font += ', monospace';
         if (!fontSize || fontSize.length === 0)
             fontSize = '1em';
-        logPath = parseTemplate(set.logPath);
+        logPath = parseTemplate(window.opener.getOption('logPath'));
         if (display) {
             display.updateFont(font, fontSize);
-            display.enableDebug = set.enableDebug;
+            display.enableDebug = window.opener.getOption('enableDebug');
         }
 
         var keys = Object.keys(_viewers);
@@ -443,7 +456,8 @@
     }
 
     function saveOptions() {
-        ipcRenderer.send('setting-changed', { type: 'extensions', name: 'log-viewer', value: options });
+        window.opener.client.options.extensions['log-viewer'] = options;
+        window.opener.client.saveOptions();
     }
 
     function closeViewer(panel) {
@@ -459,17 +473,16 @@
 
     function openFile(file, dock) {
         if (!file || file.length === 0) {
-            ipcRenderer.invoke('show-dialog', 'showOpenDialog',
-                {
-                    filters: $fileFilters,
-                    properties: ['multiSelections', 'openFile'],
-                    defaultPath: (manager.active && manager.active.file) ? path.dirname(manager.active.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0]) : logPath)
-                }).then(result => {
-                    if (result.filePaths === undefined || result.filePaths.length === 0) {
-                        return;
-                    }
-                    openFiles(result.filePaths, true, dock);
-                });
+            dialog.showOpenDialog({
+                filters: $fileFilters,
+                properties: ['multiSelections', 'openFile'],
+                defaultPath: (manager.active && manager.active.file) ? path.dirname(manager.active.file) : (options.recent && options.recent.length ? path.dirname(options.recent[0]) : logPath)
+            }).then(result => {
+                if (result.filePaths === undefined || result.filePaths.length === 0) {
+                    return;
+                }
+                openFiles(result.filePaths, true, dock);
+            });
         }
         else {
             _recent.unshift(file);
@@ -484,7 +497,7 @@
         for (var f = 0, fl = files.length; f < fl; f++) {
             if (!existsSync(files[f])) {
                 if (exists)
-                    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                    dialog.showMessageBox({
                         type: 'info',
                         title: 'Path does not exist',
                         message: 'The path \'' + files[f] + '\' does not seem to exist anymore on disk.'
@@ -537,7 +550,7 @@
                     idx: r,
                     click: (item) => {
                         if (!existsSync(options.recent[item.idx])) {
-                            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                            dialog.showMessageBox({
                                 type: 'info',
                                 title: 'Path does not exist',
                                 message: 'The path \'' + options.recent[item.idx] + '\' does not seem to exist anymore on disk.'
@@ -621,7 +634,7 @@
                     selected = !sel.isCollapsed && sel.type === 'Range' && manager.active.viewer.contains(sel.anchorNode);
                 }
                 let inputMenu;
-                if (ipcRenderer.sendSync('get-global', 'debug')) {
+                if (window.getGlobal('debug')) {
                     if (selected) {
                         inputMenu = Menu.buildFromTemplate([
                             {
@@ -641,7 +654,7 @@
                             { type: 'separator' },
                             {
                                 label: 'Inspect', click: () => {
-                                    remote.getCurrentWindow().webContents.inspectElement(e.pageX, e.pageY);
+                                    ipcRenderer.invoke('contents', 'inspectElement', e.pageX, e.pageY);
                                 }
                             }
                         ]);
@@ -659,7 +672,7 @@
                             { type: 'separator' },
                             {
                                 label: 'Inspect', click: () => {
-                                    remote.getCurrentWindow().webContents.inspectElement(e.pageX, e.pageY);
+                                    ipcRenderer.invoke('contents', 'inspectElement', e.pageX, e.pageY);
                                 }
                             }]);
                     }
@@ -705,6 +718,7 @@
                 manager.focusPane(p.dock);
             });
             loadContents(p);
+            doUpdate(1);
         };
         p.iframe.src = './log.viewer.tab.html';
         p.pane.appendChild(p.iframe);
@@ -1008,68 +1022,61 @@
     }
 
     // eslint-disable-next-line no-unused-vars
-    function closeHidden() {
-        var dialogs = document.body.getElementsByTagName('dialog');
-        var e = 0, el = dialogs.length;
-        for (; e < el; e++) {
-            if (dialogs[e].open) {
-                if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                    {
-                        type: 'question',
-                        title: 'Open dialog',
-                        message: (dialogs[e].dataset.title || 'Dialog') + ' is open, exit?',
-                        buttons: ['Yes', 'No'],
-                        defaultId: 1
-                    }) === 1)
-                    return;
-            }
-        }
-        if (!savedOpened())
-            return;
-        ipcRenderer.invoke('window', 'hide');
+    function closeHidden(hidden) {
+        //if (!closeable()) return false;
+        if (hidden) return true;
     }
 
-    // eslint-disable-next-line no-unused-vars
-    function closeWindow() {
-        ipcRenderer.invoke('window', 'clearCache')
-    }
-
-    window.onbeforeunload = function (evt) {
+    function closeable(all) {
+        if (document.activeElement)
+            document.activeElement.blur();
         if (!$closeWindow) {
-            if (document.activeElement)
-                document.activeElement.blur();
-            evt.returnValue = false;
-            setTimeout(() => {
+            if (prefs && !prefs.closed) {
+                dialog.showMessageBox({
+                    type: 'error',
+                    title: 'Preferences dialog open',
+                    message: 'You must close the preferences dialog before you can close character manager.',
+                    defaultId: 1,
+                    noLink: true
+                });
+                $closeWindow = false;
+            }
+            else {
                 var dialogs = document.body.getElementsByTagName('dialog');
                 var e = 0, el = dialogs.length;
                 for (; e < el; e++) {
                     if (dialogs[e].open) {
-                        if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                            {
-                                type: 'question',
-                                title: 'Open dialog',
-                                message: (dialogs[e].dataset.title || 'Dialog') + ' is open, exit?',
-                                buttons: ['Yes', 'No'],
-                                defaultId: 1
-                            }) === 1)
-                            return 'no';
+                        if (dialog.showMessageBoxSync({
+                            type: 'question',
+                            title: 'Open dialog',
+                            message: (dialogs[e].dataset.title || 'Dialog') + ' is open, exit?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1,
+                            noLink: true
+                        }) === 1) {
+                            $closeWindow = false;
+                            return $closeWindow;
+                        }
                     }
                 }
-                if (!savedOpened())
-                    return 'no';
-                //clean up
-                var keys = Object.keys(_viewers);
-                var p = keys.length;
-                while (p--)
-                    closeViewer(_viewers[keys[p]]);
+                if (!savedOpened()) {
+                    $closeWindow = false;
+                    return $closeWindow;
+                }
                 $closeWindow = true;
-                ipcRenderer.invoke('window', 'close');
-            });
-            return 'no';
+            }
         }
-        $closeWindow = true;
-        ipcRenderer.invoke('window', 'close');
-        return;
+        return $closeWindow;
+    }
+
+    // eslint-disable-next-line no-unused-vars
+    window.onbeforeunload = () => {
+        ipcRenderer.invoke('window', 'clearCache')
+        var keys = Object.keys(_viewers);
+        var p = keys.length;
+        while (p--)
+            closeViewer(_viewers[keys[p]]);
+        window.opener.client.off('options-loaded', optionsLoaded);
     };
 
     $(document).ready(() => {
@@ -1092,11 +1099,12 @@
         doUpdate(4);
         ipcRenderer.invoke('window', 'setEnabled', true);
         //menubar.enabled = true;
+        window.opener.client.on('options-loaded', optionsLoaded);
     });
 
-    ipcRenderer.on('reload-options', () => {
+    function optionsLoaded() {
         loadOptions();
-    });
+    }
 
     $(window).keydown((event) => {
         if (document.getElementById('progress-dialog').open) {
@@ -1107,7 +1115,7 @@
 
     // eslint-disable-next-line no-unused-vars
     function backup() {
-        var file = ipcRenderer.sendSync('show-dialog-sync', 'showSaveDialog', {
+        var file = dialog.showSaveDialogSync({
             title: 'Save as...',
             defaultPath: path.join(parseTemplate('{documents}'), 'jiMUD-logs.zip'),
             filters: [
@@ -1127,13 +1135,13 @@
         if (isDirSync(path.join(data, 'logs'))) {
             files = walkSync(path.join(data, 'logs'));
             if (files.length === 0) {
-                ipcRenderer.invoke('show-dialog', 'showMessageBox',
-                    {
-                        type: 'error',
-                        title: 'No logs found',
-                        message: 'No logs to backup',
-                        defaultId: 1
-                    });
+                dialog.showMessageBox({
+                    type: 'error',
+                    title: 'No logs found',
+                    message: 'No logs to backup',
+                    defaultId: 1,
+                    noLink: true
+                });
                 return;
             }
             files.files.forEach(file => {
@@ -1158,8 +1166,8 @@
     }
 
     function setProgressDialogValue(value) {
-        ipcRenderer.send('set-progress', { value: value });
-        ipcRenderer.send('set-progress-window', 'code-editor', { value: value });
+        window.opener.updateProgress(value);
+        window.setProgressBar(-1);
         document.getElementById('progress-dialog-progressbar').value = value * 100;
     }
 
@@ -1178,6 +1186,18 @@
         if (archive)
             archive.abort();
         closeProgressDialog();
+    }
+
+    function getSettings() {
+        return window.opener._windowState.data.settings;
+    }
+
+    function reloadOptions(file, global) {
+        window.opener.reloadOptions(file, global);
+    }
+
+    function updateProgress(value) {
+        window.opener.updateProgress(value);
     }
 </script>
 

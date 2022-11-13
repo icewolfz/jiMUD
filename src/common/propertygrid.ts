@@ -19,6 +19,7 @@ export class PropertyGrid extends EventEmitter {
     private $id;
     private $objects = [];
     private $options = {};
+    private $groupOptions = {};
     private $state = {};
     private $editor;
     private $prevEditor;
@@ -69,7 +70,11 @@ export class PropertyGrid extends EventEmitter {
                 return true;
             if (this.$options[prop].editor && this.$options[prop].editor.type === EditorType.readonly)
                 return true;
+            if (this.$groupOptions && this.$groupOptions[this.$options[prop].group || 'Misc'].readonly)
+                return true;
         }
+        if (this.$groupOptions && this.$groupOptions['Misc'] && this.$groupOptions['Misc'].readonly)
+            return true;
         if (typeof this.$readonly === 'function')
             return this.$readonly(prop, this.getValue(prop), this.$objects.length !== 0 ? this.$objects : null);
         return this.$readonly;
@@ -87,7 +92,7 @@ export class PropertyGrid extends EventEmitter {
         return this.$objects[0];
     }
     set object(value) {
-        this.objects = value;
+        this.objects = [value];
     }
 
     get objects() { return this.$objects; }
@@ -169,10 +174,84 @@ export class PropertyGrid extends EventEmitter {
         return this.$options[prop];
     }
 
+    public setGroupOptions(group, ops?) {
+        if (Array.isArray(group)) {
+            let l = group.length;
+            while (l--) {
+                this.$groupOptions[group[l].group] = group[l];
+            }
+        }
+        else if (typeof group === 'object')
+            this.$groupOptions[group.group] = group;
+        else if (!ops)
+            delete this.$groupOptions[group];
+        else
+            this.$groupOptions[group] = ops;
+        this.doUpdate(UpdateType.build);
+    }
+
+    public getGroupOptions(group, ops?) {
+        if (!group || !this.$groupOptions) return null;
+        if (ops) {
+            if (!this.$groupOptions[group]) return null;
+            return this.$groupOptions[group][ops];
+        }
+        return this.$groupOptions[group];
+    }
+
     public propertyEditor(prop, ops) {
         this.$options[prop] = ops;
         if (this.$editor && this.$editor.property === prop)
             this.createEditor(this.$editor.el);
+    }
+
+    public toggleGroup(group) {
+        const c2 = document.querySelector(`[data-group="${group}"]`);
+        if (!c2) {
+            this.$state[group] = !this.$state[group];
+            return;
+        }
+        const el2 = (<HTMLElement>c2.parentElement.children[2]);
+        if (el2.style.display === 'none') {
+            el2.style.display = '';
+            c2.classList.remove('fa-chevron-right');
+            c2.classList.add('fa-chevron-down');
+            this.$state[group] = false;
+            this.emit('group-expanded', group)
+        }
+        else {
+            el2.style.display = 'none';
+            c2.classList.add('fa-chevron-right');
+            c2.classList.remove('fa-chevron-down');
+            this.$state[group] = true;
+            this.emit('group-collapsed', group)
+        }
+    }
+
+    public expandGroup(group) {
+        const c2 = document.querySelector(`[data-group="${group}"]`);
+        if (!c2)
+            this.$state[group] = false;
+        if (!this.$state[group]) return;
+        const el2 = (<HTMLElement>c2.parentElement.children[2]);
+        el2.style.display = '';
+        c2.classList.remove('fa-chevron-right');
+        c2.classList.add('fa-chevron-down');
+        this.$state[group] = false;
+        this.emit('group-expanded', group)
+    }
+
+    public collapseGroup(group) {
+        const c2 = <HTMLElement>document.querySelector(`[data-group="${group}"]`);
+        if (!c2)
+            this.$state[group] = true;
+        if (this.$state[group]) return;
+        const el2 = (<HTMLElement>c2.parentElement.children[2]);
+        el2.style.display = 'none';
+        c2.classList.add('fa-chevron-right');
+        c2.classList.remove('fa-chevron-down');
+        this.$state[group] = true;
+        this.emit('group-collapsed', group)
     }
 
     public get properties() {
@@ -293,7 +372,19 @@ export class PropertyGrid extends EventEmitter {
             }
         }
         const frag = document.createDocumentFragment();
-        const groups = Object.keys(layout).sort().reverse();
+        const groups = Object.keys(layout).sort((a, b) => {
+            let sA = 0;
+            let sB = 0;
+            if (this.$groupOptions[a])
+                sA = this.$groupOptions[a].sort || 0;
+            if (this.$groupOptions[b])
+                sB = this.$groupOptions[b].sort || 0;
+            if (sA > sB)
+                return 1;
+            if (sA < sB)
+                return -1;
+            return a.localeCompare(b);
+        }).reverse();
         let g = groups.length;
         while (g--) {
             group = groups[g];
@@ -314,12 +405,14 @@ export class PropertyGrid extends EventEmitter {
                     c2.classList.remove('fa-chevron-right');
                     c2.classList.add('fa-chevron-down');
                     this.$state[c2.dataset.group] = false;
+                    this.emit('group-expanded', c2.dataset.group)
                 }
                 else {
                     el2.style.display = 'none';
                     c2.classList.add('fa-chevron-right');
                     c2.classList.remove('fa-chevron-down');
                     this.$state[c2.dataset.group] = true;
+                    this.emit('group-collapsed', c2.dataset.group)
                 }
             });
             el.appendChild(lbl);

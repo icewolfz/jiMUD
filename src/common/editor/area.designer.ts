@@ -8,7 +8,7 @@ import { PropertyGrid } from '../propertygrid';
 import { EditorType } from '../value.editors';
 import { DataGrid } from '../datagrid';
 import { copy, formatString, isFileSync, capitalize, Cardinal, pinkfishToHTML, stripPinkfish, consolidate, parseTemplate, initEditDropdown, capitalizePinkfish, stripQuotes } from '../library';
-const { clipboard, ipcRenderer } = require('electron');
+const { clipboard } = require('electron');
 const path = require('path');
 const fs = require('fs-extra');
 const { deflateSync, unzipSync } = require('zlib');
@@ -19,7 +19,11 @@ declare global {
     interface Window {
         $roomImg: HTMLImageElement;
         $roomImgLoaded: boolean;
+        showContext: any;
     }
+
+    let dialog: any;
+    let openAdvancedEditor;
 }
 
 interface AreaDesignerOptions extends EditorOptions {
@@ -1213,7 +1217,6 @@ export class AreaDesigner extends EditorBase {
         this.parent.appendChild(frag);
         //#region create map editor
         this.$splitterEditor = new Splitter({ parent: this.parent, orientation: Orientation.vertical });
-        this.$splitterEditor.Panel2MinSize = 300;
         this.$splitterEditor.on('splitter-moved', (e) => {
             this.emit('room-splitter-moved', e);
             this.emit('option-changed', 'editorWidth', e);
@@ -1517,7 +1520,7 @@ export class AreaDesigner extends EditorBase {
                 inputMenu = [
                     { role: 'selectAll' }
                 ];
-            ipcRenderer.invoke('show-context', inputMenu);
+            window.showContext(inputMenu);
         });
         this.$roomPreview.short = document.createElement('div');
         this.$roomPreview.short.classList.add('room-short');
@@ -4817,14 +4820,14 @@ export class AreaDesigner extends EditorBase {
             this.changed = true;
         });
         this.$propertiesEditor.monsterGrid.on('delete', (e) => {
-            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                {
-                    type: 'warning',
-                    title: 'Delete',
-                    message: 'Delete selected base monster' + (this.$propertiesEditor.monsterGrid.selectedCount > 1 ? 's' : '') + '?',
-                    buttons: ['Yes', 'No'],
-                    defaultId: 1
-                })
+            if (dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Delete',
+                message: 'Delete selected base monster' + (this.$propertiesEditor.monsterGrid.selectedCount > 1 ? 's' : '') + '?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+                noLink: true
+            })
                 === 1)
                 e.preventDefault = true;
             else {
@@ -5351,14 +5354,14 @@ export class AreaDesigner extends EditorBase {
             this.changed = true;
         });
         this.$propertiesEditor.roomGrid.on('delete', (e) => {
-            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                {
-                    type: 'warning',
-                    title: 'Delete',
-                    message: 'Delete selected base room' + (this.$propertiesEditor.roomGrid.selectedCount > 1 ? 's' : '') + '?',
-                    buttons: ['Yes', 'No'],
-                    defaultId: 1
-                })
+            if (dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Delete',
+                message: 'Delete selected base room' + (this.$propertiesEditor.roomGrid.selectedCount > 1 ? 's' : '') + '?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+                noLink: true
+            })
                 === 1)
                 e.preventDefault = true;
             else {
@@ -5755,14 +5758,14 @@ export class AreaDesigner extends EditorBase {
             }
         ];
         this.$monsterGrid.on('delete', (e) => {
-            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                {
-                    type: 'warning',
-                    title: 'Delete',
-                    message: 'Delete monster' + (this.$monsterGrid.selectedCount > 1 ? 's' : '') + '?',
-                    buttons: ['Yes', 'No'],
-                    defaultId: 1
-                })
+            if (dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Delete',
+                message: 'Delete monster' + (this.$monsterGrid.selectedCount > 1 ? 's' : '') + '?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+                noLink: true
+            })
                 === 1)
                 e.preventDefault = true;
             else {
@@ -6466,7 +6469,7 @@ export class AreaDesigner extends EditorBase {
                                         title: 'Long description',
                                         body: `<div class="col-sm-12 form-group">
                                         <label class="control-label" style="width: 100%">Long
-                                            <a href="#" onclick="ipcRenderer.send('send-editor', document.getElementById('obj-long').value, 'editor', true);document.getElementById('obj-long').focus();">
+                                            <a href="#" onclick="openAdvancedEditor(document.getElementById('obj-long').value);document.getElementById('obj-long').focus();">
                                                 <i class="fa fa-edit"></i>
                                             </a>
                                             <textarea class="input-sm form-control" id="obj-long" style="width: 100%;height: 266px;"></textarea>
@@ -7871,14 +7874,14 @@ export class AreaDesigner extends EditorBase {
             }
         ];
         this.$objectGrid.on('delete', (e) => {
-            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                {
-                    type: 'warning',
-                    title: 'Delete',
-                    message: 'Delete object' + (this.$objectGrid.selectedCount > 1 ? 's' : '') + '?',
-                    buttons: ['Yes', 'No'],
-                    defaultId: 1
-                })
+            if (dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Delete',
+                message: 'Delete object' + (this.$objectGrid.selectedCount > 1 ? 's' : '') + '?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+                noLink: true
+            })
                 === 1)
                 e.preventDefault = true;
             else {
@@ -9226,6 +9229,9 @@ export class AreaDesigner extends EditorBase {
         return false;
     }
 
+    public update(what, ...args) {
+    }
+
     public get buttons() {
         const frag = document.createDocumentFragment();
         let group;
@@ -9299,8 +9305,9 @@ export class AreaDesigner extends EditorBase {
             el.setAttribute('for', this.parent.id + '-level');
             el.classList.add('label');
             el.textContent = 'Level';
+            el.appendChild(this.$depthToolbar);
             frag.appendChild(el);
-            frag.appendChild(this.$depthToolbar);
+            //frag.appendChild(this.$depthToolbar);
         }
         return [frag];
     }
@@ -11609,7 +11616,7 @@ export class AreaDesigner extends EditorBase {
                 break;
         }
         if (room.short !== base.short) {
-            room.short = room.short.trim();
+            room.short = (room.short || '').trim();
             if (room.short.startsWith('(:')) {
                 data['create body'] += `   set_short(${formatFunctionPointer(room.short)});\n`;
                 data['create pre'] += createFunction(room.short, 'string');
@@ -11628,7 +11635,7 @@ export class AreaDesigner extends EditorBase {
             }
         }
         else {
-            data.name = room.short.trim();
+            data.name = (room.short || '').trim();
             if (data.name.startsWith('(:')) {
                 data.name = formatFunctionPointer(data.name).substr(2);
                 if (data.name.endsWith(':)'))
@@ -11641,7 +11648,7 @@ export class AreaDesigner extends EditorBase {
                 data.name = `"${data.name.replace(/"/g, '\\"')}"`;
         }
         if (room.long !== base.long) {
-            room.long = room.long.trim();
+            room.long = (room.long || '').trim();
             if (room.long.startsWith('(:')) {
                 data['create body'] += `   set_long(${formatFunctionPointer(room.long)});\n`;
                 data['create pre'] += createFunction(room.long, 'string');
@@ -11676,7 +11683,7 @@ export class AreaDesigner extends EditorBase {
             }
         }
         else {
-            data.description = room.long.trim();
+            data.description = (room.long || '').trim();
             if (data.description.startsWith('(:')) {
                 data.description = formatFunctionPointer(data.description).substr(2);
                 if (data.description.endsWith(':)'))
@@ -11780,7 +11787,7 @@ export class AreaDesigner extends EditorBase {
             });
         }
 
-        room.secretExit = room.secretExit.trim();
+        room.secretExit = (room.secretExit || '').trim();
         if (room.secretExit !== base.secretExit.trim()) {
             if (room.secretExit === 'false') { /**/ }
             else if (room.secretExit.startsWith('(:')) {
@@ -11822,8 +11829,8 @@ export class AreaDesigner extends EditorBase {
         if (room.nightAdjust !== base.nightAdjust)
             data['create body'] += `   set_night_adjust(${room.nightAdjust});\n`;
 
-        room.preventPeer = room.preventPeer.trim();
-        if (room.preventPeer !== base.preventPeer.trim()) {
+        room.preventPeer = (room.preventPeer || '').trim();
+        if (room.preventPeer !== (base.preventPeer || '').trim()) {
             if (room.preventPeer === 'false') { /**/ }
             else if (room.preventPeer.startsWith('(:')) {
                 data['create body'] += `   set_prevent_peer(${formatFunctionPointer(room.preventPeer)});\n`;
@@ -12355,7 +12362,7 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += `   set_name("${data['name']}");\n`;
 
         if (monster.short !== base.short) {
-            monster.short = monster.short.trim();
+            monster.short = (monster.short || '').trim();
             if (monster.short.startsWith('(:')) {
                 data['create body'] += `   set_short(${formatFunctionPointer(monster.short)});\n`;
                 data['create pre'] += createFunction(monster.short, 'string');
@@ -12366,7 +12373,7 @@ export class AreaDesigner extends EditorBase {
                 data['create body'] += `   set_short("${monster.short.replace(/"/g, '\\"')}");\n`;
         }
         if (monster.long !== base.long) {
-            monster.long = monster.long.trim();
+            monster.long = (monster.long || '').trim();
             if (monster.long.startsWith('(:')) {
                 data['create body'] += `   set_long(${formatFunctionPointer(monster.long)});\n`;
                 data['create pre'] += createFunction(monster.long, 'string');
@@ -12402,7 +12409,7 @@ export class AreaDesigner extends EditorBase {
             }
         }
         else {
-            data.description = monster.long.trim();
+            data.description = (monster.long || '').trim();
             if (data.description.startsWith('(:')) {
                 data.description = formatFunctionPointer(data.description).substr(2);
                 if (data.description.endsWith(':)'))
@@ -12454,7 +12461,7 @@ export class AreaDesigner extends EditorBase {
             props['no bleed'] = 1;
 
         if (monster.noCorpse !== base.noCorpse) {
-            monster.noCorpse = monster.noCorpse.trim();
+            monster.noCorpse = (monster.noCorpse || '').trim();
             if (monster.noCorpse.startsWith('(:')) {
                 props['no corpse'] = formatFunctionPointer(monster.noCorpse, true);
                 data['create pre'] += createFunction(monster.noCorpse, 'string');
@@ -12465,7 +12472,7 @@ export class AreaDesigner extends EditorBase {
                 props['no corpse'] = `"${monster.noCorpse.replace(/"/g, '\\"')}"`;
         }
         if (monster.noLimbs !== base.noLimbs) {
-            monster.noLimbs = monster.noLimbs.trim();
+            monster.noLimbs = (monster.noLimbs || '').trim();
             if (monster.noLimbs.startsWith('(:')) {
                 props['no limbs'] = formatFunctionPointer(monster.noLimbs, true);
                 data['create pre'] += createFunction(monster.noLimbs, 'string');
@@ -12586,7 +12593,7 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += `   set_spells(${formatArgumentList(monster.attackCommands, 64)}); //Set attack commands\n`;
         if (monster.attackInitiators !== base.attackInitiators)
             data['create body'] += `   set_combat_initiator(${formatArgumentList(monster.attackInitiators, 56)}); //Set attack initiators\n`;
-        if (monster.aggressive !== base.aggressive) {
+        if (monster.aggressive && monster.aggressive !== base.aggressive) {
             if (monster.aggressive.trim().startsWith('(['))
                 data['create body'] += `   set_aggressive( ${formatMapping(monster.aggressive, 5).trim()} ); //Set monster aggressiveness\n`;
             else
@@ -13570,7 +13577,7 @@ export class AreaDesigner extends EditorBase {
             data.name = stripPinkfish(obj.name.substr(1, obj.name.length - 2).replace(/"/g, '\\"'));
         else
             data.name = stripPinkfish(obj.name.replace(/"/g, '\\"'));
-        obj.short = obj.short.trim();
+        obj.short = (obj.short || '').trim();
         if (obj.short.startsWith('(:')) {
             data.short = formatFunctionPointer(obj.short);
             data['create pre'] += createFunction(obj.short, 'string');
@@ -13579,7 +13586,7 @@ export class AreaDesigner extends EditorBase {
             data.short = `${obj.short}`;
         else
             data.short = `"${obj.short.replace(/"/g, '\\"')}"`;
-        obj.long = obj.long.trim();
+        obj.long = (obj.long || '').trim();
         if (obj.long.startsWith('(:')) {
             data.long = formatFunctionPointer(obj.long);
             data['create pre'] += createFunction(obj.long, 'string');
@@ -13718,7 +13725,7 @@ export class AreaDesigner extends EditorBase {
                 data['create body'] += `   set_uses(${obj.baitUses});\n`;
         }
         //#region prevent actions
-        obj.preventOffer = obj.preventOffer.trim();
+        obj.preventOffer = (obj.preventOffer || '').trim();
         if (obj.preventOffer.startsWith('(:')) {
             data['create body'] += `   set_prevent_offer(${formatFunctionPointer(obj.preventOffer)});\n`;
             data['create pre'] += createFunction(obj.preventOffer, 'string');
@@ -13730,7 +13737,7 @@ export class AreaDesigner extends EditorBase {
         else if (obj.preventOffer.length > 0)
             data['create body'] += `   set_prevent_offer("${obj.preventOffer.replace(/"/g, '\\"')}");\n`;
 
-        obj.preventGet = obj.preventGet.trim();
+        obj.preventGet = (obj.preventGet || '').trim();
         if (obj.preventGet.startsWith('(:')) {
             data['create body'] += `   set_prevent_get(${formatFunctionPointer(obj.preventGet)});\n`;
             data['create pre'] += createFunction(obj.preventGet, 'string');
@@ -13742,7 +13749,7 @@ export class AreaDesigner extends EditorBase {
         else if (obj.preventGet.length > 0)
             data['create body'] += `   set_prevent_get("${obj.preventGet.replace(/"/g, '\\"')}");\n`;
 
-        obj.preventDrop = obj.preventDrop.trim();
+        obj.preventDrop = (obj.preventDrop || '').trim();
         if (obj.preventDrop.startsWith('(:')) {
             data['create body'] += `   set_prevent_drop(${formatFunctionPointer(obj.preventDrop)});\n`;
             data['create pre'] += createFunction(obj.preventDrop, 'string');
@@ -13754,7 +13761,7 @@ export class AreaDesigner extends EditorBase {
         else if (obj.preventDrop.length > 0)
             data['create body'] += `   set_prevent_drop("${obj.preventDrop.replace(/"/g, '\\"')}");\n`;
 
-        obj.preventPut = obj.preventPut.trim();
+        obj.preventPut = (obj.preventPut || '').trim();
         if (obj.preventPut.startsWith('(:')) {
             data['create body'] += `   set_prevent_put(${formatFunctionPointer(obj.preventPut)});\n`;
             data['create pre'] += createFunction(obj.preventPut, 'string');
@@ -13766,7 +13773,7 @@ export class AreaDesigner extends EditorBase {
         else if (obj.preventPut.length > 0)
             data['create body'] += `   set_prevent_put("${obj.preventPut.replace(/"/g, '\\"')}");\n`;
 
-        obj.preventSteal = obj.preventSteal.trim();
+        obj.preventSteal = (obj.preventSteal || '').trim();
         if (obj.preventSteal.startsWith('(:')) {
             data['create body'] += `   set_prevent_steal(${formatFunctionPointer(obj.preventSteal)});\n`;
             data['create pre'] += createFunction(obj.preventSteal, 'string');
@@ -14118,13 +14125,13 @@ export class AreaDesigner extends EditorBase {
             }
         }
         if (!noUndo) {
-            this.startUndoGroup();            
+            this.startUndoGroup();
             this.pushUndo(undoAction.delete, undoType.room, dRooms);
         }
         let dl = dRooms.length;
-        while(dl--)
+        while (dl--)
             if (dRooms[dl].exits)
-                this.deleteRoom(dRooms[dl], noUndo);     
+                this.deleteRoom(dRooms[dl], noUndo);
         this.$area.rooms = rooms;
         this.UpdateEditor(this.$selectedRooms);
         this.UpdatePreview(this.selectedFocusedRoom);
@@ -14159,7 +14166,7 @@ export class AreaDesigner extends EditorBase {
         Timer.end('Resize time');
         this.doUpdate(UpdateType.drawMap);
         this.changed = true;
-        if (!noUndo) {           
+        if (!noUndo) {
             this.pushUndo(undoAction.edit, undoType.resize, { width: width, height: height, depth: depth, shift: shift });
             this.stopUndoGroup();
         }

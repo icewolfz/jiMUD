@@ -5,8 +5,10 @@ allowed their own settings and map file. This allows you to assign profiles and
 settings using a character login making it easier to switch between different
 characters.
 
-To load a character you use the character manager by using File > characters or using command line
-argument, -c=[name] or --character=[name].
+To load a character use the character manager by using File > Characters or using command line
+argument, -c=[name, id #, or id:#] or --character=[name, id #, or id:#]
+**Note** if a name exist that is a number it will load the name not the id unless prepended with id: to force id only lookup
+**Note** if more then one name exist it loads only the first one returned
 
 ## Editor
 

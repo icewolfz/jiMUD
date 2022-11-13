@@ -22,13 +22,19 @@ export class Status extends EventEmitter {
     private _updating: UpdateType;
     private _rTimeout = 0;
     private dragging = false;
-    private _spitterDistance;
+    private _splitterDistance;
 
     public client: Client;
 
-    constructor(client: Client) {
+    constructor(client: Client, options?) {
         super();
         this.client = client;
+        if (options) {
+            if ('splitterDistance' in options)
+                this.splitterDistance = options.splitterDistance;
+            if ('ac' in options)
+                this.ac = options.ac;
+        }
         this.lagMeter = document.getElementById('lagMeter');
         this.client.telnet.on('latency-changed', (lag, avg) => {
             this.updateLagMeter(lag);
@@ -71,7 +77,7 @@ export class Status extends EventEmitter {
                     this.info['EXPERIENCE_NEED_RAW'] = obj.need;
                     this.info['EXPERIENCE_NEED'] = obj.need - obj.current;
                     this.info['EXPERIENCE_NEED_P'] = obj.needPercent;
-                    //if (this.info['EXPERIENCE_NEED'] < 0 && !this.client.options.allowNegativeNumberNeeded)
+                    //if (this.info['EXPERIENCE_NEED'] < 0 && !this.client.getOption('allowNegativeNumberNeeded'))
                     //this.info['EXPERIENCE_NEED'] = 0;
 
                     this.info['EXPERIENCE_EARNED'] = obj.earned;
@@ -111,14 +117,16 @@ export class Status extends EventEmitter {
                             env.classList.add('intensity-hard');
                     }
                     if (obj.tod) {
-                        $('#environment').removeClass('day night twilight dawn').addClass(obj.tod);
+                        const env = document.getElementById('environment');
+                        env.classList.remove('day', 'night', 'twilight', 'dawn');
+                        env.classList.add(obj.tod);
                         $('#environment').removeClass((index, className) => {
                             return (className.match(/(^|\s)moon\d-\S+/g) || []).join(' ');
                         });
                         if (obj.moons) {
-                            $('#environment').addClass('moon1-' + obj.moons[0]);
-                            $('#environment').addClass('moon2-' + obj.moons[1]);
-                            $('#environment').addClass('moon3-' + obj.moons[2]);
+                            env.classList.add('moon1-' + obj.moons[0]);
+                            env.classList.add('moon2-' + obj.moons[1]);
+                            env.classList.add('moon3-' + obj.moons[2]);
                         }
                     }
                     break;
@@ -223,11 +231,11 @@ export class Status extends EventEmitter {
                 $('#status-border').css('width', w1);
                 $('#status').css('width', w2);
                 if (e.pageX < maxWidth)
-                    this.spitterDistance = maxWidth - parseInt($('#status-drag-bar').css('left'), 10);
+                    this.splitterDistance = maxWidth - parseInt($('#status-drag-bar').css('left'), 10);
                 else if (e.pageX > l)
-                    this.spitterDistance = minWidth;
+                    this.splitterDistance = minWidth;
                 else
-                    this.spitterDistance = document.body.clientWidth - e.pageX + Math.abs(parseInt($('#status-drag-bar').css('left'), 10));
+                    this.splitterDistance = document.body.clientWidth - e.pageX + Math.abs(parseInt($('#status-drag-bar').css('left'), 10));
                 $('#status-ghost-bar').remove();
                 $(document).unbind('mousemove');
                 this.dragging = false;
@@ -239,32 +247,32 @@ export class Status extends EventEmitter {
         this.init();
     }
 
-    get spitterDistance(): number { return this._spitterDistance; }
-    set spitterDistance(value: number) {
-        if (value === this._spitterDistance) return;
-        this._spitterDistance = value;
+    get splitterDistance(): number { return this._splitterDistance; }
+    set splitterDistance(value: number) {
+        if (value === this._splitterDistance) return;
+        this._splitterDistance = value;
         this.updateSplitter();
     }
 
     private updateSplitter() {
         const p = parseInt($('#status').css('right'), 10) * 2;
-        if (!this._spitterDistance || this._spitterDistance < 1) {
+        if (!this._splitterDistance || this._splitterDistance < 1) {
             const b = Math.abs(parseInt($('#status-drag-bar').css('left'), 10)) + $('#status-drag-bar').outerWidth();
-            this._spitterDistance = parseInt($('#status-border').css('width'), 10) || parseInt($('#status').css('width'), 10) - b;
+            this._splitterDistance = parseInt($('#status-border').css('width'), 10) || parseInt($('#status').css('width'), 10) - b;
         }
-        if (!this.client.options.showStatus)
+        if (!this.client.getOption('showStatus'))
             this.updateInterface();
         else {
-            $('#display').css('right', this._spitterDistance);
-            $('#status').css('width', this._spitterDistance - p);
-            $('#status-border').css('width', this._spitterDistance);
-            $('#display-border').css('right', this._spitterDistance);
-            $('#command').css('right', this._spitterDistance);
+            $('#display').css('right', this._splitterDistance);
+            $('#status').css('width', this._splitterDistance - p);
+            $('#status-border').css('width', this._splitterDistance);
+            $('#command').css('right', this._splitterDistance);
         }
-        this.emit('split-moved', this._spitterDistance);
+        this.emit('split-moved', this._splitterDistance);
     }
 
     public resize() {
+        if(!this.client.getOption('showStatus')) return;
         const w1 = $('#status-border').css('width');
         $('#status-border').css('width', '');
         const w2 = $('#status').css('width');
@@ -276,10 +284,10 @@ export class Status extends EventEmitter {
         $('#status-border').css('width', w1);
         $('#status').css('width', w2);
         if ($('#status').outerWidth() < minWidth) {
-            this.spitterDistance = minWidth2;
+            this.splitterDistance = minWidth2;
         }
         else if ($('#status').outerWidth() > maxWidth) {
-            this.spitterDistance = maxWidth - parseInt($('#status-drag-bar').css('left'), 10);
+            this.splitterDistance = maxWidth - parseInt($('#status-drag-bar').css('left'), 10);
         }
     }
 
@@ -386,16 +394,12 @@ export class Status extends EventEmitter {
 
     public setTitle(title: string, lag?: string) {
         if (!title || title.length === 0) {
-            window.document.title = 'jiMUD';
             $('#character-name').html('&nbsp;');
         }
         else {
-            window.document.title = 'jiMUD - ' + title;
             $('#character-name').text(title);
         }
-        if (lag && lag.length)
-            window.document.title += ' - ' + lag;
-        this.emit('set-title', title || '');
+        this.emit('set-title', title || '', lag || '');
     }
 
     public updateOverall() {
@@ -490,8 +494,8 @@ export class Status extends EventEmitter {
         $('#xp-value').text(this.info['EXPERIENCE']);
         $('#xp-banked').text(this.info['EXPERIENCE_BANKED']);
         if (this.info['EXPERIENCE_NEED'] < 0) {
-            $('#need-value').text(this.client.options.allowNegativeNumberNeeded ? this.info['EXPERIENCE_NEED'] : 0);
-            this.updateBar('need-percent', 100 - this.info['EXPERIENCE_NEED_P'], 100, this.client.options.allowNegativeNumberNeeded ? this.info['EXPERIENCE_NEED'].toString() : '0');
+            $('#need-value').text(this.client.getOption('allowNegativeNumberNeeded') ? this.info['EXPERIENCE_NEED'] : 0);
+            this.updateBar('need-percent', 100 - this.info['EXPERIENCE_NEED_P'], 100, this.client.getOption('allowNegativeNumberNeeded') ? this.info['EXPERIENCE_NEED'].toString() : '0');
         }
         else {
             $('#need-value').text(this.info['EXPERIENCE_NEED']);
@@ -693,9 +697,9 @@ export class Status extends EventEmitter {
 
     public updateLagMeter(lag: number, force?: boolean) {
         if (!this.lagMeter) return;
-        if (this.client.options.showLagInTitle)
+        if (this.client.getOption('showLagInTitle'))
             this.setTitle(this.info['name'] || '', `${lag / 1000}s`);
-        if (!this.client.options.lagMeter && !force) return;
+        if (!this.client.getOption('lagMeter') && !force) return;
         let p = 100;
         p = lag / 200 * 100;
         if (p > 100) p = 100;
@@ -705,14 +709,12 @@ export class Status extends EventEmitter {
 
     public updateInterface(noSplitter?) {
         const display = $('#display');
-        const displayBorder = $('#display-border');
         const command = $('#command');
         const status = $('#status');
         const statusBorder = $('#status-border');
         display.css('right', '');
-        displayBorder.css('right', '');
         command.css('right', '');
-        if (!this.client.options.showStatus) {
+        if (!this.client.getOption('showStatus')) {
             const w = statusBorder.outerWidth();
             let r;
             let t;
@@ -729,13 +731,6 @@ export class Status extends EventEmitter {
                 r = t;
             if (r < 0) r = t;
             display.css('right', r + 'px');
-            r = parseInt(displayBorder.css('right'), 10) || 0;
-            if (w > 0)
-                r -= w;
-            else
-                r = 2;
-            if (r < 0) r = t;
-            displayBorder.css('right', r + 'px');
             r = parseInt(command.css('right'), 10) || 0;
             if (w > 0)
                 r -= w;
@@ -752,7 +747,7 @@ export class Status extends EventEmitter {
         statusBorder.css('visibility', '');
         statusBorder.css('display', '');
 
-        if (this.client.options.statusExperienceNeededProgressbar) {
+        if (this.client.getOption('statusExperienceNeededProgressbar')) {
             $('#need-value').css('display', 'none');
             $('#need-percent').css('display', 'block');
         }
@@ -767,7 +762,7 @@ export class Status extends EventEmitter {
         $('#experience').css('top', '');
         $('#bars').css('top', '');
 
-        if (this.client.options.showStatusWeather) {
+        if (this.client.getOption('showStatusWeather')) {
             $('#environment').css('display', '');
             top += $('#environment').outerHeight() + (parseInt($('#environment').css('top'), 10) || 0);
             //$('#environment').css('left', status.innerWidth() / 2 - $('#environment').outerWidth() / 2);
@@ -775,16 +770,16 @@ export class Status extends EventEmitter {
         else
             $('#environment').css('display', 'none');
 
-        if (!this.client.options.showStatusLimbs && !this.client.options.showStatusHealth)
+        if (!this.client.getOption('showStatusLimbs') && !this.client.getOption('showStatusHealth'))
             $('#body').css('display', 'none');
         else {
             $('#body').css('display', '');
             eTop = (parseInt($('#body').css('top'), 10) || 0);
-            if (this.client.options.showStatusLimbs)
+            if (this.client.getOption('showStatusLimbs'))
                 $('#limbs').css('display', '');
             else
                 $('#limbs').css('display', 'none');
-            if (this.client.options.showStatusHealth)
+            if (this.client.getOption('showStatusHealth'))
                 $('#hp-status').css('display', '');
             else
                 $('#hp-status').css('display', 'none');
@@ -792,7 +787,7 @@ export class Status extends EventEmitter {
             top += $('#body').outerHeight() + eTop;
         }
 
-        if (this.client.options.showStatusExperience) {
+        if (this.client.getOption('showStatusExperience')) {
             $('#experience').css('display', '');
             eTop = (parseInt($('#experience').css('top'), 10) || 0);
             $('#experience').css('top', eTop + top);
@@ -801,12 +796,12 @@ export class Status extends EventEmitter {
         else
             $('#experience').css('display', 'none');
 
-        if (this.client.options.showStatusPartyHealth)
+        if (this.client.getOption('showStatusPartyHealth'))
             $('#party').css('display', '');
         else
             $('#party').css('display', 'none');
 
-        if (this.client.options.showStatusCombatHealth)
+        if (this.client.getOption('showStatusCombatHealth'))
             $('#combat').css('display', '');
         else
             $('#combat').css('display', 'none');
@@ -815,7 +810,7 @@ export class Status extends EventEmitter {
 
         $('#bars').css('bottom', '');
         if (this.lagMeter) {
-            if (this.client.options.lagMeter) {
+            if (this.client.getOption('lagMeter')) {
                 this.lagMeter.style.visibility = '';
                 this.lagMeter.style.display = '';
                 $('#bars').css('bottom', this.lagMeter.offsetHeight + (parseInt(this.lagMeter.style.bottom, 10) || 0) + (parseInt($('#bars').css('bottom'), 10) || 0) + 'px');

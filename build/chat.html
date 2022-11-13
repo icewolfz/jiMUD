@@ -11,9 +11,11 @@
     <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
     <link href="css/main.css" rel="stylesheet" type="text/css" />
     <link href="css/ansi.css" rel="stylesheet" type="text/css" />
-    <link href="css/chat.css" rel="stylesheet" type="text/css" />
     <link href="css/theme.css" rel="stylesheet" type="text/css" />
+    <link id="theme" rel="stylesheet" href="themes/default.css" type="text/css" />
+    <link href="css/chat.css" rel="stylesheet" type="text/css" />
     <script type="text/javascript">
+        window.loadTheme();
         if (typeof module === 'object') { window.module = module; module = undefined; }
     </script>
     <script src="../lib/jquery.min.js"></script>
@@ -21,51 +23,127 @@
     <script src="../lib/bootstrap-select.min.js"></script>
     <script type="text/javascript">
         if (window.module) module = window.module;
-        const { clipboard, ipcRenderer, webFrame } = require('electron');
+        const { clipboard, webFrame } = require('electron');
         const { parseTemplate } = require('./js/library.js');
         const { Settings } = require('./js/settings');
         const { Display } = require('./js/display');
         const { AnsiColorCode } = require('./js/ansi');
-        var options;
+        var client;
 
         var display, _logger, _zoom = 1.0;
 
+        window.addEventListener('error', (e) => {
+            const { message, filename, lineno, colno, error } = e;
+            window.logError(error, true, 'Chat window');
+            console.error('Message: ' + message);
+            console.error('Url: ' + filename);
+            console.error('Line: ' + lineno);
+            console.error('Column: ' + colno);
+            console.error(error);
+            return true;
+        });
+
         function loadOptions() {
-            options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
+            client = window.opener.client;
             if (display) {
-                display.updateFont(options.chat.font, options.chat.fontSize);
-                display.maxLines = options.chat.bufferSize;
-                display.splitLive = options.chat.splitLive;
-                display.splitHeight = options.chat.splitHeight;
-                display.roundedRanges = options.chat.roundedOverlays;
-                display.showSplitButton = options.chat.showSplitButton;
-                display.enableFlashing = options.chat.flashing;
-                display.enableMXP = options.enableMXP;
-                display.enableURLDetection = options.enableURLDetection;
-                display.showInvalidMXPTags = options.display.showInvalidMXPTags;
-                display.hideTrailingEmptyLine = options.display.hideTrailingEmptyLine;
-                display.enableColors = options.display.enableColors;
-                display.enableBackgroundColors = options.display.enableBackgroundColors;
+                display.updateFont(client.getOption('chat.font'), client.getOption('chat.fontSize'));
+                display.maxLines = client.getOption('chat.bufferSize');
+                display.enableSplit = client.getOption('chat.split');
+                display.splitLive = client.getOption('chat.splitLive');
+                display.splitHeight = client.getOption('chat.splitHeight');
+                display.roundedRanges = client.getOption('chat.roundedOverlays');
+                display.showSplitButton = client.getOption('chat.showSplitButton');
+                display.enableFlashing = client.getOption('chat.flashing');
+                display.showTimestamp = client.getOption('chat.showTimestamp');
+                display.timestampFormat = client.getOption('chat.timestampFormat');
+                display.enableMXP = client.getOption('enableMXP');
+                display.enableURLDetection = client.getOption('enableURLDetection');
+                display.showInvalidMXPTags = client.getOption('display.showInvalidMXPTags');
+                display.hideTrailingEmptyLine = client.getOption('display.hideTrailingEmptyLine');
+                display.enableColors = client.getOption('display.enableColors');
+                display.enableBackgroundColors = client.getOption('display.enableBackgroundColors');
+                display.tabWidth = client.getOption('chat.tabWidth');
+                display.displayControlCodes = client.getOption('chat.displayControlCodes');
+                display.emulateTerminal = client.getOption('chat.emulateTerminal');
+                display.emulateControlCodes = client.getOption('chat.emulateControlCodes');
+                display.wordWrap = client.getOption('chat.wordWrap');
+                display.wrapAt = client.getOption('chat.wrapAt');
+                display.indent = client.getOption('chat.indent');
+                display.scrollLock = client.getOption('chat.scrollLocked');
+                display.scrollDisplay();
+                display.MatchCase = client.getOption('chat.find.case');
+                display.MatchWord = client.getOption('chat.find.word');
+                display.Reverse = client.getOption('chat.find.reverse');
+                display.RegularExpression = client.getOption('chat.find.regex');
+                display.Highlight = client.getOption('chat.find.highlight');
+                display.finderLocation = client.getOption('chat.find.location');
+                if (client.getOption('chat.find.show'))
+                    display.showFind();
             }
+            if (client.getOption('wordWrap'))
+                $('#btn-wrap').addClass('active');
+            updateScrollLockButton();
+            initLogger();
             if (_logger) {
                 _logger.postMessage({
                     action: 'options', args: {
-                        path: parseTemplate(options.logPath),
-                        offline: options.logOffline,
-                        gagged: options.logGagged,
-                        enabled: options.chat.log,
-                        unique: options.logUniqueOnConnect,
-                        prepend: options.logPrepend,
-                        what: options.logWhat,
-                        debug: options.enableDebug,
+                        path: parseTemplate(client.getOption('logPath')),
+                        offline: client.getOption('logOffline'),
+                        gagged: client.getOption('logGagged'),
+                        enabled: client.getOption('chat.log'),
+                        unique: client.getOption('logUniqueOnConnect'),
+                        prepend: client.getOption('logPrepend'),
+                        what: client.getOption('logWhat'),
+                        debug: client.getOption('enableDebug'),
                         postfix: '.chat',
-                        format: options.logTimeFormat
+                        format: client.getOption('logTimeFormat'),
+                        timestamp: client.getOption('logTimestamp'),
+                        timestampFormat: client.getOption('logTimestampFormat')
                     }
                 });
-                _logger.postMessage({ action: 'start', args: { lines: display.lines, raw: display.rawLines, formats: display.lineFormats, fragment: display.EndOfLine } });
+                _logger.postMessage({ action: 'start', args: { lines: display.lines, fragment: display.EndOfLine } });
             }
-            _zoom = options.chat.zoom;
+            _zoom = client.getOption('chat.zoom');
             webFrame.setZoomFactor(_zoom);
+        }
+
+        function initLogger() {
+            if (_logger) return;
+            _logger = new Worker('./js/logging.js');
+            _logger.onmessage = (e) => {
+                switch (e.data.event) {
+                    case 'started':
+                        $('#btn-enable').button('toggle');
+                        window.opener.client.options.chat.log = e.data.args;
+                        window.opener.doUpdate(32);
+                        break;
+                    case 'stopped':
+                        $('#btn-enable').button('toggle');
+                        window.opener.client.options.chat.log = e.data.args;
+                        window.opener.doUpdate(32);
+                        break;
+                    case 'logging':
+                        break;
+                    case 'error':
+                        error(e.data.args);
+                        break;
+                    case 'debug':
+                        if (client.getOption('enableDebug'))
+                            console.debug(e.data.args);
+                        break;
+                    case 'toggled':
+                        window.opener.client.options.chat.log = e.data.args;
+                        window.opener.doUpdate(32);
+                        break;
+                    case 'startInternal':
+                    case 'start':
+                        _logger.postMessage({ action: e.data.event, args: { lines: display.lines, fragment: display.EndOfLine } });
+                        break;
+                }
+            };
+            _logger.onerror = (e) => {
+                error(e);
+            };
         }
 
         function error(err) {
@@ -88,75 +166,68 @@
         }
 
         $(document).ready(function () {
-            display = new Display($('#display'));
+            display = new Display('chat-display');
+            events['set-title'](window.opener.getCharacterName());
+
+            display.on('scroll-lock', lock => {
+                window.opener.client.options.chat.scrollLocked = lock;
+                display.scrollLock = lock;
+                if (display.split)
+                    display.scrollDisplay(true);
+                updateScrollLockButton();
+            });
 
             display.on('split-move-done', (h) => {
-                ipcRenderer.send('setting-changed', { type: 'chat', name: 'splitHeight', value: h });
+                window.opener.client.options.chat.splitHeight = h;
+                window.opener.doUpdate(32);
             });
 
             display.on('selection-done', () => {
-                if (options.AutoCopySelectedToClipboard && display.hasSelection) {
-                    clipboard.write({
-                        text: display.selection,
-                        html: display.selectionAsHTML
-                    });
-                    clipboard.write({
-                        text: display.selection,
-                        html: display.selectionAsHTML
-                    }, 'selection');
+                if (client.getOption('AutoCopySelectedToClipboard') && display.hasSelection) {
+                    doCopy();
                     display.clearSelection();
                 }
+                document.getElementById('btn-copy').disabled = !display.hasSelection;
             });
-            _logger = new Worker('./js/logging.js');
-            _logger.onmessage = (e) => {
-                switch (e.data.event) {
-                    case 'started':
-                        $('#btn-enable').button('toggle');
-                        ipcRenderer.send('setting-changed', { chat: 'chat', name: 'log', value: e.data.args });
-                        break;
-                    case 'stopped':
-                        $('#btn-enable').button('toggle');
-                        ipcRenderer.send('setting-changed', { chat: 'chat', name: 'log', value: e.data.args });
-                        break;
-                    case 'logging':
-                        break;
-                    case 'error':
-                        error(e.data.args);
-                        break;
-                    case 'debug':
-                        if (options.enableDebug)
-                            console.debug(e.data.args);
-                        break;
-                    case 'toggled':
-                        options.chat.log = e.data.args;
-                        ipcRenderer.send('setting-changed', { chat: 'chat', name: 'log', value: e.data.args });
-                        break;
-                    case 'startInternal':
-                    case 'start':
-                        _logger.postMessage({ action: e.data.event, args: { lines: display.lines, raw: display.rawLines, formats: display.lineFormats, fragment: display.EndOfLine } });
-                        break;
-                }
-            };
-            _logger.onerror = (e) => {
-                error(e);
-            };
 
+            display.on('word', () => {
+                window.opener.client.options.chat.find.word = display.MatchWord;
+                window.opener.doUpdate(32);
+            });
+            display.on('case', () => {
+                window.opener.client.options.chat.find.case = display.MatchCase;
+                window.opener.doUpdate(32);
+
+            });
+            display.on('reverse', () => {
+                window.opener.client.options.chat.find.reverse = display.Reverse;
+                window.opener.doUpdate(32);
+            });
+            display.on('regex', () => {
+                window.opener.client.options.chat.find.regex = display.RegularExpression;
+                window.opener.doUpdate(32);
+            });
+
+            display.on('shown', () => {
+                window.opener.client.options.chat.find.show = true;
+                window.opener.doUpdate(32);
+            });
+            display.on('closed', () => {
+                window.opener.client.options.chat.find.show = false;
+                window.opener.doUpdate(32);
+            });
+            display.on('highlight', () => {
+                window.opener.client.options.chat.find.highlight = display.Highlight;
+                window.opener.doUpdate(32);
+            });
+            display.on('finder-moved', location => {
+                window.opener.client.options.chat.find.location = location;
+                window.opener.doUpdate(32);
+            });
 
             loadOptions();
-
             ['copy'].forEach(function (event) {
-                document.addEventListener(event, function () {
-                    if (display.hasSelection) {
-                        clipboard.write({
-                            text: display.selection,
-                            html: display.selectionAsHTML
-                        });
-                        clipboard.write({
-                            text: display.selection,
-                            html: display.selectionAsHTML
-                        }, 'selection');
-                    }
-                });
+                document.addEventListener(event, doCopy);
             });
             window.addEventListener('keydown', (e) => {
                 if (e.which === 33) //page up
@@ -175,6 +246,12 @@
                     display.scrollByCharacter(-1, 0);
                 else if (e.which === 40) //down
                     display.scrollDown();
+                else if (!event.ctrlKey && !event.metaKey && event.altKey && event.key === 'z')
+                    toggleWrap();
+                else if (event.key === 'ScrollLock')
+                    toggleScrollLock();
+                else if (event.ctrlKey && !event.metaKey && !event.altKey && event.key === 'f')
+                    doFind();
             });
         });
 
@@ -197,7 +274,7 @@
             display.showFind();
         }
 
-        ipcRenderer.on('chat', (event, data) => {
+        function updateChat(data) {
             if (typeof data === 'string') {
                 display.append(data);
                 data = {
@@ -207,45 +284,89 @@
                 };
             }
             else
-                display.addParserLine(data);
-            if (!options)
+                display.model.addParserLine(data);
+            if (!client)
                 loadOptions();
-            _logger.postMessage({ action: 'add-line', args: data });
-        });
+            if (_logger && client.getOption('chat.log'))
+                _logger.postMessage({ action: 'add-line', args: data });
+        }
 
-        /*
-        ipcRenderer.on('chat-done', (event, data) => {
-
-        });
-        */
-
-        ipcRenderer.on('set-title', (event, title) => {
-            if (!options)
+        var events = {
+            'set-title': (title, lag) => {
+                if (!client)
+                    loadOptions();
+                if (_logger)
+                    _logger.postMessage({ action: 'name', args: title || '' });
+                if (title && title.length > 0)
+                    document.title = 'Chat - ' + title + (window.opener.client.port === 1035 ? ' - Development' : '');
+                else
+                    document.title = 'Chat' + (window.opener.client.port === 1035 ? ' - Development' : '');
+            },
+            'options-loaded': () => {
                 loadOptions();
-            _logger.postMessage({ action: 'name', args: title });
-        });
+            },
+            'load-theme': () => {
+                window.loadTheme();
+            },
+            'connecting': () => {
+                if (!client)
+                    loadOptions();
+                if (_logger)
+                    _logger.postMessage({ action: 'connected', args: window.opener.client.connected });
+            }
+        }
 
-        ipcRenderer.on('load-char', (event, char) => {
-            _logger.postMessage({ action: 'name', args: char });
-        });
+        function updateCharacter(e) {
+            events['set-title'](window.opener.getCharacterName());
+        }
 
-        ipcRenderer.on('load-default', () => {
-            _logger.postMessage({ action: 'name', args: '' });
-        });
-
-        ipcRenderer.on('reload-options', () => {
-            loadOptions();
-        });
-
-        ipcRenderer.on('connected', () => {
-            if (!options)
-                loadOptions();
-            _logger.postMessage({ action: 'connected', args: true });
-        });
+        window.opener._status.on('set-title', events['set-title']);
+        window.opener.addEventListener('loadCharacter', updateCharacter);
+        window.opener.addEventListener('updateCharacter', updateCharacter);
+        window.opener.addEventListener('resetCharacter', updateCharacter);
+        window.opener.client.on('load-theme', events['load-theme']);
+        window.opener.client.on('options-loaded', events['options-loaded']);
+        window.opener.client.on('connecting', events['connecting']);
 
         // eslint-disable-next-line no-unused-vars
         function toggle() {
             _logger.postMessage({ action: 'toggle' });
+        }
+
+        function toggleWrap() {
+            window.opener.client.options.chat.wordWrap = !window.opener.client.getOption('chat.wordWrap');
+            if (window.opener.client.getOption('chat.wordWrap'))
+                $('#btn-wrap').addClass('active');
+            else
+                $('#btn-wrap').removeClass('active');
+            display.wordWrap = client.getOption('chat.wordWrap');
+            window.opener.doUpdate(32);
+            $('#btn-wrap').blur();
+        }
+
+        function toggleScrollLock() {
+            window.opener.client.options.chat.scrollLocked = !window.opener.client.getOption('chat.scrollLocked');
+            display.scrollLock = window.opener.client.getOption('chat.scrollLocked');
+            if (display.split)
+                display.scrollDisplay(true);
+            updateScrollLockButton();
+        }
+
+        function updateScrollLockButton() {
+            const lock = document.getElementById('btn-lock');
+            if (window.opener.client.getOption('chat.scrollLocked')) {
+                lock.title = 'Unlock display';
+                lock.firstElementChild.classList.remove('fa-lock');
+                lock.firstElementChild.classList.add('fa-unlock');
+                lock.classList.add('active');
+            }
+            else {
+                lock.classList.remove('active');
+                lock.title = 'Lock display';
+                lock.firstElementChild.classList.add('fa-lock');
+                lock.firstElementChild.classList.remove('fa-unlock');
+            }
+            lock.blur();
         }
 
         // eslint-disable-next-line no-unused-vars
@@ -262,12 +383,30 @@
             if (z === _zoom) return;
             _zoom = z;
             webFrame.setZoomFactor(z);
-            ipcRenderer.send('setting-changed', { chat: 'chat', name: 'zoom', value: z });
+            window.opener.client.options.chat.zoom = z;
+            window.opener.doUpdate(32);
         }
 
-        // eslint-disable-next-line no-unused-vars
-        function closeHidden() {
-            ipcRenderer.invoke('window', 'hide');
+        window.onbeforeunload = e => {
+            if (window.opener.client.getOption('chat.persistent') || window.opener.client.getOption('chat.captureTells') || window.opener.client.getOption('chat.captureTalk') || window.opener.client.getOption('chat.captureLines')) {
+                window.hide();
+                e.returnValue = false;
+                return 'no';
+            }
+            window.opener._status.off('set-title', events['set-title']);
+            window.opener.removeEventListener('loadCharacter', updateCharacter);
+            window.opener.removeEventListener('updateCharacter', updateCharacter);
+            window.opener.removeEventListener('resetCharacter', updateCharacter);
+            window.opener.client.off('load-theme', events['load-theme']);
+            window.opener.client.off('options-loaded', events['options-loaded']);
+            window.opener.client.off('connecting', events['connecting']);
+        };
+
+        function skipSaveWindow() {
+            if (window.opener.client.getOption('chat.persistent') || window.opener.client.getOption('chat.captureTells') || window.opener.client.getOption('chat.captureTalk') || window.opener.client.getOption('chat.captureLines'))
+                return false;
+            //if not visible do not save this window as it was probably preserved due to a setting change
+            return !window.isVisible();
         }
     </script>
 </head>
@@ -292,6 +431,14 @@
             <i class="fa fa-copy"></i>
         </button>
         <div class="btn-group" role="group">
+            <button id="btn-lock" type="button" class="btn btn-default btn-xs" title="Toggle scroll lock" onclick="toggleScrollLock()">
+                <i class="fa fa-lock"></i>
+            </button>
+            <button id="btn-wrap" type="button" class="btn btn-default btn-xs" title="Toggle word wrap" onclick="toggleWrap()">
+                <img src="../assets/icons/png/wrap.png">
+            </button>
+        </div>
+        <div class="btn-group" role="group">
             <button id="btn-zoom-in" type="button" class="btn btn-default btn-xs" title="Zoom out" onclick="updateZoom(_zoom - 0.05);">
                 <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
                     <i class="fa fa-television fa-stack-2x" style="font-size: 1em"></i>
@@ -309,7 +456,7 @@
             </button>
         </div>
     </div>
-    <div id="display"></div>
+    <div id="chat-display"></div>
 </body>
 
 </html>

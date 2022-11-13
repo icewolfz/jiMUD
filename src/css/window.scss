@@ -1,0 +1,470 @@
+$images: "./../../assets";
+$borderColor: rgb(204, 204, 204);
+$color: #333;
+$tabBackground: menu;
+$tabHeight: 26;
+
+body {
+    background-color: initial;
+}
+
+.cm {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 26px;
+    right: 0;
+    overflow: hidden;
+}
+
+.cm-tabstrip {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    height: #{$tabHeight}px;
+    background-color: $tabBackground;
+    white-space: nowrap;
+    overflow: hidden;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    line-height: #{$tabHeight}px;
+    padding: 0 10px;
+    padding-top: 2px;
+    padding-right: 26px;
+    border-top: #ccc 1px solid;
+}
+
+.cm-tabstrip li {
+    position: relative;
+    border: 1px solid $borderColor;
+    display: inline-block;
+    z-index: 0;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    box-shadow: 0 3px 3px rgba(0, 0, 0, 0.4), inset 0 1px 0 #FFF;
+    text-shadow: 0 1px #FFF;
+    margin: 0 -5px;
+    background-color: menu;
+    padding-right: 10px;
+    opacity: 0.5;
+    cursor: pointer;
+    outline: none;
+    height: 100%;
+}
+
+.cm-tabstrip li:hover {
+    background-color: #dedede;
+    color: white;
+    text-shadow: none;
+}
+
+.cm-tabstrip li:last-child {
+    padding-right: 0px;
+}
+
+#cm-tabstrip-gap {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 0px;
+    border-bottom: 1px solid $borderColor;
+    display: block;
+}
+
+.focused .cm-tabstrip li.active {
+    color: WindowText;
+    height: #{$tabHeight}px;
+    background-color: window;
+    z-index: 2;
+    border-bottom-color: window;
+    padding-right: 0px;
+    padding-top: 4px;
+    opacity: 1;
+}
+
+.cm-tabstrip li.active {
+    height: #{$tabHeight}px;
+    z-index: 2;
+    padding-right: 0px;
+    padding-top: 4px;
+    opacity: 1;
+}
+
+.drop,
+.cm-tabstrip li.drop,
+.cm-tabstrip li.new.drop,
+.cm-tabstrip li.active.drop,
+.cm-tabstrip li.changed.drop,
+.cm-tabstrip li.active.changed.drop,
+.cm-tabstrip li.new.active.drop {
+    background-color: rgba(158, 158, 158, 0.5) !important;
+    color: white !important;
+    border-color: black;
+    box-shadow: initial;
+    text-shadow: 0 1px black;
+}
+
+.cm-tabstrip li .title {
+    margin-left: 22px;
+    margin-right: 20px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-family: -apple-system, BlinkMacSystemFont, Segoe WPC, Segoe UI, HelveticaNeue-Light, Ubuntu, Droid Sans, sans-serif;
+    font-size: 11px;
+    margin-top: -2px;
+    pointer-events: none;
+    overflow: hidden;
+    height: 21px;
+}
+
+.cm-tabstrip li .title::first-letter {
+    text-transform: uppercase;
+}
+
+.cm-tabstrip li.active .title {
+    margin-top: -4px;
+    position: relative;
+    top: -1px;
+}
+
+.cm-tabstrip li .icon {
+    width: 16px;
+    height: 16px;
+    top: 3px;
+    left: 3px;
+    position: absolute;
+    background-size: 16px 16px;
+    background-position: center;
+    background-repeat: no-repeat;
+    pointer-events: none;
+}
+
+#cm-scroll-menu .icon {
+    width: 16px;
+    height: 16px;
+    margin-top: 3px;
+    background-size: 16px 16px;
+    display: inline-block;
+    position: relative;
+    top: 2px;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.cm-tabstrip li .close {
+    top: 3px;
+    right: 14px;
+    position: absolute;
+    font-size: 15px;
+    font-weight: normal;
+    display: block;
+}
+
+.cm-tabstrip li:last-child .close {
+    right: 4px;
+}
+
+.cm-tabstrip li.active .close {
+    top: 3px;
+    right: 4px;
+}
+
+.cm-tabstrip li.active .close,
+.cm-tabstrip li:hover .close {
+    display: block;
+}
+
+.cm-tabstrip li.drop .close {
+    pointer-events: none;
+}
+
+.cm-tabstrip li:only-child .close {
+    display: none;
+}
+
+#cm-scroll-left .fa,
+#cm-scroll-right .fa {
+    margin-top: 7px;
+}
+
+#cm-scroll-dropdown-container {
+    position: absolute;
+    top: 0px;
+    height: #{$tabHeight}px;
+    display: block;
+    width: 12px;
+    z-index: 1000;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+    padding: 0;
+    border-top: transparent 1px soild;
+    outline: none;
+}
+
+#cm-scroll-left,
+#cm-scroll-right,
+#cm-scroll-dropdown {
+    position: absolute;
+    top: 0px;
+    height: #{$tabHeight}px;
+    display: block;
+    width: 12px;
+    background-color: $tabBackground;
+    z-index: 1;
+    font-size: 13px;
+    text-align: center;
+    color: black;
+    text-shadow: 0px 1px #fff;
+    padding: 0;
+    outline: none;
+    border: 0;
+}
+
+#cm-scroll-left:hover,
+#cm-scroll-right:hover,
+#cm-scroll-dropdown:hover,
+#cm-add-tab a:hover,
+#cm-scroll-dropdown-container.open #cm-scroll-dropdown {
+    background-color: $borderColor;
+    color: white;
+    text-shadow: 0 1px black;
+}
+
+#cm-scroll-left {
+    left: 0;
+    border-right: 1px solid $borderColor;
+    box-shadow: 3px 8px 8px 0px rgba(0, 0, 0, 0.75);
+    z-index: 5;
+}
+
+#cm-scroll-left.disabled,
+#cm-scroll-right.disabled {
+    pointer-events: none;
+    box-shadow: none;
+    border-color: transparent;
+    color: rgb(224, 222, 222);
+    text-shadow: -1px -1px #fff;
+}
+
+#cm-scroll-right {
+    right: 12px;
+    right: 38px;
+    border-left: 1px solid $borderColor;
+    box-shadow: -3px 8px 8px 0px rgba(0, 0, 0, 0.75);
+    z-index: 5;
+}
+
+#cm-add-tab[style*='display: none'] ~ #cm-scroll-right {
+    right: 12px;
+}
+
+#cm-scroll-dropdown,
+#cm-scroll-dropdown-container {
+    right: 0;
+    z-index: 1000;
+}
+
+#cm-scroll-menu {
+    overflow: auto;
+}
+
+.cm-tabstrip.scroll {
+    padding-left: 20px;
+    padding-right: 32px;
+    padding-right: 56px;
+}
+
+#cm-add-tab[style*='display: none'] ~ .cm-tabstrip.scroll {
+    padding-right: 32px;
+}
+
+.connected2-icon {
+    background-image: url(#{$images}/icons/png/connected2.png);
+}
+
+.connectednonactive2-icon {
+    background-image: url(#{$images}/icons/png/connectednonactive2.png);
+}
+
+.disconnected2-icon {
+    background-image: url(#{$images}/icons/png/disconnected2.png);
+}
+
+/*use circle icons to see better, maybe add a setting to allow user choice*/
+.connected-icon {
+    background-image: url(#{$images}/icons/png/connected.png);
+}
+
+.connectednonactive-icon {
+    background-image: url(#{$images}/icons/png/connectednonactive.png);
+}
+
+.disconnected-icon {
+    background-image: url(#{$images}/icons/png/disconnected.png);
+}
+
+.connected-code-icon {
+    background-image: url(#{$images}/icons/png/code.connected.png);
+}
+
+.connectednonactive-code-icon {
+    background-image: url(#{$images}/icons/png/code.connectednonactive.png);
+}
+
+.disconnected-code-icon {
+    background-image: url(#{$images}/icons/png/code.disconnected.png);
+}
+
+.text-connected-icon {
+    color: blue;
+}
+
+.text-connectednonactive-icon {
+    color: lime;
+}
+
+.text-disconnected-icon {
+    color: red;
+    font-weight: bold;
+}
+
+.dropdown-menu>li>a:focus,
+.dropdown-menu>li>a.active {
+    background-color: #e8e8e8;
+    background-image: -webkit-linear-gradient(top, #f5f5f5 0, #e8e8e8 100%);
+    background-image: -o-linear-gradient(top, #f5f5f5 0, #e8e8e8 100%);
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#f5f5f5), to(#e8e8e8));
+    background-image: linear-gradient(to bottom, #f5f5f5 0, #e8e8e8 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fff5f5f5', endColorstr='#ffe8e8e8', GradientType=0);
+    background-repeat: repeat-x;
+    color: #000;
+}
+
+.dropdown-menu>li.visible {
+    border-right: 3px solid #999;
+}
+
+.cm-tabstrip li.connected {
+    background-color: lighten(rgb(178, 226, 255), 10%) !important;
+    border-color: lighten(rgb(94, 185, 242), 10%) !important;
+    opacity: 1;
+    color: black;
+}
+
+.cm-tabstrip li.connected:hover {
+    background-color: rgb(178, 226, 255) !important;
+    border-color: rgb(94, 185, 242) !important;
+    opacity: 1;
+    color: black;
+}
+
+.cm-tabstrip li.connectednonactive {
+    background-color: lighten(rgb(218, 255, 181), 10%) !important;
+    border-color: lighten(rgb(119, 168, 69), 10%) !important;
+    opacity: 1;
+    color: black;
+}
+
+.cm-tabstrip li.connectednonactive:hover {
+    background-color: rgb(218, 255, 181) !important;
+    border-color: rgb(119, 168, 69) !important;
+    opacity: 1;
+    color: black;
+}
+
+.cm-tabstrip li.disconnected {
+    background-color:lighten(rgb(255, 187, 178), 10%) !important;
+    border-color: lighten(rgb(242, 104, 94), 10%) !important;    
+    opacity: 1;
+    color: black;
+}
+
+.cm-tabstrip li.disconnected:hover {
+    background-color: rgb(255, 187, 178) !important;
+    border-color: rgb(242, 104, 94) !important;    
+    opacity: 1;
+    color: black;
+}
+/*
+.focused .cm-tabstrip li.connectednonactive.active:hover {
+    background-color: darken(rgb(218, 255, 181), 10%) !important;
+    border-color: darken(rgb(119, 168, 69), 10%) !important;
+    opacity: 1;
+    color: black;
+}
+
+.focused .cm-tabstrip li.connected.active:hover {
+    background-color: darken(rgb(178, 226, 255), 10%) !important;
+    border-color: darken(rgb(94, 185, 242), 10%) !important;
+    opacity: 1;
+    color: black;
+}
+
+.focused .cm-tabstrip li.disconnected.active:hover {
+    background-color: darken(rgb(255, 187, 178), 10%) !important;
+    border-color: darken(rgb(242, 104, 94), 10%) !important;
+    opacity: 1;
+    color: black;
+}
+*/
+
+.focused .cm-tabstrip li.active {
+    background-color: rgb(240, 217, 249) !important;
+    border-color: rgb(195, 106, 247) !important;
+    opacity: 1;
+    color: black;
+}
+
+.focused .cm-tabstrip li.active:hover {
+    background-color: darken(rgb(239, 217, 249), 10%) !important;
+    border-color: darken(rgb(214, 106, 247), 10%) !important;
+    opacity: 1;
+    color: black;
+}
+
+#cm-add-tab {
+    z-index: 1000;
+    position: absolute;
+    bottom: 0;
+    top: 0;
+    width: 26px;
+    background-color: $tabBackground;
+}
+
+#cm-add-tab a {
+    width: 22px;
+    height: 22px;
+    margin-left: 2px;
+    margin-top: 2px;    
+    background-color: $tabBackground;
+    border: 1px solid $tabBackground;
+    display: block;
+    z-index: 1;
+    font-size: 13px;
+    text-align: center;
+    color: black;
+    text-shadow: 0px 1px #fff;
+    padding: 0;
+    outline: none;
+}
+
+#cm-add-tab .fa {
+    margin-top: 4px
+}
+
+#cm-add-tab a:hover {
+    border: 1px solid $color;
+    border-radius: 4px;
+}
+
+#cm-add-tab a:active {
+    border: 1px solid $color !important;
+    background-color: darken($borderColor, 10%) !important;
+    border-radius: 4px;
+    color: white;
+    text-shadow: 0 1px black;    
+}

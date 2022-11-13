@@ -301,6 +301,7 @@ export class Parser extends EventEmitter {
     public bell: string = './../assets/sounds/bell.m4a';
     public enableBell: boolean = true;
     public display: any = null;
+    public tabWidth: number = 8;
 
     public busy = false;
 
@@ -707,8 +708,8 @@ export class Parser extends EventEmitter {
         _ColorTable[270] = 'rgb(0, 128, 128)';  //cyan back
         _ColorTable[271] = 'rgb(187, 187, 187)';  //white back
 
-        _ColorTable[272] = 'rgb(0,0,0)'; //iceMudInfoBackground
-        _ColorTable[273] = 'rgb(0, 255, 255)';  //iceMudInfoText
+        _ColorTable[272] = 'rgb(0,0,0)'; //InfoBackground
+        _ColorTable[273] = 'rgb(0, 255, 255)';  //InfoText
         _ColorTable[274] = 'rgb(0,0,0)'; //LocalEchoBackground
         _ColorTable[275] = 'rgb(255, 255, 0)';  //LocalEchoText
         _ColorTable[276] = 'rgb(0, 0, 0)';  //DefaultBack
@@ -732,9 +733,9 @@ export class Parser extends EventEmitter {
             case -10:
                 return this._ColorTable[280];  //DefaultBrightFore
             case -8:
-                return this._ColorTable[272]; //iceMudInfoBackground
+                return this._ColorTable[272]; //InfoBackground
             case -7:
-                return this._ColorTable[273];  //iceMudInfoText
+                return this._ColorTable[273];  //InfoText
             case -4:
                 return this._ColorTable[274]; //LocalEchoBackground
             case -3:
@@ -2582,11 +2583,12 @@ export class Parser extends EventEmitter {
         if (!this.EndOfLine && (this.textLength > 0 || this.rawLength > 0)) {
             let lines = this.display.lines;
             if (lines.length > 0) {
-                iTmp = this.display.lines[lines.length - 1];
-                _MXPComment = this.display.rawLines[lines.length - 1];
-                formatBuilder.push.apply(formatBuilder, this.display.lineFormats[lines.length - 1]);
+                iTmp = this.display.lines[lines.length - 1].text;
+                _MXPComment = this.display.lines[lines.length - 1].raw;
+                formatBuilder.push.apply(formatBuilder, this.display.lines[lines.length - 1].formats);
                 lineLength = this.display.lines[lines.length - 1].length;
-                this.display.removeLine(lines.length - 1);
+                //remove line but do not change selection as line will be re-added back at the end
+                this.display.removeLine(lines.length - 1, true);
                 format = formatBuilder[formatBuilder.length - 1];
                 if (format.formatType === FormatType.Link) {
                     formatBuilder.pop();
@@ -2629,6 +2631,7 @@ export class Parser extends EventEmitter {
         const f: boolean = this.emulateTerminal;
         const u: boolean = this.enableURLDetection;
         const s: boolean = this.enableMSP;
+        const tabWidth: number = this.tabWidth;
         let lnk = 0;
         let fLnk = 0;
         let lnkOffset = 0;
@@ -2791,6 +2794,17 @@ export class Parser extends EventEmitter {
                             this._SplitBuffer = '';
                             _AnsiParams = null;
                             state = ParserState.None;
+                        }
+                        else if (c === '\n' || c === '\x1b') {
+                            //malformed code
+                            idx--;
+                            rawBuilder.pop();
+                            this.rawLength--;
+                            //Abnormal end, discard
+                            state = ParserState.None;
+                            this._SplitBuffer = '';
+                            if (this.mxpState.on && c === '\n')
+                                this.ClearMXPOpen();
                         }
                         else {
                             this._SplitBuffer += c;
@@ -3470,7 +3484,7 @@ export class Parser extends EventEmitter {
                             this.mxpState.noBreak = false;
                         }
                         else if (e && c === '\t') {
-                            const _Tab = 8 - lineLength % 8;
+                            const _Tab = tabWidth - lineLength % tabWidth;
                             if (_Tab > 0) {
                                 stringBuilder.push(Array(_Tab + 1).join(' '));
                                 this.MXPCapture(Array(_Tab + 1).join(' '));
@@ -3619,7 +3633,7 @@ export class Parser extends EventEmitter {
                                 this.mxpState.noBreak = false;
                             }
                             else if (d) {
-                                i = 9215 + i;
+                                i = 9216 + i;
                                 stringBuilder.push(String.fromCharCode(i));
                                 this.MXPCapture('&#');
                                 this.MXPCapture(i.toString());

@@ -17,7 +17,6 @@
     <script src="../lib/bootstrap-select.min.js"></script>
     <script type="text/javascript">
         if (window.module) module = window.module;
-        const { ipcRenderer } = require('electron');
         var _history = [];
         var _current = 0;
         $(document).ready(function () {
@@ -36,11 +35,11 @@
                     inputMenu = [
                         { role: 'selectAll' }
                     ];
-                ipcRenderer.invoke('show-context', inputMenu);
+                window.showContext(inputMenu);
             });
             window.addEventListener('hashchange', e => {
                 loadHelp(window.location.hash);
-            }, false);         
+            }, false);
             loadHelp();
             updateButtons();
         });
@@ -376,12 +375,12 @@
             <i class="fa fa-refresh"></i>
         </button>
         <div class="btn-group" role="group">
-        <button id="btn-back" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="navigate(-1)">
-            <i class="fa fa-arrow-left"></i>
-        </button>
-        <button id="btn-forward" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="navigate(1)">
-            <i class="fa fa-arrow-right"></i>
-        </button>
+            <button id="btn-back" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="navigate(-1)">
+                <i class="fa fa-arrow-left"></i>
+            </button>
+            <button id="btn-forward" type="button" class="btn btn-default btn-xs" title="Refresh" onclick="navigate(1)">
+                <i class="fa fa-arrow-right"></i>
+            </button>
         </div>
     </div>
     <div id="body">

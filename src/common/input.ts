@@ -4,67 +4,28 @@
 //spell-checker:ignore togglecl raiseevent raisedelayed raisede diceavg dicemin dicemax zdicedev dicedev zmud
 //spell-checker:ignore testfile testspeedfile testspeedfiler nosend printprompt printp pcol forall stringlist zcolor ipos trimleft trimright
 //spell-checker:ignore bitand bitnot bitor bitshift bittest bitnum bitxor isfloat isnumber
+/// <reference types="mathjs" />
 import EventEmitter = require('events');
-import { MacroModifiers, MacroDisplay } from './profile';
+import { MacroModifiers, MacroDisplay, Alias, Trigger, Button, Profile, TriggerType, TriggerTypes, SubTriggerTypes, convertPattern } from './profile';
 import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync, splitQuoted, isValidIdentifier, fileSizeSync, parseValue } from './library';
 import { Client } from './client';
 import { Tests } from './test';
-import { Alias, Trigger, Button, Profile, TriggerType, TriggerTypes, SubTriggerTypes, convertPattern } from './profile';
-import { NewLineType, ProfileSaveType } from './types';
+import { NewLineType, ProfileSaveType, ScriptEngineType } from './types';
 import { SettingList } from './settings';
 import { getAnsiColorCode, getColorCode, isMXPColor, getAnsiCode } from './ansi';
-//use minified mathjs instead of default module for performance loading
-//const { create, all, factory } =  require('./../../lib/math');
-const { create, all, factory } = require('./../../node_modules/mathjs/lib/browser/math');
 
-/**
- * Contains custom operator overrides functions for MATHJS to add string support
- * @constant
- * @type {object}
- * 
- */
-const allWithCustomFunctions = {
-    ...all,
-
-    createEqual: factory('equal', [], () => function equal(a, b) {
-        return a === b
-    }),
-
-    createUnequal: factory('unequal', [], () => function unequal(a, b) {
-        return a !== b
-    }),
-
-    createSmaller: factory('smaller', [], () => function smaller(a, b) {
-        return a < b
-    }),
-
-    createSmallerEq: factory('smallerEq', [], () => function smallerEq(a, b) {
-        return a <= b
-    }),
-
-    createLarger: factory('larger', [], () => function larger(a, b) {
-        return a > b
-    }),
-
-    createLargerEq: factory('largerEq', [], () => function largerEq(a, b) {
-        return a >= b
-    }),
-
-    createCompare: factory('compare', [], () => function compare(a, b) {
-        return a > b ? 1 : a < b ? -1 : 0
-    }),
-
-    createAdd: factory('add', [], () => function add(a, b) {
-        return a + b
-    })
-};
+declare let getCharacterNotes;
+declare let getId;
+declare let getName;
+declare let clearName;
 
 /**
  * MATHJS expression engine
  * @constant
  * @type {object}
  */
-const mathjs = create(allWithCustomFunctions, {});
+let mathjs;
+let _mathjs;
 /**
  * Buzz sound library
  * @type {object}
@@ -89,6 +50,8 @@ const moment = require('moment');
  * @constant
  */
 const fs = require('fs');
+
+const WindowVariables = ['$selectedword', '$selword', '$selectedurl', '$selurl', '$selectedline', '$selline', '$selected', '$character', '$copied', '$action', '$trigger', '$caption', '$characterid'];
 
 /**
  * Return the proper case of a string for each word
@@ -188,6 +151,7 @@ export class Input extends EventEmitter {
     private _TriggerStates = {};
     private _TriggerFunctionCache = {};
     private _TriggerRegExCache = {};
+    private _LastTriggered = '';
     private _LastTrigger = null;
     private _scrollLock: boolean = false;
     private _gag: number = 0;
@@ -215,11 +179,11 @@ export class Input extends EventEmitter {
         for (const name in vars) {
             scope[name] = vars[name].rawValue;
         }
-        ['$selectedword', '$selword', '$selectedurl', '$selurl', '$selectedline',
-            '$selline', '$selected', '$character', '$copied'].forEach((a) => {
-                scope[a] = window[a];
-                scope[a.substr(1)] = window[a];
-            });
+        WindowVariables.forEach((a) => {
+            scope[a] = window[a];
+            scope[a.substr(1)] = window[a];
+        });
+        scope['clientid'] = getId();
         //if no stack use direct for some performance
         if (this._stack.length === 0 || (!this.stack.named && !this.loops.length))
             return scope;
@@ -245,25 +209,10 @@ export class Input extends EventEmitter {
             //not a property, i or repeatnum
             if (!Object.prototype.hasOwnProperty.call(scope, name) || name === 'i' || name === 'repeatnum')
                 continue;
+            if (WindowVariables.indexOf(name) !== -1 || WindowVariables.indexOf('$' + name) !== -1)
+                continue;
             switch (name) {
-                case '$selectedword':
-                case '$selword':
-                case '$selectedurl':
-                case '$selurl':
-                case '$selectedline':
-                case '$selline':
-                case '$selected':
-                case '$character':
-                case '$copied':
-                case 'selectedword':
-                case 'selword':
-                case 'selectedurl':
-                case 'selurl':
-                case 'selectedline':
-                case 'selline':
-                case 'selected':
-                case 'character':
-                case 'copied':
+                case 'clientid':
                     continue;
             }
             //if i to z and the loop exist skip it
@@ -283,7 +232,7 @@ export class Input extends EventEmitter {
 
     public evaluate(expression) {
         let scope = this.getScope();
-        let results = mathjs.evaluate(expression, scope);
+        let results = mathjs().evaluate(expression, scope);
         this.setScope(scope);
         return results;
     }
@@ -358,6 +307,14 @@ export class Input extends EventEmitter {
         return this._LastTrigger;
     }
 
+    get lastTriggered() {
+        return this._LastTriggered;
+    }
+
+    set lastTriggered(value) {
+        this._LastTriggered = value;
+    }
+
     private getDiceArguments(arg, scope, fun) {
         let res = /(\d+)\s*?d(F|f|%|\d+)(\s*?[-|+|*|\/]?\s*?\d+)?/g.exec(arg.toString());
         if (!res || res.length < 3) {
@@ -380,12 +337,69 @@ export class Input extends EventEmitter {
         return res;
     }
 
-    constructor(client: Client) {
-        super();
-        if (!client)
-            throw new Error('Invalid client!');
-        this.client = client;
+    private initMathJS() {
+        //use minified mathjs instead of default module for performance loading
+        let create, all, factory, mathEngine;
+        if (this.client.getOption('scriptEngineType') === ScriptEngineType.Full)
+            mathEngine = require('mathjs');
+        else if (this.client.getOption('scriptEngineType') === ScriptEngineType.Simple)
+            mathEngine = require('mathjs/number');
+        else
+            mathEngine = require('./../../node_modules/mathjs/lib/browser/math');
+        create = mathEngine.create;
+        all = mathEngine.all;
+        factory = mathEngine.factory;
+        //const { create, all, factory } = require('./../../node_modules/mathjs/lib/browser/math'); //slow but overall fastest version and kept up today
+        //import {create, all, factory} from 'mathjs'; //nearly 4.5 times slower then browser version
 
+        /**
+         * Contains custom operator overrides functions for MATHJS to add string support
+         * @constant
+         * @type {object}
+         * 
+         */
+        const allWithCustomFunctions = {
+            ...all,
+
+            createEqual: factory('equal', [], () => function equal(a, b) {
+                return a === b
+            }),
+
+            createUnequal: factory('unequal', [], () => function unequal(a, b) {
+                return a !== b
+            }),
+
+            createSmaller: factory('smaller', [], () => function smaller(a, b) {
+                return a < b
+            }),
+
+            createSmallerEq: factory('smallerEq', [], () => function smallerEq(a, b) {
+                return a <= b
+            }),
+
+            createLarger: factory('larger', [], () => function larger(a, b) {
+                return a > b
+            }),
+
+            createLargerEq: factory('largerEq', [], () => function largerEq(a, b) {
+                return a >= b
+            }),
+
+            createCompare: factory('compare', [], () => function compare(a, b) {
+                return a > b ? 1 : a < b ? -1 : 0
+            }),
+
+            createAdd: factory('add', [], () => function add(a, b) {
+                return a + b
+            })
+        };
+
+        /**
+         * MATHJS expression engine
+         * @constant
+         * @type {object}
+         */
+        _mathjs = create(allWithCustomFunctions, {});
         const funs = {
             esc: '\x1b',
             cr: '\n',
@@ -1266,27 +1280,27 @@ export class Input extends EventEmitter {
                     throw new Error('Too many arguments for unescape');
                 let c;
                 args[0] = args[0].compile().evaluate(scope).toString();
-                if (this.client.options.allowEscape) {
-                    const escape = this.client.options.allowEscape ? this.client.options.escapeChar : '';
+                if (this.client.getOption('allowEscape')) {
+                    const escape = this.client.getOption('allowEscape') ? this.client.getOption('escapeChar') : '';
                     c = escape;
                     if (escape === '\\')
                         c += escape;
-                    if (this.client.options.parseDoubleQuotes)
+                    if (this.client.getOption('parseDoubleQuotes'))
                         c += '"';
-                    if (this.client.options.parseSingleQuotes)
+                    if (this.client.getOption('parseSingleQuotes'))
                         c += '\'';
-                    if (this.client.options.commandStacking)
-                        c += this.client.options.commandStackingChar;
-                    if (this.client.options.enableSpeedpaths)
-                        c += this.client.options.speedpathsChar;
-                    if (this.client.options.enableCommands)
-                        c += this.client.options.commandChar;
-                    if (this.client.options.enableVerbatim)
-                        c += this.client.options.verbatimChar;
-                    if (this.client.options.enableDoubleParameterEscaping)
-                        c += this.client.options.parametersChar;
-                    if (this.client.options.enableNParameters)
-                        c += this.client.options.nParametersChar;
+                    if (this.client.getOption('commandStacking'))
+                        c += this.client.getOption('commandStackingChar');
+                    if (this.client.getOption('enableSpeedpaths'))
+                        c += this.client.getOption('speedpathsChar');
+                    if (this.client.getOption('enableCommands'))
+                        c += this.client.getOption('commandChar');
+                    if (this.client.getOption('enableVerbatim'))
+                        c += this.client.getOption('verbatimChar');
+                    if (this.client.getOption('enableDoubleParameterEscaping'))
+                        c += this.client.getOption('parametersChar');
+                    if (this.client.getOption('enableNParameters'))
+                        c += this.client.getOption('nParametersChar');
                     return args.replace(new RegExp(`[${c}]`, 'g'), escape + '$&');
                 }
                 return args.replace(/[\\"']/g, '\$&');
@@ -1298,27 +1312,27 @@ export class Input extends EventEmitter {
                     throw new Error('Too many arguments for unescape');
                 let c;
                 args[0] = args[0].compile().evaluate(scope).toString();
-                if (this.client.options.allowEscape) {
-                    const escape = this.client.options.allowEscape ? this.client.options.escapeChar : '';
+                if (this.client.getOption('allowEscape')) {
+                    const escape = this.client.getOption('allowEscape') ? this.client.getOption('escapeChar') : '';
                     c = escape;
                     if (escape === '\\')
                         c += escape;
-                    if (this.client.options.parseDoubleQuotes)
+                    if (this.client.getOption('parseDoubleQuotes'))
                         c += '"';
-                    if (this.client.options.parseSingleQuotes)
+                    if (this.client.getOption('parseSingleQuotes'))
                         c += '\'';
-                    if (this.client.options.commandStacking)
-                        c += this.client.options.commandStackingChar;
-                    if (this.client.options.enableSpeedpaths)
-                        c += this.client.options.speedpathsChar;
-                    if (this.client.options.enableCommands)
-                        c += this.client.options.commandChar;
-                    if (this.client.options.enableVerbatim)
-                        c += this.client.options.verbatimChar;
-                    if (this.client.options.enableDoubleParameterEscaping)
-                        c += this.client.options.parametersChar;
-                    if (this.client.options.enableNParameters)
-                        c += this.client.options.nParametersChar;
+                    if (this.client.getOption('commandStacking'))
+                        c += this.client.getOption('commandStackingChar');
+                    if (this.client.getOption('enableSpeedpaths'))
+                        c += this.client.getOption('speedpathsChar');
+                    if (this.client.getOption('enableCommands'))
+                        c += this.client.getOption('commandChar');
+                    if (this.client.getOption('enableVerbatim'))
+                        c += this.client.getOption('verbatimChar');
+                    if (this.client.getOption('enableDoubleParameterEscaping'))
+                        c += this.client.getOption('parametersChar');
+                    if (this.client.getOption('enableNParameters'))
+                        c += this.client.getOption('nParametersChar');
                     if (escape === '\\')
                         return args[0].replace(new RegExp(`\\\\[${c}]`, 'g'), (m) => m.substr(1));
                     return args[0].replace(new RegExp(`${escape}[${c}]`, 'g'), (m) => m.substr(1));
@@ -1327,21 +1341,16 @@ export class Input extends EventEmitter {
             },
             charcomment: (args, math, scope) => {
                 let notes;
-                let c
                 if (args.length === 0) {
-                    c = ipcRenderer.sendSync('get-global', 'character') || '';
-                    if (!c || !c.length) return '';
-                    notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                    notes = getCharacterNotes();
                     if (isFileSync(notes))
                         return fs.readFileSync(notes, 'utf-8');
                     return '';
                 }
                 else if (args.length > 1)
                     throw new Error('Too many arguments for charcomment');
-                c = ipcRenderer.sendSync('get-global', 'character') || '';
-                if (!c || !c.length) return;
                 args[0] = args[0].compile().evaluate(scope).toString();
-                notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                notes = getCharacterNotes();
                 if (args[0].length === 0 || !isFileSync(notes))
                     fs.writeFileSync(notes, '');
                 else if (!fileSizeSync(notes))
@@ -1352,22 +1361,35 @@ export class Input extends EventEmitter {
             },
             charnotes: (args, math, scope) => {
                 let notes;
-                let c;
                 if (args.length === 0) {
-                    c = ipcRenderer.sendSync('get-global', 'character') || '';
-                    if (!c || !c.length) return '';
-                    notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                    notes = getCharacterNotes();
                     if (isFileSync(notes))
                         return fs.readFileSync(notes, 'utf-8');
                     return '';
                 }
                 else if (args.length > 1)
                     throw new Error('Too many arguments for charnotes');
-                c = ipcRenderer.sendSync('get-global', 'character') || '';
-                if (!c || !c.length) return;
-                notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                notes = getCharacterNotes();
                 args[0] = args[0].compile().evaluate(scope).toString();
                 fs.writeFileSync(notes, args[0]);
+                return;
+            },
+            //clientid: getId(),
+            clientname: (args, math, scope) => {
+                let notes;
+                if (args.length === 0) {
+                    return getName();
+                }
+                else if (args.length == 1)
+                    this.client.emit('set-name', args[0].compile().evaluate(scope).toString());
+                else if (args.length == 2) {
+                    let i = args[1].compile().evaluate(scope);
+                    if (isNaN(i))
+                        throw new Error('Invalid argument 2 \'' + args[1].toString() + '\' must be a number for clientname');
+                    this.client.emit('set-name', args[0].compile().evaluate(scope).toString(), i);
+                }
+                else
+                    throw new Error('Too many arguments for clientname');
                 return;
             }
         };
@@ -1377,22 +1399,34 @@ export class Input extends EventEmitter {
             }
             funs[fun].rawArgs = true;
         }
-        mathjs.import(funs, {});
+        _mathjs.import(funs, {});
+    }
 
+    constructor(client: Client) {
+        super();
+        if (!client)
+            throw new Error('Invalid client!');
+        this.client = client;
+        //wrap mathjs to load on demand for speed as not every may need math
+        mathjs = () => {
+            if (_mathjs) return _mathjs;
+            this.initMathJS();
+            return _mathjs;
+        }
         this._tests = new Tests(client);
         this._commandHistory = [];
-        $(document).keydown((event) => {
+        document.addEventListener('keydown', (event) => {
             if (!this.isLocked && this.ProcessMacros(event.which, event.altKey, event.ctrlKey, event.shiftKey, event.metaKey)) {
                 event.preventDefault();
                 event.stopPropagation();
             }
             //toggle scroll lock
-            else if (event.which === 145)
+            else if (event.key === 'ScrollLock')
                 this.toggleScrollLock();
         });
 
         this.client.on('parse-command', (data) => {
-            if (this.client.options.parseCommands)
+            if (this.client.getOption('parseCommands'))
                 data.value = this.parseOutgoing(data.value, null, null, null, null, !data.comments);
         });
 
@@ -1414,25 +1448,27 @@ export class Input extends EventEmitter {
 
         this.client.on('options-loaded', () => {
             this.updatePads();
+            if (!_mathjs && this.client.getOption('initializeScriptEngineOnLoad'))
+                this.initMathJS();
         });
 
-        this.client.commandInput.keyup((event) => {
-            if (event.which !== 27 && event.which !== 38 && event.which !== 40)
+        this.client.commandInput.addEventListener('keyup', event => {
+            if (event.key !== 'Escape' && event.key !== 'ArrowUp' && event.key !== 'ArrowDown')
                 this._historyIdx = this._commandHistory.length;
-        });
+        })
 
-        this.client.commandInput.keydown((event) => {
-            switch (event.which) {
-                case 27: //esc
-                    client.commandInput.blur();
-                    client.commandInput.val('');
-                    client.commandInput.select();
+        this.client.commandInput.addEventListener('keydown', event => {
+            switch (event.key) {
+                case 'Escape': //esc
+                    this.client.commandInput.blur();
+                    this.client.commandInput.value = '';
+                    this.client.commandInput.select();
                     this._historyIdx = this._commandHistory.length;
                     break;
-                case 38: //up
-                    if (this._historyIdx === this._commandHistory.length && this.client.commandInput.val().length > 0) {
-                        this.AddCommandToHistory(this.client.commandInput.val());
-                        if (this.client.commandInput.val() === this._commandHistory[this._historyIdx - 1])
+                case 'ArrowUp': //up
+                    if (this._historyIdx === this._commandHistory.length && this.client.commandInput.value.length > 0) {
+                        this.AddCommandToHistory(this.client.commandInput.value);
+                        if (this.client.commandInput.value === this._commandHistory[this._historyIdx - 1])
                             this._historyIdx--;
                     }
                     this._historyIdx--;
@@ -1440,69 +1476,59 @@ export class Input extends EventEmitter {
                         this._historyIdx = 0;
                     if (this._commandHistory.length < 0) {
                         this._historyIdx = -1;
-                        this.client.commandInput.val('');
+                        this.client.commandInput.value = '';
                     }
                     else {
                         if (this._commandHistory.length > 0 && this._historyIdx < this._commandHistory.length && this._historyIdx >= 0)
-                            this.client.commandInput.val(this._commandHistory[this._historyIdx]);
+                            this.client.commandInput.value = this._commandHistory[this._historyIdx];
                     }
                     setTimeout(() => this.client.commandInput.select(), 0);
                     break;
-                case 40: //down
-                    if (this._historyIdx === this._commandHistory.length && this.client.commandInput.val().length > 0)
-                        this.AddCommandToHistory(this.client.commandInput.val());
+                case 'ArrowDown': //down
+                    if (this._historyIdx === this._commandHistory.length && this.client.commandInput.value.length > 0)
+                        this.AddCommandToHistory(this.client.commandInput.value);
                     this._historyIdx++;
                     if (this._historyIdx >= this._commandHistory.length || this._commandHistory.length < 1) {
                         this._historyIdx = this._commandHistory.length;
-                        this.client.commandInput.val('');
+                        this.client.commandInput.value = '';
                     }
                     else {
                         if (this._commandHistory.length > 0 && this._historyIdx < this._commandHistory.length && this._historyIdx >= 0)
-                            this.client.commandInput.val(this._commandHistory[this._historyIdx]);
+                            this.client.commandInput.value = this._commandHistory[this._historyIdx];
                     }
                     setTimeout(() => this.client.commandInput.select(), 0);
                     break;
-                case 13: // return
-                    switch (this.client.options.newlineShortcut) {
+                case 'Enter': // return
+                    switch (this.client.getOption('newlineShortcut')) {
                         case NewLineType.Ctrl:
                             if (event.ctrlKey && !event.shiftKey && !event.metaKey && !event.altKey) {
-                                this.client.commandInput.val((i, val) => {
-                                    return val + '\n';
-                                });
+                                this.client.commandInput.value += '\n';
                                 return true;
                             }
                             break;
                         case NewLineType.CtrlAndShift:
                             if (event.ctrlKey && event.shiftKey && !event.metaKey && !event.altKey) {
-                                this.client.commandInput.val((i, val) => {
-                                    return val + '\n';
-                                });
+                                this.client.commandInput.value += '\n';
                                 return true;
                             }
                             break;
                         case NewLineType.CtrlOrShift:
                             if ((event.ctrlKey || event.shiftKey) && !event.metaKey && !event.altKey) {
-                                this.client.commandInput.val((i, val) => {
-                                    return val + '\n';
-                                });
+                                this.client.commandInput.value += '\n';
                                 return true;
                             }
                             break;
                         case NewLineType.Shift:
                             if ((event.ctrlKey && event.shiftKey) && !event.metaKey && !event.altKey) {
-                                this.client.commandInput.val((i, val) => {
-                                    return val + '\n';
-                                });
+                                this.client.commandInput.value += '\n';
                                 return true;
                             }
                             break;
                     }
                     event.preventDefault();
-                    this.client.sendCommand(null, null, this.client.options.allowCommentsFromCommand);
+                    this.client.sendCommand(null, null, this.client.getOption('allowCommentsFromCommand'));
                     break;
             }
-        }).keypress((event) => {
-            return true;
         });
         //spell-checker:ignore gamepadconnected gamepaddisconnected
         window.addEventListener('gamepadconnected', (e) => {
@@ -1530,7 +1556,7 @@ export class Input extends EventEmitter {
     }
 
     private updatePads() {
-        if (this._controllersCount === 0 || !this.client.options.gamepads)
+        if (this._controllersCount === 0 || !this.client.getOption('gamepads'))
             return;
         const controllers = navigator.getGamepads();
         let c = 0;
@@ -1621,18 +1647,18 @@ export class Input extends EventEmitter {
         if (raw) {
             if (n === this.client.display.lines.length) {
                 n--;
-                if (this.client.display.lines[n].length === 0 && this.client.display.rawLines[n].length)
+                if (this.client.display.lines[n].text.length === 0 && this.client.display.lines[n].raw.length)
                     n--;
             }
-            else if (n === this.client.display.lines.length - 1 && this.client.display.lines[n].length === 0 && this.client.display.rawLines[n].length)
+            else if (n === this.client.display.lines.length - 1 && this.client.display.lines[n].text.length === 0 && this.client.display.lines[n].raw.length)
                 n--;
         }
         else if (n === this.client.display.lines.length) {
             n--;
-            if (this.client.display.lines[n].length === 0)
+            if (this.client.display.lines[n].text.length === 0)
                 n--;
         }
-        else if (n === this.client.display.lines.length - 1 && this.client.display.lines[n].length === 0)
+        else if (n === this.client.display.lines.length - 1 && this.client.display.lines[n].text.length === 0)
             n--;
         return n;
     }
@@ -1651,7 +1677,7 @@ export class Input extends EventEmitter {
 
     public AddCommandToHistory(cmd: string) {
         if ((this._commandHistory.length < 1 || this._commandHistory[this._commandHistory.length - 1] !== cmd) && cmd.length > 0) {
-            if (this._commandHistory.length >= this.client.options.commandHistorySize)
+            if (this._commandHistory.length >= this.client.getOption('commandHistorySize'))
                 this._commandHistory.shift();
             this._commandHistory.push(cmd);
             this.emit('command-history-changed', this._commandHistory);
@@ -1693,9 +1719,9 @@ export class Input extends EventEmitter {
         let arg: string = '';
         let raw: string;
         let s = 0;
-        const pd: boolean = this.client.options.parseDoubleQuotes;
-        const ps: boolean = this.client.options.parseSingleQuotes;
-        const cmdChar: string = this.client.options.commandChar;
+        const pd: boolean = this.client.getOption('parseDoubleQuotes');
+        const ps: boolean = this.client.getOption('parseSingleQuotes');
+        const cmdChar: string = this.client.getOption('commandChar');
 
         for (; idx < tl; idx++) {
             c = txt.charAt(idx);
@@ -1820,10 +1846,10 @@ export class Input extends EventEmitter {
             }
         }
         if (fun.length > 0) {
-            if (state === 3)
-                arg += '"';
-            else if (state === 4)
-                arg += '\'';
+            //if (state === 3)
+            //arg += '"';
+            //else if (state === 4)
+            //arg += '\'';
             if (arg.endsWith('\n'))
                 arg = arg.substring(0, arg.length - 1);
             if (arg.length > 0) args.push(arg);
@@ -1856,10 +1882,10 @@ export class Input extends EventEmitter {
                 if (!isFileSync(args))
                     throw new Error('Invalid file "' + args + '"');
                 tmp = fs.readFileSync(args, 'utf-8');
-                n = this.client.options.enableCommands;
+                n = this.client.getOption('enableCommands');
                 this.client.options.enableCommands = true;
                 i = new Date().getTime();
-                this.client.sendCommand(tmp, null, this.client.options.allowCommentsFromCommand);
+                this.client.sendCommand(tmp, null, this.client.getOption('allowCommentsFromCommand'));
                 p = new Date().getTime();
                 this.client.options.enableCommands = n;
                 this.client.print(`Time: ${p - i}\n`, true);
@@ -1872,14 +1898,14 @@ export class Input extends EventEmitter {
                 if (!isFileSync(args))
                     throw new Error('Invalid file "' + args + '"');
                 tmp = fs.readFileSync(args, 'utf-8');
-                n = this.client.options.enableCommands;
+                n = this.client.getOption('enableCommands');
                 this.client.options.enableCommands = true;
                 avg = 0;
                 max = 0;
                 min = 0;
                 for (i = 0; i < 10; i++) {
                     const start = new Date().getTime();
-                    this.client.sendCommand(tmp, null, this.client.options.allowCommentsFromCommand);
+                    this.client.sendCommand(tmp, null, this.client.getOption('allowCommentsFromCommand'));
                     const end = new Date().getTime();
                     p = end - start;
                     avg += p;
@@ -2993,6 +3019,8 @@ export class Input extends EventEmitter {
             //#endregion gag
             case 'wait':
             case 'wa':
+                //filter out empty arguments to avoid trailing spaces
+                args = args.filter(a => a);
                 if (args.length === 0 || args.length > 1)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'wa\x1b[0;-11;-12mit number');
                 i = parseInt(this.parseInline(args[0]), 10);
@@ -3015,13 +3043,13 @@ export class Input extends EventEmitter {
                 return null;
             case 'raiseevent':
             case 'raise':
-                if (this.client.options.parseDoubleQuotes)
+                if (this.client.getOption('parseDoubleQuotes'))
                     args.forEach((a) => {
                         return a.replace(/^\"(.*)\"$/g, (v, e, w) => {
                             return e.replace(/\\\"/g, '"');
                         });
                     });
-                if (this.client.options.parseSingleQuotes)
+                if (this.client.getOption('parseSingleQuotes'))
                     args.forEach((a) => {
                         return a.replace(/^\'(.*)\'$/g, (v, e, w) => {
                             return e.replace(/\\\'/g, '\'');
@@ -3034,44 +3062,190 @@ export class Input extends EventEmitter {
                 else
                     this.client.raise(args[0], args.slice(1));
                 return null;
-            case 'window':
-            case 'win':
-                if (this.client.options.parseDoubleQuotes)
+            case 'cl':
+            case 'close':
+                if (this.client.getOption('parseDoubleQuotes'))
                     args.forEach((a) => {
                         return a.replace(/^\"(.*)\"$/g, (v, e, w) => {
                             return e.replace(/\\\"/g, '"');
                         });
                     });
-                if (this.client.options.parseSingleQuotes)
+                if (this.client.getOption('parseSingleQuotes'))
                     args.forEach((a) => {
                         return a.replace(/^\'(.*)\'$/g, (v, e, w) => {
                             return e.replace(/\\\'/g, '\'');
                         });
                     });
-                if (args.length === 0 || args.length > 2)
-                    throw new Error('Invalid syntax use ' + cmdChar + '\x1b[4mwin\x1b[0;-11;-12mdow name');
-                else if (args.length === 1)
-                    this.client.emit('window', this.stripQuotes(this.parseInline(args[0])));
+                if (args.length > 2)
+                    throw new Error('Invalid syntax use ' + cmdChar + '\x1b[4mcl\x1b[0;-11;-12mose');
+                else if (args.length === 0)
+                    (<any>this.client).closeWindow();
                 else
-                    this.client.emit('window', this.stripQuotes(this.parseInline(args[0])), this.stripQuotes(this.parseInline(args.slice(1).join(' '))));
+                    (<any>this.client).closeWindow(this.stripQuotes(this.parseInline(args[0])));
                 return null;
-            case 'raisedelayed':
-            case 'raisede':
-                if (args.length < 2)
-                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'raisede\x1b[0;-11;-12mlayed milliseconds name or \x1b[4m' + cmdChar + 'raisede\x1b[0;-11;-12mlayed milliseconds name arguments');
-                i = parseInt(this.stripQuotes(args[0]), 10);
-                if (isNaN(i))
-                    throw new Error('Invalid number \'' + args[0] + '\' for raisedelayed');
-                if (i < 1)
-                    throw new Error('Must be greater then zero for raisedelayed');
-                args.shift();
-                if (this.client.options.parseDoubleQuotes)
+            case 'id':
+                this.client.echo('Client ID: ' + getId(), -7, -8, true, true);
+                return null
+            case 'window':
+            case 'win':
+                if (this.client.getOption('parseDoubleQuotes'))
                     args.forEach((a) => {
                         return a.replace(/^\"(.*)\"$/g, (v, e, w) => {
                             return e.replace(/\\\"/g, '"');
                         });
                     });
-                if (this.client.options.parseSingleQuotes)
+                if (this.client.getOption('parseSingleQuotes'))
+                    args.forEach((a) => {
+                        return a.replace(/^\'(.*)\'$/g, (v, e, w) => {
+                            return e.replace(/\\\'/g, '\'');
+                        });
+                    });
+                if (args.length === 0 || args.length > 3)
+                    throw new Error('Invalid syntax use ' + cmdChar + '\x1b[4mwin\x1b[0;-11;-12mdow name \x1b[3mclose\x1b[0;-11;-12m or ' + cmdChar + '\x1b[4mwin\x1b[0;-11;-12mdow new \x1b[3mcharacter\x1b[0;-11;-12m');
+                else if (args.length === 3)
+                    this.client.emit('window', this.stripQuotes(this.parseInline(args[0])), this.stripQuotes(this.parseInline(args[1])), this.stripQuotes(this.parseInline(args.slice(2).join(' '))));
+                else if (args.length === 1)
+                    this.client.emit('window', this.stripQuotes(this.parseInline(args[0])));
+                else
+                    this.client.emit('window', this.stripQuotes(this.parseInline(args[0])), this.stripQuotes(this.parseInline(args.slice(1).join(' '))));
+                return null;
+            case 'tab':
+            case 'conn':
+            case 'connection':
+                if (this.client.getOption('parseDoubleQuotes'))
+                    args.forEach((a) => {
+                        return a.replace(/^\"(.*)\"$/g, (v, e, w) => {
+                            return e.replace(/\\\"/g, '"');
+                        });
+                    });
+                if (this.client.getOption('parseSingleQuotes'))
+                    args.forEach((a) => {
+                        return a.replace(/^\'(.*)\'$/g, (v, e, w) => {
+                            return e.replace(/\\\'/g, '\'');
+                        });
+                    });
+                if (args.length > 2) {
+                    if (fun.toLowerCase() === 'tab')
+                        throw new Error('Invalid syntax use ' + cmdChar + 'tab \x1b[3mcharacter or id');
+                    else
+                        throw new Error('Invalid syntax use ' + cmdChar + '\x1b[4mconn\x1b[0;-11;-12mection \x1b[3mcharacter or id');
+                }
+                else if (args.length === 2)
+                    this.client.emit('connection', this.stripQuotes(this.parseInline(args[0])), this.stripQuotes(this.parseInline(args[1])));
+                else if (args.length === 1)
+                    this.client.emit('connection', this.stripQuotes(this.parseInline(args[0])));
+                else
+                    this.client.emit('connection');
+                return null;
+            case 'na':
+            case 'name':
+                if (this.client.getOption('parseDoubleQuotes'))
+                    args.forEach((a) => {
+                        return a.replace(/^\"(.*)\"$/g, (v, e, w) => {
+                            return e.replace(/\\\"/g, '"');
+                        });
+                    });
+                if (this.client.getOption('parseSingleQuotes'))
+                    args.forEach((a) => {
+                        return a.replace(/^\'(.*)\'$/g, (v, e, w) => {
+                            return e.replace(/\\\'/g, '\'');
+                        });
+                    });
+                if (args.length > 2)
+                    throw new Error('Invalid syntax use ' + cmdChar + '\x1b[4mna\x1b[0;-11;-12mme name \x1b[3mid');
+                else if (args.length === 0) {
+                    if (getName())
+                        this.client.echo('Client name: ' + getName(), -7, -8, true, true);
+                    else
+                        this.client.echo('Client name: Not set', -7, -8, true, true);
+                }
+                else if (args.length === 2) {
+                    i = parseInt(this.stripQuotes(this.parseInline(args[1])), 10);
+                    if (isNaN(i))
+                        throw new Error('Invalid id \'' + args[1] + '\' for name');
+                    args[0] = this.stripQuotes(this.parseInline(args[0]));
+                    this.client.emit('set-name', args[0], i);
+                    this.client.echo(`Client ${i} set to ${args[0]}`, -7, -8, true, true);
+                }
+                else {
+                    this.client.emit('set-name', this.stripQuotes(this.parseInline(args[0])));
+                    this.client.echo('Client name set to ' + getName(), -7, -8, true, true);
+                }
+                return null;
+            case 'clearna':
+            case 'clearname':
+                if (this.client.getOption('parseDoubleQuotes'))
+                    args.forEach((a) => {
+                        return a.replace(/^\"(.*)\"$/g, (v, e, w) => {
+                            return e.replace(/\\\"/g, '"');
+                        });
+                    });
+                if (this.client.getOption('parseSingleQuotes'))
+                    args.forEach((a) => {
+                        return a.replace(/^\'(.*)\'$/g, (v, e, w) => {
+                            return e.replace(/\\\'/g, '\'');
+                        });
+                    });
+                if (args.length > 2)
+                    throw new Error('Invalid syntax use ' + cmdChar + '\x1b[4mclearna\x1b[0;-11;-12mme \x1b[3mname or id');
+                else if (args.length === 0) {
+                    clearName();
+                    this.client.echo('Client name cleared', -7, -8, true, true);
+                }
+                else {
+                    name = this.parseInline(args[0]);
+                    i = parseInt(name, 10);
+                    if (isNaN(i))
+                        clearName(this.stripQuotes(name));
+                    else
+                        clearName(i);
+                    this.client.echo('Client ' + name + ' cleared', -7, -8, true, true);
+                }
+                return null;
+            case 'all':
+                if (args.length === 0)
+                    throw new Error('Invalid syntax use ' + cmdChar + 'all {commands}');
+                if (args[0].match(/^\{.*\}$/g))
+                    args = this.parseInline(args[0].substr(1, args[0].length - 2));
+                else
+                    args = args.join(' ');
+                if (args.length === 0)
+                    throw new Error('Missing commands argument');
+                (<any>this.client).sendAllBackground(this.parseInline(this.stripQuotes(args)), null, this.client.getOption('allowCommentsFromCommand'));
+                return null;
+            case 'to':
+                if (args.length < 2)
+                    throw new Error('Invalid syntax use ' + cmdChar + 'to name|id {commands}');
+                name = args[0];
+                args = args.slice(1);
+                if (name.match(/^\{.*\}$/g))
+                    name = name.substr(1, name.length - 2);
+                name = this.parseInline(this.stripQuotes(name));
+                if (args[0].match(/^\{.*\}$/g))
+                    args = this.parseInline(args[0].substr(1, args[0].length - 2));
+                else
+                    args = args.join(' ');
+                if (args.length === 0)
+                    throw new Error('Missing commands argument');
+                (<any>this.client).sendToBackground(name, this.parseInline(this.stripQuotes(args)), null, this.client.getOption('allowCommentsFromCommand'));
+                return null;
+            case 'raisedelayed':
+            case 'raisede':
+                if (args.length < 2)
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'raisede\x1b[0;-11;-12mlayed milliseconds name or \x1b[4m' + cmdChar + 'raisede\x1b[0;-11;-12mlayed milliseconds name arguments');
+                i = parseInt(this.stripQuotes(this.parseInline(args[0])), 10);
+                if (isNaN(i))
+                    throw new Error('Invalid number \'' + args[0] + '\' for raisedelayed');
+                if (i < 1)
+                    throw new Error('Must be greater then zero for raisedelayed');
+                args.shift();
+                if (this.client.getOption('parseDoubleQuotes'))
+                    args.forEach((a) => {
+                        return a.replace(/^\"(.*)\"$/g, (v, e, w) => {
+                            return e.replace(/\\\"/g, '"');
+                        });
+                    });
+                if (this.client.getOption('parseSingleQuotes'))
                     args.forEach((a) => {
                         return a.replace(/^\'(.*)\'$/g, (v, e, w) => {
                             return e.replace(/\\\'/g, '\'');
@@ -3110,8 +3284,12 @@ export class Input extends EventEmitter {
                 return null;
             case 'connect':
             case 'connecttime':
-                if (!this.client.connectTime)
-                    this.client.echo('Not connected', -7, -8, true, true);
+                if (!this.client.connectTime) {
+                    if (this.client.disconnectTime)
+                        this.client.echo('Disconnected since: ' + new moment(this.client.disconnectTime).format('MM/DD/YYYY hh:mm:ss A'), -7, -8, true, true);
+                    else
+                        this.client.echo('Not connected', -7, -8, true, true);
+                }
                 else
                     this.client.echo('You have been connected: ' + getTimeSpan(Date.now() - this.client.connectTime), -7, -8, true, true);
                 return null;
@@ -4238,10 +4416,16 @@ export class Input extends EventEmitter {
                     args = args.substr(1, args.length - 2);
                 if (n.length === 1) {
                     tmp = parseInt(n[0], 10);
+                    if (isNaN(tmp))
+                        throw new Error('Invalid loop range \'' + n[0] + '\' must be a number');
                     return this.executeForLoop(0, tmp, args);
                 }
                 tmp = parseInt(n[0], 10);
+                if (isNaN(tmp))
+                    throw new Error('Invalid loop min \'' + n[0] + '\' must be a number');
                 i = parseInt(n[1], 10);
+                if (isNaN(i))
+                    throw new Error('Invalid loop max \'' + n[1] + '\' must be a number');
                 if (tmp > i) tmp++;
                 else tmp--;
                 return this.executeForLoop(tmp, i, args);
@@ -4514,7 +4698,7 @@ export class Input extends EventEmitter {
                 if (args.length === 0)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'eva\x1b[0;-11;-12mluate expression');
                 args = this.evaluate(this.parseInline(args.join(' ')));
-                if (this.client.options.ignoreEvalUndefined && typeof args === 'undefined')
+                if (this.client.getOption('ignoreEvalUndefined') && typeof args === 'undefined')
                     args = '';
                 else
                     args = '' + args;
@@ -4566,7 +4750,7 @@ export class Input extends EventEmitter {
                 //skip trailing new lines
                 n = this.client.display.lines.length;
                 while (n-- && i) {
-                    if (this.client.display.lines[n].length)
+                    if (this.client.display.lines[n].text.length)
                         break;
                     i--;
                 }
@@ -4931,8 +5115,10 @@ export class Input extends EventEmitter {
                 else {
                     this.client.echo('Trigger state ' + n + ' fired state set to ' + trigger.triggers[n - 1].fired + '.', -7, -8, true, true);
                     //manual trigger fire it using set type
-                    if (trigger.enabled && trigger.triggers[n - 1].enabled && trigger.triggers[n - 1].type === SubTriggerTypes.Manual)
+                    if (trigger.enabled && trigger.triggers[n - 1].enabled && trigger.triggers[n - 1].type === SubTriggerTypes.Manual) {
+                        this._LastTriggered = '';
                         this.ExecuteTrigger(trigger, [], false, this._TriggerCache.indexOf(trigger), 0, 0, trigger);
+                    }
                 }
                 return null;
             case 'condition':
@@ -5129,14 +5315,14 @@ export class Input extends EventEmitter {
                     //handle \n and \r\n for windows and linux files
                     items = fs.readFileSync(f, 'utf8').split(/\r?\n/);
                     items.forEach(line => {
-                        this.client.sendBackground(p + line + i, null, this.client.options.allowCommentsFromCommand);
+                        this.client.sendBackground(p + line + i, null, this.client.getOption('allowCommentsFromCommand'));
                     });
                 }
                 else {
                     args = args.join(' ');
                     if (args.length === 0)
                         throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'se\x1b[0;-11;-12mnd file \x1b[3mprefix suffix\x1b[0;-11;-12m or \x1b[4m' + cmdChar + 'se\x1b[0;-11;-12mnd text');
-                    this.client.sendBackground(this.stripQuotes(args), this.client.options.allowCommentsFromCommand);
+                    this.client.sendBackground(this.stripQuotes(args), this.client.getOption('allowCommentsFromCommand'));
                 }
                 return null
             case 'sendraw':
@@ -5365,6 +5551,30 @@ export class Input extends EventEmitter {
                 this.createTrigger(item.pattern, item.commands, item.profile, item.options, item.name);
                 //#endregion
                 return null;
+            case 'wrap':
+            case 'wr':
+                //filter out empty arguments to avoid trailing spaces
+                args = args.filter(a => a);
+                if (args.length > 1)
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'wr\x1b[0;-11;-12map or \x1b[4m' + cmdChar + 'wr\x1b[0;-11;-12map number');
+                if (args.length === 0) {
+                    this.client.options.display.wordWrap = !this.client.getOption('display.wordWrap');
+                    this.client.display.wordWrap = this.client.getOption('display.wordWrap');
+                    this.client.saveOptions();
+                }
+                else {
+                    i = parseInt(this.parseInline(args[0]), 10);
+                    if (isNaN(i))
+                        throw new Error('Invalid number \'' + i + '\' for wrap');
+                    if (i < 0)
+                        throw new Error('Must be greater then or equal to zero for wrap');
+                    this.client.options.display.wordWrap = true;
+                    this.client.options.display.wrapAt = i;
+                    this.client.display.wordWrap = true;
+                    this.client.display.wrapAt = i;
+                    this.client.saveOptions();
+                }
+                return null;
         }
         if (fun.match(/^[-|+]?\d+$/)) {
             i = parseInt(fun, 10);
@@ -5454,28 +5664,28 @@ export class Input extends EventEmitter {
         let state = 0;
         //store as local vars to speed up parsing
         const aliases = this.client.aliases;
-        const stackingChar: string = this.client.options.commandStackingChar;
-        const spChar: string = this.client.options.speedpathsChar;
-        const ePaths: boolean = this.client.options.enableSpeedpaths;
-        const eCmd: boolean = this.client.options.enableCommands;
-        const cmdChar: string = this.client.options.commandChar;
-        const eEscape: boolean = this.client.options.allowEscape;
-        const escChar: string = this.client.options.escapeChar;
-        const verbatimChar: string = this.client.options.verbatimChar;
-        const eVerbatim: boolean = this.client.options.enableVerbatim;
-        const eParamEscape: boolean = this.client.options.enableDoubleParameterEscaping;
-        const paramChar: string = this.client.options.parametersChar;
-        const eParam: boolean = this.client.options.enableParameters;
-        const nParamChar: string = this.client.options.nParametersChar;
-        const eNParam: boolean = this.client.options.enableNParameters;
-        const varChar: string = this.client.options.variableChar;
-        const eVar: boolean = this.client.options.enableVariable;
-        const eEval: boolean = this.client.options.allowEval;
-        const iEval: boolean = this.client.options.ignoreEvalUndefined;
-        const iComments: boolean = this.client.options.enableInlineComments && !noComments;
-        const bComments: boolean = this.client.options.enableBlockComments && !noComments;
-        const iCommentsStr: string[] = this.client.options.inlineCommentString.split('');
-        const bCommentsStr: string[] = this.client.options.blockCommentString.split('');
+        const stackingChar: string = this.client.getOption('commandStackingChar');
+        const spChar: string = this.client.getOption('speedpathsChar');
+        const ePaths: boolean = this.client.getOption('enableSpeedpaths');
+        const eCmd: boolean = this.client.getOption('enableCommands');
+        const cmdChar: string = this.client.getOption('commandChar');
+        const eEscape: boolean = this.client.getOption('allowEscape');
+        const escChar: string = this.client.getOption('escapeChar');
+        const verbatimChar: string = this.client.getOption('verbatimChar');
+        const eVerbatim: boolean = this.client.getOption('enableVerbatim');
+        const eParamEscape: boolean = this.client.getOption('enableDoubleParameterEscaping');
+        const paramChar: string = this.client.getOption('parametersChar');
+        const eParam: boolean = this.client.getOption('enableParameters');
+        const nParamChar: string = this.client.getOption('nParametersChar');
+        const eNParam: boolean = this.client.getOption('enableNParameters');
+        const varChar: string = this.client.getOption('variableChar');
+        const eVar: boolean = this.client.getOption('enableVariable');        
+        const eEval: boolean = this.client.getOption('allowEval');
+        const iEval: boolean = this.client.getOption('ignoreEvalUndefined');
+        const iComments: boolean = this.client.getOption('enableInlineComments') && !noComments;
+        const bComments: boolean = this.client.getOption('enableBlockComments') && !noComments;
+        const iCommentsStr: string[] = this.client.getOption('inlineCommentString').split('');
+        const bCommentsStr: string[] = this.client.getOption('blockCommentString').split('');
         let args = [];
         let arg: any = '';
         let findAlias: boolean = true;
@@ -5491,8 +5701,8 @@ export class Input extends EventEmitter {
         let _pos: boolean = false;
         let _fall: boolean = false;
         let nest: number = 0;
-        const pd: boolean = this.client.options.parseDoubleQuotes;
-        const ps: boolean = this.client.options.parseSingleQuotes;
+        const pd: boolean = this.client.getOption('parseDoubleQuotes');
+        const ps: boolean = this.client.getOption('parseSingleQuotes');
 
         if (eAlias == null)
             eAlias = aliases.length > 0;
@@ -5503,9 +5713,9 @@ export class Input extends EventEmitter {
         if (stackingChar.length === 0)
             stacking = false;
         else if (stacking == null)
-            stacking = this.client.options.commandStacking;
+            stacking = this.client.getOption('commandStacking');
         else
-            stacking = stacking && this.client.options.commandStacking;
+            stacking = stacking && this.client.getOption('commandStacking');
 
         for (idx = 0; idx < tl; idx++) {
             c = text.charAt(idx);
@@ -6931,6 +7141,8 @@ export class Input extends EventEmitter {
         let notes;
         let c;
         switch (text) {
+            case 'clientid':
+                return getId();
             case 'esc':
                 return '\x1b';
             case 'cr':
@@ -6966,6 +7178,8 @@ export class Input extends EventEmitter {
             case 'selurl':
             case 'selline':
             case 'selword':
+            case 'action':
+            case 'trigger':
                 return this.vStack['$' + text] || window['$' + text] || '';
             case 'selected.lower':
             case 'selectedurl.lower':
@@ -6992,16 +7206,18 @@ export class Input extends EventEmitter {
             case 'selword.proper':
                 return ProperCase(this.vStack['$' + text.substr(0, text.length - 7)] || window['$' + text.substr(0, text.length - 7)]);
             case 'random':
-                return mathjs.randomInt(0, 100);
+                return mathjs().randomInt(0, 100);
             case 'charcomment':
             case 'charnotes':
-                c = ipcRenderer.sendSync('get-global', 'character') || '';
-                if (!c || !c.length) return '';
-                notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                notes = getCharacterNotes();
                 if (isFileSync(notes))
                     return fs.readFileSync(notes, 'utf-8');
                 return '';
+            case 'clientname':
+                return getName();
         }
+        if (WindowVariables.indexOf(text) !== -1)
+            return this.vStack['$' + text] || window['$' + text] || '';
         if (this.loops.length && text.length === 1) {
             let i = text.charCodeAt(0) - 105;
             if (i >= 0 && i < 18 && i < this.loops.length)
@@ -7015,7 +7231,7 @@ export class Input extends EventEmitter {
         let args;
         let min;
         let max;
-        let escape = this.client.options.allowEscape ? this.client.options.escapeChar : '';
+        let escape = this.client.getOption('allowEscape') ? this.client.getOption('escapeChar') : '';
         switch (res[1]) {
             case 'time':
                 if (res[2] && res[2].length > 0)
@@ -7035,7 +7251,7 @@ export class Input extends EventEmitter {
                 return ProperCase(this.stripQuotes(this.parseInline(res[2])));
             case 'eval':
                 args = this.evaluate(this.parseInline(res[2]));
-                if (this.client.options.ignoreEvalUndefined && typeof args === 'undefined')
+                if (this.client.getOption('ignoreEvalUndefined') && typeof args === 'undefined')
                     return null;
                 return '' + args;
             case 'dice':
@@ -7307,9 +7523,9 @@ export class Input extends EventEmitter {
                 args = this.parseInline(res[2]).split(',');
                 if (args.length === 0) throw new Error('Invalid random');
                 if (args.length === 1)
-                    return mathjs.randomInt(0, parseInt(args[0], 10) + 1);
+                    return mathjs().randomInt(0, parseInt(args[0], 10) + 1);
                 else if (args.length === 2)
-                    return mathjs.randomInt(parseInt(args[0], 10), parseInt(args[1], 10) + 1);
+                    return mathjs().randomInt(parseInt(args[0], 10), parseInt(args[1], 10) + 1);
                 else
                     throw new Error('Too many arguments for random');
             case 'case': //case(index,n1,n2...)
@@ -7691,55 +7907,55 @@ export class Input extends EventEmitter {
                 return 0;
             case 'escape':
                 args = this.stripQuotes(this.parseInline(res[2]));
-                if (this.client.options.allowEscape) {
+                if (this.client.getOption('allowEscape')) {
                     c = escape;
                     if (escape === '\\')
                         c += escape;
-                    if (this.client.options.parseDoubleQuotes)
+                    if (this.client.getOption('parseDoubleQuotes'))
                         c += '"';
-                    if (this.client.options.parseSingleQuotes)
+                    if (this.client.getOption('parseSingleQuotes'))
                         c += '\'';
-                    if (this.client.options.commandStacking)
-                        c += this.client.options.commandStackingChar;
-                    if (this.client.options.enableSpeedpaths)
-                        c += this.client.options.speedpathsChar;
-                    if (this.client.options.enableCommands)
-                        c += this.client.options.commandChar;
-                    if (this.client.options.enableVerbatim)
-                        c += this.client.options.verbatimChar;
-                    if (this.client.options.enableDoubleParameterEscaping)
-                        c += this.client.options.parametersChar;
-                    if (this.client.options.enableNParameters)
-                        c += this.client.options.nParametersChar;
-                    if (this.client.options.enableVariable)
-                        c += this.client.options.variableChar;
+                    if (this.client.getOption('commandStacking'))
+                        c += this.client.getOption('commandStackingChar');
+                    if (this.client.getOption('enableSpeedpaths'))
+                        c += this.client.getOption('speedpathsChar');
+                    if (this.client.getOption('enableCommands'))
+                        c += this.client.getOption('commandChar');
+                    if (this.client.getOption('enableVerbatim'))
+                        c += this.client.getOption('verbatimChar');
+                    if (this.client.getOption('enableDoubleParameterEscaping'))
+                        c += this.client.getOption('parametersChar');
+                    if (this.client.getOption('enableNParameters'))
+                        c += this.client.getOption('nParametersChar');
+                    if (this.client.getOption('enableVariable'))
+                        c += this.client.getOption('variableChar');
                     return args.replace(new RegExp(`[${c}]`, 'g'), escape + '$&');
                 }
                 return args.replace(/[\\"']/g, '\$&');
             case 'unescape':
                 args = this.stripQuotes(this.parseInline(res[2]));
-                if (this.client.options.allowEscape) {
+                if (this.client.getOption('allowEscape')) {
                     c = escape;
                     if (escape === '\\')
                         c += escape;
-                    if (this.client.options.parseDoubleQuotes)
+                    if (this.client.getOption('parseDoubleQuotes'))
                         c += '"';
-                    if (this.client.options.parseSingleQuotes)
+                    if (this.client.getOption('parseSingleQuotes'))
                         c += '\'';
-                    if (this.client.options.commandStacking)
-                        c += this.client.options.commandStackingChar;
-                    if (this.client.options.enableSpeedpaths)
-                        c += this.client.options.speedpathsChar;
-                    if (this.client.options.enableCommands)
-                        c += this.client.options.commandChar;
-                    if (this.client.options.enableVerbatim)
-                        c += this.client.options.verbatimChar;
-                    if (this.client.options.enableDoubleParameterEscaping)
-                        c += this.client.options.parametersChar;
-                    if (this.client.options.enableNParameters)
-                        c += this.client.options.nParametersChar;
-                    if (this.client.options.enableVariable)
-                        c += this.client.options.variableChar;
+                    if (this.client.getOption('commandStacking'))
+                        c += this.client.getOption('commandStackingChar');
+                    if (this.client.getOption('enableSpeedpaths'))
+                        c += this.client.getOption('speedpathsChar');
+                    if (this.client.getOption('enableCommands'))
+                        c += this.client.getOption('commandChar');
+                    if (this.client.getOption('enableVerbatim'))
+                        c += this.client.getOption('verbatimChar');
+                    if (this.client.getOption('enableDoubleParameterEscaping'))
+                        c += this.client.getOption('parametersChar');
+                    if (this.client.getOption('enableNParameters'))
+                        c += this.client.getOption('nParametersChar');
+                    if (this.client.getOption('enableVariable'))
+                        c += this.client.getOption('variableChar');
                     if (escape === '\\')
                         return args.replace(new RegExp(`\\\\[${c}]`, 'g'), (m) => m.substr(1));
                     return args.replace(new RegExp(`${escape}[${c}]`, 'g'), (m) => m.substr(1));
@@ -7879,20 +8095,15 @@ export class Input extends EventEmitter {
             case 'charcomment':
                 args = this.splitByQuotes(this.parseInline(res[2]), ',');
                 if (args.length === 0) {
-                    c = ipcRenderer.sendSync('get-global', 'character') || '';
-                    if (!c || !c.length) return '';
-                    notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                    notes = getCharacterNotes();
                     if (isFileSync(notes))
                         return fs.readFileSync(notes, 'utf-8');
                     return '';
                 }
                 else if (args.length > 1)
                     throw new Error('Too many arguments for charcomment');
-                if (this.client.options.allowEval) return null;
-                c = ipcRenderer.sendSync('get-global', 'character') || '';
-                if (!c || !c.length) return null;
-                args[0] = this.stripQuotes(args[0], true);
-                notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                if (this.client.getOption('allowEval')) return null;
+                notes = getCharacterNotes();
                 if (args[0].length === 0 || !isFileSync(notes))
                     fs.writeFileSync(notes, '');
                 else if (!fileSizeSync(notes))
@@ -7903,21 +8114,32 @@ export class Input extends EventEmitter {
             case 'charnotes':
                 args = this.splitByQuotes(this.parseInline(res[2]), ',');
                 if (args.length === 0) {
-                    c = ipcRenderer.sendSync('get-global', 'character') || '';
-                    if (!c || !c.length) return '';
-                    notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
+                    notes = getCharacterNotes();
                     if (isFileSync(notes))
                         return fs.readFileSync(notes, 'utf-8');
                     return '';
                 }
                 else if (args.length > 1)
                     throw new Error('Too many arguments for charnotes');
-                if (this.client.options.allowEval) return null;
-                c = ipcRenderer.sendSync('get-global', 'character') || '';
-                if (!c || !c.length) return null;
+                if (this.client.getOption('allowEval')) return null;
+                notes = getCharacterNotes();
                 args[0] = this.stripQuotes(args[0], true);
-                notes = path.join(parseTemplate('{data}'), 'characters', c + '.notes');
                 fs.writeFileSync(notes, args[0]);
+                return null;
+            case 'clientname':
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
+                if (args.length === 0)
+                    return getName();
+                else if (args.length === 1)
+                    this.client.emit('set-name', args[0]);
+                else if (args.length === 2) {
+                    c = parseInt(args[1], 10);
+                    if (isNaN(1))
+                        throw new Error('Invalid argument 2 \'' + args[0] + '\' must be a number for clientname');
+                    this.client.emit('set-name', args[0], args[1]);
+                }
+                else
+                    throw new Error('Too many arguments for clientname');
                 return null;
         }
         return null;
@@ -7996,7 +8218,7 @@ export class Input extends EventEmitter {
         //Convert to string
         if (typeof ret !== 'string')
             ret = ret.toString();
-        if (ret.length === 0 && !this.client.options.returnNewlineOnEmptyValue)
+        if (ret.length === 0 && !this.client.getOption('returnNewlineOnEmptyValue'))
             return null;
         if (ret.endsWith('\n'))
             return ret;
@@ -8005,7 +8227,7 @@ export class Input extends EventEmitter {
 
     public ProcessMacros(keycode, alt, ctrl, shift, meta) {
         if (!keycode || (keycode > 9 && keycode < 19)) return false;
-        //if(!this.client.options.enableMacros) return false;
+        //if(!this.client.getOption('enableMacros')) return false;
         //Possible cache by modifier but  not sure if it it matters as there is a limit of 1 macro per key combo so at most there probably wont be more then 5 to maybe 20 macros per key
         //const macros = this._MacroCache[`${keycode}_${mod}`] || (this._MacroCache[`${keycode}_${mod}`] = FilterArrayByKeyValue(FilterArrayByKeyValue(this.client.macros, 'key', keycode), 'modifiers', mod));
         const macros = this._MacroCache[keycode] || (this._MacroCache[keycode] = FilterArrayByKeyValue(this.client.macros, 'key', keycode));
@@ -8068,20 +8290,20 @@ export class Input extends EventEmitter {
         //Convert to string
         if (typeof ret !== 'string')
             ret = ret.toString();
-        if (ret.length === 0 && !this.client.options.returnNewlineOnEmptyValue)
+        if (ret.length === 0 && !this.client.getOption('returnNewlineOnEmptyValue'))
             return null;
         if (macro.send) {
             if (!ret.endsWith('\n'))
                 ret += '\n';
-            if (macro.chain && this.client.commandInput.val().endsWith(' ')) {
-                this.client.commandInput.val(this.client.commandInput.val() + ret);
-                this.client.sendCommand(null, null, this.client.options.allowCommentsFromCommand);
+            if (macro.chain && this.client.commandInput.value.endsWith(' ')) {
+                this.client.commandInput.value = this.client.commandInput.value + ret;
+                this.client.sendCommand(null, null, this.client.getOption('allowCommentsFromCommand'));
             }
             else
                 this.client.send(ret, true);
         }
         else if (macro.append)
-            this.client.commandInput.val(this.client.commandInput.val() + ret);
+            this.client.commandInput.value = this.client.commandInput.value + ret;
         return true;
     }
 
@@ -8204,19 +8426,19 @@ export class Input extends EventEmitter {
     public ExecutePath() {
         //if already running or no queue bail
         if (this._pathTimeout || !this._pathQueue.length || this._pathPaused) return;
-        let delay = this.client.options.pathDelay;
+        let delay = this.client.getOption('pathDelay');
         if (delay < 0) delay = 0;
         //being processing query
         this._pathTimeout = setTimeout(() => {
-            const pPath = this.client.options.parseSpeedpaths;
-            const ePath = this.client.options.echoSpeedpaths;
-            let cnt = this.client.options.pathDelayCount;
+            const pPath = this.client.getOption('parseSpeedpaths');
+            const ePath = this.client.getOption('echoSpeedpaths');
+            let cnt = this.client.getOption('pathDelayCount');
             if (cnt < 1) cnt = 1;
             const current = this._pathQueue[0];
             /*
             if (!current.previous.length) {
-                if (this.client.telnet.echo && this.client.options.commandEcho)
-                    this.client.echo(this.client.options.speedpathsChar + current.id);
+                if (this.client.telnet.echo && this.client.getOption('commandEcho'))
+                    this.client.echo(this.client.getOption('speedpathsChar') + current.id);
                 else
                     this.client.echo('\n');
             }
@@ -8344,7 +8566,7 @@ export class Input extends EventEmitter {
                 }
                 //changed state save
                 if (changed) {
-                    if (this.client.options.saveTriggerStateChanges)
+                    if (this.client.getOption('saveTriggerStateChanges'))
                         this.client.saveProfile(parent.profile.name, true, ProfileSaveType.Trigger);
                     this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
                 }
@@ -8439,7 +8661,8 @@ export class Input extends EventEmitter {
                         }
                         else if (states[t].loop !== -1 && states[t].lineCount < 1)
                             continue;
-                        val = this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], ret, t, [(trigger.raw ? raw : line)], 0, parent);
+                        this._LastTriggered = (trigger.raw ? raw : line);
+                        val = this.ExecuteTrigger(trigger, [this._LastTriggered], ret, t, [this._LastTriggered], 0, parent);
                     }
                     else {
                         //this.updateTriggerState(trigger, t);
@@ -8464,7 +8687,8 @@ export class Input extends EventEmitter {
                         }
                         continue;
                     }
-                    val = this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], ret, t, [(trigger.raw ? raw : line)], 0, parent);
+                    this._LastTriggered = (trigger.raw ? raw : line);
+                    val = this.ExecuteTrigger(trigger, [this._LastTriggered], ret, t, [this._LastTriggered], 0, parent);
                 }
                 else {
                     let re;
@@ -8488,15 +8712,16 @@ export class Input extends EventEmitter {
                         continue;
                     }
                     let args;
-                    if ((trigger.raw ? raw : line) === res[0] || !this.client.options.prependTriggeredLine)
+                    this._LastTriggered = trigger.raw ? raw : line;
+                    if ((trigger.raw ? raw : line) === res[0] || !this.client.getOption('prependTriggeredLine'))
                         args = res;
                     else {
-                        args = [(trigger.raw ? raw : line), ...res];
+                        args = [this._LastTriggered, ...res];
                         args.indices = [[0, args[0].length], ...res.indices];
                     }
                     if (res.groups)
                         Object.keys(res.groups).map(v => this.client.setVariable(v, res.groups[v]));
-                    val = this.ExecuteTrigger(trigger, args, ret, t, [trigger.raw ? raw : line, re], res.groups, parent);
+                    val = this.ExecuteTrigger(trigger, args, ret, t, [this._LastTriggered, re], res.groups, parent);
                 }
                 if (states[t] && states[t].reParse) {
                     if (!states[t].type || states[t].type === SubTriggerTypes.ReParse || states[t].type === SubTriggerTypes.ReParsePattern)
@@ -8508,14 +8733,14 @@ export class Input extends EventEmitter {
                 else if (ret) return val;
             }
             catch (e) {
-                if (this.client.options.disableTriggerOnError) {
+                if (this.client.getOption('disableTriggerOnError')) {
                     trigger.enabled = false;
                     setTimeout(() => {
                         this.client.saveProfile(parent.profile.name, false, ProfileSaveType.Trigger);
                         this.emit('item-updated', 'trigger', parent.profile, parent.profile.triggers.indexOf(parent), parent);
                     });
                 }
-                if (this.client.options.showScriptErrors)
+                if (this.client.getOption('showScriptErrors'))
                     this.client.error(e);
                 else
                     this.client.debug(e);
@@ -8545,7 +8770,8 @@ export class Input extends EventEmitter {
                     }
                     return t;
                 }
-                val = this.ExecuteTrigger(trigger, [(trigger.raw ? raw : line)], false, t, [(trigger.raw ? raw : line)], 0, parent);
+                this._LastTriggered = (trigger.raw ? raw : line);
+                val = this.ExecuteTrigger(trigger, [this._LastTriggered], false, t, [this._LastTriggered], 0, parent);
             }
             else {
                 let re;
@@ -8569,27 +8795,28 @@ export class Input extends EventEmitter {
                     return t;
                 }
                 let args;
-                if ((trigger.raw ? raw : line) === res[0] || !this.client.options.prependTriggeredLine)
+                this._LastTriggered = (trigger.raw ? raw : line);
+                if ((trigger.raw ? raw : line) === res[0] || !this.client.getOption('prependTriggeredLine'))
                     args = res;
                 else {
-                    args = [(trigger.raw ? raw : line), ...res];
+                    args = [this._LastTriggered, ...res];
                     args.indices = [[0, args[0].length], ...res.indices];
                 }
                 if (res.groups)
                     Object.keys(res.groups).map(v => this.client.variables[v] = res.groups[v]);
-                val = this.ExecuteTrigger(trigger, args, false, t, [trigger.raw ? raw : line, re], res.groups, parent);
+                val = this.ExecuteTrigger(trigger, args, false, t, [this._LastTriggered, re], res.groups, parent);
             }
             t = this.cleanUpTriggerState(t);
         }
         catch (e) {
-            if (this.client.options.disableTriggerOnError) {
+            if (this.client.getOption('disableTriggerOnError')) {
                 trigger.enabled = false;
                 setTimeout(() => {
                     this.client.saveProfile(parent.profile.name, false, ProfileSaveType.Trigger);
                     this.emit('item-updated', 'trigger', parent.profile, parent.profile.triggers.indexOf(parent), parent);
                 });
             }
-            if (this.client.options.showScriptErrors)
+            if (this.client.getOption('showScriptErrors'))
                 this.client.error(e);
             else
                 this.client.debug(e);
@@ -8707,13 +8934,13 @@ export class Input extends EventEmitter {
         //Convert to string
         if (typeof ret !== 'string')
             ret = ret.toString();
-        if (ret.length === 0 && !this.client.options.returnNewlineOnEmptyValue)
+        if (ret.length === 0 && !this.client.getOption('returnNewlineOnEmptyValue'))
             return null;
         if (!ret.endsWith('\n'))
             ret += '\n';
         if (this.client.connected)
             this.client.telnet.sendData(ret);
-        if (this.client.telnet.echo && this.client.options.commandEcho) {
+        if (this.client.telnet.echo && this.client.getOption('commandEcho')) {
             const delay = function () {
                 this.client.echo(ret);
             };
@@ -8753,7 +8980,7 @@ export class Input extends EventEmitter {
         if (parent.state > parent.triggers.length)
             parent.state = 0;
         //changed state save
-        if (this.client.options.saveTriggerStateChanges)
+        if (this.client.getOption('saveTriggerStateChanges'))
             this.client.saveProfile(parent.profile.name, true, ProfileSaveType.Trigger);
         this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
         //is new subtype a reparse? if so reparse using current trigger instant
@@ -9050,7 +9277,7 @@ export class Input extends EventEmitter {
                 }
                 //changed state save
                 if (changed) {
-                    if (this.client.options.saveTriggerStateChanges)
+                    if (this.client.getOption('saveTriggerStateChanges'))
                         this.client.saveProfile(parent.profile.name, true, ProfileSaveType.Trigger);
                     this.client.emit('item-updated', 'trigger', parent.profile.name, parent.profile.triggers.indexOf(parent), parent);
                 }
@@ -9060,12 +9287,13 @@ export class Input extends EventEmitter {
             if (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) {
                 const val = this.adjustLastLine(this.client.display.lines.length, true);
                 const line = this.client.display.lines[val];
-                t = this.TestTrigger(trigger, parent, t, line, this.client.display.rawLines[val] || line, val === this.client.display.lines.length - 1);
+                t = this.TestTrigger(trigger, parent, t, line, this.client.display.lines[val].raw || line, val === this.client.display.lines.length - 1);
                 continue;
             }
             if (trigger.type !== TriggerType.Event) continue;
             if (trigger.caseSensitive && event !== trigger.pattern) continue;
             if (!trigger.caseSensitive && event.toLowerCase() !== trigger.pattern.toLowerCase()) continue;
+            this._LastTriggered = event;
             this.ExecuteTrigger(trigger, args, false, t, 0, 0, parent);
             t = this.cleanUpTriggerState(t);
         }
@@ -9118,7 +9346,7 @@ export class Input extends EventEmitter {
             if (trigger.type === SubTriggerTypes.ReParse || trigger.type === SubTriggerTypes.ReParsePattern) {
                 const val = this.adjustLastLine(this.client.display.lines.length, true);
                 const line = this.client.display.lines[val];
-                t = this.TestTrigger(trigger, parent, t, line, this.client.display.rawLines[val] || line, val === this.client.display.lines.length - 1);
+                t = this.TestTrigger(trigger, parent, t, line, this.client.display.lines[val].raw || line, val === this.client.display.lines.length - 1);
                 continue;
             }
             if (trigger.type !== TriggerType.Expression) continue;
@@ -9166,20 +9394,20 @@ export class Input extends EventEmitter {
         if (!str) return '';
         let lines;
         /*
-        if (this.client.options.commandStacking && this.client.options.commandStackingChar && this.client.options.commandStackingChar.length > 0)
-            lines = str.split(new RegExp('\n|' + this.client.options.commandStackingChar));
+        if (this.client.getOption('commandStacking') && this.client.getOption('commandStackingChar') && this.client.getOption('commandStackingChar').length > 0)
+            lines = str.split(new RegExp('\n|' + this.client.getOption('commandStackingChar')));
         else
             lines = str.split('\n');
         */
-        if (this.client.options.commandStacking && this.client.options.commandStackingChar && this.client.options.commandStackingChar.length > 0)
-            lines = str.splitQuote('\n' + this.client.options.commandStackingChar);
+        if (this.client.getOption('commandStacking') && this.client.getOption('commandStackingChar') && this.client.getOption('commandStackingChar').length > 0)
+            lines = str.splitQuote('\n' + this.client.getOption('commandStackingChar'));
         else
             lines = str.splitQuote('\n');
         let l = 0;
         const ll = lines.length;
         const code = [];
         const b = [];
-        const cmdChar = this.client.options.commandChar;
+        const cmdChar = this.client.getOption('commandChar');
         for (; l < ll; l++) {
             if (lines[l].trim().startsWith(cmdChar + 'wait ')) {
                 code.push('setTimeout(()=> {');
@@ -9203,11 +9431,11 @@ export class Input extends EventEmitter {
     public stripQuotes(str: string, force?: boolean, forceSingle?: boolean) {
         if (!str || str.length === 0)
             return str;
-        if (force || this.client.options.parseDoubleQuotes)
+        if (force || this.client.getOption('parseDoubleQuotes'))
             str = str.replace(/^\"(.*)\"$/g, (v, e, w) => {
                 return e.replace(/\\\"/g, '"');
             });
-        if (forceSingle || this.client.options.parseSingleQuotes)
+        if (forceSingle || this.client.getOption('parseSingleQuotes'))
             str = str.replace(/^\'(.*)\'$/g, (v, e, w) => {
                 return e.replace(/\\\'/g, '\'');
             });
@@ -9219,15 +9447,15 @@ export class Input extends EventEmitter {
         let e = 0;
         if (!str || str.length === 0)
             return str;
-        if (force || this.client.options.parseDoubleQuotes) {
+        if (force || this.client.getOption('parseDoubleQuotes')) {
             t |= 2;
-            e |= this.client.options.allowEscape ? 2 : 0;
+            e |= this.client.getOption('allowEscape') ? 2 : 0;
         }
-        if (forceSingle || this.client.options.parseSingleQuotes) {
+        if (forceSingle || this.client.getOption('parseSingleQuotes')) {
             t |= 1;
-            e |= this.client.options.allowEscape ? 1 : 0;
+            e |= this.client.getOption('allowEscape') ? 1 : 0;
         }
-        return splitQuoted(str, sep, t, e, this.client.options.escapeChar);
+        return splitQuoted(str, sep, t, e, this.client.getOption('escapeChar'));
     }
 
     public createTrigger(pattern: string, commands: string, profile?: string | Profile, options?, name?: string, subTrigger?: boolean) {
@@ -9571,5 +9799,4 @@ export class Input extends EventEmitter {
             }
         }
     }
-
 }

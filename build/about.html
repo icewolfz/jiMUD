@@ -6,6 +6,7 @@
     <title>jiMUD</title>
     <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
     <style type="text/css">
         body {
             text-align: center;
@@ -161,7 +162,9 @@
     <script type="text/javascript">
         //spellchecker:ignore Wakeups
         const { version } = require('../package.json');
-        const { ipcRenderer } = require('electron');
+        const { shell, ipcRenderer } = require('electron');
+        const { parseTemplate } = require('./js/library');
+        const path = require('path');
 
         var resources;
         //function formatBytes(a,b){if(0==a)return"0 Bytes";var c=1e3,d=b||2,e=["Bytes","KB","MB","GB","TB","PB","EB","ZB","YB"],f=Math.floor(Math.log(a)/Math.log(c));return parseFloat((a/Math.pow(c,f)).toFixed(d))+" "+e[f];}
@@ -170,8 +173,12 @@
             $('#nv').text(process.versions.node);
             $('#cv').text(process.versions.chrome);
             $('#logo-version').text('v' + version);
+            $('#dataPath').text(parseTemplate('{data}'));
+            $('#profilesPath').text(parseTemplate('{profiles}'));
+            $('#charactersPath').text(parseTemplate('{characters}'));
+            $('#themesPath').text(parseTemplate(path.join('{data}', 'themes')));
             resources = document.getElementById('resourcesRows');
-            if (ipcRenderer.sendSync('get-global', 'editorOnly'))
+            if (window.getGlobal('editorOnly'))
                 $('#logo-editor').css('display', 'block');
             updateMemory();
             setInterval(updateMemory, 1000);
@@ -183,11 +190,15 @@
         });
 
         function formatMemory(amt) {
-            if(!amt)
+            if (!amt)
                 return '0K';
             if (amt > 1024)
                 return (amt / 1024).toLocaleString(0, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + 'M';
             return amt.toLocaleString(0, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + 'K';
+        }
+
+        function openFolder(folder) {
+            shell.openPath(parseTemplate(folder));
         }
 
         function updateMemory() {
@@ -233,6 +244,7 @@
         <ul class="nav nav-tabs" role="tablist">
             <li role="presentation" class="active"><a href="#general" aria-controls="general" role="tab" data-toggle="tab">General</a></li>
             <li role="presentation"><a href="#resources" aria-controls="resources" role="tab" data-toggle="tab">Resources</a></li>
+            <li role="presentation"><a href="#paths" aria-controls="paths" role="tab" data-toggle="tab">Paths</a></li>
         </ul>
 
         <div class="tab-content">
@@ -256,6 +268,40 @@
                     <tbody id="resourcesRows">
                     </tbody>
                 </table>
+            </div>
+            <div role="tabpanel" class="tab-pane fade" id="paths">
+                <div class="col-sm-12" style="margin-bottom: 10px;margin-top:10px">
+                    <div style="font-weight: bold;border-bottom: 1px solid black;margin-bottom: 5px;padding-bottom: 5px;">Data folder
+                        <button style="float: right" type="button" class="btn btn-default btn-xs" title="Open data folder..." onclick="openFolder('{data}')">
+                            <i class="fa fa-folder-o"></i>
+                        </button>
+                    </div>
+                    <span id="dataPath"></span>
+                </div>
+                <div class="col-sm-12" style="margin-bottom: 10px;">
+                    <div style="font-weight: bold;border-bottom: 1px solid black;margin-bottom: 5px;padding-bottom: 5px;">Profiles folder
+                        <button style="float: right" type="button" class="btn btn-default btn-xs" title="Open profiles folder..." onclick="openFolder('{profiles}')">
+                            <i class="fa fa-folder-o"></i>
+                        </button>
+                    </div>
+                    <span id="profilesPath"></span>
+                </div>
+                <div class="col-sm-12" style="margin-bottom: 10px;">
+                    <div style="font-weight: bold;border-bottom: 1px solid black;margin-bottom: 5px;padding-bottom: 5px;">Characters folder
+                        <button style="float: right" type="button" class="btn btn-default btn-xs" title="Open characters folder..." onclick="openFolder('{characters}')">
+                            <i class="fa fa-folder-o"></i>
+                        </button>
+                    </div>
+                    <span id="charactersPath"></span>
+                </div>
+                <div class="col-sm-12" style="margin-bottom: 10px;">
+                    <div style="font-weight: bold;border-bottom: 1px solid black;margin-bottom: 5px;padding-bottom: 5px;">User themes folder
+                        <button style="float: right" type="button" class="btn btn-default btn-xs" title="Open user themes folder..." onclick="openFolder(path.join('{data}', 'themes'))">
+                            <i class="fa fa-folder-o"></i>
+                        </button>
+                    </div>
+                    <span id="themesPath"></span>
+                </div>
             </div>
         </div>
     </div>

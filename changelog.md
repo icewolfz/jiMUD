@@ -8,6 +8,161 @@
     - Assign values as a single line
   - Add [#TEMPVAR](docs/commands.md#createmodify-profile-or-item) to create session only variables
 
+## 1.0.0-alpha
+
+- **New:**
+  - New Multiple Document Interface:
+    - Allows multiple clients to be docked in one window with tabbed interface or separate windows
+    - Full drag and drop support between windows of the same instance
+    - Color coded tabs based on client activity
+    - Tab icons based on main or dev connection
+    - Overall reduced memory and performance speed ups
+    - Remembers all last open clients and child windows
+    - Can save current layout to be loaded as it was saved
+    - Changed how child windows interact with clients to improve between window lag
+  - Character manager:
+    - Now uses sqlite as backend
+    - Reduced memory and load times
+    - Tracks connection time
+    - Keeps last connected date
+    - Import old character manager data and rename old to .bak
+      - Name is now the only way to set login name, the text displayed in the list is now just a display title for easy sorting
+      - Notes is now a tracked file path like settings and map and can be changed by the user
+      - All new characters will use a unique generated id number instead of title or name for data files to prevent sharing files by default
+    - New toolbar buttons to open characters or profiles folder
+  - Command line arguments:
+    - Added [-l/--layout](docs/README.md) to allow loading of a saved layout
+    - Added [-il/--ignore-layout](docs/README.md) to ignore loading last used layout or --layout
+    - Added [-el/--error-log](docs/README.md) to allow setting custom error log files
+    - `-data-dir` now supports relative paths and will attempt to resolve them based on the current working directory of the application
+  - Preferences:
+    - Preferences now uses an inherit system of Default < Global < Client, where it will drill down to default depending if the client or global values are not set, this system allows you to set the global value and all clients will use that setting unless they have already set it
+    - `Show add new button next to tabs` add a button to allow creation of new connections from tab strip, *Global preference* 
+    - `Lock layout` saving only the last known global window states and preserve the previous saved windows and clients opened, *Global preference*
+    - `Load layout on open` set a layout file to use when loading client, *Global preference*
+    - `Use only single instance` Allow only one instance of the application to open, *Global preference*
+    - `On second instance` What to do whe na second instance is opened when `Use only single instance` is enabled and no command line arguments passed, *Global preference*
+    - `Display control codes` Display unreadable characters, code < 32 || 127 as visual characters
+    - `Emulate terminal extended characters` Enable/disable Terminal IBM/OEM (code page 437) extended characters, will convert them to the correct unicode character in an attempt to display like classic terminal
+    - `Emulate control codes` Emulate control codes: bell, tab, backspace, escape
+    - `Clear advanced editor on send` clear the advanced editor after sending text to the mud
+    - `Close advanced editor on send` close the advanced editor after sending text to the mud, **Note** If Persistent is enabled this will merely hide the editor until next use
+    - `Word wrap` wrap long lines of text, added for chat and main display
+    - `Word wrap column` wrap lines at a fixed character column, added for chat and main display
+    - `word wrap indent` indent wrapped line with the set amount of spaces, added for chat and main display
+    - `Expression engine` Which expression engine to use when executing expressions, this changes how mathjs library is executed
+    - `Initialize expression engine on load` Initialize the expression engine on client load instead of on first use, enabling this can cause client to load slower but can speed up first use of an expression
+    - `Character manager on row double click load in:` Determine how to load a character when a row is doubled clicked in character manager
+  - `#connecttime` now displays last disconnect time when possible if disconnected
+  - Chat:
+    - Window display now uses global theme for display scroll bars
+    - Title bar now displays connected character name when possible
+    - All internal errors should now be logged to error log file
+    - Add ability to scroll lock the screen using a toggle button or scroll lock key
+    - Find dialog settings are now saved and restored
+  - Add [#WINDOW](docs/commands.md) close and new argument support
+  - Add [#CLOSE](docs/commands.md) close an open window
+  - Add [#ALL](docs/commands.md) send commands to all client windows as if sent from command line
+  - Add [#TAB](docs/commands.md) Create a new client tab in current window
+  - Add [#NAME](docs/commands.md) Set name for current tab or client id
+  - Add [#ID](docs/commands.md) Display client id
+  - Add [#CLEARNAME](docs/commands.md) clear current tab or client id's name
+  - Add [#TO](docs/commands.md) Send commands to target client name/id
+  - Add [#WRAP](docs/commands.md) Toggle word wrap and set the wrap column to number if supplied, if number is 0 disables wrap at column
+  - Add [client.id](docs/scripting.md) return client id
+  - Add [client.setName](docs/scripting.md) set client name
+  - Add [client.getName](docs/scripting.md) return client name
+  - Add [client.clearName](docs/scripting.md) clear client name
+  - Add [client.sendAll](docs/scripting.md) for scripting to send text to mud for all client windows
+  - Add [client.sendAllRaw](docs/scripting.md) for scripting to send raw text to mud for all client windows
+  - Add [client.sendAllCommand](docs/scripting.md) for scripting to send command to all client windows
+  - Add [client.sendAllBackground](docs/scripting.md) for scripting to send command to all client windows
+  - Add [client.sendTo](docs/scripting.md) for scripting to send text to mud for all client windows
+  - Add [client.sendToRaw](docs/scripting.md) for scripting to send raw text to mud for all client windows
+  - Add [client.sendToCommand](docs/scripting.md) for scripting to send command to all client windows
+  - Add [client.sendToBackground](docs/scripting.md) for scripting to send command to all client windows  
+  - Add [client.closeWindow](docs/scripting.md) for scripting to close an open window/tab
+  - Add [${clientid}](docs/functions#predefined-variables) return current client id
+  - Add [${clientname}](docs/functions#predefined-variables) return current client name
+  - Add [%clientname(*name*, *id*)](docs/functions.md#miscellaneous) Return or set the client name
+  - Add [$action](docs/functions#predefined-variables) Last triggered action executed
+  - Add [$trigger](docs/functions#predefined-variables) Last text, event, or pattern that caused last trigger to fire  
+  - Add [$caption](docs/functions#predefined-variables) returns the executing item's caption, only set for buttons and context menu items
+  - Add [$characterid](docs/functions#predefined-variables) returns current character id for client
+  - Mapper:
+    - Room editor panel is now resizable
+    - Title bar now displays connected character name when possible
+    - All internal errors should now be logged to error log file
+  - Immortal tools:
+    - File overwrite system has been added for all but uploading paths
+    - Title bar now displays connected character name when possible
+  - Advanced editor, Skills, Profile manager, Command history:
+    - Title bar now displays connected character name when possible
+  - Add tab character width control for main and chat display
+  - Profile manager:
+    - All internal errors should now be logged to error log file
+    - File item to open profile folder
+  - Log viewer: All internal errors should now be logged to error log file
+  - Find dialog is now movable to allow you to see text under it if need be
+  - Add `{profiles}` to path parsing to allow using profiles folder easier
+  - About: Add path tab that list data, profiles, and character paths with buttons to directly open them
+- **Fixed:**
+  - Fixed --data-dir by normalizing the path to ensure all / and \ are correct for target os
+  - Fixed a bug in parsing #command arguments and quotes
+  - Immortal tools:
+    - Fixed issue with multiple events not correctly working
+    - Fixed issue when remote path was cut and it force updated the file list
+    - Fixed corruption issue when attempting to get multiple directory listings at once, now queues directory calls and updates as needed
+  - Profile manager:
+    - Fixed code editor spell checking replacement
+    - Fixed treeview checkboxes for none selected items effecting selected item
+  - Fixed #wait error when followed by trailing whitespace
+  - Profiles: Fixed loading of copied profile data files not correctly loading
+  - Code editor:
+    - Fixed upload cancel button
+    - Fixed Area designer/Virtual area property drop downs shifting editors
+  - Display:
+    - Fixed MXP image hspace and vspace parsing
+    - Fixed window character height and width smaller then should be
+    - Fixed not tracking highlight all setting for find
+    - Fixed scroll to end state when window resized or large amount of text added when non split view enabled
+    - Fixed display control character unicode symbol being wrong ones
+    - Fixed finder current overlay to display correctly when highlight all enabled
+    - Fixed finder regular expression button being set to active in correctly
+    - Fixed toggle split view button/scroll corner losing text selection when clicked
+    - Fixed link not styling overline, strike-though, and related combinations  
+  - Logging:
+    - Fixed logger not enabling/disabling when changed from settings dialog
+    - Fixed logger not enabling/disabling on load
+  - Help files: Add missing logging preferences
+  - Fix number input type boxes in preferences dialog not correctly saving some values
+  - Chat:
+    - Fixed copy button always being disabled
+    - Fixed capturing of immortal tells when hidden
+    - Fixed bug in display breaking when zoomed
+  - [#LOOP](docs/commands.md) now throws an error when an invalid range is supplied
+  - Fixed a bug when executing context menus and corrupting script variable stack
+  - Fixed issue with corrupted ansi codes when displaying local text
+  - Ansi Parser: Add safety checks for malformed ansi codes
+- **Changed:**
+  - All dark icons now have a white stroke to make them work better with dark mode and dark colors
+  - Preferences that are now global:
+    - `Spellchecking` can only now be set as a global preference and requires a restart to effect any already opening clients or windows as it can only be set on window creation
+    - `Theme` only the global preference theme will be used for all clients
+  - Preferences: Remove `Enable warning dialog when closing client and child windows are open` as each child window now has it's own close rules
+  - Removed character auto load system as it was limited, replaced with saveable layout that can remember all open characters and reload them based on settings
+  - Command line arguments:
+    - Changed -s/--setting to set the global preference file to use
+    - Changed -m/--map to set working global map file for generic new connections
+    - Changed -c/--character to support # ids
+    - Removed -mf argument to keep argument name scheme flowing
+    - Removed -pf/--profiles as no longer supported, use character manager with per user settings  
+  - Mapper: Switch room editor to property grid control
+  - Update electron 19.1.1 to 19.1.5
+  - Update electron-updater 5.2.1 to 5.3.0
+  - Update mathjs 11.2.1 to 11.3.3
+  - Update monaco-editor 0.34.0 to 0.34.1
+
 ## 0.19.6 2022-10-2
 
 - **Fixed:**
@@ -181,7 +336,7 @@
       - Parsing of speed paths now allows you to use ( ) or { } to group a command, eg !2(n;w) would send n;w twice
   - Character manager: Notes field has been added to allow you to add notes that can be edited, they are saved directly to a file in character folder named character.notes, by saving directly to file it avoids keeping large amounts of text loaded into memory 
   - Add [%charcomment(text)](docs/functions.md#miscellaneous) to allow appending comments to character notes or getting notes field
-  - Add [%charnotes](docs/functions.md#miscellaneous) to allow setting notes or getting notes field
+  - Add [%charnotes(*string*)](docs/functions.md#miscellaneous) to allow setting notes or getting notes field
   - Profile manager: double clicking an item in treeview will now toggle expand or collapse state
 - **Fixed:**
   - Try to make sure window size is sent to the mud more accurately

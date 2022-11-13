@@ -12,7 +12,13 @@ const path = require('path');
 const fs = require('fs');
 //const trash = require('trash');
 
-declare let ace;
+declare let ace, dialog;
+declare global {
+    interface Window {
+        getGlobal: any;
+        getSetting: any;
+    }
+}
 
 let profiles = new ProfileCollection();
 let currentProfile;
@@ -53,6 +59,8 @@ let _bComments = true;
 let _iCommentsStr = ['/', '/'];
 let _bCommentsStr = ['/', '*'];
 
+let _saving = false;
+let options = getOptions();
 
 const _controllers = {};
 let _controllersCount = 0;
@@ -223,6 +231,8 @@ const menubar: Menubar = new Menubar([
             { type: 'separator' },
             { label: '&Import...', click: importProfiles },
             { type: 'separator' },
+            { label: '&Open profiles folder...', click: ()=> openFolder('{profiles}')},
+            { type: 'separator' },
             { label: '&Close', click: doClose }
         ]
     },
@@ -271,14 +281,14 @@ function addInputContext() {
             { type: 'separator' },
             { role: 'selectAll' }
         ]);
-        if (ipcRenderer.sendSync('get-global', 'debug')) {
+        if (window.getGlobal('debug')) {
             inputMenu.append(new MenuItem({ type: 'separator' }));
             inputMenu.append(new MenuItem(<MenuItemConstructorOptionsCustom>{
                 label: 'Inspect',
                 x: props.x,
                 y: props.y,
                 click: (item: any) => {
-                    remote.getCurrentWindow().webContents.inspectElement(item.x, item.y);
+                    ipcRenderer.invoke('contents', 'inspectElement', item.x, item.y);
                 }
             }));
         }
@@ -289,25 +299,22 @@ function addInputContext() {
                     label: props.dictionarySuggestions[w],
                     x: props.x,
                     y: props.y,
-                    sel: props.selectionText.length - props.misspelledWord.length,
-                    idx: props.selectionText.indexOf(props.misspelledWord),
-                    word: props.misspelledWord,
                     click: (item: any) => {
-                        const el = $(document.elementFromPoint(item.x, item.y));
-                        let value: string = (<string>el.val());
-                        const start = (<HTMLInputElement>el[0]).selectionStart;
-                        const wStart = start + item.idx;
-                        value = value.substring(0, wStart) + item.label + value.substring(wStart + item.word.length);
-                        el.val(value);
-                        (<HTMLInputElement>el[0]).selectionStart = start;
-                        (<HTMLInputElement>el[0]).selectionEnd = start + item.label.length + item.sel;
-                        el.blur();
-                        el.focus();
+                        let el = document.elementFromPoint(item.x, item.y);
+                        if (el.classList.contains('ace_content')) {
+                            el = el.closest('pre');
+                            let editor = el.id.substring(0, el.id.lastIndexOf('-'));
+                            const cursor = editors[editor].selection.getCursor();
+                            editors[editor].getSession().markUndoGroup();
+                            editors[editor].getSession().replace(editors[editor].getSession().getWordRange(cursor.row, cursor.column), item.label);
+                        }
+                        else
+                            ipcRenderer.invoke('contents', 'replaceMisspelling', item.label);
                     }
                 }));
             }
         }
-        inputMenu.popup({ window: remote.getCurrentWindow() });
+        inputMenu.popup();
     });
 }
 
@@ -500,7 +507,7 @@ export function RunTester() {
                 let i;
                 for (i = 0; i < res.length; i++) {
                     r += _parameter + (i + m) + ' : ' + res[i] + '\n';
-                    if(!res[i])
+                    if (!res[i])
                         r += `${_parameter}x${i + m} : 0 0\n`;
                     else
                         r += `${_parameter}x${i + m} : ${res.indices[i][0]} ${res.indices[i][1]}\n`;
@@ -521,11 +528,11 @@ export function RunTester() {
 }
 
 function addTriggerStateDropdown(item, state, contentOnly?) {
-    var content = `<a href="#" style="padding-right: 62px;" onclick="profileUI.SelectTriggerState(${state});">${state}: ${htmlEncode(GetDisplay(item))}
+    var content = `<a href="#" style="padding-right: 62px;" onclick="manager.SelectTriggerState(${state});">${state}: ${htmlEncode(GetDisplay(item))}
     <span class="btn-group" style="right: 0px;position: absolute;padding-right: 15px;">    
-    <button title="Move state up" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="profileUI.moveTriggerState(${state}, -1);event.cancelBubble = true;">
+    <button title="Move state up" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="manager.moveTriggerState(${state}, -1);event.cancelBubble = true;">
     <i class="fa fa-angle-double-up"></i></button>
-    <button title="Move state down" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="profileUI.moveTriggerState(${state}, 1);event.cancelBubble = true;"><i class="fa fa-angle-double-down"></i></button></span></a>`;
+    <button title="Move state down" id="trigger-states" class="btn btn-default btn-xs" type="button" onclick="manager.moveTriggerState(${state}, 1);event.cancelBubble = true;"><i class="fa fa-angle-double-down"></i></button></span></a>`;
     if (contentOnly)
         return content;
     return `<li>${content}</li>`;
@@ -607,12 +614,13 @@ export function SelectTriggerState(state, noUpdate?) {
 
 export function DeleteTriggerState() {
     const state = getState();
-    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+    dialog.showMessageBox({
         type: 'question',
         title: 'Delete current trigger state?',
         message: 'Are you sure you want to delete this trigger state?',
         buttons: ['Yes', 'No'],
-        defaultId: 1
+        defaultId: 1,
+        noLink: true
     }).then(result => {
         if (result.response === 0) {
             removeTriggerState(state, currentProfile, currentNode.dataAttr.index, true);
@@ -804,7 +812,7 @@ export function UpdateContextSample() {
 
 export function openImage(field?, callback?) {
     if (!field) field = '#button-icon';
-    ipcRenderer.invoke('show-dialog', 'showOpenDialog', {
+    dialog.showOpenDialog({
         defaultPath: path.dirname($(field).val()),
         filters: [
             { name: 'Images (*.jpg, *.png, *.gif)', extensions: ['jpg', 'png', 'gif'] },
@@ -1598,7 +1606,7 @@ function UpdateProfile(customUndo?: boolean): UpdateState {
         data.name = val;
         changed++;
         if (profiles.contains(val)) {
-            ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+            dialog.showMessageBox({
                 type: 'error',
                 title: 'Profile name already used',
                 message: 'The name is already in use, pick a different one'
@@ -1848,42 +1856,42 @@ function nodeCheckChanged(event, node) {
             }
             else
                 changed = 0;
-            if (profile === currentProfile)
+            if (profile === currentProfile && node.id === currentNode.id)
                 $('#editor-enabled').prop('checked', _enabled.indexOf(node.dataAttr.profile) !== -1);
             break;
         case 'aliases':
             profile.enableAliases = node.state.checked;
             t = 'profile';
             data.enableAliases = node.state.checked;
-            if (profile === currentProfile)
+            if (profile === currentProfile && node.id === currentNode.id)
                 $('#profile-enableAliases').prop('checked', node.state.checked);
             break;
         case 'macros':
             profile.enableMacros = node.state.checked;
             t = 'profile';
             data.enableMacros = node.state.checked;
-            if (profile === currentProfile)
+            if (profile === currentProfile && node.id === currentNode.id)
                 $('#profile-enableMacros').prop('checked', node.state.checked);
             break;
         case 'triggers':
             profile.enableTriggers = node.state.checked;
             t = 'profile';
             data.enableTriggers = node.state.checked;
-            if (profile === currentProfile)
+            if (profile === currentProfile && node.id === currentNode.id)
                 $('#profile-enableTriggers').prop('checked', node.state.checked);
             break;
         case 'buttons':
             profile.enableButtons = node.state.checked;
             t = 'profile';
             data.enableButtons = node.state.checked;
-            if (profile === currentProfile)
+            if (profile === currentProfile && node.id === currentNode.id)
                 $('#profile-enableButtons').prop('checked', node.state.checked);
             break;
         case 'contexts':
             profile.enableContexts = node.state.checked;
             t = 'profile';
             data.enableContexts = node.state.checked;
-            if (profile === currentProfile)
+            if (profile === currentProfile && node.id === currentNode.id)
                 $('#profile-enableContexts').prop('checked', node.state.checked);
             break;
         case 'variables':
@@ -1896,31 +1904,31 @@ function nodeCheckChanged(event, node) {
         case 'alias':
             profile.aliases[node.dataAttr.index].enabled = node.state.checked;
             data.enabled = node.state.checked;
-            if (node.id === currentNode.id)
+            if (node.id === currentNode.id && node.id === currentNode.id)
                 $('#editor-enabled').prop('checked', node.state.checked);
             break;
         case 'macro':
             profile.macros[node.dataAttr.index].enabled = node.state.checked;
             data.enabled = node.state.checked;
-            if (node.id === currentNode.id)
+            if (node.id === currentNode.id && node.id === currentNode.id)
                 $('#editor-enabled').prop('checked', node.state.checked);
             break;
         case 'trigger':
             profile.triggers[node.dataAttr.index].enabled = node.state.checked;
             data.enabled = node.state.checked;
-            if (node.id === currentNode.id && getState() === 0)
+            if (node.id === currentNode.id && getState() === 0 && node.id === currentNode.id)
                 $('#editor-enabled').prop('checked', node.state.checked);
             break;
         case 'button':
             profile.buttons[node.dataAttr.index].enabled = node.state.checked;
             data.enabled = node.state.checked;
-            if (node.id === currentNode.id)
+            if (node.id === currentNode.id && node.id === currentNode.id)
                 $('#editor-enabled').prop('checked', node.state.checked);
             break;
         case 'context':
             profile.contexts[node.dataAttr.index].enabled = node.state.checked;
             data.enabled = node.state.checked;
-            if (node.id === currentNode.id)
+            if (node.id === currentNode.id && node.id === currentNode.id)
                 $('#editor-enabled').prop('checked', node.state.checked);
             break;
         case 'variable':
@@ -2926,50 +2934,93 @@ function getProfileData() {
     return data;
 }
 
+
+function getOption(option) {
+    if (window.opener)
+        return window.opener.client.getOption(option);
+    return options.getValue(option);
+}
+
+function getOptions() {
+    if (window.opener)
+        return window.opener.client.options;
+    return Settings.load(window.getGlobal('settingsFile'));
+}
+
+function saveOptions() {
+    _saving = true;
+    if (window.opener)
+        window.opener.client.saveOptions();
+    //window.opener.client.doUpdate(32);
+    else
+        options.save(window.getGlobal('settingsFile'));
+    _saving = false;
+}
+
 function loadOptions() {
-    const options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
-    _never = options.profiles.askoncancel;
-    _enabled = options.profiles.enabled;
-    _ide = options.profiles.codeEditor;
-    _gamepads = options.gamepads;
-    _watch = options.profiles.watchFiles;
-    _sort = options.profiles.sortOrder;
-    _sortDir = options.profiles.sortDirection || 1;
-    _spellchecker = options.spellchecking || true;
-    _prependTrigger = options.prependTriggeredLine;
-    _parameter = options.parametersChar;
-    _nParameter = options.nParametersChar;
-    _command = options.commandChar;
-    _stacking = options.commandStackingChar;
-    _speed = options.speedpathsChar;
-    _verbatim = options.verbatimChar;
-    _variable = options.variableChar;
-    _iComments = options.enableInlineComments;
-    _bComments = options.enableBlockComments;
-    _iCommentsStr = options.inlineCommentString.split('');
-    _bCommentsStr = options.blockCommentString.split('');
-    _profileLoadExpand = options.profiles.profileExpandSelected;
-    _profileLoadSelect = options.profiles.profileSelected;
+    options = getOptions();
+    _never = getOption('profiles.askoncancel');
+    _enabled = getOption('profiles.enabled');
+    _ide = getOption('profiles.codeEditor');
+    _gamepads = getOption('gamepads');
+    _watch = getOption('profiles.watchFiles');
+    _sort = getOption('profiles.sortOrder');
+    _sortDir = getOption('profiles.sortDirection') || 1;
+    _spellchecker = window.getSetting('spellchecking') || true;
+    _prependTrigger = getOption('prependTriggeredLine');
+    _parameter = getOption('parametersChar');
+    _nParameter = getOption('nParametersChar');
+    _command = getOption('commandChar');
+    _stacking = getOption('commandStackingChar');
+    _speed = getOption('speedpathsChar');
+    _verbatim = getOption('verbatimChar');
+    _variable = getOption('variableChar');
+    _iComments = getOption('enableInlineComments');
+    _bComments = getOption('enableBlockComments');
+    _iCommentsStr = getOption('inlineCommentString').split('');
+    _bCommentsStr = getOption('blockCommentString').split('');
+    _profileLoadExpand = getOption('profiles.profileExpandSelected');
+    _profileLoadSelect = getOption('profiles.profileSelected');
     if (!profiles.contains(_profileLoadSelect))
         _profileLoadSelect = 'default';
     updatePads();
 
-    let theme = parseTemplate(options.theme) + '.css';
+    let theme = parseTemplate(window.getSetting('theme')) + '.css';
     if (!isFileSync(theme))
         theme = parseTemplate(path.join('{themes}', 'default')) + '.css';
     if ($('#theme').attr('href') !== theme)
         $('#theme').attr('href', theme);
 
-    if (options.profiles.split > 200) {
-        $('#sidebar').css('width', options.profiles.split);
-        $('#content').css('left', options.profiles.split);
+    if (getOption('profiles.split') > 200) {
+        $('#sidebar').css('width', getOption('profiles.split'));
+        $('#content').css('left', getOption('profiles.split'));
     }
-    setAdvancedPanel('trigger', options.profiles.triggersAdvanced);
-    setAdvancedPanel('alias', options.profiles.aliasesAdvanced);
-    setAdvancedPanel('button', options.profiles.buttonsAdvanced);
-    setAdvancedPanel('macro', options.profiles.macrosAdvanced);
-    setAdvancedPanel('context', options.profiles.contextsAdvanced);
-    setAdvancedPanel('variable', options.profiles.variablesAdvanced);
+    setAdvancedPanel('trigger', getOption('profiles.triggersAdvanced'));
+    setAdvancedPanel('alias', getOption('profiles.aliasesAdvanced'));
+    setAdvancedPanel('button', getOption('profiles.buttonsAdvanced'));
+    setAdvancedPanel('macro', getOption('profiles.macrosAdvanced'));
+    setAdvancedPanel('context', getOption('profiles.contextsAdvanced'));
+    setAdvancedPanel('variable', getOption('profiles.variablesAdvanced'));
+}
+
+function optionsLoaded() {
+    const so = _sort;
+    const sd = _sortDir;
+    loadOptions();
+    resetParseSyntax();
+    if (so !== _sort || sd !== _sortDir)
+        sortTree(true);
+}
+
+function setTitle(title, lag?) {
+    if (title && title.length > 0)
+        document.title = 'Profile manager - ' + title + (window.opener.client.port === 1035 ? ' - Development' : '');
+    else
+        document.title = 'Profile manager' + (window.opener.client.port === 1035 ? ' - Development' : '');
+}
+
+function updateCharacter(e) {
+    setTitle(window.opener.getCharacterName());
 }
 
 function setAdvancedPanel(id, state) {
@@ -2979,6 +3030,8 @@ function setAdvancedPanel(id, state) {
 }
 
 export function init() {
+    setTitle(window.opener.getCharacterName());
+    loadOptions();
     const p = path.join(parseTemplate('{data}'), 'profiles');
     if (!isDirSync(p)) {
         profiles.add(Profile.Default);
@@ -3019,7 +3072,8 @@ export function init() {
         if ($('#content').outerWidth() < 300 && $('#sidebar').outerWidth() > 202) {
             $('#sidebar').css('width', document.body.clientWidth - 300);
             $('#content').css('left', document.body.clientWidth - 300);
-            ipcRenderer.send('setting-changed', { type: 'profiles', name: 'split', value: document.body.clientWidth - 300 });
+            options.profiles.split = document.body.clientWidth - 300;
+            saveOptions();
         }
         $('#trigger-states-dropdown').css('width', $('#trigger-pattern').outerWidth() + 17 + 'px');
         $('#trigger-states-dropdown').css('left', (-$('#trigger-pattern').outerWidth()) + 'px');
@@ -3030,17 +3084,20 @@ export function init() {
             if (e.pageX < 200) {
                 $('#sidebar').css('width', 202);
                 $('#content').css('left', 202);
-                ipcRenderer.send('setting-changed', { type: 'profiles', name: 'split', value: 202 });
+                options.profiles.split = 202;
+                saveOptions();
             }
             else if (e.pageX > document.body.clientWidth - 200) {
                 $('#sidebar').css('width', document.body.clientWidth - 300);
                 $('#content').css('left', document.body.clientWidth - 300);
-                ipcRenderer.send('setting-changed', { type: 'profiles', name: 'split', value: document.body.clientWidth - 300 });
+                options.profiles.split = document.body.clientWidth - 300;
+                saveOptions();
             }
             else {
                 $('#sidebar').css('width', e.pageX + 2);
                 $('#content').css('left', e.pageX + 2);
-                ipcRenderer.send('setting-changed', { type: 'profiles', name: 'split', value: e.pageX + 2 });
+                options.profiles.split = e.pageX + 2;
+                saveOptions();
             }
 
             $('#ghost-bar').remove();
@@ -3202,7 +3259,7 @@ export function init() {
             icon.removeClass('fa-chevron-up');
             $(this).parent().css('padding-bottom', '15px');
             $(this).closest('table').css('min-height', '342px');
-            ipcRenderer.send('setting-changed', { type: 'profiles', name: getKey(editor.substr(0, editor.length - 7)) + 'Advanced', value: true });
+            options.profiles[getKey(editor.substr(0, editor.length - 7)) + 'Advanced'] = true;
         }
         else {
             panels.css('display', '');
@@ -3210,8 +3267,9 @@ export function init() {
             icon.removeClass('fa-chevron-down');
             $(this).parent().css('padding-bottom', '');
             $(this).closest('table').css('min-height', '');
-            ipcRenderer.send('setting-changed', { type: 'profiles', name: getKey(editor.substr(0, editor.length - 7)) + 'Advanced', value: false });
+            options.profiles[getKey(editor.substr(0, editor.length - 7)) + 'Advanced'] = false;
         }
+        saveOptions();
         if (_ide && editors[editor.substr(0, editor.length - 7) + '-value'])
             editors[editor.substr(0, editor.length - 7) + '-value'].resize(true);
     });
@@ -3230,30 +3288,6 @@ export function init() {
     });
 
     loadActions(parseTemplate(path.join('{assets}', 'actions')), '');
-
-    window.onbeforeunload = (evt) => {
-        if (_close || !_never || (_undo.length === 0 && updateCurrent() === UpdateState.NoChange))
-            return;
-        evt.returnValue = false;
-        setTimeout(() => {
-            const choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                {
-                    type: 'warning',
-                    title: 'Profiles changed',
-                    message: 'All unsaved changes will be lost, close?',
-                    buttons: ['Yes', 'No', 'Never ask again'],
-                    defaultId: 1
-                });
-            if (choice === 2)
-                ipcRenderer.send('setting-changed', { type: 'profiles', name: 'askoncancel', value: false });
-            if (choice === 0 || choice === 2) {
-                _close = true;
-                ipcRenderer.invoke('window', 'close');
-                return;
-            }
-        });
-        return 'no';
-    };
 
     document.onkeydown = undoKeydown;
     $('input,textarea').on('keydown', undoKeydown);
@@ -3310,7 +3344,7 @@ export function init() {
         exportmenu.append(new MenuItem({ label: 'Import...', click: importProfiles }));
         exportmenu.popup({ window: remote.getCurrentWindow(), x: x, y: y });
     });
-    loadOptions();
+
     initEditor('trigger-value');
     initEditor('macro-value');
     initEditor('alias-value');
@@ -3696,6 +3730,62 @@ export function init() {
         let n = $('#profile-tree').treeview('findNodes', ['^' + event.target.id + '$', 'id']);
         $('#profile-tree').treeview('toggleNodeExpanded', [n, { levels: 1, silent: false }]);
     });
+    if (window.opener) {
+        window.opener.client.on('options-loaded', optionsLoaded);
+        window.opener.client.on('item-updated', profileUpdateItem);
+        window.opener.client.on('item-added', profileAddItem);
+        window.opener.client.on('item-removed', profileRemoveItem);
+        window.opener.client.on('profile-updated', profileUpdated);
+        window.opener.client.on('profile-toggled', profileToggled);
+        window.opener.client.on('options-saved', optionsChanged);
+        window.opener._status.on('set-title', setTitle);
+        window.opener.addEventListener('loadCharacter', updateCharacter);
+        window.opener.addEventListener('updateCharacter', updateCharacter);
+        window.opener.addEventListener('resetCharacter', updateCharacter);
+    }
+}
+
+export function closeable(all?: boolean) {
+    if (_close || !_never || (_undo.length === 0 && updateCurrent() === UpdateState.NoChange)) {
+        return true;
+    }
+    const choice = dialog.showMessageBoxSync({
+        type: 'warning',
+        title: 'Profiles changed',
+        message: 'All unsaved changes will be lost, close?',
+        buttons: ['Yes', 'No', 'Never ask again'],
+        defaultId: 1,
+        noLink: true
+    });
+    if (choice === 2) {
+        options.profiles.askoncancel = false;
+        saveOptions();
+    }
+    if (choice === 0 || choice === 2)
+        _close = true;
+    else
+        _close = false;
+    return _close;
+}
+
+export function closed() {
+    if (window.opener) {
+        window.opener.client.off('options-loaded', optionsLoaded);
+        window.opener.client.off('item-updated', profileUpdateItem);
+        window.opener.client.off('item-added', profileAddItem);
+        window.opener.client.off('item-removed', profileRemoveItem);
+        window.opener.client.off('profile-updated', profileUpdated);
+        window.opener.client.off('profile-toggled', profileToggled);
+        window.opener.client.off('options-saved', optionsChanged);
+        window.opener._status.off('set-title', setTitle);
+        window.opener.removeEventListener('loadCharacter', updateCharacter);
+        window.opener.removeEventListener('updateCharacter', updateCharacter);
+        window.opener.removeEventListener('resetCharacter', updateCharacter);
+    }
+};
+
+export function openFolder(folder) {
+    require('electron').shell.openPath(parseTemplate(folder));
 }
 
 function startWatcher(p: string) {
@@ -3781,8 +3871,8 @@ function loadActions(p, root) {
         if (fs.lstatSync(path.join(p, files[f])).isDirectory())
             loadActions(path.join(p, files[f]), path.join(root, files[f]));
         else {
-            $('#button-actions-dropdown').append('<li title="' + path.basename(files[f], path.extname(files[f])) + '"><a href="#" onclick="profileUI.setIcon(\'' + path.join(root, files[f]).replace(/\\/g, '\\\\') + '\')"><img class="action-icon" src="' + path.join(p, files[f]) + '"><div class="overlay"></div></a></li>');
-            $('#context-actions-dropdown').append('<li title="' + path.basename(files[f], path.extname(files[f])) + '"><a href="#" onclick="profileUI.setIcon(\'' + path.join(root, files[f]).replace(/\\/g, '\\\\') + '\', \'context\', profileUI.UpdateContextSample)"><img class="action-icon" src="' + path.join(p, files[f]) + '"><div class="overlay"></div></a></li>');
+            $('#button-actions-dropdown').append('<li title="' + path.basename(files[f], path.extname(files[f])) + '"><a href="#" onclick="manager.setIcon(\'' + path.join(root, files[f]).replace(/\\/g, '\\\\') + '\')"><img class="action-icon" src="' + path.join(p, files[f]) + '"><div class="overlay"></div></a></li>');
+            $('#context-actions-dropdown').append('<li title="' + path.basename(files[f], path.extname(files[f])) + '"><a href="#" onclick="manager.setIcon(\'' + path.join(root, files[f]).replace(/\\/g, '\\\\') + '\', \'context\', manager.UpdateContextSample)"><img class="action-icon" src="' + path.join(p, files[f]) + '"><div class="overlay"></div></a></li>');
         }
     }
 }
@@ -3796,12 +3886,13 @@ export function setIcon(icon, field?, callback?) {
 
 export function doRefresh() {
     if (_undo.length > 0)
-        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+        dialog.showMessageBox({
             type: 'warning',
             title: 'Refresh profiles',
             message: 'All unsaved or applied changes will be lost, refresh?',
             buttons: ['Yes', 'No'],
-            defaultId: 1
+            defaultId: 1,
+            noLink: true
         }).then(result => {
             if (result.response === 0) {
                 filesChanged = false;
@@ -3818,8 +3909,7 @@ export function doRefresh() {
                         profiles.add(Profile.Default);
                     startWatcher(p);
                 }
-                const options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
-                _enabled = options.profiles.enabled;
+                _enabled = getOption('profiles.enabled');
                 buildTreeview(getProfileData());
             }
         });
@@ -3838,8 +3928,7 @@ export function doRefresh() {
                 profiles.add(Profile.Default);
             startWatcher(p);
         }
-        const options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
-        _enabled = options.profiles.enabled;
+        _enabled = getOption('profiles.enabled');
         buildTreeview(getProfileData());
     }
 }
@@ -3858,7 +3947,7 @@ function profileCopyName(name) {
 }
 
 function importProfiles() {
-    ipcRenderer.invoke('show-dialog', 'showOpenDialog', {
+    dialog.showOpenDialog({
         title: 'Import profiles',
         filters: [
             { name: 'Supported files (*.txt, *.zip)', extensions: ['txt', 'zip'] },
@@ -3925,12 +4014,13 @@ function importProfiles() {
                                         $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
                                     }
                                     else if (all !== 4) {
-                                        const response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                                        const response = dialog.showMessageBoxSync({
                                             type: 'question',
                                             title: 'Profiles already exists',
                                             message: 'Profile named \'' + p.name + '\' exist, replace?',
                                             buttons: ['Yes', 'No', 'Copy', 'Replace All', 'No All', 'Copy All'],
-                                            defaultId: 1
+                                            defaultId: 1,
+                                            noLink: true
                                         });
                                         if (response === 0) {
                                             _replace.push(profiles.items[p.name.toLowerCase()].clone());
@@ -3980,14 +4070,14 @@ function importProfiles() {
 
                     data = JSON.parse(data);
                     if (!data || data.version !== 2) {
-                        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+                        dialog.showMessageBox({
                             type: 'error',
                             title: 'Invalid Profile',
                             message: 'Invalid profile unable to process.'
                         });
                         return;
                     }
-                    ipcRenderer.send('set-progress', { value: 0.5, options: { mode: 'indeterminate' } });
+                    updateProgress({ value: 0.5, mode: 'indeterminate' });
                     if (data.profiles) {
                         const keys = Object.keys(data.profiles);
                         let k = 0;
@@ -4102,12 +4192,13 @@ function importProfiles() {
                                     $('#profile-tree').treeview('addNode', [newProfileNode(p), false, false]);
                                 }
                                 else if (all !== 4) {
-                                    const response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+                                    const response = dialog.showMessageBoxSync({
                                         type: 'question',
                                         title: 'Profiles already exists',
                                         message: 'Profile named \'' + p.name + '\' exist, replace?',
                                         buttons: ['Yes', 'No', 'Copy', 'Replace All', 'No All', 'Copy All'],
-                                        defaultId: 1
+                                        defaultId: 1,
+                                        noLink: true
                                     });
                                     if (response === 0) {
                                         _replace.push(profiles.items[p.name.toLowerCase()].clone());
@@ -4142,7 +4233,7 @@ function importProfiles() {
                             }
                         }
                     }
-                    ipcRenderer.send('set-progress', { value: -1, options: { mode: 'normal' } });
+                    updateProgress({ value: -1, mode: 'normal' });
                 });
         }
         if (names.length > 0) {
@@ -4167,12 +4258,13 @@ export function saveProfiles(clearNow?: boolean) {
     if (updateCurrent() !== UpdateState.NoChange)
         return false;
     if (filesChanged) {
-        let response = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox', {
+        let response = dialog.showMessageBoxSync({
             type: 'question',
             title: 'Profiles updated',
             message: 'Profiles have been updated outside of manager, save anyways?',
             buttons: ['Yes', 'No'],
-            defaultId: 1
+            defaultId: 1,
+            noLink: true
         });
         if (response === 0) {
             const p = path.join(parseTemplate('{data}'), 'profiles');
@@ -4180,10 +4272,8 @@ export function saveProfiles(clearNow?: boolean) {
                 fs.mkdirSync(p);
             profiles.save(p);
             trashProfiles(p);
-            const options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
             options.profiles.enabled = _enabled;
-            options.save(ipcRenderer.sendSync('get-global', 'settingsFile'));
-            ipcRenderer.send('setting-changed', { type: 'profiles', name: 'enabled', value: options.profiles.enabled });
+            saveOptions();
             ipcRenderer.send('reload-profiles');
             if (clearNow)
                 clearChanges();
@@ -4197,11 +4287,8 @@ export function saveProfiles(clearNow?: boolean) {
             fs.mkdirSync(p);
         profiles.save(p);
         trashProfiles(p);
-
-        const options = Settings.load(ipcRenderer.sendSync('get-global', 'settingsFile'));
         options.profiles.enabled = _enabled;
-        options.save(ipcRenderer.sendSync('get-global', 'settingsFile'));
-        ipcRenderer.send('setting-changed', { type: 'profiles', name: 'enabled', value: options.profiles.enabled });
+        saveOptions();
         ipcRenderer.send('reload-profiles');
         if (clearNow)
             clearChanges();
@@ -4332,6 +4419,13 @@ function initEditor(id) {
 
 let dragging = false;
 
+function updateProgress(progress) {
+    if (window.opener)
+        window.opener.updateProgress(progress);
+    else
+        ipcRenderer.send('parent-window', 'setProgressBar', progress.value, progress.mode ? { mode: progress.mode } : null);
+}
+
 function setParseSyntax(editor) {
     editors[editor].getSession().setMode('ace/mode/jimud', () => {
         var session = editors[editor].getSession();
@@ -4452,7 +4546,7 @@ function setParseSyntax(editor) {
     });
 }
 
-function resetParseSyutax() {
+function resetParseSyntax() {
     if (!editors) return;
     if (editors['trigger-value'] && editors['trigger-value'].getSession().getMode() === "ace/mode/jimud")
         setParseSyntax('trigger-value');
@@ -4490,12 +4584,13 @@ function updateUndoState() {
 }
 
 function DeleteProfileConfirm(profile) {
-    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+    dialog.showMessageBox({
         type: 'question',
         title: 'Delete profile?',
         message: 'Delete ' + profile.name + '?',
         buttons: ['Yes', 'No'],
-        defaultId: 1
+        defaultId: 1,
+        noLink: true
     }).then(result => {
         if (result.response === 0) DeleteProfile(profile);
     });
@@ -4525,12 +4620,13 @@ function DeleteProfile(profile, customUndo?: boolean) {
 }
 
 function DeleteItems(type, key, profile) {
-    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+    dialog.showMessageBox({
         type: 'question',
         title: 'Delete ' + type + '?',
         message: 'Are you sure you want to delete all ' + key + '?',
         buttons: ['Yes', 'No'],
-        defaultId: 1
+        defaultId: 1,
+        noLink: true
     }).then(result => {
         if (result.response === 0) {
             const _u = { action: 'group', add: [], delete: [] };
@@ -4546,12 +4642,13 @@ function DeleteItems(type, key, profile) {
 }
 
 function DeleteItemConfirm(type, key, idx, profile) {
-    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+    dialog.showMessageBox({
         type: 'question',
         title: 'Delete ' + type + '?',
         message: 'Are you sure you want to delete this ' + type + '?',
         buttons: ['Yes', 'No'],
-        defaultId: 1
+        defaultId: 1,
+        noLink: true
     }).then(result => {
         if (result.response === 0) {
             DeleteItem(type.toLowerCase(), key, idx, profile);
@@ -4604,12 +4701,13 @@ export function doClose() {
         window.close();
     }
     else {
-        ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+        dialog.showMessageBox({
             type: 'warning',
             title: 'Profiles changed',
             message: 'All unsaved changes will be lost, close?',
             buttons: ['Yes', 'No', 'Never ask again'],
-            defaultId: 1
+            defaultId: 1,
+            noLink: true
         }).then(result => {
             if (result.response === 0)
                 window.close();
@@ -4617,7 +4715,7 @@ export function doClose() {
                 _never = false;
                 _close = true;
                 window.close();
-                ipcRenderer.send('setting-changed', { type: 'profiles', name: 'askoncancel', value: false });
+                options.profiles.askoncancel = false;
             }
         });
     }
@@ -4645,12 +4743,13 @@ export function doReset(node) {
         if (!node) return;
     }
     const profile = profiles.items[node.dataAttr.profile];
-    ipcRenderer.invoke('show-dialog', 'showMessageBox', {
+    dialog.showMessageBox({
         type: 'warning',
         title: 'Reset ' + profile.name,
         message: 'Resetting will loose all profile data, reset?',
         buttons: ['Yes', 'No'],
-        defaultId: 1
+        defaultId: 1,
+        noLink: true
     }).then(result => {
         if (result.response === 0) {
             pushUndo({ action: 'reset', type: 'profile', profile: profile.clone() });
@@ -4902,55 +5001,44 @@ function insertItem(type: string, key: string, item, idx: number, profile?: Prof
     _loading--;
 }
 
-ipcRenderer.on('profile-edit-item', (event, profile, type, index) => {
+export function editItem(profile, type, index) {
     if (!profile || !profiles.items[profile.toLowerCase()]) return;
     let n = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile) + type + '$', 'id']);
     $('#profile-tree').treeview('expandNode', [n, { levels: 1, silent: false }]);
     n = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile) + type + index + '$', 'id']);
     $('#profile-tree').treeview('selectNode', [n, { silent: false }]);
-});
+};
 
-ipcRenderer.on('reload-options', (event) => {
-    const so = _sort;
-    const sd = _sortDir;
-    loadOptions();
-    resetParseSyutax();
-    if (so !== _sort || sd !== _sortDir)
-        sortTree(true);
-});
-
-ipcRenderer.on('change-options', (event, file, firstLoad) => {
-    const so = _sort;
-    const sd = _sortDir;
-    loadOptions();
-    resetParseSyutax();
-    if (so !== _sort || sd !== _sortDir)
-        sortTree(true);
+function optionsChanged() {
+    // if save was local ignore
+    if (_saving) return;
+    optionsLoaded();
     filesChanged = true;
     $('#btn-refresh').addClass('btn-warning');
-});
+}
 
-ipcRenderer.on('profile-item-added', (event, type, profile, item) => {
+
+function profileAddItem(type, profile, item) {
     filesChanged = true;
     $('#btn-refresh').addClass('btn-warning');
-});
+};
 
-ipcRenderer.on('profile-item-updated', (event, type, profile, idx, item) => {
+function profileUpdateItem(type, profile, idx, item) {
     filesChanged = true;
     $('#btn-refresh').addClass('btn-warning');
-});
+};
 
-ipcRenderer.on('profile-item-removed', (event, type, profile, idx) => {
+function profileRemoveItem(type, profile, idx) {
     filesChanged = true;
     $('#btn-refresh').addClass('btn-warning');
-});
+};
 
-ipcRenderer.on('profile-updated', (event, profile, noChanges, type) => {
+function profileUpdated(profile, noChanges, type) {
     //filesChanged = true;
     //$('#btn-refresh').addClass('btn-warning');
-});
+};
 
-ipcRenderer.on('profile-toggled', (event, profile, enabled) => {
+function profileToggled(profile, enabled) {
     const parent = $('#profile-tree').treeview('findNodes', ['^Profile' + profileID(profile) + '$', 'id']);
     if (!parent) return;
     _enabled.filter((a) => { return a !== profile.toLowerCase(); });
@@ -4965,11 +5053,11 @@ ipcRenderer.on('profile-toggled', (event, profile, enabled) => {
     const t = currentNode.dataAttr.type;
     if (currentProfile.name === profile && t === 'profile' || t === 'aliases' || t === 'triggers' || t === 'buttons' || t === 'macros' || t === 'contexts' || t === 'variables')
         $('#editor-enabled').prop('checked', enabled);
-});
+};
 
 function exportAll() {
     clearButton('#export');
-    ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
+    dialog.showSaveDialog({
         title: 'Export all profiles',
         defaultPath: 'jiMUD.profiles.txt',
         filters: [
@@ -4998,7 +5086,7 @@ $(window).keydown((event) => {
 
 // eslint-disable-next-line no-unused-vars
 function exportAllZip() {
-    const file = ipcRenderer.sendSync('show-dialog-sync', 'showSaveDialog', {
+    const file = dialog.showSaveDialogSync({
         title: 'Save as...',
         defaultPath: path.join(parseTemplate('{documents}'), 'jiMUD-profiles.zip'),
         filters: [
@@ -5018,13 +5106,13 @@ function exportAllZip() {
     if (isDirSync(path.join(data, 'profiles'))) {
         files = walkSync(path.join(data, 'profiles'));
         if (files.length === 0) {
-            ipcRenderer.invoke('show-dialog', 'showMessageBox',
-                {
-                    type: 'error',
-                    title: 'No logs found',
-                    message: 'No logs to backup',
-                    defaultId: 1
-                });
+            dialog.showMessageBox({
+                type: 'error',
+                title: 'No logs found',
+                message: 'No logs to backup',
+                defaultId: 1,
+                noLink: true
+            });
             return;
         }
         files.files.forEach(f => {
@@ -5045,8 +5133,7 @@ function showProgressDialog() {
 }
 
 function setProgressDialogValue(value) {
-    ipcRenderer.send('set-progress', { value: value });
-    ipcRenderer.send('set-progress-window', 'code-editor', { value: value });
+    updateProgress({ value: value });
     (<any>document.getElementById('progress-dialog-progressbar')).value = value * 100;
 }
 
@@ -5069,7 +5156,7 @@ function cancelProgress() {
 
 function exportCurrent() {
     clearButton('#export');
-    ipcRenderer.invoke('show-dialog', 'showSaveDialog', {
+    dialog.showSaveDialog({
         title: 'Export profile',
         defaultPath: 'jiMUD.' + profileID(currentProfile.name) + '.txt',
         filters: [

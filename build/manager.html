@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="UTF-8">
+    <title>jiMUD</title>
+    <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/main.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/theme.css" rel="stylesheet" type="text/css" />
+    <link href="css/window.css" rel="stylesheet" type="text/css" />
+    <link id="theme" rel="stylesheet" href="themes/default.css" type="text/css" />
+    <script type="text/javascript">
+        window.loadTheme();
+        if (typeof module === 'object') { window.module = module; module = undefined; }
+    </script>
+    <script src="../lib/jquery.min.js"></script>
+    <script src="../lib/bootstrap.min.js"></script>
+</head>
+
+<body id="client-container">
+    <script type="text/javascript">
+        const { ipcRenderer } = require('electron');
+        const { parseTemplate, isFileSync } = require('./js/library.js');
+        const { TabStrip } = require('./js/tabstrip.js');
+        const _clients = [];
+        var _load = [];
+        var _id;
+        var tabStrip;
+        var _current = 0;
+        var _loading = 0;
+
+        window.addEventListener('error', (e) => {
+            const { message, filename, lineno, colno, error } = e;
+            ipcRenderer.send('log-error', {
+                error: error,
+                filename: filename,
+                lineno: lineno,
+                colno: colno,
+                message: message,
+            }, false, 'Manager window');
+            return true;
+        });
+
+        function getActiveClient() {
+            return _current;
+        }
+
+        function setId(id) {
+            _id = id;
+        }
+
+        function getId() {
+            return _id;
+        }
+
+        /*
+        function saveWindow() {
+            return { data: 'custom data test' };
+        }
+
+        function restoreWindow(data) {
+            console.log('restoreWindow');
+            console.log(data);
+        }
+        */
+
+        ipcRenderer.on('new-client', (event, client) => {
+            if (typeof client.index !== 'undefined' && client.index !== -1 && client.index < _clients.length)
+                _clients.splice(client.index, 0, client.id);
+            else
+                _clients.push(client.id);
+            if (typeof tabstrip !== 'undefined')
+                addClient(client);
+            else
+                _load.push(client);
+        });
+
+        ipcRenderer.on('set-clients', (event, clients, current) => {
+            _loading++;
+            //_clients.push(......clients.map(x => x.id));
+            if (typeof tabstrip !== 'undefined')
+                setClients(clients);
+            else
+                _load = clients.map(x => x.id);
+            _current = current;
+            _loading--;
+        });
+
+        ipcRenderer.on('switch-client', (event, id) => {
+            _current = id;
+            if (typeof tabstrip !== 'undefined')
+                switchToClient(id);
+        });
+
+        ipcRenderer.on('removed-client', (event, id) => {
+            const idx = _clients.indexOf(id);
+            if (idx !== -1)
+                _clients.splice(idx, 1);
+            const tabs = tabstrip.tabs;
+            for (var t = 0, tl = tabs.length; t < tl; t++) {
+                if (tabs[t].client === id) {
+                    //remove the tab with out events or you get a loop
+                    tabstrip.removeTab(t, true);
+                    if (tabstrip.hideTabstrip && tabstrip.tabs.length === 1) {
+                        ipcRenderer.send('update-client', tabstrip.tabs[0].client, 0);
+                    }
+                    if (id === _current && tabs.length) {
+                        if (t >= tabs.length - 1)
+                            _current = tabs[t - 1].client;
+                        else
+                            _current = tabs[t].client;
+                    }
+                    break;
+                }
+            }
+        });
+
+        ipcRenderer.on('update-title', (event, id, options) => {
+            updateTitle(id, options, 0);
+        });
+
+        function updateTitle(id, options, retries) {
+            if (!options) return;
+            const tabs = tabstrip.tabs;
+            for (var t = 0, tl = tabs.length; t < tl; t++) {
+                if (tabs[t].client === id) {
+                    if ('title' in options) {
+                        tabstrip.setTabTitle(options.title, t);
+                        if (!options.tooltip)
+                            tabstrip.setTabTooltip(options.title, t);
+                        if (!tabstrip.active || tabstrip.active === tabs[t])
+                            setTitle(options.title);
+                    }
+                    if (typeof options.icon === 'number') {
+                        tabstrip.tabs[t].tab.classList.remove('connected');
+                        tabstrip.tabs[t].tab.classList.remove('disconnected');
+                        tabstrip.tabs[t].tab.classList.remove('connectednonactive');
+                        switch (options.icon) {
+                            case 1:
+                                tabstrip.setTabIconClass('connected-icon', t, true);
+                                tabstrip.tabs[t].tab.classList.add('connected');
+                                break;
+                            case 2:
+                                tabstrip.setTabIconClass('connectednonactive-icon', t, true);
+                                tabstrip.tabs[t].tab.classList.add('connectednonactive');
+                                break;
+                            case 3:
+                                tabstrip.setTabIconClass('disconnected-code-icon', t, true);
+                                tabstrip.tabs[t].tab.classList.add('disconnected');
+                                break;
+                            case 4:
+                                tabstrip.setTabIconClass('connected-code-icon', t, true);
+                                tabstrip.tabs[t].tab.classList.add('connected');
+                                break;
+                            case 5:
+                                tabstrip.setTabIconClass('connectednonactive-code-icon', t, true);
+                                tabstrip.tabs[t].tab.classList.add('connectednonactive');
+                                break;
+                            default:
+                                tabstrip.setTabIconClass('disconnected-icon', t, true);
+                                tabstrip.tabs[t].tab.classList.add('disconnected');
+                                break;
+                        }
+                    }
+                    else if (options.icon)
+                        tabstrip.setTabIconClass(options.icon, t, true);
+                    if (options.tooltip)
+                        tabstrip.setTabTooltip(options.tooltip, t);
+                    return;
+                }
+            }
+            //not found try again
+            if (retries < 3) {
+                setTimeout(() => {
+                    updateTitle(id, options, retries++);
+                }, 10);
+            }
+        }
+
+        ipcRenderer.on('reload-options', () => {
+            tabstrip.hideTabstrip = !window.getSetting('alwaysShowTabs');
+            tabstrip.showAddNewButton = window.getSetting('showTabsAddNewButton');
+            tabstrip.refresh();
+        })
+
+        function addClient(client) {
+            let tab;
+            if (typeof client.index !== 'undefined' && client.index !== -1 && client.index < _clients.length)
+                tab = tabstrip.insertTab(client.index, { title: '', icon: client.icon || 'disconnected-icon' });
+            else
+                tab = tabstrip.addTab({ title: '', icon: client.icon || 'disconnected-icon', noActivate: true, silent: true });
+            tab.client = client.id;
+            tab.tab.classList.add('disconnected');
+            if (client.current)
+                _current = client.id;
+            if (!client.noUpdate)
+                ipcRenderer.send('update-client', client.id, getClientOffset());
+        }
+
+        function setClients(clients) {
+            const tabs = [];
+            let current = 0;
+            let cTab = 0;
+            for (var c = 0, cl = clients.length; c < cl; c++) {
+                const client = clients[c];
+                _clients.push(client.id);
+                let tab = tabstrip.createTab({ title: '', icon: client.icon || 'disconnected-icon', noActivate: true, silent: true });
+                tab.client = client.id;
+                tab.tab.classList.add('disconnected');
+                tabs.push(tab);
+                if (client.current) {
+                    _current = client.id;
+                    cTab = c;
+                }
+            }
+            if (!_current)
+                _current = clients[0];
+            tabstrip.addTabs(tabs, cTab);
+            tabstrip.refresh();
+            const offset = getClientOffset();
+            for (var c = 0, cl = clients.length; c < cl; c++) {
+                ipcRenderer.send('update-client', clients[c].id, offset);
+            }
+            setTitle(tabstrip.active.title.innerText);
+        }
+
+        function switchToClient(id) {
+            const tabs = tabstrip.tabs;
+            for (var t = 0, tl = tabs.length; t < tl; t++) {
+                if (tabs[t].client === id) {
+                    tabstrip.switchToTabByIndex(t);
+                    break;
+                }
+            }
+        }
+
+        function switchTab(index) {
+            tabstrip.switchToTabByIndex(index);
+        }
+
+        function setTitle(txt) {
+            if (txt.trim().length !== 0)
+                document.title = 'jiMUD - ' + txt.trim();
+            else
+                document.title = 'jiMUD';
+            ipcRenderer.send('window-update-title');
+        }
+
+        ipcRenderer.on('blur', event => {
+            tabstrip.focused = false;
+        })
+
+        ipcRenderer.on('enter-full-screen', e => {
+            ipcRenderer.send('update-client', _current, getClientOffset());
+        });
+
+        ipcRenderer.on('leave-full-screen', e => {
+            ipcRenderer.send('update-client', _current, getClientOffset());
+        });
+
+        window.addEventListener('keydown', (event) => {
+            if (event.ctrlKey && !event.metaKey && !event.altKey && event.key === 'Tab') {
+                if (event.shiftKey)
+                    ipcRenderer.send('goto-client', getId(), 2);
+                else
+                    ipcRenderer.send('goto-client', getId(), 1);
+            }
+        });
+
+        function getClientOffset() {
+            if (!tabstrip) return 0;
+            if (tabstrip.hideTabstrip && tabstrip.tabs.length === 1)
+                return 0;
+            return tabstrip.height || 0;
+        }
+
+        function init() {
+            tabstrip = new TabStrip();
+            tabstrip.useNativeMenus = true;
+            tabstrip.hideTabstrip = !window.getSetting('alwaysShowTabs');
+            tabstrip.showAddNewButton = window.getSetting('showTabsAddNewButton');
+            tabstrip.on('tab-strip-hidden', () => {
+                ipcRenderer.send('update-client', _current, 0);
+            });
+            tabstrip.on('tab-strip-shown', () => {
+                ipcRenderer.send('update-client', _current, tabstrip.height);
+            });
+            tabstrip.on('add', e => {
+                if (_loading) return;
+                const tabs = tabstrip.tabs;
+                if (tabs.length === 2) {
+                    //force a refresh as will not update while hidden
+                    tabstrip.refresh();
+                    //resize previous tab just to ensure all are same size
+                    ipcRenderer.send('update-client', tabs[0].client, tabstrip.height);
+                    ipcRenderer.send('update-client', _current, tabstrip.height);
+                }
+            });
+            tabstrip.on('add-tab', () => {
+                ipcRenderer.send('new-client');
+            });
+            tabstrip.on('tab-click', e => {
+                ipcRenderer.send('switch-client', e.tab.client, getClientOffset());
+                _current = e.tab.client;
+            });
+            tabstrip.on('remove', e => {
+                //cancel the remove as we want to make sure it is called after browser view is cleaned up as it may cancel based on user input
+                e.cancel = true;
+                if (tabstrip.tabs.length === 1)
+                    return;
+                ipcRenderer.send('remove-client', e.tab.client);
+            });
+            tabstrip.on('removed', panel => {
+                if (tabstrip.hideTabstrip && tabstrip.tabs.length === 1)
+                    ipcRenderer.send('update-client', tabstrip.tabs[0].client, 0);
+            });
+            tabstrip.on('activated', e => {
+                if (_loading) return;
+                ipcRenderer.send('switch-client', e.tab.client, getClientOffset());
+                _current = e.tab.client;
+                setTitle(e.tab.title.innerText);
+            })
+            tabstrip.on('tab-moved', e => {
+                ipcRenderer.send('reorder-client', e.tab.client, e.index, e.oldIndex);
+            });
+            tabstrip.on('tab-drag-end', e => {
+                //dropped outside of client area so new window if more then 1 tab
+                if (e.event.dataTransfer.items.length === 0 && (e.event.clientX < 0 || e.event.clientY < 0 || e.event.clientX >= document.body.clientWidth || e.event.clientY >= document.body.clientHeight)) {
+                    e.event.stopPropagation();
+                    e.event.preventDefault();
+                    var x = e.event.screenX;
+                    var y = e.event.screenY;
+                    var bounds = e.tab.tab.getBoundingClientRect();
+                    x -= Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth));
+                    y -= Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight));
+                    ipcRenderer.send('dock-client', tabstrip.dragTab.client, { x: x, y: y, pid: ipcRenderer.sendSync('get-pid') });
+                }
+            });
+            tabstrip.on('tab-drop', e => {
+                //if not dragging its from a different window so its a undock/dock
+                if (e.tab === tabstrip.dragTab) {
+                    e.event.preventDefault();
+                    e.event.stopPropagation();
+                }
+                if (!tabstrip.dragPanel && !tabstrip.dragTab) {
+                    e.preventDefault = true;
+                    e.event.stopPropagation();
+                    e.event.preventDefault();
+                    const tab = JSON.parse(e.event.dataTransfer.getData('jimud/tab'));
+                    e.tab.tab.classList.remove('drop');
+                    ipcRenderer.send('dock-client', tab.client, { index: tabstrip.getTabIndex(e.tab), pid: ipcRenderer.sendSync('get-pid') });
+                }
+            });
+            tabstrip.on('contextmenu', (e) => {
+                menu = [
+                    {
+                        label: 'New Tab',
+                        click: `if (!event.triggeredByAccelerator) {
+                            if (event.ctrlKey)
+                                ipcRenderer.send('new-client', { port: 1035 });
+                            else if (event.shiftKey)
+                                ipcRenderer.send('new-client', { port: 1030 });
+                            else
+                                ipcRenderer.send('new-client');
+                        }
+                        else
+                            ipcRenderer.send('new-client');`
+                    },
+                    {
+                        label: 'New Window',
+                        click: `if (!event.triggeredByAccelerator) {
+                            if (event.ctrlKey)
+                                ipcRenderer.send('new-window', { port: 1035 });
+                            else if (event.shiftKey)
+                                ipcRenderer.send('new-window', { port: 1030 });
+                            else
+                                ipcRenderer.send('new-window');
+                        }
+                        else
+                            ipcRenderer.send('new-window');`
+                    },
+                    { type: 'separator' },
+                    {
+                        label: 'Windows...',
+                        click: 'ipcRenderer.send("show-window", "windows")'
+                    }
+                ];
+                if (window.getGlobal('debug')) {
+                    menu.push({ type: 'separator' });
+                    menu.push({
+                        label: 'Inspect',
+                        click: `ipcRenderer.send("inspect", ${e.pageX}, ${e.pageY});`
+                    });
+                }
+                window.showContext(menu);
+            });
+            tabstrip.on('tab-contextmenu', (e) => {
+                console.log('tab-contextmenu!');
+                menu = [];
+                console.log(e.tab);
+                if (e.tab.iconCls === 'disconnected-code-icon')
+                    menu.push({
+                        label: 'Connect',
+                        click: `ipcRenderer.send('execute-client', ${e.tab.client}, 'client.connect()');`
+                    });
+                else
+                    menu.push({
+                        label: 'Disconnect',
+                        click: `ipcRenderer.send('execute-client', ${e.tab.client}, 'client.close()');`
+                    });
+                menu.push(...[
+                    { type: 'separator' },
+                    {
+                        label: 'New Tab',
+                        click: `if (!event.triggeredByAccelerator) {
+                            if (event.ctrlKey)
+                                ipcRenderer.send('new-client', { port: 1035 });
+                            else if (event.shiftKey)
+                                ipcRenderer.send('new-client', { port: 1030 });
+                            else
+                                ipcRenderer.send('new-client');
+                        }
+                        else
+                            ipcRenderer.send('new-client');`
+                    },
+                    {
+                        label: 'New Window',
+                        click: `if (!event.triggeredByAccelerator) {
+                            if (event.ctrlKey)
+                                ipcRenderer.send('new-window', { port: 1035 });
+                            else if (event.shiftKey)
+                                ipcRenderer.send('new-window', { port: 1030 });
+                            else
+                                ipcRenderer.send('new-window');
+                        }
+                        else
+                            ipcRenderer.send('new-window');`
+                    },
+                    { type: 'separator' },
+                    {
+                        label: 'Windows...',
+                        click: 'ipcRenderer.send("show-window", "windows")'
+                    }
+                ]);
+                menu.push(
+                    { type: 'separator' },
+                    {
+                        label: 'Characters...',
+                        click: `ipcRenderer.send('execute-client', ${e.tab.client}, 'openWindow("characters")');`
+                    }
+                );
+                if (tabstrip.tabs.length > 1) {
+                    menu.push(...[
+                        { type: 'separator' },
+                        {
+                            label: 'Close',
+                            click: `ipcRenderer.send('remove-client', ${e.tab.client});`
+                        },
+                        {
+                            label: 'Close others',
+                            click: `for(c = _clients.length - 1; c >= 0; c--) {
+                                if(_clients[c] === ${e.tab.client}) continue;
+                                ipcRenderer.send('remove-client', _clients[c]);
+                            }`
+                        }
+                    ]);
+                }
+                if (window.getGlobal('debug')) {
+                    menu.push({ type: 'separator' });
+                    menu.push({
+                        label: 'Inspect',
+                        click: `ipcRenderer.send("inspect", ${e.pageX}, ${e.pageY});`
+                    });
+                }
+                window.showContext(menu);
+            });
+            window.addEventListener('dragstart', (e) => {
+                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                    e.dataTransfer.dropEffect = 'move';
+                }
+            });
+            window.addEventListener('dragleave', (e) => {
+                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                    e.dataTransfer.dropEffect = 'move';
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            });
+            window.addEventListener('dragover', (e) => {
+                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                    e.dataTransfer.dropEffect = 'move';
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            });
+            window.addEventListener('dragenter', (e) => {
+                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                    e.dataTransfer.dropEffect = 'move';
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            });
+            window.addEventListener('dragend', (e) => {
+                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                    e.dataTransfer.dropEffect = 'move';
+                }
+            });
+            window.addEventListener('drop', (e) => {
+                if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {
+                    e.dataTransfer.dropEffect = 'move';
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const tab = JSON.parse(e.dataTransfer.getData('jimud/tab'));
+                    var x = e.screenX;
+                    var y = e.screenY;
+                    if (tab.offset) {
+                        x -= tab.offset.x;
+                        y -= tab.offset.y;
+                    }
+                    ipcRenderer.send('dock-client', tab.client, { x: x, y: y, pid: ipcRenderer.sendSync('get-pid') });
+                }
+            });
+            window.addEventListener('focus', e => {
+                tabstrip.focused = true;
+                ipcRenderer.send('focus-client', _current);
+            })
+            window.addEventListener('blur', e => {
+                //tabstrip.focused = false;
+            })
+            //some type of bug on linux with double clicked titles not resizing correctly, hack around that
+            if (process.platform === 'linux') {
+                var _resize = 0;
+                window.addEventListener('resize', e => {
+                    if (_resize) return;
+                    _resize = setTimeout(() => {
+                        ipcRenderer.send('update-client', _current, getClientOffset());
+                        _resize = 0;
+                    });
+                });
+            }
+            _loading++;
+            if (_load.length) {
+                setClients(_load);
+                if (_current)
+                    switchToClient(_current);
+            }
+            _loading--;
+        };
+        init();
+    </script>
+</body>
+
+</html>

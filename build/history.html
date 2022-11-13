@@ -33,11 +33,9 @@
 <script src="../lib/bootstrap.min.js"></script>
 <script type="text/javascript">
     if (window.module) module = window.module;
-    const { ipcRenderer } = require('electron');
-
     var list = document.getElementById('history');
-    ipcRenderer.send('request-command-history');
-    ipcRenderer.on('command-history', (event, history) => {
+    function loadHistory() {
+        const history = window.opener.client.commandHistory;
         var l = history.length;
         while (list.firstChild)
             list.removeChild(list.firstChild);
@@ -56,14 +54,15 @@
             list.style.display = 'none';
             list.style.display = 'block';
         }
-    });
+    };
     list.addEventListener('dblclick', () => {
-        ipcRenderer.send('add-command-history', list.value);
-        ipcRenderer.send('send-command', list.value);
+        const cmd = list.value;
+        window.opener.client.AddCommandToHistory(cmd);
+        window.opener.client.sendCommand(cmd, false, window.opener.client.getOption('allowCommentsFromCommand'));
         window.close();
     });
     list.addEventListener('change', () => {
-        ipcRenderer.send('change-command-history-index', list.selectedIndex);
+        window.opener.client.setHistoryIndex(list.selectedIndex);
     });
     list.addEventListener('contextmenu', (e) => {
         e.preventDefault();
@@ -77,23 +76,52 @@
         }
         c.push({
             label: '&Refresh',
-            click: 'executeContext("request-command-history")'
+            click: 'executeContext("refresh")'
         });
         c.push({
             label: '&Clear history',
-            click: 'executeContext("clear-command-history")'
+            click: 'executeContext("clearHistory")'
         });
-        ipcRenderer.invoke('show-context', c);
+        window.showContext(c);
     });
 
     function executeContext(action) {
-        if (action === 'add') {
-            ipcRenderer.send('add-command-history', list.value);
-            ipcRenderer.send('send-command', list.value);
+        if (action === 'clearHistory')
+            window.opener.client.clearCommandHistory();
+        else if (action === 'refresh')
+            loadHistory();
+        else if (action === 'add') {
+            window.opener.client.AddCommandToHistory(list.value);
+            window.opener.client.sendCommand(list.value, false, window.opener.client.getOption('allowCommentsFromCommand'));
         }
-        else
-            ipcRenderer.send(action);
     }
+
+    function setTitle(title, lag) {
+        if (title && title.length > 0)
+            document.title = 'Command history - ' + title + (window.opener.client.port === 1035 ? ' - Development' : '');
+        else
+            document.title = 'Command history' + (window.opener.client.port === 1035 ? ' - Development' : '');
+    }
+
+    function updateCharacter(e) {
+        setTitle(window.opener.getCharacterName());
+    }
+
+
+    window.onbeforeunload = () => {
+        window.opener._status.off('set-title', setTitle);
+        window.opener.removeEventListener('loadCharacter', updateCharacter);
+        window.opener.removeEventListener('updateCharacter', updateCharacter);
+        window.opener.removeEventListener('resetCharacter', updateCharacter);
+    };
+
+    loadHistory();
+    setTitle(window.opener.getCharacterName());
+    window.opener._status.on('set-title', setTitle);
+    window.opener.addEventListener('loadCharacter', updateCharacter);
+    window.opener.addEventListener('updateCharacter', updateCharacter);
+    window.opener.addEventListener('resetCharacter', updateCharacter);
+
 </script>
 
 </html>

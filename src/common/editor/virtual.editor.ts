@@ -5,8 +5,8 @@ import { Splitter, Orientation } from '../splitter';
 import { PropertyGrid } from '../propertygrid';
 import { EditorType, ValueEditor } from '../value.editors';
 import { DataGrid } from '../datagrid';
-import { copy, formatString, isFileSync, capitalize, leadingZeros, Cardinal, resetCursor, enumToString, pinkfishToHTML } from '../library';
-const { clipboard, ipcRenderer } = require('electron');
+import { copy, formatString, isFileSync, capitalize, leadingZeros, Cardinal, resetCursor, enumToString, pinkfishToHTML, offset } from '../library';
+const { clipboard } = require('electron');
 const remote = require('@electron/remote');
 const { Menu, MenuItem } = remote;
 const path = require('path');
@@ -802,14 +802,14 @@ export class VirtualEditor extends EditorBase {
             }
         ];
         this.$descriptionGrid.on('delete', (e) => {
-            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                {
-                    type: 'warning',
-                    title: 'Delete',
-                    message: 'Delete terrain' + (this.$descriptionGrid.selectedCount > 1 ? 's' : '') + '?',
-                    buttons: ['Yes', 'No'],
-                    defaultId: 1
-                })
+            if (dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Delete',
+                message: 'Delete terrain' + (this.$descriptionGrid.selectedCount > 1 ? 's' : '') + '?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+                noLink: true
+            })
                 === 1)
                 e.preventDefault = true;
             else {
@@ -958,14 +958,14 @@ export class VirtualEditor extends EditorBase {
                 e.data[d].data.idx = idx;
                 e.data[d].items.idx = idx;
                 if (!all && idx < this.$items.length) {
-                    choice = ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                        {
-                            type: 'warning',
-                            title: 'Replace items',
-                            message: 'Replace old items with new?',
-                            buttons: ['Yes', 'No', 'All'],
-                            defaultId: 1
-                        });
+                    choice = dialog.showMessageBoxSync({
+                        type: 'warning',
+                        title: 'Replace items',
+                        message: 'Replace old items with new?',
+                        buttons: ['Yes', 'No', 'All'],
+                        defaultId: 1,
+                        noLink: true
+                    });
                     if (choice === 2)
                         all = true;
                     if (choice !== 1) {
@@ -1130,14 +1130,14 @@ export class VirtualEditor extends EditorBase {
             }
         ];
         this.$itemGrid.on('delete', (e) => {
-            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                {
-                    type: 'warning',
-                    title: 'Delete',
-                    message: 'Delete item' + (this.$itemGrid.selectedCount > 1 ? 's' : '') + '?',
-                    buttons: ['Yes', 'No'],
-                    defaultId: 1
-                })
+            if (dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Delete',
+                message: 'Delete item' + (this.$itemGrid.selectedCount > 1 ? 's' : '') + '?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+                noLink: true
+            })
                 === 1)
                 e.preventDefault = true;
             else {
@@ -1564,14 +1564,14 @@ export class VirtualEditor extends EditorBase {
             }
         });
         this.$exitGrid.on('delete', (e) => {
-            if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                {
-                    type: 'warning',
-                    title: 'Delete',
-                    message: 'Delete selected exit' + (this.$exitGrid.selectedCount > 1 ? 's' : '') + '?',
-                    buttons: ['Yes', 'No'],
-                    defaultId: 1
-                })
+            if (dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Delete',
+                message: 'Delete selected exit' + (this.$exitGrid.selectedCount > 1 ? 's' : '') + '?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+                noLink: true
+            })
                 === 1)
                 e.preventDefault = true;
             else {
@@ -4404,14 +4404,14 @@ export class VirtualEditor extends EditorBase {
         if (!this.$files[file] || !isFileSync(path.join(path.dirname(this.file), file)))
             return 0;
         //ask and return answer
-        return ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-            {
-                type: 'warning',
-                title: 'Confirm Save As',
-                message: file + 'already exists.\nDo you want to replace it?',
-                buttons: ['Yes', 'No'],
-                defaultId: 1
-            });
+        return dialog.showMessageBoxSync({
+            type: 'warning',
+            title: 'Confirm Save As',
+            message: file + 'already exists.\nDo you want to replace it?',
+            buttons: ['Yes', 'No'],
+            defaultId: 1,
+            noLink: true
+        });
     }
 
     public revert(file?) {
@@ -5833,6 +5833,10 @@ export class VirtualEditor extends EditorBase {
         }
         return false;
     }
+
+    public update(what, ...args) {
+    }
+
     public get buttons() {
         const frag = document.createDocumentFragment();
         let group;
@@ -5869,16 +5873,16 @@ export class VirtualEditor extends EditorBase {
         el.title = 'Show raw';
         el.innerHTML = '<span class="caret"></span>';
         el.onclick = (e) => {
-            const button = $(e.currentTarget);
-            button.addClass('open');
-            const pos = button.offset();
+            const button: HTMLInputElement = e.currentTarget;
+            button.classList.add('open');
+            const pos = offset(button);
             const x = Math.floor(pos.left);
-            const y = Math.floor(pos.top + button.outerHeight() + 2);
+            const y = Math.floor(pos.top + button.offsetHeight + 2);
             const addMenu = new Menu();
             addMenu.append(new MenuItem({
                 label: 'Map raw',
                 click: () => {
-                    button.removeClass('open');
+                    button.classList.remove('open');
                     button.blur();
                     this.switchView(View.mapRaw);
                 },
@@ -5889,7 +5893,7 @@ export class VirtualEditor extends EditorBase {
                 addMenu.append(new MenuItem({
                     label: 'Terrain raw',
                     click: () => {
-                        button.removeClass('open');
+                        button.classList.remove('open');
                         button.blur();
                         this.switchView(View.terrainsRaw);
                     },
@@ -5899,7 +5903,7 @@ export class VirtualEditor extends EditorBase {
             addMenu.append(new MenuItem({
                 label: 'Description raw',
                 click: () => {
-                    button.removeClass('open');
+                    button.classList.remove('open');
                     button.blur();
                     this.switchView(View.descriptionsRaw);
                 },
@@ -5909,7 +5913,7 @@ export class VirtualEditor extends EditorBase {
             addMenu.append(new MenuItem({
                 label: 'Items raw',
                 click: () => {
-                    button.removeClass('open');
+                    button.classList.remove('open');
                     button.blur();
                     this.switchView(View.itemsRaw);
                 },
@@ -5920,7 +5924,7 @@ export class VirtualEditor extends EditorBase {
                 addMenu.append(new MenuItem({
                     label: 'State raw',
                     click: () => {
-                        button.removeClass('open');
+                        button.classList.remove('open');
                         button.blur();
                         this.switchView(View.stateRaw);
                     },
@@ -5931,7 +5935,7 @@ export class VirtualEditor extends EditorBase {
             addMenu.append(new MenuItem({
                 label: 'External exits raw',
                 click: () => {
-                    button.removeClass('open');
+                    button.classList.remove('open');
                     button.blur();
                     this.switchView(View.exitsRaw);
                 },
@@ -5988,8 +5992,9 @@ export class VirtualEditor extends EditorBase {
             el.setAttribute('for', this.parent.id + '-level');
             el.classList.add('label');
             el.textContent = 'Level';
+            el.appendChild(this.$depthToolbar);
             frag.appendChild(el);
-            frag.appendChild(this.$depthToolbar);
+            //frag.appendChild(this.$depthToolbar);
         }
         return [frag];
     }
@@ -6278,7 +6283,7 @@ export class VirtualEditor extends EditorBase {
         if (this.$exitGrid) {
             this.$exitGrid.enterMoveFirst = value.enterMoveFirst;
             this.$exitGrid.enterMoveNext = value.enterMoveNext;
-            this.$descriptionGrid.enterMoveNew = value.enterMoveNew;
+            this.$exitGrid.enterMoveNew = value.enterMoveNew;
         }
 
         if (this.$roomEditor) {
@@ -9560,9 +9565,9 @@ export class VirtualEditor extends EditorBase {
         if (!noUndo)
             this.pushUndo(undoAction.delete, undoType.room, dRooms);
         let dl = dRooms.length;
-        while(dl--)
+        while (dl--)
             if (dRooms[dl].exits)
-                this.deleteRoom(dRooms[dl], noUndo);     
+                this.deleteRoom(dRooms[dl], noUndo);
         this.$rooms = rooms;
         this.UpdateEditor(this.$selectedRooms);
         this.UpdatePreview(this.selectedFocusedRoom);
@@ -10197,14 +10202,14 @@ export class ExternalExitValueEditor extends ValueEditor {
                 }
             });
             dg.on('delete', (e2) => {
-                if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                    {
-                        type: 'warning',
-                        title: 'Delete',
-                        message: 'Delete selected exit' + (dg.selectedCount > 1 ? 's' : '') + '?',
-                        buttons: ['Yes', 'No'],
-                        defaultId: 1
-                    })
+                if (dialog.showMessageBoxSync({
+                    type: 'warning',
+                    title: 'Delete',
+                    message: 'Delete selected exit' + (dg.selectedCount > 1 ? 's' : '') + '?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1,
+                    noLink: true
+                })
                     === 1)
                     e2.preventDefault = true;
             });
@@ -10537,14 +10542,14 @@ export class ItemsValueEditor extends ValueEditor {
                 }
             });
             dg.on('delete', (e2) => {
-                if (ipcRenderer.sendSync('show-dialog-sync', 'showMessageBox',
-                    {
-                        type: 'warning',
-                        title: 'Delete',
-                        message: 'Delete selected item' + (dg.selectedCount > 1 ? 's' : '') + '?',
-                        buttons: ['Yes', 'No'],
-                        defaultId: 1
-                    })
+                if (dialog.showMessageBoxSync({
+                    type: 'warning',
+                    title: 'Delete',
+                    message: 'Delete selected item' + (dg.selectedCount > 1 ? 's' : '') + '?',
+                    buttons: ['Yes', 'No'],
+                    defaultId: 1,
+                    noLink: true
+                })
                     === 1)
                     e2.preventDefault = true;
             });

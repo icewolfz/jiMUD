@@ -2,7 +2,7 @@
 //spellchecker:ignore sefuns efuns efun sefun lfuns lfun nroff ormatting selectall
 import { EditorBase, EditorOptions, FileState, Source } from './editor.base';
 import { conf, language, loadCompletion, LPCIndenter, LPCFormatter } from './lpc';
-import { isFileSync, isDirSync, parseTemplate, stripPinkfish, copy } from '../library';
+import { isFileSync, isDirSync, parseTemplate, stripPinkfish, copy, createColorDialog } from '../library';
 const { ipcRenderer } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -1029,7 +1029,7 @@ export class MonacoCodeEditor extends EditorBase {
         return 1;
     }
 
-    public menu(menu) {
+    public menu(menu, connected) {
         let m;
         if (menu === 'edit') {
             const selected = this.$oEditor && this.$oEditor.hasTextFocus() ? false : this.selected.length > 0;
@@ -1039,14 +1039,16 @@ export class MonacoCodeEditor extends EditorBase {
                     {
                         label: '&Insert Color...',
                         click: () => {
-                            ipcRenderer.send('show-window', 'color', { type: this.file.replace(/[/|\\:]/g, ''), color: '', window: 'code-editor' });
-                            const setColor = (event, type, color, code, window) => {
-                                if (window !== 'code-editor' || type !== this.file.replace(/[/|\\:]/g, ''))
-                                    return;
-                                this.insert('%^' + code.replace(/ /g, '%^%^') + '%^');
-                                ipcRenderer.removeListener('set-color', setColor);
-                            };
-                            ipcRenderer.on('set-color', setColor);
+                            const _colorDialog: any = createColorDialog();
+                            /*
+                            _colorDialog.addEventListener('DOMContentLoaded', () => {
+                                _colorDialog.setType(this.file.replace(/[/|\\:]/g, ''));
+                            }, { once: true });
+                            */
+                            _colorDialog.addEventListener('setColor', e => {
+                                //if(_colorDialog.getType() === this.file.replace(/[/|\\:]/g, ''))
+                                this.insert('%^' + e.detail.code.replace(/ /g, '%^%^') + '%^');
+                            });
                         }
                     },
                     { type: 'separator' },
@@ -1105,14 +1107,15 @@ export class MonacoCodeEditor extends EditorBase {
                         this.$editor.getAction('editor.action.formatDocument').run();
                     }
                 }]);
-                if (path.extname(this.file) === '.c') {
+                if (path.extname(this.file) === '.c' && window.opener) {
                     m.push(...[
                         { type: 'separator' },
                         {
                             label: '&Test',
                             click: () => {
                                 this.emit('debug', this.file);
-                            }
+                            },
+                            enabled: connected || false
                         },
                         {
                             label: 'T&est Clear',
@@ -1121,7 +1124,8 @@ export class MonacoCodeEditor extends EditorBase {
                                 this.$model.deltaDecorations(this.decorations || [], []);
                                 this.decorations = null;
                                 this.rawDecorations = null;
-                            }
+                            },
+                            enabled: connected || false
                         }
                     ]);
                 }
@@ -1170,14 +1174,16 @@ export class MonacoCodeEditor extends EditorBase {
                         {
                             label: '&Insert Color...',
                             click: () => {
-                                ipcRenderer.send('show-window', 'color', { type: this.file.replace(/[/|\\:]/g, ''), color: '', window: 'code-editor' });
-                                const setColor = (event, type, color, code, window) => {
-                                    if (window !== 'code-editor' || type !== this.file.replace(/[/|\\:]/g, ''))
-                                        return;
-                                    this.insert('%^' + code.replace(/ /g, '%^%^') + '%^');
-                                    ipcRenderer.removeListener('set-color', setColor);
-                                };
-                                ipcRenderer.on('set-color', setColor);
+                                const _colorDialog: any = createColorDialog();
+                                /*
+                                _colorDialog.addEventListener('DOMContentLoaded', () => {
+                                    _colorDialog.setType(this.file.replace(/[/|\\:]/g, ''));
+                                }, { once: true });
+                                */
+                                _colorDialog.addEventListener('setColor', e => {
+                                    //if(_colorDialog.getType() === this.file.replace(/[/|\\:]/g, ''))
+                                    this.insert('%^' + e.detail.code.replace(/ /g, '%^%^') + '%^');
+                                });
                             }
                         },
                         { type: 'separator' },
@@ -1256,7 +1262,8 @@ export class MonacoCodeEditor extends EditorBase {
                         this.$editor.getAction('editor.action.formatDocument').run();
                     }
                 }]);
-                if (path.extname(this.file) === '.c') {
+                //only show if connected and linked to a client window
+                if (path.extname(this.file) === '.c' && window.opener && connected) {
                     m.push(...[
                         { type: 'separator' },
                         {
@@ -1338,8 +1345,16 @@ export class MonacoCodeEditor extends EditorBase {
             ];
     }
 
+    public update(what, ...args) {
+        if (!window.opener) return;
+        if (what === 'menu') {
+            args[0].updateItem('edit|test', { enabled: args[1] });
+            args[0].updateItem('edit|test clear', { enabled: args[1] });
+        }
+    }
+
     public get buttons() {
-        if (path.extname(this.source === 1 ? this.remote : this.file) !== '.c')
+        if (!window.opener || path.extname(this.source === 1 ? this.remote : this.file) !== '.c')
             return [];
         const group = document.createElement('div');
         group.classList.add('btn-group');
@@ -1348,7 +1363,7 @@ export class MonacoCodeEditor extends EditorBase {
         let el = document.createElement('button');
         el.id = 'btn-debug';
         el.type = 'button';
-        el.classList.add('btn', 'btn-default', 'btn-xs');
+        el.classList.add('btn', 'btn-default', 'btn-xs', 'connected');
         el.title = 'Test';
         el.addEventListener('click', () => {
             this.emit('debug', this.file);
@@ -1358,7 +1373,7 @@ export class MonacoCodeEditor extends EditorBase {
         el = document.createElement('button');
         el.id = 'btn-debug';
         el.type = 'button';
-        el.classList.add('btn', 'btn-default', 'btn-xs');
+        el.classList.add('btn', 'btn-default', 'btn-xs', 'connected');
         el.title = 'Test clear';
         el.addEventListener('click', () => {
             monaco.editor.setModelMarkers(this.$model, '', []);

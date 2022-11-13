@@ -11,7 +11,8 @@ import EventEmitter = require('events');
 import { Parser } from './parser';
 import { htmlEncode, formatUnit } from './library';
 import { Finder } from './finder';
-import { DisplayOptions, OverlayRange } from './types';
+import { DisplayOptions, OverlayRange, Point } from './types';
+const moment = require('moment');
 
 //const CONTAINS_RTL = /(?:[\u05BE\u05C0\u05C3\u05C6\u05D0-\u05F4\u0608\u060B\u060D\u061B-\u064A\u066D-\u066F\u0671-\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u0710\u0712-\u072F\u074D-\u07A5\u07B1-\u07EA\u07F4\u07F5\u07FA-\u0815\u081A\u0824\u0828\u0830-\u0858\u085E-\u08BD\u200F\uFB1D\uFB1F-\uFB28\uFB2A-\uFD3D\uFD50-\uFDFC\uFE70-\uFEFC]|\uD802[\uDC00-\uDD1B\uDD20-\uDE00\uDE10-\uDE33\uDE40-\uDEE4\uDEEB-\uDF35\uDF40-\uDFFF]|\uD803[\uDC00-\uDCFF]|\uD83A[\uDC00-\uDCCF\uDD00-\uDD43\uDD50-\uDFFF]|\uD83B[\uDC00-\uDEBB])/;
 //const CONTAINS_LTR = /(?:[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u02B8\u0300-\u0590\u0800-\u1FFF'+'\u2C00-\uFB1C\uFDFE-\uFE6F\uFEFD-\uFFFF])/;
@@ -42,7 +43,23 @@ interface ScrollState {
 }
 
 export enum ScrollType { vertical = 0, horizontal = 1 }
-export enum UpdateType { none = 0, view = 1, overlays = 2, selection = 4, scrollbars = 8, update = 16, scroll = 32, scrollEnd = 64, scrollView = 128, display = 256, selectionChanged = 512, scrollViewOverlays = 1024, layout = 2048, scrollReset = 4096 }
+export enum UpdateType {
+    none = 0,
+    view = 1 << 0,
+    overlays = 1 << 1,
+    selection = 1 << 2,
+    scrollbars = 1 << 3,
+    update = 1 << 4,
+    scroll = 1 << 5,
+    scrollEnd = 1 << 6,
+    scrollView = 1 << 7,
+    display = 1 << 8,
+    selectionChanged = 1 << 9,
+    scrollViewOverlays = 1 << 10,
+    layout = 1 << 11,
+    scrollReset = 1 << 12,
+    calculateLines = 1 << 13
+}
 
 enum CornerType {
     Flat = 0,
@@ -54,13 +71,37 @@ interface ContextEvent extends PointerEvent {
     word: string;
     url: string;
     line: string;
+    wrappedLine: string;
 }
 
-interface Line {
-    height: number;
-    top: number;
-    width: number;
-    images: number;
+/**
+ * Contains data for a wrapped display line that is the part of a full line, replaces Line interface
+ */
+interface WrapLine {
+    line: number;           //The line number
+    id: number;             //The line id
+    height: number          //the height of the line
+    width: number;          //lets cache the width for faster calculations
+    top: number;            //cache the top to speed up display
+    images: number;         //track loading images
+    startOffset: number;    //the text start offset
+    startFormat: number;    //the starting fragment index
+    endOffset: number;      //the text end offset
+    endFormat: number;      //the ending fragment index
+    indent: boolean;        //is line indented
+    formatWidths: number[]  //format widths
+    hr: boolean             //is a horizontal rule line
+}
+
+/**
+ * Contains parsed line data
+ */
+interface LineData {
+    text: string;       //the line text
+    formats: any[];     //the line formatting data
+    raw: string;        //the raw line data including all ansi codes
+    id: number;         //unique id for line
+    timestamp: number;  //timestamp the line was added
 }
 
 /**
@@ -76,8 +117,8 @@ interface Line {
  * @todo Add/fix MXP image selection highlighting
  */
 export class Display extends EventEmitter {
-    private _lineID = 0;
-    private _parser: Parser;
+    private _model: DisplayModel;
+
     private _el: HTMLElement;
     private _os;
     private _padding = [0, 0, 0, 0];
@@ -87,19 +128,22 @@ export class Display extends EventEmitter {
     private _background: HTMLElement;
     private _finder: Finder;
     private _maxView: number = 0;
-    private _aTimer = 0;
+    private _maxViewHeight: number = 0;
 
-    private _maxLineLength: number = 0;
+    private _maxWidth: number = 0;
+    private _maxHeight: number = 0;
     private _currentSelection: Selection = {
-        start: { x: null, y: null },
-        end: { x: null, y: null },
+        start: { x: null, y: null, lineID: null, lineOffset: null },
+        end: { x: null, y: null, lineID: null, lineOffset: null },
         scrollTimer: null,
         drag: false
     };
-    private _prevSelection = {
-        start: { x: null, y: null },
-        end: { x: null, y: null }
+    /*
+    private _prevSelection: OverlayRange = {
+        start: { x: null, y: null, lineID: null, lineOffset: null },
+        end: { x: null, y: null, lineID: null, lineOffset: null }
     };
+    */
     private _borderSize: Size = { width: 0, height: 0 };
     private _character: HTMLElement;
     private _viewRange: Range = { start: 0, end: 0 };
@@ -108,25 +152,26 @@ export class Display extends EventEmitter {
     private _lastMouse: MouseEvent;
     private _roundedRanges: boolean = true;
 
-    private _lines: Line[] = [];
+    private _lines: WrapLine[] = [];
 
-    public lines: string[] = [];
-    private lineIDs: number[] = [];
-    public rawLines: string[] = [];
     public scrollToEnd: boolean = true;
-    private lineFormats = [];
     private _maxLines: number = 5000;
     private _charHeight: number;
     private _charWidth: number;
-    private _expire = {};
-    private _expire2 = [];
     private _overlays: Overlays = {
         selection: []
     };
+    private _overlayRanges = {};
     private _VScroll: ScrollBar;
     private _HScroll: ScrollBar;
     private _updating: UpdateType = UpdateType.none;
     private _splitHeight: number = -1;
+    private _wordWrap: boolean = false;
+    private _wrapAt: number = 0;
+    private _indent: number = 4;
+    private _timestamp: boolean = false;
+    private _timestampFormat: string = '[[]MM-DD HH:mm:ss.SSS[]] ';
+    private _timestampWidth: number = 0;
 
     public split = null;
     public splitLive: boolean = false;
@@ -141,7 +186,6 @@ export class Display extends EventEmitter {
             this._VScroll.autoScroll = !locked;
         }
     }
-
 
     private _linkFunction;
     private _mxpLinkFunction;
@@ -167,6 +211,125 @@ export class Display extends EventEmitter {
     private _hideTrailingEmptyLine = true;
     private _enableColors = true;
     private _enableBackgroundColors = true;
+    private _linesMap: Map<number, WrapLine[]> = new Map<number, WrapLine[]>();
+
+    get model() { return this._model; }
+    set model(value: DisplayModel) {
+        if (this._model === value) return;
+        //if model set remove all listeners
+        if (this._model)
+            this._model.removeAllListeners();
+        //set model and assign all the events needed
+        this._model = value;
+        this._model.on('debug', msg => this.debug);
+        this._model.on('bell', () => { this.emit('bell'); });
+        this._model.on('add-line', data => { this.emit('add-line', data); });
+        this._model.on('add-line-done', data => { this.emit('add-line-done', data); });
+        this._model.on('line-added', (data, noUpdate) => {
+            const idx = this._model.lines.length - 1;
+            const t = this.calculateWrapLines(idx, 0, this._indent, (this._timestamp ? this._timestampWidth : 0));
+            //track wrapped lines to line to make it easier ot lookup all wrapped lines and allow indexOf and other build in functions
+            this._linesMap.set(this._model.getLineID(idx), t);
+            if (data.formats[0].hr) {
+                t[0].hr = true;
+                this._maxWidth = Math.max(this._maxWidth, this._maxView);
+                this._maxHeight = Math.max(this._maxHeight, this._charHeight);
+            }
+            else {
+                this._maxWidth = Math.max(this._maxWidth, t[0].width);
+                this._maxHeight = Math.max(this._maxHeight, t[0].height);
+            }
+            if (this._lines.length > 0)
+                t[0].top = this._lines[this._lines.length - 1].top + this._lines[this._lines.length - 1].height;
+            for (let l = 1, ll = t.length; l < ll; l++) {
+                t[l].top = t[l - 1].top + t[l - 1].height;
+                this._maxWidth = Math.max(this._maxWidth, t[l].width + ((this._indent || 0) * this._charWidth));
+                this._maxHeight = Math.max(this._maxHeight, t[l].height);
+            }
+            this._lines.push(...t);
+
+            if (this.split) this.split.dirty = true;
+            //if (!noUpdate)
+                //this.doUpdate(UpdateType.display);
+            this.doUpdate(UpdateType.display);
+        });
+
+        this._model.on('expire-links', args => {
+            this.doUpdate(UpdateType.view);
+            this.emit('expire-links');
+        });
+        this._model.on('parse-done', () => {
+            this.emit('parse-done');
+        });
+
+        this._model.on('set-title', (title, type) => {
+            this.emit('set-title', title, type);
+        });
+        this._model.on('music', (data) => {
+            this.emit('music', data);
+        });
+        this._model.on('sound', (data) => {
+            this.emit('sound', data);
+        });
+
+        this._model.on('MXP-tag-reply', (tag, args) => {
+            this.emit('MXP-tag-reply', tag, args);
+        });
+
+        this._model.on('expire-link-line', idx => {
+            if (this.split && idx >= this.split._viewRange.start && idx <= this.split._viewRange.end && this.split._viewRange.end !== 0 && !this._model.busy) {
+                this.split.dirty = true;
+                this.doUpdate(UpdateType.display);
+            }
+            if (idx >= this._viewRange.start && idx <= this._viewRange.end && this._viewRange.end !== 0 && !this._model.busy) {
+                if (this.split) this.split.dirty = true;
+                this.doUpdate(UpdateType.display);
+            }
+        });
+    }
+
+    get showTimestamp() { return this._timestamp; }
+    set showTimestamp(value: boolean) {
+        if (value === this._timestamp) return;
+        this._timestamp = value;
+        this._viewCache = {};
+        if (this.split)
+            this.split.viewCache = {};
+        this.doUpdate(UpdateType.display);
+    }
+
+    get timestampFormat() { return this._timestampFormat; }
+    set timestampFormat(value: string) {
+        if (this._timestampFormat === value) return;
+        this._timestampFormat = value;
+        this._timestampWidth = this.textWidth(moment().format(this._timestampFormat));
+        this._viewCache = {};
+        if (this.split)
+            this.split.viewCache = {};
+        this.doUpdate(UpdateType.display);
+    }
+
+    get wordWrap() { return this._wordWrap; }
+    set wordWrap(value: boolean) {
+        if (value === this._wordWrap) return;
+        this._wordWrap = value;
+        this.doUpdate(UpdateType.calculateLines);
+    }
+
+    get wrapAt() { return this._wrapAt; }
+    set wrapAt(value: number) {
+        if (value === this._wrapAt) return;
+        this._wrapAt = value;
+        this.doUpdate(UpdateType.calculateLines);
+    }
+
+    get indent() { return this._indent; }
+    set indent(value: number) {
+        if (value === this._indent)
+            return;
+        this._indent = value;
+        this.doUpdate(UpdateType.calculateLines);
+    }
 
     get enableColors() { return this._enableColors; }
     set enableColors(value) {
@@ -204,7 +367,7 @@ export class Display extends EventEmitter {
     set roundedRanges(value: boolean) {
         if (value !== this._roundedRanges) {
             this._roundedRanges = value;
-            this.doUpdate(UpdateType.selection | UpdateType.overlays);
+            this.doUpdate(UpdateType.selection | UpdateType.overlays | UpdateType.scrollViewOverlays);
         }
     }
 
@@ -220,6 +383,11 @@ export class Display extends EventEmitter {
     get enableSplit(): boolean { return this.split == null; }
     set enableSplit(value: boolean) {
         const id = this._el.id;
+        //reset the scroll corner to ensure it is in proper state
+        if (this._scrollCorner) {
+            this._el.removeChild(this._scrollCorner);
+            this._scrollCorner = null;
+        }
         if (!this.split && value) {
             this.split = document.createElement('div');
             this.split.dirty = true;
@@ -255,14 +423,14 @@ export class Display extends EventEmitter {
                     this.split.style.bottom = this._HScroll.size + 'px';
                     this.split.bottom = this._HScroll.size;
                 }
-                if (this.split.dirty && this.split.shown && this._VScroll.scrollSize >= 0 && this.lines.length > 0) {
+                if (this.split.dirty && this.split.shown && this._VScroll.scrollSize >= 0 && this._lines.length > 0) {
                     this.split._viewRange.start = Math.trunc(this._VScroll.scrollSize / this._charHeight);
                     this.split._viewRange.end = Math.ceil((this._VScroll.scrollSize + this._innerHeight) / this._charHeight);
 
                     if (this.split._viewRange.start < 0)
                         this.split._viewRange.start = 0;
-                    if (this.split._viewRange.end > this.lines.length)
-                        this.split._viewRange.end = this.lines.length;
+                    if (this.split._viewRange.end > this._lines.length)
+                        this.split._viewRange.end = this._lines.length;
                     const lines = [];
                     const bLines = [];
                     let start = this.split._viewRange.start;
@@ -275,10 +443,10 @@ export class Display extends EventEmitter {
                         overlays.push.apply(overlays, this._overlays[ol].slice(start, end + 1));
                     }
                     overlays.push.apply(overlays, this._overlays['selection'].slice(start, end + 1));
-                    const mw = '' + (this._maxLineLength === 0 ? 0 : Math.max(this._maxLineLength * this._charWidth, this._maxView));
+                    const mw = '' + (this._maxWidth === 0 ? 0 : Math.max((this._timestamp ? this._timestampWidth : 0) + this._maxWidth, this._maxView));
                     const mv = '' + this._maxView;
-                    this.split.view.style.width = this._maxLineLength * this._charWidth + 'px';
-                    this.split.background.style.width = this._maxLineLength * this._charWidth + 'px';
+                    this.split.view.style.width = (this._timestamp ? this._timestampWidth : 0) + this._maxWidth + 'px';
+                    this.split.background.style.width = (this._timestamp ? this._timestampWidth : 0) + this._maxWidth + 'px';
                     const cache = {};
                     for (; start < end; start++) {
                         if (this.split.viewCache[start])
@@ -297,7 +465,7 @@ export class Display extends EventEmitter {
                 }
             };
             this.split.updateOverlays = () => {
-                if (this.split.shown && this._VScroll.scrollSize >= 0 && this.lines.length > 0) {
+                if (this.split.shown && this._VScroll.scrollSize >= 0 && this._lines.length > 0) {
                     const start = this.split._viewRange.start;
                     const end = this.split._viewRange.end;
                     const overlays = [];
@@ -425,6 +593,14 @@ export class Display extends EventEmitter {
         return '';
     }
 
+    get lines() {
+        return this._model.lines;
+    }
+
+    get wrappedLines() {
+        return this._lines;
+    }
+
     constructor(display: string | JQuery | HTMLElement, options?);
     constructor(display?: any, options?: DisplayOptions) {
         super();
@@ -486,7 +662,7 @@ export class Display extends EventEmitter {
         this._ruler.style.lineHeight = 'normal';
         this._ruler.style.borderBottom = '1px solid black';
         this._ruler.style.visibility = 'hidden';
-        document.body.appendChild(this._ruler);
+        this._el.appendChild(this._ruler);
 
         this._character = document.createElement('div');
         this._character.id = this.id + '-Character';
@@ -495,9 +671,9 @@ export class Display extends EventEmitter {
         this._character.innerText = 'W';
         this._character.style.visibility = 'hidden';
         this._ruler.style.visibility = 'hidden';
-        document.body.appendChild(this._character);
+        this._el.appendChild(this._character);
 
-        this._charHeight = $(this._character).innerHeight();
+        this._charHeight = parseFloat(window.getComputedStyle(this._character).height);
         this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
         this.buildStyleSheet();
 
@@ -519,85 +695,25 @@ export class Display extends EventEmitter {
             options = { display: this };
         else
             options.display = this;
-        this._parser = new Parser(options);
-        this._parser.on('debug', (msg) => { this.debug(msg); });
 
-        this._parser.on('bell', () => { this.emit('bell'); });
-
-        this._parser.on('add-line', (data: ParserLine) => {
-            this.addParserLine(data, true);
-        });
-
-        this._parser.on('expire-links', (args) => {
-            let lines;
-            let line;
-            let expire;
-            if (!args || args.length === 0) {
-                for (line in this._expire2) {
-                    if (!this._expire2.hasOwnProperty(line))
-                        continue;
-                    this.expireLineLinkFormat(this._expire2[line], +line);
-                }
-                for (expire in this._expire) {
-                    if (!this._expire.hasOwnProperty(expire))
-                        continue;
-                    lines = this._expire[expire];
-                    for (line in lines) {
-                        if (!lines.hasOwnProperty(line))
-                            continue;
-                        this.expireLineLinkFormat(lines[line], +line);
-                    }
-                }
-                this._expire2 = [];
-                this._expire = {};
-                this.doUpdate(UpdateType.view);
-            }
-            else if (this._expire[args]) {
-                lines = this._expire[args];
-                for (line in lines) {
-                    if (!lines.hasOwnProperty(line))
-                        continue;
-                    this.expireLineLinkFormat(lines[line], +line);
-                }
-                delete this._expire[args];
-                this.doUpdate(UpdateType.view);
-            }
-            this.emit('expire-links', args);
-        });
-
-        this._parser.on('parse-done', () => {
-            this.doUpdate(UpdateType.display);
-            this.emit('parse-done');
-        });
-
-        this._parser.on('set-title', (title, type) => {
-            this.emit('set-title', title, type);
-        });
-        this._parser.on('music', (data) => {
-            this.emit('music', data);
-        });
-        this._parser.on('sound', (data) => {
-            this.emit('sound', data);
-        });
-
-        this._parser.on('MXP-tag-reply', (tag, args) => {
-            this.emit('MXP-tag-reply', tag, args);
-        });
+        this.model = new DisplayModel(options);
 
         this._el.addEventListener('mousedown', (e) => {
             if (e.buttons && e.button === 0) {
                 e.preventDefault();
                 e.cancelBubble = true;
                 const os = this._os;
-                if (e.pageX - os.left > this._innerWidth)
+                if (e.pageX - os?.left > this._maxView)
                     return;
-                if (e.pageY - os.top > this._innerHeight)
+                if (e.pageY - os?.top > this._maxViewHeight)
                     return;
                 this._currentSelection.drag = true;
+                /*
                 this._prevSelection = {
-                    start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
-                    end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
+                    start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset },
+                    end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset }
                 };
+                */
                 if (e.shiftKey) {
                     this._currentSelection.end = this.getLineOffset(e.pageX, e.pageY);
                     this.emit('selection-start');
@@ -614,11 +730,11 @@ export class Display extends EventEmitter {
         });
 
         this._el.addEventListener('mouseup', (e) => {
-            if (this.lines.length === 0 || e.button !== 0) return;
+            if (this._lines.length === 0 || e.button !== 0) return;
             if (e.detail === 2) {
                 const o = this.getLineOffset(e.pageX, e.pageY);
-                if (o.y >= 0 && o.y < this.lines.length) {
-                    const line = this.lines[o.y];
+                if (o.y >= 0 && o.y < this._lines.length) {
+                    const line = this.getLineText(o.y);
                     const len = line.length;
                     if (o.x >= 0 || o.x < len) {
                         let sPos = o.x;
@@ -633,13 +749,15 @@ export class Display extends EventEmitter {
                             ePos++;
                         }
                         if (sPos >= 0 && ePos <= len) {
+                            /*
                             this._prevSelection = {
-                                start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
-                                end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
+                                start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset },
+                                end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset }
                             };
+                            */
                             this._currentSelection = {
-                                start: { x: sPos, y: o.y },
-                                end: { x: ePos, y: o.y },
+                                start: { x: sPos, y: o.y, lineID: this._lines[o.y].id, lineOffset: this._lines[o.y].startOffset + sPos },
+                                end: { x: ePos, y: o.y, lineID: this._lines[o.y].id, lineOffset: this._lines[o.y].startOffset + ePos },
                                 scrollTimer: null,
                                 drag: false
                             };
@@ -652,14 +770,16 @@ export class Display extends EventEmitter {
             }
             else if (e.detail === 3) {
                 const o = this.getLineOffset(e.pageX, e.pageY);
-                if (o.y >= 0 && o.y < this.lines.length) {
+                if (o.y >= 0 && o.y < this._lines.length) {
+                    /*
                     this._prevSelection = {
-                        start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
-                        end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
+                        start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset },
+                        end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset }
                     };
+                    */
                     this._currentSelection = {
-                        start: { x: 0, y: o.y },
-                        end: { x: this.lines[o.y].length, y: o.y },
+                        start: { x: 0, y: o.y, lineID: this._lines[o.y].id, lineOffset: this._lines[o.y].startOffset },
+                        end: { x: this.getLineText(o.y).length, y: o.y, lineID: this._lines[o.y].id, lineOffset: this._lines[o.y].startOffset + this.getLineText(o.y).length },
                         scrollTimer: null,
                         drag: false
                     };
@@ -689,10 +809,12 @@ export class Display extends EventEmitter {
             if (this._currentSelection.drag) {
                 this._lastMouse = e;
                 this._currentSelection.scrollTimer = setInterval(() => {
+                    /*
                     this._prevSelection = {
-                        start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
-                        end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
+                        start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset },
+                        end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset }
                     };
+                    */
                     /// pull as long as you can scroll either direction
 
                     if (!this._lastMouse) {
@@ -711,10 +833,10 @@ export class Display extends EventEmitter {
                     else if (y >= this._innerHeight && this._VScroll.position < this._VScroll.scrollSize) {
                         y = this._charHeight;
                         this._currentSelection.end.y++;
-                        if (this.lines.length === 0)
+                        if (this._lines.length === 0)
                             this._currentSelection.end.x = 0;
-                        else if (this._currentSelection.end.y >= this.lines.length)
-                            this._currentSelection.end.x = this.lines[this.lines.length - 1].length;
+                        else if (this._currentSelection.end.y >= this._lines.length)
+                            this._currentSelection.end.x = this.getLineText(this._lines.length - 1).length;
                     }
                     else
                         y = 0;
@@ -727,18 +849,24 @@ export class Display extends EventEmitter {
                         x = this._charWidth;
                         this._currentSelection.end.x++;
                     }
-                    else if (x > 0 && this._currentSelection.end.y >= this.lines.length) {
+                    else if (x > 0 && this._currentSelection.end.y >= this._lines.length) {
                         x = 0;
-                        if (this.lines.length === 0)
+                        if (this._lines.length === 0)
                             this._currentSelection.end.x = 0;
                         else
-                            this._currentSelection.end.x = this.lines[this.lines.length - 1].length;
+                            this._currentSelection.end.x = this.getLineText(this.lines.length - 1).length;
                     }
                     else {
                         x = 0;
                         this._currentSelection.end.x = 0;
                     }
-
+                    if (this._currentSelection.end.y >= this._lines.length) {
+                        this._currentSelection.end.lineID = this._lines[this._lines.length - 1].id;
+                        this._currentSelection.end.lineOffset = this._lines[this._lines.length - 1].endOffset;
+                    }
+                    else {
+                        this._currentSelection.end.lineID = this._lines[this._currentSelection.end.y].id;
+                    }
                     if (x === 0 && y === 0)
                         return;
 
@@ -752,10 +880,14 @@ export class Display extends EventEmitter {
 
         this._el.addEventListener('contextmenu', (e: ContextEvent) => {
             const o = this.getLineOffset(e.pageX, e.pageY);
-            if (o.y >= 0 && o.y < this.lines.length)
-                e.line = this.lines[o.y];
-            else
+            if (o.y >= 0 && o.y < this._lines.length) {
+                e.line = this.getLineText(o.y, true);
+                e.wrappedLine = this.getLineText(o.y);
+            }
+            else {
                 e.line = '';
+                e.wrappedLine = this.getLineText(o.y);
+            }
             e.word = this.getWordFromPosition(o);
             e.url = this.getUrlFromPosition(o);
             this.emit('context-menu', e);
@@ -773,7 +905,8 @@ export class Display extends EventEmitter {
                 clearInterval(this._currentSelection.scrollTimer);
                 this._currentSelection.scrollTimer = null;
                 this._currentSelection.drag = false;
-                this._currentSelection.end = this.getLineOffset(e.pageX, e.pageY);
+                this._currentSelection.end = this.clampPosition(this.getLineOffset(e.pageX, e.pageY));
+                this._currentSelection.start = this.clampPosition(this._currentSelection.start);
                 this.emit('selection-done');
                 this.doUpdate(UpdateType.selection);
             }
@@ -808,6 +941,17 @@ export class Display extends EventEmitter {
         });
         this._finder.on('closed', () => {
             this.emit('closed');
+        });
+        this._finder.on('highlight', () => {
+            this.emit('highlight');
+        });
+
+        this._finder.on('moving', location => {
+            this.emit('finder-moving', location);
+        });
+
+        this._finder.on('moved', location => {
+            this.emit('finder-moved', location);
         });
 
         this._finder.on('found-results', () => {
@@ -899,6 +1043,14 @@ export class Display extends EventEmitter {
         this._finder.Highlight = value;
     }
 
+    get finderLocation() {
+        return this._finder.location;
+    }
+
+    set finderLocation(value) {
+        this._finder.location = value;
+    }
+
     private doUpdate(type?: UpdateType) {
         if (!type) return;
         this._updating |= type;
@@ -960,7 +1112,7 @@ export class Display extends EventEmitter {
             }
 
             if ((this._updating & UpdateType.selectionChanged) === UpdateType.selectionChanged) {
-                this._prevSelection.end = this._currentSelection.end;
+                //this._prevSelection.end = this._currentSelection.end;
                 this._currentSelection.end = this.getLineOffset(this._lastMouse.pageX, this._lastMouse.pageY);
                 this.emit('selection-changed');
                 this._updating &= ~UpdateType.selectionChanged;
@@ -973,8 +1125,18 @@ export class Display extends EventEmitter {
                 this.updateOverlays();
                 this._updating &= ~UpdateType.overlays;
             }
+            if ((this._updating & UpdateType.calculateLines) === UpdateType.calculateLines) {
+                this.update();
+                this.reCalculateLines();
+                if (this.split) this.split.dirty = true;
+                this.doUpdate(UpdateType.display | UpdateType.scrollbars);
+                this._updating &= ~UpdateType.calculateLines;
+                this._updating &= ~UpdateType.update;
+            }
             if ((this._updating & UpdateType.update) === UpdateType.update) {
                 this.update();
+                if (this._wordWrap && !this._wrapAt)
+                    this.reCalculateLines();
                 this.updateScrollbars();
                 this._updating &= ~UpdateType.update;
                 this._updating &= ~UpdateType.scrollbars;
@@ -1005,92 +1167,107 @@ export class Display extends EventEmitter {
 
     set enableDebug(enable: boolean) {
         this._enableDebug = enable;
-        this._parser.enableDebug = enable;
+        this._model.enableDebug = enable;
+    }
+
+    get tabWidth(): number {
+        return this._model.tabWidth;
+    }
+
+    set tabWidth(value) {
+        this._model.tabWidth = value;
     }
 
     get textLength(): number {
-        return this._parser.textLength;
+        return this._model.textLength;
     }
 
     get EndOfLine(): boolean {
-        return this._parser.EndOfLine;
+        return this._model.EndOfLine;
     }
 
     get parseQueueLength(): number {
-        return this._parser.parseQueueLength;
+        return this._model.parseQueueLength;
     }
 
     get parseQueueEndOfLine(): boolean {
-        return this._parser.parseQueueEndOfLine;
+        return this._model.parseQueueEndOfLine;
     }
 
     get EndOfLineLength(): number {
-        if (this.lines.length === 0)
+        if (this._lines.length === 0)
             return 0;
-        return this.lines[this.lines.length - 1].length;
+        return this.lines[this.lines.length - 1].text.length;
     }
 
     set enableFlashing(value: boolean) {
-        this._parser.enableFlashing = value;
+        this._model.enableFlashing = value;
     }
     get enableFlashing(): boolean {
-        return this._parser.enableFlashing;
+        return this._model.enableFlashing;
     }
 
     set enableMXP(value: boolean) {
-        this._parser.enableMXP = value;
+        this._model.enableMXP = value;
     }
     get enableMXP(): boolean {
-        return this._parser.enableMXP;
+        return this._model.enableMXP;
     }
 
     set showInvalidMXPTags(value: boolean) {
-        this._parser.showInvalidMXPTags = value;
+        this._model.showInvalidMXPTags = value;
     }
     get showInvalidMXPTags(): boolean {
-        return this._parser.showInvalidMXPTags;
+        return this._model.showInvalidMXPTags;
     }
 
     set enableBell(value: boolean) {
-        this._parser.enableBell = value;
+        this._model.enableBell = value;
     }
     get enableBell(): boolean {
-        return this._parser.enableBell;
+        return this._model.enableBell;
     }
 
     set enableURLDetection(value: boolean) {
-        this._parser.enableURLDetection = value;
+        this._model.enableURLDetection = value;
     }
     get enableURLDetection(): boolean {
-        return this._parser.enableURLDetection;
+        return this._model.enableURLDetection;
     }
 
     set enableMSP(value: boolean) {
-        this._parser.enableMSP = value;
+        this._model.enableMSP = value;
     }
     get enableMSP(): boolean {
-        return this._parser.enableMSP;
+        return this._model.enableMSP;
     }
 
     set displayControlCodes(value: boolean) {
-        this._parser.displayControlCodes = value;
+        this._model.displayControlCodes = value;
     }
     get displayControlCodes(): boolean {
-        return this._parser.displayControlCodes;
+        return this._model.displayControlCodes;
     }
 
     set emulateTerminal(value: boolean) {
-        this._parser.emulateTerminal = value;
+        this._model.emulateTerminal = value;
     }
     get emulateTerminal(): boolean {
-        return this._parser.emulateTerminal;
+        return this._model.emulateTerminal;
+    }
+
+    set emulateControlCodes(value: boolean) {
+        this._model.emulateControlCodes = value;
+    }
+    get emulateControlCodes(): boolean {
+        return this._model.emulateControlCodes;
     }
 
     set MXPStyleVersion(value: string) {
-        this._parser.StyleVersion = value;
+        this._model.MXPStyleVersion = value;
     }
     get MXPStyleVersion(): string {
-        return this._parser.StyleVersion;
+        return this._model.MXPStyleVersion;
     }
 
     public debug(msg) {
@@ -1098,11 +1275,11 @@ export class Display extends EventEmitter {
     }
 
     public append(txt: string, remote?: boolean, force?: boolean, prependSplit?: boolean) {
-        this._parser.parse(txt, remote || false, force || false, prependSplit || false);
+        this._model.append(txt, remote || false, force || false, prependSplit || false);
     }
 
     public CurrentAnsiCode() {
-        return this._parser.CurrentAnsiCode();
+        return this._model.CurrentAnsiCode();
     }
 
     public updateWindow(width?, height?) {
@@ -1110,36 +1287,31 @@ export class Display extends EventEmitter {
             width = this.WindowWidth;
             height = this.WindowHeight;
         }
-        this._parser.updateWindow(width, height);
+        this._model.updateWindow(width, height);
         this.emit('update-window', width, height);
     }
 
     public clear() {
-        this._parser.Clear();
-        this.lines = [];
-        this.rawLines = [];
-        this.lineFormats = [];
-        this._expire = {};
-        this._expire2 = [];
+        this._model.clear();
         this._overlays = {
             selection: []
         };
         this._viewCache = {};
-        this.lineIDs = [];
+
         this._lines = [];
-        this._lineID = 0;
+
         this._viewRange = { start: 0, end: 0 };
-        this._maxLineLength = 0;
+        this._maxWidth = 0;
+        this._maxHeight = 0;
         this._overlay.innerHTML = null;
         this._view.innerHTML = null;
         this._background.innerHTML = null;
         this._currentSelection = {
-            start: { x: null, y: null },
-            end: { x: null, y: null },
+            start: { x: null, y: null, lineID: null, lineOffset: null },
+            end: { x: null, y: null, lineID: null, lineOffset: null },
             drag: false,
             scrollTimer: null
         };
-        this._parser.Clear();
         this._VScroll.reset();
         this._HScroll.reset();
         if (this.split) {
@@ -1176,7 +1348,7 @@ export class Display extends EventEmitter {
             this._contextFont = `${size} ${font}`;
             this._context.font = this._contextFont;
             //recalculate height/width of characters so display can be calculated
-            this._charHeight = $(this._character).innerHeight();
+            this._charHeight = parseFloat(window.getComputedStyle(this._character).height);
             this._charWidth = parseFloat(window.getComputedStyle(this._character).width);
             this.buildStyleSheet();
             this.reCalculateLines();
@@ -1187,6 +1359,7 @@ export class Display extends EventEmitter {
             this.updateWindow();
             //re-enable in case something outside of font change triggers a change
             this.$observer.observe(this._el, { attributes: true, attributeOldValue: true, attributeFilter: ['style'] });
+            this._timestampWidth = this.textWidth(moment().format(this._timestampFormat));
         }
         const pc = window.getComputedStyle(this._el);
         const padding = [
@@ -1206,9 +1379,9 @@ export class Display extends EventEmitter {
     }
 
     public updateView() {
-        const w = this._maxLineLength * this._charWidth;
-        let l = this.lines.length;
-        if (this._hideTrailingEmptyLine && l && this.lines[l - 1].length === 0)
+        const w = (this._timestamp ? this._timestampWidth : 0) + this._maxWidth;
+        let l = this._lines.length;
+        if (this._hideTrailingEmptyLine && l && this.getLineText(l - 1).length === 0)
             l--;
         const h = l * this._charHeight;
         const mw = '' + (w === 0 ? 0 : Math.max(w, this._maxView));
@@ -1287,13 +1460,16 @@ export class Display extends EventEmitter {
         if (l === 0) return;
         this._viewCache = {};
         if (this.split) this.split.viewCache = {};
-        /*
+        if (line === 0) {
+            this._lines[line].top = 0;
+            line++;
+        }
         while (line < l) {
+            this._lines[line].top = this._lines[line - 1].top + this._lines[line - 1].height;
             //this._viewLines[line] = this._viewLines[line].replace(/top:\d+px/, `top:${line * this._charHeight}px`);
             //this._backgroundLines[line] = this._backgroundLines[line].replace(/top:\d+px/, `top:${line * this._charHeight}px`);
             line++;
         }
-        */
     }
 
     get WindowSize(): Size {
@@ -1301,153 +1477,54 @@ export class Display extends EventEmitter {
     }
 
     get WindowWidth(): number {
-        return Math.trunc((this._innerWidth - this._VScroll.size - this._padding[1] - this._padding[3]) / parseFloat(window.getComputedStyle(this._character).width)) - 1;
+        return Math.trunc(this._maxView / this._charWidth);
     }
 
     get WindowHeight(): number {
         if (this._HScroll.visible)
-            return Math.trunc((this._innerHeight - this._HScroll.size - this._padding[0] - this._padding[2]) / $(this._character).innerHeight()) - 1;
-        return Math.trunc((this._innerHeight - this._padding[0] - this._padding[2]) / $(this._character).innerHeight()) - 1;
+            return Math.trunc((this._innerHeight - this._HScroll.size - this._padding[0] - this._padding[2]) / this._charHeight);
+        return Math.trunc((this._innerHeight - this._padding[0] - this._padding[2]) / this._charHeight);
     }
 
     public click(callback) {
         this._el.addEventListener('click', callback);
     }
 
-    public addParserLine(data: ParserLine, noUpdate?: boolean) {
-        let t;
-        this.emit('add-line', data);
-        if (data == null || typeof data === 'undefined' || data.line == null || typeof data.line === 'undefined')
-            return;
-        this.emit('add-line-done', data);
-        if (data.gagged)
-            return;
-        if (data.line === '\n' || data.line.length === 0)
-            this.lines.push('');
-        else
-            this.lines.push(data.line);
-        this.rawLines.push(data.raw);
-        this.lineFormats.push(data.formats);
-        if (data.formats[0].hr) {
-            t = this.WindowWidth;
-            if (t > this._maxLineLength)
-                this._maxLineLength = t;
-        }
-        else if (data.line.length > this._maxLineLength)
-            this._maxLineLength = data.line.length;
-        this.lineIDs.push(this._lineID);
-        const idx = this.lines.length - 1;
-
-        this._lines.push({ height: 0, top: 0, width: 0, images: 0 });
-        t = this.calculateSize(idx);
-        this.buildLineExpires(idx);
-        this._lines[idx].height = t.height;
-        this._lines[idx].width = t.width;
-        if (idx - 1 >= 0)
-            this._lines[idx].top = this._lines[idx - 1].top + this._lines[idx].height;
-        this._lineID++;
-        if (this.split) this.split.dirty = true;
-        if (!noUpdate)
-            this.doUpdate(UpdateType.display);
-    }
-
-    public removeLine(line: number) {
+    public removeLine(line: number, noSelectionChange?: boolean) {
         if (line < 0 || line >= this.lines.length) return;
-        this.emit('line-removed', line, this.lines[line]);
-        this.lines.splice(line, 1);
-        this.lineIDs.splice(line, 1);
-        this._lines.splice(line, 1);
-        this.rawLines.splice(line, 1);
-        this.lineFormats.splice(line, 1);
-        this._expire2.splice(line, 1);
-        if (this._viewCache[line])
-            delete this._viewCache[line];
-        if (this.split && this.split.viewCache[line])
-            delete this.split.viewCache[line];
-
-        if (!this._currentSelection.drag) {
-            if (this._currentSelection.start.y === line && this._currentSelection.end.y === line) {
-                this._currentSelection.start.y = null;
-                this._currentSelection.start.x = null;
-                this._currentSelection.end.y = null;
-                this._currentSelection.end.x = null;
-            }
-            else if (this._currentSelection.start.y === line) {
-                if (this._currentSelection.start.y > this._currentSelection.end.y) {
-                    this._currentSelection.start.y--;
-                    if (this._currentSelection.start.y >= 0 && this._currentSelection.start.y < this.lines.length)
-                        this._currentSelection.start.x = this.lines[this._currentSelection.start.y].length;
-                    else
-                        this._currentSelection.start.x = 0;
-                }
-                else {
-                    this._currentSelection.start.y++;
-                    this._currentSelection.start.x = 0;
-                }
-            }
-            else if (this._currentSelection.end.y === line) {
-                if (this._currentSelection.start.y > this._currentSelection.end.y) {
-                    this._currentSelection.end.y++;
-                    this._currentSelection.end.x = 0;
-                }
-                else {
-                    this._currentSelection.end.y--;
-                    if (this._currentSelection.end.y >= 0 && this._currentSelection.end.y < this.lines.length)
-                        this._currentSelection.end.x = this.lines[this._currentSelection.end.y].length;
-                    else
-                        this._currentSelection.end.x = 0;
-                }
-            }
+        this.emit('line-removed', line, this.lines[line].text);
+        const lineID = this._model.getLineID(line);
+        const wrapIndex = this._lines.findIndex(l => l.id === lineID);
+        let amt = 0;
+        for (let idx = wrapIndex, ll = this._lines.length; idx < ll; idx++) {
+            if (this._lines[idx].id != lineID) break;
+            amt++;
+            if (this._viewCache[idx])
+                delete this._viewCache[idx];
+            if (this.split && this.split.viewCache[idx])
+                delete this.split.viewCache[idx];
         }
-        let ol;
-        for (ol in this._overlays) {
-            if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0 || line >= this._overlays[ol].length)
-                continue;
-            this._overlays[ol].splice(line, 1);
-        }
-
-        for (ol in this._expire) {
-            if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0 || line >= this._expire[ol].length)
-                continue;
-            this._expire[ol].splice(line, 1);
-        }
-        if (this.split) this.split.dirty = true;
-        this.updateTops(line);
-        this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.overlays | UpdateType.selection);
-    }
-
-    public removeLines(line: number, amt: number) {
-        if (line < 0 || line >= this.lines.length) return;
-        if (amt < 1) amt = 1;
-        this.emit('lines-removed', line, this.lines.slice(line, amt));
-        this.lines.splice(line, amt);
-        this.lineIDs.splice(line, amt);
-        this._lines.splice(line, amt);
-        this.rawLines.splice(line, amt);
-        this.lineFormats.splice(line, amt);
-        this._expire2.splice(line, amt);
-
-        for (let a = 0; a < amt; a++) {
-            if (this._viewCache[line + a])
-                delete this._viewCache[line + a];
-            if (this.split && this.split.viewCache[line + a])
-                delete this.split.viewCache[line + a];
-        }
-
-        if (!this._currentSelection.drag) {
-            for (let l = line; l < line + amt; l++) {
+        this._lines.splice(wrapIndex, amt);
+        this._model.removeLine(line);
+        this._linesMap.delete(lineID);
+        if (!noSelectionChange && !this._currentSelection.drag) {
+            for (let l = wrapIndex; l < wrapIndex + amt; l++) {
                 if (this._currentSelection.start.y >= l && this._currentSelection.end.y >= l) {
                     this._currentSelection.start.y = null;
                     this._currentSelection.start.x = null;
+                    this._currentSelection.start.lineID = null;
+                    this._currentSelection.start.lineOffset = null;
                     this._currentSelection.end.y = null;
                     this._currentSelection.end.x = null;
+                    this._currentSelection.end.lineID = null;
+                    this._currentSelection.end.lineOffset = null;
                     break;
                 }
                 else if (this._currentSelection.start.y === l) {
                     if (this._currentSelection.start.y > this._currentSelection.end.y) {
                         this._currentSelection.start.y--;
-                        if (this._currentSelection.start.y >= 0 && this._currentSelection.start.y < this.lines.length)
-                            this._currentSelection.start.x = this.lines[this._currentSelection.start.y].length;
+                        if (this._currentSelection.start.y >= 0 && this._currentSelection.start.y < this._lines.length)
+                            this._currentSelection.start.x = this.getLineText(this._currentSelection.start.y).length;
                         else
                             this._currentSelection.start.x = 0;
                     }
@@ -1463,170 +1540,125 @@ export class Display extends EventEmitter {
                     }
                     else {
                         this._currentSelection.end.y--;
-                        if (this._currentSelection.end.y >= 0 && this._currentSelection.end.y < this.lines.length)
-                            this._currentSelection.end.x = this.lines[this._currentSelection.end.y].length;
+                        if (this._currentSelection.end.y >= 0 && this._currentSelection.end.y < this._lines.length)
+                            this._currentSelection.end.x = this.getLineText(this._currentSelection.end.y).length;
                         else
                             this._currentSelection.end.x = 0;
                     }
                 }
+            }
+            if (this._lines.length && this._currentSelection.start.y !== null && this._currentSelection.start.y >= 0 && this._currentSelection.start.y < this._lines.length) {
+                this._currentSelection.start.lineID = this._lines[this._currentSelection.start.y].id;
+                this._currentSelection.start.lineOffset = this._currentSelection.start.x + this._lines[this._currentSelection.start.y].startOffset;
+            }
+            if (this._lines.length && this._currentSelection.end.y !== null && this._currentSelection.end.y >= 0 && this._currentSelection.end.y < this._lines.length) {
+                this._currentSelection.end.lineID = this._lines[this._currentSelection.end.y].id;
+                this._currentSelection.end.lineOffset = this._currentSelection.end.x + this._lines[this._currentSelection.end.y].startOffset;
             }
         }
         let ol;
         for (ol in this._overlays) {
             if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0 || line >= this._overlays[ol].length)
                 continue;
-            this._overlays[ol].splice(line, amt);
-        }
-
-        for (ol in this._expire) {
-            if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0 || line >= this._expire[ol].length)
-                continue;
-            this._expire[ol].splice(line, amt);
+            this._overlays[ol].splice(wrapIndex, amt);
         }
         if (this.split) this.split.dirty = true;
-        this.updateTops(line);
+        this.updateTops(wrapIndex);
         this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.overlays | UpdateType.selection);
     }
 
-    //color like javascript.substr using 0 index and length
+    public removeLines(line: number, amt: number) {
+        if (line < 0 || line >= this.lines.length) return;
+        if (amt < 1) amt = 1;
+        this.emit('lines-removed', line, this._lines.slice(line, amt));
+        const lineID = this._model.getLineID(line);
+        const wrapIndex = this._lines.findIndex(l => l.id === lineID);
+        let wrapAmt = 0;
+        //loop map and count wrapped lines
+        for (let l = line; l < amt; l++) {
+            const dLine = this._model.getLineID(line);
+            wrapAmt += this._linesMap.get(dLine).length;
+            this._linesMap.delete(dLine);
+        }
+        this._lines.splice(wrapIndex, wrapAmt);
+        this._model.removeLines(line, amt);
+        for (let a = 0; a < wrapAmt; a++) {
+            if (this._viewCache[wrapIndex + a])
+                delete this._viewCache[wrapIndex + a];
+            if (this.split && this.split.viewCache[wrapIndex + a])
+                delete this.split.viewCache[wrapIndex + a];
+        }
+
+        if (!this._currentSelection.drag) {
+            for (let l = wrapIndex; l < wrapIndex + wrapAmt; l++) {
+                if (this._currentSelection.start.y >= l && this._currentSelection.end.y >= l) {
+                    this._currentSelection.start.y = null;
+                    this._currentSelection.start.x = null;
+                    this._currentSelection.start.lineID = null;
+                    this._currentSelection.start.lineOffset = null;
+                    this._currentSelection.end.y = null;
+                    this._currentSelection.end.x = null;
+                    this._currentSelection.end.lineID = null;
+                    this._currentSelection.end.lineOffset = null;
+                    break;
+                }
+                else if (this._currentSelection.start.y === l) {
+                    if (this._currentSelection.start.y > this._currentSelection.end.y) {
+                        this._currentSelection.start.y--;
+                        if (this._currentSelection.start.y >= 0 && this._currentSelection.start.y < this._lines.length)
+                            this._currentSelection.start.x = this.getLineText(this._currentSelection.start.y).length;
+                        else
+                            this._currentSelection.start.x = 0;
+                    }
+                    else {
+                        this._currentSelection.start.y++;
+                        this._currentSelection.start.x = 0;
+                    }
+                }
+                else if (this._currentSelection.end.y === l) {
+                    if (this._currentSelection.start.y > this._currentSelection.end.y) {
+                        this._currentSelection.end.y++;
+                        this._currentSelection.end.x = 0;
+                    }
+                    else {
+                        this._currentSelection.end.y--;
+                        if (this._currentSelection.end.y >= 0 && this._currentSelection.end.y < this._lines.length)
+                            this._currentSelection.end.x = this.getLineText(this._currentSelection.end.y).length;
+                        else
+                            this._currentSelection.end.x = 0;
+                    }
+                }
+            }
+            if (this._lines.length && this._currentSelection.start.y !== null && this._currentSelection.start.y >= 0 && this._currentSelection.start.y < this._lines.length) {
+                this._currentSelection.start.lineID = this._lines[this._currentSelection.start.y].id;
+                this._currentSelection.start.lineOffset = this._currentSelection.start.x + this._lines[this._currentSelection.start.y].startOffset;
+            }
+            if (this._lines.length && this._currentSelection.end.y !== null && this._currentSelection.end.y >= 0 && this._currentSelection.end.y < this._lines.length) {
+                this._currentSelection.end.lineID = this._lines[this._currentSelection.end.y].id;
+                this._currentSelection.end.lineOffset = this._currentSelection.end.x + this._lines[this._currentSelection.end.y].startOffset;
+            }
+        }
+        let ol;
+        for (ol in this._overlays) {
+            if (!this._overlays.hasOwnProperty(ol) || this._overlays[ol].length === 0 || line >= this._overlays[ol].length)
+                continue;
+            this._overlays[ol].splice(wrapIndex, wrapAmt);
+        }
+        if (this.split) this.split.dirty = true;
+        this.updateTops(wrapIndex);
+        this.doUpdate(UpdateType.view | UpdateType.scrollbars | UpdateType.overlays | UpdateType.selection);
+    }
+
     public colorSubStrByLine(idx: number, fore, back?, start?: number, len?: number, style?: FontStyle) {
         this.colorSubStringByLine(idx, fore, back, start, start + len, style);
     }
 
-    //color like javascript.substring using 0 index for start and end
     public colorSubStringByLine(idx: number, fore, back?, start?: number, end?: number, style?: FontStyle) {
-        //invalid line bail
-        if (idx < 0 || idx >= this.lines.length) return;
-        const lineLength = this.lines[idx].length;
-        //passed line skip
-        if (start >= lineLength) return;
-        if (!start || start < 0) start = 0;
-        if (!end || end > lineLength)
-            end = lineLength;
-        if (start === end)
+        //only update if something changed
+        if (!this._model.colorSubStringByLine(idx, fore, back, start, end, style))
             return;
-        //clear cache
-        if (this._viewCache[idx])
-            delete this._viewCache[idx];
-        const formats = this.lineFormats[idx];
-        let len = formats.length;
-        let found: boolean = false;
-        //whole line so just do everything
-        if (start === 0 && end >= lineLength) {
-            for (let f = 0; f < len; f++) {
-                const format = formats[f];
-                //only worry about normal types
-                if (format.formatType !== FormatType.Normal)
-                    continue;
-                found = true;
-                if (format.bStyle) {
-                    format.bStyle = 0;
-                    format.fStyle = 0;
-                    format.fCls = 0;
-                }
-                format.color = fore || format.color;
-                format.background = back || format.background;
-                format.style |= style || FontStyle.None;
-            }
-            //found no text block must create one
-            if (!found) {
-                formats.unshift({
-                    formatType: FormatType.Normal,
-                    offset: 0,
-                    color: fore || 0,
-                    background: back || 0,
-                    size: 0,
-                    font: 0,
-                    style: style || FontStyle.None,
-                    unicode: false
-                });
-            }
-        }
-        else {
-            let nFormat;
-            let formatEnd;
-            for (let f = 0; f < len; f++) {
-                const format = formats[f];
-                //only worry about normal types
-                if (format.formatType !== FormatType.Normal)
-                    continue;
-                //find the end of he format
-                if (f < len - 1) {
-                    let nF = f + 1;
-                    nFormat = formats[nF];
-                    //skip empty blocks
-                    if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
-                        continue;
-                    //find next block that is not same offset
-                    while (format.offset === nFormat.offset && nFormat.formatType === format.formatType && nF < len - 1)
-                        nFormat = formats[++nF];
-                    //last block same offset use total length
-                    if (nF === len && format.offset === nFormat.offset)
-                        formatEnd = lineLength;
-                    else
-                        formatEnd = nFormat.offset;
-                }
-                else
-                    formatEnd = lineLength;
-                if (start < format.offset) continue;
-                //passed end so try next block
-                if (start >= formatEnd) continue;
-                //after this block move on.
-                //not offset so need to insert a new block
-                found = true;
-                if (format.bStyle) {
-                    format.bStyle = 0;
-                    format.fStyle = 0;
-                    format.fCls = 0;
-                }
-                //if end middle of block, add new block with old info to split
-                if (end < formatEnd) {
-                    format.width = 0;
-                    formats.splice(f + 1, 0, {
-                        formatType: format.formatType,
-                        offset: end,
-                        color: format.color,
-                        background: format.background,
-                        size: format.size,
-                        font: format.font,
-                        style: format.style,
-                        unicode: format.unicode
-                    });
-                    len++;
-                }
-                if (start != format.offset) {
-                    //clean old width
-                    format.width = 0;
-                    //insert new block with new colors
-                    formats.splice(f + 1, 0, {
-                        formatType: format.formatType,
-                        offset: start,
-                        color: fore || format.color,
-                        background: back || format.background,
-                        size: format.size,
-                        font: format.font,
-                        style: format.style | (style || FontStyle.None),
-                        unicode: format.unicode
-                    });
-                    len++;
-                }
-                else {
-                    format.color = fore || format.color;
-                    format.background = back || format.background;
-                    format.style |= (style || FontStyle.None);
-                }
-                //not end so shift start to next block
-                if (end > formatEnd)
-                    start = formatEnd;
-            }
-            //clean out duplicates and other no longer needed blocks
-            this.lineFormats[idx] = this.pruneFormats(formats, this.textLength);
-            //rebuild widths for new blocks/old blocks as needed
-            this.calculateSize(idx);
-            //const t = this.calculateSize(idx);
-            //this._lines[idx].width = t.width;
-        }
-        this.doUpdate(UpdateType.view);
+        //rebuild wraps in case a format was removed
+        this.reCalculateWrapLines(idx, 0, this._indent, (this._timestamp ? this._timestampWidth : 0));
     }
 
     public removeStyleSubStrByLine(idx: number, style: FontStyle, start?: number, len?: number) {
@@ -1635,132 +1667,11 @@ export class Display extends EventEmitter {
 
     //color like javascript.substring using 0 index for start and end
     public removeStyleSubStringByLine(idx: number, style: FontStyle, start?: number, end?: number) {
-        //invalid line bail
-        if (idx < 0 || idx >= this.lines.length) return;
-        const lineLength = this.lines[idx].length;
-        //passed line skip
-        if (start >= lineLength) return;
-        if (!start || start < 0) start = 0;
-        if (!end || end > lineLength)
-            end = lineLength;
-        //clear cache
-        if (this._viewCache[idx])
-            delete this._viewCache[idx];
-        const formats = this.lineFormats[idx];
-        let len = formats.length;
-        let found: boolean = false;
-        //whole line so just do everything
-        if (start === 0 && end >= lineLength) {
-            for (let f = 0; f < len; f++) {
-                const format = formats[f];
-                //only worry about normal types
-                if (format.formatType !== FormatType.Normal)
-                    continue;
-                found = true;
-                if (format.bStyle) {
-                    format.bStyle = 0;
-                    format.fStyle = 0;
-                    format.fCls = 0;
-                }
-                format.style &= ~(style || FontStyle.None);
-            }
-            //found no text block must create one
-            if (!found) {
-                formats.unshift({
-                    formatType: FormatType.Normal,
-                    offset: 0,
-                    color: 0,
-                    background: 0,
-                    size: 0,
-                    font: 0,
-                    style: FontStyle.None,
-                    unicode: false
-                });
-            }
-        }
-        else {
-            let nFormat;
-            let formatEnd;
-            for (let f = 0; f < len; f++) {
-                const format = formats[f];
-                //only worry about normal types
-                if (format.formatType !== FormatType.Normal)
-                    continue;
-                //find the end of he format
-                if (f < len - 1) {
-                    let nF = f + 1;
-                    nFormat = formats[nF];
-                    //skip empty blocks
-                    if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
-                        continue;
-                    //find next block that is not same offset
-                    while (format.offset === nFormat.offset && nFormat.formatType === format.formatType && nF < len - 1)
-                        nFormat = formats[++nF];
-                    //last block same offset use total length
-                    if (nF === len && format.offset === nFormat.offset)
-                        formatEnd = lineLength;
-                    else
-                        formatEnd = nFormat.offset;
-                }
-                else
-                    formatEnd = lineLength;
-                if (start < format.offset) continue;
-                //passed end so try next block
-                if (start >= formatEnd) continue;
-                //after this block move on.
-                //not offset so need to insert a new block
-                found = true;
-                if (format.bStyle) {
-                    format.bStyle = 0;
-                    format.fStyle = 0;
-                    format.fCls = 0;
-                }
-                //if end middle of block, add new block with old info to split
-                if (end < formatEnd) {
-                    format.width = 0;
-                    formats.splice(f + 1, 0, {
-                        formatType: format.formatType,
-                        offset: end,
-                        color: format.color,
-                        background: format.background,
-                        size: format.size,
-                        font: format.font,
-                        style: format.style,
-                        unicode: format.unicode
-                    });
-                    len++;
-                }
-                if (start != format.offset) {
-                    //clean old width
-                    format.width = 0;
-                    //insert new block with new colors
-                    formats.splice(f + 1, 0, {
-                        formatType: format.formatType,
-                        offset: start,
-                        color: format.color,
-                        background: format.background,
-                        size: format.size,
-                        font: format.font,
-                        style: format.style & ~(style || FontStyle.None),
-                        unicode: format.unicode
-                    });
-                    len++;
-                }
-                else {
-                    format.style &= ~(style || FontStyle.None);
-                }
-                //not end so shift start to next block
-                if (end > formatEnd)
-                    start = formatEnd;
-            }
-            //clean out duplicates and other no longer needed blocks
-            this.lineFormats[idx] = this.pruneFormats(formats, this.textLength);
-            //rebuild widths for new blocks/old blocks as needed
-            this.calculateSize(idx);
-            //const t = this.calculateSize(idx);
-            //this._lines[idx].width = t.width;
-        }
-        this.doUpdate(UpdateType.view);
+        //only update if something changed
+        if (!this._model.removeStyleSubStringByLine(idx, style, start, end))
+            return;
+        //rebuild wraps in case a format was removed
+        this.reCalculateWrapLines(idx, 0, this._indent, (this._timestamp ? this._timestampWidth : 0));
     }
 
     public highlightSubStrByLine(idx: number, start?: number, len?: number) {
@@ -1769,214 +1680,23 @@ export class Display extends EventEmitter {
 
     //color like javascript.substring using 0 index for start and end
     public highlightStyleSubStringByLine(idx: number, start?: number, end?: number, color?: boolean) {
-        //invalid line bail
-        if (idx < 0 || idx >= this.lines.length) return;
-        const lineLength = this.lines[idx].length;
-        //passed line skip
-        if (start >= lineLength) return;
-        if (!start || start < 0) start = 0;
-        if (!end || end > lineLength)
-            end = lineLength;
-        //clear cache
-        if (this._viewCache[idx])
-            delete this._viewCache[idx];
-        const formats = this.lineFormats[idx];
-        let len = formats.length;
-        let found: boolean = false;
-        //whole line so just do everything
-        if (start === 0 && end >= lineLength) {
-            for (let f = 0; f < len; f++) {
-                const format = formats[f];
-                //only worry about normal types
-                if (format.formatType !== FormatType.Normal)
-                    continue;
-                found = true;
-                if (format.bStyle) {
-                    format.bStyle = 0;
-                    format.fStyle = 0;
-                    format.fCls = 0;
-                }
-                if (color || (format.style & FontStyle.Bold) === FontStyle.Bold) {
-                    if (typeof format.color === 'number')
-                        format.color = this._parser.IncreaseColor(this._parser.GetColor(format.color), 0.25);
-                    else
-                        format.color = this._parser.IncreaseColor(format.color, 0.25);
-                }
-                else
-                    format.style |= FontStyle.Bold;
-            }
-            //found no text block must create one
-            if (!found) {
-                formats.unshift({
-                    formatType: FormatType.Normal,
-                    offset: 0,
-                    color: color ? 370 : 0,
-                    background: 0,
-                    size: 0,
-                    font: 0,
-                    style: color ? FontStyle.None : FontStyle.Bold,
-                    unicode: false
-                });
-            }
-        }
-        else {
-            let nFormat;
-            let formatEnd;
-            for (let f = 0; f < len; f++) {
-                const format = formats[f];
-                //only worry about normal types
-                if (format.formatType !== FormatType.Normal)
-                    continue;
-                //find the end of he format
-                if (f < len - 1) {
-                    let nF = f + 1;
-                    nFormat = formats[nF];
-                    //skip empty blocks
-                    if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
-                        continue;
-                    //find next block that is not same offset
-                    while (format.offset === nFormat.offset && nFormat.formatType === format.formatType && nF < len - 1)
-                        nFormat = formats[++nF];
-                    //last block same offset use total length
-                    if (nF === len && format.offset === nFormat.offset)
-                        formatEnd = lineLength;
-                    else
-                        formatEnd = nFormat.offset;
-                }
-                else
-                    formatEnd = lineLength;
-                if (start < format.offset) continue;
-                //passed end so try next block
-                if (start >= formatEnd) continue;
-                //after this block move on.
-                //not offset so need to insert a new block
-                found = true;
-                if (format.bStyle) {
-                    format.bStyle = 0;
-                    format.fStyle = 0;
-                    format.fCls = 0;
-                }
-                //if end middle of block, add new block with old info to split
-                if (end < formatEnd) {
-                    format.width = 0;
-                    formats.splice(f + 1, 0, {
-                        formatType: format.formatType,
-                        offset: end,
-                        color: format.color,
-                        background: format.background,
-                        size: format.size,
-                        font: format.font,
-                        style: format.style,
-                        unicode: format.unicode
-                    });
-                    len++;
-                }
-                if (start != format.offset) {
-                    //clean old width
-                    format.width = 0;
-                    //insert new block with new colors
-                    nFormat = {
-                        formatType: format.formatType,
-                        offset: start,
-                        color: format.color,
-                        background: format.background,
-                        size: format.size,
-                        font: format.font,
-                        style: format.style,
-                        unicode: format.unicode
-                    }
-                    if (color || (format.style & FontStyle.Bold) === FontStyle.Bold) {
-                        if (typeof format.color === 'number')
-                            nFormat.color = this._parser.IncreaseColor(this._parser.GetColor(format.color), 0.25);
-                        else
-                            nFormat.color = this._parser.IncreaseColor(format.color, 0.25);
-                    }
-                    else
-                        nFormat.style |= FontStyle.Bold;
-                    formats.splice(f + 1, 0, nFormat);
-                    len++;
-                }
-                else if (color || (format.style & FontStyle.Bold) === FontStyle.Bold) {
-                    if (typeof format.color === 'number')
-                        format.color = this._parser.IncreaseColor(this._parser.GetColor(format.color), 0.25);
-                    else
-                        format.color = this._parser.IncreaseColor(format.color, 0.25);
-                }
-                else
-                    format.style |= FontStyle.Bold;
-
-                //not end so shift start to next block
-                if (end > formatEnd)
-                    start = formatEnd;
-            }
-            //clean out duplicates and other no longer needed blocks
-            this.lineFormats[idx] = this.pruneFormats(formats, this.textLength);
-            //rebuild widths for new blocks/old blocks as needed
-            this.calculateSize(idx);
-            //const t = this.calculateSize(idx);
-            //this._lines[idx].width = t.width;
-        }
-        this.doUpdate(UpdateType.view);
-    }
-
-    private pruneFormats(formats, textLen) {
-        //no formats or only 1 format
-        if (!formats || formats.length < 2) return formats;
-        const l = formats.length;
-        const nF = [];
-        for (let f = 0; f < l; f++) {
-            const format = formats[f];
-            let end;
-            if (f < l - 1) {
-                const nFormat = formats[f + 1];
-                //old links that have expired so no longer needed clean
-                //if (format.formatType === FormatType.MXPSkip) continue;
-                //skip format until find one that has different offset
-                if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
-                    continue;
-                end = nFormat.offset;
-                //empty link
-                if (format.formatType === FormatType.Link && end - format.offset === 0 && nFormat.formatType === FormatType.LinkEnd)
-                    continue;
-                //empty send
-                if (format.formatType === FormatType.MXPSend && end - format.offset === 0 && nFormat.formatType === FormatType.MXPSendEnd)
-                    continue;
-                //empty link
-                if (format.formatType === FormatType.MXPLink && end - format.offset === 0 && nFormat.formatType === FormatType.MXPLinkEnd)
-                    continue;
-                //same data but offset is higher, set next block current offset, clear width and continue;
-                if (
-                    format.formatType === nFormat.formatType &&
-                    format.color === nFormat.color &&
-                    format.background === nFormat.background &&
-                    format.size === nFormat.size &&
-                    format.font === nFormat.font &&
-                    format.style === nFormat.style &&
-                    format.unicode === nFormat.unicode
-                ) {
-                    nFormat.offset = format.offset;
-                    nFormat.width = 0;
-                    continue;
-                }
-            }
-            //trailing link with no text or empty format block and not fragment
-            else if (format.offset === textLen && textLen !== 0 && ((format.formatType === FormatType.Normal && !format.hr) || format.formatType === FormatType.Link || format.formatType === FormatType.MXPSend || format.formatType === FormatType.MXPLink))
-                continue;
-            nF.push(format);
-        }
-        return nF;
+        //only update if something changed
+        if (!this._model.highlightStyleSubStringByLine(idx, start, end, color))
+            return;
+        //rebuild wraps in case a format was removed
+        this.reCalculateWrapLines(idx, 0, this._indent, (this._timestamp ? this._timestampWidth : 0));
     }
 
     public SetColor(code: number, color) {
-        this._parser.SetColor(code, color);
+        this._model.SetColor(code, color);
     }
 
     public ClearMXP() {
-        this._parser.ClearMXP();
+        this._model.ClearMXP();
     }
 
     public ResetMXPLine() {
-        this._parser.ResetMXPLine();
+        this._model.ResetMXPLine();
     }
 
     get html(): string {
@@ -1988,11 +1708,11 @@ export class Display extends EventEmitter {
     }
 
     get text(): string {
-        return this.lines.join('\n');
+        return this._model.text;
     }
 
     get raw(): string {
-        return this.rawLines.join('');
+        return this._model.raw;
     }
 
     public trimLines() {
@@ -2000,20 +1720,24 @@ export class Display extends EventEmitter {
             return;
         if (this.lines.length > this._maxLines) {
             const amt = this.lines.length - this._maxLines;
-            this.lines.splice(0, amt);
-            this.lineIDs.splice(0, amt);
-            this._lines.splice(0, amt);
-            this.rawLines.splice(0, amt);
-            this.lineFormats.splice(0, amt);
-            this._expire2.splice(0, amt);
+            const lastLineID = this._model.getLineID(amt);
+            //let wrapAmt = this._lines.findIndex(l => l.id == lastLineID);
+            const _lines = this._lines;
+            let wrapAmt = 0;
+            const _linesLength = _lines.length;
+            for (wrapAmt = 0; wrapAmt < _linesLength; wrapAmt++) {
+                if (_lines[wrapAmt].id >= lastLineID) break;
+            }
+            this._lines.splice(0, wrapAmt);
+            this._model.removeLines(0, amt);
             if (this.hasSelection) {
                 this._currentSelection.start.y -= amt;
                 this._currentSelection.end.y -= amt;
 
                 if (this._currentSelection.start.y < 0 && this._currentSelection.end.y < 0) {
                     this._currentSelection = {
-                        start: { x: null, y: null },
-                        end: { x: null, y: null },
+                        start: { x: null, y: null, lineID: null, lineOffset: null },
+                        end: { x: null, y: null, lineID: null, lineOffset: null },
                         scrollTimer: null,
                         drag: false
                     };
@@ -2036,37 +1760,41 @@ export class Display extends EventEmitter {
                 this._overlays[ol].splice(0, amt);
             }
 
-            for (ol in this._expire) {
-                if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0)
-                    continue;
-                this._expire[ol].splice(0, amt);
-            }
-
             let m = 0;
-            const lines = this.lines;
-            const formats = this.lineFormats;
+            let mh = 0;
+            const lines = this._lines;
             const ll = lines.length;
+            const ww = this._maxView;
             for (let l = 0; l < ll; l++) {
-                if (formats[0].hr) {
-                    if (this.WindowWidth > m)
-                        m = this.WindowWidth;
+                if (lines[l].hr) {
+                    m = Math.max(m, ww);
+                    mh = Math.max(mh, this._charHeight);
                 }
-                else if (lines[l].length > m)
-                    m = lines[l].length;
+                else if (lines[l].indent) {
+                    m = Math.max(m, this._lines[l].width + ((this._indent || 0) * this._charWidth));
+                    mh = Math.max(mh, this._lines[l].height);
+                }
+                else {
+                    m = Math.max(m, this._lines[l].width);
+                    mh = Math.max(mh, this._lines[l].height);
+                }
             }
             this._viewCache = {};
             if (this.split)
                 this.split.viewCache = {};
-            this._maxLineLength = m;
+            this._maxWidth = m;
+            this._maxHeight = mh;
             if (this.split) this.split.dirty = true;
             this.doUpdate(UpdateType.selection | UpdateType.overlays);
         }
     }
 
     //TODO add font support, as different blocks of text could have different font formats, need to not just measure with but measure based on format block data
-    public getLineOffset(pageX, pageY) {
-        if (this.lines.length === 0)
-            return { x: 0, y: 0 };
+    public getLineOffset(pageX, pageY): Point {
+        if (this._lines.length === 0)
+            return { x: 0, y: 0, lineID: 0, lineOffset: 0 };
+        if (this._timestamp)
+            pageX -= this._timestampWidth;
         const os = this._os;
         let y = (pageY - os.top);
         if (this.split && this.split.shown) {
@@ -2079,19 +1807,25 @@ export class Display extends EventEmitter {
             y += this._VScroll.position;
         y = Math.trunc(y / this._charHeight);
 
-        const xPos = (pageX - os.left) + this._HScroll.position;
+        let xPos = (pageX - os.left) + this._HScroll.position;
         let x = Math.trunc(xPos / this._charWidth);
+        let id = 0;
+        let offset = 0;
         if (y >= 0) {
             let text;
             let line = y;
-            if (y < this.lines.length)
-                text = this.lines[y].replace(/ /g, '\u00A0');
-            else {
-                text = this.lines[this.lines.length - 1].replace(/ /g, '\u00A0');
-                line = this.lines.length - 1;
+            if (y >= this._lines.length)
+                line = this._lines.length - 1;
+            //if indented offset by the indent width
+            if (this._lines[line].indent) {
+                xPos -= this._indent * this._charWidth;
+                x = Math.trunc(xPos / this._charWidth);
             }
+            text = this.getLineText(y).replace(/ /g, '\u00A0');
             const tl = text.length;
-            let w = Math.ceil(this.lineWidth(line, 0, x));
+            let w = Math.ceil(this.wrapLineWidth(line, 0, x));
+            id = this._model.getLineFromID(this._lines[line].id);
+            offset = this._lines[line].startOffset;
             //let w = Math.ceil(this.textWidth(text.substr(0, x)));
             if (w > xPos && xPos > 0) {
                 while (w > xPos && x > 0) {
@@ -2099,7 +1833,7 @@ export class Display extends EventEmitter {
                     //unicode surrogate pair check
                     while (x > 0 && text.charCodeAt(x) >= 0xD800 && text.charCodeAt(x) <= 0xDBFF)
                         x--;
-                    w = Math.ceil(this.lineWidth(line, 0, x));
+                    w = Math.ceil(this.wrapLineWidth(line, 0, x));
                 }
                 x++;
                 //unicode modifier check
@@ -2112,7 +1846,7 @@ export class Display extends EventEmitter {
                     //unicode modifier check
                     while (tl > x + 1 && this.isUnicodeModifierCode(text.charCodeAt(x)))
                         x++;
-                    w = Math.ceil(this.lineWidth(line, 0, x));
+                    w = Math.ceil(this.wrapLineWidth(line, 0, x));
                 }
                 if (w > xPos) {
                     x--;
@@ -2129,7 +1863,7 @@ export class Display extends EventEmitter {
                     //unicode modifier check
                     while (tl > x + 1 && this.isUnicodeModifierCode(text.charCodeAt(x)))
                         x++;
-                    w = Math.ceil(this.lineWidth(line, 0, x));
+                    w = Math.ceil(this.wrapLineWidth(line, 0, x));
                 }
             }
             //unicode modifier check
@@ -2138,12 +1872,37 @@ export class Display extends EventEmitter {
                     x--;
             }
         }
-        return { x: x, y: y };
+        return { x: x, y: y, lineID: id, lineOffset: offset + x };
+    }
+
+    public getWrapOffset(line, offset) {
+        if (line < 0 || line >= this._model.lines.length) return { x: 0, y: 0 };
+        const lineID = this._model.getLineID(line);
+        const t = this._linesMap.get(lineID);
+        for (let l = 0, ll = t.length; l < ll; l++) {
+            if (offset >= t[l].startOffset && offset < t[l].endOffset)
+                return { x: offset - t[l].startOffset, y: this._lines.indexOf(t[l]) };
+            else if (offset === t[l].endOffset)
+                return { x: offset - t[l].startOffset, y: this._lines.indexOf(t[l]) };
+        }
+        return { x: offset - t[t.length - 1].startOffset, y: this._lines.indexOf(t[t.length - 1]) };
+    }
+
+    public getWrapOffsetByLineID(lineID, offset) {
+        const t = this._linesMap.get(lineID);
+        if (!t) return this._model.getLineFromID(lineID);
+        for (let l = 0, ll = t.length; l < ll; l++) {
+            if (offset >= t[l].startOffset && offset < t[l].endOffset)
+                return { x: offset - t[l].startOffset, y: this._lines.indexOf(t[l]) };
+            else if (offset === t[l].endOffset)
+                return { x: offset - t[l].startOffset, y: this._lines.indexOf(t[l]) };
+        }
+        return { x: offset - t[t.length - 1].startOffset, y: this._lines.indexOf(t[t.length - 1]) };
     }
 
     public getWordFromPosition(position) {
-        if (position.y >= 0 && position.y < this.lines.length) {
-            const line = this.lines[position.y];
+        if (position.y >= 0 && position.y < this._lines.length) {
+            const line = this.getLineText(position.y);
             const len = line.length;
             if (position.x >= 0 || position.x < len) {
                 let sPos = position.x;
@@ -2165,11 +1924,13 @@ export class Display extends EventEmitter {
     }
 
     public getUrlFromPosition(position) {
-        if (position.y >= 0 && position.y < this.lines.length) {
-            const line = this.lines[position.y];
+        if (position.y >= 0 && position.y < this._lines.length) {
+            const line = this.getLineText(position.y, true);
             const len = line.length;
-            if (position.x >= 0 || position.x < len) {
-                const formats = this.lineFormats[position.y];
+            const idx = this._model.getLineFromID(this._lines[position.y].id);
+            const x = position.x + this._lines[position.y].startOffset;
+            if (x >= 0 || x < len) {
+                const formats = this.lines[idx].formats;
                 const fl = formats.length;
                 let l;
                 for (l = 0; l < fl; l++) {
@@ -2193,7 +1954,7 @@ export class Display extends EventEmitter {
                     }
                     if (l >= fl)
                         end = line.length;
-                    if (position.x >= format.offset && position.x < end) {
+                    if (x >= format.offset && x < end) {
                         return format.href;
                     }
                 }
@@ -2278,18 +2039,82 @@ export class Display extends EventEmitter {
         return parseInt(window.getComputedStyle(this._ruler).fontSize, 10);
     }
 
+    private wrapLineWidth(idx, start?, len?) {
+        if (idx < 0 || idx >= this._lines.length)
+            return 0;
+        if (start === undefined || start === null)
+            return this._lines[idx].width;
+        if (len === undefined || len === null || len > this.getLineText(idx).length)
+            len = this.getLineText(idx).length;
+        if (len - start <= 0) return 0;
+        if (start === 0 && len >= this.getLineText(idx).length)
+            return this._lines[idx].width;
+        const text = this.getLineText(idx).replace(/ /g, '\u00A0');
+        const line = this._model.getLineFromID(this._lines[idx].id);
+
+        const formats = this.lines[line].formats;
+        const fLen = formats.length;
+        const tl = text.length;
+        const endFormat = this._lines[idx].endFormat
+        const startOffset = this._lines[idx].startOffset;
+        let f = this._lines[idx].startFormat;
+        let end;
+        let font;
+        let offset;
+        let width = 0;
+        for (; f <= endFormat; f++) {
+            //no width so ignore these blocks
+            if (!formats[f].width || formats[f].formatType === FormatType.LinkEnd || formats[f].formatType === FormatType.MXPLinkEnd || formats[f].formatType === FormatType.MXPSendEnd)
+                continue;
+            //TODO not supported in width calculations at the moment
+            if (formats[f].align === 'right')
+                continue;
+            //find end
+            if (f < fLen - 1)
+                end = formats[f + 1].offset - startOffset;
+            else
+                end = tl;
+            //not in this block so move to next
+            if (start >= end)
+                continue;
+            offset = formats[f].offset - startOffset;
+            //block is between start/end so whole width and move on
+            if (offset >= start && len >= end) {
+                width += formats[f].width + (formats[f].marginWidth || 0);
+                continue;
+            }
+            //get font
+            if (formats[f].font || formats[f].size)
+                font = `${formats[f].size || this._character.style.fontSize} ${formats[f].font || this._character.style.fontFamily}`;
+            else
+                font = 0;
+            if (offset > start)
+                start = offset;
+            if (len < end)
+                end = len;
+            //if unicode or non standard font calculate width
+            if (formats[f].unicode || font)
+                width += this.textWidth(text.substring(start, end), font, formats[f].style);
+            else
+                width += text.substring(start, end).length * this._charWidth;
+            //len is in block so quit
+            if (len <= end)
+                break;
+        }
+        return width;
+    }
+
+    //get line width of full non wrapped line
     private lineWidth(line, start?, len?) {
         if (line < 0 || line >= this.lines.length)
             return 0;
         if (start === undefined || start === null)
-            return this._lines[line].width;
-        if (len === undefined || len === null || len > this.lines[line].length)
-            len = this.lines[line].length;
+            start = 0;
+        if (len === undefined || len === null || len > this.lines[line].text.length)
+            len = this.lines[line].text.length;
         if (len - start <= 0) return 0;
-        if (start === 0 && len >= this.lines[line].length)
-            return this._lines[line].width;
-        const text = this.lines[line].replace(/ /g, '\u00A0');
-        const formats = this.lineFormats[line];
+        const text = this.lines[line].text.replace(/ /g, '\u00A0');
+        const formats = this.lines[line].formats;
         const fLen = formats.length;
         const tl = text.length;
         let f = 0;
@@ -2339,199 +2164,18 @@ export class Display extends EventEmitter {
         return width;
     }
 
-    private calculateSize(idx, force?: boolean) {
-        if (idx === undefined)
-            idx = this.lines.length - 1;
-        const text = this.lines[idx].replace(/ /g, '\u00A0');
-        const formats = this.lineFormats[idx];
-        let offset = 0;
-        let height = 0;
-        const len = formats.length;
-        const cw = this._charWidth;
-        const id = this.lineIDs[idx];
-        let width = 0;
-        let font: any = 0;
-        for (let f = 0; f < len; f++) {
-            const format = formats[f];
-            if (force) {
-                format.width = 0;
-                format.height = 0;
-            }
-            let nFormat;
-            let end;
-            let eText;
-            if (f < len - 1) {
-                nFormat = formats[f + 1];
-                //skip empty blocks
-                if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
-                    continue;
-                end = nFormat.offset;
-            }
-            else
-                end = text.length;
-            offset = format.offset;
-            if (format.formatType === FormatType.Normal) {
-                eText = text.substring(offset, end);
-                font = 0;
-                /*
-                if (format.font || format.size) {
-                    height = (Math.max(height, format.height = format.height || this.textHeight(eText, format.font, format.size)));
-                    format.width = format.width || this.textWidth(eText, font = `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`);
-                }
-                else */
-                if (format.unicode)
-                    format.width = format.width || this.textWidth(eText, 0, format.style);
-                else
-                    format.width = format.width || eText.length * cw;
-            }
-            else if (format.formatType === FormatType.Link && end - offset !== 0) {
-                eText = text.substring(offset, end);
-                if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font, format.style);
-                else
-                    format.width = format.width || eText.length * cw;
-            }
-            else if (format.formatType === FormatType.MXPLink && end - offset !== 0) {
-                eText = text.substring(offset, end);
-                if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font, format.style);
-                else
-                    format.width = format.width || eText.length * cw;
-            }
-            else if (format.formatType === FormatType.MXPSend && end - offset !== 0) {
-                eText = text.substring(offset, end);
-                if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font, format.style);
-                else
-                    format.width = format.width || eText.length * cw;
-            }
-            else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
-                eText = text.substring(offset, end);
-                if (format.unicode || font)
-                    format.width = format.width || this.textWidth(eText, font, format.style);
-                else
-                    format.width = format.width || eText.length * cw;
-            }
-            else if (format.formatType === FormatType.Image) {
-                width += format.marginWidth || 0;
-                if (!format.width) {
-                    this._lines[idx].images++;
-                    const img = new Image();
-                    eText = '';
-                    if (format.url.length > 0) {
-                        eText += format.url;
-                        if (!format.url.endsWith('/'))
-                            eText += '/';
-                    }
-                    if (format.t.length > 0) {
-                        eText += format.t;
-                        if (!format.t.endsWith('/'))
-                            eText += '/';
-                    }
-                    eText += format.name;
-                    img.src = eText;
-                    img.dataset.id = '' + id;
-                    img.dataset.f = '' + f;
-                    Object.assign(img.style, {
-                        position: 'absolute',
-                        top: (this._innerWidth + 100) + 'px'
-                    });
-                    this._el.appendChild(img);
-                    img.onload = () => {
-                        const lIdx = this.lineIDs.indexOf(+img.dataset.id);
-                        if (lIdx === -1 || lIdx >= this.lines.length) return;
-                        this._lines[lIdx].images--;
-                        const fIdx = +img.dataset.f;
-                        const fmt = this.lineFormats[lIdx][fIdx];
-                        if (fmt.w.length > 0 && fmt.h.length > 0) {
-                            Object.assign(img.style, {
-                                width: formatUnit(fmt.w),
-                                height: formatUnit(fmt.h, this._charHeight)
-                            });
-                        }
-                        else if (fmt.w.length > 0)
-                            img.style.width = formatUnit(fmt.w);
-                        else if (fmt.h.length > 0)
-                            img.style.height = formatUnit(fmt.h, this._charHeight);
-                        const bounds = img.getBoundingClientRect();
-                        fmt.width = bounds.width || img.width;
-                        fmt.height = bounds.height || img.height;
-                        if (format.hspace.length > 0 || format.vspace.length > 0) {
-                            const styles = getComputedStyle(img);
-                            fmt.marginHeight = parseFloat(styles.marginTop) + parseFloat(styles.marginBottom);
-                            fmt.marginWidth = parseFloat(styles.marginLeft) + parseFloat(styles.marginRight);
-                        }
-                        else {
-                            fmt.marginHeight = 0;
-                            fmt.marginWidth = 0;
-                        }
-                        this._el.removeChild(img);
-                        if (this._viewCache[lIdx])
-                            delete this._viewCache[lIdx];
-                        if (this._lines[lIdx].images !== 0) return;
-                        const t = this.calculateSize(lIdx);
-                        this._lines[lIdx].width = t.width;
-                        this._lines[lIdx].height = t.height;
-                        this.updateTops(lIdx);
-                        if (lIdx >= this._viewRange.start && lIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._parser.busy) {
-                            if (this.split) this.split.dirty = true;
-                            this.doUpdate(UpdateType.display);
-                        }
-                    };
-                }
-                if (format.marginHeight)
-                    height = Math.max(height, format.height + format.marginHeight);
-                else
-                    height = Math.max(height, format.height || 0);
-            }
-            width += format.width || 0;
-        }
-        return { width: width, height: this._charHeight };
-    }
-
-    private buildLineExpires(idx) {
-        if (idx === undefined)
-            idx = this.lines.length - 1;
-        const formats = this.lineFormats[idx];
-        for (const ol in this._expire) {
-            if (!this._expire.hasOwnProperty(ol))
-                continue;
-            if (this._expire[ol][idx])
-                delete this._expire[ol][idx];
-        }
-        delete this._expire2[idx];
-        let f = formats.length;
-        let format;
-        while (f--) {
-            format = formats[f];
-            if (format.formatType === FormatType.MXPSend || format.formatType === FormatType.MXPLink) {
-                if (format.expire && format.expire.length > 0) {
-                    if (!this._expire[format.expire])
-                        this._expire[format.expire] = [];
-                    if (!this._expire[format.expire][idx])
-                        this._expire[format.expire][idx] = [];
-                    this._expire[format.expire][idx].push(f);
-                }
-                else {
-                    if (!this._expire2[idx])
-                        this._expire2[idx] = [];
-                    this._expire2[idx].push(f);
-                }
-            }
-        }
-    }
-
     public clearOverlay(type?: string) {
         if (!type)
             type = 'default';
         if (!this._overlays[type] || this._overlays[type].length === 0) return;
         this._overlays[type] = [];
+        delete this._overlayRanges[type];
         if (this.split) this.split.dirty = true;
         this.doUpdate(UpdateType.overlays);
     }
 
     //TODO add font support, as different blocks of text could have different font formats, need to not just measure with but measure based on format block data
-    public addOverlays(ranges: OverlayRange[], cls?: string, type?: string) {
+    public addOverlays(ranges: OverlayRange[], rangeCls?: string, type?: string) {
         let s;
         let e;
         let sL;
@@ -2542,12 +2186,13 @@ export class Display extends EventEmitter {
         const rl = ranges.length;
         if (!type)
             type = 'default';
-        if (!cls || cls.length === 0)
-            cls = 'overlay-default';
+        if (!rangeCls || rangeCls.length === 0)
+            rangeCls = 'overlay-default';
         this._overlays[type] = [];
         const fl = Math.trunc;
-        const mw = Math.max(this._maxLineLength * this._charWidth, this._maxView);
-        const len = this.lines.length;
+        const mw = Math.max((this._timestamp ? this._timestampWidth : 0) + this._maxWidth, this._maxView);
+        const len = this._lines.length;
+        this._overlayRanges[type] = { ranges: ranges, cls: rangeCls };
         for (r = 0; r < rl; r++) {
             range = ranges[r];
             if (range.start.y > range.end.y) {
@@ -2564,15 +2209,20 @@ export class Display extends EventEmitter {
             }
             else if (range.start.x === range.end.x) {
                 //empty range
+                if (this.split) {//} && (range.start.y >= this.split._viewRange.start)) {
+                    this.split.dirty = true;
+                    this.doUpdate(UpdateType.scrollViewOverlays);
+                }
+                this.doUpdate(UpdateType.overlays);
                 continue;
             }
             else {
                 sL = range.start.y;
                 //invalid view
-                if (sL < 0 || sL >= this.lines.length)
+                if (sL < 0 || sL >= this._lines.length)
                     continue;
 
-                if (this.lineFormats[sL][0].hr) {
+                if (this._lines[sL].hr) {
                     s = 0;
                     e = mw;
                 }
@@ -2580,30 +2230,35 @@ export class Display extends EventEmitter {
                     s = Math.min(range.start.x, range.end.x);
                     e = Math.max(range.start.x, range.end.x);
                     if (s < 0) s = 0;
-                    if (e > this.lines[sL].length)
-                        e = this.lines[sL].length;
-                    e = this.lineWidth(sL, s, e);
-                    s = this.lineWidth(sL, 0, s);
+                    if (e > this.getLineText(sL).length)
+                        e = this.getLineText(sL).length;
+                    e = this.wrapLineWidth(sL, s, e);
+                    s = this.wrapLineWidth(sL, 0, s);
                     //e = this.textWidth(this.lines[sL].substring(s, e).replace(/ /g, '\u00A0'));
                     //s = this.textWidth(this.lines[sL].substring(0, s).replace(/ /g, '\u00A0'));
                 }
+                s += (this._timestamp ? this._timestampWidth : 0);
+                if (this._lines[sL].indent)
+                    s += this._indent * this._charWidth;
                 if (!this._overlays[type][sL])
                     this._overlays[type][sL] = [];
                 if (this._roundedRanges)
-                    this._overlays[type][sL].push(`<span id="${type}-${r}" class="${cls} trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span>`);
+                    this._overlays[type][sL].push(`<span id="${type}-${r}" class="${rangeCls} trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span>`);
                 else
-                    this._overlays[type][sL].push(`<span id="${type}-${r}" class="${cls}" style="left: ${s}px;width: ${e}px"></span>`);
+                    this._overlays[type][sL].push(`<span id="${type}-${r}" class="${rangeCls}" style="left: ${s}px;width: ${e}px"></span>`);
                 continue;
             }
 
             if (sL < 0)
                 sL = 0;
-            if (eL >= len)
+            if (eL >= len) {
                 eL = len - 1;
+                e = this.getLineText(eL).length;
+            }
             if (s < 0)
                 s = 0;
-            if (e > this.lines[eL].length)
-                e = this.lines[eL].length;
+            if (e > this.getLineText(eL).length)
+                e = this.getLineText(eL).length;
             for (let line = sL; line < eL + 1; line++) {
                 const startStyle = {
                     top: CornerType.Extern,
@@ -2613,51 +2268,57 @@ export class Display extends EventEmitter {
                     top: CornerType.Extern,
                     bottom: CornerType.Extern
                 };
-                let rCls = cls;
+                let cls = rangeCls;
                 let cl = 0;
                 if (sL === line) {
-                    const tLine = this.lines[line].replace(/ /g, '\u00A0');
+                    const tLine = this.getLineText(line).replace(/ /g, '\u00A0');
                     if (s >= tLine.length)
                         cl = tLine.length;
                     else
                         cl = s;
                 }
-                if (this.lineFormats[line][0].hr)
+                if (this._lines[line].hr)
                     w = mw;
                 else if (sL === line)
-                    w = this.lineWidth(line, s) + this._charWidth;
-                //w = this.textWidth(this.lines[sL].substr(s)) + this._charWidth;
+                    w = this.wrapLineWidth(line, s) + this._charWidth;
+                //w = this.textWidth(this.lines[sL].substr(s).replace(/ /g, '\u00A0')) + this._charWidth;
                 else if (eL === line)
-                    w = this.lineWidth(line, 0, e);
+                    w = this.wrapLineWidth(line, 0, e);
                 //w = this.textWidth(tLine.substring(0, e));
                 else
                     w = this._lines[line].width + this._charWidth;
-                cl = this.lineWidth(line, 0, cl);
+                cl = this.wrapLineWidth(line, 0, cl);
+                if (this._lines[line].indent)
+                    cl += this._indent * this._charWidth;
+                cl = fl(cl);
                 //cl = this.textWidth(tLine.substring(0, cl));
                 if (this._roundedRanges) {
                     let cr;
-                    if (this.lineFormats[line][0].hr)
+                    if (this._lines[line].hr)
                         cr = mw;
+                    else if (this._lines[line].indent)
+                        cr = fl((eL === line ? this.wrapLineWidth(line, 0, e) : (this._lines[line].width + this._charWidth)) + this._indent * this._charWidth);
                     else
-                        cr = fl(eL === line ? this.lineWidth(line, 0, e) : (this._lines[line].width + this._charWidth));
+                        cr = fl(eL === line ? this.wrapLineWidth(line, 0, e) : (this._lines[line].width + this._charWidth));
                     //cr = fl(eL === line ? this.textWidth(tLine.substring(0, e)) : (this._lines[line].width + this._charWidth));
                     if (line > sL) {
-                        let pl = 0;
+                        let plIndent = this._lines[line - 1].indent ? this._indent * this._charWidth : 0;
+                        let pl = fl(plIndent);
                         if (sL === line - 1) {
-                            if (this.lineFormats[line - 1][0].hr)
+                            if (this._lines[line - 1].hr)
                                 pl = 0;
-                            else if (fl(this.lineWidth(sL, 0, s)) >= fl(this._lines[line - 1].width + this._charWidth))
+                            else if (fl(this.wrapLineWidth(sL, 0, s) + plIndent) >= fl(this._lines[line - 1].width + this._charWidth + plIndent))
                                 //else if (fl(this.textWidth(this.lines[sL].substr(0, s).replace(/ /g, '\u00A0'))) >= fl(this._lines[line - 1].width + this._charWidth))
-                                pl = fl(this._lines[line - 1].width) + this._charWidth;
+                                pl = fl(this._lines[line - 1].width + plIndent) + this._charWidth;
                             else
-                                pl = fl(this.lineWidth(sL, 0, s));
+                                pl = fl(this.wrapLineWidth(sL, 0, s) + plIndent);
                             //pl = fl(this.textWidth(this.lines[sL].substring(0, s).replace(/ /g, '\u00A0')));
                         }
-                        const pr = this.lineFormats[line - 1][0].hr ? mw : fl(this._lines[line - 1].width + this._charWidth);
+                        const pr = this._lines[line - 1].hr ? mw : fl(this._lines[line - 1].width + this._charWidth + plIndent);
 
-                        if (fl(cl) === pl)
+                        if (cl === pl)
                             startStyle.top = CornerType.Flat;
-                        else if (fl(cl) > pl)
+                        else if (cl > pl)
                             startStyle.top = CornerType.Intern;
                         if (cr === pr)
                             endStyle.top = CornerType.Flat;
@@ -2669,14 +2330,15 @@ export class Display extends EventEmitter {
 
                     if (line < eL) {
                         let nr;
-                        if (this.lineFormats[line + 1][0].hr)
+                        let nrIndent = this._lines[line + 1].indent ? this._indent * this._charWidth : 0;
+                        if (this._lines[line + 1].hr)
                             nr = mw;
                         else
-                            nr = fl(eL === line + 1 ? this.lineWidth(line + 1, 0, e) : (this._lines[line + 1].width + this._charWidth));
+                            nr = fl(eL === line + 1 ? (this.wrapLineWidth(line + 1, 0, e) + nrIndent) : (this._lines[line + 1].width + this._charWidth + nrIndent));
                         //nr = fl(eL === line + 1 ? this.textWidth(this.lines[line + 1].substring(0, e).replace(/ /g, '\u00A0')) : (this._lines[line + 1].width + this._charWidth));
-                        if (fl(cl) === 0)
+                        if (cl === fl(nrIndent))
                             startStyle.bottom = CornerType.Flat;
-                        else if (0 < fl(cl) && fl(cl) < nr)
+                        else if (fl(nrIndent) < cl && cl < nr)
                             startStyle.bottom = CornerType.Intern;
 
                         if (cr === nr)
@@ -2686,28 +2348,30 @@ export class Display extends EventEmitter {
                     }
 
                     if (startStyle.top === CornerType.Extern) {
-                        rCls += ' tlc';
+                        cls += ' tlc';
                     }
                     if (startStyle.bottom === CornerType.Extern) {
-                        rCls += ' blc';
+                        cls += ' blc';
                     }
                     if (endStyle.top === CornerType.Extern) {
-                        rCls += ' trc';
+                        cls += ' trc';
                     }
                     if (endStyle.bottom === CornerType.Extern) {
-                        rCls += ' brc';
+                        cls += ' brc';
                     }
                 }
 
                 if (!this._overlays[type][line])
                     this._overlays[type][line] = [];
-                this._overlays[type][line].push(`<span id="${type}-${r}" class="${rCls}" style="left:${cl * this._charWidth}px;width: ${w}px;"></span>`);
-                if (startStyle.top === CornerType.Intern || startStyle.bottom === CornerType.Intern)
-                    this._overlays[type][line].push(`<span class="${cls} isb" style="top:${this._charHeight - 7}px;left:${(cl * this._charWidth - 7)}px;"></span>`);
+                this._overlays[type][line].push(`<span id="${type}-${r}" class="${cls}" style="left:${(this._timestamp ? this._timestampWidth : 0) + cl}px;width: ${w}px;"></span>`);
+                if (startStyle.top === CornerType.Intern)
+                    this._overlays[type][line].push(`<span class="${rangeCls} ist" style="top:$0px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl - 7)}px;"></span>`);
+                if (startStyle.bottom === CornerType.Intern)
+                    this._overlays[type][line].push(`<span class="${rangeCls} isb" style="top:${this._charHeight - 7}px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl - 7)}px;"></span>`);
                 if (endStyle.top === CornerType.Intern)
-                    this._overlays[type][line].push(`<span class="${cls} iet" style="top:0px;left:${(cl * this._charWidth) + w}px;"></span>`);
+                    this._overlays[type][line].push(`<span class="${rangeCls} iet" style="top:0px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl) + w}px;"></span>`);
                 if (endStyle.bottom === CornerType.Intern)
-                    this._overlays[type][line].push(`<span class="${cls} ieb" style="top:${this._charHeight - 7}px;left:${(cl * this._charWidth) + w}px;"></span>`);
+                    this._overlays[type][line].push(`<span class="${rangeCls} ieb" style="top:${this._charHeight - 7}px;left:${(this._timestamp ? this._timestampWidth : 0) + (cl) + w}px;"></span>`);
             }
         }
         let ol;
@@ -2715,7 +2379,7 @@ export class Display extends EventEmitter {
             if (!this._overlays[type].hasOwnProperty(ol))
                 continue;
             this._overlays[type][ol] = `<div style="top: ${(+ol || 0) * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${this._overlays[type][ol].join('')}</div>`;
-            if (this.split && ol >= this.split._viewRange.start) {
+            if (this.split) { //&& ol >= this.split._viewRange.start) {
                 this.split.dirty = true;
                 this.doUpdate(UpdateType.scrollViewOverlays);
             }
@@ -2725,288 +2389,7 @@ export class Display extends EventEmitter {
 
     //TODO add font support, as different blocks of text could have different font formats, need to not just measure with but measure based on format block data
     private updateSelection() {
-        const sel = this._currentSelection;
-        let s;
-        let e;
-        let sL;
-        let eL;
-        let parts;
-        let w;
-        let text;
-        this._overlays.selection = [];
-        if (sel.start.y > sel.end.y) {
-            sL = sel.end.y;
-            eL = sel.start.y;
-            s = sel.end.x;
-            e = sel.start.x;
-        }
-        else if (sel.start.y < sel.end.y) {
-            sL = sel.start.y;
-            eL = sel.end.y;
-            s = sel.start.x;
-            e = sel.end.x;
-        }
-        else if (sel.start.x === sel.end.x) {
-            if (this.split && (sel.start.y >= this.split._viewRange.start || this._prevSelection.start.y >= this.split._viewRange.start)) {
-                this.split.dirty = true;
-                this.doUpdate(UpdateType.scrollViewOverlays);
-            }
-            this.doUpdate(UpdateType.overlays);
-            this._prevSelection = {
-                start: { x: sel.end.x, y: sel.end.y },
-                end: { x: sel.end.x, y: sel.end.y }
-            };
-            return;
-        }
-        else {
-            sL = sel.start.y;
-            if (sL < 0 || sL >= this.lines.length) {
-                this._prevSelection = {
-                    start: { x: sel.end.x, y: sel.end.y },
-                    end: { x: sel.end.x, y: sel.end.y }
-                };
-                return;
-            }
-            /*
-                        w = e;
-                        while (w >= s) {
-                            if (!CONTAINS_RTL.test(text[w])) {
-                                break;
-                            }
-                            w--;
-                        }
-                        if (w !== e) {
-                            eL = e;
-                            e = this.textWidth(text.substring(s, w));
-                            s = this.textWidth(text.substring(0, s));
-                            parts = [`<span class="select-text" style="left: ${s}px;width: ${e}px"></span>`];
-                            w = this.textWidth(text.substring(w, eL));
-                            s += e - w;
-                            parts.push(`<span class="select-text" style="left: ${s}px;width: ${w}px"></span>`);
-                        }
-                        else {
-                            e = this.textWidth(text.substring(s, e));
-                            s = this.textWidth(text.substring(0, s));
-                            if (this._roundedRanges)
-                                parts = [`<span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span>`];
-                            else
-                                parts = [`<span class="select-text" style="left: ${s}px;width: ${e}px"></span>`];
-                        }
-                        this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
-            */
-            /*
-             w = this.textWidth(text.substring(0, s));
-             parts = [];
-             while (s <= e) {
-                 eL = this.textWidth(text.substr(s, 1));
-                 if (CONTAINS_RTL.test(text[s]))
-                     parts.push(`<span class="select-text" style="background-color:red !important;left: ${w}px;width: ${eL}px"></span>`);
-                 else
-                     parts.push(`<span class="select-text" style="left: ${w}px;width: ${eL}px"></span>`);
-                 s++;
-                 w += eL;
-             }
-             this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
-    */
-            if (this.lineFormats[sL][0].hr) {
-                s = 0;
-                e = Math.max(this._maxLineLength * this._charWidth, this._maxView);
-            }
-            else {
-                s = Math.min(sel.start.x, sel.end.x);
-                e = Math.max(sel.start.x, sel.end.x);
-                text = this.lines[sL];
-                if (s < 0) s = 0;
-                if (e > text.length)
-                    e = text.length;
-                e = this.lineWidth(sL, s, e);
-                s = this.lineWidth(sL, 0, s);
-                //e = this.textWidth(text.substring(s, e).replace(/ /g, '\u00A0'));
-                //s = this.textWidth(text.substring(0, s).replace(/ /g, '\u00A0'));
-            }
-            if (this._roundedRanges)
-                this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text trc tlc brc blc" style="left: ${s}px;width: ${e}px"></span></div>`;
-            else
-                this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line"><span class="select-text" style="left: ${s}px;width: ${e}px"></span></div>`;
-
-            /*
-                        const ranges = [];
-                        let range = { start: s, end: s, direction: CONTAINS_RTL.test(text[w]) ? 1 : 0 };
-                        ranges.push(range);
-                        let state = range.direction;
-                        w = s + 1;
-                        while (w <= e) {
-                            if (state === 0 && CONTAINS_RTL.test(text[w])) {
-                                range.end++;
-                                range = { start: w, end: w, direction: 1 };
-                                ranges.push(range);
-                                state = 1;
-                            }
-                            else if (state === 1 && CONTAINS_LTR.test(text[w])) {
-                                range.end++;
-                                range = { start: w, end: w, direction: 0 };
-                                ranges.push(range);
-                                state = 0;
-                            }
-                            range.end = w;
-                            w++;
-                        }
-                        console.log(ranges);
-                        s = this.textWidth(text.substring(0, s));
-                        eL = ranges.length;
-                        parts = [];
-                        for (w = 0; w < eL; w++) {
-                            e = this.textWidth(text.substring(ranges[w].start, ranges[w].end));
-                            if (ranges[w].direction)
-                                parts.push(`<span class="select-text" style="background-color:red; left: ${s}px;width: ${e}px"></span>`);
-                            else
-                                parts.push(`<span class="select-text" style="left: ${s}px;width: ${e}px"></span>`);
-                            s += e;
-                        }
-                        this._overlays.selection[sL] = `<div style="top: ${sL * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
-            */
-            if (this.split && (sL >= this.split._viewRange.start || this._prevSelection.start.y >= this.split._viewRange.start)) {
-                this.split.dirty = true;
-                this.doUpdate(UpdateType.scrollViewOverlays);
-            }
-            this.doUpdate(UpdateType.overlays);
-            this._prevSelection = {
-                start: { x: sel.end.x, y: sel.end.y },
-                end: { x: sel.end.x, y: sel.end.y }
-            };
-            return;
-        }
-        const len = this.lines.length;
-        const mw = Math.max(this._maxLineLength * this._charWidth, this._maxView);
-
-        if (sL < 0)
-            sL = 0;
-        if (eL >= len) {
-            eL = len - 1;
-            e = this.lines[eL].length;
-        }
-        if (s < 0)
-            s = 0;
-        if (e > this.lines[eL].length)
-            e = this.lines[eL].length;
-        const fl = Math.trunc;
-        for (let line = sL; line < eL + 1; line++) {
-            const startStyle = {
-                top: CornerType.Extern,
-                bottom: CornerType.Extern
-            };
-            const endStyle = {
-                top: CornerType.Extern,
-                bottom: CornerType.Extern
-            };
-            parts = [];
-            let cls = 'select-text';
-            let cl = 0;
-            if (sL === line) {
-                const tLine = this.lines[line].replace(/ /g, '\u00A0');
-                if (s >= tLine.length)
-                    cl = tLine.length;
-                else
-                    cl = s;
-            }
-            if (this.lineFormats[line][0].hr)
-                w = mw;
-            else if (sL === line)
-                w = this.lineWidth(line, s) + this._charWidth;
-            //w = this.textWidth(this.lines[sL].substr(s).replace(/ /g, '\u00A0')) + this._charWidth;
-            else if (eL === line)
-                w = this.lineWidth(line, 0, e);
-            //w = this.textWidth(tLine.substring(0, e));
-            else
-                w = this._lines[line].width + this._charWidth;
-            cl = this.lineWidth(line, 0, cl);
-            //cl = this.textWidth(tLine.substring(0, cl));
-
-            if (this._roundedRanges) {
-                let cr;
-                if (this.lineFormats[line][0].hr)
-                    cr = mw;
-                else
-                    cr = fl(eL === line ? this.lineWidth(line, 0, e) : (this._lines[line].width + this._charWidth));
-                //cr = fl(eL === line ? this.textWidth(tLine.substring(0, e)) : (this._lines[line].width + this._charWidth));
-                if (line > sL) {
-                    let pl = 0;
-                    if (sL === line - 1) {
-                        if (this.lineFormats[line - 1][0].hr)
-                            pl = 0;
-                        else if (fl(this.lineWidth(sL, 0, s)) >= fl(this._lines[line - 1].width + this._charWidth))
-                            //else if (fl(this.textWidth(this.lines[sL].substr(0, s).replace(/ /g, '\u00A0'))) >= fl(this._lines[line - 1].width + this._charWidth))
-                            pl = fl(this._lines[line - 1].width) + this._charWidth;
-                        else
-                            pl = fl(this.lineWidth(sL, 0, s));
-                        //pl = fl(this.textWidth(this.lines[sL].substring(0, s).replace(/ /g, '\u00A0')));
-                    }
-                    const pr = this.lineFormats[line - 1][0].hr ? mw : fl(this._lines[line - 1].width + this._charWidth);
-
-                    if (fl(cl) === pl)
-                        startStyle.top = CornerType.Flat;
-                    else if (fl(cl) > pl)
-                        startStyle.top = CornerType.Intern;
-                    if (cr === pr)
-                        endStyle.top = CornerType.Flat;
-                    else if (pl < cr && cr < pr)
-                        endStyle.top = CornerType.Intern;
-                    else if (cr === 0 && line === eL)
-                        endStyle.top = CornerType.Intern;
-                }
-
-                if (line < eL) {
-                    let nr;
-                    if (this.lineFormats[line + 1][0].hr)
-                        nr = mw;
-                    else
-                        nr = fl(eL === line + 1 ? this.lineWidth(line + 1, 0, e) : (this._lines[line + 1].width + this._charWidth));
-                    //nr = fl(eL === line + 1 ? this.textWidth(this.lines[line + 1].substring(0, e).replace(/ /g, '\u00A0')) : (this._lines[line + 1].width + this._charWidth));
-                    if (fl(cl) === 0)
-                        startStyle.bottom = CornerType.Flat;
-                    else if (0 < fl(cl) && fl(cl) < nr)
-                        startStyle.bottom = CornerType.Intern;
-
-                    if (cr === nr)
-                        endStyle.bottom = CornerType.Flat;
-                    else if (cr < nr)
-                        endStyle.bottom = CornerType.Intern;
-                }
-
-                if (startStyle.top === CornerType.Extern) {
-                    cls += ' tlc';
-                }
-                if (startStyle.bottom === CornerType.Extern) {
-                    cls += ' blc';
-                }
-                if (endStyle.top === CornerType.Extern) {
-                    cls += ' trc';
-                }
-                if (endStyle.bottom === CornerType.Extern) {
-                    cls += ' brc';
-                }
-            }
-
-            parts.push(`<span class="${cls}" style="left:${cl}px;width: ${w}px;"></span>`);
-
-            if (startStyle.top === CornerType.Intern || startStyle.bottom === CornerType.Intern)
-                parts.push(`<span class="select-text isb" style="top:${this._charHeight - 7}px;left:${(cl - 7)}px;"></span>`);
-            if (endStyle.top === CornerType.Intern)
-                parts.push(`<span class="select-text iet" style="top:0px;left:${(cl) + w}px;"></span>`);
-            if (endStyle.bottom === CornerType.Intern)
-                parts.push(`<span class="select-text ieb" style="top:${this._charHeight - 7}px;left:${(cl) + w}px;"></span>`);
-
-            this._overlays.selection[line] = `<div style="top: ${line * this._charHeight}px;height:${this._charHeight}px;" class="overlay-line">${parts.join('')}</div>`;
-        }
-        if (this.split && (sL >= this.split._viewRange.start || eL >= this.split._viewRange.start || this._prevSelection.start.y >= this.split._viewRange.start || this._prevSelection.end.y >= this.split._viewRange.start)) {
-            this.split.dirty = true;
-            this.doUpdate(UpdateType.scrollViewOverlays);
-        }
-        this.doUpdate(UpdateType.overlays);
-        this._prevSelection = {
-            start: { x: sel.end.x, y: sel.end.y },
-            end: { x: sel.end.x, y: sel.end.y }
-        };
+        this.addOverlays([{ start: this._currentSelection.start, end: this._currentSelection.end }], 'select-text', 'selection');
     }
 
     get hasSelection(): boolean {
@@ -3017,81 +2400,113 @@ export class Display extends EventEmitter {
     }
 
     get selection(): string {
-        if (this.lines.length === 0) return '';
+        if (this._lines.length === 0) return '';
         const sel = this._currentSelection;
-        let s;
-        let e;
-        let sL;
-        let eL;
-        if (sel.start.y > sel.end.y) {
+        let s = sel.start.x;
+        let e = sel.end.x;
+        let sL = sel.start.y;
+        let eL = sel.end.y;
+        if (sL < 0)
+            sL = 0;
+        else if (sL >= this._lines.length)
+            sL = this._lines.length - 1;
+        if (eL < 0)
+            eL = 0;
+        else if (eL >= this._lines.length)
+            eL = this._lines.length - 1;
+        //convert wrap offset to text offsets
+        s = this._lines[sL].startOffset + s;
+        e = this._lines[eL].startOffset + e;
+        //convert wrap lines to text lines
+        sL = this._model.getLineFromID(this._lines[sL].id);
+        eL = this._model.getLineFromID(this._lines[eL].id);
+        if (sL > eL) {
             sL = sel.end.y;
             eL = sel.start.y;
             s = sel.end.x;
             e = sel.start.x;
         }
-        else if (sel.start.y < sel.end.y) {
+        else if (sL < eL) {
             sL = sel.start.y;
             eL = sel.end.y;
             s = sel.start.x;
             e = sel.end.x;
         }
-        else if (sel.start.x === sel.end.x) {
+        else if (s === e) {
             return '';
         }
-        else if (sel.start.y > 0 && sel.start.y < this.lineFormats.length && this.lineFormats[sel.start.y][0].hr)
+        else if (sel.start.y > 0 && sel.start.y < this._lines.length && this._lines[sel.start.y].hr)
             return '---';
-        else {
-            s = Math.min(sel.start.x, sel.end.x);
-            e = Math.max(sel.start.x, sel.end.x);
-            return this.lines[sel.start.y].substring(s, e);
-        }
-        const len = this.lines.length;
+        else
+            return this._model.getText(sL, Math.min(s, e), Math.max(s, e));
+        const len = this._lines.length;
 
         if (sL < 0)
             sL = 0;
         if (eL >= len) {
             eL = len - 1;
-            e = this.lines[eL].length;
+            e = this.getLineText(eL).length;
         }
         if (s < 0)
             s = 0;
-        if (e > this.lines[eL].length)
-            e = this.lines[eL].length;
+        if (e > this.getLineText(eL).length)
+            e = this.getLineText(eL).length;
 
+        //convert wrap offset to text offsets
+        s = this._lines[sL].startOffset + s;
+        e = this._lines[eL].startOffset + e;
+        //convert wrap lines to text lines
+        sL = this._model.getLineFromID(this._lines[sL].id);
+        eL = this._model.getLineFromID(this._lines[eL].id);
         const txt = [];
-        if (this.lineFormats[sL][0].hr)
+        const lines = this._model.lines;
+        if (this.lines[sL].formats[0].hr)
             txt.push('---');
         else
-            txt.push(this.lines[sL].substring(s));
+            txt.push(lines[sL].text.substring(s));
         sL++;
         while (sL < eL) {
-            if (this.lineFormats[sL][0].hr)
+            if (lines[sL].formats[0].hr)
                 txt.push('---');
             else
-                txt.push(this.lines[sL]);
+                txt.push(lines[sL].text);
             sL++;
         }
-        if (this.lineFormats[eL][0].hr)
+        if (lines[eL].formats[0].hr)
             txt.push('---');
         else
-            txt.push(this.lines[eL].substring(0, e));
+            txt.push(lines[eL].text.substring(0, e));
         return txt.join('\n');
     }
 
     get selectionAsHTML(): string {
-        if (this.lines.length === 0) return '';
+        if (this._lines.length === 0) return '';
         const sel = this._currentSelection;
-        let s;
-        let e;
-        let sL;
-        let eL;
-        if (sel.start.y > sel.end.y) {
+        let s = sel.start.x;
+        let e = sel.end.x;
+        let sL = sel.start.y;
+        let eL = sel.end.y;
+        if (sL < 0)
+            sL = 0;
+        else if (sL >= this._lines.length)
+            sL = this._lines.length - 1;
+        if (eL < 0)
+            eL = 0;
+        else if (eL >= this._lines.length)
+            eL = this._lines.length - 1;
+        //convert wrap offset to text offsets
+        s = this._lines[sL].startOffset + s;
+        e = this._lines[eL].startOffset + e;
+        //convert wrap lines to text lines
+        sL = this._model.getLineFromID(this._lines[sL].id);
+        eL = this._model.getLineFromID(this._lines[eL].id);
+        if (sL > eL) {
             sL = sel.end.y;
             eL = sel.start.y;
             s = sel.end.x;
             e = sel.start.x;
         }
-        else if (sel.start.y < sel.end.y) {
+        else if (sL < eL) {
             sL = sel.start.y;
             eL = sel.end.y;
             s = sel.start.x;
@@ -3101,22 +2516,37 @@ export class Display extends EventEmitter {
             return '';
         }
         else {
+            sL = sel.start.y;
+            if (sL < 0) sL = 0;
+            if (sL >= this._lines.length)
+                sL = this._lines.length - 1;
+            //convert wrap offset to text offsets
+            s = this._lines[sL].startOffset + s;
+            e = this._lines[eL].startOffset + e;
             s = Math.min(sel.start.x, sel.end.x);
             e = Math.max(sel.start.x, sel.end.x);
-            return this.getLineHTML(sel.start.y, s, e);
+            //convert wrap lines to text lines
+            sL = this._model.getLineFromID(this._lines[sel.start.y].id);
+            return this.getLineHTML(sL, s, e);
         }
-        const len = this.lines.length;
+        const len = this._lines.length;
 
         if (sL < 0)
             sL = 0;
         if (eL >= len) {
             eL = len - 1;
-            e = this.lines[eL].length;
+            e = this.getLineText(eL).length;
         }
         if (s < 0)
             s = 0;
-        if (e > this.lines[eL].length)
-            e = this.lines[eL].length;
+        if (e > this.getLineText(eL).length)
+            e = this.getLineText(eL).length;
+        //convert wrap offset to text offsets
+        s = this._lines[sL].startOffset + s;
+        e = this._lines[eL].startOffset + e;
+        //convert wrap lines to text lines
+        sL = this._model.getLineFromID(this._lines[sL].id);
+        eL = this._model.getLineFromID(this._lines[eL].id);
 
         const txt = [this.getLineHTML(sL, s)];
         sL++;
@@ -3128,17 +2558,34 @@ export class Display extends EventEmitter {
         return txt.join('\n');
     }
 
+    private clampPosition(point: Point): Point {
+        if (point.y < 0) {
+            point.y = 0;
+            point.x = 0;
+        }
+        if (point.y >= this._lines.length) {
+            point.y = this._lines.length - 1;
+            point.x = this.getLineText(point.y).length;
+        }
+        else if (point.y === this._lines.length - 1 && point.x > this.getLineText(point.y).length) {
+            point.x = this.getLineText(point.y).length;
+        }
+        return point;
+    }
+
     public selectAll() {
-        let ll = this.lines.length;
+        let ll = this._lines.length;
         if (ll === 0) return;
         ll--;
+        /*
         this._prevSelection = {
-            start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
-            end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
+            start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset },
+            end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset }
         };
+        */
         this._currentSelection = {
-            start: { x: 0, y: 0 },
-            end: { x: this.lines[ll].length, y: ll },
+            start: { x: 0, y: 0, lineID: this._lines[0].id, lineOffset: 0 },
+            end: { x: this.getLineText(ll).length, y: ll, lineID: this._lines[ll].id, lineOffset: this._lines[ll].endOffset },
             scrollTimer: null,
             drag: false
         };
@@ -3148,13 +2595,15 @@ export class Display extends EventEmitter {
     }
 
     public clearSelection() {
+        /*
         this._prevSelection = {
-            start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y },
-            end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y }
+            start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset },
+            end: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset }
         };
+        */
         this._currentSelection = {
-            start: { x: null, y: null },
-            end: { x: null, y: null },
+            start: { x: null, y: null, lineID: null, lineOffset: null },
+            end: { x: null, y: null, lineID: null, lineOffset: null },
             scrollTimer: null,
             drag: false
         };
@@ -3167,6 +2616,7 @@ export class Display extends EventEmitter {
         if (this.split) this.split.dirty = true;
         this._os = this.offset(this._el);
         this._maxView = this._el.clientWidth - this._padding[1] - this._padding[3] - this._VScroll.size;
+        this._maxViewHeight = this._el.clientHeight - this._padding[0] - this._padding[2] - this._HScroll.size;
         //resized so new width needs a recalculate
         this._viewCache = {};
         if (this.split) {
@@ -3188,22 +2638,42 @@ export class Display extends EventEmitter {
 
     private buildLineDisplay(idx?: number, mw?, mv?) {
         if (idx === undefined)
-            idx = this.lines.length - 1;
+            idx = this._lines.length - 1;
         const back = [];
         const fore = [];
-        const text = this.lines[idx].replace(/ /g, '\u00A0');
-        const formats = this.lineFormats[idx];
+        //const text = this.getLineText(idx).replace(/ /g, '\u00A0');
+        const id = this._lines[idx].id;
+        const line = this._model.getLineFromID(id);
+        const text = this.lines[line].text.replace(/ /g, '\u00A0');
+        const formats = this.lines[line].formats;
         let offset = 0;
         let bStyle: any = '';
         let fStyle: any = '';
         let fCls: any = '';
         const ch = this._charHeight;
+        const cw = this._charWidth;
         const len = formats.length;
+        const endFormat = this._lines[idx].endFormat
+        const endOffset = this._lines[idx].endOffset;
+        const startOffset = this._lines[idx].startOffset;
+        const startFormat = this._lines[idx].startFormat;
         let left = 0;
-        const id = this.lineIDs[idx];
+        let links = 0;
         let right = false;
-
-        for (let f = 0; f < len; f++) {
+        if (this._timestamp) {
+            back.push('<span style="float: left;left:0;width:', this._timestampWidth, 'px;background:', this._model.GetColor(-8), ';"></span>');
+            if (this._lines[idx].indent)
+                fore.push('<span style="float: left;left:0;width:', this._timestampWidth, 'px;color:', this._model.GetColor(-7), ';"></span>');
+            else
+                fore.push('<span style="float: left;left:0;width:', this._timestampWidth, 'px;color:', this._model.GetColor(-7), ';">', moment(this.lines[line].timestamp).format(this._timestampFormat), '</span>');
+            left += this._timestampWidth;
+        }
+        if (this._lines[idx].indent) {
+            back.push('<span style="float: left;left:0;width:', (this._indent || 0) * cw, 'px;"></span>');
+            fore.push('<span style="float: left;left:0;width:', (this._indent || 0) * cw, 'px;"></span>');
+            left += (this._indent || 0) * cw;
+        }
+        for (let f = 0; f <= endFormat; f++) {
             const format = formats[f];
             let nFormat;
             let end;
@@ -3218,6 +2688,11 @@ export class Display extends EventEmitter {
             else
                 end = text.length;
             offset = format.offset;
+            if (offset < startOffset)
+                offset = startOffset;
+            if (end > endOffset)
+                end = endOffset;
+            let width = this._lines[idx].formatWidths[f] || format.width;
             if (format.formatType === FormatType.Normal) {
                 eText = text.substring(offset, end);
                 if (format.bStyle) {
@@ -3230,11 +2705,11 @@ export class Display extends EventEmitter {
                     fStyle = [];
                     fCls = [];
                     if (typeof format.background === 'number')
-                        bStyle.push('background:', this._parser.GetColor(format.background), ';');
+                        bStyle.push('background:', this._model.GetColor(format.background), ';');
                     else if (format.background)
                         bStyle.push('background:', format.background, ';');
                     if (typeof format.color === 'number')
-                        fStyle.push('color:', this._parser.GetColor(format.color), ';');
+                        fStyle.push('color:', this._model.GetColor(format.color), ';');
                     else if (format.color)
                         fStyle.push('color:', format.color, ';');
 
@@ -3274,50 +2749,61 @@ export class Display extends EventEmitter {
                     else
                         format.fCls = fCls = '';
                 }
+                if (f < startFormat) continue;
                 if (format.hr) {
                     back.push('<span style="left:0;width:', mw, 'px;', bStyle, '"></span>');
-                    fore.push('<span style="left:0;width:', mw, 'px;', fStyle, '"', fCls, '><div class="hr" style="background-color:', (typeof format.color === 'number' ? this._parser.GetColor(format.color) : format.color), '"></div></span>');
+                    fore.push('<span style="left:0;width:', mw, 'px;', fStyle, '"', fCls, '><div class="hr" style="background-color:', (typeof format.color === 'number' ? this._model.GetColor(format.color) : format.color), '"></div></span>');
                 }
                 else if (end - offset !== 0) {
-                    back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
-                    fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
-                    left += format.width;
+                    back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle, '"></span>');
+                    fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
+                    left += width;
                 }
             }
             else if (format.formatType === FormatType.Link) {
+                if (f < startFormat) continue;
+                links++;
                 fore.push('<a draggable="false" class="URLLink" href="javascript:void(0);" title="', format.href.replace(/"/g, '&quot;'), '" onclick="', this.linkFunction, '(\'', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), '\');return false;">');
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
-                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
-                left += format.width;
+                back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle, '"></span>');
+                fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
+                left += width;
             }
             else if (format.formatType === FormatType.LinkEnd || format.formatType === FormatType.MXPLinkEnd || format.formatType === FormatType.MXPSendEnd) {
+                if (f < startFormat) continue;
+                links--;
                 fore.push('</a>');
             }
             else if (format.formatType === FormatType.MXPLink) {
+                if (f < startFormat) continue;
+                links++;
                 fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" data-href="', format.href, '" href="javascript:void(0);" title="', format.hint.replace(/"/g, '&quot;'), '" onclick="', this.mxpLinkFunction, '(this, \'', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), '\');return false;">');
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
-                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
-                left += format.width;
+                back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle, '"></span>');
+                fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
+                left += width;
             }
             else if (format.formatType === FormatType.MXPSend) {
+                if (f < startFormat) continue;
+                links++;
                 fore.push('<a draggable="false" data-id="', id, '" class="MXPLink" href="javascript:void(0);" title="', format.hint.replace(/"/g, '&quot;'), '" onmouseover="', this.mxpTooltipFunction, '(this);"', ' onclick="', this.mxpSendFunction, '(event||window.event, this, ', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ', ', format.prompt ? 1 : 0, ', ', format.tt.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ');return false;">');
                 if (end - offset === 0) continue;
                 eText = text.substring(offset, end);
-                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '" ></span>');
-                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
-                left += format.width;
+                back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle, '" ></span>');
+                fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
+                left += width;
             }
             else if (format.formatType === FormatType.MXPExpired && end - offset !== 0) {
+                if (f < startFormat) continue;
                 eText = text.substring(offset, end);
-                back.push('<span style="left:', left, 'px;width:', format.width, 'px;', bStyle, '"></span>');
-                fore.push('<span style="left:', left, 'px;width:', format.width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
-                left += format.width;
+                back.push('<span style="left:', left, 'px;width:', width, 'px;', bStyle, '"></span>');
+                fore.push('<span style="left:', left, 'px;width:', width, 'px;', fStyle, '"', fCls, '>', htmlEncode(eText), '</span>');
+                left += width;
             }
             else if (format.formatType === FormatType.Image) {
+                if (f < startFormat) continue;
                 eText = '';
                 const tmp = ['<img style="'];
                 if (format.url.length > 0) {
@@ -3331,10 +2817,10 @@ export class Display extends EventEmitter {
                         eText += '/';
                 }
                 eText += format.name;
-                if (format.width)
-                    tmp.push('width:', format.width, 'px;');
+                if (width)
+                    tmp.push('width:', width, 'px;');
                 else if (format.w.length > 0)
-                    tmp.push('width:', formatUnit(format.w), ';');
+                    tmp.push('width:', formatUnit(format.w, cw), ';');
 
                 if (format.height)
                     tmp.push('height:', format.height, 'px;');
@@ -3356,11 +2842,11 @@ export class Display extends EventEmitter {
                         break;
                 }
                 if (format.hspace.length > 0 && format.vspace.length > 0)
-                    tmp.push('margin:', formatUnit(format.vspace), ' ', formatUnit(format.hspace, ch), ';');
+                    tmp.push('margin:', formatUnit(format.vspace, cw), ' ', formatUnit(format.hspace, ch), ';');
                 else if (format.hspace.length > 0)
                     tmp.push('margin: 0px ', formatUnit(format.hspace, ch), ';');
                 else if (format.vspace.length > 0)
-                    tmp.push('margin:', formatUnit(format.vspace), ' 0px;');
+                    tmp.push('margin:', formatUnit(format.vspace, cw), ' 0px;');
                 //TODO remove max-height when variable height supported
                 tmp.push('max-height:', '' + ch, 'px;"');
                 back.push(tmp.join(''), ` src="./../assets/blank.png"/>`);
@@ -3368,6 +2854,9 @@ export class Display extends EventEmitter {
                 fore.push(tmp.join(''), ` src="${eText}"/>`);
             }
         }
+        //close any open links
+        while (links--)
+            fore.push('</a>');
         if (right)
             return [`<span data-id="${id}" style="top:${idx * ch}px;min-width:${mv}px;">${fore.join('')}<br></span>`, `<span style="top:${idx * ch}px;min-width:${mv}px;">${back.join('')}<br></span>`];
         return [`<span data-id="${id}" style="top:${idx * ch}px;">${fore.join('')}<br></span>`, `<span style="top:${idx * ch}px;">${back.join('')}<br></span>`];
@@ -3381,16 +2870,15 @@ export class Display extends EventEmitter {
         if (start === undefined)
             start = 0;
         if (len === undefined)
-            len = this.lines[idx].length;
+            len = this.lines[idx].text.length;
         const parts = [];
         let offset = 0;
         let style: any = '';
         let fCls: any = '';
-        const text = this.lines[idx].replace(/ /g, '\u00A0');
-        const formats = this.lineFormats[idx];
+        const text = this.lines[idx].text;
+        const formats = this.lines[idx].formats;
         const fLen = formats.length;
         let right = false;
-
         for (let f = 0; f < fLen; f++) {
             const format = formats[f];
             let nFormat;
@@ -3418,11 +2906,11 @@ export class Display extends EventEmitter {
                 style = [];
                 fCls = [];
                 if (typeof format.background === 'number')
-                    style.push('background:', this._parser.GetColor(format.background), ';');
+                    style.push('background:', this._model.GetColor(format.background), ';');
                 else if (format.background)
                     style.push('background:', format.background, ';');
                 if (typeof format.color === 'number')
-                    style.push('color:', this._parser.GetColor(format.color), ';');
+                    style.push('color:', this._model.GetColor(format.color), ';');
                 else if (format.color)
                     style.push('color:', format.color, ';');
                 if (format.font)
@@ -3439,7 +2927,7 @@ export class Display extends EventEmitter {
                     if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline || (format.style & FontStyle.Underline) === FontStyle.Underline)
                         td.push('underline ');
                     if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline)
-                        style.push('border-bottom: 1px solid ', (typeof format.color === 'number' ? this._parser.GetColor(format.color) : format.color), ';');
+                        style.push('border-bottom: 1px solid ', (typeof format.color === 'number' ? this._model.GetColor(format.color) : format.color), ';');
                     else
                         style.push('padding-bottom: 1px;');
                     if ((format.style & FontStyle.Rapid) === FontStyle.Rapid || (format.style & FontStyle.Slow) === FontStyle.Slow) {
@@ -3461,7 +2949,7 @@ export class Display extends EventEmitter {
                 else
                     fCls = '';
                 if (format.hr)
-                    parts.push('<span style="', style, 'min-width:100%;width:100%;"', fCls, '><div style="position:relative;top: 50%;transform: translateY(-50%);height:4px;width:100%; background-color:', (typeof format.color === 'number' ? this._parser.GetColor(format.color) : format.color), '"></div></span>');
+                    parts.push('<span style="', style, 'min-width:100%;width:100%;"', fCls, '><div style="position:relative;top: 50%;transform: translateY(-50%);height:4px;width:100%; background-color:', (typeof format.color === 'number' ? this._model.GetColor(format.color) : format.color), '"></div></span>');
                 else if (end - offset !== 0)
                     parts.push('<span style="', style, '"', fCls, '>', htmlEncode(text.substring(offset, end)), '</span>');
             }
@@ -3537,7 +3025,7 @@ export class Display extends EventEmitter {
                 tmp += format.name;
                 parts.push(format.name, '"  style="');
                 if (format.w.length > 0)
-                    parts.push('width:', formatUnit(format.w), ';');
+                    parts.push('width:', formatUnit(format.w, this._charWidth), ';');
                 if (format.h.length > 0)
                     parts.push('height:', formatUnit(format.h, this._charHeight), ';');
                 switch (format.align.toLowerCase()) {
@@ -3556,7 +3044,7 @@ export class Display extends EventEmitter {
                 }
                 if (format.hspace.length > 0 && format.vspace.length > 0) {
                     parts.push('margin:');
-                    parts.push(formatUnit(format.vspace), ' ');
+                    parts.push(formatUnit(format.vspace, this._charWidth), ' ');
                     parts.push(formatUnit(format.hspace, this._charHeight), ';');
                 }
                 else if (format.hspace.length > 0) {
@@ -3565,30 +3053,105 @@ export class Display extends EventEmitter {
                 }
                 else if (format.vspace.length > 0) {
                     parts.push('margin:');
-                    parts.push(formatUnit(format.vspace), ' 0px;');
+                    parts.push(formatUnit(format.vspace, this._charWidth), ' 0px;');
                 }
                 parts.push('"');
                 if (format.ismap) parts.push(' ismap onclick="return false;"');
                 parts.push(`src="${tmp}"/>`);
             }
         }
-        if (right && len < this.lines[idx].length)
+        if (right && len < this.lines[idx].text.length)
             return `<span class="line" style="min-width:100%">${parts.join('')}</span>`;
         if (right)
             return `<span class="line" style="min-width:100%">${parts.join('')}<br></span>`;
-        if (len < this.lines[idx].length)
+        if (len < this.lines[idx].text.length)
             return `<span class="line">${parts.join('')}</span>`;
         return `<span class="line">${parts.join('')}<br></span>`;
     }
 
     public reCalculateLines() {
-        let t;
         const ll = this.lines.length;
-        for (let l = 0; l < ll; l++) {
-            t = this.calculateSize(l, true);
-            this._lines[l].width = t.width;
-            this._lines[l].height = t.height;
+        this._lines = [];
+        this._linesMap.clear();
+        this._maxWidth = 0;
+        this._maxHeight = 0
+        //only recalculate if have lines
+        if (ll === 0) return;
+        let t: WrapLine[] = this.calculateWrapLines(0, 0, this._indent, (this._timestamp ? this._timestampWidth : 0), true);
+        if (this.lines[0].formats[0].hr) {
+            t[0].hr = true;
+            this._maxWidth = Math.max(this._maxWidth, this._maxView);
+            this._maxHeight = Math.max(this._maxHeight, this._charHeight);
         }
+        else {
+            this._maxWidth = Math.max(this._maxWidth, t[0].width);
+            this._maxHeight = Math.max(this._maxHeight, t[0].height);
+        }
+        for (let l = 1, ll = t.length; l < ll; l++) {
+            t[l].top = t[l - 1].top + t[l - 1].height;
+            this._maxWidth = Math.max(this._maxWidth, t[l].width + ((this._indent || 0) * this._charWidth));
+            this._maxHeight = Math.max(this._maxHeight, t[l].height);
+        }
+        this._linesMap.set(t[0].id, t);
+        this._lines.push(...t);
+
+        for (let l = 1; l < ll; l++) {
+            const t = this.calculateWrapLines(l, 0, this._indent, (this._timestamp ? this._timestampWidth : 0), true);
+            if (this.lines[l].formats[0].hr) {
+                t[0].hr = true;
+                this._maxWidth = Math.max(this._maxWidth, this._maxView);
+                this._maxHeight = Math.max(this._maxHeight, this._charHeight);
+            }
+            else {
+                this._maxWidth = Math.max(this._maxWidth, t[0].width);
+                this._maxHeight = Math.max(this._maxHeight, t[0].height);
+            }
+            this._linesMap.set(t[0].id, t);
+            t[0].top = this._lines[this._lines.length - 1].top + this._lines[this._lines.length - 1].height;
+            for (let l = 1, ll = t.length; l < ll; l++) {
+                t[l].top = t[l - 1].top + t[l - 1].height;
+                this._maxWidth = Math.max(this._maxWidth, t[l].width + ((this._indent || 0) * this._charWidth));
+                this._maxHeight = Math.max(this._maxHeight, t[l].height);
+            }
+            this._lines.push(...t);
+        }
+        let offset;
+        if (this._currentSelection.start.y !== null) {
+            offset = this.getWrapOffsetByLineID(this._currentSelection.start.lineID, this._currentSelection.start.lineOffset)
+            this._currentSelection.start.y = offset.y;
+            this._currentSelection.start.x = offset.x;
+            this.doUpdate(UpdateType.selection);
+        }
+        if (this._currentSelection.end.y !== null) {
+            offset = this.getWrapOffsetByLineID(this._currentSelection.end.lineID, this._currentSelection.end.lineOffset)
+            this._currentSelection.end.y = offset.y;
+            this._currentSelection.end.x = offset.x;
+            this.doUpdate(UpdateType.selection);
+        }
+
+        let ol;
+        for (ol in this._overlayRanges) {
+            //skip selection as that is custom handled, find/find-current are handled by the finder refresh call
+            if (!this._overlayRanges.hasOwnProperty(ol) || !this._overlayRanges[ol] || ol === 'selection' || ol === 'find' || ol === 'find-current')
+                continue;
+            const ranges = this._overlayRanges[ol].ranges;
+            const rangesLength = ranges.length;
+            for (let r = 0; r < rangesLength; r++) {
+                const range = ranges[r];
+                if (range.start.y !== null) {
+                    offset = this.getWrapOffsetByLineID(range.start.lineID, range.start.lineOffset);
+                    range.start.y = offset.y;
+                    range.start.x = offset.x;
+                }
+                if (range.end.y !== null) {
+                    offset = this.getWrapOffsetByLineID(range.end.lineID, range.end.lineOffset);
+                    range.end.y = offset.y;
+                    range.end.x = offset.x;
+                }
+            }
+            this.addOverlays(this._overlayRanges[ol].ranges, this._overlayRanges[ol].cls, ol);
+        }
+        this._finder.refresh();
     }
 
     public scrollDisplay(force?: boolean) {
@@ -3610,7 +3173,7 @@ export class Display extends EventEmitter {
     private _scrollCorner: HTMLElement;
 
     public updateScrollbars() {
-        if (this._parser.busy)
+        if (this._model.busy)
             return;
         this._HScroll.offset = this._VScroll.trackOffset;
         this._HScroll.resize();
@@ -3630,8 +3193,11 @@ export class Display extends EventEmitter {
             this._scrollCorner = document.createElement('div');
             if (this._showSplitButton && this.split) {
                 this._scrollCorner.classList.add('scroll-corner', 'scroll-split-button');
+                this._scrollCorner.title = 'Toggle split view';
                 this._scrollCorner.innerHTML = '<i class="fa fa-minus"></i>';
-                this._scrollCorner.addEventListener('click', () => {
+                this._scrollCorner.addEventListener('click', e => {
+                    e.cancelBubble = true;
+                    e.stopPropagation();
                     this.scrollLock = !this.scrollLock;
                     if (this.split.shown)
                         this.scrollDisplay(true);
@@ -3645,10 +3211,11 @@ export class Display extends EventEmitter {
         }
         if (this.split) {
             this.split.dirty = true;
-            if (this._VScroll.scrollSize >= 0)
-                this._scrollCorner.classList.remove('disabled');
-            else
-                this._scrollCorner.classList.add('disabled');
+            if (this._scrollCorner)
+                if (this._VScroll.scrollSize >= 0)
+                    this._scrollCorner.classList.remove('disabled');
+                else
+                    this._scrollCorner.classList.add('disabled');
         }
     }
 
@@ -3661,9 +3228,7 @@ export class Display extends EventEmitter {
     }
 
     public find(focus?: boolean) {
-        {
-            this._finder.find(false);
-        }
+        this._finder.find(false);
     }
 
     public scrollTo(x: number, y: number) {
@@ -3740,49 +3305,6 @@ export class Display extends EventEmitter {
         return this._VScroll.atBottom;
     }
 
-    private expireLineLinkFormat(formats, idx: number) {
-        let f;
-        let fs;
-        let fl;
-        let fsl;
-        let type;
-        let eType;
-        let format;
-        let n = 0;
-        for (fs = 0, fsl = formats.length; fs < fsl; fs++) {
-            fl = this.lineFormats[idx].length;
-            f = formats[fs];
-            format = this.lineFormats[idx][f];
-            type = format.formatType;
-            if (format.formatType === FormatType.MXPLink)
-                eType = FormatType.MXPLinkEnd;
-            else
-                eType = FormatType.MXPSendEnd;
-            format.formatType = FormatType.MXPExpired;
-            f++;
-            for (; f < fl; f++) {
-                if (this.lineFormats[idx][f] === eType) {
-                    if (n === 0) {
-                        this.lineFormats[idx][f].formatType = FormatType.MXPSkip;
-                        break;
-                    }
-                    else
-                        n--;
-                }
-                else if (this.lineFormats[idx][f] === type)
-                    n++;
-            }
-        }
-        if (this.split && idx >= this.split._viewRange.start && idx <= this.split._viewRange.end && this.split._viewRange.end !== 0 && !this._parser.busy) {
-            this.split.dirty = true;
-            this.doUpdate(UpdateType.display);
-        }
-        if (idx >= this._viewRange.start && idx <= this._viewRange.end && this._viewRange.end !== 0 && !this._parser.busy) {
-            if (this.split) this.split.dirty = true;
-            this.doUpdate(UpdateType.display);
-        }
-    }
-
     public dispose() {
         this._finder.dispose();
         this._HScroll.dispose();
@@ -3815,6 +3337,486 @@ export class Display extends EventEmitter {
         }
         this._VScroll.updateLayout();
         this._HScroll.updateLayout();
+    }
+
+    public getLineText(line, full?: boolean) {
+        //if line out of range, or if for what ever reason the line is missing data return empty string
+        if (line < 0 || line >= this._lines.length || !this._lines[line]) return '';
+        //get line from id in case lines where removed
+        const idx = this._model.getLineFromID(this._lines[line].id);
+        //line id not found, removed some how return empty string
+        if (idx === -1) return '';
+        if (full)
+            return this.lines[idx].text;
+        return this.lines[idx].text.substring(this._lines[line].startOffset, this._lines[line].endOffset);
+    }
+
+    public reCalculateWrapLines(line: number, width?: number, indent?: number, left?: number, force?: boolean) {
+        const wraps = this.calculateWrapLines(line, width, indent, left, force);
+        const lineID = this._model.getLineID(line);
+        const wrapIndex = this._lines.findIndex(l => l.id === lineID);
+        const wrapAmount = this._linesMap.get(lineID).length;
+        this._lines.splice(wrapIndex, wrapAmount, ...wraps);
+        this._linesMap.delete(lineID);
+        this._linesMap.set(lineID, wraps);
+        //clear cache
+        for (let a = 0; a < wrapAmount; a++) {
+            if (this._viewCache[wrapIndex + a])
+                delete this._viewCache[wrapIndex + a];
+            if (this.split && this.split.viewCache[wrapIndex + a])
+                delete this.split.viewCache[wrapIndex + a];
+        }
+        if (this.split) this.split.dirty = true;
+        this.doUpdate(UpdateType.view | UpdateType.scrollView);
+    }
+
+    /**
+     *  Calculate the wrapped lines for raw line
+     * 
+     * @param {number} line the line index to calculate wrapped lines for
+     * @param {number=} width the width to wrap to
+     * @param {number=} indent the amount of leading indention to prepend
+     * @param {number=} left the starting left spacing to allow for fixed columns or addons
+     * @param {boolean=} force force the recalculate of each fragment's width
+     * @returns {wrapLine[]}
+     */
+    public calculateWrapLines(line: number, width?: number, indent?: number, left?: number, force?: boolean): WrapLine[] {
+        if (line === undefined || line < 0)
+            line = 0;
+        if (line >= this.lines.length)
+            line = this.lines.length - 1;
+        if (!width || typeof width !== 'number') {
+            if (this._wrapAt)
+                width = this._wrapAt * this._charWidth;
+            else
+                width = this.WindowWidth * this._charWidth;//this._maxView;
+        }
+        if (width < 200)
+            width = 200;
+        left = left || 0;
+        //cache locally for a performance boost
+        const charWidth = this._charWidth;
+        const charHeight = this._charHeight;
+        //calculate the indent with
+        indent = (indent || 0) * charWidth;
+        const wrapLines: WrapLine[] = [];
+        const lineID = this._model.getLineID(line);
+        let currentLine: WrapLine = {
+            line: line,
+            height: charHeight,
+            width: 0,
+            top: 0,
+            images: 0,
+            startOffset: 0,
+            startFormat: 0,
+            endOffset: 0,
+            endFormat: 0,
+            indent: false,
+            id: lineID,
+            formatWidths: [],
+            hr: false
+        };
+        const formats = this.lines[line].formats;
+        const formatsLength = formats.length;
+        const text = this.lines[line].text.replace(/ /g, '\u00A0');
+        const rawText = this.lines[line].text;
+        const wrapText = this._wordWrap;
+        let endOffset = 0;
+        let startOffset = 0;
+        let measureText;
+        let font: any = 0;
+        //start at left column
+        let lineWidth = left;
+        let lineHeight = charHeight;
+        let formatIdx;
+        let currentWidth;
+        let breakOffset = -1;
+        for (formatIdx = 0; formatIdx < formatsLength; formatIdx++) {
+            const currentFormat = formats[formatIdx];
+            const currentIdx = formatIdx;
+            let nextFormat;
+            if (formatIdx < formatsLength - 1) {
+                nextFormat = formats[formatIdx + 1];
+                //empty format block so move on until a new block to process
+                if (currentFormat.offset === nextFormat.offset && nextFormat.formatType === currentFormat.formatType)
+                    continue;
+                endOffset = nextFormat.offset;
+            }
+            else
+                endOffset = text.length;
+            if (force) {
+                currentFormat.width = 0;
+                currentFormat.height = 0;
+            }
+            startOffset = currentFormat.offset;
+            if (!currentLine) {
+                currentLine = {
+                    line: line,
+                    height: charHeight,
+                    width: 0,
+                    top: 0,
+                    images: 0,
+                    startOffset: startOffset,
+                    startFormat: formatIdx,
+                    endOffset: 0,
+                    endFormat: 0,
+                    indent: true,
+                    id: lineID,
+                    formatWidths: [],
+                    hr: false
+                }
+            }
+            switch (currentFormat.formatType) {
+                case FormatType.Normal:
+                case FormatType.Link:
+                case FormatType.MXPLink:
+                case FormatType.MXPSend:
+                case FormatType.MXPExpired:
+                    //empty block so skip
+                    if (endOffset - startOffset === 0) continue;
+                    measureText = text.substring(startOffset, endOffset);
+                    //TODO add font/variable height support
+                    /*
+                    if (format.font || format.size) {
+                        lineHeight = (Math.max(lineHeight, format.height = format.height || this.textHeight(eText, format.font, format.size) || charHeight));
+                        format.width = format.width || this.textWidth(eText, font = `${format.size || this._character.style.fontSize} ${format.font || this._character.style.fontFamily}`);
+                    }
+                    else */
+                    if (currentFormat.unicode || font)
+                        currentFormat.width = currentFormat.width || this.textWidth(measureText, font, currentFormat.style);
+                    else
+                        currentFormat.width = currentFormat.width || measureText.length * charWidth;
+                    if (wrapText && lineWidth + currentFormat.width > width) {
+                        lineHeight = Math.max(lineHeight, currentFormat.height || charHeight);
+                        let currentOffset = startOffset + 1;
+                        currentWidth = 0;
+                        let formatEnd = -1;
+                        for (; currentOffset <= endOffset; currentOffset++) {
+                            //if unicode in block make sure to include any unicode modifiers if they are right after current char
+                            //also make sure surrogate pair are included
+                            if (currentFormat.unicode)
+                                //FIXME does not work correctly when the last character in the text is surrogate pair it will wrap but it will wrap 2 chars instead of just the one
+                                //https://dmitripavlutin.com/what-every-javascript-developer-should-know-about-unicode/#24-surrogate-pairs
+                                if ((text.charCodeAt(currentOffset) >= 0xD800 && text.charCodeAt(currentOffset) <= 0xDBFF)) {
+                                    currentOffset++;
+                                    if (currentOffset === endOffset - 1)
+                                        currentOffset++;
+                                }
+                                else
+                                    while (currentOffset <= endOffset && (this.isUnicodeModifierCode(text.charCodeAt(currentOffset + 1))))
+                                        currentOffset++;
+                            measureText = text.substring(startOffset, currentOffset);
+                            if (currentFormat.unicode)
+                                currentWidth = this.textWidth(measureText, 0, currentFormat.style);
+                            else
+                                currentWidth = measureText.length * charWidth;
+                            const char = rawText.charAt(currentOffset);
+                            if (char === ' ' || char === '-')
+                                breakOffset = currentOffset;
+                            if (lineWidth + currentWidth > width) {
+                                if (currentOffset === endOffset) {
+                                    currentOffset--;
+                                    while (currentOffset > 0 && this.isUnicodeModifierCode(text.charCodeAt(currentOffset)))
+                                        currentOffset--;
+                                }
+                                else {
+                                    while (currentOffset > 0 && this.isUnicodeModifierCode(text.charCodeAt(currentOffset)))
+                                        currentOffset--;
+                                    if ((text.charCodeAt(currentOffset) >= 0xD800 && text.charCodeAt(currentOffset) <= 0xDBFF))
+                                        currentOffset--;
+                                    currentOffset--;
+                                }
+                                //found a break point in current fragment use it to prevent extra searching
+                                if (breakOffset !== -1 && breakOffset <= currentOffset) {
+                                    currentOffset = breakOffset;
+                                    measureText = text.substring(startOffset, currentOffset);
+                                    if (currentFormat.unicode)
+                                        currentWidth = this.textWidth(measureText, 0, currentFormat.style);
+                                    else
+                                        currentWidth = measureText.length * charWidth;
+                                    currentLine.width = lineWidth + currentWidth - left;
+                                }
+                                //no break point and still in fragment so just leave it whole to speed things up
+                                else if (breakOffset === -1 && currentLine.startFormat === formatIdx) {
+                                    measureText = text.substring(startOffset, currentOffset);
+                                    if (currentFormat.unicode)
+                                        currentWidth = this.textWidth(measureText, 0, currentFormat.style);
+                                    else
+                                        currentWidth = measureText.length * charWidth;
+                                    currentLine.width = lineWidth + currentWidth - left;
+                                }
+                                else {
+                                    const wordBreak = this.findLineBreak(line, currentLine.startFormat, currentLine.startOffset, formatIdx, currentOffset);
+                                    currentOffset = wordBreak.offset;
+                                    //format block changed so remeasure the entire section to get correct width
+                                    if (formatIdx !== wordBreak.fragment) {
+                                        formatIdx = wordBreak.fragment;
+                                        formatEnd = 0;
+                                        if (formatIdx < formatsLength - 1) {
+                                            nextFormat = formats[formatIdx + 1];
+                                            //empty format block so move on until a new block to process
+                                            //if (currentFormat.offset === nextFormat.offset && nextFormat.formatType === currentFormat.formatType)
+                                            //continue;
+                                            formatEnd = nextFormat.offset;
+                                        }
+                                        else
+                                            formatEnd = text.length;
+                                        currentLine.width = this.lineWidth(line, currentLine.startOffset, currentOffset - currentLine.startOffset);
+                                        if (currentLine.indent)
+                                            currentLine.width += indent;
+                                        currentWidth = 0;
+                                        //changed format so new end offset
+                                        endOffset = formatEnd;
+                                    }
+                                    //if same block measure the adjusted string width
+                                    else {
+                                        measureText = text.substring(startOffset, currentOffset);
+                                        if (currentFormat.unicode)
+                                            currentWidth = this.textWidth(measureText, 0, currentFormat.style);
+                                        else
+                                            currentWidth = measureText.length * charWidth;
+                                        currentLine.width = lineWidth + currentWidth - left;
+                                    }
+                                }
+                                if (formatEnd === currentOffset && currentFormat.formatType !== FormatType.Normal)
+                                    formatIdx++;
+                                currentLine.formatWidths[formatIdx] = currentWidth;
+                                breakOffset = -1;
+                                currentLine.endFormat = formatIdx;
+                                currentLine.endOffset = currentOffset;
+                                currentLine.height = lineHeight;
+                                if (currentLine.indent)
+                                    currentLine.width -= indent;
+                                wrapLines.push(currentLine);
+                                //start at left column + indent width
+                                lineWidth = left + indent;
+                                currentWidth = 0;
+                                lineHeight = charHeight;
+                                startOffset = currentOffset;
+                                //new line start with image
+                                currentLine = {
+                                    line: line,
+                                    height: charHeight,
+                                    width: 0,
+                                    top: 0,
+                                    images: 0,
+                                    startOffset: startOffset,
+                                    //if start and end same use next format
+                                    startFormat: formatIdx,
+                                    endOffset: 0,
+                                    endFormat: 0,
+                                    indent: true,
+                                    id: lineID,
+                                    formatWidths: [],
+                                    hr: false
+                                }
+                            }
+                            else {
+                                currentLine.formatWidths[formatIdx] = currentWidth;
+                                //last char so it does not wrap here so add to line width for next block
+                                if (currentOffset === endOffset && startOffset !== currentFormat.offset && formatIdx >= currentIdx)
+                                    lineWidth += currentWidth;
+                            }
+                        }
+                    }
+                    else {
+                        lineWidth += currentFormat.width || 0;
+                        //new fragment so reset breakOffset
+                        breakOffset = -1;
+                    }
+                    break;
+                case FormatType.Image:
+                    if (!currentFormat.width || !currentFormat.height) {
+                        const img = new Image();
+                        measureText = '';
+                        if (currentFormat.url.length > 0) {
+                            measureText += currentFormat.url;
+                            if (!currentFormat.url.endsWith('/'))
+                                measureText += '/';
+                        }
+                        if (currentFormat.t.length > 0) {
+                            measureText += currentFormat.t;
+                            if (!currentFormat.t.endsWith('/'))
+                                measureText += '/';
+                        }
+                        measureText += currentFormat.name;
+                        img.src = measureText;
+                        img.dataset.id = '' + this._model.getLineID(line);
+                        img.dataset.f = '' + formatIdx;
+                        img.dataset.line = '' + line;
+                        this._el.appendChild(img);
+                        Object.assign(img.style, {
+                            position: 'absolute',
+                            top: (this._innerWidth + 100) + 'px'
+                        });
+                        if (currentFormat.w.length > 0 && currentFormat.h.length > 0) {
+                            Object.assign(img.style, {
+                                width: formatUnit(currentFormat.w, charWidth),
+                                height: formatUnit(currentFormat.h, charHeight)
+                            });
+                        }
+                        else if (currentFormat.w.length > 0)
+                            img.style.width = formatUnit(currentFormat.w, charWidth);
+                        else if (currentFormat.h.length > 0)
+                            img.style.height = formatUnit(currentFormat.h, charHeight);
+                        else //if not set mark as loading
+                            this._lines[line].images++;
+                        const bounds = img.getBoundingClientRect();
+                        if (currentFormat.w.length > 0)
+                            currentFormat.width = bounds.width || img.width;
+                        if (currentFormat.h.length > 0)
+                            currentFormat.height = bounds.height || img.height;
+                        currentFormat.marginHeight = 0;
+                        currentFormat.marginWidth = 0;
+                        if (currentFormat.hspace.length > 0 && currentFormat.vspace.length > 0) {
+                            img.style.marginLeft = formatUnit(currentFormat.hspace, charWidth);
+                            img.style.marginTop = formatUnit(currentFormat.vspace, charHeight);
+                            const styles = getComputedStyle(img);
+                            currentFormat.marginHeight = parseFloat(styles.marginTop) * 2;
+                            currentFormat.marginWidth = parseFloat(styles.marginLeft) * 2;
+                        }
+                        else if (currentFormat.hspace.length > 0) {
+                            img.style.marginLeft = formatUnit(currentFormat.hspace, charWidth);
+                            const styles = getComputedStyle(img);
+                            currentFormat.marginWidth = parseFloat(styles.marginLeft) * 2;
+                        }
+                        else if (currentFormat.vspace.length > 0) {
+                            img.style.marginTop = formatUnit(currentFormat.vspace, charHeight);
+                            const styles = getComputedStyle(img);
+                            currentFormat.marginHeight = parseFloat(styles.marginTop) * 2;
+                        }
+                        //only calculate if width or height not set
+                        if (!currentFormat.width || !currentFormat.height) {
+                            //only append if needing to calculate otherwise just let it be garbage collected
+                            img.onload = () => {
+                                //get index from id as lines could have been removed
+                                const lIdx = this._model.getLineFromID(+img.dataset.id);
+                                //if index not found or larger then current lines, line probably was removed
+                                if (lIdx === -1 || lIdx >= this.lines.length) return;
+                                this._lines[lIdx].images--;
+                                const fIdx = +img.dataset.f;
+                                const fmt = this.lines[lIdx].formats[fIdx];
+                                const bounds = img.getBoundingClientRect();
+                                fmt.width = bounds.width || img.width;
+                                fmt.height = bounds.height || img.height;
+                                this._el.removeChild(img);
+                                if (this._lines[lIdx].images !== 0) return;
+                                this.reCalculateWrapLines(lIdx, width, indent, left, force);
+                                this.updateTops(lIdx);
+                                if (lIdx >= this._viewRange.start && lIdx <= this._viewRange.end && this._viewRange.end !== 0 && !this._model.busy) {
+                                    if (this.split) this.split.dirty = true;
+                                    this.doUpdate(UpdateType.display);
+                                }
+                            };
+                        }
+                        else
+                            this._el.removeChild(img);
+                    }
+                    if (currentFormat.marginHeight)
+                        lineHeight = Math.max(lineHeight, (currentFormat.height + currentFormat.marginHeight) || charHeight);
+                    else
+                        lineHeight = Math.max(lineHeight, currentFormat.height || charHeight);
+                    lineHeight = charHeight;
+                    if (wrapText && lineWidth + (currentFormat.marginWidth || 0) + currentFormat.width > width) {
+                        //empty line so image is the current line
+                        if (currentLine.width === 0) {
+                            if (currentFormat.marginHeight)
+                                currentLine.height = Math.max(lineHeight, currentFormat.height + (currentFormat.marginHeight || 0));
+                            else
+                                currentLine.height = Math.max(lineHeight, currentFormat.height || charHeight);
+                            currentLine.width = currentFormat.width;
+                            currentLine.endOffset = endOffset;
+                            currentLine.endFormat = formatIdx;
+                            wrapLines.push(currentLine);
+                            currentLine = null;
+                            lineWidth = left + indent
+                            continue;
+                        }
+                        else {
+                            currentLine.width = lineWidth - left;
+                            currentLine.endOffset = startOffset;
+                            currentLine.endFormat = formatIdx - 1;
+                            if (currentLine.indent)
+                                currentLine.width -= indent;
+                            wrapLines.push(currentLine);
+                            lineWidth = left + indent
+                            //new line start with image
+                            currentLine = {
+                                line: line,
+                                height: 0,
+                                width: 0,
+                                top: 0,
+                                images: 0,
+                                startOffset: startOffset,
+                                startFormat: formatIdx,
+                                endOffset: 0,
+                                endFormat: 0,
+                                indent: true,
+                                id: lineID,
+                                formatWidths: [],
+                                hr: false
+                            }
+                        }
+                    }
+                    lineWidth += currentFormat.marginWidth || 0;
+                    lineWidth += currentFormat.width || 0;
+                    break;
+            }
+            if (currentFormat.marginHeight)
+                lineHeight = Math.max(lineHeight, (currentFormat.height + currentFormat.marginHeight) || charHeight);
+            else
+                lineHeight = Math.max(lineHeight, currentFormat.height || charHeight);
+        }
+        if (currentLine) {
+            currentLine.height = lineHeight
+            currentLine.width = lineWidth - left;
+            currentLine.endFormat = formatIdx - 1;
+            currentLine.endOffset = endOffset;
+            if (currentLine.indent)
+                currentLine.width -= indent;
+            wrapLines.push(currentLine);
+        }
+        return wrapLines;
+    }
+
+    private findLineBreak(line: number, startFragment: number, startOffset: number, endFragment: number, endOffset: number) {
+        if (endOffset <= startOffset)
+            return {
+                fragment: endFragment,
+                offset: endOffset
+            };
+        const formats = this.lines[line].formats;
+        const text = this.lines[line].text;
+        let fragmentEndOffset = endOffset;
+        for (let formatIdx = endFragment; formatIdx >= startFragment; formatIdx--) {
+            const currentFormat = formats[formatIdx];
+            let offset = currentFormat.offset;
+            if (offset < startOffset)
+                offset = startOffset;
+            if (endOffset - startOffset === 0)
+                continue;
+            //if an image break at image
+            if (currentFormat.formatType === FormatType.Image)
+                return {
+                    fragment: endFragment,
+                    offset: offset
+                };
+            const measureText = text.substring(offset, fragmentEndOffset);
+            for (let idx = measureText.length - 1; idx >= 0; idx--) {
+                //break at space or hyphen
+                const char = measureText.charAt(idx);
+                if (char === ' ' || char === '-')
+                    return {
+                        fragment: formatIdx,
+                        offset: offset + idx + 1 //make sure space is part of current line
+                    }
+            }
+            fragmentEndOffset = offset;
+        }
+        return {
+            fragment: endFragment,
+            offset: endOffset
+        }
     }
 }
 
@@ -4161,7 +4163,7 @@ export class ScrollBar extends EventEmitter {
             this.track.classList.remove('scroll-disabled');
         else
             this.track.classList.add('scroll-disabled');
-        this._thumbSize = Math.ceil(1 / this._percentView * this.trackSize);
+        this._thumbSize = Math.ceil(1 / this._percentView * this.trackSize) || 0;
         if (this._thumbSize > this.trackSize)
             this._thumbSize = this.trackSize;
         if (this._thumbSize < 15)
@@ -4269,7 +4271,8 @@ export class ScrollBar extends EventEmitter {
         if (bar || !this.trackOffsetSize.width)
             this.trackOffsetSize = { height: this.track.offsetHeight, width: this.track.offsetWidth };
         this._percentView = this._contentSize / this._parentSize;
-        this.maxPosition = this._parentSize - Math.ceil(1 / this._percentView * this._parentSize);
+        //not sure why i subtracted from parent size to get maxPosition as it breaks resize and scroll to wne
+        this.maxPosition = this._parentSize;// - Math.ceil(1 / this._percentView * this._parentSize);
         if (this.maxPosition < 0)
             this.maxPosition = 0;
         this.update();
@@ -4355,5 +4358,824 @@ export class ScrollBar extends EventEmitter {
         window.removeEventListener('mousemove', this._wMove);
         window.removeEventListener('mouseup', this._wUp);
         window.removeEventListener('resize', this._wResize);
+    }
+}
+
+export class DisplayModel extends EventEmitter {
+    private _lineID = 0;
+    private _parser: Parser;
+    public lines: LineData[] = [];
+    private lineIDs: number[] = [];
+    private _expire = {};
+    private _expire2 = [];
+
+    get enableDebug() {
+        return this._parser.enableDebug;
+    }
+
+    set enableDebug(value) {
+        this._parser.enableDebug = value;
+    }
+
+    get tabWidth(): number {
+        return this._parser.tabWidth;
+    }
+
+    set tabWidth(value) {
+        this._parser.tabWidth = value;
+    }
+
+    get textLength(): number {
+        return this._parser.textLength;
+    }
+
+    get EndOfLine(): boolean {
+        return this._parser.EndOfLine;
+    }
+
+    get parseQueueLength(): number {
+        return this._parser.parseQueueLength;
+    }
+
+    get parseQueueEndOfLine(): boolean {
+        return this._parser.parseQueueEndOfLine;
+    }
+
+    set enableFlashing(value: boolean) {
+        this._parser.enableFlashing = value;
+    }
+    get enableFlashing(): boolean {
+        return this._parser.enableFlashing;
+    }
+
+    set enableMXP(value: boolean) {
+        this._parser.enableMXP = value;
+    }
+    get enableMXP(): boolean {
+        return this._parser.enableMXP;
+    }
+
+    set showInvalidMXPTags(value: boolean) {
+        this._parser.showInvalidMXPTags = value;
+    }
+    get showInvalidMXPTags(): boolean {
+        return this._parser.showInvalidMXPTags;
+    }
+
+    set enableBell(value: boolean) {
+        this._parser.enableBell = value;
+    }
+    get enableBell(): boolean {
+        return this._parser.enableBell;
+    }
+
+    set enableURLDetection(value: boolean) {
+        this._parser.enableURLDetection = value;
+    }
+    get enableURLDetection(): boolean {
+        return this._parser.enableURLDetection;
+    }
+
+    set enableMSP(value: boolean) {
+        this._parser.enableMSP = value;
+    }
+    get enableMSP(): boolean {
+        return this._parser.enableMSP;
+    }
+
+    set displayControlCodes(value: boolean) {
+        this._parser.displayControlCodes = value;
+    }
+    get displayControlCodes(): boolean {
+        return this._parser.displayControlCodes;
+    }
+
+    set emulateTerminal(value: boolean) {
+        this._parser.emulateTerminal = value;
+    }
+    get emulateTerminal(): boolean {
+        return this._parser.emulateTerminal;
+    }
+
+    set emulateControlCodes(value: boolean) {
+        this._parser.emulateControlCodes = value;
+    }
+    get emulateControlCodes(): boolean {
+        return this._parser.emulateControlCodes;
+    }
+
+    set MXPStyleVersion(value: string) {
+        this._parser.StyleVersion = value;
+    }
+    get MXPStyleVersion(): string {
+        return this._parser.StyleVersion;
+    }
+
+    constructor(options: DisplayOptions) {
+        super();
+        this._parser = new Parser(options);
+        this._parser.on('debug', (msg) => { this.emit(msg); });
+
+        this._parser.on('bell', () => { this.emit('bell'); });
+
+        this._parser.on('add-line', (data: ParserLine) => {
+            this.addParserLine(data, true);
+        });
+
+        this._parser.on('expire-links', (args) => {
+            let lines;
+            let line;
+            let expire;
+            if (!args || args.length === 0) {
+                for (line in this._expire2) {
+                    if (!this._expire2.hasOwnProperty(line))
+                        continue;
+                    this.expireLineLinkFormat(this._expire2[line], +line);
+                }
+                for (expire in this._expire) {
+                    if (!this._expire.hasOwnProperty(expire))
+                        continue;
+                    lines = this._expire[expire];
+                    for (line in lines) {
+                        if (!lines.hasOwnProperty(line))
+                            continue;
+                        this.expireLineLinkFormat(lines[line], +line);
+                    }
+                }
+                this._expire2 = [];
+                this._expire = {};
+                this.emit('expire-links', args);
+            }
+            else if (this._expire[args]) {
+                lines = this._expire[args];
+                for (line in lines) {
+                    if (!lines.hasOwnProperty(line))
+                        continue;
+                    this.expireLineLinkFormat(lines[line], +line);
+                }
+                delete this._expire[args];
+                this.emit('expire-links', args);
+            }
+        });
+
+        this._parser.on('parse-done', () => {
+            this.emit('parse-done');
+        });
+
+        this._parser.on('set-title', (title, type) => {
+            this.emit('set-title', title, type);
+        });
+        this._parser.on('music', (data) => {
+            this.emit('music', data);
+        });
+        this._parser.on('sound', (data) => {
+            this.emit('sound', data);
+        });
+
+        this._parser.on('MXP-tag-reply', (tag, args) => {
+            this.emit('MXP-tag-reply', tag, args);
+        });
+
+    }
+
+    public addParserLine(data: ParserLine, noUpdate?: boolean) {
+        data.timestamp = Date.now();
+        this.emit('add-line', data);
+        if (data == null || typeof data === 'undefined' || data.line == null || typeof data.line === 'undefined')
+            return;
+        this.emit('add-line-done', data);
+        if (data.gagged)
+            return;
+        const line: LineData = {
+            text: (data.line === '\n' || data.line.length === 0) ? '' : data.line,
+            raw: data.raw,
+            formats: data.formats,
+            id: this._lineID,
+            timestamp: data.timestamp
+        }
+        this.lines.push(line);
+        this.lineIDs.push(this._lineID);
+        this._lineID++;
+        this.buildLineExpires(this.lines.length - 1);
+        this.emit('line-added', data, noUpdate);
+    }
+
+    private expireLineLinkFormat(formats, idx: number) {
+        let f;
+        let fs;
+        let fl;
+        let fsl;
+        let type;
+        let eType;
+        let format;
+        let n = 0;
+        for (fs = 0, fsl = formats.length; fs < fsl; fs++) {
+            fl = this.lines[idx].formats.length;
+            f = formats[fs];
+            format = this.lines[idx].formats[f];
+            type = format.formatType;
+            if (format.formatType === FormatType.MXPLink)
+                eType = FormatType.MXPLinkEnd;
+            else
+                eType = FormatType.MXPSendEnd;
+            format.formatType = FormatType.MXPExpired;
+            f++;
+            for (; f < fl; f++) {
+                if (this.lines[idx].formats[f] === eType) {
+                    if (n === 0) {
+                        this.lines[idx].formats[f].formatType = FormatType.MXPSkip;
+                        break;
+                    }
+                    else
+                        n--;
+                }
+                else if (this.lines[idx].formats[f] === type)
+                    n++;
+            }
+        }
+        this.emit('expire-link-line', idx);
+    }
+
+    public clear() {
+        this._parser.Clear();
+        this.lines = [];
+        this._expire = {};
+        this._expire2 = [];
+        this.lineIDs = [];
+        this._lineID = 0;
+    }
+
+    public IncreaseColor(color, percent) {
+        return this._parser.IncreaseColor(color, percent);
+    }
+
+    public GetColor(color) {
+        return this._parser.GetColor(color);
+    }
+
+    public append(txt: string, remote?: boolean, force?: boolean, prependSplit?: boolean) {
+        this._parser.parse(txt, remote || false, force || false, prependSplit || false);
+    }
+
+    public CurrentAnsiCode() {
+        return this._parser.CurrentAnsiCode();
+    }
+
+    public updateWindow(width?, height?) {
+        this._parser.updateWindow(width, height);
+    }
+
+    public SetColor(code: number, color) {
+        this._parser.SetColor(code, color);
+    }
+
+    public ClearMXP() {
+        this._parser.ClearMXP();
+    }
+
+    public ResetMXPLine() {
+        this._parser.ResetMXPLine();
+    }
+
+    get busy() {
+        return this._parser.busy;
+    }
+
+    public removeLine(line: number) {
+        this.lines.splice(line, 1);
+        this.lineIDs.splice(line, 1);
+        this._expire2.splice(line, 1);
+    }
+
+    public removeLines(line: number, amt: number) {
+        this.lines.splice(line, amt);
+        this.lineIDs.splice(line, amt);
+        this._expire2.splice(line, amt);
+        for (let ol in this._expire) {
+            if (!this._expire.hasOwnProperty(ol) || this._expire[ol].length === 0 || line >= this._expire[ol].length)
+                continue;
+            this._expire[ol].splice(line, amt);
+        }
+    }
+
+    public getLineID(line: number) {
+        if (line < 0 || line >= this.lineIDs.length) return -1;
+        return this.lineIDs[line];
+    }
+
+    public get getNextLineID() {
+        return this._lineID;
+    }
+
+    public getLineFromID(id) {
+        return this.lineIDs.indexOf(id);
+    }
+
+    private buildLineExpires(idx) {
+        if (idx === undefined)
+            idx = this.lines.length - 1;
+        const formats = this.lines[idx].formats;
+        for (const ol in this._expire) {
+            if (!this._expire.hasOwnProperty(ol))
+                continue;
+            if (this._expire[ol][idx])
+                delete this._expire[ol][idx];
+        }
+        delete this._expire2[idx];
+        let f = formats.length;
+        let format;
+        while (f--) {
+            format = formats[f];
+            if (format.formatType === FormatType.MXPSend || format.formatType === FormatType.MXPLink) {
+                if (format.expire && format.expire.length > 0) {
+                    if (!this._expire[format.expire])
+                        this._expire[format.expire] = [];
+                    if (!this._expire[format.expire][idx])
+                        this._expire[format.expire][idx] = [];
+                    this._expire[format.expire][idx].push(f);
+                }
+                else {
+                    if (!this._expire2[idx])
+                        this._expire2[idx] = [];
+                    this._expire2[idx].push(f);
+                }
+            }
+        }
+    }
+
+    //color like javascript.substr using 0 index and length
+    public colorSubStrByLine(idx: number, fore, back?, start?: number, len?: number, style?: FontStyle) {
+        return this.colorSubStringByLine(idx, fore, back, start, start + len, style);
+    }
+
+    //color like javascript.substring using 0 index for start and end
+    public colorSubStringByLine(idx: number, fore, back?, start?: number, end?: number, style?: FontStyle) {
+        //invalid line bail
+        if (idx < 0 || idx >= this.lines.length) return false;
+        const lineLength = this.lines[idx].text.length;
+        //passed line skip
+        if (start >= lineLength) return false;
+        if (!start || start < 0) start = 0;
+        if (!end || end > lineLength)
+            end = lineLength;
+        if (start === end)
+            return false;
+        const formats = this.lines[idx].formats;
+        let len = formats.length;
+        let found: boolean = false;
+        //whole line so just do everything
+        if (start === 0 && end >= lineLength) {
+            for (let f = 0; f < len; f++) {
+                const format = formats[f];
+                //only worry about normal types
+                if (format.formatType !== FormatType.Normal)
+                    continue;
+                found = true;
+                if (format.bStyle) {
+                    format.bStyle = 0;
+                    format.fStyle = 0;
+                    format.fCls = 0;
+                }
+                format.color = fore || format.color;
+                format.background = back || format.background;
+                format.style |= style || FontStyle.None;
+            }
+            //found no text block must create one
+            if (!found) {
+                formats.unshift({
+                    formatType: FormatType.Normal,
+                    offset: 0,
+                    color: fore || 0,
+                    background: back || 0,
+                    size: 0,
+                    font: 0,
+                    style: style || FontStyle.None,
+                    unicode: false
+                });
+            }
+        }
+        else {
+            let nFormat;
+            let formatEnd;
+            for (let f = 0; f < len; f++) {
+                const format = formats[f];
+                //only worry about normal types
+                if (format.formatType !== FormatType.Normal)
+                    continue;
+                //find the end of he format
+                if (f < len - 1) {
+                    let nF = f + 1;
+                    nFormat = formats[nF];
+                    //skip empty blocks
+                    if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
+                        continue;
+                    //find next block that is not same offset
+                    while (format.offset === nFormat.offset && nFormat.formatType === format.formatType && nF < len - 1)
+                        nFormat = formats[++nF];
+                    //last block same offset use total length
+                    if (nF === len && format.offset === nFormat.offset)
+                        formatEnd = lineLength;
+                    else
+                        formatEnd = nFormat.offset;
+                }
+                else
+                    formatEnd = lineLength;
+                if (start < format.offset) continue;
+                //passed end so try next block
+                if (start >= formatEnd) continue;
+                //after this block move on.
+                //not offset so need to insert a new block
+                found = true;
+                if (format.bStyle) {
+                    format.bStyle = 0;
+                    format.fStyle = 0;
+                    format.fCls = 0;
+                }
+                //if end middle of block, add new block with old info to split
+                if (end < formatEnd) {
+                    format.width = 0;
+                    formats.splice(f + 1, 0, {
+                        formatType: format.formatType,
+                        offset: end,
+                        color: format.color,
+                        background: format.background,
+                        size: format.size,
+                        font: format.font,
+                        style: format.style,
+                        unicode: format.unicode
+                    });
+                    len++;
+                }
+                if (start != format.offset) {
+                    //clean old width
+                    format.width = 0;
+                    //insert new block with new colors
+                    formats.splice(f + 1, 0, {
+                        formatType: format.formatType,
+                        offset: start,
+                        color: fore || format.color,
+                        background: back || format.background,
+                        size: format.size,
+                        font: format.font,
+                        style: format.style | (style || FontStyle.None),
+                        unicode: format.unicode
+                    });
+                    len++;
+                }
+                else {
+                    format.color = fore || format.color;
+                    format.background = back || format.background;
+                    format.style |= (style || FontStyle.None);
+                }
+                //not end so shift start to next block
+                if (end > formatEnd)
+                    start = formatEnd;
+            }
+            //clean out duplicates and other no longer needed blocks
+            this.lines[idx].formats = this.pruneFormats(formats, this.textLength);
+        }
+        return true;
+    }
+
+    public removeStyleSubStrByLine(idx: number, style: FontStyle, start?: number, len?: number) {
+        return this.removeStyleSubStringByLine(idx, style, start, start + len);
+    }
+
+    //color like javascript.substring using 0 index for start and end
+    public removeStyleSubStringByLine(idx: number, style: FontStyle, start?: number, end?: number) {
+        //invalid line bail
+        if (idx < 0 || idx >= this.lines.length) return false;
+        const lineLength = this.lines[idx].text.length;
+        //passed line skip
+        if (start >= lineLength) return false;
+        if (!start || start < 0) start = 0;
+        if (!end || end > lineLength)
+            end = lineLength;
+
+        const formats = this.lines[idx].formats;
+        let len = formats.length;
+        let found: boolean = false;
+        //whole line so just do everything
+        if (start === 0 && end >= lineLength) {
+            for (let f = 0; f < len; f++) {
+                const format = formats[f];
+                //only worry about normal types
+                if (format.formatType !== FormatType.Normal)
+                    continue;
+                found = true;
+                if (format.bStyle) {
+                    format.bStyle = 0;
+                    format.fStyle = 0;
+                    format.fCls = 0;
+                }
+                format.style &= ~(style || FontStyle.None);
+            }
+            //found no text block must create one
+            if (!found) {
+                formats.unshift({
+                    formatType: FormatType.Normal,
+                    offset: 0,
+                    color: 0,
+                    background: 0,
+                    size: 0,
+                    font: 0,
+                    style: FontStyle.None,
+                    unicode: false
+                });
+            }
+        }
+        else {
+            let nFormat;
+            let formatEnd;
+            for (let f = 0; f < len; f++) {
+                const format = formats[f];
+                //only worry about normal types
+                if (format.formatType !== FormatType.Normal)
+                    continue;
+                //find the end of he format
+                if (f < len - 1) {
+                    let nF = f + 1;
+                    nFormat = formats[nF];
+                    //skip empty blocks
+                    if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
+                        continue;
+                    //find next block that is not same offset
+                    while (format.offset === nFormat.offset && nFormat.formatType === format.formatType && nF < len - 1)
+                        nFormat = formats[++nF];
+                    //last block same offset use total length
+                    if (nF === len && format.offset === nFormat.offset)
+                        formatEnd = lineLength;
+                    else
+                        formatEnd = nFormat.offset;
+                }
+                else
+                    formatEnd = lineLength;
+                if (start < format.offset) continue;
+                //passed end so try next block
+                if (start >= formatEnd) continue;
+                //after this block move on.
+                //not offset so need to insert a new block
+                found = true;
+                if (format.bStyle) {
+                    format.bStyle = 0;
+                    format.fStyle = 0;
+                    format.fCls = 0;
+                }
+                //if end middle of block, add new block with old info to split
+                if (end < formatEnd) {
+                    format.width = 0;
+                    formats.splice(f + 1, 0, {
+                        formatType: format.formatType,
+                        offset: end,
+                        color: format.color,
+                        background: format.background,
+                        size: format.size,
+                        font: format.font,
+                        style: format.style,
+                        unicode: format.unicode
+                    });
+                    len++;
+                }
+                if (start != format.offset) {
+                    //clean old width
+                    format.width = 0;
+                    //insert new block with new colors
+                    formats.splice(f + 1, 0, {
+                        formatType: format.formatType,
+                        offset: start,
+                        color: format.color,
+                        background: format.background,
+                        size: format.size,
+                        font: format.font,
+                        style: format.style & ~(style || FontStyle.None),
+                        unicode: format.unicode
+                    });
+                    len++;
+                }
+                else {
+                    format.style &= ~(style || FontStyle.None);
+                }
+                //not end so shift start to next block
+                if (end > formatEnd)
+                    start = formatEnd;
+            }
+            //clean out duplicates and other no longer needed blocks
+            this.lines[idx].formats = this.pruneFormats(formats, this.textLength);
+        }
+        return true;
+    }
+
+    public highlightSubStrByLine(idx: number, start?: number, len?: number) {
+        return this.highlightStyleSubStringByLine(idx, start, start + len);
+    }
+
+    //color like javascript.substring using 0 index for start and end
+    public highlightStyleSubStringByLine(idx: number, start?: number, end?: number, color?: boolean) {
+        //invalid line bail
+        if (idx < 0 || idx >= this.lines.length) return false;
+        const lineLength = this.lines[idx].text.length;
+        //passed line skip
+        if (start >= lineLength) return false;
+        if (!start || start < 0) start = 0;
+        if (!end || end > lineLength)
+            end = lineLength;
+
+        const formats = this.lines[idx].formats;
+        let len = formats.length;
+        let found: boolean = false;
+        //whole line so just do everything
+        if (start === 0 && end >= lineLength) {
+            for (let f = 0; f < len; f++) {
+                const format = formats[f];
+                //only worry about normal types
+                if (format.formatType !== FormatType.Normal)
+                    continue;
+                found = true;
+                if (format.bStyle) {
+                    format.bStyle = 0;
+                    format.fStyle = 0;
+                    format.fCls = 0;
+                }
+                if (color || (format.style & FontStyle.Bold) === FontStyle.Bold) {
+                    if (typeof format.color === 'number')
+                        format.color = this._parser.IncreaseColor(this._parser.GetColor(format.color), 0.25);
+                    else
+                        format.color = this._parser.IncreaseColor(format.color, 0.25);
+                }
+                else
+                    format.style |= FontStyle.Bold;
+            }
+            //found no text block must create one
+            if (!found) {
+                formats.unshift({
+                    formatType: FormatType.Normal,
+                    offset: 0,
+                    color: color ? 370 : 0,
+                    background: 0,
+                    size: 0,
+                    font: 0,
+                    style: color ? FontStyle.None : FontStyle.Bold,
+                    unicode: false
+                });
+            }
+        }
+        else {
+            let nFormat;
+            let formatEnd;
+            for (let f = 0; f < len; f++) {
+                const format = formats[f];
+                //only worry about normal types
+                if (format.formatType !== FormatType.Normal)
+                    continue;
+                //find the end of he format
+                if (f < len - 1) {
+                    let nF = f + 1;
+                    nFormat = formats[nF];
+                    //skip empty blocks
+                    if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
+                        continue;
+                    //find next block that is not same offset
+                    while (format.offset === nFormat.offset && nFormat.formatType === format.formatType && nF < len - 1)
+                        nFormat = formats[++nF];
+                    //last block same offset use total length
+                    if (nF === len && format.offset === nFormat.offset)
+                        formatEnd = lineLength;
+                    else
+                        formatEnd = nFormat.offset;
+                }
+                else
+                    formatEnd = lineLength;
+                if (start < format.offset) continue;
+                //passed end so try next block
+                if (start >= formatEnd) continue;
+                //after this block move on.
+                //not offset so need to insert a new block
+                found = true;
+                if (format.bStyle) {
+                    format.bStyle = 0;
+                    format.fStyle = 0;
+                    format.fCls = 0;
+                }
+                //if end middle of block, add new block with old info to split
+                if (end < formatEnd) {
+                    format.width = 0;
+                    formats.splice(f + 1, 0, {
+                        formatType: format.formatType,
+                        offset: end,
+                        color: format.color,
+                        background: format.background,
+                        size: format.size,
+                        font: format.font,
+                        style: format.style,
+                        unicode: format.unicode
+                    });
+                    len++;
+                }
+                if (start != format.offset) {
+                    //clean old width
+                    format.width = 0;
+                    //insert new block with new colors
+                    nFormat = {
+                        formatType: format.formatType,
+                        offset: start,
+                        color: format.color,
+                        background: format.background,
+                        size: format.size,
+                        font: format.font,
+                        style: format.style,
+                        unicode: format.unicode
+                    }
+                    if (color || (format.style & FontStyle.Bold) === FontStyle.Bold) {
+                        if (typeof format.color === 'number')
+                            nFormat.color = this._parser.IncreaseColor(this._parser.GetColor(format.color), 0.25);
+                        else
+                            nFormat.color = this._parser.IncreaseColor(format.color, 0.25);
+                    }
+                    else
+                        nFormat.style |= FontStyle.Bold;
+                    formats.splice(f + 1, 0, nFormat);
+                    len++;
+                }
+                else if (color || (format.style & FontStyle.Bold) === FontStyle.Bold) {
+                    if (typeof format.color === 'number')
+                        format.color = this._parser.IncreaseColor(this._parser.GetColor(format.color), 0.25);
+                    else
+                        format.color = this._parser.IncreaseColor(format.color, 0.25);
+                }
+                else
+                    format.style |= FontStyle.Bold;
+
+                //not end so shift start to next block
+                if (end > formatEnd)
+                    start = formatEnd;
+            }
+            //clean out duplicates and other no longer needed blocks
+            this.lines[idx].formats = this.pruneFormats(formats, this.textLength);
+        }
+        return true;
+    }
+
+    private pruneFormats(formats, textLen) {
+        //no formats or only 1 format
+        if (!formats || formats.length < 2) return formats;
+        const l = formats.length;
+        const nF = [];
+        for (let f = 0; f < l; f++) {
+            const format = formats[f];
+            let end;
+            if (f < l - 1) {
+                const nFormat = formats[f + 1];
+                //old links that have expired so no longer needed clean
+                //if (format.formatType === FormatType.MXPSkip) continue;
+                //skip format until find one that has different offset
+                if (format.offset === nFormat.offset && nFormat.formatType === format.formatType)
+                    continue;
+                end = nFormat.offset;
+                //empty link
+                if (format.formatType === FormatType.Link && end - format.offset === 0 && nFormat.formatType === FormatType.LinkEnd)
+                    continue;
+                //empty send
+                if (format.formatType === FormatType.MXPSend && end - format.offset === 0 && nFormat.formatType === FormatType.MXPSendEnd)
+                    continue;
+                //empty link
+                if (format.formatType === FormatType.MXPLink && end - format.offset === 0 && nFormat.formatType === FormatType.MXPLinkEnd)
+                    continue;
+                //same data but offset is higher, set next block current offset, clear width and continue;
+                if (
+                    format.formatType === nFormat.formatType &&
+                    format.color === nFormat.color &&
+                    format.background === nFormat.background &&
+                    format.size === nFormat.size &&
+                    format.font === nFormat.font &&
+                    format.style === nFormat.style &&
+                    format.unicode === nFormat.unicode
+                ) {
+                    nFormat.offset = format.offset;
+                    nFormat.width = 0;
+                    continue;
+                }
+            }
+            //trailing link with no text or empty format block and not fragment
+            else if (format.offset === textLen && textLen !== 0 && ((format.formatType === FormatType.Normal && !format.hr) || format.formatType === FormatType.Link || format.formatType === FormatType.MXPSend || format.formatType === FormatType.MXPLink))
+                continue;
+            nF.push(format);
+        }
+        return nF;
+    }
+
+    get text(): string {
+        return this.lines.map(line => line.text).join('\n');
+    }
+
+    get raw(): string {
+        return this.lines.map(line => line.raw).join('');
+    }
+
+    public getText(line, start, end?) {
+        if (line < 0 || line >= this.lines.length) return '';
+        if (start < 0) start = 0;
+        if (typeof end === 'undefined' || end > this.lines[line].text.length)
+            return this.lines[line].text.substring(start);
+        return this.lines[line].text.substring(start, end);
     }
 }
