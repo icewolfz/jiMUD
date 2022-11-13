@@ -26,6 +26,7 @@
     - Added [-l/--layout](docs/README.md) to allow loading of a saved layout
     - Added [-il/--ignore-layout](docs/README.md) to ignore loading last used layout or --layout
     - Added [-el/--error-log](docs/README.md) to allow setting custom error log files
+    - `-data-dir` now supports relative paths and will attempt to resolve them based on the current working directory of the application
   - Preferences:
     - Preferences now uses an inherit system of Default < Global < Client, where it will drill down to default depending if the client or global values are not set, this system allows you to set the global value and all clients will use that setting unless they have already set it
     - `Show add new button next to tabs` add a button to allow creation of new connections from tab strip, *Global preference* 

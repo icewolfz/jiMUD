@@ -63,7 +63,7 @@ argv = require('yargs-parser')(argv, {
 });
 
 if (argv['data-dir'] && argv['data-dir'].length > 0)
-    app.setPath('userData', path.normalize(argv['data-dir']));
+    app.setPath('userData', path.resolve(path.normalize(argv['data-dir'])));
 else if (process.env.PORTABLE_EXECUTABLE_DIR && !argv['no-pd'] && !argv['no-portable-dir'])
     app.setPath('userData', process.env.PORTABLE_EXECUTABLE_DIR);
 

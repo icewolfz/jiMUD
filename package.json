@@ -18,7 +18,9 @@
   "private": true,
   "scripts": {
     "start": "electron .",
+    "start:local": "electron . --data-dir=./data",
     "debug": "electron . -d",
+    "debug:local": "electron . --data-dir=./data -d",
     "editor": "electron . -eo",
     "editor:debug": "electron . -eo -d",
     "build:debug": "electron-builder --dir",
