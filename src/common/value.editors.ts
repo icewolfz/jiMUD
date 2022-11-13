@@ -81,7 +81,7 @@ export abstract class ValueEditor extends EventEmitter {
     public get container() {
         if (this.$container)
             return this.$container;
-        const d = (this.control.parent || document.body);
+        const d = (this.control.editorContainer || this.control.parent || document.body);
         if (!this.options)
             return this.$container = d;
         if (typeof this.options.container === 'string') {

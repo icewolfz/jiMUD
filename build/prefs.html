@@ -14,10 +14,17 @@
     <link href="css/datagrid.css" rel="stylesheet" type="text/css" />
     <link href="css/propertygrid.css" rel="stylesheet" type="text/css" />
     <style>
+        html {
+            height: 100%;
+            width: 100%;
+        }
+
         body {
             -webkit-user-select: none;
             user-select: none;
             overflow: hidden;
+            height: 100%;
+            width: 100%;
         }
 
 
@@ -101,6 +108,15 @@
             right: 0;
             border: 0px solid #ccc;
         }
+
+        .property-grid-group {
+            padding-left: 0;
+        }
+
+        .property-grid-collapse, .property-grid-group-label {
+            display: none;
+        }
+
     </style>
     <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
@@ -1489,6 +1505,7 @@
         function showListView() {
             const { PropertyGrid } = require('./js/propertygrid');
             _settingGrid = new PropertyGrid({ parent: document.getElementById('list-container') });
+            //_settingGrid.editorContainer = document.body;
             document.getElementById('list-container').style.display = 'block';
             const data = {};
             const defaults = {};

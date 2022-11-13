@@ -27,6 +27,7 @@ export class PropertyGrid extends EventEmitter {
     private _updating;
     private _rTimeout = 0;
     private $readonly: any = false;
+    private $editorContainer: HTMLElement;
 
     public defaults;
     public hideUnSetProperties = false;
@@ -134,6 +135,21 @@ export class PropertyGrid extends EventEmitter {
         this.createControl();
     }
     get parent(): HTMLElement { return this.$parent; }
+
+    get editorContainer(): HTMLElement { return this.$editorContainer; }
+    set editorContainer(value) {
+        if (value === this.$editorContainer) return;
+        if (typeof value === 'string') {
+            if ((<string>value).startsWith('#'))
+                this.$editorContainer = document.getElementById((<string>value).substring(1));
+            else
+                this.$editorContainer = document.getElementById(value);
+        }
+        else if (value instanceof $)
+            this.$editorContainer = value[0];
+        else if (value instanceof HTMLElement)
+            this.$editorContainer = value;
+    }
 
     public refresh() {
         this.doUpdate(UpdateType.build);
