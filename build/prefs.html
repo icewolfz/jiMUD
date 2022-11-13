@@ -96,11 +96,11 @@
         }
 
         .property-grid-item-label {
-            width: 250px;
+            width: 275px;
         }
 
         .property-grid-item-value {
-            left: 250px;
+            left: 275px;
         }
 
         .property-grid {
@@ -113,10 +113,10 @@
             padding-left: 0;
         }
 
-        .property-grid-collapse, .property-grid-group-label {
+        .property-grid-collapse,
+        .property-grid-group-label {
             display: none;
         }
-
     </style>
     <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
@@ -1505,6 +1505,9 @@
         function showListView() {
             const { PropertyGrid } = require('./js/propertygrid');
             _settingGrid = new PropertyGrid({ parent: document.getElementById('list-container') });
+            _settingGrid.setGroupOptions('Misc', {
+                formatter: title => title
+            });
             //_settingGrid.editorContainer = document.body;
             document.getElementById('list-container').style.display = 'block';
             const data = {};
@@ -1514,9 +1517,26 @@
                 data[m] = getSettingValue(m);
                 defaults[m] = isGlobal ? Settings.defaultValue(m) : window.getSetting(m);
             });
+            getProperties(_settings, 'extensions', '', data);
+            getProperties(_settings, 'windows', '', data);
+            //_settings.extensions
             _settingGrid.defaults = defaults;
             _settingGrid.object = data;
         }
+
+        function getProperties(source, property, root, data) {
+            if (typeof source[property] === 'object' && !Array.isArray(source[property])) {
+                for (let child in source[property]) {
+                    if (!source[property].hasOwnProperty(child))
+                        continue;
+                    getProperties(source[property], child, root + property + '.', data);
+                }
+            }
+            else {
+                data[root + property] = source[property];
+            }
+        }
+
     </script>
 </head>
 

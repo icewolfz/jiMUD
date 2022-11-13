@@ -597,7 +597,7 @@ export class Backup extends EventEmitter {
      * @param inherited Track inherited state
      */
     private getProperty(source, target, property, root, inherited) {
-        if (typeof source[property] === 'object') {
+        if (typeof source[property] === 'object' && !Array.isArray(source[property])) {
             for (let child in source[property]) {
                 if (!source[property].hasOwnProperty(child))
                     continue;

@@ -451,7 +451,10 @@ export class PropertyGrid extends EventEmitter {
                 el.classList.add('property-grid-item');
                 lbl = document.createElement('div');
                 lbl.classList.add('property-grid-item-label');
-                lbl.textContent = capitalize(layout[group][c].name);
+                if (this.$groupOptions && this.$groupOptions[group] && this.$groupOptions[group].formatter)
+                    lbl.textContent = this.$groupOptions[group].formatter(layout[group][c].name);
+                else
+                    lbl.textContent = capitalize(layout[group][c].name);
                 lbl.title = capitalize(layout[group][c].name);
                 el.appendChild(lbl);
                 lbl = document.createElement('div');
