@@ -822,9 +822,12 @@ export class FlagValueEditor extends ValueEditor {
             if (height < 154) {
                 this.$dropdown.style.height = height + 'px';
                 this.$dropdown.style.overflow = 'hidden';
+                this.positionDropdown(height);
             }
-            else
+            else {
                 this.$dropdown.style.height = '154px';
+                this.positionDropdown(154);
+            }
             this.$dropdown.addEventListener('click', (e2) => {
                 e2.stopPropagation();
                 e2.cancelBubble = true;
@@ -841,7 +844,6 @@ export class FlagValueEditor extends ValueEditor {
                 e2.stopPropagation();
                 e2.cancelBubble = true;
             });
-            this.positionDropdown();
             this.container.appendChild(this.$dropdown);
             this.$dropdown.focus();
         });
@@ -867,12 +869,12 @@ export class FlagValueEditor extends ValueEditor {
 
     public openAdvanced() { /**/ }
 
-    private positionDropdown() {
+    private positionDropdown(height?) {
         const b = this.parent.getBoundingClientRect();
         const c = this.container.getBoundingClientRect();
         let left = 0;
         let width = 300;
-        let top = b.top + this.$editor.parentElement.offsetHeight - c.top;
+        let top = b.bottom - c.top;
         if (b.width < 300) {
             left = (b.left - 300 + b.width - c.left);
         }
@@ -887,8 +889,9 @@ export class FlagValueEditor extends ValueEditor {
         if (Math.abs(left) + width > document.body.clientWidth)
             left = document.body.clientWidth - width;
         //extends past bottom so open up
-        if (top + this.$dropdown.clientHeight > document.body.clientHeight)
-            top = b.top - this.$dropdown.clientHeight;
+        height = height || this.$dropdown.offsetHeight;
+        if (top + height > document.body.clientHeight)
+            top = b.top - height;
 
         this.$dropdown.style.left = left + 'px';
         this.$dropdown.style.width = width + 'px';
@@ -1331,6 +1334,7 @@ export class CollectionValueEditor extends ValueEditor {
             }
             dg.addRows(this.$value.map(a => ({ ...a })));
             dg.on('selection-changed', () => {
+                if (this.options && this.options.noControls) return;
                 if (dg.selectedCount) {
                     this.$edit.removeAttribute('disabled');
                     this.$del.removeAttribute('disabled');
@@ -1350,6 +1354,10 @@ export class CollectionValueEditor extends ValueEditor {
                 }
             });
             dg.on('delete', (e2) => {
+                if (this.options && this.options.noControls) {
+                    e2.preventDefault = true;
+                    return;
+                }
                 if (dialog.showMessageBoxSync({
                     type: 'warning',
                     title: 'Delete',
@@ -1362,12 +1370,14 @@ export class CollectionValueEditor extends ValueEditor {
                     e2.preventDefault = true;
             });
             dg.on('cut', () => {
+                if (this.options && this.options.noControls) return;
                 if (dg.canPaste)
                     this.$paste.removeAttribute('disabled');
                 else
                     this.$paste.setAttribute('disabled', 'true');
             });
             dg.on('copy', () => {
+                if (this.options && this.options.noControls) return;
                 if (dg.canPaste)
                     this.$paste.removeAttribute('disabled');
                 else
@@ -1403,81 +1413,82 @@ export class CollectionValueEditor extends ValueEditor {
             });
             button.textContent = 'Ok';
             header.appendChild(button);
+            if (!this.options || !this.options.noControls) {
+                el = document.createElement('div');
+                el.classList.add('btn-group');
+                el.style.cssFloat = 'left';
+                button = document.createElement('button');
+                button.type = 'button';
+                button.classList.add('btn', 'btn-default');
+                button.addEventListener('click', () => {
+                    dg.addNewRow();
+                });
+                button.title = 'Add' + (this.options ? ' ' + this.options.type : '');
+                button.innerHTML = '<i class="fa fa-plus"></i>';
+                el.appendChild(button);
+                button = document.createElement('button');
+                button.type = 'button';
+                button.disabled = true;
+                button.classList.add('btn', 'btn-default');
+                button.addEventListener('click', () => {
+                    dg.beginEdit(dg.selected[0].row);
+                });
+                button.title = 'Edit' + (this.options ? ' ' + this.options.type : '');
+                button.innerHTML = '<i class="fa fa-edit"></i>';
+                this.$edit = button;
+                el.appendChild(button);
+                button = document.createElement('button');
+                button.disabled = true;
+                button.type = 'button';
+                button.title = 'Delete' + (this.options ? ' ' + this.options.type + '(s)' : '');
+                button.classList.add('btn', 'btn-danger');
+                button.addEventListener('click', () => {
+                    dg.delete();
+                });
+                button.innerHTML = '<i class="fa fa-trash"></i>';
+                this.$del = button;
+                el.appendChild(button);
+                header.appendChild(el);
 
-            el = document.createElement('div');
-            el.classList.add('btn-group');
-            el.style.cssFloat = 'left';
-            button = document.createElement('button');
-            button.type = 'button';
-            button.classList.add('btn', 'btn-default');
-            button.addEventListener('click', () => {
-                dg.addNewRow();
-            });
-            button.title = 'Add' + (this.options ? ' ' + this.options.type : '');
-            button.innerHTML = '<i class="fa fa-plus"></i>';
-            el.appendChild(button);
-            button = document.createElement('button');
-            button.type = 'button';
-            button.disabled = true;
-            button.classList.add('btn', 'btn-default');
-            button.addEventListener('click', () => {
-                dg.beginEdit(dg.selected[0].row);
-            });
-            button.title = 'Edit' + (this.options ? ' ' + this.options.type : '');
-            button.innerHTML = '<i class="fa fa-edit"></i>';
-            this.$edit = button;
-            el.appendChild(button);
-            button = document.createElement('button');
-            button.disabled = true;
-            button.type = 'button';
-            button.title = 'Delete' + (this.options ? ' ' + this.options.type + '(s)' : '');
-            button.classList.add('btn', 'btn-danger');
-            button.addEventListener('click', () => {
-                dg.delete();
-            });
-            button.innerHTML = '<i class="fa fa-trash"></i>';
-            this.$del = button;
-            el.appendChild(button);
-            header.appendChild(el);
-
-            //CUT COPY PASTE
-            el = document.createElement('div');
-            el.classList.add('btn-group');
-            el.style.cssFloat = 'left';
-            button = document.createElement('button');
-            button.type = 'button';
-            button.disabled = true;
-            button.classList.add('btn', 'btn-default');
-            button.addEventListener('click', () => {
-                dg.cut();
-            });
-            button.title = 'Cut';
-            button.innerHTML = '<i class="fa fa-cut"></i>';
-            this.$cut = button;
-            el.appendChild(button);
-            button = document.createElement('button');
-            button.type = 'button';
-            button.disabled = true;
-            button.classList.add('btn', 'btn-default');
-            button.addEventListener('click', () => {
-                dg.copy();
-            });
-            button.title = 'Copy';
-            button.innerHTML = '<i class="fa fa-copy"></i>';
-            this.$copy = button;
-            el.appendChild(button);
-            button = document.createElement('button');
-            button.type = 'button';
-            button.title = 'Paste';
-            button.disabled = !dg.canPaste;
-            button.classList.add('btn', 'btn-default');
-            button.addEventListener('click', () => {
-                dg.paste();
-            });
-            button.innerHTML = '<i class="fa fa-paste"></i>';
-            this.$paste = button;
-            el.appendChild(button);
-            header.appendChild(el);
+                //CUT COPY PASTE
+                el = document.createElement('div');
+                el.classList.add('btn-group');
+                el.style.cssFloat = 'left';
+                button = document.createElement('button');
+                button.type = 'button';
+                button.disabled = true;
+                button.classList.add('btn', 'btn-default');
+                button.addEventListener('click', () => {
+                    dg.cut();
+                });
+                button.title = 'Cut';
+                button.innerHTML = '<i class="fa fa-cut"></i>';
+                this.$cut = button;
+                el.appendChild(button);
+                button = document.createElement('button');
+                button.type = 'button';
+                button.disabled = true;
+                button.classList.add('btn', 'btn-default');
+                button.addEventListener('click', () => {
+                    dg.copy();
+                });
+                button.title = 'Copy';
+                button.innerHTML = '<i class="fa fa-copy"></i>';
+                this.$copy = button;
+                el.appendChild(button);
+                button = document.createElement('button');
+                button.type = 'button';
+                button.title = 'Paste';
+                button.disabled = !dg.canPaste;
+                button.classList.add('btn', 'btn-default');
+                button.addEventListener('click', () => {
+                    dg.paste();
+                });
+                button.innerHTML = '<i class="fa fa-paste"></i>';
+                this.$paste = button;
+                el.appendChild(button);
+                header.appendChild(el);
+            }
             document.body.appendChild(this.$dialog);
             this.control.emit('dialog-open');
             this.$dialog.showModal();
