@@ -1503,10 +1503,15 @@
         }
 
         function showListView() {
+            //TODO find.location, chat.find.location, and chat.lines need all custom editors or collection types as they are arrays
+            //TODO all the enum types need custom editors and link to enums instead of raw #s, this is supported just need set each of the enums to a custom editor
             const { PropertyGrid } = require('./js/propertygrid');
             _settingGrid = new PropertyGrid({ parent: document.getElementById('list-container') });
             _settingGrid.setGroupOptions('Misc', {
                 formatter: title => title
+            });
+            _settingGrid.on('value-changed', (prop, newValue, oldValue) => {
+                _settings.setValue(prop, newValue);
             });
             //_settingGrid.editorContainer = document.body;
             document.getElementById('list-container').style.display = 'block';

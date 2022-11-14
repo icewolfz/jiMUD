@@ -512,7 +512,11 @@ export class PropertyGrid extends EventEmitter {
         oldValue = this.$objects[0][this.$editor.property];
         if (value !== oldValue || !this.sameValue(prop)) {
             this.$objects.forEach(o => o[prop] = value);
-            this.$editor.el.textContent = this.formattedValue(this.$editor.property);
+            if (typeof this.formattedValue(this.$editor.property) === 'boolean')
+                this.$editor.el.textContent = capitalize('' + this.formattedValue(this.$editor.property));
+            else
+                this.$editor.el.textContent = this.formattedValue(this.$editor.property);
+            this.$editor.el.title = this.$editor.el.textContent;
         }
         if (value === this.defaultFormattedValue(prop))
             this.$editor.el.classList.add('default');
@@ -532,7 +536,11 @@ export class PropertyGrid extends EventEmitter {
         oldValue = this.$objects[0][this.$editor.property];
         if (!canceled && (value !== oldValue || !this.sameValue(prop))) {
             this.$objects.forEach(o => o[prop] = value);
-            this.$editor.el.textContent = this.formattedValue(this.$editor.property);
+            if (typeof this.formattedValue(this.$editor.property) === 'boolean')
+                this.$editor.el.textContent = capitalize('' + this.formattedValue(this.$editor.property));
+            else
+                this.$editor.el.textContent = this.formattedValue(this.$editor.property);
+            this.$editor.el.title = this.$editor.el.textContent;
         }
         if (this.$editor.editor)
             this.$editor.editor.destroy();
