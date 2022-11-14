@@ -636,10 +636,10 @@ export class Settings {
     public allowEval: boolean;
     public externalWho: boolean;
     public externalHelp: boolean;
-    public watchForProfilesChanges;
+    public watchForProfilesChanges: boolean;
     public onProfileChange: OnProfileChange;
     public onProfileDeleted: OnProfileDeleted;
-    public enableDoubleParameterEscaping;
+    public enableDoubleParameterEscaping: boolean;
 
     public ignoreEvalUndefined: boolean;
     public enableInlineComments: boolean;
@@ -694,7 +694,7 @@ export class Settings {
     public showStatusPartyHealth: boolean;
     public showStatusCombatHealth: boolean;
     public showButtonBar: boolean;
-    public allowNegativeNumberNeeded;
+    public allowNegativeNumberNeeded: boolean;
     public spellchecking: boolean;
     public hideOnMinimize: boolean;
     public showTrayIcon: boolean;

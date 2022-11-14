@@ -1488,7 +1488,7 @@ export function stringToEnum(str, en, ignoreCase?) {
     return value;
 }
 
-export function enumToString(value, en) {
+export function enumToString(value, en, exact?) {
     let state;
     const states = Object.keys(en).filter(key => !isNaN(Number(en[key])));
     if (value === 0)
@@ -1497,7 +1497,11 @@ export function enumToString(value, en) {
     state = states.length;
     while (state--) {
         if (en[states[state]] === 0) continue;
-        if ((value & en[states[state]]) === en[states[state]])
+        if (exact) {
+            if (value === en[states[state]])
+                f.push(capitalize(states[state].replace(/_/g, ' ')));
+        }
+        else if ((value & en[states[state]]) === en[states[state]])
             f.push(capitalize(states[state].replace(/_/g, ' ')));
     }
     return f.join(', ');

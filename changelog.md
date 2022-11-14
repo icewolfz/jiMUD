@@ -29,6 +29,7 @@
     - `-data-dir` now supports relative paths and will attempt to resolve them based on the current working directory of the application
   - Preferences:
     - Preferences now uses an inherit system of Default < Global < Client, where it will drill down to default depending if the client or global values are not set, this system allows you to set the global value and all clients will use that setting unless they have already set it
+    - Add an advanced view for editing
     - `Show add new button next to tabs` add a button to allow creation of new connections from tab strip, *Global preference* 
     - `Lock layout` saving only the last known global window states and preserve the previous saved windows and clients opened, *Global preference*
     - `Load layout on open` set a layout file to use when loading client, *Global preference*

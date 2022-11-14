@@ -314,7 +314,7 @@ export class PropertyGrid extends EventEmitter {
         if (this.$options[prop].formatter)
             return this.$options[prop].formatter(prop, this.getValue(prop), this.$objects.length !== 0 ? this.$objects : null);
         if (this.$options[prop].editor && this.$options[prop].editor.options && this.$options[prop].editor.type === EditorType.flag)
-            return enumToString(this.getValue(prop), this.$options[prop].editor.options.enum);
+            return enumToString(this.getValue(prop), this.$options[prop].editor.options.enum, this.$options[prop].editor.options.exact);
         return this.getValue(prop);
     }
 
@@ -326,7 +326,7 @@ export class PropertyGrid extends EventEmitter {
         if (this.$options[prop].formatter)
             return this.$options[prop].formatter(prop, this.defaultValue(prop), this.$objects.length !== 0 ? this.$objects : null, 1);
         if (this.$options[prop].editor && this.$options[prop].editor.options && this.$options[prop].editor.type === EditorType.flag)
-            return enumToString(this.defaultValue(prop), this.$options[prop].editor.options.enum);
+            return enumToString(this.defaultValue(prop), this.$options[prop].editor.options.enum, this.$options[prop].editor.options.exact);
         return this.defaultValue(prop);
     }
 
@@ -518,7 +518,7 @@ export class PropertyGrid extends EventEmitter {
                 this.$editor.el.textContent = this.formattedValue(this.$editor.property);
             this.$editor.el.title = this.$editor.el.textContent;
         }
-        if (value === this.defaultFormattedValue(prop))
+        if (this.formattedValue(prop) === this.defaultFormattedValue(prop))
             this.$editor.el.classList.add('default');
         else
             this.$editor.el.classList.remove('default');
@@ -549,7 +549,7 @@ export class PropertyGrid extends EventEmitter {
             property: this.$editor.property,
             type: this.$editor.type
         };
-        if (value === this.defaultFormattedValue(prop))
+        if (this.formattedValue(prop) === this.defaultFormattedValue(prop))
             this.$editor.el.classList.add('default');
         else
             this.$editor.el.classList.remove('default');

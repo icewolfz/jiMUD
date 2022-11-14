@@ -128,7 +128,7 @@
     <script type="text/javascript">
         //spell-checker:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
         const { parseTemplate, templatePath, existsSync, getColors, isFileSync, isDirSync, walkSync, isArrayEqual } = require('./js/library');
-        const { TrayClick, TrayMenu } = require('./js/types');
+        const { TrayClick, TrayMenu, ProfileSortOrder, OnProfileChange, OnProfileDeleted, ScriptEngineType, BackupSelection, OnSecondInstance } = require('./js/types');
         const Settings = require('./js/settings').Settings;
         const { ipcRenderer } = require('electron');
         const RGBColor = require('rgbcolor');
@@ -1410,8 +1410,12 @@
         function saveSettings() {
             var oldLines = getSettingValue('chat.lines').join(',');
             var newLines = $('#chat-lines').val();
-            if (oldLines !== newLines)
-                _settings.chat.lines = newLines.split(',');
+            if (oldLines !== newLines) {
+                if (newLines.trim().length === 0)
+                    _settings.chat.lines = [];
+                else
+                    _settings.chat.lines = newLines.split(',');
+            }
             _settings.save(_settingsFile);
             ipcRenderer.send('reload-options', _settingsFile, window.opener && typeof window.opener.getId === 'function' ? window.opener.getId() : 0);
             if (window.opener && typeof window.opener.reloadOptions === 'function')
@@ -1503,16 +1507,241 @@
         }
 
         function showListView() {
-            //TODO find.location, chat.find.location, and chat.lines need all custom editors or collection types as they are arrays
-            //TODO all the enum types need custom editors and link to enums instead of raw #s, this is supported just need set each of the enums to a custom editor
+            if (dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Advanced view',
+                message: 'Editing settings in advanced view may break if wrong values are entered, switch anyways?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+                noLink: true
+            }) === 1)
+                return;
+
+            //TODO update simple setting form fields
+            //TODO Add button to switch back from advanced view
             const { PropertyGrid } = require('./js/propertygrid');
             _settingGrid = new PropertyGrid({ parent: document.getElementById('list-container') });
             _settingGrid.setGroupOptions('Misc', {
                 formatter: title => title
             });
             _settingGrid.on('value-changed', (prop, newValue, oldValue) => {
-                _settings.setValue(prop, newValue);
+                if (prop === 'find.location' || prop === 'chat.find.location')
+                    _settings.setValue(prop, [newValue[0].value, newValue[1].value]);
+                else if (prop === 'chat.lines') {
+                    _settings.setValue(prop, newValue.map(v => v.value));
+                    $('#chat-lines').val(getSettingValue('chat.lines').join(','));
+                }
+                else
+                    _settings.setValue(prop, newValue);
             });
+            _settingGrid.setPropertyOptions([
+                {
+                    property: 'find.location',
+                    label: 'find.location',
+                    formatter: (prop, value) => {
+                        return value[0].value + ', ' + value[1].value;
+                    },
+                    tooltipFormatter: (prop, value) => {
+                        return value[0].value + ', ' + value[1].value;
+                    },
+                    editor: {
+                        type: 8,
+                        options: {
+                            open: true,
+                            columns: [
+                                {
+                                    label: '',
+                                    field: 'field',
+                                    width: 130,
+                                    readonly: true,
+                                },
+                                {
+                                    label: 'Value',
+                                    field: 'value',
+                                    width: 130,
+                                    spring: true
+                                }
+                            ],
+                            noControls: true
+                        }
+                    }
+                },
+                {
+                    property: 'chat.find.location',
+                    label: 'chat.find.location',
+                    group: 'Misc',
+                    formatter: (prop, value) => {
+                        return value[0].value + ', ' + value[1].value;
+                    },
+                    tooltipFormatter: (prop, value) => {
+                        return value[0].value + ', ' + value[1].value;
+                    },
+                    editor: {
+                        type: 8,
+                        options: {
+                            open: true,
+                            columns: [
+                                {
+                                    label: '',
+                                    field: 'field',
+                                    width: 130,
+                                    readonly: true,
+                                },
+                                {
+                                    label: 'Value',
+                                    field: 'value',
+                                    width: 130,
+                                    spring: true
+                                }
+                            ],
+                            noControls: true
+                        }
+                    }
+                },
+                {
+                    property: 'chat.lines',
+                    label: 'chat.lines',
+                    group: 'Misc',
+                    formatter: (prop, value) => {
+                        return value.map(v => v.value).join(',');
+                    },
+                    tooltipFormatter: (prop, value) => {
+                        return value.map(v => v.value).join(',');
+                    },
+                    editor: {
+                        type: 8,
+                        options: {
+                            type: 'line',
+                            open: true,
+                            columns: [
+                                {
+                                    label: 'Value',
+                                    field: 'value',
+                                    width: 200,
+                                    spring: true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    label: 'profiles.sortOrder',
+                    property: 'profiles.sortOrder',
+                    editor: {
+                        type: 1,
+                        options: {
+                            enum: ProfileSortOrder,
+                            container: document.body
+                        }
+                    }
+                },
+                {
+                    label: 'onProfileChange',
+                    property: 'onProfileChange',
+                    editor: {
+                        type: 1,
+                        options: {
+                            enum: OnProfileChange,
+                            container: document.body,
+                            exact: true
+                        }
+                    }
+                },
+                {
+                    label: 'onProfileDeleted',
+                    property: 'onProfileDeleted',
+                    editor: {
+                        type: 1,
+                        options: {
+                            enum: OnProfileDeleted,
+                            container: document.body,
+                            exact: true
+                        }
+                    }
+                },
+                {
+                    label: 'scriptEngineType',
+                    property: 'scriptEngineType',
+                    editor: {
+                        type: 1,
+                        options: {
+                            enum: ScriptEngineType,
+                            container: document.body,
+                            exact: true
+                        }
+                    }
+                },
+                {
+                    label: 'backupLoad',
+                    property: 'backupLoad',
+                    editor: {
+                        type: 1,
+                        options: {
+                            enum: BackupSelection,
+                            container: document.body
+                        }
+                    }
+                },
+                {
+                    label: 'backupSave',
+                    property: 'backupSave',
+                    editor: {
+                        type: 1,
+                        options: {
+                            enum: BackupSelection,
+                            container: document.body
+                        }
+                    }
+                },
+                {
+                    label: 'trayClick',
+                    property: 'trayClick',
+                    editor: {
+                        type: 1,
+                        options: {
+                            enum: TrayClick,
+                            container: document.body,
+                            exact: true
+                        }
+                    }
+                },
+                {
+                    label: 'trayDblClick',
+                    property: 'trayDblClick',
+                    editor: {
+                        type: 1,
+                        options: {
+                            enum: TrayClick,
+                            container: document.body,
+                            exact: true
+                        }
+                    }
+                },
+                {
+                    label: 'trayMenu',
+                    property: 'trayMenu',
+                    editor: {
+                        type: 1,
+                        options: {
+                            enum: TrayMenu,
+                            container: document.body,
+                            exact: true
+                        }
+                    }
+                },
+                {
+                    label: 'onSecondInstance',
+                    property: 'onSecondInstance',
+                    editor: {
+                        type: 1,
+                        options: {
+                            enum: OnSecondInstance,
+                            container: document.body,
+                            exact: true
+                        }
+                    }
+                },
+            ])
             //_settingGrid.editorContainer = document.body;
             document.getElementById('list-container').style.display = 'block';
             const data = {};
@@ -1521,6 +1750,32 @@
             SettingProperties.map(m => {
                 data[m] = getSettingValue(m);
                 defaults[m] = isGlobal ? Settings.defaultValue(m) : window.getSetting(m);
+                if (m === 'find.location' || m === 'chat.find.location') {
+                    data[m] = [{
+                        field: 'Top',
+                        value: data[m][0]
+                    }, {
+                        field: 'Right',
+                        value: data[m][1]
+                    }];
+                    defaults[m] = [{
+                        value: defaults[m][0]
+                    }, {
+                        value: defaults[m][1]
+                    }];
+                }
+                else if (m === 'chat.lines') {
+                    data[m] = data[m].map(l => {
+                        return {
+                            value: l
+                        }
+                    });
+                    defaults[m] = defaults[m].map(l => {
+                        return {
+                            value: l
+                        }
+                    });
+                }
             });
             getProperties(_settings, 'extensions', '', data);
             getProperties(_settings, 'windows', '', data);
@@ -1547,12 +1802,12 @@
 
 <body>
     <div class="dialog-body">
-        <div id="list-container" class="panel panel-default datagrid-standard" style="display:none;z-index: 1000;position: absolute;right:0px;left: 0px;top: 0px;bottom:55px;margin:0"></div>
+        <div id="list-container" class="panel panel-default datagrid-standard" style="display:none;z-index: 50;position: absolute;right:0px;left: 0px;top: 0px;bottom:55px;margin:0"></div>
         <div id="pref-tree" class="panel panel-default"></div>
         <div id="content" class="panel panel-default">
             <div class="panel-heading">
                 <span id="pref-title">General</span>
-                <!--<button style="float: right" type="button" class="btn btn-default btn-xs" onclick="showListView()"><i class="fa fa-list" aria-hidden="true"></i></button>-->
+                <button style="float: right" type="button" class="btn btn-default btn-xs" onclick="showListView()" title="Show advanced view"><i class="fa fa-list" aria-hidden="true"></i></button>
             </div>
             <div class="panel-body" id="pref-editor">
                 <div role="tabpanel" class="pref-pane" id="general">

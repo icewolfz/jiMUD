@@ -790,8 +790,20 @@ export class FlagValueEditor extends ValueEditor {
                                 child = children[cl];
                                 if (child.value !== '0')
                                     child.checked = false;
+                                else
+                                    child.checked = true;
                             }
-                            child.checked = true;
+                        }
+                        else if (this.options.exact) {
+                            const currentValue = (<HTMLInputElement>e2.currentTarget).value;
+                            value = +currentValue;
+                            while (cl--) {
+                                child = children[cl];
+                                if (child.value !== currentValue)
+                                    child.checked = false;
+                                else
+                                    child.checked = true;
+                            }
                         }
                         else {
                             let none;
@@ -814,6 +826,8 @@ export class FlagValueEditor extends ValueEditor {
                     l.appendChild(document.createTextNode(capitalize(values[val].replace(/_/g, ' ').toLowerCase())));
                     if (this.$value !== 0 && en[values[val]] === 0)
                         i.checked = false;
+                    else if (this.options.exact)
+                        i.checked = this.$value === en[values[val]];
                     else
                         i.checked = (this.$value & en[values[val]]) === en[values[val]];
                     this.$dropdown.appendChild(l);
@@ -931,7 +945,7 @@ export class FlagValueEditor extends ValueEditor {
     set value(value: any) {
         if (!this.options.enum) return;
         this.$value = value;
-        this.$editor.value = enumToString(value, this.options.enum);
+        this.$editor.value = enumToString(value, this.options.enum, this.options.exact);
         resetCursor(this.$editor);
     }
 }
@@ -1519,7 +1533,7 @@ export class CollectionValueEditor extends ValueEditor {
         if (ops)
             return ops(this.property, value, this.data);
         if (this.options && this.options.enum)
-            return enumToString(value, this.options.enum);
+            return enumToString(value, this.options.enum, this.options.exact);
         if (typeof value === 'boolean')
             return capitalize('' + value);
         return value;
