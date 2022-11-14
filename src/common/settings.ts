@@ -721,6 +721,9 @@ export class Settings {
 
     public characterManagerDblClick: number;
 
+    public warnAdvancedSettings: boolean;
+    public showAdvancedSettings: boolean;
+
     public static load(file) {
         try {
             if (!fs.statSync(file).isFile())
@@ -2012,6 +2015,8 @@ export class Settings {
             case 'characterManagerDblClick': return 8;
             case 'windows':
             case 'extensions': return {};
+            case 'warnAdvancedSettings': return true;
+            case 'showAdvancedSettings': return false;
         }
         return null;
     }

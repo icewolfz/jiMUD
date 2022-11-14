@@ -283,7 +283,7 @@ Controls what is captured into the chat window
 - `Enable warning dialog when connected and closing client` disable or enable warning check when closing mud and connected
 - `Enable warning dialog when any client is connected and closing window with more then 1 client` disable or enable warning check when closing window with more then one client open <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
 - `Enable warning dialog when closing client and child windows are open` disable or enable warning dialog when closing and child windows are open
-- `Enable warning dialog when loading a character from manager` disable or enable warning dialog when loading a character
+- `Enable warning dialog when loading a character from manager` disable or enable warning dialog when loading a character <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
 - `Open 'Who is on' in web browser` Open the 'Who is on?' in a web browser, if disabled will open in a child window of jiMUD
 - `Open ShadowMUD help in web browser` Open the ShadowMUD help in a web browser, if disabled will open in a child window of jiMUD
 - `Character manager on row double click load in:` Determine how to load a character when a row is doubled clicked in character manager

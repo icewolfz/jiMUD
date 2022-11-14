@@ -135,11 +135,13 @@
         const path = require('path');
         const fs = require('fs');
         const fontList = require('font-list');
-        const SettingProperties = ['bufferSize', 'commandDelay', 'commandDelayCount', 'commandHistorySize', 'fontSize', 'cmdfontSize', 'commandEcho', 'flashing', 'autoConnect', 'enableAliases', 'enableTriggers', 'enableMacros', 'showScriptErrors', 'commandStacking', 'commandStackingChar', 'htmlLog', 'keepLastCommand', 'enableMCCP', 'enableUTF8', 'font', 'cmdfont', 'mapper.follow', 'mapper.enabled', 'mapper.split', 'mapper.fill', 'showMapper', 'fullScreen', 'enableMXP', 'enableMSP', 'parseCommands', 'lagMeter', 'enablePing', 'enableEcho', 'enableSpeedpaths', 'speedpathsChar', 'parseSpeedpaths', 'profile', 'parseSingleQuotes', 'parseDoubleQuotes', 'logEnabled', 'logPrepend', 'logOffline', 'logUniqueOnConnect', 'enableURLDetection', 'notifyMSPPlay', 'CommandonClick', 'allowEval', 'allowEscape', 'AutoCopySelectedToClipboard', 'enableDebug', 'editorPersistent', 'askonclose', 'dev', 'chat.captureLines', 'chat.captureAllLines', 'chat.captureReviews', 'chat.captureTells', 'chat.captureTalk', 'chat.gag', 'chat.CaptureOnlyOpen', 'checkForUpdates', 'autoCreateCharacter', 'askonchildren', 'mapper.legend', 'mapper.room', 'mapper.importType', 'mapper.vscroll', 'mapper.hscroll', 'mapper.scale', 'mapper.alwaysOnTop', 'mapper.alwaysOnTopClient', 'mapper.memory', 'mapper.memorySavePeriod', 'mapper.active.ID', 'mapper.active.x', 'mapper.active.y', 'mapper.active.z', 'mapper.active.area', 'mapper.active.zone', 'mapper.persistent', 'profiles.split', 'profiles.askoncancel', 'profiles.triggersAdvanced', 'profiles.aliasesAdvanced', 'profiles.buttonsAdvanced', 'profiles.macrosAdvanced', 'profiles.contextsAdvanced', 'profiles.codeEditor', 'profiles.watchFiles', 'chat.alwaysOnTop', 'chat.alwaysOnTopClient', 'chat.log', 'chat.persistent', 'chat.zoom', 'chat.font', 'chat.fontSize', 'title', 'logGagged', 'logTimeFormat', 'autoConnectDelay', 'autoLogin', 'onDisconnect', 'enableKeepAlive', 'keepAliveDelay', 'newlineShortcut', 'logWhat', 'logErrors', 'showErrorsExtended', 'reportCrashes', 'enableCommands', 'commandChar', 'escapeChar', 'enableVerbatim', 'verbatimChar', 'soundPath', 'logPath', 'theme', 'gamepads', 'buttons.connect', 'buttons.characters', 'buttons.preferences', 'buttons.log', 'buttons.clear', 'buttons.lock', 'buttons.map', 'buttons.user', 'buttons.mail', 'buttons.compose', 'buttons.immortal', 'buttons.codeEditor', 'find.case', 'find.word', 'find.reverse', 'find.regex', 'find.selection', 'find.show', 'display.split', 'display.splitHeight', 'display.splitLive', 'display.roundedOverlays', 'backupLoad', 'backupSave', 'backupAllProfiles', 'scrollLocked', 'showStatus', 'showCharacterManager', 'showChat', 'showEditor', 'showArmor', 'showStatusWeather', 'showStatusLimbs', 'showStatusHealth', 'showStatusExperience', 'showStatusPartyHealth', 'showStatusCombatHealth', 'showButtonBar', 'allowNegativeNumberNeeded', 'spellchecking', 'hideOnMinimize', 'showTrayIcon', 'statusExperienceNeededProgressbar', 'trayClick', 'trayDblClick', 'pasteSpecialPrefix', 'pasteSpecialPostfix', 'pasteSpecialReplace', 'pasteSpecialPrefixEnabled', 'pasteSpecialPostfixEnabled', 'pasteSpecialReplaceEnabled', 'display.showSplitButton', 'chat.split', 'chat.splitHeight', 'chat.splitLive', 'chat.roundedOverlays', 'chat.showSplitButton', 'chat.bufferSize', 'chat.flashing', 'display.hideTrailingEmptyLine', 'display.enableColors', 'display.enableBackgroundColors', 'enableSound', 'allowHalfOpen', 'editorClearOnSend', 'editorCloseOnSend', 'askOnCloseAll', 'askonloadCharacter', 'mapper.roomWidth', 'mapper.roomGroups', 'mapper.showInTaskBar', 'profiles.enabled', 'profiles.sortOrder', 'profiles.sortDirection', 'profiles.showInTaskBar', 'profiles.profileSelected', 'profiles.profileExpandSelected', 'chat.lines', 'chat.showInTaskBar', 'chat.showTimestamp', 'chat.timestampFormat', 'chat.tabWidth', 'chat.displayControlCodes', 'chat.emulateTerminal', 'chat.emulateControlCodes', 'chat.wordWrap', 'chat.wrapAt', 'chat.indent', 'chat.scrollLocked', 'chat.find.case', 'chat.find.word', 'chat.find.reverse', 'chat.find.regex', 'chat.find.selection', 'chat.find.show', 'chat.find.highlight', 'chat.find.location', 'codeEditor.showInTaskBar', 'codeEditor.persistent', 'codeEditor.alwaysOnTop', 'codeEditor.alwaysOnTopClient', 'autoTakeoverLogin', 'fixHiddenWindows', 'maxReconnectDelay', 'enableBackgroundThrottling', 'enableBackgroundThrottlingClients', 'showInTaskBar', 'showLagInTitle', 'mspMaxRetriesOnError', 'logTimestamp', 'logTimestampFormat', 'disableTriggerOnError', 'prependTriggeredLine', 'enableParameters', 'parametersChar', 'enableNParameters', 'nParametersChar', 'enableParsing', 'externalWho', 'externalHelp', 'watchForProfilesChanges', 'onProfileChange', 'onProfileDeleted', 'enableDoubleParameterEscaping', 'ignoreEvalUndefined', 'enableInlineComments', 'enableBlockComments', 'inlineCommentString', 'blockCommentString', 'allowCommentsFromCommand', 'saveTriggerStateChanges', 'groupProfileSaves', 'groupProfileSaveDelay', 'returnNewlineOnEmptyValue', 'pathDelay', 'pathDelayCount', 'echoSpeedpaths', 'alwaysShowTabs', 'scriptEngineType', 'initializeScriptEngineOnLoad', 'find.highlight', 'find.location', 'display.showInvalidMXPTags', 'display.showTimestamp', 'display.timestampFormat', 'display.displayControlCodes', 'display.emulateTerminal', 'display.emulateControlCodes', 'display.wordWrap', 'display.tabWidth', 'display.wrapAt', 'display.indent', 'statusWidth', 'showEditorInTaskBar', 'trayMenu', 'lockLayout', 'loadLayout', 'useSingleInstance', 'statusWidth', 'characterManagerDblClick'];
+        const SettingProperties = ['bufferSize', 'commandDelay', 'commandDelayCount', 'commandHistorySize', 'fontSize', 'cmdfontSize', 'commandEcho', 'flashing', 'autoConnect', 'enableAliases', 'enableTriggers', 'enableMacros', 'showScriptErrors', 'commandStacking', 'commandStackingChar', 'htmlLog', 'keepLastCommand', 'enableMCCP', 'enableUTF8', 'font', 'cmdfont', 'mapper.follow', 'mapper.enabled', 'mapper.split', 'mapper.fill', 'showMapper', 'fullScreen', 'enableMXP', 'enableMSP', 'parseCommands', 'lagMeter', 'enablePing', 'enableEcho', 'enableSpeedpaths', 'speedpathsChar', 'parseSpeedpaths', 'profile', 'parseSingleQuotes', 'parseDoubleQuotes', 'logEnabled', 'logPrepend', 'logOffline', 'logUniqueOnConnect', 'enableURLDetection', 'notifyMSPPlay', 'CommandonClick', 'allowEval', 'allowEscape', 'AutoCopySelectedToClipboard', 'enableDebug', 'editorPersistent', 'askonclose', 'dev', 'chat.captureLines', 'chat.captureAllLines', 'chat.captureReviews', 'chat.captureTells', 'chat.captureTalk', 'chat.gag', 'chat.CaptureOnlyOpen', 'checkForUpdates', 'autoCreateCharacter', 'askonchildren', 'mapper.legend', 'mapper.room', 'mapper.importType', 'mapper.vscroll', 'mapper.hscroll', 'mapper.scale', 'mapper.alwaysOnTop', 'mapper.alwaysOnTopClient', 'mapper.memory', 'mapper.memorySavePeriod', 'mapper.active.ID', 'mapper.active.x', 'mapper.active.y', 'mapper.active.z', 'mapper.active.area', 'mapper.active.zone', 'mapper.persistent', 'profiles.split', 'profiles.askoncancel', 'profiles.triggersAdvanced', 'profiles.aliasesAdvanced', 'profiles.buttonsAdvanced', 'profiles.macrosAdvanced', 'profiles.contextsAdvanced', 'profiles.codeEditor', 'profiles.watchFiles', 'chat.alwaysOnTop', 'chat.alwaysOnTopClient', 'chat.log', 'chat.persistent', 'chat.zoom', 'chat.font', 'chat.fontSize', 'title', 'logGagged', 'logTimeFormat', 'autoConnectDelay', 'autoLogin', 'onDisconnect', 'enableKeepAlive', 'keepAliveDelay', 'newlineShortcut', 'logWhat', 'logErrors', 'showErrorsExtended', 'reportCrashes', 'enableCommands', 'commandChar', 'escapeChar', 'enableVerbatim', 'verbatimChar', 'soundPath', 'logPath', 'theme', 'gamepads', 'buttons.connect', 'buttons.characters', 'buttons.preferences', 'buttons.log', 'buttons.clear', 'buttons.lock', 'buttons.map', 'buttons.user', 'buttons.mail', 'buttons.compose', 'buttons.immortal', 'buttons.codeEditor', 'find.case', 'find.word', 'find.reverse', 'find.regex', 'find.selection', 'find.show', 'display.split', 'display.splitHeight', 'display.splitLive', 'display.roundedOverlays', 'backupLoad', 'backupSave', 'backupAllProfiles', 'scrollLocked', 'showStatus', 'showCharacterManager', 'showChat', 'showEditor', 'showArmor', 'showStatusWeather', 'showStatusLimbs', 'showStatusHealth', 'showStatusExperience', 'showStatusPartyHealth', 'showStatusCombatHealth', 'showButtonBar', 'allowNegativeNumberNeeded', 'spellchecking', 'hideOnMinimize', 'showTrayIcon', 'statusExperienceNeededProgressbar', 'trayClick', 'trayDblClick', 'pasteSpecialPrefix', 'pasteSpecialPostfix', 'pasteSpecialReplace', 'pasteSpecialPrefixEnabled', 'pasteSpecialPostfixEnabled', 'pasteSpecialReplaceEnabled', 'display.showSplitButton', 'chat.split', 'chat.splitHeight', 'chat.splitLive', 'chat.roundedOverlays', 'chat.showSplitButton', 'chat.bufferSize', 'chat.flashing', 'display.hideTrailingEmptyLine', 'display.enableColors', 'display.enableBackgroundColors', 'enableSound', 'allowHalfOpen', 'editorClearOnSend', 'editorCloseOnSend', 'askOnCloseAll', 'askonloadCharacter', 'mapper.roomWidth', 'mapper.roomGroups', 'mapper.showInTaskBar', 'profiles.enabled', 'profiles.sortOrder', 'profiles.sortDirection', 'profiles.showInTaskBar', 'profiles.profileSelected', 'profiles.profileExpandSelected', 'chat.lines', 'chat.showInTaskBar', 'chat.showTimestamp', 'chat.timestampFormat', 'chat.tabWidth', 'chat.displayControlCodes', 'chat.emulateTerminal', 'chat.emulateControlCodes', 'chat.wordWrap', 'chat.wrapAt', 'chat.indent', 'chat.scrollLocked', 'chat.find.case', 'chat.find.word', 'chat.find.reverse', 'chat.find.regex', 'chat.find.selection', 'chat.find.show', 'chat.find.highlight', 'chat.find.location', 'codeEditor.showInTaskBar', 'codeEditor.persistent', 'codeEditor.alwaysOnTop', 'codeEditor.alwaysOnTopClient', 'autoTakeoverLogin', 'fixHiddenWindows', 'maxReconnectDelay', 'enableBackgroundThrottling', 'enableBackgroundThrottlingClients', 'showInTaskBar', 'showLagInTitle', 'mspMaxRetriesOnError', 'logTimestamp', 'logTimestampFormat', 'disableTriggerOnError', 'prependTriggeredLine', 'enableParameters', 'parametersChar', 'enableNParameters', 'nParametersChar', 'enableParsing', 'externalWho', 'externalHelp', 'watchForProfilesChanges', 'onProfileChange', 'onProfileDeleted', 'enableDoubleParameterEscaping', 'ignoreEvalUndefined', 'enableInlineComments', 'enableBlockComments', 'inlineCommentString', 'blockCommentString', 'allowCommentsFromCommand', 'saveTriggerStateChanges', 'groupProfileSaves', 'groupProfileSaveDelay', 'returnNewlineOnEmptyValue', 'pathDelay', 'pathDelayCount', 'echoSpeedpaths', 'alwaysShowTabs', 'scriptEngineType', 'initializeScriptEngineOnLoad', 'find.highlight', 'find.location', 'display.showInvalidMXPTags', 'display.showTimestamp', 'display.timestampFormat', 'display.displayControlCodes', 'display.emulateTerminal', 'display.emulateControlCodes', 'display.wordWrap', 'display.tabWidth', 'display.wrapAt', 'display.indent', 'statusWidth', 'showEditorInTaskBar', 'trayMenu', 'lockLayout', 'loadLayout', 'useSingleInstance', 'statusWidth', 'characterManagerDblClick', 'warnAdvancedSettings', 'showAdvancedSettings'];
         var currentColors;
         var globalColors;
         var archiver, archive;
         var loading = 0;
+        var _advanced = 0;
+        let _settingGrid;
 
         var _settingsFile;
         var _globalFile = window.getGlobal('settingsFile');
@@ -747,6 +749,8 @@
                 });
             });
             loading--;
+            if (window.getSetting('showAdvancedSettings'))
+                showAdvancedView()
         });
 
         function sortFiles(a, b) {
@@ -1018,6 +1022,8 @@
                     'reopen': true
                 };
             loadSettings();
+            if (advanced)
+                setGridValues();
         }
 
         function syncSettings() {
@@ -1027,6 +1033,8 @@
                     continue;
                 syncProperty(_settings, prop, '');
             }
+            if (advanced)
+                setGridValues();
         }
 
         function syncProperty(obj, property, root) {
@@ -1506,248 +1514,300 @@
             closeProgressDialog();
         }
 
-        function showListView() {
-            if (dialog.showMessageBoxSync({
-                type: 'warning',
-                title: 'Advanced view',
-                message: 'Editing settings in advanced view may break if wrong values are entered, switch anyways?',
-                buttons: ['Yes', 'No'],
-                defaultId: 1,
-                noLink: true
-            }) === 1)
-                return;
+        function showStandardView() {
+            _advanced = 0;
+            window.setSetting('showAdvancedSettings', false);
+            if (_globalFile === _settingsFile)
+                _settings.showAdvancedSettings = false;
+            loadSettings();
+            document.getElementById('list-container').style.display = 'none';
+        }
 
-            //TODO update simple setting form fields
-            //TODO Add button to switch back from advanced view
-            const { PropertyGrid } = require('./js/propertygrid');
-            _settingGrid = new PropertyGrid({ parent: document.getElementById('list-container') });
-            _settingGrid.setGroupOptions('Misc', {
-                formatter: title => title
-            });
-            _settingGrid.on('value-changed', (prop, newValue, oldValue) => {
-                if (prop === 'find.location' || prop === 'chat.find.location')
-                    _settings.setValue(prop, [newValue[0].value, newValue[1].value]);
-                else if (prop === 'chat.lines') {
-                    _settings.setValue(prop, newValue.map(v => v.value));
-                    $('#chat-lines').val(getSettingValue('chat.lines').join(','));
+        function showAdvancedView() {
+            if (window.getSetting('warnAdvancedSettings')) {
+                let response = dialog.showMessageBoxSync({
+                    type: 'warning',
+                    title: 'Advanced view',
+                    message: 'Editing settings in advanced view may break if wrong values are entered, switch anyways?',
+                    buttons: ['Yes', 'No', 'Never ask again'],
+                    defaultId: 1,
+                    noLink: true
+                });
+                if (response === 1)
+                    return;
+                if (response === 2) {
+                    window.setSetting('warnAdvancedSettings', false);
+                    if (_globalFile === _settingsFile)
+                        _settings.warnAdvancedSettings = false;
                 }
-                else
-                    _settings.setValue(prop, newValue);
-            });
-            _settingGrid.setPropertyOptions([
-                {
-                    property: 'find.location',
-                    label: 'find.location',
-                    formatter: (prop, value) => {
-                        return value[0].value + ', ' + value[1].value;
+            }
+            const { PropertyGrid } = require('./js/propertygrid');
+            _advanced = 1;
+            if (!_settingGrid) {
+                _settingGrid = new PropertyGrid({ parent: document.getElementById('list-container') });
+                _settingGrid.setGroupOptions('Misc', {
+                    formatter: title => title
+                });
+                _settingGrid.on('value-changed', (prop, newValue, oldValue) => {
+                    if (prop === 'find.location' || prop === 'chat.find.location')
+                        _settings.setValue(prop, [newValue[0].value, newValue[1].value]);
+                    else if (prop === 'chat.lines') {
+                        _settings.setValue(prop, newValue.map(v => v.value));
+                        $('#chat-lines').val(getSettingValue('chat.lines').join(','));
+                    }
+                    else
+                        _settings.setValue(prop, newValue);
+                });
+                _settingGrid.setPropertyOptions([
+                    {
+                        property: 'find.location',
+                        label: 'find.location',
+                        formatter: (prop, value) => {
+                            return value[0].value + ', ' + value[1].value;
+                        },
+                        tooltipFormatter: (prop, value) => {
+                            return value[0].value + ', ' + value[1].value;
+                        },
+                        editor: {
+                            type: 8,
+                            options: {
+                                open: true,
+                                columns: [
+                                    {
+                                        label: '',
+                                        field: 'field',
+                                        width: 130,
+                                        readonly: true,
+                                    },
+                                    {
+                                        label: 'Value',
+                                        field: 'value',
+                                        width: 130,
+                                        spring: true
+                                    }
+                                ],
+                                noControls: true
+                            }
+                        }
                     },
-                    tooltipFormatter: (prop, value) => {
-                        return value[0].value + ', ' + value[1].value;
+                    {
+                        property: 'chat.find.location',
+                        label: 'chat.find.location',
+                        group: 'Misc',
+                        formatter: (prop, value) => {
+                            return value[0].value + ', ' + value[1].value;
+                        },
+                        tooltipFormatter: (prop, value) => {
+                            return value[0].value + ', ' + value[1].value;
+                        },
+                        editor: {
+                            type: 8,
+                            options: {
+                                open: true,
+                                columns: [
+                                    {
+                                        label: '',
+                                        field: 'field',
+                                        width: 130,
+                                        readonly: true,
+                                    },
+                                    {
+                                        label: 'Value',
+                                        field: 'value',
+                                        width: 130,
+                                        spring: true
+                                    }
+                                ],
+                                noControls: true
+                            }
+                        }
                     },
-                    editor: {
-                        type: 8,
-                        options: {
-                            open: true,
-                            columns: [
-                                {
-                                    label: '',
-                                    field: 'field',
-                                    width: 130,
-                                    readonly: true,
-                                },
-                                {
-                                    label: 'Value',
-                                    field: 'value',
-                                    width: 130,
-                                    spring: true
-                                }
-                            ],
-                            noControls: true
+                    {
+                        property: 'chat.lines',
+                        label: 'chat.lines',
+                        group: 'Misc',
+                        formatter: (prop, value) => {
+                            return value.map(v => v.value).join(',');
+                        },
+                        tooltipFormatter: (prop, value) => {
+                            return value.map(v => v.value).join(',');
+                        },
+                        editor: {
+                            type: 8,
+                            options: {
+                                type: 'line',
+                                open: true,
+                                columns: [
+                                    {
+                                        label: 'Value',
+                                        field: 'value',
+                                        width: 200,
+                                        spring: true
+                                    }
+                                ]
+                            }
                         }
-                    }
-                },
-                {
-                    property: 'chat.find.location',
-                    label: 'chat.find.location',
-                    group: 'Misc',
-                    formatter: (prop, value) => {
-                        return value[0].value + ', ' + value[1].value;
                     },
-                    tooltipFormatter: (prop, value) => {
-                        return value[0].value + ', ' + value[1].value;
+                    {
+                        label: 'profiles.sortOrder',
+                        property: 'profiles.sortOrder',
+                        editor: {
+                            type: 1,
+                            options: {
+                                enum: ProfileSortOrder,
+                                container: document.body
+                            }
+                        }
                     },
-                    editor: {
-                        type: 8,
-                        options: {
-                            open: true,
-                            columns: [
-                                {
-                                    label: '',
-                                    field: 'field',
-                                    width: 130,
-                                    readonly: true,
-                                },
-                                {
-                                    label: 'Value',
-                                    field: 'value',
-                                    width: 130,
-                                    spring: true
-                                }
-                            ],
-                            noControls: true
+                    {
+                        label: 'onProfileChange',
+                        property: 'onProfileChange',
+                        editor: {
+                            type: 1,
+                            options: {
+                                enum: OnProfileChange,
+                                container: document.body,
+                                exact: true
+                            }
                         }
-                    }
-                },
-                {
-                    property: 'chat.lines',
-                    label: 'chat.lines',
-                    group: 'Misc',
-                    formatter: (prop, value) => {
-                        return value.map(v => v.value).join(',');
                     },
-                    tooltipFormatter: (prop, value) => {
-                        return value.map(v => v.value).join(',');
+                    {
+                        label: 'onProfileDeleted',
+                        property: 'onProfileDeleted',
+                        editor: {
+                            type: 1,
+                            options: {
+                                enum: OnProfileDeleted,
+                                container: document.body,
+                                exact: true
+                            }
+                        }
                     },
-                    editor: {
-                        type: 8,
-                        options: {
-                            type: 'line',
-                            open: true,
-                            columns: [
-                                {
-                                    label: 'Value',
-                                    field: 'value',
-                                    width: 200,
-                                    spring: true
-                                }
-                            ]
+                    {
+                        label: 'scriptEngineType',
+                        property: 'scriptEngineType',
+                        editor: {
+                            type: 1,
+                            options: {
+                                enum: ScriptEngineType,
+                                container: document.body,
+                                exact: true
+                            }
                         }
-                    }
-                },
-                {
-                    label: 'profiles.sortOrder',
-                    property: 'profiles.sortOrder',
-                    editor: {
-                        type: 1,
-                        options: {
-                            enum: ProfileSortOrder,
-                            container: document.body
+                    },
+                    {
+                        label: 'backupLoad',
+                        property: 'backupLoad',
+                        editor: {
+                            type: 1,
+                            options: {
+                                enum: BackupSelection,
+                                container: document.body
+                            }
                         }
-                    }
-                },
-                {
-                    label: 'onProfileChange',
-                    property: 'onProfileChange',
-                    editor: {
-                        type: 1,
-                        options: {
-                            enum: OnProfileChange,
-                            container: document.body,
-                            exact: true
+                    },
+                    {
+                        label: 'backupSave',
+                        property: 'backupSave',
+                        editor: {
+                            type: 1,
+                            options: {
+                                enum: BackupSelection,
+                                container: document.body
+                            }
                         }
-                    }
-                },
-                {
-                    label: 'onProfileDeleted',
-                    property: 'onProfileDeleted',
-                    editor: {
-                        type: 1,
-                        options: {
-                            enum: OnProfileDeleted,
-                            container: document.body,
-                            exact: true
+                    },
+                    {
+                        label: 'trayClick',
+                        property: 'trayClick',
+                        editor: {
+                            type: 1,
+                            options: {
+                                enum: TrayClick,
+                                container: document.body,
+                                exact: true
+                            }
                         }
-                    }
-                },
-                {
-                    label: 'scriptEngineType',
-                    property: 'scriptEngineType',
-                    editor: {
-                        type: 1,
-                        options: {
-                            enum: ScriptEngineType,
-                            container: document.body,
-                            exact: true
+                    },
+                    {
+                        label: 'trayDblClick',
+                        property: 'trayDblClick',
+                        editor: {
+                            type: 1,
+                            options: {
+                                enum: TrayClick,
+                                container: document.body,
+                                exact: true
+                            }
                         }
-                    }
-                },
-                {
-                    label: 'backupLoad',
-                    property: 'backupLoad',
-                    editor: {
-                        type: 1,
-                        options: {
-                            enum: BackupSelection,
-                            container: document.body
+                    },
+                    {
+                        label: 'trayMenu',
+                        property: 'trayMenu',
+                        editor: {
+                            type: 1,
+                            options: {
+                                enum: TrayMenu,
+                                container: document.body,
+                                exact: true
+                            }
                         }
-                    }
-                },
-                {
-                    label: 'backupSave',
-                    property: 'backupSave',
-                    editor: {
-                        type: 1,
-                        options: {
-                            enum: BackupSelection,
-                            container: document.body
+                    },
+                    {
+                        label: 'onSecondInstance',
+                        property: 'onSecondInstance',
+                        editor: {
+                            type: 1,
+                            options: {
+                                enum: OnSecondInstance,
+                                container: document.body,
+                                exact: true
+                            }
                         }
-                    }
-                },
-                {
-                    label: 'trayClick',
-                    property: 'trayClick',
-                    editor: {
-                        type: 1,
-                        options: {
-                            enum: TrayClick,
-                            container: document.body,
-                            exact: true
-                        }
-                    }
-                },
-                {
-                    label: 'trayDblClick',
-                    property: 'trayDblClick',
-                    editor: {
-                        type: 1,
-                        options: {
-                            enum: TrayClick,
-                            container: document.body,
-                            exact: true
-                        }
-                    }
-                },
-                {
-                    label: 'trayMenu',
-                    property: 'trayMenu',
-                    editor: {
-                        type: 1,
-                        options: {
-                            enum: TrayMenu,
-                            container: document.body,
-                            exact: true
-                        }
-                    }
-                },
-                {
-                    label: 'onSecondInstance',
-                    property: 'onSecondInstance',
-                    editor: {
-                        type: 1,
-                        options: {
-                            enum: OnSecondInstance,
-                            container: document.body,
-                            exact: true
-                        }
-                    }
-                },
-            ])
-            //_settingGrid.editorContainer = document.body;
+                    },
+                ])
+                //_settingGrid.editorContainer = document.body;
+            }
             document.getElementById('list-container').style.display = 'block';
+            window.setSetting('showAdvancedSettings', true);
+            if (_globalFile === _settingsFile)
+                _settings.showAdvancedSettings = false;
+            setGridValues();
+        }
+
+        function setGridValues() {
             const data = {};
             const defaults = {};
             const isGlobal = _settingsFile === _globalFile;
             SettingProperties.map(m => {
+                if (!isGlobal) {
+                    switch (m) {
+                        case 'spellchecking':
+                        case 'checkForUpdates':
+                        case 'theme':
+                        case 'alwaysShowTabs':
+                        case 'showTabsAddNewButton':
+                        case 'lockLayout':
+                        case 'loadLayout':
+                        case 'scriptEngineType':
+                        case 'useSingleInstance':
+                        case 'onSecondInstance':
+                        case 'fixHiddenWindows':
+                        case 'hideOnMinimize':
+                        case 'showInTaskBar':
+                        case 'enableBackgroundThrottling':
+                        case 'enableBackgroundThrottlingClients':
+                        case 'askOnCloseAll':
+                        case 'showTrayIcon':
+                        case 'trayMenu':
+                        case 'trayClick':
+                        case 'trayDblClick':
+                        case 'showAdvancedSettings':
+                        case 'warnAdvancedSettings':
+                        case 'askonloadCharacter':
+                            return;
+                    }
+                }
                 data[m] = getSettingValue(m);
                 defaults[m] = isGlobal ? Settings.defaultValue(m) : window.getSetting(m);
                 if (m === 'find.location' || m === 'chat.find.location') {
@@ -1802,12 +1862,14 @@
 
 <body>
     <div class="dialog-body">
-        <div id="list-container" class="panel panel-default datagrid-standard" style="display:none;z-index: 50;position: absolute;right:0px;left: 0px;top: 0px;bottom:55px;margin:0"></div>
+        <div id="list-container" class="panel panel-default datagrid-standard" style="display:none;z-index: 50;position: absolute;right:0px;left: 0px;top: 0px;bottom:55px;margin:0">
+            <button style="z-index: 51;position: absolute;right: 20px;top: 5px;" type="button" class="btn btn-default btn-xs" onclick="showStandardView()" title="Show standard view"><i class="fa fa-gears" aria-hidden="true"></i></button>
+        </div>
         <div id="pref-tree" class="panel panel-default"></div>
         <div id="content" class="panel panel-default">
             <div class="panel-heading">
                 <span id="pref-title">General</span>
-                <button style="float: right" type="button" class="btn btn-default btn-xs" onclick="showListView()" title="Show advanced view"><i class="fa fa-list" aria-hidden="true"></i></button>
+                <button style="float: right" type="button" class="btn btn-default btn-xs" onclick="showAdvancedView()" title="Show advanced view"><i class="fa fa-list" aria-hidden="true"></i></button>
             </div>
             <div class="panel-body" id="pref-editor">
                 <div role="tabpanel" class="pref-pane" id="general">
@@ -3055,7 +3117,7 @@
                         </label>
                     </div>
                     -->
-                    <div class="col-sm-6 form-group">
+                    <div class="col-sm-6 form-group global">
                         <label class="control-label">
                             <input type="checkbox" id="askonloadCharacter" /> Enable warning dialog when loading a character from manager
                         </label>
