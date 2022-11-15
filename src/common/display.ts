@@ -1113,7 +1113,7 @@ export class Display extends EventEmitter {
 
             if ((this._updating & UpdateType.selectionChanged) === UpdateType.selectionChanged) {
                 //this._prevSelection.end = this._currentSelection.end;
-                this._currentSelection.end = this.getLineOffset(this._lastMouse.pageX, this._lastMouse.pageY);
+                this._currentSelection.end = this.clampPosition(this.getLineOffset(this._lastMouse.pageX, this._lastMouse.pageY));
                 this.emit('selection-changed');
                 this._updating &= ~UpdateType.selectionChanged;
             }
