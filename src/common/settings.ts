@@ -508,7 +508,7 @@ export let SettingList: any[] = [
     ['lockLayout', 0, SettingType.Boolean, false],
     ['loadLayout', 0, SettingType.String, ''],
     ['useSingleInstance', 0, SettingType.Boolean, true],
-    ['statusWidth', 0, SettingType.Number, OnSecondInstance.Show],
+    ['onSecondInstance', 0, SettingType.Number, OnSecondInstance.Show],
     ['characterManagerDblClick', 0, SettingType.Number, 8]
 ];
 
@@ -2011,7 +2011,7 @@ export class Settings {
             case 'lockLayout': return false;
             case 'loadLayout': return '';
             case 'useSingleInstance': return true;
-            case 'statusWidth': return OnSecondInstance.Show;
+            case 'onSecondInstance': return OnSecondInstance.Show;
             case 'characterManagerDblClick': return 8;
             case 'windows':
             case 'extensions': return {};

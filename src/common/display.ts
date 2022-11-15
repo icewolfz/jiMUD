@@ -1999,7 +1999,6 @@ export class Display extends EventEmitter {
             //Devanagari 
             case 0x0901:
             case 0x0953:
-            case 0x0953:
             //Ethiopic Combining                
             case 0x135D:
             case 0x135E:

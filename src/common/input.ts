@@ -95,7 +95,7 @@ enum ParseState {
     paramsP = 8,
     paramsPBlock = 9,
     paramsPEscape = 10,
-    paramsPNamed = 17,
+    paramsPNamed = 26,
     paramsN = 11,
     paramsNBlock = 12,
     paramsNEscape = 13,
