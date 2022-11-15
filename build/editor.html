@@ -943,6 +943,11 @@
                                         });
                                         return;
                                     }
+                                    else if (window.opener._windows['code.editor.html'].document.readyState !== 'complete') {
+                                        windows['code.editor.html'].addEventListener('load', () => {
+                                            window.opener._windows['code.editor.html'].updateValue(getFormattedText().replace(/(?:\r)/g, ''));
+                                        }, { once: true });
+                                    }
                                     else
                                         window.opener._windows['code.editor.html'].updateValue(getFormattedText().replace(/(?:\r)/g, ''));
                                     if (getOption('editorClearOnSend'))

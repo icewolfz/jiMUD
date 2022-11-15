@@ -2942,6 +2942,11 @@
                     });
                 });
             }
+            else if (typeof window.opener._windows['code.editor.html'].openEditor !== 'function' || window.opener._windows['code.editor.html'].document.readyState !== 'complete') {
+                setTimeout(() => {
+                    openEditor(file, remote, remoteEdit);
+                }, 100);
+            }
             else {
                 window.opener._windows['code.editor.html'].openEditor(file, remote, remoteEdit);
                 window.opener._windows['code.editor.html'].focus();
