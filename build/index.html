@@ -3179,7 +3179,13 @@
                 client.emit('load-theme');
                 client.clearOptionCache();
             }
-            if (settings !== _windowState.data.settings) return;
+            if (settings !== _windowState.data.settings) {
+                if (global) {
+                    client.loadOptions();
+                    doUpdate(76);
+                }
+                return;
+            }
             client.loadOptions();
             doUpdate(76);
             client.sendGMCP('Core.Hello { "client": "' + client.telnet.terminal + '", "version": "' + client.telnet.version + '" }');
@@ -3902,7 +3908,7 @@
                     $updating &= ~32;
                 }
                 if (($updating & 64) === 64) {
-                    client.saveOptions();
+                    //client.saveOptions();
                     ipcRenderer.invoke('window', 'clearCache').then(() => { if (client.getOption('enableDebug')) console.log('Cache cleared'); });
                     webFrame.clearCache();
                     $updating &= ~64;
