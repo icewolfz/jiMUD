@@ -35,6 +35,8 @@ Open an issue about it or log on to [ShadowMUD](http://www,shadowmud.com) using 
 * `{pictures}` Directory for a user's pictures.
 * `{videos}` Directory for a user's videos.
 * `{assets}` Directory for accessing client assets, ***Read only***
+* `{profiles}` Directory for user profiles
+* `{characters}` Directory for character manager data filess
 
 ## Setting keys, value type and default value
 

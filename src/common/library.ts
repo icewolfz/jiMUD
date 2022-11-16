@@ -814,7 +814,7 @@ export function templatePath(p: string) {
         '{assets}',
         '{data}',
         '{home}',
-        '{path}}',
+        '{path}',
         '{appData}',
         '{temp}',
         '{desktop}',
@@ -822,7 +822,8 @@ export function templatePath(p: string) {
         '{downloads}',
         '{music}',
         '{pictures}',
-        '{videos}'
+        '{videos}',
+        '{profiles}'
     ];
     const sl = paths.length;
     for (let s = 0; s < sl; s++) {
