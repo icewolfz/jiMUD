@@ -1,6 +1,6 @@
 //spell-checker:ignore rgbcolor, Fraktur, aixterm, FNAME, ismap, ATTLIST, windowname, cmds, apos, doubleunderline, MXPO
 import { EventEmitter } from 'events';
-import RGBColor = require('rgbcolor');
+import * as RGBColor from 'rgbcolor';
 import { ParserLine, FormatType, ParserOptions, FontStyle, LineFormat, LinkFormat, ImageFormat, Size } from './types';
 import { stripQuotes, CharAllowedInURL, htmlDecode } from './library';
 

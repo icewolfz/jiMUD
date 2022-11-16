@@ -4,7 +4,7 @@
  * @author William
  */
 //spell-checker:ignore Eisu, Junja, Hanja, Nonconvert, Modechange, printscreen, jisho, Masshou, Touroku, loya, roya
-//spell-checker:ignore Wsctrl, Cusel, Enlw, Backtab, Crsel, Exsel, Ereof rtrim ltrim rgbcolor Dropdown DBLUNDERLINE noflash
+//spell-checker:ignore Wsctrl, Cusel, Enlw, Backtab, Crsel, Exsel, Ereof rtrim ltrim Dropdown DBLUNDERLINE noflash
 const path = require('path');
 const fs = require('fs');
 let crypto;
@@ -1824,8 +1824,6 @@ export function pinkfishToHTML(text) {
 }
 
 function loadColors() {
-    const rgbcolor = require('rgbcolor');
-    const _dColors = getColors();
     let c;
     let color;
     let r;
@@ -1834,22 +1832,22 @@ function loadColors() {
     let idx;
     _colorCodes = {};
 
-    _colorCodes['BLACK'] = new rgbcolor(_dColors[0]).toHex().substr(1).toUpperCase();
-    _colorCodes['RED'] = new rgbcolor(_dColors[1]).toHex().substr(1).toUpperCase();
-    _colorCodes['GREEN'] = new rgbcolor(_dColors[2]).toHex().substr(1).toUpperCase();
-    _colorCodes['ORANGE'] = new rgbcolor(_dColors[3]).toHex().substr(1).toUpperCase();
-    _colorCodes['BLUE'] = new rgbcolor(_dColors[4]).toHex().substr(1).toUpperCase();
-    _colorCodes['MAGENTA'] = new rgbcolor(_dColors[5]).toHex().substr(1).toUpperCase();
-    _colorCodes['CYAN'] = new rgbcolor(_dColors[6]).toHex().substr(1).toUpperCase();
-    _colorCodes['WHITE'] = new rgbcolor(_dColors[7]).toHex().substr(1).toUpperCase();
-    _colorCodes['mono11'] = new rgbcolor(_dColors[8]).toHex().substr(1).toUpperCase();
-    _colorCodes['BOLD%^%^RED'] = new rgbcolor(_dColors[9]).toHex().substr(1).toUpperCase();
-    _colorCodes['BOLD%^%^GREEN'] = new rgbcolor(_dColors[10]).toHex().substr(1).toUpperCase();
-    _colorCodes['YELLOW'] = new rgbcolor(_dColors[11]).toHex().substr(1).toUpperCase();
-    _colorCodes['BOLD%^%^BLUE'] = new rgbcolor(_dColors[12]).toHex().substr(1).toUpperCase();
-    _colorCodes['BOLD%^%^MAGENTA'] = new rgbcolor(_dColors[13]).toHex().substr(1).toUpperCase();
-    _colorCodes['BOLD%^%^CYAN'] = new rgbcolor(_dColors[14]).toHex().substr(1).toUpperCase();
-    _colorCodes['BOLD%^%^WHITE'] = new rgbcolor(_dColors[15]).toHex().substr(1).toUpperCase();
+    _colorCodes['BLACK'] = '000000';
+    _colorCodes['RED'] = '800000';
+    _colorCodes['GREEN'] = '008000';
+    _colorCodes['ORANGE'] = '808000';
+    _colorCodes['BLUE'] = '0000EE';
+    _colorCodes['MAGENTA'] = '800080';
+    _colorCodes['CYAN'] = '008080';
+    _colorCodes['WHITE'] = 'BBBBBB';
+    _colorCodes['mono11'] = '808080';
+    _colorCodes['BOLD%^%^RED'] = 'FF0000';
+    _colorCodes['BOLD%^%^GREEN'] = '00FF00';
+    _colorCodes['YELLOW'] = 'FFFF00';
+    _colorCodes['BOLD%^%^BLUE'] = '5C5CFF';
+    _colorCodes['BOLD%^%^MAGENTA'] = 'FF00FF';
+    _colorCodes['BOLD%^%^CYAN'] = '00FFFF';
+    _colorCodes['BOLD%^%^WHITE'] = 'FFFFFF';
 
     for (r = 0; r < 6; r++) {
         for (g = 0; g < 6; g++) {
