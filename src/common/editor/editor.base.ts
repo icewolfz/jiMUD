@@ -1,4 +1,4 @@
-import EventEmitter = require('events');
+import { EventEmitter } from 'events';
 const fs = require('fs-extra');
 const path = require('path');
 

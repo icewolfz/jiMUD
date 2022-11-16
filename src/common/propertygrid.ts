@@ -1,5 +1,5 @@
 //spellchecker:ignore dropdown
-import EventEmitter = require('events');
+import { EventEmitter } from 'events';
 import { capitalize, enumToString } from './library';
 import { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropDownEditValueEditor, CollectionValueEditor, SelectValueEditor, ButtonValueEditor } from './value.editors';
 

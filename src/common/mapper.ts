@@ -1,6 +1,6 @@
 //spell-checker:ignore pathfinding, vscroll, hscroll, AUTOINCREMENT, Arial, isdoor, isclosed, prevroom, islocked, cmds
 //spell-checker:ignore watersource, dirtroad, sanddesert, icesheet, highmountain, pavedroad, rockdesert
-import EventEmitter = require('events');
+import { EventEmitter } from 'events';
 import { parseTemplate, copy } from './library';
 const fs = require('fs');
 const path = require('path');

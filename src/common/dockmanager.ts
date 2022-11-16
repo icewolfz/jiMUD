@@ -1,5 +1,5 @@
 //spellchecker:ignore dropdown dropdownmenu tabpane
-import EventEmitter = require('events');
+import { EventEmitter } from 'events';
 import { nativeImage } from 'electron';
 
 declare let window;

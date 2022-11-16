@@ -7,7 +7,7 @@
  * @author  William
  */
 import { Size, ParserLine, FormatType, FontStyle } from './types';
-import EventEmitter = require('events');
+import { EventEmitter } from 'events';
 import { Parser } from './parser';
 import { htmlEncode, formatUnit } from './library';
 import { Finder } from './finder';

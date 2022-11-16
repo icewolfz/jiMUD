@@ -1,6 +1,6 @@
 //spellchecker:ignore sefun sefuns lfuns lfun efuns efun precompiler ltrim rtrim
 //spellchecker:ignore lbracket rbracket loperator roperator rhook lhook xeot
-import EventEmitter = require('events');
+import { EventEmitter } from 'events';
 import { parseTemplate, walkSync } from '../library';
 const fs = require('fs-extra');
 const path = require('path');

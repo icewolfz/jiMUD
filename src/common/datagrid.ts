@@ -1,5 +1,5 @@
 //spellchecker:ignore datagrid dropdown
-import EventEmitter = require('events');
+import { EventEmitter } from 'events';
 import { capitalize, clone } from './library';
 import { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropDownEditValueEditor, SelectValueEditor, CollectionValueEditor, ButtonValueEditor } from './value.editors';
 export { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropDownEditValueEditor, SelectValueEditor, CollectionValueEditor, ButtonValueEditor } from './value.editors';

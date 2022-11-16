@@ -1,5 +1,5 @@
 //spell-checker:words vscroll, hscroll, Commandon, cmdfont, isdoor, isclosed, triggernewline, triggerprompt
-import EventEmitter = require('events');
+import { EventEmitter } from 'events';
 import { Client } from './client';
 import { parseTemplate, existsSync, isArrayEqual } from './library';
 import { BackupSelection, Log } from './types';

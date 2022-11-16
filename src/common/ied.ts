@@ -5,7 +5,7 @@
  * @author William
  */
 //spell-checker:words fswin, chunksize
-import EventEmitter = require('events');
+import { EventEmitter } from 'events';
 import { isDirSync, existsSync } from './library';
 import { FileInfo, IEDError, IEDCmdStatus, TempType } from './types';
 const fs = require('fs');

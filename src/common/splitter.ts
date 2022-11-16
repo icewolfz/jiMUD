@@ -1,5 +1,5 @@
 //spellchecker:ignore
-import EventEmitter = require('events');
+import { EventEmitter } from 'events';
 
 export interface SplitterOptions {
     container?: any;

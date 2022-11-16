@@ -1,5 +1,5 @@
 //spell-checker:words keycode
-import EventEmitter = require('events');
+import { EventEmitter } from 'events';
 
 /**
  * Simple search box dialog

@@ -7,7 +7,7 @@
 const buzz = require('buzz');
 //const path = require('path');
 //const fs = require('fs');
-import EventEmitter = require('events');
+import { EventEmitter } from 'events';
 import { stripQuotes } from './library';
 import { TelnetOption } from './telnet';
 

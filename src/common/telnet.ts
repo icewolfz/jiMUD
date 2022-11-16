@@ -1,10 +1,8 @@
 // spell-checker:words TELOP, TERMINALTYPE, NEWENVIRON, Achaea, Webdings, ENDOFRECORD, USERVAR keepalive, DONT
-import EventEmitter = require('events');
-import net = require('net');
+import { EventEmitter } from 'events';
+import { Socket } from 'net';
 
 const ZLIB: any = require('./../../lib/inflate_stream.min.js').Zlib;
-
-const Socket = net.Socket;
 
 export interface TelnetOption {
     telnet: Telnet;

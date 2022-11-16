@@ -1,7 +1,7 @@
 // spell-checker:word omud
 // spell-checker:ignore hasmembers, hpmax, spmax, mpmax,
 // spell-checker:ignore righthoof, rightfoot, lefthoof, leftfoot, rightarm, leftarm, rightleg, leftleg, righthand, lefthand, leftwing, rightwing
-import EventEmitter = require('events');
+import { EventEmitter } from 'events';
 import { Client } from './client';
 
 export enum UpdateType { none = 0, sortCombat = 1, sortParty = 2, overall = 4, xp = 8, status = 16 }

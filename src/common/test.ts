@@ -1,5 +1,5 @@
 //spell-checker:ignore memberof, webdings, redbu, ismap, isdoor Cornsilk Gainsboro prevroom
-import EventEmitter = require('events');
+import { EventEmitter } from 'events';
 import { Client } from './client';
 import { AnsiColorCode, Ansi } from './ansi';
 

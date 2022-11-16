@@ -8,7 +8,7 @@
  * @change 2018-01-09 William Set file in constructor
  */
 //spell-checker:words fswin, chunksize
-import EventEmitter = require('events');
+import { EventEmitter } from 'events';
 import { Client } from './client';
 import { parseTemplate, isFileSync } from './library';
 import { MailStatus, MailAction, MailReadFormat, MailFolders } from './types';

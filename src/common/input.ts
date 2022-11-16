@@ -7,7 +7,7 @@
 //spell-checker:ignore reparse reparsepattern looplines looppattern withinlines sendraw sendprompt sendp stripansi clientname speakstop speakpause speakresume
 //spell-checker:ignore LOOPEXPRSSION COMMANDINPUTPATTERN COMMANDINPUTREGULAR REGULAREXPRESSION COMMANDINPUTREGULAREXPRESSION COMMANDINPUTREGULAR
 /// <reference types="mathjs" />
-import EventEmitter = require('events');
+import { EventEmitter } from 'events';
 import { MacroModifiers, MacroDisplay, Alias, Trigger, Button, Profile, TriggerType, TriggerTypes, SubTriggerTypes, convertPattern } from './profile';
 import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync, splitQuoted, isValidIdentifier, fileSizeSync } from './library';
 import { Client } from './client';

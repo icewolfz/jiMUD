@@ -1,7 +1,7 @@
 // spell-checker:words cmdfont repeatnum
 // spell-checker:ignore endof, Commandon errored
 
-import EventEmitter = require('events');
+import { EventEmitter } from 'events';
 import { Telnet, TelnetOption } from './telnet';
 import { ParserLine, ProfileSaveType } from './types';
 import { AnsiColorCode } from './ansi';

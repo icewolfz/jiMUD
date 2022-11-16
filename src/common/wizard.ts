@@ -1,5 +1,5 @@
 //spellchecker:ignore datagrid
-import EventEmitter = require('events');
+import { EventEmitter } from 'events';
 import { DataGrid } from './datagrid';
 
 export interface WizardOptions {
