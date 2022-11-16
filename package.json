@@ -45,7 +45,7 @@
     "package:linux": "npm run package:linux64",
     "package:linux32": "electron-builder --linux deb AppImage rpm tar.xz --ia32",
     "package:linux64": "electron-builder --linux deb AppImage rpm tar.xz snap --x64",
-    "min": "minify out -d build/js --mangle --simplify --builtIns=false",
+    "min": "node minify",
     "release:win": "npm run compile && npm run package:win",
     "release:linux": "npm run compile && npm run package:linux",
     "release:mac": "npm run compile && npm run package:mac",
@@ -61,13 +61,13 @@
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.5.14",
     "@types/node": "^18.11.9",
-    "babel-minify": "^0.5.2",
     "electron": "^19.1.5",
     "electron-builder": "^23.6.0",
     "electron-rebuild": "^3.2.9",
     "eslint": "^8.27.0",
     "eslint-plugin-html": "^7.1.0",
-    "sass": "^1.56.1"
+    "sass": "^1.56.1",
+    "terser": "^5.15.1"
   },
   "build": {
     "appId": "jiMUD",

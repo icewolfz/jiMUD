@@ -3,7 +3,9 @@
 //spell-checker:ignore keycode repeatnum chatp chatprompt untrigger unevent nocr timepattern ungag showclient showcl hideclient hidecl toggleclient
 //spell-checker:ignore togglecl raiseevent raisedelayed raisede diceavg dicemin dicemax zdicedev dicedev zmud
 //spell-checker:ignore testfile testspeedfile testspeedfiler nosend printprompt printp pcol forall stringlist zcolor ipos trimleft trimright
-//spell-checker:ignore bitand bitnot bitor bitshift bittest bitnum bitxor isfloat isnumber
+//spell-checker:ignore bitand bitnot bitor bitshift bittest bitnum bitxor isfloat isnumber isdefined charcomment charnotes cmdpattern loopexpression
+//spell-checker:ignore reparse reparsepattern looplines looppattern withinlines sendraw sendprompt sendp stripansi clientname speakstop speakpause speakresume
+//spell-checker:ignore LOOPEXPRSSION COMMANDINPUTPATTERN COMMANDINPUTREGULAR REGULAREXPRESSION COMMANDINPUTREGULAREXPRESSION COMMANDINPUTREGULAR
 /// <reference types="mathjs" />
 import EventEmitter = require('events');
 import { MacroModifiers, MacroDisplay, Alias, Trigger, Button, Profile, TriggerType, TriggerTypes, SubTriggerTypes, convertPattern } from './profile';
@@ -382,7 +384,7 @@ export class Input extends EventEmitter {
          * @type {object}
          */
         _mathjs = create(allWithCustomFunctions, {});
-        const funs = {
+        const functions = {
             esc: '\x1b',
             cr: '\n',
             lf: '\r',
@@ -1367,13 +1369,13 @@ export class Input extends EventEmitter {
                 return;
             }
         };
-        for (let fun in funs) {
-            if (!funs.hasOwnProperty(fun) || typeof funs[fun] !== 'function') {
+        for (let fun in functions) {
+            if (!functions.hasOwnProperty(fun) || typeof functions[fun] !== 'function') {
                 continue;
             }
-            funs[fun].rawArgs = true;
+            functions[fun].rawArgs = true;
         }
-        _mathjs.import(funs, {});
+        _mathjs.import(functions, {});
     }
 
     constructor(client: Client) {
@@ -4632,7 +4634,7 @@ export class Input extends EventEmitter {
                     }
                 }
                 else if (args.length > 1)
-                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'fr\x1b[0;-11;-12mEEZE \x1b[3mnumber\x1b[0;-11;-12m');
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'fr\x1b[0;-11;-12meeze \x1b[3mnumber\x1b[0;-11;-12m');
                 return null;
             //#endregion freeze                
             case 'clr':
@@ -8192,11 +8194,11 @@ export class Input extends EventEmitter {
                     delete states[t];
                 }
                 else if (states[t].type === SubTriggerTypes.Duration) {
-                    //trigger time has pased, delete it and advance
+                    //trigger time has paused, delete it and advance
                     if (states[t].time < Date.now()) {
                         delete states[t];
                         this.advanceTrigger(trigger, parent, t);
-                        //need to reparse as the state is no longer valie and the next state might be
+                        //need to reparse as the state is no longer valid and the next state might be
                         if (!states[t])
                             states[t] = { reParse: true };
                         else
@@ -8568,7 +8570,7 @@ export class Input extends EventEmitter {
             else if (this._TriggerStates[idx].type === SubTriggerTypes.WithinLines)
                 this.clearTriggerState(idx);
             else if (this._TriggerStates[idx].type === TriggerType.LoopExpression) {
-                //infintate until expression is false
+                //infinite until expression is false
                 if (this._TriggerStates[idx].loop === -1)
                     return;
                 //else if uses a line count

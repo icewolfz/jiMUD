@@ -15,7 +15,8 @@
 		"no-global-assign": 0,
 		"no-delete-var": "off",
 		"no-trailing-spaces": "warn",
-		"quotes": ["error", "single"]
+		"quotes": ["error", "single"],
+		"@typescript-eslint/switch-exhaustiveness-check": "warn"
 	},
 	"extends": "eslint:recommended",
 	"plugins": [
