@@ -1057,6 +1057,8 @@ export class Display extends EventEmitter {
         if (this._updating === UpdateType.none)
             return;
         window.requestAnimationFrame(() => {
+            if (this._updating === UpdateType.none)
+                return;            
             if ((this._updating & UpdateType.layout) === UpdateType.layout) {
                 this.updateLayout();
                 this._updating &= ~UpdateType.layout;
@@ -1143,6 +1145,8 @@ export class Display extends EventEmitter {
             }
             else if ((this._updating & UpdateType.scrollbars) === UpdateType.scrollbars) {
                 this.updateScrollbars();
+                this.update();
+                this._updating &= ~UpdateType.update;
                 this._updating &= ~UpdateType.scrollbars;
             }
             if ((this._updating & UpdateType.scrollEnd) === UpdateType.scrollEnd) {
@@ -1821,7 +1825,7 @@ export class Display extends EventEmitter {
                 xPos -= this._indent * this._charWidth;
                 x = Math.trunc(xPos / this._charWidth);
             }
-            text = this.getLineText(y).replace(/ /g, '\u00A0');
+            text = this.getLineText(y);
             const tl = text.length;
             let w = Math.ceil(this.wrapLineWidth(line, 0, x));
             id = this._model.getLineFromID(this._lines[line].id);
@@ -2048,7 +2052,7 @@ export class Display extends EventEmitter {
         if (len - start <= 0) return 0;
         if (start === 0 && len >= this.getLineText(idx).length)
             return this._lines[idx].width;
-        const text = this.getLineText(idx).replace(/ /g, '\u00A0');
+        const text = this.getLineText(idx);
         const line = this._model.getLineFromID(this._lines[idx].id);
 
         const formats = this.lines[line].formats;
@@ -2112,7 +2116,7 @@ export class Display extends EventEmitter {
         if (len === undefined || len === null || len > this.lines[line].text.length)
             len = this.lines[line].text.length;
         if (len - start <= 0) return 0;
-        const text = this.lines[line].text.replace(/ /g, '\u00A0');
+        const text = this.lines[line].text;
         const formats = this.lines[line].formats;
         const fLen = formats.length;
         const tl = text.length;
@@ -2233,8 +2237,6 @@ export class Display extends EventEmitter {
                         e = this.getLineText(sL).length;
                     e = this.wrapLineWidth(sL, s, e);
                     s = this.wrapLineWidth(sL, 0, s);
-                    //e = this.textWidth(this.lines[sL].substring(s, e).replace(/ /g, '\u00A0'));
-                    //s = this.textWidth(this.lines[sL].substring(0, s).replace(/ /g, '\u00A0'));
                 }
                 s += (this._timestamp ? this._timestampWidth : 0);
                 if (this._lines[sL].indent)
@@ -2270,7 +2272,7 @@ export class Display extends EventEmitter {
                 let cls = rangeCls;
                 let cl = 0;
                 if (sL === line) {
-                    const tLine = this.getLineText(line).replace(/ /g, '\u00A0');
+                    const tLine = this.getLineText(line);
                     if (s >= tLine.length)
                         cl = tLine.length;
                     else
@@ -2280,17 +2282,14 @@ export class Display extends EventEmitter {
                     w = mw;
                 else if (sL === line)
                     w = this.wrapLineWidth(line, s) + this._charWidth;
-                //w = this.textWidth(this.lines[sL].substr(s).replace(/ /g, '\u00A0')) + this._charWidth;
                 else if (eL === line)
                     w = this.wrapLineWidth(line, 0, e);
-                //w = this.textWidth(tLine.substring(0, e));
                 else
                     w = this._lines[line].width + this._charWidth;
                 cl = this.wrapLineWidth(line, 0, cl);
                 if (this._lines[line].indent)
                     cl += this._indent * this._charWidth;
                 cl = fl(cl);
-                //cl = this.textWidth(tLine.substring(0, cl));
                 if (this._roundedRanges) {
                     let cr;
                     if (this._lines[line].hr)
@@ -2299,7 +2298,6 @@ export class Display extends EventEmitter {
                         cr = fl((eL === line ? this.wrapLineWidth(line, 0, e) : (this._lines[line].width + this._charWidth)) + this._indent * this._charWidth);
                     else
                         cr = fl(eL === line ? this.wrapLineWidth(line, 0, e) : (this._lines[line].width + this._charWidth));
-                    //cr = fl(eL === line ? this.textWidth(tLine.substring(0, e)) : (this._lines[line].width + this._charWidth));
                     if (line > sL) {
                         let plIndent = this._lines[line - 1].indent ? this._indent * this._charWidth : 0;
                         let pl = fl(plIndent);
@@ -2307,11 +2305,9 @@ export class Display extends EventEmitter {
                             if (this._lines[line - 1].hr)
                                 pl = 0;
                             else if (fl(this.wrapLineWidth(sL, 0, s) + plIndent) >= fl(this._lines[line - 1].width + this._charWidth + plIndent))
-                                //else if (fl(this.textWidth(this.lines[sL].substr(0, s).replace(/ /g, '\u00A0'))) >= fl(this._lines[line - 1].width + this._charWidth))
                                 pl = fl(this._lines[line - 1].width + plIndent) + this._charWidth;
                             else
                                 pl = fl(this.wrapLineWidth(sL, 0, s) + plIndent);
-                            //pl = fl(this.textWidth(this.lines[sL].substring(0, s).replace(/ /g, '\u00A0')));
                         }
                         const pr = this._lines[line - 1].hr ? mw : fl(this._lines[line - 1].width + this._charWidth + plIndent);
 
@@ -2334,7 +2330,6 @@ export class Display extends EventEmitter {
                             nr = mw;
                         else
                             nr = fl(eL === line + 1 ? (this.wrapLineWidth(line + 1, 0, e) + nrIndent) : (this._lines[line + 1].width + this._charWidth + nrIndent));
-                        //nr = fl(eL === line + 1 ? this.textWidth(this.lines[line + 1].substring(0, e).replace(/ /g, '\u00A0')) : (this._lines[line + 1].width + this._charWidth));
                         if (cl === fl(nrIndent))
                             startStyle.bottom = CornerType.Flat;
                         else if (fl(nrIndent) < cl && cl < nr)
@@ -2640,10 +2635,9 @@ export class Display extends EventEmitter {
             idx = this._lines.length - 1;
         const back = [];
         const fore = [];
-        //const text = this.getLineText(idx).replace(/ /g, '\u00A0');
         const id = this._lines[idx].id;
         const line = this._model.getLineFromID(id);
-        const text = this.lines[line].text.replace(/ /g, '\u00A0');
+        const text = this.lines[line].text;
         const formats = this.lines[line].formats;
         let offset = 0;
         let bStyle: any = '';
@@ -3417,8 +3411,7 @@ export class Display extends EventEmitter {
         };
         const formats = this.lines[line].formats;
         const formatsLength = formats.length;
-        const text = this.lines[line].text.replace(/ /g, '\u00A0');
-        const rawText = this.lines[line].text;
+        const text = this.lines[line].text;
         const wrapText = this._wordWrap;
         let endOffset = 0;
         let startOffset = 0;
@@ -3509,7 +3502,7 @@ export class Display extends EventEmitter {
                                 currentWidth = this.textWidth(measureText, 0, currentFormat.style);
                             else
                                 currentWidth = measureText.length * charWidth;
-                            const char = rawText.charAt(currentOffset);
+                            const char = text.charAt(currentOffset);
                             if (char === ' ' || char === '-')
                                 breakOffset = currentOffset;
                             if (lineWidth + currentWidth > width) {
@@ -3560,7 +3553,7 @@ export class Display extends EventEmitter {
                                         }
                                         else
                                             formatEnd = text.length;
-                                        currentLine.width = this.lineWidth(line, currentLine.startOffset, currentOffset - currentLine.startOffset);
+                                        currentLine.width = this.lineWidth(line, currentLine.startOffset, currentOffset);
                                         if (currentLine.indent)
                                             currentLine.width += indent;
                                         currentWidth = 0;
