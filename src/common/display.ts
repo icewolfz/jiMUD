@@ -78,7 +78,6 @@ interface ContextEvent extends PointerEvent {
  * Contains data for a wrapped display line that is the part of a full line, replaces Line interface
  */
 interface WrapLine {
-    line: number;           //The line number
     id: number;             //The line id
     height: number          //the height of the line
     width: number;          //lets cache the width for faster calculations
@@ -1828,7 +1827,7 @@ export class Display extends EventEmitter {
             text = this.getLineText(y);
             const tl = text.length;
             let w = Math.ceil(this.wrapLineWidth(line, 0, x));
-            id = this._model.getLineFromID(this._lines[line].id);
+            id = this._lines[line].id;
             offset = this._lines[line].startOffset;
             //let w = Math.ceil(this.textWidth(text.substr(0, x)));
             if (w > xPos && xPos > 0) {
@@ -3395,7 +3394,6 @@ export class Display extends EventEmitter {
         const wrapLines: WrapLine[] = [];
         const lineID = this._model.getLineID(line);
         let currentLine: WrapLine = {
-            line: line,
             height: charHeight,
             width: 0,
             top: 0,
@@ -3443,7 +3441,6 @@ export class Display extends EventEmitter {
             startOffset = currentFormat.offset;
             if (!currentLine) {
                 currentLine = {
-                    line: line,
                     height: charHeight,
                     width: 0,
                     top: 0,
@@ -3587,7 +3584,6 @@ export class Display extends EventEmitter {
                                 startOffset = currentOffset;
                                 //new line start with image
                                 currentLine = {
-                                    line: line,
                                     height: charHeight,
                                     width: 0,
                                     top: 0,
@@ -3734,7 +3730,6 @@ export class Display extends EventEmitter {
                             lineWidth = left + indent
                             //new line start with image
                             currentLine = {
-                                line: line,
                                 height: 0,
                                 width: 0,
                                 top: 0,
