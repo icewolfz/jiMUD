@@ -2,6 +2,9 @@
 
 ## 1.0.0-alpha.1
 
+- **Changed:**
+  - Update electron 19.1.5 to 19.1.6
+
 ## 1.0.0-alpha
 
 - **New:**
