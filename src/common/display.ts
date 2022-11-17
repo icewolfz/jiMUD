@@ -3516,8 +3516,10 @@ export class Display extends EventEmitter {
                                     currentOffset--;
                                 }
                                 //found a break point in current fragment use it to prevent extra searching
-                                if (breakOffset !== -1 && breakOffset <= currentOffset) {
-                                    currentOffset = breakOffset;
+                                //if break at exact end of line move on to make them line up neater
+                                if (breakOffset !== -1 && breakOffset < currentOffset) {
+                                    //add one to ensure the split character is on the line for nicer layout
+                                    currentOffset = breakOffset + 1;
                                     measureText = text.substring(startOffset, currentOffset);
                                     if (currentFormat.unicode)
                                         currentWidth = this.textWidth(measureText, 0, currentFormat.style);
