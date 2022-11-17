@@ -163,12 +163,12 @@
         //spellchecker:ignore Wakeups
         const { version } = require('../package.json');
         const { shell, ipcRenderer } = require('electron');
-        const { parseTemplate } = require('./js/library');
-        const path = require('path');
+        const { parseTemplate } = require('./js/library');        
 
         var resources;
         //function formatBytes(a,b){if(0==a)return"0 Bytes";var c=1e3,d=b||2,e=["Bytes","KB","MB","GB","TB","PB","EB","ZB","YB"],f=Math.floor(Math.log(a)/Math.log(c));return parseFloat((a/Math.pow(c,f)).toFixed(d))+" "+e[f];}
         $(document).ready(() => {
+            const path = require('path');
             $('#ev').text(process.versions.electron);
             $('#nv').text(process.versions.node);
             $('#cv').text(process.versions.chrome);

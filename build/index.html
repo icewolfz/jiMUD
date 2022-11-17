@@ -1088,7 +1088,7 @@
 
             client.display.on('context-menu', (e) => {
                 client.commandInput.dataset.selStart = client.commandInput.selectionStart;
-                client.commandInput.dataset.selEnd, client.commandInput.selectionEnd;
+                client.commandInput.dataset.selEnd = client.commandInput.selectionEnd;
                 e.preventDefault();
                 var parent = e.srcElement.parentNode;
                 _selword = e.word;
