@@ -1331,6 +1331,10 @@ ipcMain.handle('get-app', async (event, key, ...args) => {
         case 'getFileIconDataUrl':
             let icon = await app.getFileIcon(...args);
             return icon.toDataURL();
+        case 'getVersion':
+            return app.getVersion();
+        case 'getName':
+            return app.getName();
     }
     return null;
 });
@@ -1342,13 +1346,21 @@ ipcMain.on('get-app-sync', async (event, key, ...args) => {
             break;
         case 'addRecentDocument':
             app.addRecentDocument(...args);
+            event.returnValue = null;
             break;
         case 'clearRecentDocuments':
             app.clearRecentDocuments();
+            event.returnValue = null;
             break;
         case 'getFileIconDataUrl':
             let icon = await app.getFileIcon(...args);
             event.returnValue = icon.toDataURL();
+            break;
+        case 'getVersion':
+            event.returnValue = app.getVersion();
+            break;
+        case 'getName':
+            event.returnValue = app.getName();
             break;
     }
 });
@@ -2620,7 +2632,7 @@ async function canCloseAllWindows(warn) {
 function initializeChildWindow(window, link, details, noClose) {
     let file = link;
     if (file.startsWith(URL.pathToFileURL(__dirname).href))
-        file = file.substring(URL.pathToFileURL(__dirname).href.length + 1);    
+        file = file.substring(URL.pathToFileURL(__dirname).href.length + 1);
     require("@electron/remote/main").enable(window.webContents);
     window.removeMenu();
     window.once('ready-to-show', () => {
@@ -3262,7 +3274,7 @@ function getWindowY(y, h) {
 function buildOptions(details, window, settings) {
     let file = details.url;
     if (file.startsWith(URL.pathToFileURL(__dirname).href))
-        file = file.substring(URL.pathToFileURL(__dirname).href.length + 1);    
+        file = file.substring(URL.pathToFileURL(__dirname).href.length + 1);
     options = {
         file: file,
         backgroundColor: '#000',
