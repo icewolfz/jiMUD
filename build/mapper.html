@@ -934,7 +934,7 @@
         function optionsLoaded() {
             save(function () {
                 try {
-                    const client = window.opender.client;
+                    const client = window.opener.client;
                     mapper.memorySavePeriod = client.getOption('mapper.memorySavePeriod');
                     mapper.memory = client.getOption('mapper.memory');
                     mapper.mapFile = window.opener.getMapFile();
