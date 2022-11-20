@@ -1458,6 +1458,23 @@ export function moveCursorToEnd(el) {
     }
 }
 
+export function getCursor(el) {
+    if (!el) return 0;
+    if (typeof el.selectionStart === 'number') {
+        return el.selectionDirection == 'backward' ? el.selectionStart : el.selectionEnd;
+    } else if ((<any>document).selection) {
+        // Set focus on the element
+        el.focus();
+        // To get cursor position, get empty selection range
+        var oSel = (<any>document).selection.createRange();
+        // Move selection start to 0 position
+        oSel.moveStart('character', -el.value.length);
+        // The caret position is selection length
+        return oSel.text.length;
+    }
+    return 0;
+}
+
 export function stringToEnum(str, en, ignoreCase?) {
     if (!str || !en) return 0;
     if (ignoreCase)

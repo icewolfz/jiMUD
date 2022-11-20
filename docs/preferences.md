@@ -88,6 +88,9 @@ Reset - Resetting will revert all settings back to default values
   - `Shift + Enter` add newline on shift+enter
   - `(Ctrl | Shift) + Enter` add a new line on ctrl+enter or shift+enter
   - `Ctrl + Shift + Enter` add a newline on ctrl+shift+enter
+- `Enable tab completion` Enable tab complete, when enabled pressing tab will complete the current word form the last lines of buffered text
+- `Tab completion buffer limit` The number of buffered lines to use for tab completion
+- `Ignore case for tab completion` Ignore letter cashing when searching for matching words
 
 ## Logging
 

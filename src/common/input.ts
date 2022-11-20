@@ -9,7 +9,7 @@
 /// <reference types="mathjs" />
 import { EventEmitter } from 'events';
 import { MacroModifiers, MacroDisplay, Alias, Trigger, Button, Profile, TriggerType, TriggerTypes, SubTriggerTypes, convertPattern } from './profile';
-import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync, splitQuoted, isValidIdentifier, fileSizeSync } from './library';
+import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync, splitQuoted, isValidIdentifier, fileSizeSync, getCursor } from './library';
 import { Client } from './client';
 import { Tests } from './test';
 import { NewLineType, ProfileSaveType, ScriptEngineType } from './types';
@@ -133,6 +133,9 @@ enum TriggerTypeFilter {
  */
 export class Input extends EventEmitter {
     private _historyIdx: number = -1;
+    private _tabIdx: number = -1;
+    private _tabWords: string[] = null;;
+    private _tabSearch: any;
     private _commandHistory: string[];
     private _locked: number = 0;
     private _tests: Tests;
@@ -1440,6 +1443,9 @@ export class Input extends EventEmitter {
                     this.client.commandInput.value = '';
                     this.client.commandInput.select();
                     this._historyIdx = this._commandHistory.length;
+                    this._tabIdx = -1;
+                    this._tabWords = null;
+                    this._tabSearch = null
                     break;
                 case 'ArrowUp': //up
                     if (this._historyIdx === this._commandHistory.length && this.client.commandInput.value.length > 0) {
@@ -1501,10 +1507,66 @@ export class Input extends EventEmitter {
                             }
                             break;
                     }
+                    this._tabIdx = -1;
+                    this._tabWords = null;
+                    this._tabSearch = null
                     event.preventDefault();
                     this.client.sendCommand(null, null, this.client.getOption('allowCommentsFromCommand'));
                     break;
+                case 'Tab':
+                    if (!this.client.getOption('enableTabCompletion') || this.client.commandInput.value.length === 0) return;
+                    if (!event.altKey && !event.ctrlKey && event.shiftKey && !event.metaKey)
+                        this._tabIdx--;
+                    else
+                        this._tabIdx++;
+                    let start = this.client.commandInput.selectionStart;
+                    let end = this.client.commandInput.selectionEnd;
+                    if (this._tabWords === null) {
+                        const cursorPos = getCursor(this.client.commandInput);
+                        let endPos = this.client.commandInput.value.indexOf(' ', cursorPos);
+                        let startPos = this.client.commandInput.value.lastIndexOf(' ', cursorPos - 1);
+                        if (endPos === -1)
+                            endPos = this.client.commandInput.value.length;
+                        if (startPos === -1)
+                            startPos = 0;
+                        else
+                            startPos++;
+                        start = startPos;
+                        end = endPos;
+                        if (start === end)
+                            end++;
+                        const findStr = this.client.commandInput.value.substring(startPos, endPos);
+                        //nothing to find so bail
+                        if (findStr.length === 0) return;
+                        this._tabSearch = { start: startPos, end: endPos, find: findStr.length };
+                        //get all words that start with findStr then reverse as you want last words first as they are the newest
+                        this._tabWords = [...new Set([].concat(...this.client.display.lines.slice(this.client.display.lines.length - this.client.getOption('tabCompletionBufferLimit')).map(line => line.text.split(/(\b)/))).filter(word => word.match(new RegExp(`^${findStr}`, this.client.getOption('ignoreCaseTabCompletion') ? 'i' : ''))))].reverse();
+                    }
+                    else
+                        start -= this._tabSearch.find;
+                    if (this._tabWords.length === 0) return;
+                    if (this._tabIdx < 0) this._tabIdx = this._tabWords.length - 1;
+                    if (this._tabIdx >= this._tabWords.length) this._tabIdx = 0;
+
+                    this.client.commandInput.value = this.client.commandInput.value.substring(0, start)
+                        + this._tabWords[this._tabIdx]
+                        + this.client.commandInput.value.substring(end, this.client.commandInput.value.length);
+                    this.client.commandInput.selectionStart = this._tabSearch.start + this._tabSearch.find;
+                    this.client.commandInput.selectionEnd = this._tabSearch.start + this._tabWords[this._tabIdx].length;
+                    event.preventDefault();
+                    break;
+                default:
+                    this._tabIdx = -1;
+                    this._tabWords = null;
+                    this._tabSearch = null
+                    break;
             }
+        });
+
+        this.client.commandInput.addEventListener('mouseup', event => {
+            this._tabIdx = -1;
+            this._tabWords = null;
+            this._tabSearch = null
         });
         //spell-checker:ignore gamepadconnected gamepaddisconnected
         window.addEventListener('gamepadconnected', (e) => {

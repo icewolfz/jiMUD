@@ -509,7 +509,10 @@ export let SettingList: any[] = [
     ['loadLayout', 0, SettingType.String, ''],
     ['useSingleInstance', 0, SettingType.Boolean, true],
     ['onSecondInstance', 0, SettingType.Number, OnSecondInstance.Show],
-    ['characterManagerDblClick', 0, SettingType.Number, 8]
+    ['characterManagerDblClick', 0, SettingType.Number, 8],
+    ['enableTabCompletion', SettingType.Boolean, true],
+    ['ignoreCaseTabCompletion', 0, SettingType.Boolean, false],
+    ['tabCompletionBufferLimit', 0, SettingType.Number, 100]
 ];
 
 /**
@@ -662,6 +665,9 @@ export class Settings {
 
     public scriptEngineType: ScriptEngineType;
     public initializeScriptEngineOnLoad: boolean;
+    public enableTabCompletion: boolean;
+    public ignoreCaseTabCompletion: boolean;
+    public tabCompletionBufferLimit: number;
 
     /**
      * @depreciated Allow window states have been moved to a separate layout system
@@ -2017,6 +2023,9 @@ export class Settings {
             case 'extensions': return {};
             case 'warnAdvancedSettings': return true;
             case 'showAdvancedSettings': return false;
+            case 'enableTabCompletion': return true;
+            case 'ignoreCaseTabCompletion': return false;
+            case 'tabCompletionBufferLimit': return 100;
         }
         return null;
     }
