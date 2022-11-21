@@ -1555,6 +1555,25 @@ export class Input extends EventEmitter {
                     this.client.commandInput.selectionEnd = this._tabSearch.start + this._tabWords[this._tabIdx].length;
                     event.preventDefault();
                     break;
+                case 'Shift':
+                case 'Control':
+                case 'Meta':
+                case 'Alt':
+                case 'CapsLock':
+                case 'Fn':
+                case 'NumLock':
+                case 'ScrollLock':
+                case 'Super':
+                case 'PageDown':
+                case 'PageUp':
+                case 'End':
+                case 'Home':
+                case 'ArrowLeft':
+                case 'ArrowRight':
+                case 'ContextMenu':
+                    //TODO see if any other keys should not effect tab complete
+                    //Do not effect tab completion
+                    break;
                 default:
                     this._tabIdx = -1;
                     this._tabWords = null;
