@@ -249,7 +249,7 @@ export class Display extends EventEmitter {
 
             if (this.split) this.split.dirty = true;
             //if (!noUpdate)
-                //this.doUpdate(UpdateType.display);
+            //this.doUpdate(UpdateType.display);
             this.doUpdate(UpdateType.display);
         });
 
@@ -1057,7 +1057,7 @@ export class Display extends EventEmitter {
             return;
         window.requestAnimationFrame(() => {
             if (this._updating === UpdateType.none)
-                return;            
+                return;
             if ((this._updating & UpdateType.layout) === UpdateType.layout) {
                 this.updateLayout();
                 this._updating &= ~UpdateType.layout;
@@ -3393,6 +3393,9 @@ export class Display extends EventEmitter {
         indent = (indent || 0) * charWidth;
         const wrapLines: WrapLine[] = [];
         const lineID = this._model.getLineID(line);
+        const rnd = function(num) { return Math.round(num * 100000) / 100000.0 };
+        //const rnd = function (num) { return +num.toFixed(6); };
+        width = rnd(width);
         let currentLine: WrapLine = {
             height: charHeight,
             width: 0,
@@ -3475,7 +3478,7 @@ export class Display extends EventEmitter {
                         currentFormat.width = currentFormat.width || this.textWidth(measureText, font, currentFormat.style);
                     else
                         currentFormat.width = currentFormat.width || measureText.length * charWidth;
-                    if (wrapText && lineWidth + currentFormat.width > width) {
+                    if (wrapText && rnd(lineWidth + currentFormat.width) > width) {
                         lineHeight = Math.max(lineHeight, currentFormat.height || charHeight);
                         let currentOffset = startOffset + 1;
                         currentWidth = 0;
@@ -3502,7 +3505,7 @@ export class Display extends EventEmitter {
                             const char = text.charAt(currentOffset);
                             if (char === ' ' || char === '-')
                                 breakOffset = currentOffset;
-                            if (lineWidth + currentWidth > width) {
+                            if (rnd(lineWidth + currentWidth) > width) {
                                 if (currentOffset === endOffset) {
                                     currentOffset--;
                                     while (currentOffset > 0 && this.isUnicodeModifierCode(text.charCodeAt(currentOffset)))
@@ -3569,8 +3572,8 @@ export class Display extends EventEmitter {
                                         currentLine.width = lineWidth + currentWidth - left;
                                     }
                                 }
-                                if (formatEnd === currentOffset && currentFormat.formatType !== FormatType.Normal)
-                                    formatIdx++;
+                                //if (formatEnd === currentOffset && currentFormat.formatType !== FormatType.Normal)
+                                    //formatIdx++;
                                 currentLine.formatWidths[formatIdx] = currentWidth;
                                 breakOffset = -1;
                                 currentLine.endFormat = formatIdx;
@@ -3604,7 +3607,7 @@ export class Display extends EventEmitter {
                             else {
                                 currentLine.formatWidths[formatIdx] = currentWidth;
                                 //last char so it does not wrap here so add to line width for next block
-                                if (currentOffset === endOffset && startOffset !== currentFormat.offset && formatIdx >= currentIdx)
+                                if (currentOffset === endOffset && startOffset !== currentFormat.offset)
                                     lineWidth += currentWidth;
                             }
                         }
@@ -3744,7 +3747,7 @@ export class Display extends EventEmitter {
                                 id: lineID,
                                 formatWidths: [],
                                 hr: false
-                            }
+                            };
                         }
                     }
                     lineWidth += currentFormat.marginWidth || 0;

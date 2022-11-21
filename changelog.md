@@ -7,6 +7,12 @@
   - `Enable tab completion` Enable tab complete, when enabled pressing tab will complete the current word form the last lines of buffered text
   - `Tab completion buffer limit` The number of buffered lines to use for tab completion
   - `Ignore case for tab completion` Ignore letter cashing when searching for matching words
+- **Fixed:**
+  - Display:
+    - Round word wrap widths to prevent floating point math errors
+    - Fix word wrap calculations for long urls
+    - Fix incorrect selection width for certain text style combinations
+
 - **Changed:**
   - Display: Adjust word wrap break points to have better flow
   - Update electron 19.1.5 to 19.1.6
