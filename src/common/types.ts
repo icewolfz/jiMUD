@@ -104,6 +104,10 @@ export enum OnSecondInstance {
   Nothing = 0, Show = 1, NewConnection = 2, NewWindow = 4
 }
 
+export enum CharacterManagerDblClick {
+  OpenTab = 1, NewTab = 2, NewWindow = 4, Global = 8
+}
+
 /**
    * Enum flag for Font styles.
    * @readonly

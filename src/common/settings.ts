@@ -1,6 +1,6 @@
 //spell-checker:words vscroll, hscroll, askoncancel, askonclose,commandon, cmdfont
 //spell-checker:ignore emoteto, emotetos askonchildren YYYYMMDD Hmmss
-import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect, ProfileSortOrder, OnProfileChange, OnProfileDeleted, TrayMenu, OnSecondInstance, ScriptEngineType, SettingType } from './types';
+import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect, ProfileSortOrder, OnProfileChange, OnProfileDeleted, TrayMenu, OnSecondInstance, CharacterManagerDblClick, ScriptEngineType, SettingType } from './types';
 const path = require('path');
 const fs = require('fs');
 
@@ -509,7 +509,7 @@ export let SettingList: any[] = [
     ['loadLayout', 0, SettingType.String, ''],
     ['useSingleInstance', 0, SettingType.Boolean, true],
     ['onSecondInstance', 0, SettingType.Number, OnSecondInstance.Show],
-    ['characterManagerDblClick', 0, SettingType.Number, 8],
+    ['characterManagerDblClick', 0, SettingType.Number, CharacterManagerDblClick.NewTab],
     ['enableTabCompletion', SettingType.Boolean, true],
     ['ignoreCaseTabCompletion', 0, SettingType.Boolean, false],
     ['tabCompletionBufferLimit', 0, SettingType.Number, 100]
@@ -725,7 +725,7 @@ export class Settings {
     public useSingleInstance: boolean;
     public onSecondInstance: OnSecondInstance;
 
-    public characterManagerDblClick: number;
+    public characterManagerDblClick: CharacterManagerDblClick;
 
     public warnAdvancedSettings: boolean;
     public showAdvancedSettings: boolean;
@@ -2018,7 +2018,7 @@ export class Settings {
             case 'loadLayout': return '';
             case 'useSingleInstance': return true;
             case 'onSecondInstance': return OnSecondInstance.Show;
-            case 'characterManagerDblClick': return 8;
+            case 'characterManagerDblClick': return CharacterManagerDblClick.NewTab;
             case 'windows':
             case 'extensions': return {};
             case 'warnAdvancedSettings': return true;
