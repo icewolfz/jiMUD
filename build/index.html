@@ -1516,6 +1516,7 @@
             });
 
             client.on('notify', (title, message, options) => {
+                if(!client.getOption('enableNotifications')) return;
                 options = options || { silent: true };
                 if (!Object.prototype.hasOwnProperty.call(options, 'silent'))
                     options.silent = true;
@@ -2917,6 +2918,7 @@
                 { menu: ['file', 'disconnect'], options: { enabled: client.connected } },
                 { menu: ['file', 'enableParsing'], options: { checked: client.enableParsing } },
                 { menu: ['file', 'enableTriggers'], options: { checked: client.enableTriggers } },
+                //{ menu: ['file', 'enableNotifications'], options: { checked: client.getOption('enableNotifications') } },
                 { menu: ['file', 'close'], options: { visible: _clients.clients !== 1, enabled: _clients.clients !== 1 } },
                 { menu: ['window', 'close others'], options: { visible: _clients.clients !== 1, enabled: _clients.clients !== 1 } }
             ];
@@ -3727,6 +3729,11 @@
         function toggleTriggers() {
             client.enableTriggers = !client.enableTriggers;
             ipcRenderer.send('update-menuitem', { menu: ['file', 'enableTriggers'], options: { checked: client.enableTriggers } });
+        }
+
+        function toggleNotifications() {
+            client.options.enableNotifications = !client.getOption('enableNotifications');
+            //ipcRenderer.send('update-menuitem', { menu: ['file', 'enableNotifications'], options: { checked: client.getOption('enableNotifications') } });
         }
 
         function copyAsHTML() {

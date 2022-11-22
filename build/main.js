@@ -4129,6 +4129,17 @@ function createMenu(window) {
                         executeScriptClient('toggleTriggers()', window || mWindow, true);
                     }
                 },
+                /*
+                {
+                    label: 'Enable &notifications',
+                    id: 'enableNotifications',
+                    type: 'checkbox',
+                    checked: true,
+                    click: (item, mWindow) => {
+                        executeScriptClient('toggleNotifications()', window || mWindow, true);
+                    }
+                },
+                */
                 {
                     type: 'separator'
                 },

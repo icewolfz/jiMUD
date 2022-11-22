@@ -294,6 +294,7 @@ Controls what is captured into the chat window
   - `New tab` load selected character in new tab in opened window
   - `New window` load selected character in new window
   - `Use global preference` load based on global preference setting, **per mud only**
+- `Enable Notifications` Enable notifications, effects [#notify](commands.md#Miscellaneous) and [client.notify](scripting.md)
 
 ## Advanced > Backup
 

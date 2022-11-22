@@ -512,7 +512,8 @@ export let SettingList: any[] = [
     ['characterManagerDblClick', 0, SettingType.Number, CharacterManagerDblClick.NewTab],
     ['enableTabCompletion', SettingType.Boolean, true],
     ['ignoreCaseTabCompletion', 0, SettingType.Boolean, false],
-    ['tabCompletionBufferLimit', 0, SettingType.Number, 100]
+    ['tabCompletionBufferLimit', 0, SettingType.Number, 100],
+    ['enableNotifications', 0, SettingType.Boolean, true]
 ];
 
 /**
@@ -668,6 +669,7 @@ export class Settings {
     public enableTabCompletion: boolean;
     public ignoreCaseTabCompletion: boolean;
     public tabCompletionBufferLimit: number;
+    public enableNotifications: boolean;
 
     /**
      * @depreciated Allow window states have been moved to a separate layout system
@@ -2026,6 +2028,7 @@ export class Settings {
             case 'enableTabCompletion': return true;
             case 'ignoreCaseTabCompletion': return false;
             case 'tabCompletionBufferLimit': return 100;
+            case 'enableNotifications': return true;
         }
         return null;
     }
