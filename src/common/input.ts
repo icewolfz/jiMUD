@@ -1535,12 +1535,14 @@ export class Input extends EventEmitter {
                         end = endPos;
                         if (start === end)
                             end++;
-                        const findStr = this.client.commandInput.value.substring(startPos, endPos);
+                        let findStr = this.client.commandInput.value.substring(startPos, endPos);
                         //nothing to find so bail
                         if (findStr.length === 0) return;
                         this._tabSearch = { start: startPos, end: endPos, find: findStr.length };
+                        findStr = findStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        const regSearch = new RegExp(`^${findStr}`, this.client.getOption('ignoreCaseTabCompletion') ? 'i' : '');
                         //get all words that start with findStr then reverse as you want last words first as they are the newest
-                        this._tabWords = [...new Set([].concat(...this.client.display.lines.slice(this.client.display.lines.length - this.client.getOption('tabCompletionBufferLimit')).map(line => line.text.split(/(\b)/))).filter(word => word.match(new RegExp(`^${findStr}`, this.client.getOption('ignoreCaseTabCompletion') ? 'i' : ''))).reverse())];
+                        this._tabWords = [...new Set([].concat(...this.client.display.lines.slice(this.client.display.lines.length - this.client.getOption('tabCompletionBufferLimit')).map(line => line.text.split(/\s/))).filter(word => word.match(regSearch)).reverse())];
                     }
                     else
                         start -= this._tabSearch.find;

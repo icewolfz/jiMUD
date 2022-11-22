@@ -2239,3 +2239,7 @@ export function boldUnicodeText(text) {
     };
     return text.replace(/[A-Za-z]/g, b);
 }
+
+export function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+}
