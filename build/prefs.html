@@ -461,6 +461,7 @@
                     case 'echo-8':
                     case 'echo-2':
                     case 'echo-4':
+                        _settings.echo = 0;
                         if ($('#echo-8').prop('checked'))
                             _settings.echo |= 8;
                         if ($('#echo-2').prop('checked'))
@@ -899,7 +900,7 @@
 
             $('#echo-8').prop('checked', (getSettingValue('echo') & 8) === 8);
             $('#echo-2').prop('checked', (getSettingValue('echo') & 2) === 2);
-            $('#echo-4').prop('checked', (getSettingValue('echo') & 4) === 8);
+            $('#echo-4').prop('checked', (getSettingValue('echo') & 4) === 4);
 
             $('#logWhat-html').prop('checked', (getSettingValue('logWhat') & 1) === 1);
             $('#logWhat-text').prop('checked', (getSettingValue('logWhat') & 2) === 2);

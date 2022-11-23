@@ -3642,7 +3642,7 @@
         function focusClient() {
             setTimeout(() => {
                 for (_window in _windows) {
-                    if (!Object.prototype.hasOwnProperty.call(_windows, _window) || !_windows[_window] || _windows[_window].closed)
+                    if (!Object.prototype.hasOwnProperty.call(_windows, _window) || !_windows[_window] || _windows[_window].closed || !window.isVisible())
                         continue;
                     if (_windows[_window].document.readyState !== 'complete') {
                         focusClient();
