@@ -8,6 +8,10 @@
   - `Tab completion buffer limit` The number of buffered lines to use for tab completion
   - `Ignore case for tab completion` Ignore letter cashing when searching for matching words
   - `Enable Notifications` Enable notifications, effects [#notify](commands.md#Miscellaneous) and [client.notify](scripting.md)
+  - `Echo` Determine what echos to the screen
+    - `Triggers` Echo trigger pattern to screen if fired, **Warning** this may cause infinite looping if pattern is exact matching
+    - `Scripts` Echo script type values to the screen before they are executed
+    - `Commands` Echo #commands to the screen
 - **Fixed:**
   - Display:
     - Round word wrap widths to prevent floating point math errors

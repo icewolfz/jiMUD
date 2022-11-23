@@ -108,6 +108,10 @@ export enum CharacterManagerDblClick {
   OpenTab = 1, NewTab = 2, NewWindow = 4, Global = 8
 }
 
+export enum Echo {
+  None = 0, Triggers = 8, Scripts = 2, Commands = 4
+}
+
 /**
    * Enum flag for Font styles.
    * @readonly

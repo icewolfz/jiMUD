@@ -2689,6 +2689,7 @@
                 });
                 switch (item.style) {
                     case 1:
+                        client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
                         try {
                             ret = client.parseOutgoing(item.value);
                         }
@@ -2701,8 +2702,11 @@
                         }
                         break;
                     case 2:
+                        if((client.getOption('echo') & 2) === 2)
+                            client.echo(item.value, -7, -8, true, true);
                         /*jslint evil: true */
                         var f = new Function('try { ' + item.value + '\n} catch (e) { if(this.getOption(\'showScriptErrors\') this.error(e);}');
+                        client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
                         try {
                             ret = f.apply(client);
                         }
@@ -2713,7 +2717,7 @@
                             client._input._stack.pop();
                             client._input.vStackPop();
                         }
-                        if (ret)
+                        if (typeof ret === 'string')
                             ret = client.parseOutgoing(ret);
                         break;
                     default:
@@ -2770,6 +2774,8 @@
                         }
                         break;
                     case 2:
+                        if((client.getOption('echo') & 2) === 2)
+                            client.echo(button.value, -7, -8, true, true);
                         /*jslint evil: true */
                         var f = new Function('try { ' + button.value + '\n} catch (e) { if(this.getOption(\'showScriptErrors\') this.error(e);}');
                         client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });

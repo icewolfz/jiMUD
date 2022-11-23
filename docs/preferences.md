@@ -227,6 +227,10 @@ Controls what is captured into the chat window
   - `Fast` Fast engine is the fastest to load, supports all complex types and numbers but string operations are not supported, eg "a" == "a" will error
   - `Simple` A simpler version of the full engine that loads faster but only supports basic numbers and string operations
 - `Initialize expression engine on load` Initialize the expression engine on client load instead of on first use, enabling this can cause client to load slower but can speed up first use of an expression
+- `Echo` Determine what echos to the screen
+  - `Triggers` Echo trigger pattern to screen if fired, **Warning** this may cause infinite looping if pattern is exact matching
+  - `Scripts` Echo script type values to the screen before they are executed
+  - `Commands` Echo #commands to the screen
 
 ## Scripting > Special characters
 

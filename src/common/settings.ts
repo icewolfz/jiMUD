@@ -1,6 +1,6 @@
 //spell-checker:words vscroll, hscroll, askoncancel, askonclose,commandon, cmdfont
 //spell-checker:ignore emoteto, emotetos askonchildren YYYYMMDD Hmmss
-import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect, ProfileSortOrder, OnProfileChange, OnProfileDeleted, TrayMenu, OnSecondInstance, CharacterManagerDblClick, ScriptEngineType, SettingType } from './types';
+import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect, ProfileSortOrder, OnProfileChange, OnProfileDeleted, TrayMenu, OnSecondInstance, CharacterManagerDblClick, ScriptEngineType, SettingType, Echo } from './types';
 const path = require('path');
 const fs = require('fs');
 
@@ -513,7 +513,8 @@ export let SettingList: any[] = [
     ['enableTabCompletion', SettingType.Boolean, true],
     ['ignoreCaseTabCompletion', 0, SettingType.Boolean, false],
     ['tabCompletionBufferLimit', 0, SettingType.Number, 100],
-    ['enableNotifications', 0, SettingType.Boolean, true]
+    ['enableNotifications', 0, SettingType.Boolean, true],
+    ['echo', 0, SettingType.Number, Echo.None]
 ];
 
 /**
@@ -731,6 +732,7 @@ export class Settings {
 
     public warnAdvancedSettings: boolean;
     public showAdvancedSettings: boolean;
+    public echo: Echo;
 
     public static load(file) {
         try {
@@ -2029,6 +2031,7 @@ export class Settings {
             case 'ignoreCaseTabCompletion': return false;
             case 'tabCompletionBufferLimit': return 100;
             case 'enableNotifications': return true;
+            case 'echo': return Echo.None;
         }
         return null;
     }

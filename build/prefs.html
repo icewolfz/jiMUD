@@ -458,6 +458,16 @@
                         if ($('#backup-load-windows').prop('checked'))
                             _settings.backupLoad |= 16;
                         break;
+                    case 'echo-8':
+                    case 'echo-2':
+                    case 'echo-4':
+                        if ($('#echo-8').prop('checked'))
+                            _settings.echo |= 8;
+                        if ($('#echo-2').prop('checked'))
+                            _settings.echo |= 2;
+                        if ($('#echo-4').prop('checked'))
+                            _settings.echo |= 4;
+                        break;
                     case 'profiles-sortOrder-alpha':
                     case 'profiles-sortOrder-priority':
                     case 'profiles-sortOrder-index':
@@ -886,6 +896,10 @@
             $('#backup-save-profiles').prop('checked', (getSettingValue('backupSave') & 4) === 4);
             $('#backup-save-settings').prop('checked', (getSettingValue('backupSave') & 8) === 8);
             $('#backup-save-windows').prop('checked', (getSettingValue('backupSave') & 16) === 16);
+
+            $('#echo-8').prop('checked', (getSettingValue('echo') & 8) === 8);
+            $('#echo-2').prop('checked', (getSettingValue('echo') & 2) === 2);
+            $('#echo-4').prop('checked', (getSettingValue('echo') & 4) === 8);
 
             $('#logWhat-html').prop('checked', (getSettingValue('logWhat') & 1) === 1);
             $('#logWhat-text').prop('checked', (getSettingValue('logWhat') & 2) === 2);
@@ -2442,7 +2456,7 @@
                         <label class="control-label">
                             <input type="checkbox" id="enableTabCompletion" /> Enable tab completion
                         </label>
-                    </div>  
+                    </div>
 
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
@@ -2456,7 +2470,7 @@
                         <label class="control-label">
                             <input type="checkbox" id="ignoreCaseTabCompletion" /> Ignore case for tab completion
                         </label>
-                    </div>                    
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="logging">
 
@@ -3050,6 +3064,20 @@
                             <input type="checkbox" id="initializeScriptEngineOnLoad" /> Initialize expression engine on load
                         </label>
                     </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">Echo</label>
+                        <div class="btn-group" data-toggle="buttons">
+                            <label class="btn btn-default btn-xs">
+                                <input type="checkbox" id="echo-8"> Triggers
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="checkbox" id="echo-2"> Scripts
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="checkbox" id="echo-4"> Commands
+                            </label>
+                        </div>
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="advanced">
                     <div class="col-sm-6 form-group global">
@@ -3173,7 +3201,7 @@
                         <label class="control-label">
                             <input type="checkbox" id="enableNotifications" /> Enable Notifications
                         </label>
-                    </div>                      
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="backup">
                     <div class="col-sm-12 form-group" style="padding: 0px;">

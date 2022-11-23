@@ -1934,6 +1934,8 @@ export class Input extends EventEmitter {
         let min;
         switch (fun.toLowerCase()) {
             case 'testfile':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 args = this.parseInline(args.join(' '));
                 if (!args || args.length === 0)
                     throw new Error('Invalid syntax use ' + cmdChar + 'testfile file');
@@ -1949,6 +1951,8 @@ export class Input extends EventEmitter {
                 this.client.print(`Time: ${p - i}\n`, true);
                 return null;
             case 'testspeedfile':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 args = this.parseInline(args.join(' '));
                 items = [];
                 if (!args || args.length === 0)
@@ -1979,6 +1983,8 @@ export class Input extends EventEmitter {
                 this.client.options.enableCommands = n;
                 return null;
             case 'testspeedfiler':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 args = this.parseInline(args.join(' '));
                 items = [];
                 if (!args || args.length === 0)
@@ -2008,12 +2014,16 @@ export class Input extends EventEmitter {
             //spell-checker:ignore chatprompt chatp
             case 'chatprompt':
             case 'chatp':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 args = this.parseInline(args.join(' '));
                 if ((<any>this.client).sendChat)
                     (<any>this.client).sendChat(args);
                 return null;
             case 'chat':
             case 'ch':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 args = this.parseInline(args.join(' ') + '\n');
                 if ((<any>this.client).sendChat)
                     (<any>this.client).sendChat(args);
@@ -2022,6 +2032,8 @@ export class Input extends EventEmitter {
             case 'unaction':
             case 'untrigger':
             case 'unt':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 profile = null;
                 name = null;
                 reload = true;
@@ -2096,6 +2108,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'suspend':
             case 'sus':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 switch (args.length) {
                     case 0:
                         tmp = this.client.alarms;
@@ -2125,6 +2139,8 @@ export class Input extends EventEmitter {
                 }
             case 'resume':
             case 'resu':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 switch (args.length) {
                     case 0:
                         if (this._lastSuspend === -1)
@@ -2152,6 +2168,8 @@ export class Input extends EventEmitter {
             case 'ac':
             case 'trigger':
             case 'tr':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 //#region trigger
                 item = {
                     profile: null,
@@ -2310,6 +2328,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'event':
             case 'ev':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 //#region event
                 profile = null;
                 reload = true;
@@ -2495,6 +2515,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'unevent':
             case 'une':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 //#region unevent
                 if (args.length === 0)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'une\x1b[0;-11;-12mvent name or \x1b[4m' + cmdChar + 'une\x1b[0;-11;-12mvent {name} \x1b[3mprofile\x1b[0;-11;-12m');
@@ -2552,6 +2574,8 @@ export class Input extends EventEmitter {
             //#endregion
             case 'button':
             case 'bu':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 //#region button
                 //#button name caption {commands} {icon} options profile
                 //#button name|index
@@ -2773,6 +2797,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'unbutton':
             case 'unb':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 //#region unbutton
                 if (args.length === 0)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'unb\x1b[0;-11;-12mtton name or \x1b[4m' + cmdChar + 'unb\x1b[0;-11;-12mtton {name} \x1b[3mprofile\x1b[0;-11;-12m');
@@ -2839,6 +2865,8 @@ export class Input extends EventEmitter {
             //#endregion button
             case 'alarm':
             case 'ala':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 //#region alarm
                 //spell-checker:ignore timepattern
                 profile = null;
@@ -3002,6 +3030,8 @@ export class Input extends EventEmitter {
             //#endregion alarm
             case 'ungag':
             case 'ung':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length > 0)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'ung\x1b[0;-11;-12mag number or \x1b[4m' + cmdChar + 'ung\x1b[0;-11;-12mag');
                 if (this._gagID.length) {
@@ -3012,6 +3042,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'gag':
             case 'ga':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 //#region gag
                 if (args.length === 0) {
                     //if one exist for this line remove it and replace it with new one
@@ -3077,6 +3109,8 @@ export class Input extends EventEmitter {
             //#endregion gag
             case 'wait':
             case 'wa':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 //filter out empty arguments to avoid trailing spaces
                 args = args.filter(a => a);
                 if (args.length === 0 || args.length > 1)
@@ -3089,18 +3123,26 @@ export class Input extends EventEmitter {
                 return i;
             case 'showclient':
             case 'showcl':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 this.client.show();
                 return null;
             case 'hideclient':
             case 'hidecl':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 this.client.hide();
                 return null;
             case 'toggleclient':
             case 'togglecl':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 this.client.toggle();
                 return null;
             case 'raiseevent':
             case 'raise':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (this.client.getOption('parseDoubleQuotes'))
                     args.forEach((a) => {
                         return a.replace(/^\"(.*)\"$/g, (v, e, w) => {
@@ -3122,6 +3164,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'cl':
             case 'close':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (this.client.getOption('parseDoubleQuotes'))
                     args.forEach((a) => {
                         return a.replace(/^\"(.*)\"$/g, (v, e, w) => {
@@ -3142,10 +3186,14 @@ export class Input extends EventEmitter {
                     (<any>this.client).closeWindow(this.stripQuotes(this.parseInline(args[0])));
                 return null;
             case 'id':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 this.client.echo('Client ID: ' + getId(), -7, -8, true, true);
                 return null
             case 'window':
             case 'win':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (this.client.getOption('parseDoubleQuotes'))
                     args.forEach((a) => {
                         return a.replace(/^\"(.*)\"$/g, (v, e, w) => {
@@ -3170,6 +3218,8 @@ export class Input extends EventEmitter {
             case 'tab':
             case 'conn':
             case 'connection':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (this.client.getOption('parseDoubleQuotes'))
                     args.forEach((a) => {
                         return a.replace(/^\"(.*)\"$/g, (v, e, w) => {
@@ -3197,6 +3247,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'na':
             case 'name':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (this.client.getOption('parseDoubleQuotes'))
                     args.forEach((a) => {
                         return a.replace(/^\"(.*)\"$/g, (v, e, w) => {
@@ -3232,6 +3284,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'clearna':
             case 'clearname':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (this.client.getOption('parseDoubleQuotes'))
                     args.forEach((a) => {
                         return a.replace(/^\"(.*)\"$/g, (v, e, w) => {
@@ -3261,6 +3315,8 @@ export class Input extends EventEmitter {
                 }
                 return null;
             case 'all':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length === 0)
                     throw new Error('Invalid syntax use ' + cmdChar + 'all {commands}');
                 if (args[0].match(/^\{.*\}$/g))
@@ -3272,6 +3328,8 @@ export class Input extends EventEmitter {
                 (<any>this.client).sendAllBackground(this.parseInline(this.stripQuotes(args)), null, this.client.getOption('allowCommentsFromCommand'));
                 return null;
             case 'to':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length < 2)
                     throw new Error('Invalid syntax use ' + cmdChar + 'to name|id {commands}');
                 name = args[0];
@@ -3289,6 +3347,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'raisedelayed':
             case 'raisede':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length < 2)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'raisede\x1b[0;-11;-12mlayed milliseconds name or \x1b[4m' + cmdChar + 'raisede\x1b[0;-11;-12mlayed milliseconds name arguments');
                 i = parseInt(this.stripQuotes(this.parseInline(args[0])), 10);
@@ -3317,6 +3377,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'notify':
             case 'not':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length === 0)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'not\x1b[0;-11;-12mify title \x1b[3mmessage icon\x1b[0;-11;-12m');
                 else {
@@ -3335,6 +3397,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'idle':
             case 'idletime':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (!this.client.lastSendTime)
                     this.client.echo('Not connected', -7, -8, true, true);
                 else
@@ -3342,6 +3406,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'connect':
             case 'connecttime':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (!this.client.connectTime) {
                     if (this.client.disconnectTime)
                         this.client.echo('Disconnected since: ' + new moment(this.client.disconnectTime).format('MM/DD/YYYY hh:mm:ss A'), -7, -8, true, true);
@@ -3353,13 +3419,19 @@ export class Input extends EventEmitter {
                 return null;
             case 'beep':
             case 'be':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 this.client.beep();
                 return null;
             case 'version':
             case 've':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 this.client.echo(this.client.telnet.terminal + ' v' + this.client.version, -7, -8, true, true);
                 return null;
             case 'soundinfo':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (this.client.MSP.SoundState.playing) {
                     this.client.echo('Playing Sound - ' + this.client.MSP.SoundState.file + ' - ' + buzz.toTimer(this.client.MSP.SoundState.sound.getTime()) + '/' + buzz.toTimer(this.client.MSP.SoundState.sound.getDuration()), -7, -8, true, true);
                 }
@@ -3367,6 +3439,8 @@ export class Input extends EventEmitter {
                     this.client.echo('No sound currently playing.', -7, -8, true, true);
                 return null;
             case 'musicinfo':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (this.client.MSP.MusicState.playing)
                     this.client.echo('Playing Music - ' + this.client.MSP.MusicState.file + ' -  ' + buzz.toTimer(this.client.MSP.MusicState.sound.getTime()) + '/' + buzz.toTimer(this.client.MSP.MusicState.sound.getDuration()), -7, -8, true, true);
                 else
@@ -3374,6 +3448,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'playmusic':
             case 'playm':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 args = this.parseInline(args.join(' '));
                 tmp = { off: false, file: '', url: '', volume: 100, repeat: 1, priority: 50, type: '', continue: true };
                 i = args.lastIndexOf('/');
@@ -3387,6 +3463,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'playsound':
             case 'plays':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 args = this.parseInline(args.join(' '));
                 tmp = { off: false, file: '', url: '', volume: 100, repeat: 1, priority: 50, type: '', continue: true };
                 i = args.lastIndexOf('/');
@@ -3400,25 +3478,35 @@ export class Input extends EventEmitter {
                 return null;
             case 'stopmusic':
             case 'stopm':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 this.client.MSP.MusicState.close();
                 return null;
             case 'stopsound':
             case 'stops':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 this.client.MSP.SoundState.close();
                 return null;
             case 'stopallsound':
             case 'stopa':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 this.client.MSP.MusicState.close();
                 this.client.MSP.SoundState.close();
                 return null;
-            case 'showprompt': f
+            case 'showprompt':
             case 'showp':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 args = this.parseInline(args.join(' '));
                 this.client.telnet.receivedData(Buffer.from(args), true, true);
                 this.client.telnet.prompt = true;
                 return null;
             case 'show':
             case 'sh':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 args = this.parseInline(args.join(' ') + '\n');
                 this.client.telnet.receivedData(Buffer.from(args), true, true);
                 return null;
@@ -3426,6 +3514,8 @@ export class Input extends EventEmitter {
             case 'sayp':
             case 'echoprompt':
             case 'echop':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 args = this.parseInline(args.join(' '));
                 this.client.print('\x1b[-7;-8m' + args + '\x1b[0m', false);
                 return null;
@@ -3433,6 +3523,8 @@ export class Input extends EventEmitter {
             case 'sa':
             case 'echo':
             case 'ec':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 args = this.parseInline(args.join(' '));
                 if (this.client.telnet.prompt)
                     this.client.print('\n\x1b[-7;-8m' + args + '\x1b[0m\n', false);
@@ -3441,6 +3533,8 @@ export class Input extends EventEmitter {
                 this.client.telnet.prompt = false;
                 return null;
             case 'print':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 i = this.client.enableTriggers;
                 this.client.enableTriggers = false;
                 args = this.parseInline(args.join(' '));
@@ -3453,6 +3547,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'printprompt':
             case 'printp':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 i = this.client.enableTriggers;
                 this.client.enableTriggers = false;
                 args = this.parseInline(args.join(' '));
@@ -3461,6 +3557,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'alias':
             case 'al':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length === 0)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'al\x1b[0;-11;-12mias name value or \x1b[4m' + cmdChar + 'al\x1b[0;-11;-12mias name {value} \x1b[3mprofile\x1b[0;-11;-12m');
                 else if (args.length === 1)
@@ -3533,6 +3631,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'unalias':
             case 'una':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length === 0)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'una\x1b[0;-11;-12mlias name or \x1b[4m' + cmdChar + 'una\x1b[0;-11;-12mlias {name} \x1b[3mprofile\x1b[0;-11;-12m');
                 else {
@@ -3597,6 +3697,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'setsetting':
             case 'sets':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length === 0)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'sets\x1b[0;-11;-12metting name value');
                 else if (args.length === 1)
@@ -3680,6 +3782,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'getsetting':
             case 'gets':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length === 0)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'gets\x1b[0;-11;-12metting name');
                 else {
@@ -3748,6 +3852,8 @@ export class Input extends EventEmitter {
                 }
                 return null;
             case 'profilelist':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 this.client.echo('\x1b[4mProfiles:\x1b[0m', -7, -8, true, true);
                 p = path.join(parseTemplate('{data}'), 'profiles');
                 if (isDirSync(p)) {
@@ -3765,6 +3871,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'profile':
             case 'pro':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length === 0)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'pro\x1b[0;-11;-12mfile name or \x1b[4m' + cmdChar + 'pro\x1b[0;-11;-12mfile name enable/disable');
                 else if (args.length === 1) {
@@ -3827,6 +3935,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'color':
             case 'co':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length > 1 && args.length < 4) {
                     item = {
                         profile: null,
@@ -3989,6 +4099,8 @@ export class Input extends EventEmitter {
                 }
                 return null;
             case 'cw':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 trigger = this.stack.regex;
                 if (args.length > 1 && args.length < 4) {
                     item = {
@@ -4205,6 +4317,8 @@ export class Input extends EventEmitter {
                 }
                 return null;
             case 'pcol':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length < 1 || args.length > 5)
                     throw new Error('Invalid syntax use ' + cmdChar + 'pcol color \x1b[3mXStart, XEnd, YStart, YEnd\x1b[0;-11;-12m');
                 if (args.length > 1) {
@@ -4355,6 +4469,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'highlight':
             case 'hi':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length > 0 && args.length < 2) {
                     item = {
                         profile: null,
@@ -4381,6 +4497,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'break':
             case 'br':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'br\x1b[0;-11;-12meak\x1b[0;-11;-12m');
                 if (!this.loops.length)
@@ -4392,6 +4510,8 @@ export class Input extends EventEmitter {
                 return -1;
             case 'continue':
             case 'cont':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'cont\x1b[0;-11;-12minue\x1b[0;-11;-12m');
                 if (!this.loops.length)
@@ -4399,6 +4519,8 @@ export class Input extends EventEmitter {
                 this.stack.continue = true;
                 return -2;
             case 'if':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (!args.length || args.length > 3)
                     throw new Error('Invalid syntax use ' + cmdChar + 'if {expression} {true-command} \x1b[3m{false-command}\x1b[0;-11;-12m');
                 if (args[0].match(/^\{[\s\S]*\}$/g))
@@ -4419,6 +4541,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'case':
             case 'ca':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (!args.length || args.length < 2)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'ca\x1b[0;-11;-12mse\x1b[0;-11;-12m index {command 1} \x1b[3m{command n}\x1b[0;-11;-12m');
                 if (args[0].match(/^\{[\s\S]*\}$/g))
@@ -4436,6 +4560,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'switch':
             case 'sw':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (!args.length || args.length < 2)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'sw\x1b[0;-11;-12mitch\x1b[0;-11;-12m (expression) {command} \x1b[3m(expression) {command} ... {else_command}\x1b[0;-11;-12m');
                 if (args.length % 2 === 1)
@@ -4466,6 +4592,8 @@ export class Input extends EventEmitter {
                 return null
             case 'loop':
             case 'loo':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length < 2)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'loo\x1b[0;-11;-12mp\x1b[0;-11;-12m range {commands}');
                 n = this.parseInline(args.shift()).split(',');
@@ -4489,6 +4617,8 @@ export class Input extends EventEmitter {
                 return this.executeForLoop(tmp, i, args);
             case 'repeat':
             case 'rep':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length < 2)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'rep\x1b[0;-11;-12meat\x1b[0;-11;-12m expression {commands}');
                 i = args.shift();
@@ -4504,6 +4634,8 @@ export class Input extends EventEmitter {
                     return this.executeForLoop((-i) + 1, 1, args);
                 return this.executeForLoop(0, i, args);
             case 'until':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length < 2)
                     throw new Error('Invalid syntax use ' + cmdChar + 'until expression {commands}');
                 i = args.shift();
@@ -4533,6 +4665,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'while':
             case 'wh':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length < 2)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'wh\x1b[0;-11;-12mile expression {commands}');
                 i = args.shift();
@@ -4562,6 +4696,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'forall':
             case 'fo':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length < 2)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'fo\x1b[0;-11;-12mrall stringlist {commands}');
                 i = args.shift();
@@ -4594,6 +4730,8 @@ export class Input extends EventEmitter {
             case 'variable':
             case 'var':
             case 'va':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length === 0) {
                     i = Object.keys(this.client.variables);
                     al = i.length;
@@ -4627,6 +4765,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'unvar':
             case 'unv':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length !== 1)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'unv\x1b[0;-11;-12mar name ');
                 i = args.shift();
@@ -4637,6 +4777,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'add':
             case 'ad':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length < 2)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'ad\x1b[0;-11;-12md name value');
                 i = args.shift();
@@ -4658,6 +4800,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'math':
             case 'mat':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length < 2)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'mat\x1b[0;-11;-12mh name value');
                 i = args.shift();
@@ -4674,6 +4818,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'evaluate':
             case 'eva':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length === 0)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'eva\x1b[0;-11;-12mluate expression');
                 args = this.evaluate(this.parseInline(args.join(' ')));
@@ -4689,6 +4835,8 @@ export class Input extends EventEmitter {
                 return null
             case 'freeze':
             case 'fr':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 //#region freeze
                 if (args.length === 0) {
                     this.scrollLock = !this.scrollLock;
@@ -4720,6 +4868,8 @@ export class Input extends EventEmitter {
                 return null;
             //#endregion freeze                
             case 'clr':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length)
                     throw new Error('Invalid syntax use ' + cmdChar + 'CLR');
                 //nothing to clear so just bail
@@ -4739,11 +4889,15 @@ export class Input extends EventEmitter {
                 this.client.print(tmp.join(''), true);
                 return null;
             case 'fire':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 args = this.parseInline(args.join(' ') + '\n');
                 this.ExecuteTriggers(TriggerTypes.Regular | TriggerTypes.Pattern | TriggerTypes.LoopExpression, args, args, false, false);
                 return null;
             case 'state': //#STATE id state profile
             case 'sta':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 //setup args for easy use
                 args = args.map(m => {
                     if (!m || !m.length)
@@ -4888,6 +5042,8 @@ export class Input extends EventEmitter {
                 this.client.echo('Trigger state set to ' + trigger.state + '.', -7, -8, true, true);
                 return null;
             case 'set':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 //#SET pattern|name state value profile
                 //setup args for easy use
                 args = args.map(m => {
@@ -5102,6 +5258,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'condition':
             case 'cond':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 //#region condition
                 item = {
                     profile: null,
@@ -5277,10 +5435,14 @@ export class Input extends EventEmitter {
                 //#endregion
                 return null;
             case 'cr':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 this.client.sendBackground('\n');
                 return null;
             case 'send':
             case 'se':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length === 0)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'se\x1b[0;-11;-12mnd file \x1b[3mprefix suffix\x1b[0;-11;-12m or \x1b[4m' + cmdChar + 'se\x1b[0;-11;-12mnd text');
                 tmp = this.stripQuotes(this.parseInline(args[0]));
@@ -5305,6 +5467,8 @@ export class Input extends EventEmitter {
                 }
                 return null
             case 'sendraw':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length === 0)
                     throw new Error('Invalid syntax use ' + cmdChar + 'sendraw text or ' + cmdChar + 'sendraw file \x1b[3mprefix suffix\x1b[0;-11;-12m');
                 tmp = this.stripQuotes(this.parseInline(args[0]));
@@ -5332,6 +5496,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'sendprompt':
             case 'sendp':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length === 0)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'sendp\x1b[0;-11;-12mrompt text');
                 args = args.join(' ');
@@ -5341,9 +5507,13 @@ export class Input extends EventEmitter {
                 return null;
             case 'character':
             case 'char':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 this.client.sendRaw(window.$character || '');
                 return null;
             case 'speak':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length === 0)
                     throw new Error('Invalid syntax use ' + cmdChar + 'speak text');
                 args = args.join(' ');
@@ -5354,29 +5524,41 @@ export class Input extends EventEmitter {
                     window.speechSynthesis.speak(new SpeechSynthesisUtterance(args));
                 return null;
             case 'speakstop':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length !== 0)
                     throw new Error('Invalid syntax use ' + cmdChar + 'speakstop');
                 window.speechSynthesis.cancel();
                 return null;
             case 'speakpause':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length !== 0)
                     throw new Error('Invalid syntax use ' + cmdChar + 'speakpause');
                 window.speechSynthesis.pause();
                 return null;
             case 'speakresume':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length !== 0)
                     throw new Error('Invalid syntax use ' + cmdChar + 'speakresume');
                 window.speechSynthesis.resume();
                 return null;
             case 'comment':
             case 'comm':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 return null;
             case 'noop':
             case 'no':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 if (args.length)
                     this.parseInline(args.join(' '));
                 return null;
             case 'temp':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 //#region temp
                 item = {
                     profile: null,
@@ -5532,6 +5714,8 @@ export class Input extends EventEmitter {
                 return null;
             case 'wrap':
             case 'wr':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
                 //filter out empty arguments to avoid trailing spaces
                 args = args.filter(a => a);
                 if (args.length > 1)
@@ -5556,6 +5740,8 @@ export class Input extends EventEmitter {
                 return null;
         }
         if (fun.match(/^[-|+]?\d+$/)) {
+            if ((this.client.getOption('echo') & 4) === 4)
+                this.client.echo(raw, -3, -4, true, true);
             i = parseInt(fun, 10);
             if (args.length === 0)
                 throw new Error('Invalid syntax use ' + cmdChar + 'nnn commands');
@@ -5568,8 +5754,11 @@ export class Input extends EventEmitter {
         }
         const data = { name: fun, args: args, raw: raw, handled: false, return: null };
         this.client.emit('function', data);
-        if (data.handled)
+        if (data.handled) {
+            if ((this.client.getOption('echo') & 4) === 4)
+                this.client.echo(raw, -3, -4, true, true);
             return data.return;
+        }
         return data.raw + '\n';
     }
 
@@ -7871,6 +8060,8 @@ export class Input extends EventEmitter {
                     this._stack.pop();
                     break;
                 case 2:
+                    if ((this.client.getOption('echo') & 2) === 2)
+                        this.client.echo(alias.value, -7, -8, true, true);
                     /*jslint evil: true */
                     const named = this.GetNamedArguments(alias.params, args);
                     if (named)
@@ -7953,6 +8144,8 @@ export class Input extends EventEmitter {
                     }
                     break;
                 case 2:
+                    if ((this.client.getOption('echo') & 2) === 2)
+                        this.client.echo(macro.value, -7, -8, true, true);
                     /*jslint evil: true */
                     const f = new Function('try { ' + macro.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
                     this._stack.push({ loops: [], args: 0, named: 0, used: 0 });
@@ -8565,6 +8758,8 @@ export class Input extends EventEmitter {
         }
         else if (parent.triggers.length)
             this.advanceTrigger(trigger, parent, idx);
+        if ((this.client.getOption('echo') & 8) === 8)
+            this.client.echo('Trigger fired: ' + trigger.pattern, -7, -8, true, true);
         if (trigger.value.length)
             switch (trigger.style) {
                 case 1:
@@ -8580,6 +8775,8 @@ export class Input extends EventEmitter {
                     }
                     break;
                 case 2:
+                    if ((this.client.getOption('echo') & 2) === 2)
+                        this.client.echo(trigger.value, -7, -8, true, true);
                     //do not cache temp triggers
                     if (trigger.temp) {
                         ret = new Function('try { ' + trigger.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
