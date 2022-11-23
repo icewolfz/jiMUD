@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Code Editor</title>
+    <title>Code editor</title>
     <link rel="shortcut icon" href="../assets/icons/win/code.ico" />
     <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
@@ -2798,9 +2798,9 @@
     function updateUI() {
         var enabled = (manager.active && manager.active.editor) ? true : false;
         if (enabled)
-            document.title = 'Code Editor - ' + manager.active.tab.innerText;
+            document.title = 'Code editor - ' + manager.active.tab.innerText;
         else
-            document.title = 'Code Editor';
+            document.title = 'Code editor';
         $('#btn-close').prop('disabled', !enabled);
         $('#btn-close-all').prop('disabled', !enabled);
         menubar.updateItem('File|Close', { enabled: enabled });
@@ -8142,7 +8142,7 @@
         manager.setPanelTooltip(panel.editor.file, panel);
         manager.setPanelTitle(panel.editor.filename, panel);
         if (manager.active && manager.active.editor && manager.active.editor === panel.editor)
-            document.title = 'Code Editor - ' + manager.active.tab.innerText;
+            document.title = 'Code editor - ' + manager.active.tab.innerText;
         try {
             panel.editor.save();
         }
@@ -9195,8 +9195,8 @@
             p.editor.on('contextmenu', (e, editor) => {
                 var temp = [];
                 //Broken on windows, seems spell checker always returns false try again once fixed to add spell checker
+                //This seems to work if the application uses a built exe, and only broken when running from electron
                 //seems if you change the lang to en-GB it will work, seems en-US is broken
-                /*
                 //const curr = remote.getCurrentWindow().webContents.session.getSpellCheckerLanguages() || [];
                 //remote.getCurrentWindow().webContents.session.setSpellCheckerLanguages(['en-GB'])
                 const word = editor.getModel().getWordAtPosition(e.target.position);
@@ -9214,8 +9214,8 @@
                         temp.push({ type: 'separator' });
                     }
                 }
-                remote.getCurrentWindow().webContents.session.setSpellCheckerLanguages(curr)
-                */
+                //remote.getCurrentWindow().webContents.session.setSpellCheckerLanguages(curr)
+
                 if (p.editor.supports('refresh')) {
                     temp.push({
                         label: 'Refresh',

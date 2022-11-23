@@ -95,7 +95,7 @@ Usage: `jiMUD [arguments...]`
 - [Assets](assets.md)
 - [Mapper](mapper.md)
 - [Character manager](character.manager.md)
-- [Immortal Tools](immortal.md)
+- [Immortal tools](immortal.md)
 - [Code editor](codeeditor.md)
   - [Area designer](codeeditor.designer.md)
 

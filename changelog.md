@@ -12,6 +12,7 @@
     - `Triggers` Echo trigger pattern to screen if fired, **Warning** this may cause infinite looping if pattern is exact matching
     - `Scripts` Echo script type values to the screen before they are executed
     - `Commands` Echo #commands to the screen
+- Code editor: Add right click spell check support for systems that support it
 - **Fixed:**
   - Display:
     - Round word wrap widths to prevent floating point math errors
@@ -816,9 +817,9 @@
 
 - **New:**
   - Character manager: Added `Disconnect on load` for each character allowing you to force the current connection to disconnect and using the new characters auto connect settings
-  - Code Editor: add armour of holding support to area designer and code template
+  - Code editor: add armour of holding support to area designer and code template
 - **Fixed:**
-  - Code Editor:
+  - Code editor:
     - Select drop downs cutoff or causing scrolling when used in dialogs
     - Fix native tab icons when opening multiple files at once
 - **Changed:**
@@ -861,7 +862,7 @@
 
 - **Fixed:**
   - Files not correctly moved to trash
-  - Code Editor:
+  - Code editor:
     - Fix undo, redo, cut, copy, and paste did not work from menus/context after upgrading to 0.21.x monaco-editor
     - Fix custom actions when using diff system
     - Fix issue with advanced editor in editor only mode
@@ -898,7 +899,7 @@
 ## v0.14.1 2021-02-24
 
 - **Fixed:**
-  - Code Editor:
+  - Code editor:
     - Fix remote diff/editing systems, broken in v0.11.3 due to tmp changing how temp directories worked
     - Fix new area dialog title and default name being [Object object]
     - Fix ([]) and ({}) from adding an extra )
@@ -934,7 +935,7 @@
     - Use login name not character manager name when auto logging in
     - Cache login name to improve performance checks
   - Display: Fixed Split scroll live update when enabled
-  - Code Editor:
+  - Code editor:
     - Add better error logging when editor breaks
     - Fix random hang issue
 - **Changed:**
@@ -954,7 +955,7 @@
       - Fixed issue with custom tags and elements causing double display
   - Hopefully fix issue where menu bar is default menu instead of proper menu
   - Fix command history window list delay update on first command
-  - Code Editor:
+  - Code editor:
     - Fixed issue where editor would randomly hang
     - Fixed issue where virtual/area designer maps would not be drawn on first load
     - Fixed issue when virtual/area designer property editor would fail to create an editor on click
@@ -2539,14 +2540,14 @@
     - Reconnect dialog - show a dialog with an auto reconnect count down with buttons to allow you to pick
     - Show character manager - display the character manager
     - Quit - quit the client
-  - Immortal Tools:
+  - Immortal tools:
     - Queue list now contains an status column to display any errors from upload/downloading
     - Queue list error icon now has error as tooltip
 - **Changed:**
-  - Immortal Tools: Performance tweaks to lower cpu when downloading or uploading
-  - Immortal Tools: Update data table control to newest version
+  - Immortal tools: Performance tweaks to lower cpu when downloading or uploading
+  - Immortal tools: Update data table control to newest version
 - **Fixed:**
-  - Immortal Tools:
+  - Immortal tools:
     - Update status bar when reset
     - Fixed creating sub folders in current local folder
     - Statusbar now shows correct remote file counts
@@ -2559,7 +2560,7 @@
 
 - **New:**
   - Add [#untrigger](docs/commands.md) command to remove triggers or alarms
-  - Immortal Tools: can zoom in/out and reset from menu bar
+  - Immortal tools: can zoom in/out and reset from menu bar
   - Mapper, immortal tools, profile manager, advanced editor, and chat window now support loading css/js to allow [customizing](docs/customizing.md) by creating files in the application data folder.
     - Profile manger: profiles.js and profiles.css
     - Chat capture window: chat.js and chat.css
@@ -2567,14 +2568,14 @@
     - Advanced editor: editor.js and editor.css
     - Immortal tools: immortal.js and immortal.css
 - **Changed:**
-  - Immortal Tools: use natural sort when sorting file names
+  - Immortal tools: use natural sort when sorting file names
 - **Fixed:**
   - Chat capture: crafting and tattooist menus should now be ignored
   - Keep alive was setting as milliseconds instead on seconds.
   - Keep alive delay was not set due to a bug in node it was not setting correctly unless already connected.
   - Fixed var tag in #TestMXP
   - Fixed parsing of var tag if invalid tag matching
-  - Immortal Tools: List view key down selection search now ignores case for more accurate searching
+  - Immortal tools: List view key down selection search now ignores case for more accurate searching
 
 ## v0.4.30 2017-11-29
 

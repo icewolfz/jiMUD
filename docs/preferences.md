@@ -194,7 +194,7 @@ Controls what is captured into the chat window
 - `Persistent` causes the chat window to remain in memory to help speed up load times on future uses, note this setting only has effect if capture settings are off
 - `Show in taskbar` Always show mapper window in taskbar **Ignored when Always on top enabled in windows**. __Mac__, __Windows__
 
-## Code Editor
+## Code editor
 
 - `Persistent` causes the code editor window to remain in memory to help speed up load times on future uses
 - `Always on top of the main window` Force code editor window to always be above main client window, when ever client window is focused it will bring the code editor along with it. **Requires restart on windows**
