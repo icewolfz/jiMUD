@@ -818,7 +818,7 @@
         function setSettings() {
             const sl = SettingProperties.length;
             for (var s = 0; s < sl; s++) {
-                value = _settings[SettingProperties[s]];
+                value = _settings.getValue(SettingProperties[s]);
                 //if not defined get global value
                 if (typeof value === 'undefined') {
                     if (_settingsFile === _globalFile)

@@ -915,6 +915,7 @@
                 window.opener.addEventListener('loadCharacter', updateCharacter);
                 window.opener.addEventListener('updateCharacter', updateCharacter);
                 window.opener.addEventListener('resetCharacter', updateCharacter);
+                window.opener.focus();
             }
             catch (err) {
                 if (typeof err === 'string')
