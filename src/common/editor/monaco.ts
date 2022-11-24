@@ -3,7 +3,6 @@
 import { EditorBase, EditorOptions, FileState, Source } from './editor.base';
 import { conf, language, loadCompletion, LPCIndenter, LPCFormatter } from './lpc';
 import { isFileSync, isDirSync, parseTemplate, stripPinkfish, copy, createColorDialog } from '../library';
-const { ipcRenderer } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
