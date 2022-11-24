@@ -1519,15 +1519,28 @@ export class MonacoCodeEditor extends EditorBase {
             for (let c = 0; c <= textLength; c++) {
                 const word = this.$model.getWordAtPosition({ column: c, lineNumber: l });
                 if (!word) continue;
-                if (webFrame.isWordMisspelled(word.word)) {
-                    markers.push({
-                        message: `"${word.word}": Unknown word.`,
-                        severity: monaco.MarkerSeverity.Info,
-                        startLineNumber: l,
-                        startColumn: word.startColumn,
-                        endLineNumber: l,
-                        endColumn: word.endColumn
-                    });
+                if (language.keywords.indexOf(word.word) !== -1 ||
+                    language.const.indexOf(word.word) !== -1 ||
+                    language.efuns.indexOf(word.word) !== -1 ||
+                    language.abbr.indexOf(word.word) !== -1 ||
+                    language.sefuns.indexOf(word.word) !== -1 ||
+                    language.applies.indexOf(word.word) !== -1
+                ) continue;
+                //monaco.editor.tokenize('string', 'lpc');
+                let words = word.word.split('_');
+                let sCol = word.startColumn;
+                for (let w = 0, wl = words.length; w < wl; w++) {
+                    if (webFrame.isWordMisspelled(words[w])) {
+                        markers.push({
+                            message: `"${words[w]}": Unknown word.`,
+                            severity: monaco.MarkerSeverity.Info,
+                            startLineNumber: l,
+                            startColumn: sCol,
+                            endLineNumber: l,
+                            endColumn: sCol + words[w].length
+                        });
+                    }
+                    sCol += words[w].length + 1;
                 }
                 //skip remaining word length
                 c += word.word.length;
