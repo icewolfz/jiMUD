@@ -4125,7 +4125,7 @@
                         else
                             logOutput(errors[e]);
                     }
-                    monaco.editor.setModelMarkers(model, '', markers);
+                    monaco.editor.setModelMarkers(model, 'errors', markers);
                     panel.editor.decorations = model.deltaDecorations(panel.editor.decorations || [], delta);
                     panel.editor.rawDecorations = delta;
                     //if (panel.editor.decorations && panel.editor.decorations.length)

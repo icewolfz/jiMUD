@@ -144,7 +144,7 @@ export function SetupEditor() {
                                     zIndex: 1
                                 }
                             }]);
-                            monaco.editor.setModelMarkers(model, '', [
+                            monaco.editor.setModelMarkers(model, 'errors', [
                                 {
                                     startColumn: e.col + 1,
                                     startLineNumber: e.line + 1,
@@ -737,6 +737,7 @@ export class MonacoCodeEditor extends EditorBase {
                 this.$model.deltaDecorations(this.decorations, []);
                 this.decorations = null;
             }
+            monaco.editor.setModelMarkers(this.$model, 'errors', []);
             if (this.$spellchecking) {
                 if (e.isFlush) {
                     monaco.editor.setModelMarkers(this.$model, 'spelling', []);
@@ -1132,8 +1133,21 @@ export class MonacoCodeEditor extends EditorBase {
                     click: () => {
                         monaco.editor.setModelMarkers(this.$model, '', []);
                         this.$editor.getAction('editor.action.formatDocument').run();
+                        if (this.$spellchecking) {
+                            monaco.editor.setModelMarkers(this.$model, 'spelling', []);
+                            this.spellCheckLines(1, this.$model.getLineCount());
+                        }
                     }
                 }]);
+                if (this.$spellchecking)
+                    m.push(...[
+                        { type: 'separator' }, {
+                            label: '&Spellcheck Document',
+                            click: () => {
+                                monaco.editor.setModelMarkers(this.$model, 'spelling', []);
+                                this.spellCheckLines(1, this.$model.getLineCount());
+                            }
+                        }]);
                 if (path.extname(this.file) === '.c' && window.opener) {
                     m.push(...[
                         { type: 'separator' },
@@ -1147,7 +1161,7 @@ export class MonacoCodeEditor extends EditorBase {
                         {
                             label: 'T&est Clear',
                             click: () => {
-                                monaco.editor.setModelMarkers(this.$model, '', []);
+                                monaco.editor.setModelMarkers(this.$model, 'errors', []);
                                 this.$model.deltaDecorations(this.decorations || [], []);
                                 this.decorations = null;
                                 this.rawDecorations = null;
@@ -1287,8 +1301,21 @@ export class MonacoCodeEditor extends EditorBase {
                     click: () => {
                         monaco.editor.setModelMarkers(this.$model, '', []);
                         this.$editor.getAction('editor.action.formatDocument').run();
+                        if (this.$spellchecking) {
+                            monaco.editor.setModelMarkers(this.$model, 'spelling', []);
+                            this.spellCheckLines(1, this.$model.getLineCount());
+                        }
                     }
                 }]);
+                if (this.$spellchecking)
+                    m.push(...[
+                        { type: 'separator' }, {
+                            label: '&Spellcheck Document',
+                            click: () => {
+                                monaco.editor.setModelMarkers(this.$model, 'spelling', []);
+                                this.spellCheckLines(1, this.$model.getLineCount());
+                            }
+                        }]);
                 //only show if connected and linked to a client window
                 if (path.extname(this.file) === '.c' && window.opener && connected) {
                     m.push(...[
@@ -1302,7 +1329,7 @@ export class MonacoCodeEditor extends EditorBase {
                         {
                             label: 'T&est Clear',
                             click: () => {
-                                monaco.editor.setModelMarkers(this.$model, '', []);
+                                monaco.editor.setModelMarkers(this.$model, 'errors', []);
                                 this.$model.deltaDecorations(this.decorations || [], []);
                                 this.decorations = null;
                                 this.rawDecorations = null;
@@ -1403,7 +1430,7 @@ export class MonacoCodeEditor extends EditorBase {
         el.classList.add('btn', 'btn-default', 'btn-xs', 'connected');
         el.title = 'Test clear';
         el.addEventListener('click', () => {
-            monaco.editor.setModelMarkers(this.$model, '', []);
+            monaco.editor.setModelMarkers(this.$model, 'errors', []);
             this.$model.deltaDecorations(this.decorations || [], []);
             this.decorations = null;
             this.rawDecorations = null;
