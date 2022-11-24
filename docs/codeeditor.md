@@ -229,6 +229,7 @@ Create a new monster using a wizard for easy option selection
 - Clear remote data in code preference dialog or deleting the files in %appdata%\jiMUD\editor
 - Remote editing, allows you to edit files directly on server using local temp files and using IED to download/upload on open/save.
 - Upload/Upload as to directly upload file to mud using IED
+- Basic spell checking, **See known issues**
 
 **Note:** You must be connected to the mud and logged in as an immortal to use remote features
 
@@ -415,3 +416,5 @@ Editor preferences are stored in their own file independent of client or charact
 - Missing context menus, will be addressed in future releases
 - You can not edit remote virtual maps in virtual map editor, as most virtual maps require multiple files and at the moment it is impossible to know all the remote files
 - Pasting virtual area rooms into other maps does not copy descriptions or items
+- Spell checking is disabled for lines longer then 1000 characters
+- Spell checking is limited to only displaying 100 misspelled words

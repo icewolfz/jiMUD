@@ -4668,6 +4668,8 @@
             p = keys[k];
             if (_editors[p].editor.type === 1) {
                 _editors[p].editor.options = options.modelOptions;
+                _editors[p].editor.spellcheck = options.spellchecking;
+                _editors[p].spellcheck = options.spellchecking;
                 manager.setPanelIconClass(getFileIcon(_editors[p].editor.file), _editors[p]);
                 if (options.nativeIcons)
                     ipcRenderer.invoke('get-app', 'getFileIconDataUrl', (path.extname(_editors[p].editor.file).length !== 0 ? _editors[p].editor.file : '.*'), { size: 'small' }).then(icon => {
@@ -8954,8 +8956,10 @@
                         manager.setPanelIcon(icon, p);
                     });
                 //check in case errored above
-                if (p.editor)
+                if (p.editor) {
                     p.editor.options = options.modelOptions;
+                    p.editor.spellcheck = options.spellchecking;
+                }
             }
             /*
             if (!_watched[data.file]) {
@@ -9200,15 +9204,24 @@
                 //const curr = remote.getCurrentWindow().webContents.session.getSpellCheckerLanguages() || [];
                 //remote.getCurrentWindow().webContents.session.setSpellCheckerLanguages(['en-GB'])
                 const word = editor.getModel().getWordAtPosition(e.target.position);
-                if (word && word.word.length !== 0 && webFrame.isWordMisspelled(word.word)) {
+                if (p.spellcheck && word && word.word.length !== 0 && webFrame.isWordMisspelled(word.word)) {
                     let words = webFrame.getWordSuggestions(word.word);
                     if (words.length) {
                         for (let w = 0, wl = words.length; w < wl; w++)
                             temp.push({
                                 label: words[w],
-                                position: e.target.poistion,
+                                word: word,
+                                position: e.target.position,
                                 click: (item) => {
-                                    console.log(item.label);
+                                    editor.pushUndoStop();
+                                    editor.executeCommands(this.id, [
+                                        new ReplaceCommandThatPreservesSelection(
+                                            new monaco.Range(item.position.lineNumber, item.word.startColumn, item.position.lineNumber, item.word.endColumn),
+                                            item.label,
+                                            new monaco.Selection(item.position.lineNumber, item.position.column, item.position.lineNumber, item.position.column)
+                                        )
+                                    ]);
+                                    editor.pushUndoStop();
                                 }
                             });
                         temp.push({ type: 'separator' });
@@ -9406,7 +9419,7 @@
                 _editors['remote:' + data.remote] = p;
             else
                 _editors[data.file] = p;
-            p.spellCheck = options.spellCheck;
+            p.spellcheck = options.spellchecking;
             _loading--;
         }
         if (add) {

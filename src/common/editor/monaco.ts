@@ -14,6 +14,7 @@ declare global {
     interface Window {
         $editor: monaco.editor.IStandaloneCodeEditor;
     }
+    let webFrame;
 }
 
 //based on monaco-loader(https://github.com/felixrieseberg/monaco-loader), inlined to reduce load times
@@ -671,6 +672,7 @@ export class MonacoCodeEditor extends EditorBase {
 
     public decorations;
     public rawDecorations;
+    private $spellchecking;
 
     constructor(options?: EditorOptions) {
         super(options);
@@ -735,7 +737,26 @@ export class MonacoCodeEditor extends EditorBase {
                 this.$model.deltaDecorations(this.decorations, []);
                 this.decorations = null;
             }
-            monaco.editor.setModelMarkers(this.$model, '', []);
+            if (this.$spellchecking) {
+                if (e.isFlush) {
+                    monaco.editor.setModelMarkers(this.$model, 'spelling', []);
+                    this.spellCheckLines(1, this.$model.getLineCount());
+                }
+                else if (e.changes.length) {
+                    monaco.editor.setModelMarkers(this.$model, 'spelling', monaco.editor.getModelMarkers({ owner: 'spelling', resource: this.$model.uri }).filter(m => {
+                        if (m.startLineNumber >= e.changes[0].range.startLineNumber && m.startLineNumber <= e.changes[0].range.endLineNumber)
+                            return false;
+                        if (m.endLineNumber >= e.changes[0].range.startLineNumber && m.endLineNumber <= e.changes[0].range.endLineNumber)
+                            return false;
+                        return true;
+                    }).map(m => {
+                        delete m.owner;
+                        delete m.resource;
+                        return m;
+                    }) || []);
+                    this.spellCheckLines(e.changes[0].range.startLineNumber, e.changes[0].range.endLineNumber);
+                }
+            }
         });
         this.$model.onDidChangeDecorations(e => {
             this.decorations = this.$model.getAllDecorations(null, true).filter(f => f.options.marginClassName === 'line-error-margin' || f.options.marginClassName === 'line-warning-margin').map(f => f.id);
@@ -938,7 +959,14 @@ export class MonacoCodeEditor extends EditorBase {
                 break;
         }
     }
-    public set spellcheck(value: boolean) { /**/ }
+    public set spellcheck(value: boolean) {
+        if (this.$spellchecking == value) return;
+        this.$spellchecking = value;
+        monaco.editor.setModelMarkers(this.$model, 'spelling', []);
+        if (this.$spellchecking)
+            this.spellCheckLines(1, this.$model.getLineCount());
+    }
+    public get spellcheck() { return this.$spellchecking; }
     public find() {
         if (this.$oEditor && this.$oEditor.hasTextFocus()) {
             if (this.selected.length > 0)
@@ -1469,4 +1497,44 @@ export class MonacoCodeEditor extends EditorBase {
     }
 
     public clear() { /** */ }
+
+    //TODO move this to a webworker to not block
+    private spellCheckLines(start, end) {
+        const markers: any[] = monaco.editor.getModelMarkers({ owner: 'spelling', resource: this.$model.uri }).map(m => {
+            delete m.owner;
+            delete m.resource;
+            return m;
+        }) || [];
+        if (markers.length >= 100) return;
+        if (end - start > 25) {
+            const oldEnd = end;
+            setTimeout(() => {
+                this.spellCheckLines(start + 25, oldEnd);
+            }, 250);
+            end = start + 24;
+        }
+        for (let l = start; l <= end; l++) {
+            const textLength = this.$model.getLineLength(l);
+            if (textLength > 1000) continue;
+            for (let c = 0; c <= textLength; c++) {
+                const word = this.$model.getWordAtPosition({ column: c, lineNumber: l });
+                if (!word) continue;
+                if (webFrame.isWordMisspelled(word.word)) {
+                    markers.push({
+                        message: `"${word.word}": Unknown word.`,
+                        severity: monaco.MarkerSeverity.Info,
+                        startLineNumber: l,
+                        startColumn: word.startColumn,
+                        endLineNumber: l,
+                        endColumn: word.endColumn
+                    });
+                }
+                //skip remaining word length
+                c += word.word.length;
+                if (markers.length === 100) break;
+            }
+            if (markers.length === 100) break;
+        }
+        monaco.editor.setModelMarkers(this.$model, 'spelling', markers);
+    }
 }
