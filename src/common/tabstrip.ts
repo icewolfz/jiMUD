@@ -398,6 +398,14 @@ export class TabStrip extends EventEmitter {
         this.$scrollLeft.onmouseleave = (e) => {
             clearTimeout(this._scrollTimer);
         };
+        this.$scrollLeft.ondragenter = e => {
+            if (e.dataTransfer.types && e.dataTransfer.types.indexOf(this.dropDataFormat) !== -1) 
+                this.scrollTabs(-16);
+        };
+        this.$scrollLeft.ondragleave = e => {
+            if (e.dataTransfer.types && e.dataTransfer.types.indexOf(this.dropDataFormat) !== -1) 
+                clearTimeout(this._scrollTimer);            
+        }; 
         this.$scrollLeft.classList.add('hidden');
         this.$el.appendChild(this.$scrollLeft);
         this.$addNewButton = document.createElement('div');
@@ -427,10 +435,16 @@ export class TabStrip extends EventEmitter {
         this.$scrollRight.onmouseleave = (e) => {
             clearTimeout(this._scrollTimer);
         };
+        this.$scrollRight.ondragenter = e => {
+            if (e.dataTransfer.types && e.dataTransfer.types.indexOf(this.dropDataFormat) !== -1) 
+                this.scrollTabs(16);
+        };
+        this.$scrollRight.ondragleave = e => {
+            if (e.dataTransfer.types && e.dataTransfer.types.indexOf(this.dropDataFormat) !== -1) 
+                clearTimeout(this._scrollTimer);            
+        };         
         this.$scrollRight.classList.add('hidden');
         this.$el.appendChild(this.$scrollRight);
-
-
 
         const d = document.createElement('div');
         d.classList.add('dropdown');

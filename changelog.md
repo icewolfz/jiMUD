@@ -20,7 +20,10 @@
     - Round word wrap widths to prevent floating point math errors
     - Fix word wrap calculations for long urls
     - Fix incorrect selection width for certain text style combinations
-  - Code editor: Fix goto line to correctly scroll to when clicking an error from output window
+  - Code editor:
+    - Fix goto line to correctly scroll to when clicking an error from output window
+    - Fix tab strip to scroll when a tab is dragged over scroll buttons
+  - Interface: Fix tab strip to scroll when a tab is dragged over scroll buttons
 - **Changed:**
   - `Character manager on row double click load in:` Now defaults to open in new tab
   - Display: Adjust word wrap break points to have better flow

@@ -1090,6 +1090,14 @@ export class DockPane extends EventEmitter {
             if (this._scroll > 0)
                 this.scrollTabs(-16);
         };
+        this.$scrollLeft.ondragenter = e => {
+            if (e.dataTransfer.types && e.dataTransfer.types.indexOf(this.dropDataFormat) !== -1) 
+                this.scrollTabs(-16);
+        };
+        this.$scrollLeft.ondragleave = e => {
+            if (e.dataTransfer.types && e.dataTransfer.types.indexOf(this.dropDataFormat) !== -1) 
+                clearTimeout(this._scrollTimer);            
+        };
         this.$scrollLeft.onmouseup = (e) => {
             clearTimeout(this._scrollTimer);
         };
@@ -1114,6 +1122,15 @@ export class DockPane extends EventEmitter {
         this.$scrollRight.onmouseleave = (e) => {
             clearTimeout(this._scrollTimer);
         };
+
+        this.$scrollRight.ondragenter = e => {
+            if (e.dataTransfer.types && e.dataTransfer.types.indexOf(this.dropDataFormat) !== -1) 
+                this.scrollTabs(16);
+        };
+        this.$scrollRight.ondragleave = e => {
+            if (e.dataTransfer.types && e.dataTransfer.types.indexOf(this.dropDataFormat) !== -1) 
+                clearTimeout(this._scrollTimer);            
+        };        
         this.$scrollRight.classList.add('hidden');
         this.$el.appendChild(this.$scrollRight);
 
