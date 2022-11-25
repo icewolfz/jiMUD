@@ -5108,6 +5108,20 @@ ipcMain.on('progress', (event, ...args) => {
         parent.send('progress', ...args);
 });
 
+ipcMain.on('addWordToSpellCheckerDictionary', (event, word) => {
+    if(!word || !word.length) return;
+    event.sender.session.addWordToSpellCheckerDictionary(word);
+});
+
+ipcMain.on('removeWordFromSpellCheckerDictionary', (event, word) => {
+    if(!word || !word.length) return;
+    event.sender.session.removeWordFromSpellCheckerDictionary(word);
+});
+
+ipcMain.handle('listWordsInSpellCheckerDictionary', async (event) => {    
+    return await event.sender.session.listWordsInSpellCheckerDictionary();
+});
+
 function resetProfilesMenu(window) {
     if (!window || !windows[getWindowId(window)].menubar) return;
     const profiles = windows[getWindowId(window)].menubar.getItem('profiles', 2);

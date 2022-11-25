@@ -230,6 +230,8 @@ Create a new monster using a wizard for easy option selection
 - Remote editing, allows you to edit files directly on server using local temp files and using IED to download/upload on open/save.
 - Upload/Upload as to directly upload file to mud using IED
 - Basic spell checking, **See known issues**
+  - Can add words to custom editor dictionary or OS dictionary if supported
+  - Can ignore words until next time editor is opened
 
 **Note:** You must be connected to the mud and logged in as an immortal to use remote features
 

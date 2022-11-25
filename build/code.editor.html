@@ -1915,6 +1915,7 @@
     const { DataGrid } = require('./js/datagrid');
     const { createFunction, formatFunctionPointer, formatArgumentList, formatMapping, MonacoCodeEditor, VirtualEditor, AreaDesigner, Source, FileBrowseValueEditor, RoomExit, RoomStates } = require('./js/editor/code.editor');
     const { EditorSettings } = require('./js/editor/code.editor.settings');
+    const { language } = require('./js/editor/lpc');
 
     const { Menu, MenuItem } = remote;
     const { Menubar } = require('./js/menubar');
@@ -1940,6 +1941,7 @@
     var krypto = null;
     var menubar;
     var options, _updating = 0;
+    var dictionaryIgnore = [];
     var _opening = {};
     var _open;
     var newCounter = 1;
@@ -9203,28 +9205,73 @@
                 //seems if you change the lang to en-GB it will work, seems en-US is broken
                 //const curr = remote.getCurrentWindow().webContents.session.getSpellCheckerLanguages() || [];
                 //remote.getCurrentWindow().webContents.session.setSpellCheckerLanguages(['en-GB'])
-                const word = editor.getModel().getWordAtPosition(e.target.position);
-                if (p.spellcheck && word && word.word.length !== 0 && webFrame.isWordMisspelled(word.word)) {
-                    let words = webFrame.getWordSuggestions(word.word);
-                    if (words.length) {
-                        for (let w = 0, wl = words.length; w < wl; w++)
-                            temp.push({
-                                label: words[w],
-                                word: word,
-                                position: e.target.position,
-                                click: (item) => {
-                                    editor.pushUndoStop();
-                                    editor.executeCommands(this.id, [
-                                        new ReplaceCommandThatPreservesSelection(
-                                            new monaco.Range(item.position.lineNumber, item.word.startColumn, item.position.lineNumber, item.word.endColumn),
-                                            item.label,
-                                            new monaco.Selection(item.position.lineNumber, item.position.column, item.position.lineNumber, item.position.column)
-                                        )
-                                    ]);
-                                    editor.pushUndoStop();
-                                }
-                            });
-                        temp.push({ type: 'separator' });
+                let word = editor.getModel().getWordAtPosition(e.target.position);
+                if (p.spellcheck && word && word.word.length !== 0) {
+                    //let words = word.word.split('_');
+                    let words = word.word.split(/(_)|(?=[A-Z])|(\d+)/g);
+                    ///_|(?=[A-Z])|(?<=[a-z])(?=\d)/g
+                    let sCol = word.startColumn;
+                    for (let w = 0, wl = words.length; w < wl; w++) {
+                        if (!words[w]) continue;
+                        if (sCol + words[w].length >= e.target.position.column) {
+                            word = words[w];
+                            break;
+                        }
+                        //sCol += words[w].length + 1;
+                        sCol += words[w].length;
+                    }
+                    if (isWordMisspelled(word)) {
+                        words = webFrame.getWordSuggestions(word);
+                        if (words.length) {
+                            for (let w = 0, wl = words.length; w < wl; w++)
+                                temp.push({
+                                    label: words[w],
+                                    word: word,
+                                    column: sCol,
+                                    position: e.target.position,
+                                    click: (item) => {
+                                        editor.pushUndoStop();
+                                        editor.executeCommands(this.id, [
+                                            new ReplaceCommandThatPreservesSelection(
+                                                new monaco.Range(item.position.lineNumber, item.column, item.position.lineNumber, item.column + item.word.length),
+                                                item.label,
+                                                new monaco.Selection(item.position.lineNumber, item.position.column, item.position.lineNumber, item.position.column)
+                                            )
+                                        ]);
+                                        editor.pushUndoStop();
+                                    }
+                                });
+                            temp.push({ type: 'separator' });
+                        }
+                        temp.push(...[{
+                            label: 'Add to editor dictionary',
+                            word: word,
+                            click: item => {
+                                if (!options.dictionary)
+                                    options.dictionary = [];
+                                options.dictionary.push(item.word.toLowerCase());
+                                saveOptions();
+                                p.editor.spellcheckDocument();
+                            }
+                        },
+                        {
+                            label: 'Add to operating system dictionary',
+                            word: word,
+                            click: item => {
+                                ipcRenderer.send('addWordToSpellCheckerDictionary', item.word.toLowerCase());
+                                saveOptions();
+                                p.editor.spellcheckDocument();
+                            }
+                        },                        
+                        {
+                            label: 'Ignore word',
+                            word: word,
+                            click: item => {
+                                dictionaryIgnore.push(item.word.toLowerCase());
+                                p.editor.spellcheckDocument();
+                            }
+                        }
+                        ,{ type: 'separator' }]);
                     }
                 }
                 //remote.getCurrentWindow().webContents.session.setSpellCheckerLanguages(curr)
@@ -9576,6 +9623,21 @@
         return data;
     }
 
+    function isWordMisspelled(word) {
+        if (options && options.dictionary && options.dictionary.indexOf(word.toLowerCase()) !== -1)
+            return false;
+        if(dictionaryIgnore.indexOf(word.toLowerCase()) !== -1)
+            return false;
+        if (language.keywords.indexOf(word) !== -1 ||
+            language.const.indexOf(word) !== -1 ||
+            language.efuns.indexOf(word) !== -1 ||
+            language.abbr.indexOf(word) !== -1 ||
+            language.sefuns.indexOf(word) !== -1 ||
+            language.applies.indexOf(word) !== -1
+        )
+            return false;
+        return webFrame.isWordMisspelled(word);
+    }
 </script>
 
 </html>

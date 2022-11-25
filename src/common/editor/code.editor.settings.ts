@@ -19,6 +19,7 @@ export class EditorSettings {
     public uploadAs;
     public enableBackgroundThrottling: boolean = true;
     public theme: number = 0;
+    public dictionary = [];
 
     public window = {
         persistent: false,

@@ -14,7 +14,7 @@ declare global {
     interface Window {
         $editor: monaco.editor.IStandaloneCodeEditor;
     }
-    let webFrame;
+    let isWordMisspelled;
 }
 
 //based on monaco-loader(https://github.com/felixrieseberg/monaco-loader), inlined to reduce load times
@@ -739,10 +739,8 @@ export class MonacoCodeEditor extends EditorBase {
             }
             monaco.editor.setModelMarkers(this.$model, 'errors', []);
             if (this.$spellchecking) {
-                if (e.isFlush) {
-                    monaco.editor.setModelMarkers(this.$model, 'spelling', []);
-                    this.spellCheckLines(1, this.$model.getLineCount());
-                }
+                if (e.isFlush)
+                    this.spellcheckDocument();
                 else if (e.changes.length) {
                     monaco.editor.setModelMarkers(this.$model, 'spelling', monaco.editor.getModelMarkers({ owner: 'spelling', resource: this.$model.uri }).filter(m => {
                         if (m.startLineNumber >= e.changes[0].range.startLineNumber && m.startLineNumber <= e.changes[0].range.endLineNumber)
@@ -963,9 +961,10 @@ export class MonacoCodeEditor extends EditorBase {
     public set spellcheck(value: boolean) {
         if (this.$spellchecking == value) return;
         this.$spellchecking = value;
-        monaco.editor.setModelMarkers(this.$model, 'spelling', []);
         if (this.$spellchecking)
-            this.spellCheckLines(1, this.$model.getLineCount());
+            this.spellcheckDocument();
+        else
+            monaco.editor.setModelMarkers(this.$model, 'spelling', []);
     }
     public get spellcheck() { return this.$spellchecking; }
     public find() {
@@ -1133,10 +1132,8 @@ export class MonacoCodeEditor extends EditorBase {
                     click: () => {
                         monaco.editor.setModelMarkers(this.$model, '', []);
                         this.$editor.getAction('editor.action.formatDocument').run();
-                        if (this.$spellchecking) {
-                            monaco.editor.setModelMarkers(this.$model, 'spelling', []);
-                            this.spellCheckLines(1, this.$model.getLineCount());
-                        }
+                        if (this.$spellchecking) 
+                            this.spellcheckDocument();
                     }
                 }]);
                 if (this.$spellchecking)
@@ -1144,8 +1141,7 @@ export class MonacoCodeEditor extends EditorBase {
                         { type: 'separator' }, {
                             label: '&Spellcheck Document',
                             click: () => {
-                                monaco.editor.setModelMarkers(this.$model, 'spelling', []);
-                                this.spellCheckLines(1, this.$model.getLineCount());
+                                this.spellcheckDocument();
                             }
                         }]);
                 if (path.extname(this.file) === '.c' && window.opener) {
@@ -1301,10 +1297,8 @@ export class MonacoCodeEditor extends EditorBase {
                     click: () => {
                         monaco.editor.setModelMarkers(this.$model, '', []);
                         this.$editor.getAction('editor.action.formatDocument').run();
-                        if (this.$spellchecking) {
-                            monaco.editor.setModelMarkers(this.$model, 'spelling', []);
-                            this.spellCheckLines(1, this.$model.getLineCount());
-                        }
+                        if (this.$spellchecking) 
+                            this.spellcheckDocument();
                     }
                 }]);
                 if (this.$spellchecking)
@@ -1312,8 +1306,7 @@ export class MonacoCodeEditor extends EditorBase {
                         { type: 'separator' }, {
                             label: '&Spellcheck Document',
                             click: () => {
-                                monaco.editor.setModelMarkers(this.$model, 'spelling', []);
-                                this.spellCheckLines(1, this.$model.getLineCount());
+                                this.spellcheckDocument();
                             }
                         }]);
                 //only show if connected and linked to a client window
@@ -1525,8 +1518,13 @@ export class MonacoCodeEditor extends EditorBase {
 
     public clear() { /** */ }
 
+    public spellcheckDocument() {
+        monaco.editor.setModelMarkers(this.$model, 'spelling', []);
+        this.spellCheckLines(1, this.$model.getLineCount());
+    }
+
     //TODO move this to a webworker to not block
-    private spellCheckLines(start, end) {
+    public spellCheckLines(start, end) {
         const markers: any[] = monaco.editor.getModelMarkers({ owner: 'spelling', resource: this.$model.uri }).map(m => {
             delete m.owner;
             delete m.resource;
@@ -1554,10 +1552,11 @@ export class MonacoCodeEditor extends EditorBase {
                     language.applies.indexOf(word.word) !== -1
                 ) continue;
                 //monaco.editor.tokenize('string', 'lpc');
-                let words = word.word.split('_');
+                let words = word.word.split(/(_)|(?=[A-Z])|(\d+)/g);
                 let sCol = word.startColumn;
                 for (let w = 0, wl = words.length; w < wl; w++) {
-                    if (webFrame.isWordMisspelled(words[w])) {
+                    if (!words[w]) continue;
+                    if (isWordMisspelled(words[w])) {
                         markers.push({
                             message: `"${words[w]}": Unknown word.`,
                             severity: monaco.MarkerSeverity.Info,
@@ -1567,7 +1566,7 @@ export class MonacoCodeEditor extends EditorBase {
                             endColumn: sCol + words[w].length
                         });
                     }
-                    sCol += words[w].length + 1;
+                    sCol += words[w].length;
                 }
                 //skip remaining word length
                 c += word.word.length;
