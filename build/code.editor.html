@@ -507,7 +507,12 @@
             <button id="btn-clear-output" type="button" class="btn btn-default btn-xs" title="Clear output" onclick="doClearOutput()">
                 <i class="fa fa-trash"></i>
             </button>
+            <!--
+            <a href="javascript:void(0)" onclick="showOutput()">Output</a>
+            <a href="javascript:void(0)" onclick="showProblems()">Problems</a>
+            -->
         </div>
+        <div id="problem-display" class="problem-display" style="display: none"></div>
         <div id="output-display" class="output-display" contenteditable="true" readonly="readonly"></div>
     </div>
     <div id="statusbar" class="statusbar">
@@ -1951,6 +1956,7 @@
     var outputDragging = false;
     var output = $('#output');
     var outputDisplay = $('#output-display');
+    var problemDisplay = $('#problem-display');
     var _editors = {};
     var _recent = [];
     var sbSize = document.getElementById('statusbar-size');
@@ -3221,6 +3227,24 @@
         $(window).trigger('resize');
         doUpdate(16);
         if (manager.active && manager.active.editor) manager.active.editor.focus();
+    }
+
+    function showOutput() {
+        outputDisplay.css('display', 'block');
+        problemDisplay.css('display', 'none');
+    }
+
+    function showProblems() {
+        outputDisplay.css('display', 'none');
+        problemDisplay.css('display', 'block');
+        const markers = monaco.editor.getModelMarkers();
+        const ml = markers.length;
+        problemDisplay.empty();
+        let text = [];
+        for (let m = 0; m < ml; m++) {
+            text.push(`<li>${path.basename(markers[m].resource.path)} ${markers[m].message} ${markers[m].owner} [Ln ${markers[m].startLineNumber}, Col ${markers[m].startColumn}]</li>`);
+        }
+        problemDisplay.append('<ul>' + text.join('') + '</ul>');
     }
 
     function logOutput(text, open) {

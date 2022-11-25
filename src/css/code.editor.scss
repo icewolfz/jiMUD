@@ -183,6 +183,17 @@ body {
     background: white;
 }
 
+.problem-display {
+    position: absolute;
+    top: 31px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    overflow: auto;
+    outline: none;
+    background: white;
+}
+
 .output .error {
     color: red;
     text-decoration: none;
