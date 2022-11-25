@@ -1586,7 +1586,8 @@ export class MonacoCodeEditor extends EditorBase {
                             startLineNumber: l,
                             startColumn: sCol,
                             endLineNumber: l,
-                            endColumn: sCol + words[w].length
+                            endColumn: sCol + words[w].length,
+                            source: this.file
                         });
                     }
                     sCol += words[w].length;

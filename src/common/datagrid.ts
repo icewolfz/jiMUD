@@ -1688,7 +1688,7 @@ export class DataGrid extends EventEmitter {
                     }
                     this.$dataWidth = this.$body.children[0].clientWidth;
                     this.$dataHeight = this.$body.children[0].clientHeight;
-                    this.doUpdate(UpdateType.resize);
+                    this.doUpdate(UpdateType.resize | UpdateType.resizeWidth);
                 });
             }
             else if (this.$children && c === this.$firstColumn)
@@ -2060,9 +2060,9 @@ export class DataGrid extends EventEmitter {
         }
         if (!Array.isArray(rows))
             rows = [rows];
-        rows.forEach(r => {
+        rows = rows.map(r => {
             if (typeof r !== 'number')
-                return this.$sortedRows.indexOf(this.$rows.indexOf(rows));
+                return this.$sortedRows.indexOf(this.$rows.indexOf(r));
             return r;
         });
         rows.forEach(r => {
@@ -2084,9 +2084,9 @@ export class DataGrid extends EventEmitter {
             }
             if (!Array.isArray(rows))
                 rows = [rows];
-            rows.forEach(r => {
+            rows = rows.map(r => {
                 if (typeof r !== 'number')
-                    return this.$sortedRows.indexOf(this.$rows.indexOf(rows));
+                    return this.$sortedRows.indexOf(this.$rows.indexOf(r));
                 return r;
             });
             rows.forEach(r => {
@@ -2113,9 +2113,9 @@ export class DataGrid extends EventEmitter {
             }
             if (!Array.isArray(rows))
                 rows = [rows];
-            rows.forEach(r => {
+            rows = rows.map(r => {
                 if (typeof r !== 'number')
-                    return this.$sortedRows.indexOf(this.$rows.indexOf(rows));
+                    return this.$sortedRows.indexOf(this.$rows.indexOf(r));
                 return r;
             });
             rows.forEach(r => {

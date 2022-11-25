@@ -1956,7 +1956,7 @@
     var outputDragging = false;
     var output = $('#output');
     var outputDisplay = $('#output-display');
-    var problemDisplay = $('#problem-display');
+    var problemDisplay;
     var _editors = {};
     var _recent = [];
     var sbSize = document.getElementById('statusbar-size');
@@ -3231,20 +3231,136 @@
 
     function showOutput() {
         outputDisplay.css('display', 'block');
-        problemDisplay.css('display', 'none');
+        if (problemDisplay)
+            problemDisplay.parent.style.display = 'none';
     }
 
     function showProblems() {
         outputDisplay.css('display', 'none');
-        problemDisplay.css('display', 'block');
+        if (!problemDisplay) {
+            problemDisplay = new DataGrid(document.getElementById('problem-display'));
+            problemDisplay.showChildren = true;
+            problemDisplay.on('row-dblclick', (e, row) => {
+                e.preventDefault();
+                if (row.parent === -1) {
+                    problemDisplay.toggleRows(row.row);
+                }
+                else {
+                    gotoPosition(findEditor(row.row.file), row.row.children[row.child].startLineNumber, row.row.children[row.child].startColumn, row.row.children[row.child].endColumn);
+                }
+            });
+            //text.push(`<li>${path.basename(markers[m].resource.path)} ${markers[m].message} ${markers[m].owner} [Ln ${markers[m].startLineNumber}, Col ${markers[m].startColumn}]</li>`);
+            problemDisplay.columns = [
+                {
+                    label: 'File',
+                    field: 'file',
+                    width: 100,
+                    readonly: true,
+                    formatter: (data) => {
+                        if (!data || data.parent !== -1) return '';
+                        return path.basename(data.cell || '');
+                    },
+                    tooltipFormatter: (data) => {
+                        if (!data || data.parent !== -1) return '';
+                        return path.basename(data.cell || '');
+                    }
+                }, {
+                    label: 'Message',
+                    field: 'message',
+                    readonly: true,
+                    sortable: false,
+                    spring: true,
+                    width: 250,
+                    formatter: (data) => {
+                        if (!data) return '';
+                        if (data.parent === -1 && data.row.children)
+                            return '';
+                        return data.cell || '';
+                    },
+                    tooltipFormatter: (data) => {
+                        if (!data) return '';
+                        if (data.parent === -1 && data.row.children)
+                            return '';
+                        return data.cell || '';
+                    },
+                    editor: {
+                        options: {
+                            singleLine: true
+                        }
+                    }
+                }, {
+                    label: '',
+                    field: 'owner',
+                    width: 100,
+                    readonly: true,
+                    sortable: false,
+                    formatter: (data) => {
+                        if (!data) return '';
+                        if (data.parent === -1 && data.row.children)
+                            return '';
+                        return data.cell;
+                    },
+                    tooltipFormatter: (data) => {
+                        if (!data) return '';
+                        if (data.parent === -1 && data.row.children)
+                            return '';
+                        return data.cell;
+                    }
+                }, {
+                    label: 'Line',
+                    field: 'startLineNumber',
+                    width: 75,
+                    sortable: false,
+                    readonly: true,
+                    formatter: (data) => {
+                        if (!data) return '';
+                        if (data.parent === -1 && data.row.children)
+                            return '';
+                        return data.cell;
+                    },
+                    tooltipFormatter: (data) => {
+                        if (!data) return '';
+                        if (data.parent === -1 && data.row.children)
+                            return '';
+                        return data.cell;
+                    }
+                }, {
+                    label: 'Column',
+                    field: 'startColumn',
+                    width: 75,
+                    sortable: false,
+                    readonly: true,
+                    formatter: (data) => {
+                        if (!data) return '';
+                        if (data.parent === -1 && data.row.children)
+                            return '';
+                        return data.cell;
+                    },
+                    tooltipFormatter: (data) => {
+                        if (!data) return '';
+                        if (data.parent === -1 && data.row.children)
+                            return '';
+                        return data.cell;
+                    }
+                }
+            ];
+        }
+        problemDisplay.parent.style.display = 'block';
         const markers = monaco.editor.getModelMarkers();
         const ml = markers.length;
-        problemDisplay.empty();
-        let text = [];
+        const url = require('url');
+        let items = {};
         for (let m = 0; m < ml; m++) {
-            text.push(`<li>${path.basename(markers[m].resource.path)} ${markers[m].message} ${markers[m].owner} [Ln ${markers[m].startLineNumber}, Col ${markers[m].startColumn}]</li>`);
+            const file = markers[m].source || url.fileURLToPath(markers[m].resource.toString());
+            if (!items[file])
+                items[file] = {
+                    file: file,
+                    children: []
+                }
+            markers[m].file = file;
+            items[file].children.push(markers[m]);
         }
-        problemDisplay.append('<ul>' + text.join('') + '</ul>');
+        problemDisplay.rows = Object.values(items);
     }
 
     function logOutput(text, open) {
@@ -3788,6 +3904,29 @@
         manager.panes[dock].switchToPanel(panel);
         window.$editors[dock].setPosition({ column: 1, lineNumber: line });
         window.$dEditors[dock].setPosition({ column: 1, lineNumber: line });
+        window.$editors[dock].revealPositionInCenterIfOutsideViewport({ column: 1, lineNumber: line });
+        window.$dEditors[dock].revealPositionInCenterIfOutsideViewport({ column: 1, lineNumber: line });
+    }
+
+    function gotoPosition(id, line, column, endColumn) {
+        if (!id) return;
+        var panel = manager.findPanel(id);
+        if (!panel) return;
+        var dock = manager.panes.indexOf(panel.dock);
+        if (dock === -1) return;
+        manager.panes[dock].switchToPanel(panel);
+        window.$editors[dock].setPosition({ column: column, lineNumber: line });
+        window.$dEditors[dock].setPosition({ column: column, lineNumber: line });
+        if (endColumn) {
+            window.$editors[dock].revealRange({ startColumn: column, endColumn: endColumn, startLineNumber: line, endLineNumber: line });
+            window.$dEditors[dock].revealRange({ startColumn: column, endColumn: endColumn, startLineNumber: line, endLineNumber: line });
+            window.$editors[dock].setSelection({ startColumn: column, endColumn: endColumn, startLineNumber: line, endLineNumber: line });
+            window.$dEditors[dock].setSelection({ startColumn: column, endColumn: endColumn, startLineNumber: line, endLineNumber: line });
+        }
+        else {
+            window.$editors[dock].revealPositionInCenterIfOutsideViewport({ column: column, lineNumber: line });
+            window.$dEditors[dock].revealPositionInCenterIfOutsideViewport({ column: column, lineNumber: line });
+        }
     }
 
     function gotoNextChange() {
@@ -4128,7 +4267,8 @@
                                 endColumn: model.getLineContent(line).length,
                                 endLineNumber: line,
                                 message: m[2],
-                                severity: 8, //error
+                                severity: 8, //error,
+                                source: panel.editor.filename
                             });
                             delta.forEach(f => {
                                 if (f.range.startLineNumber === line && f.options.marginClassName === 'line-warning-margin')
