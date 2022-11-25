@@ -9220,7 +9220,7 @@
                         //sCol += words[w].length + 1;
                         sCol += words[w].length;
                     }
-                    if (isWordMisspelled(word)) {
+                    if (isWordMisspelled(word, p.editor)) {
                         words = webFrame.getWordSuggestions(word);
                         if (words.length) {
                             for (let w = 0, wl = words.length; w < wl; w++)
@@ -9262,16 +9262,32 @@
                                 saveOptions();
                                 p.editor.spellcheckDocument();
                             }
-                        },                        
+                        },
                         {
-                            label: 'Ignore word',
+                            label: 'Ignore word in this document',
+                            word: word,
+                            click: item => {
+                                p.editor.addIgnoredWord(item.word);
+                                p.editor.spellcheckDocument();
+                            }
+                        },
+                        {
+                            label: 'Ignore word in all documents',
                             word: word,
                             click: item => {
                                 dictionaryIgnore.push(item.word.toLowerCase());
-                                p.editor.spellcheckDocument();
+                                var keys = Object.keys(_editors);
+                                var k = keys.length;
+                                var p;
+                                while (k--) {
+                                    ((p) => {
+                                        if (_editors[p].editor.type === 1)
+                                            setTimeout(() => _editors[p].editor.spellcheckDocument(), 0);
+                                    })(keys[k]);
+                                }
                             }
-                        }
-                        ,{ type: 'separator' }]);
+                        },
+                        { type: 'separator' }]);
                     }
                 }
                 //remote.getCurrentWindow().webContents.session.setSpellCheckerLanguages(curr)
@@ -9623,10 +9639,12 @@
         return data;
     }
 
-    function isWordMisspelled(word) {
+    function isWordMisspelled(word, editor) {
         if (options && options.dictionary && options.dictionary.indexOf(word.toLowerCase()) !== -1)
             return false;
-        if(dictionaryIgnore.indexOf(word.toLowerCase()) !== -1)
+        if (editor && editor.isWordIgnored(word))
+            return false;
+        if (dictionaryIgnore.indexOf(word.toLowerCase()) !== -1)
             return false;
         if (language.keywords.indexOf(word) !== -1 ||
             language.const.indexOf(word) !== -1 ||

@@ -669,6 +669,7 @@ export class MonacoCodeEditor extends EditorBase {
         bracketColorization: true,
         independentColorPoolPerBracketType: false
     };
+    private $dictionaryIgnored = [];
 
     public decorations;
     public rawDecorations;
@@ -1132,7 +1133,7 @@ export class MonacoCodeEditor extends EditorBase {
                     click: () => {
                         monaco.editor.setModelMarkers(this.$model, '', []);
                         this.$editor.getAction('editor.action.formatDocument').run();
-                        if (this.$spellchecking) 
+                        if (this.$spellchecking)
                             this.spellcheckDocument();
                     }
                 }]);
@@ -1297,7 +1298,7 @@ export class MonacoCodeEditor extends EditorBase {
                     click: () => {
                         monaco.editor.setModelMarkers(this.$model, '', []);
                         this.$editor.getAction('editor.action.formatDocument').run();
-                        if (this.$spellchecking) 
+                        if (this.$spellchecking)
                             this.spellcheckDocument();
                     }
                 }]);
@@ -1523,6 +1524,28 @@ export class MonacoCodeEditor extends EditorBase {
         this.spellCheckLines(1, this.$model.getLineCount());
     }
 
+    public isWordIgnored(word) {
+        if (this.$dictionaryIgnored && this.$dictionaryIgnored.indexOf(word.toLowerCase()) !== -1)
+            return true;
+        return false;
+    }
+
+    public addIgnoredWord(word) {
+        if (word && word.length) {
+            if (!this.$dictionaryIgnored)
+                this.$dictionaryIgnored = [];
+            this.$dictionaryIgnored.push(word.toLowerCase());
+        }
+    }
+
+    public removeIgnoredWord(word) {
+        if (!word || word.length === 0 || !this.$dictionaryIgnored || this.$dictionaryIgnored.length === 0)
+            return;
+        const index = this.$dictionaryIgnored.indexOf(word.toLowerCase());
+        if (index === -1) return;
+        this.$dictionaryIgnored.splice(index, 1);
+    }
+
     //TODO move this to a webworker to not block
     public spellCheckLines(start, end) {
         const markers: any[] = monaco.editor.getModelMarkers({ owner: 'spelling', resource: this.$model.uri }).map(m => {
@@ -1556,7 +1579,7 @@ export class MonacoCodeEditor extends EditorBase {
                 let sCol = word.startColumn;
                 for (let w = 0, wl = words.length; w < wl; w++) {
                     if (!words[w]) continue;
-                    if (isWordMisspelled(words[w])) {
+                    if (isWordMisspelled(words[w], this)) {
                         markers.push({
                             message: `"${words[w]}": Unknown word.`,
                             severity: monaco.MarkerSeverity.Info,
