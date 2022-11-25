@@ -9251,7 +9251,14 @@
                                     options.dictionary = [];
                                 options.dictionary.push(item.word.toLowerCase());
                                 saveOptions();
-                                p.editor.spellcheckDocument();
+                                var keys = Object.keys(_editors);
+                                var k = keys.length;
+                                while (k--) {
+                                    ((p) => {
+                                        if (_editors[p].editor.type === 1)
+                                            setTimeout(() => _editors[p].editor.spellcheckDocument(), 0);
+                                    })(keys[k]);
+                                }
                             }
                         },
                         {
@@ -9259,8 +9266,14 @@
                             word: word,
                             click: item => {
                                 ipcRenderer.send('addWordToSpellCheckerDictionary', item.word.toLowerCase());
-                                saveOptions();
-                                p.editor.spellcheckDocument();
+                                var keys = Object.keys(_editors);
+                                var k = keys.length;
+                                while (k--) {
+                                    ((p) => {
+                                        if (_editors[p].editor.type === 1)
+                                            setTimeout(() => _editors[p].editor.spellcheckDocument(), 1);
+                                    })(keys[k]);
+                                }
                             }
                         },
                         {
@@ -9278,7 +9291,6 @@
                                 dictionaryIgnore.push(item.word.toLowerCase());
                                 var keys = Object.keys(_editors);
                                 var k = keys.length;
-                                var p;
                                 while (k--) {
                                     ((p) => {
                                         if (_editors[p].editor.type === 1)
