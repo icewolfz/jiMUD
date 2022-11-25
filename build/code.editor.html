@@ -9244,7 +9244,7 @@
                             temp.push({ type: 'separator' });
                         }
                         temp.push(...[{
-                            label: 'Add to editor dictionary',
+                            label: `Add "${word}" to editor dictionary`,
                             word: word,
                             click: item => {
                                 if (!options.dictionary)
@@ -9262,7 +9262,7 @@
                             }
                         },
                         {
-                            label: 'Add to operating system dictionary',
+                            label: `Add "${word}" to operating system dictionary`,
                             word: word,
                             click: item => {
                                 ipcRenderer.send('addWordToSpellCheckerDictionary', item.word.toLowerCase());
@@ -9277,7 +9277,7 @@
                             }
                         },
                         {
-                            label: 'Ignore word in this document',
+                            label: `Ignore "${word}" in this document`,
                             word: word,
                             click: item => {
                                 p.editor.addIgnoredWord(item.word);
@@ -9285,7 +9285,7 @@
                             }
                         },
                         {
-                            label: 'Ignore word in all documents',
+                            label: `Ignore "${word}" in all documents`,
                             word: word,
                             click: item => {
                                 dictionaryIgnore.push(item.word.toLowerCase());
