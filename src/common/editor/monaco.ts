@@ -1548,11 +1548,7 @@ export class MonacoCodeEditor extends EditorBase {
 
     //TODO move this to a webworker to not block
     public spellCheckLines(start, end) {
-        const markers: any[] = monaco.editor.getModelMarkers({ owner: 'spelling', resource: this.$model.uri }).map(m => {
-            delete m.owner;
-            delete m.resource;
-            return m;
-        }) || [];
+        const markers: any[] = monaco.editor.getModelMarkers({ owner: 'spelling', resource: this.$model.uri }) || [];
         if (markers.length >= 100) return;
         if (end - start > 25) {
             const oldEnd = end;
