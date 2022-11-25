@@ -9652,6 +9652,7 @@
     }
 
     function isWordMisspelled(word, editor) {
+        if (word === '_') return false;
         if (options && options.dictionary && options.dictionary.indexOf(word.toLowerCase()) !== -1)
             return false;
         if (editor && editor.isWordIgnored(word))
