@@ -3406,7 +3406,7 @@
     }
 
     function buildProblems() {
-        if (!problemDisplay) return;
+        if (!problemDisplay || !options.output || options.outputTab !== 1) return;
         if (typeof monaco === 'undefined') {
             setTimeout(buildProblems, 100);
             return;

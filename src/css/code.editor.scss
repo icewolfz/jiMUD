@@ -194,6 +194,10 @@ body {
     background: white;
 }
 
+.problem-display .datagrid-cell-parent {
+    overflow: initial;
+}
+
 .output-tab {
     display: inline-block;
     height: 22px;
