@@ -1172,10 +1172,29 @@ export class MonacoCodeEditor extends EditorBase {
                     label: 'Go to Definition',
                     accelerator: 'F12',
                     click: () => {
-                        this.$editor.getAction('editor.action.goToDeclaration').run();
+                        this.$editor.getAction('editor.action.revealDefinition').run().then(() => {
+                            this.$editor.revealPositionInCenterIfOutsideViewport(this.$editor.getPosition());    
+                        });
                     }
+                },
+                {
+                    label: 'Peek Definition',
+                    accelerator: 'Alt+F12',
+                    click: () => {
+                        this.$editor.getAction('editor.action.peekDefinition').run();
+                    },
+                    position: 'after=goto',
+                    id: 'peek'
                 }]);
             }
+            else if (this.$spellchecking)
+                m.push(...[
+                    { type: 'separator' }, {
+                        label: '&Spellcheck Document',
+                        click: () => {
+                            this.spellcheckDocument();
+                        }
+                    }]);
             m.push({ type: 'separator' });
             m.push({
                 label: '&Go to line...',
@@ -1337,7 +1356,9 @@ export class MonacoCodeEditor extends EditorBase {
                         label: 'Go to Definition',
                         accelerator: 'F12',
                         click: () => {
-                            this.$editor.getAction('editor.action.goToDeclaration').run();
+                            this.$editor.getAction('editor.action.revealDefinition').run().then(() => {
+                                this.$editor.revealPositionInCenterIfOutsideViewport(this.$editor.getPosition());    
+                            });
                         },
                         position: 'before=sep',
                         id: 'goto'
@@ -1346,12 +1367,20 @@ export class MonacoCodeEditor extends EditorBase {
                         label: 'Peek Definition',
                         accelerator: 'Alt+F12',
                         click: () => {
-                            this.$editor.getAction('editor.action.previewDeclaration').run();
+                            this.$editor.getAction('editor.action.peekDefinition').run();
                         },
                         position: 'after=goto',
                         id: 'peek'
                     }]);
             }
+            else if (this.$spellchecking)
+                m.push(...[
+                    { type: 'separator' }, {
+                        label: '&Spellcheck Document',
+                        click: () => {
+                            this.spellcheckDocument();
+                        }
+                    }]);
 
             return m;
         }
@@ -1521,7 +1550,7 @@ export class MonacoCodeEditor extends EditorBase {
 
     public spellcheckDocument() {
         monaco.editor.setModelMarkers(this.$model, 'spelling', []);
-        if(this.$spellcheckTimer)
+        if (this.$spellcheckTimer)
             clearTimeout(this.$spellcheckTimer);
         this.spellCheckLines(1, this.$model.getLineCount());
     }

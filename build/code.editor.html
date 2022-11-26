@@ -8325,8 +8325,8 @@
             return false;
         }
         addToRecent(file);
-        delete _editors[old];
-        _editors[file] = panel;
+        delete _editors[getFilePath(old)];
+        _editors[getFilePath(file)] = panel;
         if (manager.active && manager.active.editor) {
             manager.active.editor.focus();
             sbName.textContent = manager.active.editor.source === Source.local ? manager.active.editor.file : manager.active.editor.remote;
@@ -8427,7 +8427,7 @@
         if (panel.editor.source)
             delete _editors['remote:' + panel.editor.remote];
         else
-            delete _editors[panel.editor.file];
+            delete _editors[getFilePath(panel.editor.file)];
     }
 
     function revertFile(panel) {
@@ -8580,7 +8580,7 @@
     function findEditor(file) {
         if (!file || file.length === 0)
             return 0;
-        return _editors[file];
+        return _editors[getFilePath(file)];
     }
 
     function watchFile(file) {
@@ -9657,7 +9657,7 @@
             if (data.source)
                 _editors['remote:' + data.remote] = p;
             else
-                _editors[data.file] = p;
+                _editors[getFilePath(data.file)] = p;
             p.spellcheck = options.spellchecking;
             _loading--;
         }
@@ -9832,6 +9832,13 @@
         )
             return false;
         return webFrame.isWordMisspelled(word);
+    }
+
+    //Hack to fix window/mac casing issues
+    function getFilePath(file) {
+        if (file && process.platform !== 'linux') 
+            return file.toLowerCase();
+        return file;
     }
 </script>
 
