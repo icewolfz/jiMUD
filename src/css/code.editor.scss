@@ -194,6 +194,25 @@ body {
     background: white;
 }
 
+.output-tab {
+    display: inline-block;
+    height: 22px;
+    font-size: 15px;
+    color: black;
+    margin-left: 5px;
+    text-decoration: none;
+}
+
+.output-tab:hover {
+    text-decoration: none;
+    background-color: #e0e0e0; 
+}
+
+.output-tab.active {
+    border-bottom: 1px solid;
+    text-decoration: none;
+}
+
 .output .error {
     color: red;
     text-decoration: none;

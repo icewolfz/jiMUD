@@ -15,6 +15,7 @@
   - Code editor:
     - Add right click spell check support for systems that support it
     - Add basic spell checking
+    - Add problem panel to display all errors and misspellings
 - **Fixed:**
   - Display:
     - Round word wrap widths to prevent floating point math errors

@@ -731,7 +731,7 @@ export const language = <ILanguage>{
             [/[<>](?!@symbols)/, '@brackets'],
             [/@symbols/, {
                 cases: {
-                    '@operators': 'delimiter',
+                    '@operators': 'operator',
                     '@default': ''
                 }
             }],

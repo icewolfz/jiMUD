@@ -13,6 +13,7 @@ export class EditorSettings {
     public lastActive = '';
     public outputSize = 170;
     public output = false;
+    public outputTab = 0;
     public nativeIcons: boolean = false;
     public spellchecking: true;
     public remote = '.';

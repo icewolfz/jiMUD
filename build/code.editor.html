@@ -394,6 +394,7 @@
                 })
             ];
             initEditor(window.$dEditors[0], 1);
+            monaco.editor.onDidChangeMarkers(buildProblems);
             _ready = true;
         }
     </script>
@@ -504,13 +505,11 @@
             <a href="javascript:void(0)" onclick="closeOutput()" class="close">
                 <i class="fa fa-times"></i>
             </a>
-            <button id="btn-clear-output" type="button" class="btn btn-default btn-xs" title="Clear output" onclick="doClearOutput()">
+            <a id="output-tab" class="output-tab active" href="javascript:void(0)" onclick="showOutput()">Output</a>
+            <a id="problem-tab" class="output-tab" href="javascript:void(0)" onclick="showProblems()">Problems</a>
+            <button id="btn-clear-output" style="float: right" type="button" class="btn btn-default btn-xs" title="Clear output" onclick="doClearOutput()">
                 <i class="fa fa-trash"></i>
-            </button>
-            <!--
-            <a href="javascript:void(0)" onclick="showOutput()">Output</a>
-            <a href="javascript:void(0)" onclick="showProblems()">Problems</a>
-            -->
+            </button>            
         </div>
         <div id="problem-display" class="problem-display" style="display: none"></div>
         <div id="output-display" class="output-display" contenteditable="true" readonly="readonly"></div>
@@ -2095,6 +2094,14 @@
                 click: toggleOutput,
                 enabled: true
             },
+            {
+                label: '&Problems',
+                accelerator: 'CmdOrCtrl+Shift+M',
+                type: 'checkbox',
+                checked: false,
+                click: toggleProblems,
+                enabled: true
+            },
             { type: 'separator' },
             {
                 label: '&Toggle Developer Tools',
@@ -3051,7 +3058,12 @@
             dock.css('bottom', '');
             output.css('display', 'none');
         }
-        menubar.updateItem('view|output', { checked: options.output });
+        if (options.outputTab === 0)
+            showOutput();
+        else
+            showProblems();
+        menubar.updateItem('view|output', { checked: options.output && options.outputTab === 0 });
+        menubar.updateItem('view|problems', { checked: options.output && options.outputTab === 1 });
         doUpdate(4);
     }
 
@@ -3193,11 +3205,14 @@
     }
 
     function toggleOutput() {
+        if (options.output && options.outputTab !== 0) {
+            showOutput();
+            return;
+        }
         if (options.output)
             options.output = false;
         else
             options.output = true;
-        menubar.updateItem('view|output', { checked: options.output });
         output.css('height', (options.outputSize - 20) + 'px');
         if (options.output) {
             dock.css('bottom', options.outputSize + 'px');
@@ -3209,6 +3224,31 @@
         }
         $(window).trigger('resize');
         doUpdate(16);
+        showOutput();
+        if (manager.active && manager.active.editor) manager.active.editor.focus();
+    }
+
+    function toggleProblems() {
+        if (options.output && options.outputTab !== 1) {
+            showProblems();
+            return;
+        }
+        if (options.output)
+            options.output = false;
+        else
+            options.output = true;
+        output.css('height', (options.outputSize - 20) + 'px');
+        if (options.output) {
+            dock.css('bottom', options.outputSize + 'px');
+            output.css('display', 'block');
+        }
+        else {
+            dock.css('bottom', '');
+            output.css('display', 'none');
+        }
+        $(window).trigger('resize');
+        doUpdate(16);
+        showProblems();
         if (manager.active && manager.active.editor) manager.active.editor.focus();
     }
 
@@ -3222,6 +3262,7 @@
     function closeOutput() {
         options.output = false;
         menubar.updateItem('view|output', { checked: options.output });
+        menubar.updateItem('view|problems', { checked: options.output });
         dock.css('bottom', '');
         output.css('display', 'none');
         $(window).trigger('resize');
@@ -3230,13 +3271,25 @@
     }
 
     function showOutput() {
+        options.outputTab = 0;
+        document.getElementById('btn-clear-output').style.display = '';
+        menubar.updateItem('view|output', { checked: options.output });
+        menubar.updateItem('view|problems', { checked: false });
         outputDisplay.css('display', 'block');
+        document.getElementById('output-tab').classList.add('active');
+        document.getElementById('problem-tab').classList.remove('active');
         if (problemDisplay)
             problemDisplay.parent.style.display = 'none';
     }
 
     function showProblems() {
+        options.outputTab = 1;
+        document.getElementById('btn-clear-output').style.display = 'none';
+        menubar.updateItem('view|output', { checked: false });
+        menubar.updateItem('view|problems', { checked: options.output });
         outputDisplay.css('display', 'none');
+        document.getElementById('output-tab').classList.remove('active');
+        document.getElementById('problem-tab').classList.add('active');
         if (!problemDisplay) {
             problemDisplay = new DataGrid(document.getElementById('problem-display'));
             problemDisplay.showChildren = true;
@@ -3346,6 +3399,15 @@
             ];
         }
         problemDisplay.parent.style.display = 'block';
+        buildProblems();
+    }
+
+    function buildProblems() {
+        if (!problemDisplay) return;
+        if (typeof monaco === 'undefined') {
+            setTimeout(buildProblems, 100);
+            return;
+        }
         const markers = monaco.editor.getModelMarkers();
         const ml = markers.length;
         const url = require('url');
@@ -3368,6 +3430,8 @@
             return;
         if (open && !options.output)
             toggleOutput();
+        else if (open && optons.outputTab !== 0)
+            showOutput();
         outputDisplay.append('<div>' + text + '</div>');
         outputDisplay[0].scrollTop = outputDisplay[0].scrollHeight;
     }
@@ -9836,7 +9900,7 @@
 
     //Hack to fix window/mac casing issues
     function getFilePath(file) {
-        if (file && process.platform !== 'linux') 
+        if (file && process.platform !== 'linux')
             return file.toLowerCase();
         return file;
     }
