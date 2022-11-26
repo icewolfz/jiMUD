@@ -213,6 +213,10 @@ body {
     text-decoration: none;
 }
 
+.btn-clear:before {
+    background: #f5f5f5;
+}
+
 .output .error {
     color: red;
     text-decoration: none;

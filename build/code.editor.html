@@ -502,14 +502,17 @@
     <div id="output" class="output">
         <div id="btm-drag-bar"></div>
         <div id="output-toolbar" class="btn-toolbar" role="toolbar">
-            <a href="javascript:void(0)" onclick="closeOutput()" class="close">
+            <a href="javascript:void(0)" title="Close panel" onclick="closeOutput()" class="close">
                 <i class="fa fa-times"></i>
             </a>
+            <a id="btn-clear-output" href="javascript:void(0)" title="Clear output" onclick="doClearOutput()" class="close">
+                <span class="fa-stack" style="top: -1px;width: 1em;height: 1em;line-height: 1em;font-size: 1em;">
+                    <i class="fa fa-align-justify fa-stack-2x" style="font-size: 1em"></i>
+                    <i class="btn-clear fa fa-times fa-stack-1x" style="font-size: 0.6em;margin-top: 3px;margin-left: 5px;"></i>
+                </span>
+            </a>
             <a id="output-tab" class="output-tab active" href="javascript:void(0)" onclick="showOutput()">Output</a>
-            <a id="problem-tab" class="output-tab" href="javascript:void(0)" onclick="showProblems()">Problems</a>
-            <button id="btn-clear-output" style="float: right" type="button" class="btn btn-default btn-xs" title="Clear output" onclick="doClearOutput()">
-                <i class="fa fa-trash"></i>
-            </button>            
+            <a id="problem-tab" class="output-tab" href="javascript:void(0)" onclick="showProblems()">Problems</a>           
         </div>
         <div id="problem-display" class="problem-display" style="display: none"></div>
         <div id="output-display" class="output-display" contenteditable="true" readonly="readonly"></div>
