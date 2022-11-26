@@ -3314,7 +3314,7 @@
                     readonly: true,
                     formatter: (data) => {
                         if (!data || data.parent !== -1) return '';
-                        return path.basename(data.cell || '');
+                        return path.basename(data.cell || '') + ` <span style="background-color: #bbb;color: white;border-radius: 10px;padding: 1px 4px;">${data.row.children.length > 100 ? 100 + '+' : data.row.children.length}</span>`;
                     },
                     tooltipFormatter: (data) => {
                         if (!data || data.parent !== -1) return '';

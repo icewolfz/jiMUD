@@ -1581,7 +1581,7 @@ export class MonacoCodeEditor extends EditorBase {
     private $spellcheckTimer;
     public spellCheckLines(start, end) {
         const markers: any[] = monaco.editor.getModelMarkers({ owner: 'spelling', resource: this.$model.uri }) || [];
-        if (markers.length >= 100) return;
+        if (markers.length >= 101) return;
         if (end - start > 25) {
             const oldEnd = end;
             this.$spellcheckTimer = setTimeout(() => {
@@ -1623,9 +1623,9 @@ export class MonacoCodeEditor extends EditorBase {
                 }
                 //skip remaining word length
                 c += word.word.length;
-                if (markers.length === 100) break;
+                if (markers.length === 101) break;
             }
-            if (markers.length === 100) break;
+            if (markers.length === 101) break;
         }
         monaco.editor.setModelMarkers(this.$model, 'spelling', markers);
     }
