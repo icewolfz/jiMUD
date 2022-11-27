@@ -67,6 +67,10 @@ export class DockManager extends EventEmitter {
     private $bars: HTMLElement[] = [];
     private $ghostBar: HTMLElement = null;
 
+    private $resizeObserver;
+    private $resizeObserverCache;
+    private $observer: MutationObserver;
+
     private _dropDataFormat: string = 'dockmanger/tab';
 
     constructor(options?: any | DockManagerOptions) {
@@ -85,6 +89,26 @@ export class DockManager extends EventEmitter {
         window.addEventListener('load', () => {
             this.doUpdate(UpdateType.resize);
         });
+
+        this.$resizeObserver = new ResizeObserver((entries, observer) => {
+            if (entries.length === 0) return;
+            if (!entries[0].contentRect || entries[0].contentRect.width === 0 || entries[0].contentRect.height === 0)
+                return;
+            if (!this.$resizeObserverCache || this.$resizeObserverCache.width !== entries[0].contentRect.width || this.$resizeObserverCache.height !== entries[0].contentRect.height) {
+                this.$resizeObserverCache = { width: entries[0].contentRect.width, height: entries[0].contentRect.height };
+                this.doUpdate(UpdateType.resize);
+            }
+        });
+        this.$resizeObserver.observe(this.$el);
+        this.$observer = new MutationObserver((mutationsList) => {
+            let mutation;
+            for (mutation of mutationsList) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    this.doUpdate(UpdateType.resize);
+                }
+            }
+        });
+        this.$observer.observe(this.$el, { attributes: true, attributeOldValue: true, attributeFilter: ['style'] });        
     }
 
     public get parent() { return this.$parent; }
@@ -702,7 +726,7 @@ export class DockManager extends EventEmitter {
         for (; l < t; l++) {
             this.panes[l].width = this.$widths[l] * (this.$el.clientWidth - bWidth);
             this.panes[l].left = w;
-            this.panes[l].resize();
+            this.panes[l].doUpdate(UpdateType.resize);
             w += this.panes[l].width + 4;
         }
         t = this.$bars.length;
@@ -1776,7 +1800,7 @@ export class DockPane extends EventEmitter {
         }
     }
 
-    private doUpdate(type?: UpdateType) {
+    public doUpdate(type?: UpdateType) {
         if (!type) return;
         this._updating |= type;
         if (this._updating === UpdateType.none || this._rTimeout)
