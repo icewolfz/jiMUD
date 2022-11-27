@@ -220,7 +220,7 @@ export class Display extends EventEmitter {
             this._model.removeAllListeners();
         //set model and assign all the events needed
         this._model = value;
-        this._model.on('debug', msg => this.debug);
+        this._model.on('debug', this.debug);
         this._model.on('bell', () => { this.emit('bell'); });
         this._model.on('add-line', data => { this.emit('add-line', data); });
         this._model.on('add-line-done', data => { this.emit('add-line-done', data); });
