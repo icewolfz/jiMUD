@@ -196,6 +196,10 @@ body {
     height: 12px;
 }
 
+#commandInput::-webkit-scrollbar {
+    background-color: black;
+}
+
 /* Track */
 
 #display::-webkit-scrollbar-track,
