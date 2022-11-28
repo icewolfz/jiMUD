@@ -1601,6 +1601,15 @@
                     client.commandInput.addEventListener('input', resizeCommandInput);
                     client.commandInput.addEventListener('change', resizeCommandInput);
                 }
+                if (this.client.getOption('commandWordWrap')) {
+                    document.getElementById('commandMeasure').style.whiteSpace = 'pre-wrap';
+                    document.getElementById('commandMeasure').style.overflowWrap = 'anywhere';
+                }
+                else {
+                    document.getElementById('commandMeasure').style.whiteSpace = '';
+                    document.getElementById('commandMeasure').style.overflowWrap = '';
+                }
+                resizeCommandInput();
             });
 
             client.on('scroll-lock', (lock) => {
@@ -2579,6 +2588,14 @@
             if (this.client.getOption('commandAutoSize')) {
                 client.commandInput.addEventListener('input', resizeCommandInput);
                 client.commandInput.addEventListener('change', resizeCommandInput);
+            }
+            if (this.client.getOption('commandWordWrap')) {
+                document.getElementById('commandMeasure').style.whiteSpace = 'pre-wrap';
+                document.getElementById('commandMeasure').style.overflowWrap = 'anywhere';
+            }
+            else {
+                document.getElementById('commandMeasure').style.whiteSpace = '';
+                document.getElementById('commandMeasure').style.overflowWrap = '';
             }
             initClientEvents();
             client.sendChat = updateChat;
