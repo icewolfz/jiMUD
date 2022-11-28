@@ -12,6 +12,9 @@
       - `Triggers` Echo trigger pattern to screen if fired, **Warning** this may cause infinite looping if pattern is exact matching
       - `Scripts` Echo script type values to the screen before they are executed
       - `Commands` Echo #commands to the screen
+    - Command line:
+      - `Auto size to contents` Resize command input height based on contents
+      - `Word wrap` Wrap long lines in command input    
   - Code editor:
     - Add right click spell check support for systems that support it
     - Add basic spell checking

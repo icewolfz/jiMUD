@@ -514,7 +514,9 @@ export let SettingList: any[] = [
     ['ignoreCaseTabCompletion', 0, SettingType.Boolean, false],
     ['tabCompletionBufferLimit', 0, SettingType.Number, 100],
     ['enableNotifications', 0, SettingType.Boolean, true],
-    ['echo', 0, SettingType.Number, Echo.None]
+    ['echo', 0, SettingType.Number, Echo.None],
+    ['commandAutoSize', 0, SettingType.Boolean, false],
+    ['commandWordWrap', 0, SettingType.Boolean, false]
 ];
 
 /**
@@ -733,6 +735,8 @@ export class Settings {
     public warnAdvancedSettings: boolean;
     public showAdvancedSettings: boolean;
     public echo: Echo;
+    public commandAutoSize: boolean;
+    public commandWordWrap: boolean;
 
     public static load(file) {
         try {
@@ -2032,6 +2036,8 @@ export class Settings {
             case 'tabCompletionBufferLimit': return 100;
             case 'enableNotifications': return true;
             case 'echo': return Echo.None;
+            case 'commandAutoSize': return false;
+            case 'commandWordWrap': return false;
         }
         return null;
     }

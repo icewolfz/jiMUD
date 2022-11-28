@@ -1230,6 +1230,7 @@ export class Client extends EventEmitter {
         this.display.RegularExpression = this.getOption('find.regex');
         this.display.Highlight = this.getOption('find.highlight');
         this.display.finderLocation = this.getOption('find.location');
+        this.commandInput.wrap = this.getOption('commandWordWrap') ? 'on' : 'off';
 
         this.UpdateFonts();
         this.display.scrollDisplay();

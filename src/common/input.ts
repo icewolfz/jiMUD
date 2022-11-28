@@ -20,6 +20,7 @@ declare let getCharacterNotes;
 declare let getId;
 declare let getName;
 declare let clearName;
+declare let resizeCommandInput;
 
 /**
  * MATHJS expression engine
@@ -1464,9 +1465,8 @@ export class Input extends EventEmitter {
                         this._historyIdx = -1;
                         this.client.commandInput.value = '';
                     }
-                    else {
-                        if (this._commandHistory.length > 0 && this._historyIdx < this._commandHistory.length && this._historyIdx >= 0)
-                            this.client.commandInput.value = this._commandHistory[this._historyIdx];
+                    else if (this._commandHistory.length > 0 && this._historyIdx < this._commandHistory.length && this._historyIdx >= 0) {
+                        this.client.commandInput.value = this._commandHistory[this._historyIdx];
                     }
                     setTimeout(() => this.client.commandInput.select(), 0);
                     break;
@@ -1480,9 +1480,8 @@ export class Input extends EventEmitter {
                         this._historyIdx = this._commandHistory.length;
                         this.client.commandInput.value = '';
                     }
-                    else {
-                        if (this._commandHistory.length > 0 && this._historyIdx < this._commandHistory.length && this._historyIdx >= 0)
-                            this.client.commandInput.value = this._commandHistory[this._historyIdx];
+                    else if (this._commandHistory.length > 0 && this._historyIdx < this._commandHistory.length && this._historyIdx >= 0) {
+                        this.client.commandInput.value = this._commandHistory[this._historyIdx];
                     }
                     setTimeout(() => this.client.commandInput.select(), 0);
                     break;
@@ -1491,24 +1490,32 @@ export class Input extends EventEmitter {
                         case NewLineType.Ctrl:
                             if (event.ctrlKey && !event.shiftKey && !event.metaKey && !event.altKey) {
                                 this.client.commandInput.value += '\n';
+                                if (this.client.getOption('commandAutoSize'))
+                                    resizeCommandInput();
                                 return true;
                             }
                             break;
                         case NewLineType.CtrlAndShift:
                             if (event.ctrlKey && event.shiftKey && !event.metaKey && !event.altKey) {
                                 this.client.commandInput.value += '\n';
+                                if (this.client.getOption('commandAutoSize'))
+                                    resizeCommandInput();
                                 return true;
                             }
                             break;
                         case NewLineType.CtrlOrShift:
                             if ((event.ctrlKey || event.shiftKey) && !event.metaKey && !event.altKey) {
                                 this.client.commandInput.value += '\n';
+                                if (this.client.getOption('commandAutoSize'))
+                                    resizeCommandInput();
                                 return true;
                             }
                             break;
                         case NewLineType.Shift:
                             if ((event.ctrlKey && event.shiftKey) && !event.metaKey && !event.altKey) {
                                 this.client.commandInput.value += '\n';
+                                if (this.client.getOption('commandAutoSize'))
+                                    resizeCommandInput();
                                 return true;
                             }
                             break;
@@ -1520,6 +1527,8 @@ export class Input extends EventEmitter {
                         this._tabSearch = null
                         event.preventDefault();
                         this.client.sendCommand(null, null, this.client.getOption('allowCommentsFromCommand'));
+                        if (this.client.getOption('commandAutoSize'))
+                            resizeCommandInput();
                     }
                     break;
                 case 'Tab':
@@ -1534,8 +1543,13 @@ export class Input extends EventEmitter {
                     let end = this.client.commandInput.selectionEnd;
                     if (this._tabWords === null) {
                         const cursorPos = getCursor(this.client.commandInput);
+                        //(?=\s[\S]+$)
                         let endPos = this.client.commandInput.value.indexOf(' ', cursorPos);
+                        if (endPos === -1)
+                            endPos = this.client.commandInput.value.indexOf('\n', cursorPos);
                         let startPos = this.client.commandInput.value.lastIndexOf(' ', cursorPos - 1);
+                        if (startPos === -1)
+                            startPos = this.client.commandInput.value.indexOf('\n', cursorPos - 1);
                         if (endPos === -1)
                             endPos = this.client.commandInput.value.length;
                         if (startPos === -1)
@@ -1566,6 +1580,8 @@ export class Input extends EventEmitter {
                     this.client.commandInput.selectionStart = this._tabSearch.start + this._tabSearch.find;
                     this.client.commandInput.selectionEnd = this._tabSearch.start + this._tabWords[this._tabIdx].length;
                     event.preventDefault();
+                    if (this.client.getOption('commandAutoSize'))
+                        resizeCommandInput();
                     break;
                 case 'Shift':
                 case 'Control':

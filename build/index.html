@@ -860,7 +860,8 @@
             const cmd = document.getElementById('command');
             const cmdSize = window.getComputedStyle(cmd);
             measure.style.fontSize = this.commandInput.style.fontSize;
-            measure.style.fontFamily = this.commandInput.style.fontFamily;      
+            measure.style.fontFamily = this.commandInput.style.fontFamily;
+            measure.style.width = document.getElementById('commandInput').offsetWidth + 'px';
             const oldMeasure = measure.innerHTML;
             measure.innerHTML = 'W';
             const height = measure.offsetHeight;
@@ -869,6 +870,25 @@
             padding += parseFloat(cmdSize.paddingTop) || 0;
             padding += parseFloat(cmdSize.paddingBottom) || 0;
             measure.innerHTML = oldMeasure;
+            cmd.style.height = (height + padding) + 'px';
+            document.getElementById('commandbox').style.height = height + 'px';
+            document.getElementById('display').style.bottom = (height + padding) + 'px';
+        }
+
+        function resizeCommandInput() {
+            //TODO cache elements using a command = { el1, ... } to group
+            const measure = document.getElementById('commandMeasure');
+            const cmd = document.getElementById('command');
+            measure.innerHTML = client.commandInput.value + '\n';
+            const height = measure.offsetHeight;
+
+            //TODO cache in update function
+            const cmdSize = window.getComputedStyle(cmd);
+            let padding = parseFloat(cmdSize.borderTopWidth) || 0;
+            padding += parseFloat(cmdSize.borderBottomWidth) || 0;
+            padding += parseFloat(cmdSize.paddingTop) || 0;
+            padding += parseFloat(cmdSize.paddingBottom) || 0;
+
             cmd.style.height = (height + padding) + 'px';
             document.getElementById('commandbox').style.height = height + 'px';
             document.getElementById('display').style.bottom = (height + padding) + 'px';
@@ -1575,6 +1595,12 @@
                 reloadIcon();
                 createWatcher();
                 loadLoggerOptions();
+                client.commandInput.removeEventListener('input', resizeCommandInput);
+                client.commandInput.removeEventListener('change', resizeCommandInput);
+                if (this.client.getOption('commandAutoSize')) {
+                    client.commandInput.addEventListener('input', resizeCommandInput);
+                    client.commandInput.addEventListener('change', resizeCommandInput);
+                }
             });
 
             client.on('scroll-lock', (lock) => {
@@ -2550,6 +2576,10 @@
             //#region Setup client
             //client = new Client('display', 'commandInput', _windowState.data.settings);  
             client = new (require('./js/client.js').Client)('display', 'commandInput', _windowState.data.settings);
+            if (this.client.getOption('commandAutoSize')) {
+                client.commandInput.addEventListener('input', resizeCommandInput);
+                client.commandInput.addEventListener('change', resizeCommandInput);
+            }
             initClientEvents();
             client.sendChat = updateChat;
             client.display.enableBell = false;
