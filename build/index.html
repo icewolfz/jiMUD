@@ -730,12 +730,12 @@
                     break;
                 case 'buttons':
                     client.options.showButtonBar = !client.getOption('showButtonBar');
-                    doUpdate(33);
+                    doUpdate(33 | 1024);
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'buttonsvisible'], options: { checked: client.getOption('showButtonBar') } });
                     break;
                 case 'status':
                     client.options.showStatus = !client.getOption('showStatus');
-                    doUpdate(33);
+                    doUpdate(33 | 1024);
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'statusvisible'], options: { checked: client.options.showStatus } });
                     break;
                 case 'lagmeter':
@@ -844,6 +844,7 @@
             updateCommandInput();
             setTimeout(() => {
                 updateCommandInput();
+                resizeCommandInput();
                 //only update if not loading
                 if (document.getElementById('loader').style.display !== 'none')
                     _status.resize();
