@@ -5,9 +5,7 @@ A list of profiled images and image spites that can be accessed using
 
 - `border.png` Main client border sprite
 - `button.png` Button bar border
-- `input.left.png` Command box left end cap
-- `input.png` Command box repeating middle background
-- `input.right.png` Command box right end cap
+- `input.png` Command box border
 
 ## Actions
 

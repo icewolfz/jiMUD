@@ -47,27 +47,18 @@ body {
     bottom: 0px;
     left: 32px;
     right: 178px;
-    background-color: transparent;
-    background-image: url(#{$images}/input.png);
+    background-color: transparent;    
+    border: 5px solid;
+    border-top: 3px solid;
+    border-bottom: 3px solid;    
+    border-image: url(#{$images}/input.png) 5 5;
 }
 
 #commandbox {
-    left: 5px;
-    right: 96px;
+    left: 2px;
+    right: 93px;
     height: 18px;
-    bottom: 5px;
-}
-
-#commandleft {
-    background-image: url(#{$images}/input.left.png);
-    height: 26px;
-    width: 5px;
-}
-
-#commandright {
-    background-image: url(#{$images}/input.right.png);
-    height: 26px;
-    width: 5px;
+    bottom: 0px;
 }
 
 #commandInput {
@@ -843,22 +834,8 @@ body {
     background-color: #790000;
 }
 
-.command-history {
-    right: 60px;
-    top: 4px;
-}
-
-#btnTriggers {
-    right: 24px;
-}
-
-#btnParsing {
-    right: 42px;
-}
-
 #btnTriggers,
 #btnParsing {
-    top: 5px;
     text-align: center;
     border-radius: 4px;
     border: 0px;
@@ -887,8 +864,6 @@ body {
 }
 
 #advedit {
-    top: 5px;
-    right: 6px;
     text-align: center;
     border-radius: 4px;
     border: 0px;

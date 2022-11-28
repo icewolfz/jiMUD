@@ -26,7 +26,9 @@
     - Fix tab strip to scroll when a tab is dragged over scroll buttons
     - Fix goto/peek Definition menu and context items
     - Fix tab strip dropdown menu height when output panel visible
-  - Interface: Fix tab strip to scroll when a tab is dragged over scroll buttons
+  - Interface:
+    - Fix tab strip to scroll when a tab is dragged over scroll buttons
+    - Command input box resizes correctly to set font size to a max of 50% window height
 - **Changed:**
   - `Character manager on row double click load in:` Now defaults to open in new tab
   - Display: Adjust word wrap break points to have better flow

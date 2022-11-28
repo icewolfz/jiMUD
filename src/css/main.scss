@@ -168,19 +168,21 @@ body {
     box-sizing: border-box;
 }
 
+#commandMeasure {
+    white-space: pre;
+    position: absolute;
+    z-index: 1000;
+    max-height: 50%;
+}
+
 #commandbox {
     position: absolute;
     box-sizing: border-box;
 }
 
-#commandleft {
-    float: left;
-    box-sizing: border-box;
-}
-
-#commandright {
+#commandBoxButtons {
+    display: inline-flex;
     float: right;
-    box-sizing: border-box;
 }
 
 #commandInput {
@@ -238,23 +240,11 @@ body {
 }
 
 .command-history {
-    position: absolute !important;
-    top: 2px;
-    right: 64px;
-}
-
-#btnParsing {
-    top: 2px;
-    right: 42px;
-}
-
-#btnTriggers {
-    top: 2px;
-    right: 22px;
+    margin-right: 2px;
 }
 
 #advedit, #btnTriggers, #btnParsing {
-    position: absolute;
+    margin-right: 2px;
     border-radius: 4px;
 }
 

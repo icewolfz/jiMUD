@@ -14,6 +14,7 @@ body {
     top: 2px;
     bottom: 29px;
     border: 1px solid #{$borderColor};
+    margin-bottom: 4px;
 }
 
 #display-split-bar {
@@ -37,24 +38,30 @@ body {
 
 #command {
     height: 24px;
-    bottom: 2px;
+    bottom: 0px;
     left: 34px;
     right: 165px;
     background-color: transparent;
     border: 0px;
+    padding: 2px;
+}
+
+#commandBoxButtons  {
+    position: absolute;
+    right: 0;
+    top: -1px;
 }
 
 #commandbox {
     left: 0px;
     top: 0px;
-    right: 112px;
+    right: 116px;
     bottom: 0px;
     background-color: white;
 }
 
-#commandleft,
-#commandright {
-    display: none;
+#commandMeasure {
+    min-height: 24px;
 }
 
 #commandInput {
@@ -838,31 +845,12 @@ body {
     height: 24px;
 }
 
-.command-history {
-    right: 25px;
-    top: 0;
-}
-
 #history-dropup .fa {
     margin-top: 3px;
     font-size: 18px;
 }
 
-.command-history {
-    right: 78px;
-    top: 0px;
-}
-
-#btnTriggers {
-    right: 26px;
-}
-
-#btnParsing {
-    right: 52px;
-}
-
 #btnTriggers, #btnParsing {
-    top: 0px;
     text-align: center;
     height: 24px;
     width: 24px;
@@ -871,8 +859,6 @@ body {
 }
 
 #advedit {
-    right: 0px;
-    top: 0px;
     height: 24px;
     width: 24px;
     font-size: 22px;

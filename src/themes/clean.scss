@@ -12,6 +12,7 @@ body {
     top: 2px;
     bottom: 29px;
     border: 1px solid #{$borderColor};
+    margin-bottom: 5px;
 }
 
 #display-split-bar {
@@ -46,18 +47,14 @@ body {
     right: 170px;
     background-color: transparent;
     border: 1px solid #{$borderColor};
+    padding: 2px;
 }
 
 #commandbox {
     left: 2px;
-    right: 96px;
+    right: 93px;
     height: 18px;
     bottom: 2px;
-}
-
-#commandleft,
-#commandright {
-    display: none;
 }
 
 #commandInput {
@@ -822,22 +819,8 @@ body {
     background-color: #790000;
 }
 
-.command-history {
-    right: 58px;
-    top: 3px;
-}
-
-#btnTriggers {
-    right: 22px;
-}
-
-#btnParsing {
-    right: 40px;
-}
-
 #btnTriggers,
 #btnParsing {
-    top: 3px;
     text-align: center;
     border-radius: 4px;
     border: 0px;
@@ -866,8 +849,6 @@ body {
 }
 
 #advedit {
-    top: 3px;
-    right: 3px;
     text-align: center;
     border-radius: 4px;
     border: 0px;

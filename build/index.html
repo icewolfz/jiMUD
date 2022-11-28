@@ -22,27 +22,28 @@
         </div>
     </div>
     <div id="display"></div>
+    <div id="commandMeasure"></div>
     <div id="command">
-        <div id="commandleft"></div>
-        <div id="commandright"></div>
         <div id="commandbox">
             <textarea type="text" id="commandInput" aria-live="polite" spellcheck="true" wrap="off" cols="20" rows="20"></textarea>
         </div>
-        <div class="dropdown dropup command-history">
-            <a id="history-dropup" title="Show command history" class="button button-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" area-expanded="true">
-                <i class="fa fa-history"></i><span class="caret" style="margin: 0"></span>
+        <div id="commandBoxButtons">
+            <div class="dropdown dropup command-history">
+                <a id="history-dropup" title="Show command history" class="button button-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" area-expanded="true">
+                    <i class="fa fa-history"></i><span class="caret" style="margin: 0"></span>
+                </a>
+                <ul class="dropdown-menu pull-right dropdown-menu-right" data-container="body" aria-labelledby="history-dropdown"></ul>
+            </div>
+            <a href="javascript:void(0)" title="Toggle parsing" class="button button-sm" id="btnParsing" onclick="toggleParsing()">
+                <i class="fa fa-terminal"></i>
             </a>
-            <ul class="dropdown-menu pull-right dropdown-menu-right" data-container="body" aria-labelledby="history-dropdown"></ul>
+            <a href="javascript:void(0)" title="Toggle triggers" class="button button-sm" id="btnTriggers" onclick="toggleTriggers()">
+                <i class="fa fa-bolt"></i>
+            </a>
+            <a href="javascript:void(0)" title="Show advanced editor" class="button button-sm" id="advedit" onclick="openWindow('editor');">
+                <i class="fa fa-edit"></i>
+            </a>
         </div>
-        <a href="javascript:void(0)" title="Toggle parsing" class="button button-sm" id="btnParsing" onclick="toggleParsing()">
-            <i class="fa fa-terminal"></i>
-        </a>
-        <a href="javascript:void(0)" title="Toggle triggers" class="button button-sm" id="btnTriggers" onclick="toggleTriggers()">
-            <i class="fa fa-bolt"></i>
-        </a>
-        <a href="javascript:void(0)" title="Show advanced editor" class="button button-sm" id="advedit" onclick="openWindow('editor');">
-            <i class="fa fa-edit"></i>
-        </a>
     </div>
     <a href="javascript:void(0)" id="drag-grip" title="Drag grip" draggable="true" class="button drag-grip" style="display: none">
         <svg class="svg-icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
@@ -840,7 +841,9 @@
             else
                 document.getElementById('btnTriggers').classList.remove('on');
             buildButtons();
+            updateCommandInput();
             setTimeout(() => {
+                updateCommandInput();
                 //only update if not loading
                 if (document.getElementById('loader').style.display !== 'none')
                     _status.resize();
@@ -850,6 +853,25 @@
                 client.UpdateWindow();
             }, 1);
             updateMenu();
+        }
+
+        async function updateCommandInput() {
+            const measure = document.getElementById('commandMeasure');
+            const cmd = document.getElementById('command');
+            const cmdSize = window.getComputedStyle(cmd);
+            measure.style.fontSize = this.commandInput.style.fontSize;
+            measure.style.fontFamily = this.commandInput.style.fontFamily;      
+            const oldMeasure = measure.innerHTML;
+            measure.innerHTML = 'W';
+            const height = measure.offsetHeight;
+            let padding = parseFloat(cmdSize.borderTopWidth) || 0;
+            padding += parseFloat(cmdSize.borderBottomWidth) || 0;
+            padding += parseFloat(cmdSize.paddingTop) || 0;
+            padding += parseFloat(cmdSize.paddingBottom) || 0;
+            measure.innerHTML = oldMeasure;
+            cmd.style.height = (height + padding) + 'px';
+            document.getElementById('commandbox').style.height = height + 'px';
+            document.getElementById('display').style.bottom = (height + padding) + 'px';
         }
 
         function buildMenu(name, context) {
