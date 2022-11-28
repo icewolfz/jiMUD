@@ -855,6 +855,7 @@
             updateMenu();
         }
 
+        let commandInput = {};
         async function updateCommandInput() {
             const measure = document.getElementById('commandMeasure');
             const cmd = document.getElementById('command');
@@ -873,22 +874,21 @@
             cmd.style.height = (height + padding) + 'px';
             document.getElementById('commandbox').style.height = height + 'px';
             document.getElementById('display').style.bottom = (height + padding) + 'px';
+            commandInput = {
+                measure: measure,
+                cmd: cmd,
+                cmdSize: cmdSize,
+                height: height,
+                padding: padding
+            }
         }
 
         function resizeCommandInput() {
-            //TODO cache elements using a command = { el1, ... } to group
-            const measure = document.getElementById('commandMeasure');
-            const cmd = document.getElementById('command');
-            measure.innerHTML = client.commandInput.value + '\n';
+            const measure = commandInput.measure;
+            const cmd = commandInput.cmd;
+            measure.innerHTML = client.commandInput.value + '\n';            
             const height = measure.offsetHeight;
-
-            //TODO cache in update function
-            const cmdSize = window.getComputedStyle(cmd);
-            let padding = parseFloat(cmdSize.borderTopWidth) || 0;
-            padding += parseFloat(cmdSize.borderBottomWidth) || 0;
-            padding += parseFloat(cmdSize.paddingTop) || 0;
-            padding += parseFloat(cmdSize.paddingBottom) || 0;
-
+            const padding = commandInput.padding;
             cmd.style.height = (height + padding) + 'px';
             document.getElementById('commandbox').style.height = height + 'px';
             document.getElementById('display').style.bottom = (height + padding) + 'px';
