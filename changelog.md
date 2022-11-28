@@ -29,6 +29,9 @@
   - Interface:
     - Fix tab strip to scroll when a tab is dragged over scroll buttons
     - Command input box resizes correctly to set font size to a max of 50% window height
+  - Command input:
+    - Send command only on enter key and no modifiers held down
+    - Allow history navigation only if no modifier keys are held down, fixing shift selection support
 - **Changed:**
   - `Character manager on row double click load in:` Now defaults to open in new tab
   - Display: Adjust word wrap break points to have better flow

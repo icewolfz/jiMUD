@@ -1439,6 +1439,8 @@ export class Input extends EventEmitter {
         this.client.commandInput.addEventListener('keydown', event => {
             switch (event.key) {
                 case 'Escape': //esc
+                    //any modifier set not a proper history navigation    
+                    if (event.ctrlKey || event.shiftKey || event.metaKey || event.altKey) return;
                     this.client.commandInput.blur();
                     this.client.commandInput.value = '';
                     this.client.commandInput.select();
@@ -1448,6 +1450,8 @@ export class Input extends EventEmitter {
                     this._tabSearch = null
                     break;
                 case 'ArrowUp': //up
+                    //any modifier set not a proper history navigation    
+                    if (event.ctrlKey || event.shiftKey || event.metaKey || event.altKey) return;
                     if (this._historyIdx === this._commandHistory.length && this.client.commandInput.value.length > 0) {
                         this.AddCommandToHistory(this.client.commandInput.value);
                         if (this.client.commandInput.value === this._commandHistory[this._historyIdx - 1])
@@ -1467,6 +1471,8 @@ export class Input extends EventEmitter {
                     setTimeout(() => this.client.commandInput.select(), 0);
                     break;
                 case 'ArrowDown': //down
+                    //any modifier set not a proper history navigation    
+                    if (event.ctrlKey || event.shiftKey || event.metaKey || event.altKey) return;
                     if (this._historyIdx === this._commandHistory.length && this.client.commandInput.value.length > 0)
                         this.AddCommandToHistory(this.client.commandInput.value);
                     this._historyIdx++;
@@ -1507,15 +1513,20 @@ export class Input extends EventEmitter {
                             }
                             break;
                     }
-                    this._tabIdx = -1;
-                    this._tabWords = null;
-                    this._tabSearch = null
-                    event.preventDefault();
-                    this.client.sendCommand(null, null, this.client.getOption('allowCommentsFromCommand'));
+                    //only send if no modifiers set
+                    if (!event.ctrlKey && !event.shiftKey && !event.metaKey && !event.altKey) {
+                        this._tabIdx = -1;
+                        this._tabWords = null;
+                        this._tabSearch = null
+                        event.preventDefault();
+                        this.client.sendCommand(null, null, this.client.getOption('allowCommentsFromCommand'));
+                    }
                     break;
                 case 'Tab':
                     if (!this.client.getOption('enableTabCompletion') || this.client.commandInput.value.length === 0) return;
-                    if (!event.altKey && !event.ctrlKey && event.shiftKey && !event.metaKey)
+                    //any modifiers down do not do tab complete
+                    if (event.altKey || event.ctrlKey || event.metaKey) return;
+                    if (event.shiftKey)
                         this._tabIdx--;
                     else
                         this._tabIdx++;
