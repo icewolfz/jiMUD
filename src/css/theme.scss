@@ -290,3 +290,8 @@ button.active.focus {
         transform: rotate(360deg);
     }
 }
+
+#commandMeasure::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
