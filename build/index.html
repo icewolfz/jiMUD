@@ -901,7 +901,7 @@
         function _resizeCommandInput() {
             const measure = commandInput.measure;
             const cmd = commandInput.cmd;
-            measure.innerHTML = client.commandInput.value + '\n';            
+            measure.innerHTML = client.commandInput.value + '\n';
             const height = measure.offsetHeight;
             const padding = commandInput.padding;
             cmd.style.height = (height + padding) + 'px';
@@ -1124,6 +1124,29 @@
             _backup.on('finish-save', () => {
                 client.raise('backup-saved');
             });
+        }
+
+        async function initCommandInput() {
+            if (this.client.getOption('commandAutoSize') || this.client.getOption('commandScrollbars')) {
+                client.commandInput.addEventListener('input', resizeCommandInput);
+                client.commandInput.addEventListener('change', resizeCommandInput);
+            }
+            if (this.client.getOption('commandWordWrap')) {
+                document.getElementById('commandMeasure').style.whiteSpace = 'pre-wrap';
+                document.getElementById('commandMeasure').style.overflowWrap = 'anywhere';
+            }
+            else {
+                document.getElementById('commandMeasure').style.whiteSpace = '';
+                document.getElementById('commandMeasure').style.overflowWrap = '';
+            }
+            if (this.client.getOption('commandScrollbars')) {
+                document.getElementById('commandMeasure').style.overflow = 'auto';
+                client.commandInput.style.overflow = 'auto';
+            }
+            else {
+                document.getElementById('commandMeasure').style.overflow = '';
+                client.commandInput.style.overflow = '';
+            }
         }
 
         async function initClientEvents() {
@@ -1612,18 +1635,7 @@
                 loadLoggerOptions();
                 client.commandInput.removeEventListener('input', resizeCommandInput);
                 client.commandInput.removeEventListener('change', resizeCommandInput);
-                if (this.client.getOption('commandAutoSize')) {
-                    client.commandInput.addEventListener('input', resizeCommandInput);
-                    client.commandInput.addEventListener('change', resizeCommandInput);
-                }
-                if (this.client.getOption('commandWordWrap')) {
-                    document.getElementById('commandMeasure').style.whiteSpace = 'pre-wrap';
-                    document.getElementById('commandMeasure').style.overflowWrap = 'anywhere';
-                }
-                else {
-                    document.getElementById('commandMeasure').style.whiteSpace = '';
-                    document.getElementById('commandMeasure').style.overflowWrap = '';
-                }
+                initCommandInput();
                 resizeCommandInput();
             });
 
@@ -2600,18 +2612,7 @@
             //#region Setup client
             //client = new Client('display', 'commandInput', _windowState.data.settings);  
             client = new (require('./js/client.js').Client)('display', 'commandInput', _windowState.data.settings);
-            if (this.client.getOption('commandAutoSize')) {
-                client.commandInput.addEventListener('input', resizeCommandInput);
-                client.commandInput.addEventListener('change', resizeCommandInput);
-            }
-            if (this.client.getOption('commandWordWrap')) {
-                document.getElementById('commandMeasure').style.whiteSpace = 'pre-wrap';
-                document.getElementById('commandMeasure').style.overflowWrap = 'anywhere';
-            }
-            else {
-                document.getElementById('commandMeasure').style.whiteSpace = '';
-                document.getElementById('commandMeasure').style.overflowWrap = '';
-            }
+            initCommandInput();
             initClientEvents();
             client.sendChat = updateChat;
             client.display.enableBell = false;
@@ -4041,7 +4042,7 @@
                     client.display.find(false);
                     $updating &= ~512;
                 }
-                if(($updating & 1024) === 1024) {
+                if (($updating & 1024) === 1024) {
                     _resizeCommandInput();
                     $updating &= ~1024;
                 }

@@ -1490,7 +1490,7 @@ export class Input extends EventEmitter {
                         case NewLineType.Ctrl:
                             if (event.ctrlKey && !event.shiftKey && !event.metaKey && !event.altKey) {
                                 this.client.commandInput.value += '\n';
-                                if (this.client.getOption('commandAutoSize'))
+                                if (this.client.getOption('commandAutoSize') || this.client.getOption('commandScrollbars'))
                                     resizeCommandInput();
                                 return true;
                             }
@@ -1498,7 +1498,7 @@ export class Input extends EventEmitter {
                         case NewLineType.CtrlAndShift:
                             if (event.ctrlKey && event.shiftKey && !event.metaKey && !event.altKey) {
                                 this.client.commandInput.value += '\n';
-                                if (this.client.getOption('commandAutoSize'))
+                                if (this.client.getOption('commandAutoSize') || this.client.getOption('commandScrollbars'))
                                     resizeCommandInput();
                                 return true;
                             }
@@ -1506,7 +1506,7 @@ export class Input extends EventEmitter {
                         case NewLineType.CtrlOrShift:
                             if ((event.ctrlKey || event.shiftKey) && !event.metaKey && !event.altKey) {
                                 this.client.commandInput.value += '\n';
-                                if (this.client.getOption('commandAutoSize'))
+                                if (this.client.getOption('commandAutoSize') || this.client.getOption('commandScrollbars'))
                                     resizeCommandInput();
                                 return true;
                             }
@@ -1514,7 +1514,7 @@ export class Input extends EventEmitter {
                         case NewLineType.Shift:
                             if ((event.ctrlKey && event.shiftKey) && !event.metaKey && !event.altKey) {
                                 this.client.commandInput.value += '\n';
-                                if (this.client.getOption('commandAutoSize'))
+                                if (this.client.getOption('commandAutoSize') || this.client.getOption('commandScrollbars'))
                                     resizeCommandInput();
                                 return true;
                             }
@@ -1527,7 +1527,7 @@ export class Input extends EventEmitter {
                         this._tabSearch = null
                         event.preventDefault();
                         this.client.sendCommand(null, null, this.client.getOption('allowCommentsFromCommand'));
-                        if (this.client.getOption('commandAutoSize'))
+                        if (this.client.getOption('commandAutoSize') || this.client.getOption('commandScrollbars'))
                             resizeCommandInput();
                     }
                     break;
@@ -1580,7 +1580,7 @@ export class Input extends EventEmitter {
                     this.client.commandInput.selectionStart = this._tabSearch.start + this._tabSearch.find;
                     this.client.commandInput.selectionEnd = this._tabSearch.start + this._tabWords[this._tabIdx].length;
                     event.preventDefault();
-                    if (this.client.getOption('commandAutoSize'))
+                    if (this.client.getOption('commandAutoSize') || this.client.getOption('commandScrollbars'))
                         resizeCommandInput();
                     break;
                 case 'Shift':

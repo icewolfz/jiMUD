@@ -83,6 +83,7 @@ Reset - Resetting will revert all settings back to default values
 - `Keep Last Command` This leaves the last command entered into the command input and selected it, if disabled it will be cleared
 - `Auto size to contents` Resize command input height based on contents
 - `Word wrap` Wrap long lines in command input
+- `Scrollbars` Add scrollbars when needed to command input
 - `History Size` The number of items to keep in command history when navigating using the up/down arrow.
 - `Newline shortcut` A shortcut for adding newlines to command input
   - `None` no shortcut enter always sends command

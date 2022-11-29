@@ -516,7 +516,8 @@ export let SettingList: any[] = [
     ['enableNotifications', 0, SettingType.Boolean, true],
     ['echo', 0, SettingType.Number, Echo.None],
     ['commandAutoSize', 0, SettingType.Boolean, false],
-    ['commandWordWrap', 0, SettingType.Boolean, false]
+    ['commandWordWrap', 0, SettingType.Boolean, false],
+    ['commandScrollbars', 0, SettingType.Boolean, false]
 ];
 
 /**
@@ -737,6 +738,7 @@ export class Settings {
     public echo: Echo;
     public commandAutoSize: boolean;
     public commandWordWrap: boolean;
+    public commandScrollbars: boolean;
 
     public static load(file) {
         try {
