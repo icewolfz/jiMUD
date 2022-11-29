@@ -154,7 +154,7 @@
     "chokidar": "^3.5.3",
     "electron-updater": "^5.3.0",
     "font-list": "^1.4.5",
-    "fs-extra": "^10.1.0",
+    "fs-extra": "^11.0.0",
     "fswin": "^3.22.106",
     "lz-string": "^1.4.4",
     "markdown-it": "^13.0.1",

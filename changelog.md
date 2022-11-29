@@ -42,6 +42,7 @@
   - Update electron 19.1.5 to 21.3.1
   - Update mathjs 11.3.3 to 11.4.0
   - Update better-sqlite3 7.6.2 to 8.0.0
+  - Update fs-extra 10.1.0 to 11.0.0
 
 ## 1.0.0-alpha
 
