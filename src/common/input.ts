@@ -1469,6 +1469,8 @@ export class Input extends EventEmitter {
                         this.client.commandInput.value = this._commandHistory[this._historyIdx];
                     }
                     setTimeout(() => this.client.commandInput.select(), 0);
+                    if (this.client.getOption('commandAutoSize') || this.client.getOption('commandScrollbars'))
+                        resizeCommandInput();
                     break;
                 case 'ArrowDown': //down
                     //any modifier set not a proper history navigation    
@@ -1484,6 +1486,8 @@ export class Input extends EventEmitter {
                         this.client.commandInput.value = this._commandHistory[this._historyIdx];
                     }
                     setTimeout(() => this.client.commandInput.select(), 0);
+                    if (this.client.getOption('commandAutoSize') || this.client.getOption('commandScrollbars'))
+                        resizeCommandInput();
                     break;
                 case 'Enter': // return
                     switch (this.client.getOption('newlineShortcut')) {
