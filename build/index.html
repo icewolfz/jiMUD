@@ -730,12 +730,16 @@
                     break;
                 case 'buttons':
                     client.options.showButtonBar = !client.getOption('showButtonBar');
-                    doUpdate(33 | 1024);
+                    doUpdate(33);
+                    if (this.client.getOption('commandAutoSize') || this.client.getOption('commandScrollbars'))
+                        resizeCommandInput();
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'buttons', 'buttonsvisible'], options: { checked: client.getOption('showButtonBar') } });
                     break;
                 case 'status':
                     client.options.showStatus = !client.getOption('showStatus');
-                    doUpdate(33 | 1024);
+                    doUpdate(33);
+                    if (this.client.getOption('commandAutoSize') || this.client.getOption('commandScrollbars'))
+                        resizeCommandInput();
                     ipcRenderer.send('update-menuitem', { menu: ['view', 'status', 'statusvisible'], options: { checked: client.options.showStatus } });
                     break;
                 case 'lagmeter':
@@ -844,7 +848,8 @@
             updateCommandInput();
             setTimeout(() => {
                 updateCommandInput();
-                resizeCommandInput();
+                if (this.client.getOption('commandAutoSize') || this.client.getOption('commandScrollbars'))
+                    resizeCommandInput();
                 //only update if not loading
                 if (document.getElementById('loader').style.display !== 'none')
                     _status.resize();
@@ -1636,7 +1641,8 @@
                 client.commandInput.removeEventListener('input', resizeCommandInput);
                 client.commandInput.removeEventListener('change', resizeCommandInput);
                 initCommandInput();
-                resizeCommandInput();
+                if (this.client.getOption('commandAutoSize') || this.client.getOption('commandScrollbars'))
+                    resizeCommandInput();
             });
 
             client.on('scroll-lock', (lock) => {

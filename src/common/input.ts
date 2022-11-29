@@ -1492,6 +1492,8 @@ export class Input extends EventEmitter {
                                 this.client.commandInput.value += '\n';
                                 if (this.client.getOption('commandAutoSize') || this.client.getOption('commandScrollbars'))
                                     resizeCommandInput();
+                                this.client.commandInput.blur();
+                                this.client.commandInput.focus();
                                 return true;
                             }
                             break;
@@ -1500,6 +1502,8 @@ export class Input extends EventEmitter {
                                 this.client.commandInput.value += '\n';
                                 if (this.client.getOption('commandAutoSize') || this.client.getOption('commandScrollbars'))
                                     resizeCommandInput();
+                                this.client.commandInput.blur();
+                                this.client.commandInput.focus();
                                 return true;
                             }
                             break;
@@ -1508,6 +1512,8 @@ export class Input extends EventEmitter {
                                 this.client.commandInput.value += '\n';
                                 if (this.client.getOption('commandAutoSize') || this.client.getOption('commandScrollbars'))
                                     resizeCommandInput();
+                                this.client.commandInput.blur();
+                                this.client.commandInput.focus();
                                 return true;
                             }
                             break;
@@ -1516,6 +1522,8 @@ export class Input extends EventEmitter {
                                 this.client.commandInput.value += '\n';
                                 if (this.client.getOption('commandAutoSize') || this.client.getOption('commandScrollbars'))
                                     resizeCommandInput();
+                                this.client.commandInput.blur();
+                                this.client.commandInput.focus();
                                 return true;
                             }
                             break;
