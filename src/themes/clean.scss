@@ -270,26 +270,6 @@ body {
     background: rgba(128, 0, 0, 0.5);
 }
 
-.find button .fa {
-    margin-top: 3px;
-}
-
-.find button {
-    width: 22px;
-    height: 22px;
-    border: 1px solid transparent;
-    text-align: center;
-    font-family: Arial, Helvetica, sans-serif;
-    vertical-align: top;
-    line-height: 16px;
-    color: inherit;
-    background-color: inherit;
-    padding: 0px;
-    margin-left: 2px;
-    margin-right: 2px;
-    border-radius: 2px;
-}
-
 .find button:hover,
 .find button.active:hover {
     border: 1px solid wheat;
@@ -314,31 +294,6 @@ body {
     color: wheat;
 }
 
-.find-case {
-    font-size: 10px;
-}
-
-.find-word {
-    text-decoration: overline underline;
-    font-size: 10px;
-}
-
-.find-highlight {
-    border-radius: 4px;
-    background: rgb(171, 102, 31);
-}
-
-.find-no-results {
-    color: #F08080;
-}
-
-.find-highlight.current {
-    border-radius: 4px;
-    background: rgb(116, 192, 114);
-    z-index: 10;
-}
-
-
 /* begin status */
 
 #status {
@@ -357,117 +312,6 @@ body {
     display: none;
 }
 
-.day {
-    background-image: url("#{$images}/status/daybg.png");
-}
-
-.day #environmentcenter {
-    background-image: url("#{$images}/status/sun.png");
-}
-
-.night {
-    background-image: url("#{$images}/status/nightbg.png");
-}
-
-.twilight {
-    background-image: url("#{$images}/status/sunsetbg.png");
-}
-
-.dawn {
-    background-image: url("#{$images}/status/sunrisebg.png");
-}
-
-.twilight #environmentcenter,
-.dawn #environmentcenter {
-    background-image: url("#{$images}/status/sunset.png");
-}
-
-.moon1-full #environmentleft {
-    background-image: url("#{$images}/status/redmoonfull.png");
-}
-
-.moon1-waning #environmentleft {
-    background-image: url("#{$images}/status/redmoonwaning.png");
-}
-
-.moon1-waxing #environmentleft {
-    background-image: url("#{$images}/status/redmoonwaxing.png");
-}
-
-.moon2-full #environmentcenter {
-    background-image: url("#{$images}/status/bluemoonfull.png");
-}
-
-.moon2-waning #environmentcenter {
-    background-image: url("#{$images}/status/bluemoonwaning.png");
-}
-
-.moon2-waxing #environmentcenter {
-    background-image: url("#{$images}/status/bluemoonwaxing.png");
-}
-
-.moon3-full #environmentright {
-    background-image: url("#{$images}/status/greenmoonfull.png");
-}
-
-.moon3-waning #environmentright {
-    background-image: url("#{$images}/status/greenmoonwaning.png");
-}
-
-.moon3-waxing #environmentright {
-    background-image: url("#{$images}/status/greenmoonwaxing.png");
-}
-
-.weather-snow #environmentweather {
-    background-image: url("#{$images}/status/weathersnow.png");
-}
-
-.weather-snow.intensity-hard #environmentweather {
-    background-image: url("#{$images}/status/weathersnowhard.png");
-}
-
-.weather-hail #environmentweather {
-    background-image: url("#{$images}/status/weatherhail.png");
-}
-
-.weather-hail.intensity-hard #environmentweather {
-    background-image: url("#{$images}/status/weatherhailhard.png");
-}
-
-.weather-rain #environmentweather,
-.weather-zombie_rain #environmentweather {
-    background-image: url("#{$images}/status/weatherrain.png");
-}
-
-.weather-rain.intensity-hard #environmentweather,
-.weather-zombie_rain.intensity-hard #environmentweather {
-    background-image: url("#{$images}/status/weatherrainhard.png");
-}
-
-.weather-sand #environmentweather {
-    background-image: url("#{$images}/status/weathersand.png");
-}
-
-.weather-sand.intensity-hard #environmentweather {
-    background-image: url("#{$images}/status/weathersandhard.png");
-}
-
-.weather-sleet #environmentweather {
-    background-image: url("#{$images}/status/weathersleet.png");
-}
-
-.weather-sleet.intensity-hard #environmentweather {
-    background-image: url("#{$images}/status/weathersleethard.png");
-}
-
-.weather-blood_rain #environmentweather {
-    background-image: url("#{$images}/status/weatherblood_rain.png");
-}
-
-.weather-blood_rain.intensity-hard #environmentweather {
-    background-image: url("#{$images}/status/weatherblood_rainhard.png");
-}
-
 #environment {
     height: 50px;
     top: 3px;
@@ -481,70 +325,6 @@ body {
     color: wheat;
     padding: 0 22px;
     font-size: 1.2em;
-}
-
-#character-name::first-letter {
-    text-transform: uppercase;
-}
-
-.weapon-dominant {
-    border-color: red !important;
-}
-
-.weapon-large-sword {
-    background-image: url(#{$images}/status/icon_sword_long2.png);
-}
-
-.weapon-shield {
-    background-image: url(#{$images}/status/icon_shield.png);
-}
-
-.weapon-melee {
-    background-image: url(#{$images}/status/icon_melee.png);
-}
-
-.weapon-miscellaneous {
-    background-image: url(#{$images}/status/icon_misc.png);
-}
-
-.weapon-polearm {
-    background-image: url(#{$images}/status/icon_halberd2.png);
-}
-
-.weapon-small-sword {
-    background-image: url(#{$images}/status/icon_sword_short3.png);
-}
-
-.weapon-spear {
-    background-image: url(#{$images}/status/icon_spear2.png);
-}
-
-.weapon-axe {
-    background-image: url(#{$images}/status/icon_axe1.png);
-}
-
-.weapon-blunt {
-    background-image: url(#{$images}/status/icon_bigclub1.png);
-}
-
-.weapon-knife {
-    background-image: url(#{$images}/status/icon_dagger1.png);
-}
-
-.weapon-bow {
-    background-image: url(#{$images}/status/icon_Bow3.png);
-}
-
-.weapon-crossbow {
-    background-image: url(#{$images}/status/icon_XBow2.png);
-}
-
-.weapon-flail {
-    background-image: url(#{$images}/status/icon_bullwhip.png);
-}
-
-.weapon-staff {
-    background-image: url(#{$images}/status/icon_staff2.png);
 }
 
 #lefthandweapon {
@@ -620,10 +400,6 @@ body {
     bottom: 2px;
 }
 
-.combat-bar .progressbar .progressbar-text {
-    left: 0;
-}
-
 #body {
     top: 3px;
     right: 3px;
@@ -633,148 +409,13 @@ body {
     padding: 2px;
 }
 
-#health {
-    left: 2px;
-}
-
-#armor {
-    right: 2px;
-}
-
-.health-100 {
-    fill: rgb(255, 0, 0);
-    color: rgb(255, 0, 0);
-    stroke: rgb(255, 0, 0);
-}
-
-.health-80-99 {
-    fill: rgb(252, 71, 29);
-    color: rgb(252, 71, 29);
-    stroke: rgb(252, 71, 29);
-}
-
-.health-60-79 {
-    fill: rgb(252, 165, 40);
-    color: rgb(252, 165, 40);
-    stroke: rgb(252, 165, 40);
-}
-
-.health-40-59 {
-    fill: rgb(251, 217, 48);
-    color: rgb(251, 217, 48);
-    stroke: rgb(251, 217, 48);
-}
-
-.health-20-39 {
-    fill: rgb(251, 255, 55);
-    color: rgb(251, 255, 55);
-    stroke: rgb(251, 255, 55);
-}
-
-.health-1-19 {
-    fill: rgb(167, 255, 69);
-    color: rgb(167, 255, 69);
-    stroke: rgb(167, 255, 69);
-}
-
-.health-full {
-    fill: rgb(0, 255, 31);
-    color: rgb(0, 255, 31);
-    stroke: rgb(0, 255, 31);
-}
-
-.armor-unarmored {
-    fill: rgb(128, 0, 0);
-    color: rgb(128, 0, 0);
-    stroke: rgb(128, 0, 0);
-}
-
-.armor-barely {
-    fill: rgb(255, 0, 0);
-    color: rgb(255, 0, 0);
-    stroke: rgb(255, 0, 0);
-}
-
-.armor-slightly {
-    fill: rgb(128, 128, 0);
-    color: rgb(128, 128, 0);
-    stroke: rgb(128, 128, 0);
-}
-
-.armor-somewhat {
-    fill: rgb(255, 255, 0);
-    color: rgb(255, 255, 0);
-    stroke: rgb(255, 255, 0);
-}
-
-.armor-moderately {
-    fill: rgb(0, 128, 128);
-    color: rgb(0, 128, 128);
-    stroke: rgb(0, 128, 128);
-}
-
-.armor-fairly {
-    fill: rgb(0, 255, 255);
-    color: rgb(0, 255, 255);
-    stroke: rgb(0, 255, 255);
-}
-
-.armor-adequately {
-    fill: rgb(0, 128, 0);
-    color: rgb(0, 128, 0);
-    stroke: rgb(0, 128, 0);
-}
-
-.armor-well {
-    fill: rgb(0, 255, 0);
-    color: rgb(0, 255, 0);
-    stroke: rgb(0, 255, 0);
-}
-
-.armor-considerably {
-    fill: rgb(0, 0, 128);
-    color: rgb(0, 0, 128);
-    stroke: rgb(0, 0, 128);
-}
-
-.armor-significantly {
-    fill: rgb(0, 0, 255);
-    color: rgb(0, 0, 255);
-    stroke: rgb(0, 0, 255);
-}
-
-.armor-completely {
-    fill: rgb(128, 128, 110);
-    color: rgb(128, 128, 110);
-    stroke: rgb(128, 128, 110);
-}
-
-.armor-extensively {
-    fill: rgb(255, 255, 255);
-    color: rgb(255, 255, 255);
-    stroke: rgb(255, 255, 255);
-}
-
 .progressbar {
-    height: 14px;
-    font-size: 1em;
     border: 1px solid #{$borderColor};
-    width: 118px;
-    -webkit-border-radius: 6px;
-    border-radius: 6px;
-    /* future proofing */
-    background: -webkit-linear-gradient(left, rgba(255, 50, 50, 1) 0%, rgba(255, 157, 0, 1) 25%, rgba(255, 255, 0, 1) 50%, rgba(189, 252, 0, 1) 75%, rgba(0, 255, 0, 1) 100%);
-    background: linear-gradient(to right, rgba(255, 50, 50, 1) 0%, rgba(255, 157, 0, 1) 25%, rgba(255, 255, 0, 1) 50%, rgba(189, 252, 0, 1) 75%, rgba(0, 255, 0, 1) 100%);
 }
 
 #hp-status {
     text-align: left;
     color: wheat;
-}
-
-#hp-status span {
-    overflow: hidden;
-    display: inline-block;
 }
 
 .progressbar .progressbar-text {

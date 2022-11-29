@@ -511,26 +511,6 @@ pre.viewer {
     color: #{$color};
 }
 
-.find button .fa {
-    margin-top: 3px;
-}
-
-.find button {
-    width: 22px;
-    height: 22px;
-    border: 1px solid transparent;
-    text-align: center;
-    font-family: Arial, Helvetica, sans-serif;
-    vertical-align: top;
-    line-height: 16px;
-    color: inherit;
-    background-color: inherit;
-    padding: 0px;
-    margin-left: 2px;
-    margin-right: 2px;
-    border-radius: 2px;
-}
-
 .find button:hover,
 .find button.active:hover {
     color: #{$color};
@@ -575,26 +555,3 @@ pre.viewer {
     padding: 0px;
 }
 
-.find-case {
-    font-size: 10px;
-}
-
-.find-word {
-    text-decoration: overline underline;
-    font-size: 10px;
-}
-
-.find-highlight {
-    border-radius: 4px;
-    background: rgb(171, 102, 31);
-}
-
-.find-no-results {
-    color: #F08080;
-}
-
-.find-highlight.current {
-    border-radius: 4px;
-    background: rgb(116, 192, 114);
-    z-index: 10;
-}
