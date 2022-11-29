@@ -318,115 +318,6 @@ body {
     display: none;
 }
 
-.day {
-    background-image: url("#{$images}/status/daybg.png");
-}
-
-.day #environmentcenter {
-    background-image: url("#{$images}/status/sun.png");
-}
-
-.night {
-    background-image: url("#{$images}/status/nightbg.png");
-}
-
-.twilight {
-    background-image: url("#{$images}/status/sunsetbg.png");
-}
-
-.dawn {
-    background-image: url("#{$images}/status/sunrisebg.png");
-}
-
-.twilight #environmentcenter,
-.dawn #environmentcenter {
-    background-image: url("#{$images}/status/sunset.png");
-}
-
-.moon1-full #environmentleft {
-    background-image: url("#{$images}/status/redmoonfull.png");
-}
-
-.moon1-waning #environmentleft {
-    background-image: url("#{$images}/status/redmoonwaning.png");
-}
-
-.moon1-waxing #environmentleft {
-    background-image: url("#{$images}/status/redmoonwaxing.png");
-}
-
-.moon2-full #environmentcenter {
-    background-image: url("#{$images}/status/bluemoonfull.png");
-}
-
-.moon2-waning #environmentcenter {
-    background-image: url("#{$images}/status/bluemoonwaning.png");
-}
-
-.moon2-waxing #environmentcenter {
-    background-image: url("#{$images}/status/bluemoonwaxing.png");
-}
-
-.moon3-full #environmentright {
-    background-image: url("#{$images}/status/greenmoonfull.png");
-}
-
-.moon3-waning #environmentright {
-    background-image: url("#{$images}/status/greenmoonwaning.png");
-}
-
-.moon3-waxing #environmentright {
-    background-image: url("#{$images}/status/greenmoonwaxing.png");
-}
-
-.weather-snow #environmentweather {
-    background-image: url("#{$images}/status/weathersnow.png");
-}
-
-.weather-snow.intensity-hard #environmentweather {
-    background-image: url("#{$images}/status/weathersnowhard.png");
-}
-
-.weather-hail #environmentweather {
-    background-image: url("#{$images}/status/weatherhail.png");
-}
-
-.weather-hail.intensity-hard #environmentweather {
-    background-image: url("#{$images}/status/weatherhailhard.png");
-}
-
-.weather-rain #environmentweather, .weather-zombie_rain #environmentweather {
-    background-image: url("#{$images}/status/weatherrain.png");
-}
-
-.weather-rain.intensity-hard #environmentweather,.weather-zombie_rain.intensity-hard #environmentweather {
-    background-image: url("#{$images}/status/weatherrainhard.png");
-}
-
-.weather-sand #environmentweather {
-    background-image: url("#{$images}/status/weathersand.png");
-}
-
-.weather-sand.intensity-hard #environmentweather {
-    background-image: url("#{$images}/status/weathersandhard.png");
-}
-
-.weather-sleet #environmentweather {
-    background-image: url("#{$images}/status/weathersleet.png");
-}
-
-.weather-sleet.intensity-hard #environmentweather {
-    background-image: url("#{$images}/status/weathersleethard.png");
-}
-
-.weather-blood_rain #environmentweather {
-    background-image: url("#{$images}/status/weatherblood_rain.png");
-}
-
-.weather-blood_rain.intensity-hard #environmentweather{
-    background-image: url("#{$images}/status/weatherblood_rainhard.png");
-}
-
 #environment {
     height: 50px;
     top: 3px;
@@ -441,66 +332,6 @@ body {
     color: #{$textColor};
     padding: 0 22px;
     font-size: 1.2em;
-}
-
-.weapon-dominant {
-    border-color: red !important;
-}
-
-.weapon-large-sword {
-    background-image: url(#{$images}/status/icon_sword_long2.png);
-}
-
-.weapon-shield {
-    background-image: url(#{$images}/status/icon_shield.png);
-}
-
-.weapon-melee {
-    background-image: url(#{$images}/status/icon_melee.png);
-}
-
-.weapon-miscellaneous {
-    background-image: url(#{$images}/status/icon_misc.png);
-}
-
-.weapon-polearm {
-    background-image: url(#{$images}/status/icon_halberd2.png);
-}
-
-.weapon-small-sword {
-    background-image: url(#{$images}/status/icon_sword_short3.png);
-}
-
-.weapon-spear {
-    background-image: url(#{$images}/status/icon_spear2.png);
-}
-
-.weapon-axe {
-    background-image: url(#{$images}/status/icon_axe1.png);
-}
-
-.weapon-blunt {
-    background-image: url(#{$images}/status/icon_bigclub1.png);
-}
-
-.weapon-knife {
-    background-image: url(#{$images}/status/icon_dagger1.png);
-}
-
-.weapon-bow {
-    background-image: url(#{$images}/status/icon_Bow3.png);
-}
-
-.weapon-crossbow {
-    background-image: url(#{$images}/status/icon_XBow2.png);
-}
-
-.weapon-flail {
-    background-image: url(#{$images}/status/icon_bullwhip.png);
-}
-
-.weapon-staff {
-    background-image: url(#{$images}/status/icon_staff2.png);
 }
 
 #lefthandweapon {
@@ -557,10 +388,6 @@ body {
 .combat-name {
     right: 1px;
     left: 38px;
-}
-
-.combat-name:first-letter {
-    text-transform: capitalize;
 }
 
 .combat-icon {

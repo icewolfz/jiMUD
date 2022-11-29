@@ -659,3 +659,7 @@ button.active.focus {
     background: rgb(116, 192, 114);
     z-index: 10;
 }
+
+.combat-name:first-letter {
+    text-transform: capitalize;
+}
