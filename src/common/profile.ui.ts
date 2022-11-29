@@ -4927,7 +4927,7 @@ export function validateIdentifiers(el: HTMLInputElement, focus?) {
     else {
         el.parentElement.classList.add('has-error');
         el.parentElement.classList.add('has-feedback');
-        el.nextElementSibling.innerHTML = '<small class="aura-error">Invalid names:' + ids.join(',') + '</small>';
+        el.nextElementSibling.innerHTML = '<small class="text-error">Invalid names:' + ids.join(',') + '</small>';
         if (focus)
             el.focus();
     }

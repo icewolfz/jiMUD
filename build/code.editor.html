@@ -5032,7 +5032,7 @@
             p.addClass('has-error');
             p.addClass('has-feedback');
             $('button', p).addClass('btn-danger');
-            p.find('.form-error').html('<small class="aura-error"><span class=\'sr-only\'>Error:</span>Path does not exist</small>');
+            p.find('.form-error').html('<small class="text-error"><span class=\'sr-only\'>Error:</span>Path does not exist</small>');
             $('#new-area-path').focus();
             return;
         }
@@ -5041,7 +5041,7 @@
             p.addClass('has-error');
             p.addClass('has-feedback');
             $('button', p).addClass('btn-danger');
-            p.find('.form-error').html('<small class="aura-error"><span class=\'sr-only\'>Error:</span>Invalid path</small>');
+            p.find('.form-error').html('<small class="text-error"><span class=\'sr-only\'>Error:</span>Invalid path</small>');
             $('#new-area-path').focus();
             return;
         }
@@ -5049,7 +5049,7 @@
             p = $('#new-area-name').parent();
             p.addClass('has-error');
             p.addClass('has-feedback');
-            p.find('.form-error').html('<small class="aura-error"><span class=\'sr-only\'>Error:</span>Invalid, can only contain letters, numbers, and _</small>');
+            p.find('.form-error').html('<small class="text-error"><span class=\'sr-only\'>Error:</span>Invalid, can only contain letters, numbers, and _</small>');
             $('#new-area-name').focus();
             return;
         }
@@ -5059,7 +5059,7 @@
             p.addClass('has-error');
             p.addClass('has-feedback');
             $('button', p).addClass('btn-danger');
-            p.find('.form-error').html('<small class="aura-error"><span class=\'sr-only\'>Error:</span>Directory with area name already exist</small>');
+            p.find('.form-error').html('<small class="text-error"><span class=\'sr-only\'>Error:</span>Directory with area name already exist</small>');
             $('#new-area-path').focus();
             return;
         }
@@ -5263,7 +5263,7 @@
             p.addClass('has-error');
             p.addClass('has-feedback');
             $('button', p).addClass('btn-danger');
-            p.find('.form-error').html('<small class="aura-error"><span class=\'sr-only\'>Error:</span>Path does not exist</small>');
+            p.find('.form-error').html('<small class="text-error"><span class=\'sr-only\'>Error:</span>Path does not exist</small>');
             $('#new-virtual-area-path').focus();
             return;
         }
@@ -5272,7 +5272,7 @@
             p.addClass('has-error');
             p.addClass('has-feedback');
             $('button', p).addClass('btn-danger');
-            p.find('.form-error').html('<small class="aura-error"><span class=\'sr-only\'>Error:</span>Invalid path</small>');
+            p.find('.form-error').html('<small class="text-error"><span class=\'sr-only\'>Error:</span>Invalid path</small>');
             $('#new-virtual-area-path').focus();
             return;
         }
@@ -5281,7 +5281,7 @@
             p.addClass('has-error');
             p.addClass('has-feedback');
             $('button', p).addClass('btn-danger');
-            p.find('.form-error').html('<small class="aura-error"><span class=\'sr-only\'>Error:</span>Path already contains a virtual server</small>');
+            p.find('.form-error').html('<small class="text-error"><span class=\'sr-only\'>Error:</span>Path already contains a virtual server</small>');
             $('#new-virtual-area-path').focus();
             return;
         }
@@ -5293,7 +5293,7 @@
                 p = $('#new-virtual-area-area').parent().parent();
                 p.addClass('has-error');
                 p.addClass('has-feedback');
-                p.find('.form-error').html('<small class="aura-error"><span class=\'sr-only\'>Error:</span>Invalid, can only contain letters, numbers, and _</small>');
+                p.find('.form-error').html('<small class="text-error"><span class=\'sr-only\'>Error:</span>Invalid, can only contain letters, numbers, and _</small>');
                 $('#new-virtual-area-area').focus();
                 return;
             }
@@ -5303,7 +5303,7 @@
                 p.addClass('has-error');
                 p.addClass('has-feedback');
                 $('button', p).addClass('btn-danger');
-                p.find('.form-error').html('<small class="aura-error"><span class=\'sr-only\'>Error:</span>Directory with area name already exist</small>');
+                p.find('.form-error').html('<small class="text-error"><span class=\'sr-only\'>Error:</span>Directory with area name already exist</small>');
                 $('#new-virtual-area-area').focus();
                 return;
             }

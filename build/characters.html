@@ -82,14 +82,14 @@
                 if (invalidFile($('#get-name-value').val())) {
                     p.addClass('has-error');
                     p.addClass('has-feedback');
-                    p.find('.form-error').html('<small class="aura-error"><span class=\'sr-only\'>Error:</span>Invalid name</small>');
+                    p.find('.form-error').html('<small class="text-error"><span class=\'sr-only\'>Error:</span>Invalid name</small>');
                     $('#get-name-value').focus();
                     return;
                 }
                 if ($('#get-name').data('type') === 1 && $('#get-name-value').val().toLowerCase() === $('#get-name').data('name')) {
                     p.addClass('has-error');
                     p.addClass('has-feedback');
-                    p.find('.form-error').html('<small class="aura-error"><span class=\'sr-only\'>Error:</span>Current name</small>');
+                    p.find('.form-error').html('<small class="text-error"><span class=\'sr-only\'>Error:</span>Current name</small>');
                     $('#get-name-value').focus();
                     return;
                 }
@@ -1174,7 +1174,7 @@
             display: block;
         }
 
-        .aura-error,
+        .text-error,
         .form-error,
         .has-error a {
             color: #A94442;
