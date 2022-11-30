@@ -36,6 +36,9 @@ Many predefined functions can be called directly in an expression with out the \
 
 **Note** when using functions in the expression engine arguments are not parsed by the command parser, example: \${eval(len(\${selected}))} would return the leng of \${selected} not the value of \${selected} and does not work the same as \${eval(\${len(\${selected})})} you can access selected directly using selected or $selected
 
+### Expressions - Known issues
+If you use a function with out the () it will return the function object and could lead to displaying a large amount of code to the screen
+
 ## Escaping
 
 Escaping allows you to prevent special characters from being parsed and allow them to be used as normal, characters that are escaped are $%"'{, command character, escape character, speedpath character, verbatim character. For example: \${copied} would return as ${copied} as the \ prevents the \$ from being parsed as variable or function, note how you do not have to escape the { as it is not required as the $ is not processed so { will be read as a normal character.

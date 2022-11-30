@@ -1356,7 +1356,6 @@ export class Input extends EventEmitter {
             },
             //clientid: getId(),
             clientname: (args, math, scope) => {
-                let notes;
                 if (args.length === 0) {
                     return getName();
                 }
