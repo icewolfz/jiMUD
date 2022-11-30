@@ -40,7 +40,7 @@
 - **Changed:**
   - `Character manager on row double click load in:` Now defaults to open in new tab
   - Display: Adjust word wrap break points to have better flow
-  - Update electron 19.1.5 to 21.3.1
+  - Update electron 19.1.5 to 22.0.0
   - Update mathjs 11.3.3 to 11.4.0
   - Update better-sqlite3 7.6.2 to 8.0.0
   - Update fs-extra 10.1.0 to 11.1.0

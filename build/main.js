@@ -891,11 +891,19 @@ else if (getSetting('loadLayout'))
     _layout = parseTemplate(getSetting('loadLayout'));
 
 app.on('render-process-gone', (event, webContents, details) => {
-    logError(`Render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
+    if (webContents)
+        logError(`Render process gone, url: ${webContents.getURL()}, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
+    else
+        logError(`Render process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
 });
 
 app.on('child-process-gone', (event, details) => {
-    logError(`Child process gone, reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
+    var data = [];
+    if (details.serviceName && details.serviceName.length)
+        data.push(`service name: ${details.serviceName}`);
+    if (details.name && details.name.length)
+        data.push(`name: ${details.name}`);
+    logError(`Child process gone, name: ${data.join(', ')}reason: ${details.reason}, exitCode ${details.exitCode}\n`, true);
 });
 
 // This method will be called when Electron has finished
@@ -5109,16 +5117,16 @@ ipcMain.on('progress', (event, ...args) => {
 });
 
 ipcMain.on('addWordToSpellCheckerDictionary', (event, word) => {
-    if(!word || !word.length) return;
+    if (!word || !word.length) return;
     event.sender.session.addWordToSpellCheckerDictionary(word);
 });
 
 ipcMain.on('removeWordFromSpellCheckerDictionary', (event, word) => {
-    if(!word || !word.length) return;
+    if (!word || !word.length) return;
     event.sender.session.removeWordFromSpellCheckerDictionary(word);
 });
 
-ipcMain.handle('listWordsInSpellCheckerDictionary', async (event) => {    
+ipcMain.handle('listWordsInSpellCheckerDictionary', async (event) => {
     return await event.sender.session.listWordsInSpellCheckerDictionary();
 });
 
