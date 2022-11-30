@@ -2399,7 +2399,7 @@ export class Display extends EventEmitter {
         let e = sel.end.x;
         let sL = sel.start.y;
         let eL = sel.end.y;
-        if(sL === -1 && eL === -1)
+        if((sL === -1 && eL === -1) || sL === null || eL === null)
             return '';
         if (sL < 0)
             sL = 0;
