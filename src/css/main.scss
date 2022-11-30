@@ -175,6 +175,7 @@ body {
     max-height: 50%;
     visibility: hidden;
     line-height: 1.2;
+    min-height: 16px;
 }
 
 #commandbox {
@@ -192,6 +193,7 @@ body {
     resize: none;
     overflow: hidden;
     line-height: 1.2;
+    min-height: 16px;
 }
 
 #commandInput:focus {
