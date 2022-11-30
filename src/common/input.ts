@@ -1381,6 +1381,11 @@ export class Input extends EventEmitter {
         _mathjs.import(functions, {});
     }
 
+    public resetExpressionEngine() {
+        if(!_mathjs) return;
+        _mathjs = undefined;
+    }
+
     constructor(client: Client) {
         super();
         if (!client)

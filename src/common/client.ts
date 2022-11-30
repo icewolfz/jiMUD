@@ -1208,6 +1208,7 @@ export class Client extends EventEmitter {
         this._input.scrollLock = this.getOption('scrollLocked');
         this._input.enableParsing = this.getOption('enableParsing');
         this._input.enableTriggers = this.getOption('enableTriggers');
+        this._input.resetExpressionEngine();
         this.display.scrollLock = this.getOption('scrollLocked');
         this.display.enableSplit = this.getOption('display.split');
         this.display.hideTrailingEmptyLine = this.getOption('display.hideTrailingEmptyLine');
