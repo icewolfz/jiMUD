@@ -8111,7 +8111,7 @@ export class Input extends EventEmitter {
                         ret = Object.keys(named).map(v => `let ${v} = this._input.stack.named["${v}"];`).join('') + '\n';
                     else
                         ret = '';
-                    const f = new Function('try { ' + ret + alias.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                    const f = new Function('try { ' + ret + alias.value + '\n} catch (e) { if(this.getOption(\'showScriptErrors\')) this.error(e);}');
                     this._stack.push({ loops: [], args: args, named: named, append: alias.append, used: 0 });
                     try {
                         ret = f.apply(this.client, args);
@@ -8190,7 +8190,7 @@ export class Input extends EventEmitter {
                     if ((this.client.getOption('echo') & 2) === 2)
                         this.client.echo(macro.value, -7, -8, true, true);
                     /*jslint evil: true */
-                    const f = new Function('try { ' + macro.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                    const f = new Function('try { ' + macro.value + '\n} catch (e) { if(this.getOption(\'showScriptErrors\')) this.error(e);}');
                     this._stack.push({ loops: [], args: 0, named: 0, used: 0 });
                     try {
                         ret = f.apply(this.client);
@@ -8822,7 +8822,7 @@ export class Input extends EventEmitter {
                         this.client.echo(trigger.value, -7, -8, true, true);
                     //do not cache temp triggers
                     if (trigger.temp) {
-                        ret = new Function('try { ' + trigger.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                        ret = new Function('try { ' + trigger.value + '\n} catch (e) { if(this.getOption(\'showScriptErrors\')) this.error(e);}');
                         ret = ret.apply(this.client, args);
                     }
                     else {
@@ -8832,7 +8832,7 @@ export class Input extends EventEmitter {
                             else
                                 ret = '';
                             /*jslint evil: true */
-                            this._TriggerFunctionCache[idx] = new Function('try { ' + ret + trigger.value + '\n} catch (e) { if(this.options.showScriptErrors) this.error(e);}');
+                            this._TriggerFunctionCache[idx] = new Function('try { ' + ret + trigger.value + '\n} catch (e) { if(this.getOption(\'showScriptErrors\')) this.error(e);}');
                         }
                         this._stack.push({ loops: [], args: args, named: 0, used: 0, regex: regex, indices: args.indices });
                         try {

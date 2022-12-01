@@ -37,6 +37,8 @@
     - Send command only on enter key and no modifiers held down
     - Allow history navigation only if no modifier keys are held down, fixing shift selection support
     - Newline shortcut now correctly scrolls to the empty line
+  - Fix alias, macro, and trigger script type to use inherited showScriptErrors setting correctly
+  - Fix context menu script type 'this' error
 - **Changed:**
   - `Character manager on row double click load in:` Now defaults to open in new tab
   - Display: Adjust word wrap break points to have better flow
