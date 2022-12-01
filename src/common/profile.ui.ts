@@ -2724,9 +2724,9 @@ function buildTreeview(data, skipInit?) {
                     nodes.push(newItemNode(items[i], i, t, parent.dataAttr.profile));
                 }
                 add(nodes.sort(sortNodes));
-                if (_clip && _clip.action === 2 && _clip.key === node.text.toLowerCase()) {
+                if (_clip && _clip.action === 2 && _clip.key === node.text.toLowerCase() && _clip.profile === parent.dataAttr.profile) {
                     for (i = 0, il = _clip.data.length; i < il; i++) {
-                        n = $('#profile-tree').treeview('findNodes', ['^' + node.id + i, 'id']);
+                        n = $('#profile-tree').treeview('findNodes', ['^' + node.id + _clip.data[i], 'id']);
                         n[0].$el.css('opacity', '0.5');
                     }
                 }
