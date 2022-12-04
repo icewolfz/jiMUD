@@ -483,12 +483,12 @@ export class TextValueEditor extends ValueEditor {
         }
         if (left < -c.left)
             left = -c.left;
-        if (width > document.body.clientWidth)
-            width = document.body.clientWidth;
-        if (Math.abs(left) + width > document.body.clientWidth)
-            left = document.body.clientWidth - width;
+        if (width > c.width)
+            width = c.width;
+        if (Math.abs(left) + width > c.width)
+            left = c.width - Math.abs(left);
         //extends past bottom so open up
-        if (top + 150 > document.body.clientHeight)
+        if (top + 150 > c.height)
             top = b.top - 150;
 
         this.$dropdown.style.left = left + 'px';
@@ -898,13 +898,13 @@ export class FlagValueEditor extends ValueEditor {
         }
         if (left < -c.left)
             left = -c.left;
-        if (width > document.body.clientWidth)
-            width = document.body.clientWidth;
-        if (Math.abs(left) + width > document.body.clientWidth)
-            left = document.body.clientWidth - width;
+        if (width > c.width)
+            width = c.width;
+        if (Math.abs(left) + width > c.width)
+            left = c.width - Math.abs(left);
         //extends past bottom so open up
         height = height || this.$dropdown.offsetHeight;
-        if (top + height > document.body.clientHeight)
+        if (top + height > c.height)
             top = b.top - height;
 
         this.$dropdown.style.left = left + 'px';
@@ -1167,13 +1167,13 @@ export class DropDownEditValueEditor extends ValueEditor {
         }
         if (left < -c.left)
             left = -c.left;
-        if (width > document.body.clientWidth)
-            width = document.body.clientWidth;
-        if (Math.abs(left) + width > document.body.clientWidth)
-            left = document.body.clientWidth - width;
+        if (width > c.width)
+            width = c.width;
+        if (Math.abs(left) + width > c.width)
+            left = c.width - Math.abs(left);
         height = height || this.$dropdown.offsetHeight;
         //extends past bottom so open up
-        if (top + height > document.body.clientHeight)
+        if (top + height > c.height)
             top = b.top - height;
 
         this.$dropdown.style.left = left + 'px';
