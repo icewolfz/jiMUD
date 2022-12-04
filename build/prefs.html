@@ -128,14 +128,14 @@
     <script type="text/javascript">
         //spell-checker:ignore rgbcolor cmdfont selectpicker commandon prepend tablist tabpanel hellip emoteto  ABCDEFGHIJKLMNOPQRSTUVWXYZ
         const { parseTemplate, templatePath, existsSync, getColors, isFileSync, isDirSync, walkSync, isArrayEqual } = require('./js/library');
-        const { TrayClick, TrayMenu, ProfileSortOrder, OnProfileChange, OnProfileDeleted, ScriptEngineType, BackupSelection, OnSecondInstance } = require('./js/types');
+        const { TrayClick, TrayMenu, ProfileSortOrder, OnProfileChange, OnProfileDeleted, ScriptEngineType, BackupSelection, OnSecondInstance, TabCompletion } = require('./js/types');
         const Settings = require('./js/settings').Settings;
         const { ipcRenderer } = require('electron');
         const RGBColor = require('rgbcolor');
         const path = require('path');
         const fs = require('fs');
         const fontList = require('font-list');
-        const SettingProperties = ['bufferSize', 'commandDelay', 'commandDelayCount', 'commandHistorySize', 'fontSize', 'cmdfontSize', 'commandEcho', 'flashing', 'autoConnect', 'enableAliases', 'enableTriggers', 'enableMacros', 'showScriptErrors', 'commandStacking', 'commandStackingChar', 'htmlLog', 'keepLastCommand', 'enableMCCP', 'enableUTF8', 'font', 'cmdfont', 'mapper.follow', 'mapper.enabled', 'mapper.split', 'mapper.fill', 'showMapper', 'fullScreen', 'enableMXP', 'enableMSP', 'parseCommands', 'lagMeter', 'enablePing', 'enableEcho', 'enableSpeedpaths', 'speedpathsChar', 'parseSpeedpaths', 'profile', 'parseSingleQuotes', 'parseDoubleQuotes', 'logEnabled', 'logPrepend', 'logOffline', 'logUniqueOnConnect', 'enableURLDetection', 'notifyMSPPlay', 'CommandonClick', 'allowEval', 'allowEscape', 'AutoCopySelectedToClipboard', 'enableDebug', 'editorPersistent', 'askonclose', 'dev', 'chat.captureLines', 'chat.captureAllLines', 'chat.captureReviews', 'chat.captureTells', 'chat.captureTalk', 'chat.gag', 'chat.CaptureOnlyOpen', 'checkForUpdates', 'autoCreateCharacter', 'askonchildren', 'mapper.legend', 'mapper.room', 'mapper.importType', 'mapper.vscroll', 'mapper.hscroll', 'mapper.scale', 'mapper.alwaysOnTop', 'mapper.alwaysOnTopClient', 'mapper.memory', 'mapper.memorySavePeriod', 'mapper.active.ID', 'mapper.active.x', 'mapper.active.y', 'mapper.active.z', 'mapper.active.area', 'mapper.active.zone', 'mapper.persistent', 'profiles.split', 'profiles.askoncancel', 'profiles.triggersAdvanced', 'profiles.aliasesAdvanced', 'profiles.buttonsAdvanced', 'profiles.macrosAdvanced', 'profiles.contextsAdvanced', 'profiles.codeEditor', 'profiles.watchFiles', 'chat.alwaysOnTop', 'chat.alwaysOnTopClient', 'chat.log', 'chat.persistent', 'chat.zoom', 'chat.font', 'chat.fontSize', 'title', 'logGagged', 'logTimeFormat', 'autoConnectDelay', 'autoLogin', 'onDisconnect', 'enableKeepAlive', 'keepAliveDelay', 'newlineShortcut', 'logWhat', 'logErrors', 'showErrorsExtended', 'reportCrashes', 'enableCommands', 'commandChar', 'escapeChar', 'enableVerbatim', 'verbatimChar', 'soundPath', 'logPath', 'theme', 'gamepads', 'buttons.connect', 'buttons.characters', 'buttons.preferences', 'buttons.log', 'buttons.clear', 'buttons.lock', 'buttons.map', 'buttons.user', 'buttons.mail', 'buttons.compose', 'buttons.immortal', 'buttons.codeEditor', 'find.case', 'find.word', 'find.reverse', 'find.regex', 'find.selection', 'find.show', 'display.split', 'display.splitHeight', 'display.splitLive', 'display.roundedOverlays', 'backupLoad', 'backupSave', 'backupAllProfiles', 'scrollLocked', 'showStatus', 'showCharacterManager', 'showChat', 'showEditor', 'showArmor', 'showStatusWeather', 'showStatusLimbs', 'showStatusHealth', 'showStatusExperience', 'showStatusPartyHealth', 'showStatusCombatHealth', 'showButtonBar', 'allowNegativeNumberNeeded', 'spellchecking', 'hideOnMinimize', 'showTrayIcon', 'statusExperienceNeededProgressbar', 'trayClick', 'trayDblClick', 'pasteSpecialPrefix', 'pasteSpecialPostfix', 'pasteSpecialReplace', 'pasteSpecialPrefixEnabled', 'pasteSpecialPostfixEnabled', 'pasteSpecialReplaceEnabled', 'display.showSplitButton', 'chat.split', 'chat.splitHeight', 'chat.splitLive', 'chat.roundedOverlays', 'chat.showSplitButton', 'chat.bufferSize', 'chat.flashing', 'display.hideTrailingEmptyLine', 'display.enableColors', 'display.enableBackgroundColors', 'enableSound', 'allowHalfOpen', 'editorClearOnSend', 'editorCloseOnSend', 'askOnCloseAll', 'askonloadCharacter', 'mapper.roomWidth', 'mapper.roomGroups', 'mapper.showInTaskBar', 'profiles.enabled', 'profiles.sortOrder', 'profiles.sortDirection', 'profiles.showInTaskBar', 'profiles.profileSelected', 'profiles.profileExpandSelected', 'chat.lines', 'chat.showInTaskBar', 'chat.showTimestamp', 'chat.timestampFormat', 'chat.tabWidth', 'chat.displayControlCodes', 'chat.emulateTerminal', 'chat.emulateControlCodes', 'chat.wordWrap', 'chat.wrapAt', 'chat.indent', 'chat.scrollLocked', 'chat.find.case', 'chat.find.word', 'chat.find.reverse', 'chat.find.regex', 'chat.find.selection', 'chat.find.show', 'chat.find.highlight', 'chat.find.location', 'codeEditor.showInTaskBar', 'codeEditor.persistent', 'codeEditor.alwaysOnTop', 'codeEditor.alwaysOnTopClient', 'autoTakeoverLogin', 'fixHiddenWindows', 'maxReconnectDelay', 'enableBackgroundThrottling', 'enableBackgroundThrottlingClients', 'showInTaskBar', 'showLagInTitle', 'mspMaxRetriesOnError', 'logTimestamp', 'logTimestampFormat', 'disableTriggerOnError', 'prependTriggeredLine', 'enableParameters', 'parametersChar', 'enableNParameters', 'nParametersChar', 'enableParsing', 'externalWho', 'externalHelp', 'watchForProfilesChanges', 'onProfileChange', 'onProfileDeleted', 'enableDoubleParameterEscaping', 'ignoreEvalUndefined', 'enableInlineComments', 'enableBlockComments', 'inlineCommentString', 'blockCommentString', 'allowCommentsFromCommand', 'saveTriggerStateChanges', 'groupProfileSaves', 'groupProfileSaveDelay', 'returnNewlineOnEmptyValue', 'pathDelay', 'pathDelayCount', 'echoSpeedpaths', 'alwaysShowTabs', 'scriptEngineType', 'initializeScriptEngineOnLoad', 'find.highlight', 'find.location', 'display.showInvalidMXPTags', 'display.showTimestamp', 'display.timestampFormat', 'display.displayControlCodes', 'display.emulateTerminal', 'display.emulateControlCodes', 'display.wordWrap', 'display.tabWidth', 'display.wrapAt', 'display.indent', 'statusWidth', 'showEditorInTaskBar', 'trayMenu', 'lockLayout', 'loadLayout', 'useSingleInstance', 'statusWidth', 'characterManagerDblClick', 'warnAdvancedSettings', 'showAdvancedSettings', 'enableTabCompletion', 'tabCompletionBufferLimit', 'ignoreCaseTabCompletion', 'enableNotifications', 'commandAutoSize', 'commandWordWrap', 'commandScrollbars'];
+        const SettingProperties = ['bufferSize', 'commandDelay', 'commandDelayCount', 'commandHistorySize', 'fontSize', 'cmdfontSize', 'commandEcho', 'flashing', 'autoConnect', 'enableAliases', 'enableTriggers', 'enableMacros', 'showScriptErrors', 'commandStacking', 'commandStackingChar', 'htmlLog', 'keepLastCommand', 'enableMCCP', 'enableUTF8', 'font', 'cmdfont', 'mapper.follow', 'mapper.enabled', 'mapper.split', 'mapper.fill', 'showMapper', 'fullScreen', 'enableMXP', 'enableMSP', 'parseCommands', 'lagMeter', 'enablePing', 'enableEcho', 'enableSpeedpaths', 'speedpathsChar', 'parseSpeedpaths', 'profile', 'parseSingleQuotes', 'parseDoubleQuotes', 'logEnabled', 'logPrepend', 'logOffline', 'logUniqueOnConnect', 'enableURLDetection', 'notifyMSPPlay', 'CommandonClick', 'allowEval', 'allowEscape', 'AutoCopySelectedToClipboard', 'enableDebug', 'editorPersistent', 'askonclose', 'dev', 'chat.captureLines', 'chat.captureAllLines', 'chat.captureReviews', 'chat.captureTells', 'chat.captureTalk', 'chat.gag', 'chat.CaptureOnlyOpen', 'checkForUpdates', 'autoCreateCharacter', 'askonchildren', 'mapper.legend', 'mapper.room', 'mapper.importType', 'mapper.vscroll', 'mapper.hscroll', 'mapper.scale', 'mapper.alwaysOnTop', 'mapper.alwaysOnTopClient', 'mapper.memory', 'mapper.memorySavePeriod', 'mapper.active.ID', 'mapper.active.x', 'mapper.active.y', 'mapper.active.z', 'mapper.active.area', 'mapper.active.zone', 'mapper.persistent', 'profiles.split', 'profiles.askoncancel', 'profiles.triggersAdvanced', 'profiles.aliasesAdvanced', 'profiles.buttonsAdvanced', 'profiles.macrosAdvanced', 'profiles.contextsAdvanced', 'profiles.codeEditor', 'profiles.watchFiles', 'chat.alwaysOnTop', 'chat.alwaysOnTopClient', 'chat.log', 'chat.persistent', 'chat.zoom', 'chat.font', 'chat.fontSize', 'title', 'logGagged', 'logTimeFormat', 'autoConnectDelay', 'autoLogin', 'onDisconnect', 'enableKeepAlive', 'keepAliveDelay', 'newlineShortcut', 'logWhat', 'logErrors', 'showErrorsExtended', 'reportCrashes', 'enableCommands', 'commandChar', 'escapeChar', 'enableVerbatim', 'verbatimChar', 'soundPath', 'logPath', 'theme', 'gamepads', 'buttons.connect', 'buttons.characters', 'buttons.preferences', 'buttons.log', 'buttons.clear', 'buttons.lock', 'buttons.map', 'buttons.user', 'buttons.mail', 'buttons.compose', 'buttons.immortal', 'buttons.codeEditor', 'find.case', 'find.word', 'find.reverse', 'find.regex', 'find.selection', 'find.show', 'display.split', 'display.splitHeight', 'display.splitLive', 'display.roundedOverlays', 'backupLoad', 'backupSave', 'backupAllProfiles', 'scrollLocked', 'showStatus', 'showCharacterManager', 'showChat', 'showEditor', 'showArmor', 'showStatusWeather', 'showStatusLimbs', 'showStatusHealth', 'showStatusExperience', 'showStatusPartyHealth', 'showStatusCombatHealth', 'showButtonBar', 'allowNegativeNumberNeeded', 'spellchecking', 'hideOnMinimize', 'showTrayIcon', 'statusExperienceNeededProgressbar', 'trayClick', 'trayDblClick', 'pasteSpecialPrefix', 'pasteSpecialPostfix', 'pasteSpecialReplace', 'pasteSpecialPrefixEnabled', 'pasteSpecialPostfixEnabled', 'pasteSpecialReplaceEnabled', 'display.showSplitButton', 'chat.split', 'chat.splitHeight', 'chat.splitLive', 'chat.roundedOverlays', 'chat.showSplitButton', 'chat.bufferSize', 'chat.flashing', 'display.hideTrailingEmptyLine', 'display.enableColors', 'display.enableBackgroundColors', 'enableSound', 'allowHalfOpen', 'editorClearOnSend', 'editorCloseOnSend', 'askOnCloseAll', 'askonloadCharacter', 'mapper.roomWidth', 'mapper.roomGroups', 'mapper.showInTaskBar', 'profiles.enabled', 'profiles.sortOrder', 'profiles.sortDirection', 'profiles.showInTaskBar', 'profiles.profileSelected', 'profiles.profileExpandSelected', 'chat.lines', 'chat.showInTaskBar', 'chat.showTimestamp', 'chat.timestampFormat', 'chat.tabWidth', 'chat.displayControlCodes', 'chat.emulateTerminal', 'chat.emulateControlCodes', 'chat.wordWrap', 'chat.wrapAt', 'chat.indent', 'chat.scrollLocked', 'chat.find.case', 'chat.find.word', 'chat.find.reverse', 'chat.find.regex', 'chat.find.selection', 'chat.find.show', 'chat.find.highlight', 'chat.find.location', 'codeEditor.showInTaskBar', 'codeEditor.persistent', 'codeEditor.alwaysOnTop', 'codeEditor.alwaysOnTopClient', 'autoTakeoverLogin', 'fixHiddenWindows', 'maxReconnectDelay', 'enableBackgroundThrottling', 'enableBackgroundThrottlingClients', 'showInTaskBar', 'showLagInTitle', 'mspMaxRetriesOnError', 'logTimestamp', 'logTimestampFormat', 'disableTriggerOnError', 'prependTriggeredLine', 'enableParameters', 'parametersChar', 'enableNParameters', 'nParametersChar', 'enableParsing', 'externalWho', 'externalHelp', 'watchForProfilesChanges', 'onProfileChange', 'onProfileDeleted', 'enableDoubleParameterEscaping', 'ignoreEvalUndefined', 'enableInlineComments', 'enableBlockComments', 'inlineCommentString', 'blockCommentString', 'allowCommentsFromCommand', 'saveTriggerStateChanges', 'groupProfileSaves', 'groupProfileSaveDelay', 'returnNewlineOnEmptyValue', 'pathDelay', 'pathDelayCount', 'echoSpeedpaths', 'alwaysShowTabs', 'scriptEngineType', 'initializeScriptEngineOnLoad', 'find.highlight', 'find.location', 'display.showInvalidMXPTags', 'display.showTimestamp', 'display.timestampFormat', 'display.displayControlCodes', 'display.emulateTerminal', 'display.emulateControlCodes', 'display.wordWrap', 'display.tabWidth', 'display.wrapAt', 'display.indent', 'statusWidth', 'showEditorInTaskBar', 'trayMenu', 'lockLayout', 'loadLayout', 'useSingleInstance', 'statusWidth', 'characterManagerDblClick', 'warnAdvancedSettings', 'showAdvancedSettings', 'enableTabCompletion', 'tabCompletionBufferLimit', 'ignoreCaseTabCompletion', 'enableNotifications', 'commandAutoSize', 'commandWordWrap', 'commandScrollbars', 'tabCompletionList', 'tabCompletionLookupType'];
         var currentColors;
         var globalColors;
         var archiver, archive;
@@ -181,7 +181,12 @@
                         { text: 'Advanced', dataAttr: { title: 'Display > Advanced', pane: 'display-advanced' } },
                     ]
                 },
-                { text: 'Command line' },
+                {
+                    text: 'Command line',
+                    nodes: [
+                        { text: 'Tab completion', dataAttr: { title: 'Command line > Tab completion', pane: 'tab-completion' } },
+                    ]
+                },
                 { text: 'Colors' },
                 {
                     text: 'Logging',
@@ -673,6 +678,18 @@
                         if (this.checked)
                             _settings.scriptEngineType = 4;
                         break;
+                    case 'tabCompletionLookupType-prepend':
+                        _settings.tabCompletionLookupType = 1;
+                        break;
+                    case 'tabCompletionLookupType-append':
+                        _settings.tabCompletionLookupType = 2;
+                        break;
+                    case 'tabCompletionLookupType-buffer':
+                        _settings.tabCompletionLookupType = 4;
+                        break;
+                    case 'tabCompletionLookupType-list':
+                        _settings.tabCompletionLookupType = 8
+                        break;
                     case 'characterManagerDblClick-1':
                         if (this.checked)
                             _settings.characterManagerDblClick = 1;
@@ -887,6 +904,7 @@
             $('#chat-captureAllLines').prop('disabled', !getSettingValue('chat.captureLines'));
 
             $('#chat-lines').val(getSettingValue('chat.lines').join(','));
+            $('#tabCompletionList').val(getSettingValue('tabCompletionList'));
 
             $('#backup-load-map').prop('checked', (getSettingValue('backupLoad') & 2) === 2);
             $('#backup-load-profiles').prop('checked', (getSettingValue('backupLoad') & 4) === 4);
@@ -958,6 +976,11 @@
             $('#scriptEngineType-1').prop('checked', getSettingValue('scriptEngineType') === 1);
             $('#scriptEngineType-2').prop('checked', getSettingValue('scriptEngineType') === 2);
             $('#scriptEngineType-4').prop('checked', getSettingValue('scriptEngineType') === 4);
+
+            $('#tabCompletionLookupType-prepend').prop('checked', getSettingValue('tabCompletionLookupType') === 1);
+            $('#tabCompletionLookupType-append').prop('checked', getSettingValue('tabCompletionLookupType') === 2);
+            $('#tabCompletionLookupType-buffer').prop('checked', getSettingValue('tabCompletionLookupType') === 4);
+            $('#tabCompletionLookupType-list').prop('checked', getSettingValue('tabCompletionLookupType') === 8);
 
             if (_settingsFile === _globalFile) {
                 $('#characterManagerDblClick-1').prop('checked', getSettingValue('characterManagerDblClick') === 1 || getSettingValue('characterManagerDblClick') === 8);
@@ -1439,6 +1462,10 @@
                 else
                     _settings.chat.lines = newLines.split(',');
             }
+            oldLines = getSettingValue('tabCompletionList');
+            newLines = $('#tabCompletionList').val();
+            if (oldLines !== newLines)
+                _settings.tabCompletionList = newLines;
             _settings.save(_settingsFile);
             ipcRenderer.send('reload-options', _settingsFile, window.opener && typeof window.opener.getId === 'function' ? window.opener.getId() : 0);
             if (window.opener && typeof window.opener.reloadOptions === 'function')
@@ -1780,6 +1807,18 @@
                             }
                         }
                     },
+                    {
+                        label: 'tabCompletionLookupType',
+                        property: 'tabCompletionLookupType',
+                        editor: {
+                            type: 1,
+                            options: {
+                                enum: TabCompletion,
+                                container: document.body,
+                                exact: true
+                            }
+                        }
+                    },
                 ])
                 //_settingGrid.editorContainer = document.body;
             }
@@ -1804,7 +1843,6 @@
                         case 'showTabsAddNewButton':
                         case 'lockLayout':
                         case 'loadLayout':
-                        case 'scriptEngineType':
                         case 'useSingleInstance':
                         case 'onSecondInstance':
                         case 'fixHiddenWindows':
@@ -2470,13 +2508,18 @@
 
                         </div>
                     </div>
-
+                </div>
+                <div role="tabpanel" class="pref-pane" id="tab-completion">
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="enableTabCompletion" /> Enable tab completion
                         </label>
                     </div>
-
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="ignoreCaseTabCompletion" /> Ignore case for tab completion
+                        </label>
+                    </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             Tab completion buffer limit
@@ -2484,11 +2527,33 @@
                         </label>
                     </div>
 
+                    <div class="col-sm-12 form-group">
+                        <label class="control-label">Tab completion lookup type</label>
+                        <div>
+                            <div class="btn-group" data-toggle="buttons">
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="tabCompletionLookupType" id="tabCompletionLookupType-prepend"> Prepend list to buffer
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="tabCompletionLookupType" id="tabCompletionLookupType-append"> Append list to buffer
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="tabCompletionLookupType" id="tabCompletionLookupType-buffer"> Buffer only
+                                </label>
+                                <label class="btn btn-default btn-xs">
+                                    <input type="radio" name="tabCompletionLookupType" id="tabCompletionLookupType-list"> List only
+                                </label>
+                            </div>
+                        </div>
+                    </div>
 
-                    <div class="col-sm-6 form-group">
-                        <label class="control-label">
-                            <input type="checkbox" id="ignoreCaseTabCompletion" /> Ignore case for tab completion
-                        </label>
+                    <div class="col-sm-12 form-group">
+                        <div class="form-group">
+                            <label class="control-label" style="width: 100%">Tab completion list
+                                <textarea class="input-sm form-control" id="tabCompletionList" rows="6" style="width: 100%"></textarea>
+                                <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Separate each with a space or newline, for example: test1 test2</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="logging">

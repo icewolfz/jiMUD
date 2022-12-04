@@ -7,6 +7,12 @@
     - `Enable tab completion` Enable tab complete, when enabled pressing tab will complete the current word form the last lines of buffered text
     - `Tab completion buffer limit` The number of buffered lines to use for tab completion
     - `Ignore case for tab completion` Ignore letter cashing when searching for matching words
+    - `Tab completion list` Custom list of words to prepend, append, or use for tab completion
+    - `Tab completion lookup type` Where to look up tab completion
+      - `Prepend list to buffer` Prepend completion list to buffer for look up
+      - `Append list to buffer` Append completion list to end of buffer for look up
+      - `Buffer only` Use buffer only for look up
+      - `List only` Use tab completion list only for look up
     - `Enable Notifications` Enable notifications, effects [#notify](commands.md#Miscellaneous) and [client.notify](scripting.md)
     - `Echo` Determine what echos to the screen
       - `Triggers` Echo trigger pattern to screen if fired, **Warning** this may cause infinite looping if pattern is exact matching

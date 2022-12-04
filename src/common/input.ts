@@ -12,7 +12,7 @@ import { MacroModifiers, MacroDisplay, Alias, Trigger, Button, Profile, TriggerT
 import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync, splitQuoted, isValidIdentifier, fileSizeSync, getCursor } from './library';
 import { Client } from './client';
 import { Tests } from './test';
-import { NewLineType, ProfileSaveType, ScriptEngineType } from './types';
+import { NewLineType, ProfileSaveType, ScriptEngineType, TabCompletion } from './types';
 import { SettingList } from './settings';
 import { getAnsiColorCode, getColorCode, isMXPColor, getAnsiCode } from './ansi';
 
@@ -1382,7 +1382,7 @@ export class Input extends EventEmitter {
     }
 
     public resetExpressionEngine() {
-        if(!_mathjs) return;
+        if (!_mathjs) return;
         _mathjs = undefined;
     }
 
@@ -1579,10 +1579,24 @@ export class Input extends EventEmitter {
                         const findStr = this.client.commandInput.value.substring(startPos, endPos);
                         //nothing to find so bail
                         if (findStr.length === 0) return;
+                        //tabCompletionList
+                        //tabCompletionType
+                        //this.client.getOption('enableTabCompletion')
+                        //TabCompletion
                         this._tabSearch = { start: startPos, end: endPos, find: findStr.length };
                         const regSearch = new RegExp(`^${findStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, this.client.getOption('ignoreCaseTabCompletion') ? 'i' : '');
-                        //get all words that start with findStr then reverse as you want last words first as they are the newest
-                        this._tabWords = [...new Set([].concat(...this.client.display.lines.slice(this.client.display.lines.length - this.client.getOption('tabCompletionBufferLimit')).map(line => line.text.split(/\s+/))).filter(word => word.match(regSearch)).reverse())];
+                        if (this.client.getOption('tabCompletionLookupType') === TabCompletion.List)
+                            this._tabWords = [...new Set(<string>this.client.getOption('tabCompletionList').split(/\s+/).filter(word => word.match(regSearch)))];
+                        else {
+                            //get all words that start with findStr then reverse as you want last words first as they are the newest
+                            this._tabWords = [].concat(...this.client.display.lines.slice(this.client.display.lines.length - this.client.getOption('tabCompletionBufferLimit')).map(line => line.text.split(/\s+/))).filter(word => word.match(regSearch)).reverse();
+                            if (this.client.getOption('tabCompletionLookupType') === TabCompletion.PrependBuffer)
+                                this._tabWords = [...new Set(<string>this.client.getOption('tabCompletionList').split(/\s+/).filter(word => word.match(regSearch).reverse()))].concat(this._tabWords);
+                            else if (this.client.getOption('tabCompletionLookupType') === TabCompletion.AppendBuffer)
+                                this._tabWords = this._tabWords.concat([...new Set(<string>this.client.getOption('tabCompletionList').split(/\s+/).filter(word => word.match(regSearch)).reverse())]);
+
+                            this._tabWords = [...new Set(this._tabWords)];
+                        }
                     }
                     else
                         start -= this._tabSearch.find;

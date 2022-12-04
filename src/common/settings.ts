@@ -1,6 +1,6 @@
 //spell-checker:words vscroll, hscroll, askoncancel, askonclose,commandon, cmdfont
 //spell-checker:ignore emoteto, emotetos askonchildren YYYYMMDD Hmmss
-import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect, ProfileSortOrder, OnProfileChange, OnProfileDeleted, TrayMenu, OnSecondInstance, CharacterManagerDblClick, ScriptEngineType, SettingType, Echo } from './types';
+import { NewLineType, Log, BackupSelection, TrayClick, OnDisconnect, ProfileSortOrder, OnProfileChange, OnProfileDeleted, TrayMenu, OnSecondInstance, CharacterManagerDblClick, ScriptEngineType, SettingType, Echo, TabCompletion } from './types';
 const path = require('path');
 const fs = require('fs');
 
@@ -517,7 +517,9 @@ export let SettingList: any[] = [
     ['echo', 0, SettingType.Number, Echo.None],
     ['commandAutoSize', 0, SettingType.Boolean, false],
     ['commandWordWrap', 0, SettingType.Boolean, false],
-    ['commandScrollbars', 0, SettingType.Boolean, false]
+    ['commandScrollbars', 0, SettingType.Boolean, false],
+    ['tabCompletionList', 0, SettingType.String, ''],
+    ['tabCompletionLookupType', 0, SettingType.Boolean, TabCompletion.PrependBuffer]
 ];
 
 /**
@@ -674,6 +676,8 @@ export class Settings {
     public ignoreCaseTabCompletion: boolean;
     public tabCompletionBufferLimit: number;
     public enableNotifications: boolean;
+    public tabCompletionLookupType: TabCompletion;
+    public tabCompletionList: string;
 
     /**
      * @depreciated Allow window states have been moved to a separate layout system
@@ -2040,6 +2044,8 @@ export class Settings {
             case 'echo': return Echo.None;
             case 'commandAutoSize': return false;
             case 'commandWordWrap': return false;
+            case 'tabCompletionLookupType': return TabCompletion.PrependBuffer;
+            case 'tabCompletionList': return '';
         }
         return null;
     }

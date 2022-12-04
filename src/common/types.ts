@@ -112,6 +112,8 @@ export enum Echo {
   None = 0, Triggers = 8, Scripts = 2, Commands = 4
 }
 
+export enum TabCompletion { PrependBuffer = 1, AppendBuffer = 2, BufferOnly = 4, List = 8 }
+
 /**
    * Enum flag for Font styles.
    * @readonly

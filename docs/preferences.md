@@ -76,7 +76,7 @@ Reset - Resetting will revert all settings back to default values
 - `Error` The color of error messages
 - `Ansi colors` You can set the 8 regular colors, 8 background colors, 8 bold/bright colors and the 8 faint colors.
 
-## Command Line
+## Command line
 
 - `Font` The font for the command input box
 - `Font size` The font size for the command input box
@@ -91,9 +91,18 @@ Reset - Resetting will revert all settings back to default values
   - `Shift + Enter` add newline on shift+enter
   - `(Ctrl | Shift) + Enter` add a new line on ctrl+enter or shift+enter
   - `Ctrl + Shift + Enter` add a newline on ctrl+shift+enter
+
+## Command line > Tab completion
+
 - `Enable tab completion` Enable tab complete, when enabled pressing tab will complete the current word form the last lines of buffered text
 - `Tab completion buffer limit` The number of buffered lines to use for tab completion
 - `Ignore case for tab completion` Ignore letter cashing when searching for matching words
+- `Tab completion lookup type` Where to look up tab completion, word lookup starts from left to right/top to bottom for list, and right to left/newest to oldest for buffered lines
+  - `Prepend list to buffer` Prepend completion list to buffer for look up
+  - `Append list to buffer` Append completion list to end of buffer for look up
+  - `Buffer only` Use buffer only for look up
+  - `List only` Use tab completion list only for look up
+- `Tab completion list` Custom list of words to prepend, append, or use for tab completion
 
 ## Logging
 
