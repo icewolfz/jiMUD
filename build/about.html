@@ -161,7 +161,6 @@
     </script>
     <script type="text/javascript">
         //spellchecker:ignore Wakeups
-        const { version } = require('../package.json');
         const { shell, ipcRenderer } = require('electron');
         const { parseTemplate } = require('./js/library');        
 
@@ -172,7 +171,7 @@
             $('#ev').text(process.versions.electron);
             $('#nv').text(process.versions.node);
             $('#cv').text(process.versions.chrome);
-            $('#logo-version').text('v' + version);
+            $('#logo-version').text('v' + ipcRenderer.sendSync('get-app-sync', 'getVersion'));
             $('#dataPath').text(parseTemplate('{data}'));
             $('#profilesPath').text(parseTemplate('{profiles}'));
             $('#charactersPath').text(parseTemplate('{characters}'));

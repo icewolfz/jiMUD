@@ -456,14 +456,12 @@
         //const Client = require('./js/client.js').Client;
         //const Status = require('./js/status.js').Status;
         //const Backup = require('./js/backup.js').Backup;
-        const { Settings } = require('./js/settings');
         const { shell, clipboard, ipcRenderer, webFrame, nativeImage } = require('electron');
         const remote = require('@electron/remote');
         const { Menu, MenuItem } = remote;
-        const { parseTemplate, setSelectionRange, isFileSync, decrypt, offset } = require('./js/library.js');
+        const { parseTemplate, setSelectionRange, decrypt, offset } = require('./js/library.js');
         const { ProfileSaveType } = require('./js/types.js');
         const path = require('path');
-        const { version } = require('../package.json');
         //#endregion
 
         //#region variable declarations
@@ -633,9 +631,9 @@
             var im = el.querySelector('img[ismap]');
             var extra = '';
             if (im > 0) {
-                var offset = offset(im);
-                var x = Math.floor(e.clientX - offset.left);
-                var y = Math.floor(e.clientY - offset.top);
+                var os = offset(im);
+                var x = Math.floor(e.clientX - os.left);
+                var y = Math.floor(e.clientY - os.top);
                 extra = '?' + x + ',' + y;
             }
 
@@ -1183,7 +1181,7 @@
                 if (!_context)
                     buildContextMenu();
                 var iUrl = 0;
-                if (parent&& parent.classList && (parent.classList.contains('URLLink') || (parent.classList.contains('MXPLink') && parent.dataset.href && parent.dataset.href.length > 0)))
+                if (parent && parent.classList && (parent.classList.contains('URLLink') || (parent.classList.contains('MXPLink') && parent.dataset.href && parent.dataset.href.length > 0)))
                     iUrl = 1;
                 else if (parent && parent.classList && parent.classList.contains('MXPLink'))
                     iUrl = 2;
@@ -2714,7 +2712,6 @@
             window.readClipboardHTML = () => { return clipboard.readHTML('selection') || clipboard.readHTML() || ''; };
             client.readClipboardHTML = window.readClipboardHTML;
 
-            client.version = version;
             client.host = ('host' in _windowState.data) ? (_windowState.data.host || 'www.shadowmud.com') : 'www.shadowmud.com';
             client.port = ('port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.getOption('dev') ? 1035 : 1030);
             client.telnet.GMCPSupports.push('Room 1');
