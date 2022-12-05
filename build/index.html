@@ -2758,23 +2758,30 @@
             document.getElementById('loader').style.display = 'none';
         }
 
+        function createInputStack(data) {
+            client._input.vStackPush({
+                ...{
+                    $repeatnum: window.repeatnum,
+                    $action: window.$action,
+                    $trigger: window.$trigger
+                }, ...data
+            });
+        }
+
         function executeContext(item) {
             if (!item) return;
             if (!item.enabled) return false;
             var ret;// = '';
             if (item.value.length) {
-                client._input.vStackPush({
-                    $repeatnum: window.repeatnum,
+                createInputStack({
                     $selword: _selword,
                     $selurl: _selurl,
                     $selline: _selline,
                     $selectedword: _selword,
                     $selectedurl: _selurl,
                     $selectedline: _selline,
-                    $action: window.$action,
-                    $trigger: window.$trigger,
                     $caption: item.caption
-                });
+                })
                 switch (item.style) {
                     case 1:
                         client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
@@ -2843,10 +2850,7 @@
             if (!button.enabled) return false;
             var ret;// = '';
             if (button.value.length) {
-                client._input.vStackPush({
-                    $repeatnum: window.repeatnum,
-                    $caption: button.caption
-                });
+                createInputStack({ $caption: button.caption });
                 switch (button.style) {
                     case 1:
                         client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
