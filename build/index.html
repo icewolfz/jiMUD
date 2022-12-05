@@ -2768,20 +2768,10 @@
             });
         }
 
-        function executeContext(item) {
-            if (!item) return;
-            if (!item.enabled) return false;
-            var ret;// = '';
+        function executeItemValue(item, stack) {
+            var ret;
             if (item.value.length) {
-                createInputStack({
-                    $selword: _selword,
-                    $selurl: _selurl,
-                    $selline: _selline,
-                    $selectedword: _selword,
-                    $selectedurl: _selurl,
-                    $selectedline: _selline,
-                    $caption: item.caption
-                })
+                createInputStack(stack || {});
                 switch (item.style) {
                     case 1:
                         client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
@@ -2821,6 +2811,21 @@
                         break;
                 }
             }
+            return ret;
+        }
+
+        function executeContext(item) {
+            if (!item) return;
+            if (!item.enabled) return false;
+            var ret = executeItemValue(item, {
+                $selword: _selword,
+                $selurl: _selurl,
+                $selline: _selline,
+                $selectedword: _selword,
+                $selectedurl: _selurl,
+                $selectedline: _selline,
+                $caption: item.caption
+            });
             if (ret == null)
                 return true;
             if (typeof ret !== 'string')
@@ -2848,48 +2853,7 @@
             if (idx < 0 || idx >= client.buttons.length) return false;
             button = client.buttons[idx];
             if (!button.enabled) return false;
-            var ret;// = '';
-            if (button.value.length) {
-                createInputStack({ $caption: button.caption });
-                switch (button.style) {
-                    case 1:
-                        client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
-                        try {
-                            ret = client.parseOutgoing(button.value);
-                        }
-                        catch (e) {
-                            throw e;
-                        }
-                        finally {
-                            client._input._stack.pop();
-                            client._input.vStackPop();
-                        }
-                        break;
-                    case 2:
-                        if ((client.getOption('echo') & 2) === 2)
-                            client.echo(button.value, -7, -8, true, true);
-                        /*jslint evil: true */
-                        var f = new Function('try { ' + button.value + '\n} catch (e) { if(this.getOption(\'showScriptErrors\')) this.error(e);}');
-                        client._input._stack.push({ loops: [], args: 0, named: 0, used: 0 });
-                        try {
-                            ret = f.apply(client);
-                        }
-                        catch (e) {
-                            throw e;
-                        }
-                        finally {
-                            client._input._stack.pop();
-                            client._input.vStackPop();
-                        }
-                        if (typeof ret === 'string')
-                            ret = client.parseOutgoing(ret);
-                        break;
-                    default:
-                        ret = button.value;
-                        client._input.vStackPop();
-                        break;
-                }
-            }
+            var ret = executeItemValue(button, { $caption: button.caption });
             if (ret == null) {
                 setTimeout(() => {
                     if (client.getOption('CommandonClick'))
