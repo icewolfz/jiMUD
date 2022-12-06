@@ -52,7 +52,7 @@ export class EditorSettings {
         fontWeight: 'normal',
         lineNumbers: 'on',
         links: true,
-        matchBrackets: true,
+        matchBrackets: 'always',
         quickSuggestions: true,
         renderWhitespace: 'none',
         renderControlCharacters: false,
@@ -147,7 +147,10 @@ export class EditorSettings {
                     if (!data[prop].hasOwnProperty(prop2)) {
                         continue;
                     }
-                    settings[prop][prop2] = data[prop][prop2];
+                    if(prop2 === 'matchBrackets' && data[prop][prop2] === true)
+                        settings[prop][prop2] = 'always';
+                    else
+                        settings[prop][prop2] = data[prop][prop2];
                 }
             }
             else

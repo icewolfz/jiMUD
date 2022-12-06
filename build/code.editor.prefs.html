@@ -339,6 +339,10 @@
 
             $('#editorOptions-lineNumbers').val(_settings.editorOptions.lineNumbers);
             $('#editorOptions-lineNumbers').selectpicker('render');
+
+            $('#editorOptions-matchBrackets').val(_settings.editorOptions.matchBrackets);
+            $('#editorOptions-matchBrackets').selectpicker('render');
+
             $('#editorOptions-renderWhitespace').val(_settings.editorOptions.renderWhitespace);
             $('#editorOptions-renderWhitespace').selectpicker('render');
             $('#editorOptions-showFoldingControls').val(_settings.editorOptions.showFoldingControls);
@@ -562,8 +566,13 @@
                     </label>
                 </div>
                 <div class="col-sm-6 form-group">
-                    <label class="control-label">
-                        <input type="checkbox" id="editorOptions-matchBrackets" /> Enable highlighting of matching brackets
+                    <label class="control-label">Highlighting of matching brackets
+                        <br>
+                        <select id="editorOptions-matchBrackets" class="form-control selectpicker" data-container="body" data-width="250px">
+                            <option value="always">Always</option>
+                            <option value="never">Never</option>
+                            <option value="near">Near</option>
+                        </select>
                     </label>
                 </div>
                 <div class="col-sm-6 form-group">
