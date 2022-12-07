@@ -50,6 +50,7 @@
   - Fix alias, macro, and trigger script type to use inherited showScriptErrors setting correctly
   - Fix context menu script type 'this' error
   - Profile manager: Fix cut marking items in newly expanded profiles with wrong state style
+  - Add safety checks in case game pads were not correctly detected
 - **Changed:**
   - `Character manager on row double click load in:` Now defaults to open in new tab
   - Display: Adjust word wrap break points to have better flow

@@ -1681,7 +1681,8 @@ export class Input extends EventEmitter {
             this._gamepadCaches = [];
         for (; c < cl; c++) {
             const controller = controllers[c];
-            if (!controller) continue;
+            //no control and did not correctly connect so skip
+            if (!controller || !this._controllers[controller.index]) continue;
             const state = this._controllers[controller.index].state;
             const axes = this._controllers[controller.index].axes;
             const bl = controller.buttons.length;
