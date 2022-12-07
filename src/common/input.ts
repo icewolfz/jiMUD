@@ -1591,7 +1591,7 @@ export class Input extends EventEmitter {
                             //get all words that start with findStr then reverse as you want last words first as they are the newest
                             this._tabWords = [].concat(...this.client.display.lines.slice(this.client.display.lines.length - this.client.getOption('tabCompletionBufferLimit')).map(line => line.text.split(/\s+/))).filter(word => word.match(regSearch)).reverse();
                             if (this.client.getOption('tabCompletionLookupType') === TabCompletion.PrependBuffer)
-                                this._tabWords = [...new Set(<string>this.client.getOption('tabCompletionList').split(/\s+/).filter(word => word.match(regSearch).reverse()))].concat(this._tabWords);
+                                this._tabWords = [...new Set(<string>this.client.getOption('tabCompletionList').split(/\s+/).filter(word => word.match(regSearch)).reverse())].concat(this._tabWords);
                             else if (this.client.getOption('tabCompletionLookupType') === TabCompletion.AppendBuffer)
                                 this._tabWords = this._tabWords.concat([...new Set(<string>this.client.getOption('tabCompletionList').split(/\s+/).filter(word => word.match(regSearch)).reverse())]);
 
