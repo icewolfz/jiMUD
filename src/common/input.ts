@@ -1604,8 +1604,9 @@ export class Input extends EventEmitter {
                     if (this._tabIdx < 0) this._tabIdx = this._tabWords.length - 1;
                     if (this._tabIdx >= this._tabWords.length) this._tabIdx = 0;
 
+                    const tabCasing = this.client.getOption('tabCompletionReplaceCasing');
                     this.client.commandInput.value = this.client.commandInput.value.substring(0, start)
-                        + this._tabWords[this._tabIdx]
+                        + (tabCasing === 1 ? (this._tabWords[this._tabIdx].toLowerCase()) : (tabCasing === 2 ? this._tabWords[this._tabIdx].toUpperCase() : this._tabWords[this._tabIdx]))
                         + this.client.commandInput.value.substring(end, this.client.commandInput.value.length);
                     this.client.commandInput.selectionStart = this._tabSearch.start + this._tabSearch.find;
                     this.client.commandInput.selectionEnd = this._tabSearch.start + this._tabWords[this._tabIdx].length;

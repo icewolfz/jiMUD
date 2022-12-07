@@ -13,6 +13,10 @@
       - `Append list to buffer` Append completion list to end of buffer for look up
       - `Buffer only` Use buffer only for look up
       - `List only` Use tab completion list only for look up
+    - `Tab completion replace casing` The casing to use for the tab completion
+      - `Original` Use the words original casing
+      - `Lower case` Convert to all lower case
+      - `Upper case` Convert to all upper case      
     - `Enable Notifications` Enable notifications, effects [#notify](commands.md#Miscellaneous) and [client.notify](scripting.md)
     - `Echo` Determine what echos to the screen
       - `Triggers` Echo trigger pattern to screen if fired, **Warning** this may cause infinite looping if pattern is exact matching

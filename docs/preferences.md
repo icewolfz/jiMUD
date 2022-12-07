@@ -95,9 +95,13 @@ Reset - Resetting will revert all settings back to default values
 ## Command line > Tab completion
 
 - `Enable tab completion` Enable tab complete, when enabled pressing tab will complete the current word form the last lines of buffered text
-- `Tab completion buffer limit` The number of buffered lines to use for tab completion
 - `Ignore case for tab completion` Ignore letter cashing when searching for matching words
-- `Tab completion lookup type` Where to look up tab completion, word lookup starts from left to right/top to bottom for list, and right to left/newest to oldest for buffered lines
+- `Tab completion replace casing` The casing to use for the tab completion
+  - `Original` Use the words original casing
+  - `Lower case` Convert to all lower case
+  - `Upper case` Convert to all upper case
+- `Tab completion buffer limit` The number of buffered lines to use for tab completion
+- `Tab completion lookup type` Where to look up tab completion, word lookup starts from left to right/top to bottom for list, and right to left/buffer newest to oldest for buffered lines
   - `Prepend list to buffer` Prepend completion list to buffer for look up
   - `Append list to buffer` Append completion list to end of buffer for look up
   - `Buffer only` Use buffer only for look up

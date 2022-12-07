@@ -519,7 +519,8 @@ export let SettingList: any[] = [
     ['commandWordWrap', 0, SettingType.Boolean, false],
     ['commandScrollbars', 0, SettingType.Boolean, false],
     ['tabCompletionList', 0, SettingType.String, ''],
-    ['tabCompletionLookupType', 0, SettingType.Boolean, TabCompletion.PrependBuffer]
+    ['tabCompletionLookupType', 0, SettingType.Boolean, TabCompletion.PrependBuffer],
+    ['tabCompletionReplaceCasing', 0, SettingType.Number, 0]
 ];
 
 /**
@@ -678,6 +679,7 @@ export class Settings {
     public enableNotifications: boolean;
     public tabCompletionLookupType: TabCompletion;
     public tabCompletionList: string;
+    public tabCompletionReplaceCasing: number;
 
     /**
      * @depreciated Allow window states have been moved to a separate layout system
@@ -2046,6 +2048,7 @@ export class Settings {
             case 'commandWordWrap': return false;
             case 'tabCompletionLookupType': return TabCompletion.PrependBuffer;
             case 'tabCompletionList': return '';
+            case 'tabCompletionReplaceCasing': return 0;
         }
         return null;
     }
