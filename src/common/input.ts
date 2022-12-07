@@ -1431,7 +1431,6 @@ export class Input extends EventEmitter {
         });
 
         this.client.on('options-loaded', () => {
-            this.updatePads();
             if (!_mathjs && this.client.getOption('initializeScriptEngineOnLoad'))
                 this.initMathJS();
             this.initPads();
@@ -1665,7 +1664,11 @@ export class Input extends EventEmitter {
         this.initPads();
     }
 
-    private initPads() {
+    private async initPads() {
+        if(!this.client || !this.client.options) {
+            setTimeout(this.initPads, 5);
+            return;
+        }
         this._controllers = [];
         this._controllersCount = 0;
         this._gamepadCaches = null;
