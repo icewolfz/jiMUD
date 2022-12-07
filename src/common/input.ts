@@ -1434,6 +1434,7 @@ export class Input extends EventEmitter {
             this.updatePads();
             if (!_mathjs && this.client.getOption('initializeScriptEngineOnLoad'))
                 this.initMathJS();
+            this.initPads();
         });
 
         this.client.commandInput.addEventListener('keyup', event => {
@@ -1648,6 +1649,7 @@ export class Input extends EventEmitter {
         });
         //spell-checker:ignore gamepadconnected gamepaddisconnected
         window.addEventListener('gamepadconnected', (e) => {
+            if (!this.client.getOption('gamepads')) return;
             if (!this._gamepadCaches)
                 this._gamepadCaches = [];
             this._controllers[e.gamepad.index] = { pad: e.gamepad, axes: clone(e.gamepad.axes), state: { axes: [], buttons: [] }, pState: { axes: [], buttons: [] } };
@@ -1656,10 +1658,17 @@ export class Input extends EventEmitter {
         });
 
         window.addEventListener('gamepaddisconnected', (e) => {
+            if (!this.client.getOption('gamepads')) return;
             delete this._controllers[e.gamepad.index];
             this._controllersCount--;
         });
+        this.initPads();
+    }
 
+    private initPads() {
+        this._controllers = [];
+        this._controllersCount = 0;
+        if (!this.client.getOption('gamepads')) return;
         const controllers = navigator.getGamepads();
         let ct = 0;
         const cl = controllers.length;
