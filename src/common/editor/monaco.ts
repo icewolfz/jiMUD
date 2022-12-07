@@ -15,6 +15,7 @@ declare global {
         $editor: monaco.editor.IStandaloneCodeEditor;
     }
     let isWordMisspelled;
+    let webFrame;
 }
 
 //based on monaco-loader(https://github.com/felixrieseberg/monaco-loader), inlined to reduce load times
@@ -305,6 +306,88 @@ export function SetupEditor() {
                     };
                 }
             });
+            ["lpc", 'plaintext'].map(lang => {
+                monaco.languages.registerCodeActionProvider(lang, {
+                    provideCodeActions: (
+                        model: monaco.editor.ITextModel /**ITextModel*/,
+                        range: monaco.Range /**Range*/,
+                        context: monaco.languages.CodeActionContext /**CodeActionContext*/,
+                        token: monaco.CancellationToken /**CancellationToken*/
+                    ): any => {
+                        const actions = [];
+                        const ml = context.markers.length;
+                        for (let m = 0; m < ml; m++) {
+                            if ((<any>context.markers[m]).owner !== 'spelling') continue;
+                            const words = webFrame.getWordSuggestions(context.markers[m].message.substring(1, context.markers[m].message.length - 16));
+                            if (words.length) {
+                                for (let w = 0, wl = words.length; w < wl; w++)
+                                    actions.push({
+                                        title: words[w],
+                                        diagnostics: [context.markers[m]],
+                                        kind: "quickfix",
+                                        edit: {
+                                            edits: [
+                                                {
+                                                    resource: model.uri,
+                                                    textEdit: {
+                                                        range: context.markers[m],
+                                                        text: words[w]
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        isPreferred: true
+                                    });
+                            }
+                            actions.push(...[{
+                                title: `Add "${context.markers[m].message.substring(1, context.markers[m].message.length - 16)}" to editor dictionary`,
+                                diagnostics: [context.markers[m]],
+                                kind: "quickfix",
+                                command: {
+                                    id: 'jimud.addDictionary',
+                                    title: '',
+                                    arguments: [0, context.markers[m].message.substring(1, context.markers[m].message.length - 16)]
+                                },
+                                isPreferred: true
+                            }, {
+                                title: `Add "${context.markers[m].message.substring(1, context.markers[m].message.length - 16)}" to operating system dictionary`,
+                                diagnostics: [context.markers[m]],
+                                kind: "quickfix",
+                                command: {
+                                    id: 'jimud.addDictionary',
+                                    title: '',
+                                    arguments: [1, context.markers[m].message.substring(1, context.markers[m].message.length - 16)]
+                                },
+                                isPreferred: true
+                            }, {
+                                title: `Ignore "${context.markers[m].message.substring(1, context.markers[m].message.length - 16)}" in this document`,
+                                diagnostics: [context.markers[m]],
+                                kind: "quickfix",
+                                command: {
+                                    id: 'jimud.ignoreWord',
+                                    title: '',
+                                    arguments: [0, context.markers[m].message.substring(1, context.markers[m].message.length - 16)]
+                                },
+                                isPreferred: true
+                            }, {
+                                title: `Ignore "${context.markers[m].message.substring(1, context.markers[m].message.length - 16)}" in all documents`,
+                                diagnostics: [context.markers[m]],
+                                kind: "quickfix",
+                                command: {
+                                    id: 'jimud.ignoreWord',
+                                    title: '',
+                                    arguments: [1, context.markers[m].message.substring(1, context.markers[m].message.length - 16)]
+                                },
+                                isPreferred: true
+                            }]);
+                        }
+                        return {
+                            actions: actions,
+                            dispose: () => { }
+                        }
+                    }
+                });
+            })
             resolve(monaco);
         });
     });
@@ -743,6 +826,13 @@ export class MonacoCodeEditor extends EditorBase {
                 if (e.isFlush)
                     this.spellcheckDocument();
                 else if (e.changes.length) {
+                    let lineAdjust = 0;
+                    for (var c = 0, cl = e.changes.length; c < cl; c++) {
+                        if (e.changes[c].rangeLength === 0 && (e.changes[c].text === '\r\n' || e.changes[c].text === '\n'))
+                            lineAdjust += 1;
+                        else
+                            lineAdjust += e.changes[c].range.endLineNumber - e.changes[c].range.startLineNumber;
+                    }
                     monaco.editor.setModelMarkers(this.$model, 'spelling', monaco.editor.getModelMarkers({ owner: 'spelling', resource: this.$model.uri }).filter(m => {
                         if (m.startLineNumber >= e.changes[0].range.startLineNumber && m.startLineNumber <= e.changes[0].range.endLineNumber)
                             return false;
@@ -752,9 +842,30 @@ export class MonacoCodeEditor extends EditorBase {
                     }).map(m => {
                         delete m.owner;
                         delete m.resource;
+                        //adjust lines to reflect new lines added
+                        if (m.startLineNumber >= e.changes[0].range.startLineNumber || m.startLineNumber >= e.changes[0].range.endLineNumber)
+                            m.startLineNumber += lineAdjust;
+                        if (m.endLineNumber >= e.changes[0].range.startLineNumber || m.endLineNumber >= e.changes[0].range.endLineNumber)
+                            m.endLineNumber += lineAdjust;
                         return m;
                     }) || []);
-                    this.spellCheckLines(e.changes[0].range.startLineNumber, e.changes[0].range.endLineNumber);
+                    let start = e.changes[0].range.startLineNumber;
+                    let end = e.changes[0].range.endLineNumber
+                    //if a new line spell check before and after in case in the middle of a word
+                    if (e.changes[0].rangeLength === 0 && (e.changes[0].text === '\r\n' || e.changes[0].text === '\n')) {
+                        //only adjust if not first line
+                        start--;
+                        end++;
+                    }
+                    //adjust end in case pasted multiple new lines
+                    const startPosition = this.$model.getPositionAt(e.changes[0].rangeOffset);
+                    const endPosition = this.$model.getPositionAt(e.changes[0].rangeOffset + e.changes[0].text.length);
+                    end += endPosition.lineNumber - startPosition.lineNumber;
+                    if (start < 1)
+                        start = 1;
+                    if (end > this.$model.getLineCount())
+                        end = this.$model.getLineCount();
+                    this.spellCheckLines(start, end);
                 }
             }
         });
@@ -1173,7 +1284,7 @@ export class MonacoCodeEditor extends EditorBase {
                     accelerator: 'F12',
                     click: () => {
                         this.$editor.getAction('editor.action.revealDefinition').run().then(() => {
-                            this.$editor.revealPositionInCenterIfOutsideViewport(this.$editor.getPosition());    
+                            this.$editor.revealPositionInCenterIfOutsideViewport(this.$editor.getPosition());
                         });
                     }
                 },
@@ -1357,7 +1468,7 @@ export class MonacoCodeEditor extends EditorBase {
                         accelerator: 'F12',
                         click: () => {
                             this.$editor.getAction('editor.action.revealDefinition').run().then(() => {
-                                this.$editor.revealPositionInCenterIfOutsideViewport(this.$editor.getPosition());    
+                                this.$editor.revealPositionInCenterIfOutsideViewport(this.$editor.getPosition());
                             });
                         },
                         position: 'before=sep',

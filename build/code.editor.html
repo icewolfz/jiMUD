@@ -379,6 +379,58 @@
             el = document.createElement('div');
             el.classList.add('diff-container');
             pane.appendChild(el);
+            monaco.editor.addCommand({
+                id: "jimud.addDictionary",
+                run: (...args) => {
+                    if (args[1] === 0) {
+                        if (!options.dictionary)
+                            options.dictionary = [];
+                        options.dictionary.push(args[2].toLowerCase());
+                        saveOptions();
+                        var keys = Object.keys(_editors);
+                        var k = keys.length;
+                        while (k--) {
+                            ((p) => {
+                                if (_editors[p].editor.type === 1)
+                                    setTimeout(() => _editors[p].editor.spellcheckDocument(), 0);
+                            })(keys[k]);
+                        }
+                    }
+                    else if (args[1] === 1) {
+                        ipcRenderer.send('addWordToSpellCheckerDictionary', args[2].toLowerCase());
+                        var keys = Object.keys(_editors);
+                        var k = keys.length;
+                        while (k--) {
+                            ((p) => {
+                                if (_editors[p].editor.type === 1)
+                                    setTimeout(() => _editors[p].editor.spellcheckDocument(), 1);
+                            })(keys[k]);
+                        }
+                    }
+                }
+            });
+            monaco.editor.addCommand({
+                id: "jimud.ignoreWord",
+                run: (...args) => {
+                    if (args[1] === 0) {
+                        if (manager.active && manager.active.editor) {
+                        manager.active.editor.addIgnoredWord(args[2]);
+                        manager.active.editor.spellcheckDocument();
+                        }
+                    }
+                    else if (args[1] === 1) {
+                        dictionaryIgnore.push(args[2].toLowerCase());
+                        var keys = Object.keys(_editors);
+                        var k = keys.length;
+                        while (k--) {
+                            ((p) => {
+                                if (_editors[p].editor.type === 1)
+                                    setTimeout(() => _editors[p].editor.spellcheckDocument(), 0);
+                            })(keys[k]);
+                        }
+                    }
+                }
+            });
             window.$dEditors = [monaco.editor.createDiffEditor(el, {
                 language: 'lpc',
                 autoIndent: true,
@@ -512,7 +564,7 @@
                 </span>
             </a>
             <a id="output-tab" class="output-tab active" href="javascript:void(0)" onclick="showOutput()">Output</a>
-            <a id="problem-tab" class="output-tab" href="javascript:void(0)" onclick="showProblems()">Problems</a>           
+            <a id="problem-tab" class="output-tab" href="javascript:void(0)" onclick="showProblems()">Problems</a>
         </div>
         <div id="problem-display" class="problem-display" style="display: none"></div>
         <div id="output-display" class="output-display" contenteditable="true" readonly="readonly"></div>
