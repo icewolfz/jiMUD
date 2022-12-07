@@ -1668,6 +1668,7 @@ export class Input extends EventEmitter {
     private initPads() {
         this._controllers = [];
         this._controllersCount = 0;
+        this._gamepadCaches = null;
         if (!this.client.getOption('gamepads')) return;
         const controllers = navigator.getGamepads();
         let ct = 0;
