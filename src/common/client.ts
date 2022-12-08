@@ -1181,7 +1181,7 @@ export class Client extends EventEmitter {
         this.display.enableColors = this.getOption('display.enableColors');
         this.display.enableBackgroundColors = this.getOption('display.enableBackgroundColors');
         const colors = this.getOption('colors');
-        if (colors.length > 0) {
+        if (colors && colors.length > 0) {
             let c;
             const cl = colors.length;
             for (c = 0; c < cl; c++) {
