@@ -2910,6 +2910,54 @@ function parseTemplate(str, data) {
     return str;
 }
 
+
+function templatePath(p) {
+    const paths = [
+        '{characters}',
+        '{themes}',
+        '{assets}',
+        '{data}',
+        '{home}',
+        '{path}',
+        '{appData}',
+        '{temp}',
+        '{desktop}',
+        '{documents}',
+        '{downloads}',
+        '{music}',
+        '{pictures}',
+        '{videos}',
+        '{profiles}'
+    ];
+    const sl = paths.length;
+    for (let s = 0; s < sl; s++) {
+        const t = parseTemplate(paths[s]);
+        if (p.startsWith(t))
+            return paths[s] + p.substr(t.length);
+    }
+    return p;
+}
+
+function templateObject(obj) {
+    if (!obj) return obj;
+    for (prop in obj) {
+        if (!Object.prototype.hasOwnProperty.call(obj, prop) || typeof obj[prop] !== 'string')
+            continue;
+        obj[prop] = templatePath(obj[prop]);
+    }
+    return obj
+}
+
+function parseTemplateObject(obj) {
+    if (!obj) return obj;
+    for (prop in obj) {
+        if (!Object.prototype.hasOwnProperty.call(obj, prop) || typeof obj[prop] !== 'string')
+            continue;
+        obj[prop] = parseTemplate(obj[prop]);
+    }
+    return obj
+}
+
 //#region File system functions
 function isDirSync(aPath) {
     try {
@@ -3848,7 +3896,7 @@ async function saveWindowLayout(file, locked) {
                     devTools: clients[id].view.webContents.isDevToolsOpened()
                 },
                 //get any custom data from window
-                data: await executeScript('if(typeof saveWindow === "function") saveWindow()', clients[id].view).catch(logError),
+                data: templateObject(await executeScript('if(typeof saveWindow === "function") saveWindow()', clients[id].view).catch(logError)),
                 states: clients[id].states,
                 name: clients[id].name
             }
@@ -3861,9 +3909,9 @@ async function saveWindowLayout(file, locked) {
                 const wData = {
                     client: getClientId(clients[id].view), //use function to ensure proper id data type
                     state: saveWindowState(window, stateMap.get(window)),
-                    details: { url: clients[id].windows[idx].details.url, options: clients[id].windows[idx].details.options.features },
+                    details: { url: templatePath(URL.fileURLToPath(clients[id].windows[idx].details.url)), options: templateObject(clients[id].windows[idx].details.options.features) },
                     //get any custom data from window
-                    data: await executeScript('if(typeof saveWindow === "function") saveWindow()', window).catch(logError)
+                    data: templateObject(await executeScript('if(typeof saveWindow === "function") saveWindow()', window).catch(logError))
                 }
                 for (key in wData.state) {
                     if (!Object.prototype.hasOwnProperty.call(wData.state, key) || key === 'alwaysOnTop')
@@ -3944,6 +3992,14 @@ function loadWindowLayout(file, charData) {
             if (charData[0])
                 client.data = charData[0];
             charData.shift();
+        }
+        else
+            client.data = parseTemplateObject(client.data);
+        for (let w = 0, wl = client.windows.length; w < wl; w++) {
+            client.windows[w].details.options = parseTemplateObject(client.windows[w].details.options);
+            if (!client.windows[w].details.url.startsWith('file://')) {
+                client.windows[w].details.url = URL.pathToFileURL(parseTemplate(client.windows[w].details.url)).toString();
+            }
         }
         createClient({ parent: windows[client.parent].window, name: client.name, bounds: client.state.bounds, id: client.id, data: client, file: client.file });
     }
