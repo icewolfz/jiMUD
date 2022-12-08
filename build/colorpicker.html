@@ -345,9 +345,9 @@
         function loadColors() {
             var colors;
             if (window.getGlobal('editorOnly'))
-                colors = window.getSetting('colors');
+                colors = window.getSetting('colors') || [];
             else
-                colors = window.opener.opener.client.getOption('colors');
+                colors = window.opener.opener.client.getOption('colors') || [];
             var _dColors = getColors();
             var c, color, r, g, b, idx, cl;
             $('body').empty();

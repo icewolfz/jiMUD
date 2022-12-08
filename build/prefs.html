@@ -1034,7 +1034,7 @@
             if (_globalFile === _settingsFile)
                 globalColors = [];
             else
-                globalColors = window.getSetting('colors').slice();
+                globalColors = (window.getSetting('colors') || []).slice();
             var _colors = getColors();
             var c;
             for (c = 0; c < 16; c++)

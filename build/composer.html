@@ -1168,7 +1168,7 @@
             var c, color, r, g, b, idx, _bold = [], bl;
             _ColorTable = [];
             _colors = {};
-            var ClientColors = client.getOption('colors');
+            var ClientColors = client.getOption('colors') || [];
             color = new rgbcolor(ClientColors[0] || _dColors[0]).toHex().substr(1).toUpperCase();
             _colors[color] = 'BLACK';
             _ColorTable.push(color, 'BLACK');

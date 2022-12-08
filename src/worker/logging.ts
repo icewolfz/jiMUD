@@ -118,7 +118,7 @@ self.addEventListener('message', (e: MessageEvent) => {
                     continue;
                 if (option === 'colors') {
                     const _colors = e.data.args[option];
-                    if (_colors.length > 0) {
+                    if (_colors && _colors.length > 0) {
                         let clr;
                         const cl = _colors.length;
                         for (clr = 0; clr < cl; clr++) {
