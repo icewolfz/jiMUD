@@ -2933,9 +2933,11 @@ function templatePath(p) {
         '{profiles}'
     ];
     const sl = paths.length;
+    //cache the path for some speed boost 
+    const testPath = getFilePath(p);
     for (let s = 0; s < sl; s++) {
         const t = getFilePath(parseTemplate(paths[s]));
-        if (getFilePath(p).startsWith(t))
+        if (testPath.startsWith(t))
             return paths[s] + p.substr(t.length);
     }
     return p;
