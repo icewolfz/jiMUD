@@ -4043,7 +4043,7 @@ function restoreWindowState(window, state, showType) {
     if (state.fullscreen)
         window.setFullScreen(state.fullscreen);
     if (global.debug && showType !== 2)
-        openDevtools(window.webContents, { activate: false });
+        openDevtools(window.webContents, { mode: 'detach', activate: false });
     else if (state.devTools && showType !== 2)
         openDevtools(window.webContents);
     if (!state.enabled)
@@ -4581,7 +4581,7 @@ function createMenu(window) {
                                 if (mWindow.webContents.isDevToolsOpened())
                                     mWindow.webContents.closeDevTools();
                                 else
-                                    mWindow.webContents.openDevTools();
+                                    mWindow.webContents.openDevTools({ mode: 'detach' });
                                 focusWindow(mWindow);
                             }
                         },
@@ -4604,7 +4604,7 @@ function createMenu(window) {
                                 if (mWindow.webContents.isDevToolsOpened())
                                     mWindow.webContents.closeDevTools();
                                 else
-                                    mWindow.webContents.openDevTools();
+                                    mWindow.webContents.openDevTools({ mode: 'detach' });
                                 var view = getActiveClient(mWindow).view;
                                 if (view && view.webContents.isDevToolsOpened())
                                     view.webContents.closeDevTools();
