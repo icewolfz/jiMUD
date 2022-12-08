@@ -808,30 +808,7 @@ export function parseTemplate(str: string, data?) {
 }
 
 export function templatePath(p: string) {
-    const paths = [
-        '{characters}',
-        '{themes}',
-        '{assets}',
-        '{data}',
-        '{home}',
-        '{path}',
-        '{appData}',
-        '{temp}',
-        '{desktop}',
-        '{documents}',
-        '{downloads}',
-        '{music}',
-        '{pictures}',
-        '{videos}',
-        '{profiles}'
-    ];
-    const sl = paths.length;
-    for (let s = 0; s < sl; s++) {
-        const t = parseTemplate(paths[s]);
-        if (p.startsWith(t))
-            return paths[s] + p.substr(t.length);
-    }
-    return p;
+    return ipcRenderer.sendSync('templatePath', p);
 }
 
 export function naturalCompare(a, b) {

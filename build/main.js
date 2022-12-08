@@ -2910,6 +2910,9 @@ function parseTemplate(str, data) {
     return str;
 }
 
+ipcMain.on('templatePath', (event, p) => {
+    event.returnValue = templatePath(p);
+});
 
 function templatePath(p) {
     const paths = [
@@ -2931,8 +2934,8 @@ function templatePath(p) {
     ];
     const sl = paths.length;
     for (let s = 0; s < sl; s++) {
-        const t = parseTemplate(paths[s]);
-        if (p.startsWith(t))
+        const t = getFilePath(parseTemplate(paths[s]));
+        if (getFilePath(p).startsWith(t))
             return paths[s] + p.substr(t.length);
     }
     return p;
@@ -2941,9 +2944,12 @@ function templatePath(p) {
 function templateObject(obj) {
     if (!obj) return obj;
     for (prop in obj) {
-        if (!Object.prototype.hasOwnProperty.call(obj, prop) || typeof obj[prop] !== 'string')
+        if (!Object.prototype.hasOwnProperty.call(obj, prop))
             continue;
-        obj[prop] = templatePath(obj[prop]);
+        if (typeof obj[prop] === 'object')
+            obj[prop] = templateObject(obj[prop]);
+        else if (typeof obj[prop] === 'string')
+            obj[prop] = templatePath(obj[prop]);
     }
     return obj
 }
@@ -2951,14 +2957,24 @@ function templateObject(obj) {
 function parseTemplateObject(obj) {
     if (!obj) return obj;
     for (prop in obj) {
-        if (!Object.prototype.hasOwnProperty.call(obj, prop) || typeof obj[prop] !== 'string')
+        if (!Object.prototype.hasOwnProperty.call(obj, prop))
             continue;
-        obj[prop] = parseTemplate(obj[prop]);
+        if (typeof obj[prop] === 'object')
+            obj[prop] = parseTemplateObject(obj[prop]);
+        else if (typeof obj[prop] === 'string')
+            obj[prop] = parseTemplate(obj[prop]);
     }
     return obj
 }
 
 //#region File system functions
+//Hack to fix window/mac casing issues
+function getFilePath(file) {
+    if (file && process.platform !== 'linux')
+        return file.toLowerCase();
+    return file;
+}
+
 function isDirSync(aPath) {
     try {
         return fs.statSync(aPath).isDirectory();

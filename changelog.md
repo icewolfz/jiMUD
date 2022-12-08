@@ -54,6 +54,7 @@
     - Add safety checks in case game pads were not correctly detected
     - Correctly build game pad data when setting changed and only save data if setting enabled
   - Fix serializing of window layout child window paths to save relative to the open jiMUD making it easier to port data to new computers
+  - Fix template paths with mixed cases in windows and mac
 - **Changed:**
   - `Character manager on row double click load in:` Now defaults to open in new tab
   - Display: Adjust word wrap break points to have better flow
