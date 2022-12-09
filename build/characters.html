@@ -558,6 +558,8 @@
                     fs.closeSync(fs.openSync(sf, 'w'));
                 character.ID = ipcRenderer.sendSync('add-character', character);
                 _charactersDataGrid.addRow(character);
+                _charactersDataGrid.select(_charactersDataGrid.rows.filter(r => r.ID === character.ID));
+                document.getElementById('name').focus()
                 saveCharacters();
             });
         }
@@ -611,6 +613,8 @@
                     fs.closeSync(fs.openSync(sf, 'w'));
                 character.ID = ipcRenderer.sendSync('add-character', character);
                 _charactersDataGrid.addRow(character);
+                _charactersDataGrid.select(_charactersDataGrid.rows.filter(r => r.ID === character.ID));
+                document.getElementById('name').focus()
                 saveCharacters();
             });
         }
