@@ -26,6 +26,7 @@
       - `Auto size to contents` Resize command input height based on contents
       - `Word wrap` Wrap long lines in command input
       - `Scrollbars` Add scrollbars when needed to command input
+    - `Character Manager Add Button Action` Control the action of the add button
   - Code editor:
     - Add right click spell check support for systems that support it
     - Add basic spell checking

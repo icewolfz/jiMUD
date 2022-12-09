@@ -314,6 +314,9 @@ Controls what is captured into the chat window
   - `New tab` load selected character in new tab in opened window
   - `New window` load selected character in new window
   - `Use global preference` load based on global preference setting, **per mud only**
+- `Character Manager Add Button Action` Set what the action for the character manager add toolbar button when creating a new character
+  - `Default` Create a character with a copy of global map data
+  - `Empty` Create a character with an empty map
 - `Enable Notifications` Enable notifications, effects [#notify](commands.md#Miscellaneous) and [client.notify](scripting.md)
 
 ## Advanced > Backup

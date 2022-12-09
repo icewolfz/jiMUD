@@ -520,7 +520,8 @@ export let SettingList: any[] = [
     ['commandScrollbars', 0, SettingType.Boolean, false],
     ['tabCompletionList', 0, SettingType.String, ''],
     ['tabCompletionLookupType', 0, SettingType.Boolean, TabCompletion.PrependBuffer],
-    ['tabCompletionReplaceCasing', 0, SettingType.Number, 0]
+    ['tabCompletionReplaceCasing', 0, SettingType.Number, 0],
+    ['characterManagerAddButtonAction', 0, SettingType.Number, 0]
 ];
 
 /**
@@ -680,6 +681,7 @@ export class Settings {
     public tabCompletionLookupType: TabCompletion;
     public tabCompletionList: string;
     public tabCompletionReplaceCasing: number;
+    public characterManagerAddButtonAction: number;
 
     /**
      * @depreciated Allow window states have been moved to a separate layout system
@@ -2049,6 +2051,7 @@ export class Settings {
             case 'tabCompletionLookupType': return TabCompletion.PrependBuffer;
             case 'tabCompletionList': return '';
             case 'tabCompletionReplaceCasing': return 0;
+            case 'characterManagerAddButtonAction': return 0;
         }
         return null;
     }

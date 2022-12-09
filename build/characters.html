@@ -41,6 +41,7 @@
 
         var changed = 0;
         var askonloadCharacter = window.getSetting('askonloadCharacter');
+        var addAction = window.getSetting('characterManagerAddButtonAction');
         var setTab;
 
         $(window).keydown((event) => {
@@ -494,6 +495,13 @@
                 $(field).val(templatePath(result.filePaths[0]));
                 if (callback) callback();
             });
+        }
+
+        function addButton() {
+            if(addAction === 1)
+                addEmpty();
+            else
+                add();
         }
 
         function add(name) {
@@ -1227,7 +1235,7 @@
             </button>            
         </div>
         <div class="btn-group" role="group">
-            <button type="button" class="btn btn-default btn-xs" title="Add" onclick="add()">
+            <button type="button" class="btn btn-default btn-xs" title="Add" onclick="addButton()">
                 <i class="fa fa-plus"></i>
             </button>
             <button id="btn-add-dropdown" type="button" class="btn btn-default btn-xs" title="Add">
