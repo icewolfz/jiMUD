@@ -510,7 +510,7 @@
                 const character = {
                     Title: name,
                     Preferences: path.join('{characters}', nextID + '.json'),
-                    Map: path.join('{characters}', nextID + '.Map'),
+                    Map: path.join('{characters}', nextID + '.map'),
                     Notes: path.join('{characters}', nextID + '.notes')
                 };
                 var sf = parseTemplate(character.Preferences);
@@ -570,7 +570,7 @@
                 const character = {
                     Title: name,
                     Preferences: path.join('{characters}', nextID + '.json'),
-                    Map: path.join('{characters}', nextID + '.Map'),
+                    Map: path.join('{characters}', nextID + '.map'),
                     Notes: path.join('{characters}', nextID + '.notes')
                 };
                 var sf = parseTemplate(character.Preferences);
@@ -733,7 +733,7 @@
                 delete newCharacter.ID;
                 newCharacter.Title = name;
                 newCharacter.Preferences = path.join('{characters}', nextID + '.json');
-                newCharacter.Map = path.join('{characters}', nextID + '.Map');
+                newCharacter.Map = path.join('{characters}', nextID + '.map');
                 newCharacter.Notes = path.join('{characters}', nextID + '.notes');
                 var f = parseTemplate(character.Preferences);
                 var sf = parseTemplate(newCharacter.Preferences);
