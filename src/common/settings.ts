@@ -519,7 +519,7 @@ export let SettingList: any[] = [
     ['commandWordWrap', 0, SettingType.Boolean, false],
     ['commandScrollbars', 0, SettingType.Boolean, false],
     ['tabCompletionList', 0, SettingType.String, ''],
-    ['tabCompletionLookupType', 0, SettingType.Boolean, TabCompletion.PrependBuffer],
+    ['tabCompletionLookupType', 0, SettingType.Number, TabCompletion.PrependBuffer],
     ['tabCompletionReplaceCasing', 0, SettingType.Number, 0],
     ['characterManagerAddButtonAction', 0, SettingType.Number, 0]
 ];
