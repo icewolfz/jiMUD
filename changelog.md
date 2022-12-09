@@ -58,6 +58,7 @@
   - Fix template paths with mixed cases in windows and mac
 - **Changed:**
   - `Character manager on row double click load in:` Now defaults to open in new tab
+  - Character manger: new icon for new tab button
   - Display: Adjust word wrap break points to have better flow
   - Update electron 19.1.5 to 22.0.0
   - Update mathjs 11.3.3 to 11.5.0
