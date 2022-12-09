@@ -4032,7 +4032,7 @@
             clearWatcher();
             if (!client.getOption('watchForProfilesChanges'))
                 return;
-            _watcher = require('chokidar').watch(path.join(parseTemplate('{data}'), 'profiles'), {
+            _watcher = require('chokidar').watch(parseTemplate('{profiles}'), {
                 persistent: true,
                 depth: 0,
                 ignoreInitial: true

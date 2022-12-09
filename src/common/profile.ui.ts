@@ -2858,7 +2858,7 @@ function setAdvancedPanel(id, state) {
 export function init() {
     setTitle(window.opener.getCharacterName());
     loadOptions();
-    const p = path.join(parseTemplate('{data}'), 'profiles');
+    const p = parseTemplate('{profiles}');
     if (!isDirSync(p)) {
         profiles.add(Profile.Default);
     }
@@ -3671,7 +3671,7 @@ export function doRefresh() {
                 resetUndo();
                 profiles = new ProfileCollection();
                 $('#btn-refresh').removeClass('btn-warning');
-                const p = path.join(parseTemplate('{data}'), 'profiles');
+                const p = parseTemplate('{profiles}');
                 if (!isDirSync(p)) {
                     profiles.add(Profile.Default);
                 }
@@ -3690,7 +3690,7 @@ export function doRefresh() {
         resetUndo();
         profiles = new ProfileCollection();
         $('#btn-refresh').removeClass('btn-warning');
-        const p = path.join(parseTemplate('{data}'), 'profiles');
+        const p = parseTemplate('{profiles}');
         if (!isDirSync(p)) {
             profiles.add(Profile.Default);
         }
@@ -4029,7 +4029,7 @@ export function saveProfiles(clearNow?: boolean) {
             noLink: true
         });
         if (response === 0) {
-            const p = path.join(parseTemplate('{data}'), 'profiles');
+            const p = parseTemplate('{profiles}');
             if (!existsSync(p))
                 fs.mkdirSync(p);
             profiles.save(p);
@@ -4044,7 +4044,7 @@ export function saveProfiles(clearNow?: boolean) {
         }
     }
     else {
-        const p = path.join(parseTemplate('{data}'), 'profiles');
+        const p = parseTemplate('{profiles}');
         if (!existsSync(p))
             fs.mkdirSync(p);
         profiles.save(p);

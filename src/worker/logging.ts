@@ -355,7 +355,7 @@ function writeHeader() {
         backgrounds = {};
         backgroundsCnt = 0;
         writingHeader = true;
-        appendFileSync(currentFile + '.htm', fs.readFileSync(path.join(path.join(__dirname, '..', '..', 'assets'), 'log.header.html'), 'utf-8').replace(/\n|\r|\n\r|\r\n/g, ''));
+        appendFileSync(currentFile + '.htm', fs.readFileSync(path.join(__dirname, '..', '..', 'assets', 'log.header.html'), 'utf-8').replace(/\n|\r|\n\r|\r\n/g, ''));
         writingHeader = false;
     }
 }

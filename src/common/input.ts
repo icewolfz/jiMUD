@@ -1233,7 +1233,7 @@ export class Input extends EventEmitter {
                     if (this.client.profiles.contains(args[1]))
                         profile = this.client.profiles.items[args[1].toLowerCase()];
                     else {
-                        profile = Profile.load(path.join(path.join(parseTemplate('{data}'), 'profiles'), args[1].toLowerCase() + '.json'));
+                        profile = Profile.load(path.join(parseTemplate('{profiles}'), args[1].toLowerCase() + '.json'));
                         if (!profile)
                             throw new Error('Profile not found: ' + args[1]);
                     }
@@ -2109,7 +2109,7 @@ export class Input extends EventEmitter {
                 profile = null;
                 name = null;
                 reload = true;
-                p = path.join(parseTemplate('{data}'), 'profiles');
+                p = parseTemplate('{profiles}');
                 if (args.length < 1 || args.length > 2)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'unt\x1b[0;-11;-12mrigger {pattern|name} \x1b[3mprofile\x1b[0;-11;-12m');
                 if (args[0].length === 0)
@@ -2250,7 +2250,7 @@ export class Input extends EventEmitter {
                     commands: null,
                     options: { priority: 0 }
                 };
-                p = path.join(parseTemplate('{data}'), 'profiles');
+                p = parseTemplate('{profiles}');
                 if (args.length < 2 || args.length > 5)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'tr\x1b[0;-11;-12migger name {pattern} {commands} \x1b[3moptions profile\x1b[0;-11;-12m or \x1b[4m' + cmdChar + 'tr\x1b[0;-11;-12migger {pattern} {commands} \x1b[3m{options} profile\x1b[0;-11;-12m');
                 if (args[0].length === 0)
@@ -2412,7 +2412,7 @@ export class Input extends EventEmitter {
                     commands: null,
                     options: { priority: 0 }
                 };
-                p = path.join(parseTemplate('{data}'), 'profiles');
+                p = parseTemplate('{profiles}');
                 if (args.length < 2 || args.length > 4)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'ev\x1b[0;-11;-12ment name {commands} \x1b[3moptions profile\x1b[0;-11;-12m');
                 if (args[0].length === 0)
@@ -2595,7 +2595,7 @@ export class Input extends EventEmitter {
                 else {
                     reload = true;
                     profile = null;
-                    p = path.join(parseTemplate('{data}'), 'profiles');
+                    p = parseTemplate('{profiles}');
                     if (args[0].match(/^\{.*\}$/g) || args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g)) {
                         if (args.length > 2)
                             throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'une\x1b[0;-11;-12mvent name or \x1b[4m' + cmdChar + 'une\x1b[0;-11;-12mvent {name} \x1b[3mprofile\x1b[0;-11;-12m');
@@ -2678,7 +2678,7 @@ export class Input extends EventEmitter {
                     icon: null,
                     options: { priority: 0 }
                 };
-                p = path.join(parseTemplate('{data}'), 'profiles');
+                p = parseTemplate('{profiles}');
                 if (args.length < 2 || args.length > 5)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'bu\x1b[0;-11;-12mtton name|index or \x1b[4m' + cmdChar + 'bu\x1b[0;-11;-12mtton name \x1b[3mcaption\x1b[0;-11;-12m {commands} \x1b[3m{icon} options profile\x1b[0;-11;-12m or \x1b[4m' + cmdChar + 'by\x1b[0;-11;-12mutton \x1b[3mcaption\x1b[0;-11;-12m {commands} \x1b[3m{icon} {options} profile\x1b[0;-11;-12m');
                 if (args[0].length === 0)
@@ -2877,7 +2877,7 @@ export class Input extends EventEmitter {
                 else {
                     reload = true;
                     profile = null;
-                    p = path.join(parseTemplate('{data}'), 'profiles');
+                    p = parseTemplate('{profiles}');
                     if (args[0].match(/^\{.*\}$/g) || args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g)) {
                         if (args.length > 2)
                             throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'unb\x1b[0;-11;-12mtton name or \x1b[4m' + cmdChar + 'unb\x1b[0;-11;-12mtton {name} \x1b[3mprofile\x1b[0;-11;-12m');
@@ -2945,7 +2945,7 @@ export class Input extends EventEmitter {
                 name = null;
                 reload = true;
                 n = false;
-                p = path.join(parseTemplate('{data}'), 'profiles');
+                p = parseTemplate('{profiles}');
                 if (args.length < 2 || args.length > 4)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'ala\x1b[0;-11;-12mrm name {timepattern} {commands} \x1b[3mprofile\x1b[0;-11;-12m, \x1b[4m' + cmdChar + 'ala\x1b[0;-11;-12mrm name {timepattern} \x1b[3mprofile\x1b[0;-11;-12m, or \x1b[4m' + cmdChar + 'ala\x1b[0;-11;-12mrm {timepattern} {commands} \x1b[3mprofile\x1b[0;-11;-12m');
                 if (args[0].length === 0)
@@ -3639,7 +3639,7 @@ export class Input extends EventEmitter {
                     n = this.parseInline(this.stripQuotes(args.shift()));
                     reload = true;
                     profile = null;
-                    p = path.join(parseTemplate('{data}'), 'profiles');
+                    p = parseTemplate('{profiles}');
                     if (args[0].match(/^\{.*\}$/g) || args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g)) {
                         if (args.length > 2)
                             throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'al\x1b[0;-11;-12mias name value or \x1b[4m' + cmdChar + 'al\x1b[0;-11;-12mias name {value} \x1b[3mprofile\x1b[0;-11;-12m');
@@ -3710,7 +3710,7 @@ export class Input extends EventEmitter {
                 else {
                     reload = true;
                     profile = null;
-                    p = path.join(parseTemplate('{data}'), 'profiles');
+                    p = parseTemplate('{profiles}');
                     if (args[0].match(/^\{.*\}$/g) || args[0].match(/^".*"$/g) || args[0].match(/^'.*'$/g)) {
                         if (args.length > 2)
                             throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'una\x1b[0;-11;-12mlias name or \x1b[4m' + cmdChar + 'una\x1b[0;-11;-12mlias {name} \x1b[3mprofile\x1b[0;-11;-12m');
@@ -3927,7 +3927,7 @@ export class Input extends EventEmitter {
                 if ((this.client.getOption('echo') & 4) === 4)
                     this.client.echo(raw, -3, -4, true, true);
                 this.client.echo('\x1b[4mProfiles:\x1b[0m', -7, -8, true, true);
-                p = path.join(parseTemplate('{data}'), 'profiles');
+                p = parseTemplate('{profiles}');
                 if (isDirSync(p)) {
                     const files = fs.readdirSync(p);
                     al = files.length;
@@ -3962,7 +3962,7 @@ export class Input extends EventEmitter {
                 else {
                     args[0] = this.parseInline(args[0]).toLowerCase();
                     if (!this.client.profiles.contains(args[0])) {
-                        this.client.profiles.load(args[0], path.join(parseTemplate('{data}'), 'profiles'));
+                        this.client.profiles.load(args[0], parseTemplate('{profiles}'));
                         if (!this.client.profiles.contains(args[0]))
                             throw new Error('Profile not found');
                     }
@@ -5340,7 +5340,7 @@ export class Input extends EventEmitter {
                     commands: null,
                     options: { priority: 0 }
                 };
-                p = path.join(parseTemplate('{data}'), 'profiles');
+                p = parseTemplate('{profiles}');
                 if (args.length < 2 || args.length > 5)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'cond\x1b[0;-11;-12mition name|pattern {pattern} {commands} \x1b[3moptions profile\x1b[0;-11;-12m or \x1b[4m' + cmdChar + 'cond\x1b[0;-11;-12mition {pattern} {commands} \x1b[3m{options} profile\x1b[0;-11;-12m');
                 if (args[0].length === 0)
@@ -5639,7 +5639,7 @@ export class Input extends EventEmitter {
                     commands: null,
                     options: { priority: 0 }
                 };
-                p = path.join(parseTemplate('{data}'), 'profiles');
+                p = parseTemplate('{profiles}');
                 if (args.length < 2 || args.length > 5)
                     throw new Error('Invalid syntax use ' + cmdChar + 'temp name {pattern} {commands} \x1b[3moptions profile\x1b[0;-11;-12m or ' + cmdChar + 'temp {pattern} {commands} \x1b[3m{options} profile\x1b[0;-11;-12m');
                 if (args[0].length === 0)
@@ -8019,7 +8019,7 @@ export class Input extends EventEmitter {
                     if (this.client.profiles.contains(args[1]))
                         mod = this.client.profiles.items[args[1].toLowerCase()];
                     else {
-                        mod = Profile.load(path.join(path.join(parseTemplate('{data}'), 'profiles'), args[1].toLowerCase() + '.json'));
+                        mod = Profile.load(path.join(parseTemplate('{profiles}'), args[1].toLowerCase() + '.json'));
                         if (!mod)
                             throw new Error('Profile not found: ' + args[1]);
                     }
@@ -9346,7 +9346,7 @@ export class Input extends EventEmitter {
         let sTrigger;
         let reload = true;
         let isNew = false;
-        const p = path.join(parseTemplate('{data}'), 'profiles');
+        const p = parseTemplate('{profiles}');
         if (!pattern && !name)
             throw new Error(`Trigger '${name || ''}' not found`);
         if (!profile) {

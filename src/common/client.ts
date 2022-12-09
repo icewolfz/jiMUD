@@ -76,7 +76,7 @@ export class Client extends EventEmitter {
         const a = [];
         let v;
         let vl;
-        const p = path.join(parseTemplate('{data}'), 'profiles')
+        const p = parseTemplate('{profiles}');
         //can only enable profiles that exist, so scan the array for valid profiles
         for (v = 0, vl = value.length; v < vl; v++) {
             //found so already loaded just save it
@@ -389,7 +389,7 @@ export class Client extends EventEmitter {
     public loadProfiles() {
         //reloaded before save done, clear state
         this.clearProfileSaves();
-        const p = path.join(parseTemplate('{data}'), 'profiles');
+        const p = parseTemplate('{profiles}');
         //clear out all current profiles
         this.profiles = new ProfileCollection();
         if (!existsSync(p)) {
@@ -423,7 +423,7 @@ export class Client extends EventEmitter {
         //profile was marked ot be save but reload so remove save
         if (this._profileSaves[profile.toLowerCase()])
             delete this._profileSaves[profile.toLowerCase()];
-        const p = path.join(parseTemplate('{data}'), 'profiles');
+        const p = parseTemplate('{profiles}');
         if (!existsSync(p))
             return;
         this.profiles.remove(profile);
@@ -443,7 +443,7 @@ export class Client extends EventEmitter {
 
     public saveProfiles(noChanges?: boolean) {
         this.clearProfileSaves();
-        const p = path.join(parseTemplate('{data}'), 'profiles');
+        const p = parseTemplate('{profiles}');
         if (!existsSync(p))
             fs.mkdirSync(p);
         this.profiles.save(p);
@@ -459,7 +459,7 @@ export class Client extends EventEmitter {
         //is not loaded so no reason to even save it
         if (!this.profiles.contains(profile))
             return;
-        const p = path.join(parseTemplate('{data}'), 'profiles');
+        const p = parseTemplate('{profiles}');
         if (!existsSync(p))
             fs.mkdirSync(p);
         //if group add to  save tracker and store change flag
@@ -514,7 +514,7 @@ export class Client extends EventEmitter {
             p.push(profile);
             //load if not loaded
             if (!this.profiles.contains(profile))
-                this.profiles.load(profile, path.join(parseTemplate('{data}'), 'profiles'));
+                this.profiles.load(profile, parseTemplate('{profiles}'));
         }
         else {
             //remove profile, don't bother unloading as they may turn it back on so just leave it loaded

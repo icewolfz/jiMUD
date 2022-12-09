@@ -142,6 +142,7 @@
         var loading = 0;
         var _advanced = 0;
         let _settingGrid;
+        var _profiles = ['default'];
 
         var _settingsFile;
         var _globalFile = window.getGlobal('settingsFile');
@@ -324,7 +325,7 @@
                     window.error(err);
                 });
 
-            var p = path.join(parseTemplate('{data}'), 'profiles');
+            var p = parseTemplate('{profiles}');
             if (isDirSync(p)) {
                 var files = fs.readdirSync(p);
                 var ops = [];
@@ -333,6 +334,7 @@
                         if (files[i].toLowerCase() === 'default.json')
                             continue;
                         ops.push('<option value="', path.basename(files[i], '.json').toLowerCase(), '">', path.basename(files[i], '.json'), '</option>');
+                        _profiles.push(path.basename(files[i], '.json').toLowerCase());
                     }
                 }
 
@@ -1607,7 +1609,7 @@
                 _settingGrid.on('value-changed', (prop, newValue, oldValue) => {
                     if (prop === 'find.location' || prop === 'chat.find.location')
                         _settings.setValue(prop, [newValue[0].value, newValue[1].value]);
-                    else if(prop === 'profiles.enabled')
+                    else if (prop === 'profiles.enabled')
                         _settings.setValue(prop, newValue.map(v => v.value));
                     else if (prop === 'chat.lines') {
                         _settings.setValue(prop, newValue.map(v => v.value));
@@ -1854,12 +1856,18 @@
                                         label: 'Value',
                                         field: 'value',
                                         width: 200,
-                                        spring: true
+                                        spring: true,
+                                        editor: {
+                                            type: 7,
+                                            options: {
+                                                data: _profiles
+                                            }
+                                        }
                                     }
                                 ]
                             }
                         }
-                    },                    
+                    },
                 ])
                 //_settingGrid.editorContainer = document.body;
             }

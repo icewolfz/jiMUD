@@ -153,7 +153,7 @@ export class Backup extends EventEmitter {
 
         if (this.client.options.backupAllProfiles) {
             const profiles = new ProfileCollection();
-            profiles.loadPath(path.join(parseTemplate('{data}'), 'profiles'));
+            profiles.loadPath(parseTemplate('{profiles}'));
             data.profiles = profiles.clone(2);
         }
         else
@@ -467,7 +467,7 @@ export class Backup extends EventEmitter {
                     }
                     profiles.add(p);
                 }
-                const pf = path.join(parseTemplate('{data}'), 'profiles');
+                const pf = parseTemplate('{profiles}');
                 if (!existsSync(pf))
                     fs.mkdirSync(pf);
                 profiles.save(pf);
