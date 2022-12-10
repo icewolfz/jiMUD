@@ -508,7 +508,7 @@
             showGetName(name, function (event, name) {
                 const nextID = ipcRenderer.sendSync('get-character-next-id');
                 const character = {
-                    Title: name,
+                    Title: name || '',
                     Preferences: path.join('{characters}', nextID + '.json'),
                     Map: path.join('{characters}', nextID + '.map'),
                     Notes: path.join('{characters}', nextID + '.notes')
@@ -568,7 +568,7 @@
             showGetName(function (event, name) {
                 const nextID = ipcRenderer.sendSync('get-character-next-id');
                 const character = {
-                    Title: name,
+                    Title: name || '',
                     Preferences: path.join('{characters}', nextID + '.json'),
                     Map: path.join('{characters}', nextID + '.map'),
                     Notes: path.join('{characters}', nextID + '.notes')
@@ -629,6 +629,7 @@
             else
                 character = ipcRenderer.sendSync('get-character', ID);
             showGetName(character.Title, character.Title, 1, function (event, name, oldName) {
+                name = name || '';
                 changes = { ID: ID, Title: name };
                 //cleanup for file names
                 oldName = oldName.replace(/[^a-zA-Z0-9]+/g, '');
@@ -731,7 +732,7 @@
                 const nextID = ipcRenderer.sendSync('get-character-next-id');
                 var newCharacter = clone(character);
                 delete newCharacter.ID;
-                newCharacter.Title = name;
+                newCharacter.Title = name || '';
                 newCharacter.Preferences = path.join('{characters}', nextID + '.json');
                 newCharacter.Map = path.join('{characters}', nextID + '.map');
                 newCharacter.Notes = path.join('{characters}', nextID + '.notes');
