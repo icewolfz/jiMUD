@@ -830,8 +830,8 @@ export class MonacoCodeEditor extends EditorBase {
                     for (var c = 0, cl = e.changes.length; c < cl; c++) {
                         if (e.changes[c].rangeLength !== 0 && e.changes[c].text === '')
                             lineAdjust -= e.changes[c].range.endLineNumber - e.changes[c].range.startLineNumber;
-                        else if (e.changes[c].rangeLength === 0 && (e.changes[c].text === '\r\n' || e.changes[c].text === '\n'))
-                            lineAdjust += 1;
+                        else if (e.changes[c].rangeLength === 0 && e.changes[c].text.indexOf('\n') !== -1)
+                            lineAdjust += e.changes[c].text.split('\n').length - 1;
                         else
                             lineAdjust += e.changes[c].range.endLineNumber - e.changes[c].range.startLineNumber;
                     }
