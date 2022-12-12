@@ -828,7 +828,9 @@ export class MonacoCodeEditor extends EditorBase {
                 else if (e.changes.length) {
                     let lineAdjust = 0;
                     for (var c = 0, cl = e.changes.length; c < cl; c++) {
-                        if (e.changes[c].rangeLength === 0 && (e.changes[c].text === '\r\n' || e.changes[c].text === '\n'))
+                        if (e.changes[c].rangeLength !== 0 && e.changes[c].text === '')
+                            lineAdjust -= e.changes[c].range.endLineNumber - e.changes[c].range.startLineNumber;
+                        else if (e.changes[c].rangeLength === 0 && (e.changes[c].text === '\r\n' || e.changes[c].text === '\n'))
                             lineAdjust += 1;
                         else
                             lineAdjust += e.changes[c].range.endLineNumber - e.changes[c].range.startLineNumber;
