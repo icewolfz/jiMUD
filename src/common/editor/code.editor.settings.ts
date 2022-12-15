@@ -76,6 +76,9 @@ export class EditorSettings {
             bracketPairs: true,
             highlightActiveIndentation: true,
             indentation: true
+        },
+        dropIntoEditor: {
+            enabled: false
         }
     };
 
@@ -147,7 +150,7 @@ export class EditorSettings {
                     if (!data[prop].hasOwnProperty(prop2)) {
                         continue;
                     }
-                    if(prop2 === 'matchBrackets' && data[prop][prop2] === true)
+                    if (prop2 === 'matchBrackets' && data[prop][prop2] === true)
                         settings[prop][prop2] = 'always';
                     else
                         settings[prop][prop2] = data[prop][prop2];

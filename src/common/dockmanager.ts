@@ -1365,7 +1365,7 @@ export class DockPane extends EventEmitter {
         panel.tab.ondrop = (e) => {
             const eDrag = { id: panel.id, panel: panel, preventDefault: false, event: e };
             panel.dock.emit('tab-drop', eDrag);
-            if (eDrag.preventDefault) return;
+            if (eDrag.preventDefault || !panel.dock.manager.dragPanel) return;
             if (panel.dock.manager.dragPanel === panel) return;
             panel.tab.classList.remove('drop');
             e.dataTransfer.dropEffect = 'move';

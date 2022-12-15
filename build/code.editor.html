@@ -414,8 +414,8 @@
                 run: (...args) => {
                     if (args[1] === 0) {
                         if (manager.active && manager.active.editor) {
-                        manager.active.editor.addIgnoredWord(args[2]);
-                        manager.active.editor.spellcheckDocument();
+                            manager.active.editor.addIgnoredWord(args[2]);
+                            manager.active.editor.spellcheckDocument();
                         }
                     }
                     else if (args[1] === 1) {
@@ -8181,8 +8181,11 @@
         if (files.length === 0) return;
         var panels = [];
         for (var f = 0, fl = files.length; f < fl; f++) {
-            if (typeof files[f].file !== 'string')
+            if (typeof files[f].file !== 'string') {
+                if (files[f].remoteEdit && (!files[f].file || files[f].file.length === 0))
+                    openRemote(files[f].remote);
                 continue;
+            }
             if (!files[f].remoteEdit && isDirSync(files[f].file)) {
                 dialog.showMessageBox({
                     type: 'info',
