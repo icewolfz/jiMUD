@@ -1245,9 +1245,10 @@ export class MonacoCodeEditor extends EditorBase {
                     accelerator: 'Alt+Shift+F',
                     click: () => {
                         monaco.editor.setModelMarkers(this.$model, '', []);
-                        this.$editor.getAction('editor.action.formatDocument').run();
-                        if (this.$spellchecking)
-                            this.spellcheckDocument();
+                        this.$editor.getAction('editor.action.formatDocument').run().then(() => {
+                            if (this.$spellchecking)
+                                setTimeout(() => this.spellcheckDocument(), 50);
+                        });
                     }
                 }]);
                 if (this.$spellchecking)
@@ -1429,9 +1430,10 @@ export class MonacoCodeEditor extends EditorBase {
                     accelerator: 'Alt+Shift+F',
                     click: () => {
                         monaco.editor.setModelMarkers(this.$model, '', []);
-                        this.$editor.getAction('editor.action.formatDocument').run();
-                        if (this.$spellchecking)
-                            this.spellcheckDocument();
+                        this.$editor.getAction('editor.action.formatDocument').run().then(() => {
+                            if (this.$spellchecking)
+                                setTimeout(() => this.spellcheckDocument(), 50);
+                        });
                     }
                 }]);
                 if (this.$spellchecking)
