@@ -11,6 +11,15 @@ typings/
 src/js/*
 out/*
 dist/*
+!build/js/editor/.gitignore
+/build/js/*
+/build/js/editor/area.designer.js
+/build/js/editor/code.editor.js
+/build/js/editor/code.editor.settings.js
+/build/js/editor/editor.base.js
+/build/js/editor/lpc.js
+/build/js/editor/monaco.js
+/build/js/editor/virtual.editor.js
 /build/js/logging.js
 /build/js/mapper.js
 /build/js/msp.js
