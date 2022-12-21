@@ -358,8 +358,8 @@ export let SettingList: any[] = [
     ['buttons.lock', 0, 1, true],
     ['buttons.map', 0, 1, true],
     ['buttons.user', 0, 1, true],
-    ['buttons.mail', 0, 1, true],
-    ['buttons.compose', 0, 1, true],
+    ['buttons.mail', 0, 1, false],
+    ['buttons.compose', 0, 1, false],
     ['buttons.immortal', 0, 1, true],
     ['buttons.codeEditor', 0, 1, false],
     ['find.case', 0, 1, false],
@@ -1886,8 +1886,8 @@ export class Settings {
             case 'buttons.map': return true;
             case 'buttons.user': return true;
             case 'buttons.mail': return true;
-            case 'buttons.compose': return true;
-            case 'buttons.immortal': return true;
+            case 'buttons.compose': return false;
+            case 'buttons.immortal': return false;
             case 'buttons.codeEditor': return false;
             case 'find.case': return false;
             case 'find.word': return false;

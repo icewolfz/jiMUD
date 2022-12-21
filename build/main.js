@@ -4620,6 +4620,7 @@ function createMenu(window) {
                             executeScriptClient('toggleView("button.mail")', window || mWindow, true);
                           }
                         },
+                        */
                         {
                           label: '&Compose mail',
                           id: "composebutton",
@@ -4629,7 +4630,6 @@ function createMenu(window) {
                             executeScriptClient('toggleView("button.compose")', window || mWindow, true);
                           }
                         },
-                        */
                         {
                             label: '&User buttons',
                             id: 'userbutton',
@@ -4868,15 +4868,15 @@ function createMenu(window) {
                   visible: true,
                   //accelerator: 'CmdOrCtrl+M'
                 },
+                */
                 {
                   label: '&Compose mail...',
                   click: (item, mWindow) => {
-                    executeScriptClient('showComposer()', window || mWindow, true);
+                    executeScriptClient('openWindow("composer")', window || mWindow, true);
                   },
                   visible: true,
                   //accelerator: 'CmdOrCtrl+M'
                 },
-                */
                 { type: 'separator' }
             ]
         },

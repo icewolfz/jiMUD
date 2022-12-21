@@ -123,6 +123,9 @@ Usage: `jiMUD [arguments...]`
   - Reverse style has weird results with heavy nesting of reverse tags and colors, suggest to just use normal background colors.
   - Correction from context menu may remove applied styles depending on if they are just that word
   - Complex color codes may be returned due to nesting and other complex style choices
+- Mail composer
+  - All issues from Advanced editor
+  - Does not work if in an editor on mud or at a prompt accepting input  
 - General slow performance, do not use --disable-gpu it can impact overall performance
 - [Mapper](mapper.md#know-issues)
 - [Code editor](codeeditor.md#know-issues)

@@ -31,6 +31,7 @@
     - Add right click spell check support for systems that support it
     - Add basic spell checking
     - Add problem panel to display all errors and misspellings
+  - Add basic mail composer dialog to allow mailing to players easier
 - **Fixed:**
   - Display:
     - Round word wrap widths to prevent floating point math errors
