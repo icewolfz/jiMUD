@@ -30,14 +30,14 @@
         const { Menu, MenuItem } = remote;
         const { stripHTML, htmlEncode, invert, parseTemplate, getColors, createColorDialog } = require('./js/library');
         const { Settings } = require('./js/settings');
-        const { Mail } = require('./js/mail');
-        const { MailStatus, MailReadFormat } = require('./js/types');
+        //const { Mail } = require('./js/mail');
+        //const { MailStatus, MailReadFormat } = require('./js/types');
         const rgbcolor = require('rgbcolor');
         const fs = require('fs');
         const path = require('path');
 
 
-        var mail;
+        //var mail;
         var draft = true;
         var closeWindow = false;
         var id = '' + (Date.now() / 1000);
@@ -246,7 +246,7 @@
                         classes.push('overline');
                         break;
                     case 'FLASH':
-                        if (client.getOption('flashing'))
+                        if (window.opener.client.getOption('flashing'))
                             classes.push('flash');
                         else
                             classes.push('noflash');
@@ -467,8 +467,8 @@
             var buffer = [];
             var codes = [];
             var color, d, dl, rgb;
-            if (client.getOption('enableDebug'))
-                client.debug('Composer Editor Get Raw HTML: ' + tinymce.activeEditor.getContent({ format: 'raw' }));
+            if (window.opener.client.getOption('enableDebug'))
+                window.opener.client.debug('Composer Editor Get Raw HTML: ' + tinymce.activeEditor.getContent({ format: 'raw' }));
             for (d = data.length - 1; d >= 0; d--) {
                 if (!data[d].startsWith('"') && data[d] != 'BR' && data[d] != 'RESET')
                     data.pop();
@@ -862,54 +862,186 @@
                 editor.ui.registry.addIcon('reverse', '<img src="../assets/icons/png/reverse.png" />');
 
                 editor.ui.registry.addSplitButton('send', {
-                    type: 'splitbutton',
                     icon: 'sendraw',
-                    tooltip: 'Send mail',
-                    onclick: sendFormatted,
+                    tooltip: 'Send to mud',
+                    onAction: function () {
+                        sendMail(getFormattedText().replace(/(?:\r)/g, ''), 3);
+                    },
+                    onItemAction: function (api, value) {
+                        switch (value) {
+                            /*
+                            case 'formatted':
+                                sendMail(getFormattedText().replace(/(?:\r)/g, ''));
+                                break;
+                            case 'text':
+                                sendMail(getText().replace(/(?:\r)/g, ''));
+                                break;
+                            case 'formattednoecho':
+                                sendMail(getFormattedText().replace(/(?:\r)/g, ''), 1);
+                                break;
+                            case 'textnoecho':
+                                sendMail(getText().replace(/(?:\r)/g, ''), 1);
+                                break;
+                            case 'formattedverbatim':
+                                sendMail(getFormattedText().replace(/(?:\r)/g, ''), 2);
+                                break;
+                            case 'textverbatim':
+                                sendMail(getText().replace(/(?:\r)/g, ''), 2);
+                                break;
+                                */
+                            case 'rawformatted':
+                                sendMail(getFormattedText().replace(/(?:\r)/g, ''), 3);
+                                break;
+                            case 'rawtext':
+                                sendMail(getText().replace(/(?:\r)/g, ''), 3);
+                                break;
+                        }
+                    },
+                    fetch: callback => {
+                        callback([
+                            /*
+                            {
+                                text: 'Formatted as commands',
+                                value: 'formatted',
+                                type: 'choiceitem'
+                            },
+                            {
+                                text: 'Text as commands',
+                                value: 'text',
+                                type: 'choiceitem'
+                            },
+                            {
+                                text: 'Formatted as commands (No echo)',
+                                value: 'formattednoecho',
+                                type: 'choiceitem'
+                            },
+                            {
+                                text: 'Text as commands (No echo)',
+                                value: 'textnoecho',
+                                type: 'choiceitem'
+                            },
+                            {
+                                text: 'Formatted verbatim (No echo)',
+                                value: 'formattedverbatim',
+                                type: 'choiceitem'
+                            },
+                            {
+                                text: 'Text verbatim (No echo)',
+                                value: 'textverbatim',
+                                type: 'choiceitem'
+                            },
+                            */
+                            {
+                                text: 'Formatted',
+                                value: 'rawformatted',
+                                type: 'choiceitem'
+                            },
+                            {
+                                text: 'Text',
+                                value: 'rawtext',
+                                type: 'choiceitem'
+                            }
+                        ]);
+                    }
+                });
+                editor.ui.registry.addButton('append', {
+                    icon: 'open',
+                    tooltip: 'Append file...',
+                    onAction: appendFile
+                });
+                editor.ui.registry.addToggleButton('overline', {
+                    icon: 'overline',
+                    tooltip: 'Overline',
+                    format: 'overline',
+                    onAction: buttonApi => toggleFormat('overline'),
+                    onSetup: buttonApi => buttonPostRender(buttonApi, 'overline')
+                });
+                editor.ui.registry.addToggleButton('dblunderline', {
+                    icon: 'dblunderline',
+                    tooltip: 'Double Underline',
+                    format: 'dblunderline',
+                    onAction: buttonApi => toggleFormat('dblunderline'),
+                    onSetup: buttonApi => buttonPostRender(buttonApi, 'dblunderline')
+                });
+                editor.ui.registry.addToggleButton('flash', {
+                    tooltip: 'Flash',
+                    format: 'flash',
+                    icon: 'flash',
+                    onAction: buttonApi => toggleFormat('flash'),
+                    onSetup: buttonApi => buttonPostRender(buttonApi, 'flash')
+                });
+                editor.ui.registry.addToggleButton('reverse', {
+                    icon: 'reverse',
+                    tooltip: 'Reverse',
+                    format: 'reverse',
+                    onAction: buttonApi => toggleFormat('reverse'),
+                    onSetup: buttonApi => buttonPostRender(buttonApi, 'reverse')
+                });
+
+                editor.ui.registry.addMenuItem('style', {
+                    text: 'Style',
                     menu: [
                         {
-                            text: 'Send formatted ',
-                            onclick: sendFormatted
+                            image: '../assets/icons/png/overline.png',
+                            text: 'Overline',
+                            format: 'overline',
+                            onclick: toggleFormat,
+                            onpostrender: buttonPostRender
+                        }, {
+                            image: '../assets/icons/png/dblunderline.png',
+                            text: 'Double Underline',
+                            format: 'dblunderline',
+                            onclick: toggleFormat,
+                            onpostrender: buttonPostRender
                         },
                         {
-                            text: 'Send text',
-                            onclick: sendRaw
+                            text: 'Flash',
+                            format: 'flash',
+                            image: '../assets/icons/png/flash.png',
+                            onclick: toggleFormat,
+                            onpostrender: buttonPostRender
+                        },
+                        {
+                            image: '../assets/icons/png/reverse.png',
+                            text: 'Reverse',
+                            format: 'reverse',
+                            onclick: toggleFormat,
+                            onpostrender: buttonPostRender
                         }
                     ]
                 });
-                editor.addButton('append', {
-                    icon: 'fa-open',
-                    tooltip: 'Append file...',
-                    onclick: appendFile
-                });
-                editor.addButton('overline', {
+
+                editor.ui.registry.addMenuItem('overline', {
                     image: '../assets/icons/png/overline.png',
-                    tooltip: 'Overline',
+                    text: 'Overline',
                     format: 'overline',
                     onclick: toggleFormat,
                     onpostrender: buttonPostRender
                 });
-                editor.addButton('dblunderline', {
+
+                editor.ui.registry.addMenuItem('dblunderline', {
                     image: '../assets/icons/png/dblunderline.png',
-                    tooltip: 'Double Underline',
+                    text: 'Double Underline',
                     format: 'dblunderline',
                     onclick: toggleFormat,
                     onpostrender: buttonPostRender
                 });
-                editor.addButton('flash', {
-                    tooltip: 'Flash',
+
+                editor.ui.registry.addMenuItem('flash', {
+                    text: 'Flash',
                     format: 'flash',
                     image: '../assets/icons/png/flash.png',
                     onclick: toggleFormat,
                     onpostrender: buttonPostRender
                 });
-                editor.addButton('reverse', {
+                editor.ui.registry.addMenuItem('reverse', {
                     image: '../assets/icons/png/reverse.png',
-                    tooltip: 'Reverse',
+                    text: 'Reverse',
                     format: 'reverse',
                     onclick: toggleFormat,
                     onpostrender: buttonPostRender
                 });
+
 
                 editor.on('Change', function () {
                     addReverse($('.reverse', $(editor.getDoc()).contents()));
@@ -932,6 +1064,60 @@
             });
         }
 
+        function sendMail(body, type) {
+            if (!window.opener.client.connected) {
+                dialog.showMessageBox({
+                    type: 'error',
+                    title: 'Not connected',
+                    message: 'Must be connected to mud to send mail'
+                });
+                return;
+            }
+            var to = (document.getElementById('to').value.split(/ |,/) || []).filter((a) => { return a.length > 0; });
+            var cc = (document.getElementById('CC').value.split(/ |,/) || []).filter((a) => { return a.length > 0; });
+            var p = $('#to-form');
+            p.removeClass('has-error');
+            p.removeClass('has-feedback');
+            if (to.length === 0) {
+                p.addClass('has-error');
+                p.addClass('has-feedback');
+                dialog.showMessageBox({
+                    type: 'error',
+                    title: 'No recipient',
+                    message: 'Must supply at least one recipient'
+                });
+                document.getElementById('to').focus();
+                return;
+            }
+            sendCommand('mail ' + to.join(' '), type);
+            sendCommand(document.getElementById('Subject').value || '', type);
+            sendCommand(body, type);
+            sendCommand('.', type);
+            sendCommand(cc.join(' '), type);
+            //if (getOption('editorClearOnSend'))
+            tinymce.activeEditor.setContent('');
+            //if (getOption('editorCloseOnSend'))
+            window.close();
+        }
+
+        function sendCommand(cmd, type) {
+            cmd += '\n';
+            switch (type) {
+                case 1:
+                    window.opener.client.sendBackground(cmd, true);
+                    break;
+                case 2:
+                    window.opener.client.send(cmd, false);
+                    break;
+                case 3:
+                    window.opener.client.sendRaw(cmd);
+                    break;
+                default:
+                    window.opener.client.sendCommand(cmd);
+                    break;
+            }
+        }
+
         function sendFormatted() {
             var to = $('#to').val().split(/ |,/).filter((a) => { return a.length > 0; });
             var cc = ($('#CC').val().split(/ |,/) || []).filter((a) => { return a.length > 0; });
@@ -949,22 +1135,23 @@
                 $('#to').focus();
                 return;
             }
-            $('#sendProgressbar').html('<progress max="100"></progress>');
-            $('#sendProgress')[0].showModal();
-            ipcRenderer.send('set-progress', { value: 0 });
-            ipcRenderer.send('set-progress-window', 'composer', { value: 0 });
+            //$('#sendProgressbar').html('<progress max="100"></progress>');
+            //$('#sendProgress')[0].showModal();
+            //ipcRenderer.send('set-progress', { value: 0 });
+            //ipcRenderer.send('set-progress-window', 'composer', { value: 0 });
 
-
-            mail.send({
-                id: id,
-                subject: $('#Subject').val(),
-                read: 0,
-                to: to,
-                cc: cc,
-                from: ipcRenderer.sendSync('get-global', 'character') || '',
-                raw: getFormattedText().replace(/(?:\r)/g, ''),
-                ansi: getAnsiText().replace(/(?:\r)/g, '')
-            }, options.extensions['mail'] ? options.extensions['mail'].saveSent : true);
+            /*
+                        mail.send({
+                            id: id,
+                            subject: $('#Subject').val(),
+                            read: 0,
+                            to: to,
+                            cc: cc,
+                            from: window.opener.getCharacterName() || '',
+                            raw: getFormattedText().replace(/(?:\r)/g, ''),
+                            ansi: getAnsiText().replace(/(?:\r)/g, '')
+                        }, options.extensions['mail'] ? options.extensions['mail'].saveSent : true);
+                        */
         }
 
         function sendRaw() {
@@ -982,26 +1169,28 @@
                 $('#to').focus();
                 return;
             }
-            $('#sendProgressbar').html('<progress max="100"></progress>');
-            $('#sendProgress')[0].showModal();
-            ipcRenderer.send('set-progress', { value: 0 });
-            ipcRenderer.send('set-progress-window', 'composer', { value: 0 });
-
-            mail.send({
-                id: id,
-                subject: $('#Subject').val(),
-                read: 0,
-                to: to,
-                cc: cc,
-                from: ipcRenderer.sendSync('get-global', 'character') || '',
-                raw: getText().replace(/(?:\r)/g, ''),
-                ansi: getText().replace(/(?:\r)/g, '')
-            }, options.extensions['mail'] ? options.extensions['mail'].saveSent : true);
+            //$('#sendProgressbar').html('<progress max="100"></progress>');
+            //$('#sendProgress')[0].showModal();
+            //ipcRenderer.send('set-progress', { value: 0 });
+            //ipcRenderer.send('set-progress-window', 'composer', { value: 0 });
+            /*
+                        mail.send({
+                            id: id,
+                            subject: $('#Subject').val(),
+                            read: 0,
+                            to: to,
+                            cc: cc,
+                            from: window.opener.getCharacterName() || '',
+                            raw: getText().replace(/(?:\r)/g, ''),
+                            ansi: getText().replace(/(?:\r)/g, '')
+                        }, options.extensions['mail'] ? options.extensions['mail'].saveSent : true);
+                        */
         }
 
         $(document).ready(() => {
             initShadowMUD();
-            var file = ipcRenderer.sendSync('get-global', 'character');
+            /*
+            var file = window.opener.getCharacterName();
             if (!file || file.length === 0)
                 file = parseTemplate(path.join('{data}', 'mail.sqlite'));
             else
@@ -1054,6 +1243,7 @@
                 if ($('#sendProgress')[0].open)
                     $('#sendProgress')[0].close();
             });
+            */
             tinymce.init({
                 custom_colors: false,
                 selector: 'textarea',
@@ -1103,7 +1293,7 @@
                         insertFormatted(clipboard.readText('selection') || '');
                     });
                     editor.on('PastePreProcess', function (e) {
-                        if (client.getOption('enableDebug'))
+                        if (window.opener.client.getOption('enableDebug'))
                             window.opener.client.debug('Compose Before Editor PastePreProcess: ' + e.content);
                         clearReverse($('.reverse', $(editor.getDoc()).contents()));
                         e.content = e.content.replace(/<\/p>/g, '<br>');
@@ -1117,7 +1307,7 @@
                             }
                             e.content = e.content.substring(0, m.index) + e.content.substring(m.index, regex.lastIndex).replace(/\n/g, '<br>') + e.content.substring(regex.lastIndex);
                         }
-                        if (client.getOption('enableDebug'))
+                        if (window.opener.client.getOption('enableDebug'))
                             window.opener.client.debug('Compose After Editor PastePreProcess: ' + e.content);
                     });
                     editor.on('PastePreProcess', function () {
@@ -1156,19 +1346,20 @@
                 cMenu.popup();
             });
             loadOptions();
-            window.opener.client.on('options-loaded', optionsLoaded);
+            window.opener.client.on('options-loaded', loadOptions);
+            window.opener._status.on('set-title', setTitle);
+            window.opener.addEventListener('loadCharacter', updateCharacter);
+            window.opener.addEventListener('updateCharacter', updateCharacter);
+            window.opener.addEventListener('resetCharacter', updateCharacter);
+            //window.opener.client.on('received-GMCP', processGMCP);
         });
-
-        function optionsLoaded() {
-            loadOptions();
-        }
 
         function loadColors() {
             var _dColors = getColors();
             var c, color, r, g, b, idx, _bold = [], bl;
             _ColorTable = [];
             _colors = {};
-            var ClientColors = client.getOption('colors') || [];
+            var ClientColors = window.opener.client.getOption('colors') || [];
             color = new rgbcolor(ClientColors[0] || _dColors[0]).toHex().substr(1).toUpperCase();
             _colors[color] = 'BLACK';
             _ColorTable.push(color, 'BLACK');
@@ -1309,24 +1500,38 @@
             }, { once: true });
         }
 
-        ipcRenderer.on('reload-options', () => {
-            loadOptions();
-        });
+        async function processGMCP(mod, obj) {
+            //if (mail)
+            //mail.processGMCP(mod, obj);
+        }
 
-        ipcRenderer.on('GMCP-received', (event, data) => {
-            if (client && client.getOption('enableDebug'))
-                console.log(data);
-            if (mail)
-                mail.processGMCP(data.mod, data.obj);
-        });
+        function setTitle(title, lag) {
+            if (title && title.length > 0)
+                document.title = 'Composer - ' + title + (window.opener.client.port === 1035 ? ' - Development' : '');
+            else
+                document.title = 'Composer' + (window.opener.client.port === 1035 ? ' - Development' : '');
+        }
 
-        ipcRenderer.on('set-color', (event, type, color, code, window) => {
-            if (window !== 'composer') return;
+        function updateCharacter(e) {
+            setTitle(window.opener.getCharacterName());
+            try {
+                //TODO update mail file
+            }
+            catch (err) {
+                if (typeof err === 'string')
+                    window.opener.client.error(err);
+                else
+                    window.opener.client.error(err.stack || err.message);
+            }
+        }
+
+        function setColor(type, color, code) {
             if (color === 'transparent')
                 tinymce.activeEditor.plugins['shadowmud'].removeFormat(type);
             else
                 tinymce.activeEditor.plugins['shadowmud'].applyFormat(type, '#' + color);
-        });
+            tinymce.activeEditor.plugins['smtextcolor'].setColor(type, '#' + color);
+        }
 
         function createOptions() {
             if (options.extensions['mail'])
@@ -1352,7 +1557,7 @@
             var ask = 0;
             if (options.extensions['mail'])
                 ask = options.extensions['mail'].draft;
-
+            /*
             if (!closeWindow && draft && !ask) {
                 evt.returnValue = false;
                 setTimeout(() => {
@@ -1377,14 +1582,14 @@
                             read: 0,
                             to: $('#to').val().split(/ |,/),
                             cc: $('#CC').val().split(/ |,/),
-                            from: ipcRenderer.sendSync('get-global', 'character') || '',
+                            from: window.opener.getCharacterName() || '',
                             raw: getFormattedText().replace(/(?:\r)/g, ''),
                             ansi: getAnsiText().replace(/(?:\r)/g, ''),
                             html: getHTML()
                         }, () => {
                             mail.close();
                             closeWindow = true;
-                            window.opener.client.off('options-loaded', optionsLoaded);
+                            window.opener.client.off('options-loaded', loadOptions);
                             window.close();
                         });
                         return;
@@ -1395,7 +1600,7 @@
                         ipcRenderer.send('setting-changed', { type: 'extensions', name: 'mail', value: options.extensions['mail'] });
                     }
                     closeWindow = true;
-                    window.opener.client.off('options-loaded', optionsLoaded);
+                    window.opener.client.off('options-loaded', loadOptions);
                     window.close();
                 });
                 return;
@@ -1408,23 +1613,29 @@
                     read: 0,
                     to: $('#to').val().split(/ |,/),
                     cc: $('#CC').val().split(/ |,/),
-                    from: ipcRenderer.sendSync('get-global', 'character') || '',
+                    from: window.opener.getCharacterName() || '',
                     raw: getFormattedText().replace(/(?:\r)/g, ''),
                     ansi: getAnsiText().replace(/(?:\r)/g, ''),
                     html: getHTML()
                 }, () => {
                     mail.close();
                     closeWindow = true;
-                    window.opener.client.off('options-loaded', optionsLoaded);
+                    window.opener.client.off('options-loaded', loadOptions);
                     window.close();
                 });
                 return;
             }
             else if (mail)
                 mail.close();
+            */
             closeWindow = true;
-            window.opener.client.off('options-loaded', optionsLoaded);
-            window.close();
+            window.opener.client.off('options-loaded', loadOptions);
+            window.opener._status.off('set-title', setTitle);
+            window.opener.removeEventListener('loadCharacter', updateCharacter);
+            window.opener.removeEventListener('updateCharacter', updateCharacter);
+            window.opener.removeEventListener('resetCharacter', updateCharacter);
+            //window.opener.client.off('received-GMCP', processGMCP);
+            //window.close();
         };
     </script>
     <style>
@@ -1460,23 +1671,29 @@
                     <label class="input-group-addon" for="to">To</label>
                     <span class="fa fa-remove form-control-feedback" aria-hidden="true"></span>
                     <input type="text" id="to" class="form-control" />
+                    <!--TODO readd once a way to query player list from mud-->
+                    <!--
                     <span class="input-group-btn">
                         <ul id="to-list" class="dropdown-menu" aria-labelledby="button-to" data-container="body"></ul>
                         <button id="button-to" class="btn btn-default dropdown-toggle" style="width:17px;min-width:17px;padding-left:4px;padding-right:4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
                             <span class="caret" style="margin-left: -1px;"></span>
                         </button>
                     </span>
+                    -->
                 </div>
             </div>
             <div class="input-group input-group-xs">
                 <label class="input-group-addon" for="CC">CC</label>
                 <input type="text" id="CC" class="form-control" />
+                <!--TODO readd once a way to query player list from mud-->
+                <!--
                 <span class="input-group-btn">
                     <ul id="CC-list" class="dropdown-menu" aria-labelledby="button-CC" data-container="body"></ul>
                     <button id="button-CC" class="btn btn-default dropdown-toggle" style="width:17px;min-width:17px;padding-left:4px;padding-right:4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
                         <span class="caret" style="margin-left: -1px;"></span>
                     </button>
                 </span>
+                -->
             </div>
             <div class="input-group input-group-xs">
                 <label class="input-group-addon" for="Subject">Subject</label>

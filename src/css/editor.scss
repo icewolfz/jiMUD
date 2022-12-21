@@ -74,7 +74,8 @@ i.mce-i-fa-send:before {
     left: 10px;
 }
 
-i.mce-i-fa-sendraw, i.mce-i-fa-open {
+i.mce-i-fa-sendraw,
+i.mce-i-fa-open {
     font-size: 26px !important;
 }
 
@@ -109,7 +110,7 @@ i.mce-i-fa-open:before {
     line-height: 0;
     border: 5px dashed #fff !important;
     border-left-color: transparent !important;
-    border-right-color: transparent !important;    
+    border-right-color: transparent !important;
 }
 
 .mce-tooltip-n .mce-tooltip-arrow {
@@ -165,9 +166,11 @@ i.mce-i-fa-open:before {
     0% {
         opacity: 1.0;
     }
+
     50% {
         opacity: 0.0;
     }
+
     100% {
         opacity: 1.0;
     }
@@ -177,9 +180,11 @@ i.mce-i-fa-open:before {
     0% {
         opacity: 1.0;
     }
+
     50% {
         opacity: 0.0;
     }
+
     100% {
         opacity: 1.0;
     }
@@ -1227,6 +1232,8 @@ i.mce-i-fa-open:before {
 
 /**color icon end**/
 
-.tox .tox-toolbar, .tox .tox-toolbar__overflow, .tox .tox-toolbar__primary {
+.tox .tox-toolbar,
+.tox .tox-toolbar__overflow,
+.tox .tox-toolbar__primary {
     background-attachment: local !important;
 }

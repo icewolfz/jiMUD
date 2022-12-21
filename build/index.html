@@ -96,7 +96,7 @@
     <a href="javascript:void(0)" title="Mail" id="mail" class="button" onclick="showMail();">
       <i class="fa fa-envelope"></i>
     </a>
-    <a href="javascript:void(0)" title="Compose new mail" id="compose" class="button" onclick="showComposer();">
+    <a href="javascript:void(0)" title="Compose new mail" id="compose" class="button" onclick="openWindow('composer');">
       <span class="fa-stack">
         <i class="fa fa-envelope-open-o fa-stack-2x"></i>
         <i class="fa fa-pencil fa-stack-1x" style="margin-top:-10px;margin-left:6px;"></i>
@@ -1971,6 +1971,12 @@
                         else
                             openWindow('immortal');
                         break;
+                    case 'composer':
+                        if (args === 'close')
+                            closeWindow('composer');
+                        else
+                            openWindow('composer');
+                        break;
                     case 'history':
                     case 'command-history':
                         if (args === 'close')
@@ -2689,6 +2695,9 @@
                     case 'immortals':
                         closeWindow('immortal');
                         break;
+                        case 'composer':
+                        closeWindow('composer');
+                        break;                        
                     case 'history':
                     case 'command-history':
                         closeWindow('history');
@@ -3526,6 +3535,15 @@
                         _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultX', 'defaultY', 'persistent', 'alwaysOnTop', 'showInTaskBar', 'overlayIcon', 'title', ...Object.keys(data.state || {})]);
                     _windows['code.editor.html'] = window.open('code.editor.html', 'Code editor-' + getId(), `defaultY=center,defaultX=center,persistent=${client.getOption('codeEditor.persistent')},alwaysOnTopClient=${client.getOption('codeEditor.alwaysOnTopClient')},alwaysOnTop=${client.getOption('codeEditor.alwaysOnTop')},showInTaskBar=${client.getOption('codeEditor.showInTaskBar')},defaultHeight=600,defaultWidth=800,backgroundColor=gray,icon=${path.join(__dirname, '../assets/icons/png/code.png')},overlayIcon=${path.join(__dirname, '../assets/icons/png/code.png')},title=Code editor${_options}`);
                     break;
+                case 'composer':
+                    if (data && data.details)
+                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultX', 'defaultY', 'persistent', ...Object.keys(data.state || {})]);
+                    if (client.options.windows.composer && client.options.windows.composer.options)
+                        _options += `,persistent=${client.options.windows.composer.options.persistent},alwaysOnTopClient=${client.options.windows.composer.options.alwaysOnTopClient},alwaysOnTop=${client.options.windows.composer.options.alwaysOnTop || false},showInTaskBar=${client.options.windows.composer.options.showInTaskBar || false}`;
+                    else
+                        _options += `,alwaysOnTopClient=true`;
+                    _windows['composer.html'] = window.open('composer.html', 'Composer-' + getId(), `defaultY=center,defaultX=center,backgroundColor=#fff,icon=${path.join(__dirname, '../assets/icons/png/composer.png')}${_options}`);
+                    break;
             }
             if (data && data.data && typeof _windows[name + '.html'].restoreWindow !== 'undefined')
                 _windows[name + '.html'].restoreWindow(data.data);
@@ -3582,6 +3600,7 @@
                     case 'skills.html'://center,center,800,600
                     case 'profiles.html'://center,center,800,600
                     case 'code.editor.html'://center,center,800,600
+                    case 'composer.html'://center,center,800,600
                         break;
                 }
                 _windows[_window].moveTo(pX - width / 2, pY - height / 2);
@@ -3775,19 +3794,6 @@
             }
             else
                 ipcRenderer.send('show-window', 'mail', { show: true, file: 'mail.html', icon: 'mail', alwaysOnTopClient: true });
-        }
-
-        // eslint-disable-next-line no-unused-vars
-        function showComposer() {
-            //TODO make work, as gmcp mail system never completed create a work around hat use the mail command to send/update
-            if (client.options.windows['composer'] && client.options.windows['composer'].options) {
-                client.options.windows['composer'].options.show = true;
-                client.options.windows['composer'].options.persistent = false;
-                client.options.windows['composer'].options.noInput = true;
-                ipcRenderer.send('show-window', 'composer', client.options.windows['composer'].options);
-            }
-            else
-                ipcRenderer.send('show-window', 'composer', { show: true, file: 'composer.html', icon: 'composer', alwaysOnTopClient: true, persistent: false, noInput: true });
         }
         */
 
