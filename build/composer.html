@@ -43,6 +43,7 @@
         var id = '' + (Date.now() / 1000);
         var _colors, _ColorTable, options, _colorCodes, client;
         var _colorDialog;
+        var _body = null;
         var colorNames = {
             'BLACK': 'Black',
             'RED': 'Maroon',
@@ -1074,7 +1075,6 @@
                 return;
             }
             var to = (document.getElementById('to').value.split(/ |,/) || []).filter((a) => { return a.length > 0; });
-            var cc = (document.getElementById('CC').value.split(/ |,/) || []).filter((a) => { return a.length > 0; });
             var p = $('#to-form');
             p.removeClass('has-error');
             p.removeClass('has-feedback');
@@ -1090,14 +1090,7 @@
                 return;
             }
             sendCommand('mail ' + to.join(' '), type);
-            sendCommand(document.getElementById('Subject').value || '', type);
-            sendCommand(body, type);
-            sendCommand('.', type);
-            sendCommand(cc.join(' '), type);
-            //if (getOption('editorClearOnSend'))
-            tinymce.activeEditor.setContent('');
-            //if (getOption('editorCloseOnSend'))
-            window.close();
+            _body = body;
         }
 
         function sendCommand(cmd, type) {
@@ -1111,6 +1104,9 @@
                     break;
                 case 3:
                     window.opener.client.sendRaw(cmd);
+                    break;
+                case 4:
+                    window.opener.client.send(cmd, true);
                     break;
                 default:
                     window.opener.client.sendCommand(cmd);
@@ -1347,6 +1343,7 @@
             });
             loadOptions();
             window.opener.client.on('options-loaded', loadOptions);
+            window.opener.client.on('add-line', addLine);
             window.opener._status.on('set-title', setTitle);
             window.opener.addEventListener('loadCharacter', updateCharacter);
             window.opener.addEventListener('updateCharacter', updateCharacter);
@@ -1505,6 +1502,23 @@
             //mail.processGMCP(mod, obj);
         }
 
+        function addLine(data) {
+            if (data.line === 'Subject: ' && data.fragment)
+                sendCommand(document.getElementById('Subject').value || '', 4);
+            else if (_body !== null && data.line.length && data.line.split('').every(char => char === '_')) {
+                sendCommand(_body || '', 2);
+                sendCommand('.', 4);
+                _body = null;
+            }
+            else if (data.line === 'Cc: ' && data.fragment) {
+                sendCommand((document.getElementById('CC').value.split(/ |,/) || []).filter((a) => { return a.length > 0; }).join(' '), 1);
+                //if (getOption('editorClearOnSend'))
+                tinymce.activeEditor.setContent('');
+                //if (getOption('editorCloseOnSend'))
+                window.close();
+            }
+        }
+
         function setTitle(title, lag) {
             if (title && title.length > 0)
                 document.title = 'Composer - ' + title + (window.opener.client.port === 1035 ? ' - Development' : '');
@@ -1630,6 +1644,7 @@
             */
             closeWindow = true;
             window.opener.client.off('options-loaded', loadOptions);
+            window.opener.client.off('add-line', addLine);
             window.opener._status.off('set-title', setTitle);
             window.opener.removeEventListener('loadCharacter', updateCharacter);
             window.opener.removeEventListener('updateCharacter', updateCharacter);
