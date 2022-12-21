@@ -66,6 +66,7 @@
   - Update better-sqlite3 7.6.2 to 8.0.1
   - Update fs-extra 10.1.0 to 11.1.0
   - Update @electron/remote 2.0.8 to 2.0.9
+  - Advanced editor: Remove bold style as ansi uses colors instead
 
 ## 1.0.0-alpha
 

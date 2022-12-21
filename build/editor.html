@@ -744,11 +744,13 @@
                     cMenu.append(new MenuItem({
                         label: 'Style',
                         submenu: [
+                            /*
                             {
                                 label: 'Bold',
                                 icon: editor.formatter.match('bold') ? path.join(__dirname, '../assets/icons/png/bold.selected.png') : path.join(__dirname, '../assets/icons/png/bold.png'),
                                 click: toggleContextFormat,
                             },
+                            */
                             {
                                 label: 'Italic',
                                 icon: editor.formatter.match('italic') ? path.join(__dirname, '../assets/icons/png/italic.selected.png') : path.join(__dirname, '../assets/icons/png/italic.png'),
@@ -1155,7 +1157,7 @@
                 //textcolor_cols: "16",
                 textcolor_rows: '3',
                 textcolor_cols: '8',
-                toolbar: 'send | append | undo redo | smforecolor smbackcolor | bold italic underline strikethrough overline dblunderline flash reverse | insertdatetime',
+                toolbar: 'send | append | undo redo | smforecolor smbackcolor | italic underline strikethrough overline dblunderline flash reverse | insertdatetime',
                 content_css: 'css/editorcontent.css',
                 formats: {
                     bold: { inline: 'strong', exact: true, links: true, remove_similar: true },
