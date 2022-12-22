@@ -4778,6 +4778,24 @@ function createMenu(window) {
                     },
                     accelerator: 'CmdOrCtrl+Shift+H'
                 },
+                /*
+                {
+                  label: '&Mail...',
+                  click: (item, mWindow) => {
+                    executeScriptClient('showMail()', window || mWindow, true);
+                  },
+                  visible: true,
+                  //accelerator: 'CmdOrCtrl+M'
+                },
+                */
+                {
+                  label: '&Compose mail...',
+                  click: (item, mWindow) => {
+                    executeScriptClient('openWindow("composer")', window || mWindow, true);
+                  },
+                  visible: true,
+                  //accelerator: 'CmdOrCtrl+M'
+                },                
                 { type: 'separator' },
                 {
                     label: 'Save &Layout...',
@@ -4859,24 +4877,6 @@ function createMenu(window) {
                     }
                 },
                 */
-                /*
-                {
-                  label: '&Mail...',
-                  click: (item, mWindow) => {
-                    executeScriptClient('showMail()', window || mWindow, true);
-                  },
-                  visible: true,
-                  //accelerator: 'CmdOrCtrl+M'
-                },
-                */
-                {
-                  label: '&Compose mail...',
-                  click: (item, mWindow) => {
-                    executeScriptClient('openWindow("composer")', window || mWindow, true);
-                  },
-                  visible: true,
-                  //accelerator: 'CmdOrCtrl+M'
-                },
                 { type: 'separator' }
             ]
         },
