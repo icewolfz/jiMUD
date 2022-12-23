@@ -2286,12 +2286,12 @@
                 }));
                 */
                 c.append(new MenuItem({
-                  label: 'Compose mail',
-                  type: 'checkbox',
-                  checked: client.getOption('buttons.compose'),
-                  click: () => {
-                    toggleView("button.compose");
-                  }
+                    label: 'Compose mail',
+                    type: 'checkbox',
+                    checked: client.getOption('buttons.compose'),
+                    click: () => {
+                        toggleView("button.compose");
+                    }
                 }));
                 c.append(new MenuItem({
                     label: 'User buttons',
@@ -3403,9 +3403,13 @@
             clientsChanged(windows, clients);
         });
 
-        ipcRenderer.on('activated', event => {
-            doUpdate(4);
-            reloadIcon();
+        ipcRenderer.on('activated', (event, newWindow) => {
+            setTimeout(() => {
+                doUpdate(4);
+                reloadIcon(newWindow);
+                updateTitle();
+                ipcRenderer.send('update-title', { title: getCharacterName() || '' });
+            }, 100);
         });
 
         let _clients = ipcRenderer.sendSync('get-window-client-count') || { window: 1, clients: 1 };
@@ -3414,8 +3418,12 @@
             _clients.clients = clients;
             if (!document.getElementById('drag-grip'))
                 setTimeout(() => { clientsChanged(windows, clients) }, 100);
-            else if (clients === 1 && windows > 1)
+            else if (clients === 1 && windows > 1) {
                 document.getElementById('drag-grip').style.display = 'inline-block';
+                document.getElementById('drag-grip').style.height = '32px';
+                //Hack to fix mouse events
+                setTimeout(() => { document.getElementById('drag-grip').style.height = ''; }, 50);
+            }
             else
                 document.getElementById('drag-grip').style.display = 'none';
             doUpdate(4);
@@ -4176,19 +4184,19 @@
             return data;
         }
 
-        function reloadIcon() {
+        function reloadIcon(force) {
             if (client.connected) {
                 if (!active && (_icon == 5 || _icon == 2))
-                    updateIcon(client.port === 1035 ? 5 : 2);
+                    updateIcon(client.port === 1035 ? 5 : 2, force);
                 else
-                    updateIcon(client.port === 1035 ? 4 : 1);
+                    updateIcon(client.port === 1035 ? 4 : 1, force);
             }
             else
-                updateIcon(client.port === 1035 ? 3 : 0);
+                updateIcon(client.port === 1035 ? 3 : 0, force);
         }
 
-        function updateIcon(icon) {
-            if (icon === _icon) return;
+        function updateIcon(icon, force) {
+            if (!force && icon === _icon) return;
             ipcRenderer.send('update-title', { icon: icon });
             _icon = icon;
         }

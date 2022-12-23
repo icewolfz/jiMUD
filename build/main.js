@@ -1938,6 +1938,7 @@ ipcMain.on('dock-client', (event, id, options) => {
             if (focusedClient === id && focusedWindow === windowId)
                 focusWindow(window, true);
             clientsChanged();
+            clients[id].view.webContents.send('activated', true);
         });
         return;
     }
@@ -1961,7 +1962,7 @@ ipcMain.on('dock-client', (event, id, options) => {
     if (windows[windowId].current && clients[windows[windowId].current])
         clients[windows[windowId].current].view.webContents.send('deactivated');
     windows[windowId].current = id;
-    clients[id].view.webContents.send('activated');
+    clients[id].view.webContents.send('activated', true);
     window.setTopBrowserView(clients[id].view);
     setClientWindowsParent(id, window, oldWindow);
     if (options)

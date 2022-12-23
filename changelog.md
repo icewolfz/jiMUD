@@ -59,6 +59,8 @@
   - Fix serializing of window layout child window paths to save relative to the open jiMUD making it easier to port data to new computers
   - Fix template paths with mixed cases in windows and mac
   - Character manger: Select new character and focus on login field when created
+  - Fix drag-grip being cut in half
+  - Fix Tab and window title not being correctly set when drag and dropped
 - **Changed:**
   - `Character manager on row double click load in:` Now defaults to open in new tab
   - Character manger: new icon for new tab button
