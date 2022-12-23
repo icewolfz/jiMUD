@@ -27,6 +27,7 @@
       - `Word wrap` Wrap long lines in command input
       - `Scrollbars` Add scrollbars when needed to command input
     - `Character Manager Add Button Action` Control the action of the add button
+    - `Enable crash reporting` Enable crash reporting, will save mini dump files to local by default to {data}\Crashpad
   - Code editor:
     - Add right click spell check support for systems that support it
     - Add basic spell checking

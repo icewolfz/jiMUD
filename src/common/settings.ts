@@ -521,7 +521,8 @@ export let SettingList: any[] = [
     ['tabCompletionList', 0, SettingType.String, ''],
     ['tabCompletionLookupType', 0, SettingType.Number, TabCompletion.PrependBuffer],
     ['tabCompletionReplaceCasing', 0, SettingType.Number, 0],
-    ['characterManagerAddButtonAction', 0, SettingType.Number, 0]
+    ['characterManagerAddButtonAction', 0, SettingType.Number, 0],
+    ['enableCrashReporting', 0, SettingType.Boolean, false]
 ];
 
 /**
@@ -747,6 +748,7 @@ export class Settings {
     public commandAutoSize: boolean;
     public commandWordWrap: boolean;
     public commandScrollbars: boolean;
+    public enableCrashReporting: boolean;
 
     public static load(file) {
         try {
@@ -2052,6 +2054,7 @@ export class Settings {
             case 'tabCompletionList': return '';
             case 'tabCompletionReplaceCasing': return 0;
             case 'characterManagerAddButtonAction': return 0;
+            case 'enableCrashReporting': return false;
         }
         return null;
     }

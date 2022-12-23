@@ -75,6 +75,7 @@ Usage: `jiMUD [arguments...]`
 - `-l=[file], -layout=[file]` Load window layout file
 - `-il, --ignore-layout` Ignore layout and do not save window states
 - `-nci, --no-character-import` Do not import old character.json
+- `-fci, --force-character-import` Force import old characters.json
 - `-f, --force` Force load of instance even if single only instance enable
 - `-nls, --no-layout-save` Do not save any layout changes when application is closed
 - `-nw, --new-window` Open a new window
@@ -82,6 +83,8 @@ Usage: `jiMUD [arguments...]`
 - `-nt, --new-tab` Open a new tab
 - `-nt=[id], --new-tab=[id]` Open a new tab and load a character, similar to --character but will not replace current active tab if it exist
 - `-el=[file], --error-log=[file]` Set a custom error log path
+- `-cr, --crash-reporting` Enable crash reporting to local folder
+- `-crp=[path], --crash-reporting-path=[path]`  Path where crash reporting data is saved
 
 ## References
 
@@ -125,7 +128,7 @@ Usage: `jiMUD [arguments...]`
   - Complex color codes may be returned due to nesting and other complex style choices
 - Mail composer
   - All issues from Advanced editor
-  - Does not work if in an editor on mud or at a prompt accepting input  
+  - Does not work if in an editor on mud or at a prompt accepting input
 - General slow performance, do not use --disable-gpu it can impact overall performance
 - [Mapper](mapper.md#know-issues)
 - [Code editor](codeeditor.md#know-issues)

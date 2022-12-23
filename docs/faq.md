@@ -331,6 +331,7 @@ Open an issue about it or log on to [ShadowMUD](http://www,shadowmud.com) using 
 | tabCompletionLookupType           | integer       | 1                                 |
 | tabCompletionReplaceCasing        | integer       | 0                                 |
 | characterManagerAddButtonAction   | integer       | 0                                 |
+| enableCrashReporting              | boolean       | false                             |
 
 ### trayClick and trayDblClick values
 

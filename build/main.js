@@ -35,8 +35,8 @@ else //not found use native
     argv = process.argv;
 
 argv = require('yargs-parser')(argv, {
-    string: ['data-dir', 's', 'setting', 'm', 'map', 'c', 'character', 'l', 'layout', 'el', 'error-log'],
-    boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import', 'f', 'force', 'nls', 'no-layout-save', 'fci', 'force-character-import'],
+    string: ['data-dir', 's', 'setting', 'm', 'map', 'c', 'character', 'l', 'layout', 'el', 'error-log', 'crp', 'crash-reporting-path'],
+    boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import', 'f', 'force', 'nls', 'no-layout-save', 'fci', 'force-character-import', 'cr', 'crash-reporting'],
     alias: {
         'd': ['debug'],
         'eo': ['editorOnly', 'editoronly'],
@@ -55,7 +55,9 @@ argv = require('yargs-parser')(argv, {
         'nc': ['new-connection', 'nt', 'new-tab'],
         'nw': ['new-window'],
         'nls': ['no-layout-save'],
-        'el': ['error-log']
+        'el': ['error-log'],
+        'cr': ['crash-reporting'],
+        'crp': ['crash-reporting-path']
     },
     configuration: {
         'short-option-groups': false
@@ -218,34 +220,38 @@ function commandLineArgumentHelp() {
     msg += '-nt, --new-tab - Open a new tab\n';
     msg += '-nt=[id], --new-tab=[id] - Open a new tab and load a character, similar to --character but will not replace current active connection if it exist\n';
     msg += '-el=[file], --error-log=[file] Set a custom error log path';
+    msg += '-cr, --crash-reporting Enable crash reporting to local folder';
+    msg += '-crp=[path], --crash-reporting-path=[path] Path where crash reporting data is saved';
     return msg;
 }
 
 function displayConsoleHelp() {
     console.log('Usage: jiMUD [arguments...]');
     console.log('');
-    console.log('-h, --help                                Print console help');
-    console.log('-v, --version                             Print current version');
-    console.log('-d, --debug                               Enable dev tools for all windows');
-    console.log('-s=[file], --setting=[file]               Override default setting file');
-    console.log('-m=[file], --map=[file]                   Override default map file');
-    console.log('-c=[name or id], --character=[name or id] Load a character from character database, may be used multiple times to supply multiple characters to load');
-    console.log('-c=[id:#], --character=[id:#]             Load a character from character database by id only, may be used multiple times to supply multiple characters to load');
-    console.log('-e, --e, -e=[file], --e=[file]            Open code editor with current/new client');
-    console.log('-eo, --eo, -eo=[file], --eo=[file]        Open only the code editor');
-    console.log('-no-pd, -no-portable-dir                  Do not use portable dir');
-    console.log('-data-dir=[file]                          Set a custom directory to store saved data');
-    console.log('-l=[file], --layout=[file]                Load window layout file');
-    console.log('-il, --ignore-layout                      Ignore layout and do not save window states');
-    console.log('-nci, --no-character-import               Do not import old characters.json');
-    console.log('-fci, --force-character-import            Force import old characters.json');
-    console.log('-f, --force                               Force load of instance even if single only instance enabled');
-    console.log('-nls, --no-layout-save                    Do not save any layout changes when application is closed');
-    console.log('-nw, --new-window                         Open a new window');
-    console.log('-nw=[id], --new-window=[id]               Open a new window with and load a character');
-    console.log('-nt, --new-tab                            Open a new tab')
-    console.log('-nt=[id], --new-tab=[id]                  Open a new tab and load a character, similar to --character but will not replace current active connection if it exist');
-    console.log('-el=[file], --error-log=[file]            Set a custom error log path');
+    console.log('-h, --help                                 Print console help');
+    console.log('-v, --version                              Print current version');
+    console.log('-d, --debug                                Enable dev tools for all windows');
+    console.log('-s=[file], --setting=[file]                Override default setting file');
+    console.log('-m=[file], --map=[file]                    Override default map file');
+    console.log('-c=[name or id], --character=[name or id]  Load a character from character database, may be used multiple times to supply multiple characters to load');
+    console.log('-c=[id:#], --character=[id:#]              Load a character from character database by id only, may be used multiple times to supply multiple characters to load');
+    console.log('-e, --e, -e=[file], --e=[file]             Open code editor with current/new client');
+    console.log('-eo, --eo, -eo=[file], --eo=[file]         Open only the code editor');
+    console.log('-no-pd, -no-portable-dir                   Do not use portable dir');
+    console.log('-data-dir=[file]                           Set a custom directory to store saved data');
+    console.log('-l=[file], --layout=[file]                 Load window layout file');
+    console.log('-il, --ignore-layout                       Ignore layout and do not save window states');
+    console.log('-nci, --no-character-import                Do not import old characters.json');
+    console.log('-fci, --force-character-import             Force import old characters.json');
+    console.log('-f, --force                                Force load of instance even if single only instance enabled');
+    console.log('-nls, --no-layout-save                     Do not save any layout changes when application is closed');
+    console.log('-nw, --new-window                          Open a new window');
+    console.log('-nw=[id], --new-window=[id]                Open a new window with and load a character');
+    console.log('-nt, --new-tab                             Open a new tab')
+    console.log('-nt=[id], --new-tab=[id]                   Open a new tab and load a character, similar to --character but will not replace current active connection if it exist');
+    console.log('-el=[file], --error-log=[file]             Set a custom error log path');
+    console.log('-cr, --crash-reporting                     Enable crash reporting to local folder');
+    console.log('-crp=[path], --crash-reporting-path=[path] Path where crash reprting data is saved');
 }
 
 //id, data, file, title, icon
@@ -725,6 +731,14 @@ if (argv.eo)
 if (argv.nls)
     _saved = true;
 
+if (argv.crp && argv.crp.length > 0)
+    app.setPath('crashDumps', path.resolve(path.normalize(argv.crp)));
+
+if (getSetting('enableCrashReporting') || argv.cr) {
+    const { crashReporter } = require('electron')
+    crashReporter.start({ uploadToServer: false });
+}
+
 if (getSetting('useSingleInstance') && !global.editorOnly && !argv.f) {
     var lock = app.requestSingleInstanceLock();
     if (!lock) {
@@ -734,8 +748,8 @@ if (getSetting('useSingleInstance') && !global.editorOnly && !argv.f) {
     else
         app.on('second-instance', (event, second_argv, workingDirectory, additionalData) => {
             second_argv = require('yargs-parser')(second_argv, {
-                string: ['data-dir', 's', 'setting', 'm', 'map', 'c', 'character', 'l', 'layout', 'el', 'error-log'],
-                boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import', 'f', 'force', 'nls', 'no-layout-save', 'fci', 'force-character-import'],
+                string: ['data-dir', 's', 'setting', 'm', 'map', 'c', 'character', 'l', 'layout', 'el', 'error-log', 'crp', 'crash-reporting-path'],
+                boolean: ['h', 'help', 'v', 'version', 'no-pd', 'no-portable-dir', 'disable-gpu', 'd', 'debug', '?', 'il', 'ignore-layout', 'nci', 'no-character-import', 'f', 'force', 'nls', 'no-layout-save', 'fci', 'force-character-import', 'cr', 'crash-reporting'],
                 alias: {
                     'd': ['debug'],
                     'eo': ['editorOnly', 'editoronly'],
@@ -754,7 +768,9 @@ if (getSetting('useSingleInstance') && !global.editorOnly && !argv.f) {
                     'nc': ['new-connection', 'nt', 'new-tab'],
                     'nw': ['new-window'],
                     'nls': ['no-layout-save'],
-                    'el': ['error=log']
+                    'el': ['error=log'],
+                    'cr': ['crash-reporting'],
+                    'crp': ['crash-reporting-path']
                 },
                 configuration: {
                     'short-option-groups': false
@@ -4622,13 +4638,13 @@ function createMenu(window) {
                         },
                         */
                         {
-                          label: '&Compose mail',
-                          id: "composebutton",
-                          type: 'checkbox',
-                          checked: true,
-                          click: (item, mWindow) => {
-                            executeScriptClient('toggleView("button.compose")', window || mWindow, true);
-                          }
+                            label: '&Compose mail',
+                            id: "composebutton",
+                            type: 'checkbox',
+                            checked: true,
+                            click: (item, mWindow) => {
+                                executeScriptClient('toggleView("button.compose")', window || mWindow, true);
+                            }
                         },
                         {
                             label: '&User buttons',
@@ -4789,13 +4805,13 @@ function createMenu(window) {
                 },
                 */
                 {
-                  label: '&Compose mail...',
-                  click: (item, mWindow) => {
-                    executeScriptClient('openWindow("composer")', window || mWindow, true);
-                  },
-                  visible: true,
-                  //accelerator: 'CmdOrCtrl+M'
-                },                
+                    label: '&Compose mail...',
+                    click: (item, mWindow) => {
+                        executeScriptClient('openWindow("composer")', window || mWindow, true);
+                    },
+                    visible: true,
+                    //accelerator: 'CmdOrCtrl+M'
+                },
                 { type: 'separator' },
                 {
                     label: 'Save &Layout...',
