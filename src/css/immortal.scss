@@ -72,6 +72,12 @@ body {
     bottom: 0;
 }
 
+#drag-bar:hover{
+    background-color: #000;    
+    transition-delay: 1s;
+    opacity: 0.5;
+}
+
 #ghost-bar {
     width: 3px;
     background-color: #000;
@@ -90,6 +96,12 @@ body {
     top: 0px;
     left: 0px;
     right: 0px;
+}
+
+#btm-drag-bar:hover{
+    background-color: #000;    
+    transition-delay: 1s;
+    opacity: 0.5;
 }
 
 #btm-ghost-bar {

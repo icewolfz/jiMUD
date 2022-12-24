@@ -115,6 +115,12 @@ body {
     cursor: ew-resize;
 }
 
+#drag-bar:hover{
+    background-color: #000;    
+    transition-delay: 1s;
+    opacity: 0.5;
+}
+
 #ghost-bar {
     width: 3px;
     background-color: #000;

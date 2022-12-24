@@ -300,8 +300,8 @@
                     {
                         id: 'ghost-bar',
                         css: {
-                            height: main.outerHeight(),
-                            top: main.offset().top,
+                            height: main.outerHeight() + 4,
+                            top: main.offset().top - 2,
                             left: main.offset().left - 3
                         }
                     }).appendTo('body');
