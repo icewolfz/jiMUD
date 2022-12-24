@@ -3404,12 +3404,12 @@
         });
 
         ipcRenderer.on('activated', (event, newWindow) => {
-            setTimeout(() => {
+            //setTimeout(() => {
                 doUpdate(4);
                 reloadIcon(newWindow);
                 updateTitle();
                 ipcRenderer.send('update-title', { title: getCharacterName() || '' });
-            }, 100);
+            //}, 100);
         });
 
         let _clients = ipcRenderer.sendSync('get-window-client-count') || { window: 1, clients: 1 };

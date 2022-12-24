@@ -326,17 +326,23 @@
                 ipcRenderer.send('reorder-client', e.tab.client, e.index, e.oldIndex);
             });
             tabstrip.on('tab-drag-end', e => {
-                //dropped outside of client area so new window if more then 1 tab
-                if (e.event.dataTransfer.items.length === 0 && (e.event.clientX < 0 || e.event.clientY < 0 || e.event.clientX >= document.body.clientWidth || e.event.clientY >= document.body.clientHeight)) {
-                    e.event.stopPropagation();
-                    e.event.preventDefault();
-                    var x = e.event.screenX;
-                    var y = e.event.screenY;
-                    var bounds = e.tab.tab.getBoundingClientRect();
-                    x -= Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth));
-                    y -= Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight));
-                    ipcRenderer.send('dock-client', tabstrip.dragTab.client, { x: x, y: y, pid: ipcRenderer.sendSync('get-pid') });
-                }
+                const dragTab = tabstrip.dragTab;
+                //delay event to try and prevent race condition if dropped on another window
+                setTimeout(() => {
+                    //dropped outside of client area so new window if more then 1 tab
+                    if (e.event.dataTransfer.items.length === 0 && (e.event.clientX < 0 || e.event.clientY < 0 || e.event.clientX >= document.body.clientWidth || e.event.clientY >= document.body.clientHeight)) {
+                        //if not docked to this window it was moved already so return
+                        if (_clients.indexOf(dragTab.client) === -1) return;
+                        e.event.stopPropagation();
+                        e.event.preventDefault();
+                        var x = e.event.screenX;
+                        var y = e.event.screenY;
+                        var bounds = e.tab.tab.getBoundingClientRect();
+                        x -= Math.ceil(bounds.left + (window.outerWidth - document.body.offsetWidth));
+                        y -= Math.ceil(bounds.top + (window.outerHeight - document.body.offsetHeight));
+                        ipcRenderer.send('dock-client', dragTab.client, { x: x, y: y, pid: ipcRenderer.sendSync('get-pid') });
+                    }
+                }, 75);
             });
             tabstrip.on('tab-drop', e => {
                 //if not dragging its from a different window so its a undock/dock

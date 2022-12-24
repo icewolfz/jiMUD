@@ -2273,6 +2273,13 @@ ipcMain.on('get-client-title', (event, id) => {
         event.returnValue = '';
 });
 
+ipcMain.on('get-client-parent-id', (event, id) => {
+    if (clients[id])
+        event.returnValue = getWindowId(clients[id].parent);
+    else
+        event.returnValue = -1;
+})
+
 //bounds, id, data, file
 function createClient(options) {
     options = options || {};
