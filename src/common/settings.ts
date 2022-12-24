@@ -522,7 +522,8 @@ export let SettingList: any[] = [
     ['tabCompletionLookupType', 0, SettingType.Number, TabCompletion.PrependBuffer],
     ['tabCompletionReplaceCasing', 0, SettingType.Number, 0],
     ['characterManagerAddButtonAction', 0, SettingType.Number, 0],
-    ['enableCrashReporting', 0, SettingType.Boolean, false]
+    ['enableCrashReporting', 0, SettingType.Boolean, false],
+    ['characterManagerPanelWidth', 0, SettingType.Number, 0]
 ];
 
 /**
@@ -741,6 +742,7 @@ export class Settings {
     public onSecondInstance: OnSecondInstance;
 
     public characterManagerDblClick: CharacterManagerDblClick;
+    public characterManagerPanelWidth: number;
 
     public warnAdvancedSettings: boolean;
     public showAdvancedSettings: boolean;
@@ -2055,6 +2057,7 @@ export class Settings {
             case 'tabCompletionReplaceCasing': return 0;
             case 'characterManagerAddButtonAction': return 0;
             case 'enableCrashReporting': return false;
+            case 'characterManagerPanelWidth': return 0;
         }
         return null;
     }

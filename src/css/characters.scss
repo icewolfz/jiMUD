@@ -106,3 +106,20 @@ body {
     resize: none;
     width: initial;
 }
+
+#drag-bar {
+    background-color: transparent;
+    height: 100%;
+    float: right;
+    width: 3px;
+    cursor: ew-resize;
+}
+
+#ghost-bar {
+    width: 3px;
+    background-color: #000;
+    opacity: 0.5;
+    position: absolute;
+    cursor: ew-resize;
+    z-index: 999
+}

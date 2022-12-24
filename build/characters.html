@@ -38,6 +38,7 @@
         const moment = require('moment');
         var archiver, archive;
         var _charactersDataGrid;
+        var dragging = false;
 
         var changed = 0;
         var askonloadCharacter = window.getSetting('askonloadCharacter');
@@ -281,6 +282,67 @@
             });
             _charactersDataGrid.sort(1);
             loadCharacters();
+            var size = 202;
+            if (window.opener.client)
+                size = window.opener.client.getOption('characterManagerPanelWidth');
+            else
+                size = window.getSetting('characterManagerPanelWidth');
+            if (size < 202)
+                size = 202;
+            $('#panel').css('width', size);
+            $('#content').css('left', size);
+
+            $('#drag-bar').mousedown(function (e) {
+                e.preventDefault();
+                dragging = true;
+                var main = $('#content');
+                var ghostBar = $('<div>',
+                    {
+                        id: 'ghost-bar',
+                        css: {
+                            height: main.outerHeight(),
+                            top: main.offset().top,
+                            left: main.offset().left - 3
+                        }
+                    }).appendTo('body');
+
+                $(document).mousemove(function (e) {
+                    if (e.pageX < 199)
+                        ghostBar.css('left', 199);
+                    else if (e.pageX > document.body.clientWidth - 250)
+                        ghostBar.css('left', document.body.clientWidth - 250);
+                    else
+                        ghostBar.css('left', e.pageX);
+                });
+            });
+
+            $(document).mouseup(function (e) {
+                if (dragging) {
+                    var size;
+                    if (e.pageX < 200) {
+                        $('#panel').css('width', 202);
+                        $('#content').css('left', 202);
+                        size = 202;
+                    }
+                    else if (e.pageX > document.body.clientWidth - 250) {
+                        $('#panel').css('width', document.body.clientWidth - 250);
+                        $('#content').css('left', document.body.clientWidth - 250);
+                        size = document.body.clientWidth - 250;
+                    }
+                    else {
+                        $('#panel').css('width', e.pageX + 2);
+                        $('#content').css('left', e.pageX + 2);
+                        size = e.pageX + 2;
+                    }
+                    if (window.opener.client)
+                        window.opener.client.options.characterManagerPanelWidth = size;
+                    else
+                        window.setSetting('characterManagerPanelWidth', size);
+                    $('#ghost-bar').remove();
+                    $(document).unbind('mousemove');
+                    dragging = false;
+                }
+            });
         });
 
         function invalidFile(file) {
@@ -498,7 +560,7 @@
         }
 
         function addButton() {
-            if(addAction === 1)
+            if (addAction === 1)
                 addEmpty();
             else
                 add();
@@ -1237,7 +1299,7 @@
                     <i class="fa fa-folder-o fa-stack-2x" style="font-size: 1em"></i>
                     <i class="fa fa-users fa-stack-1x" style="font-size: 0.8em;margin-top: -2px;left:5px;"></i>
                 </span>
-            </button>            
+            </button>
         </div>
         <div class="btn-group" role="group">
             <button type="button" class="btn btn-default btn-xs" title="Add" onclick="addButton()">
@@ -1266,7 +1328,7 @@
                 <i class="fa fa-play"></i>
             </button>
             <button id="btn-load-connection" type="button" disabled="disabled" class="btn btn-success btn-xs" title="Load in new tab" onclick="newConnection()">
-                <i class="fa fa-step-forward"></i>                                
+                <i class="fa fa-step-forward"></i>
             </button>
             <button id="btn-load-window" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Load in new window" onclick="newWindow()">
                 <i class="fa fa-window-restore"></i>
@@ -1277,7 +1339,11 @@
         </button>
     </div>
     <div id="main">
-        <div id="characters-container" class="panel panel-default datagrid-standard" style="position: absolute;left: 2px;top: 2px;bottom:2px;width:200px;margin:0">
+        <div id="panel" style="position: absolute;left: 0px;top: 0px;bottom:0px;width:206px;margin:0">
+            <div id="characters-container" class="panel panel-default datagrid-standard" style="position: absolute;left: 2px;top: 2px;bottom:2px;right: 4px;margin:0">
+
+            </div>
+            <div id="drag-bar"></div>
         </div>
         <div id="content" class="panel panel-default" style="position: absolute;left:206px;right: 2px;top: 2px;bottom:2px;margin:0">
             <div class="panel-heading" style="position: relative;">

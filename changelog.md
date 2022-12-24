@@ -33,6 +33,7 @@
     - Add basic spell checking
     - Add problem panel to display all errors and misspellings
   - Add basic mail composer dialog to allow mailing to players easier
+  - Character manger: Ability to resize left panel using a drag and drop bar
 - **Fixed:**
   - Display:
     - Round word wrap widths to prevent floating point math errors
@@ -46,6 +47,7 @@
   - Interface:
     - Fix tab strip to scroll when a tab is dragged over scroll buttons
     - Command input box resizes correctly to set font size to a max of 50% window height
+    - Fix issues when dragging and dropping tab onto another client window
   - Command input:
     - Send command only on enter key and no modifiers held down
     - Allow history navigation only if no modifier keys are held down, fixing shift selection support
