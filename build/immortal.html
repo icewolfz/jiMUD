@@ -2195,7 +2195,7 @@
                         options.queueSize = document.body.clientHeight - e.pageY + 2;
                     options.queueSize -= 26;
                     $('#bottom').css('height', options.queueSize);
-                    $('#main').css('bottom', options.queueSize);
+                    $('#main').css('bottom', (options.queueSize + 26) + 'px');
                     doUpdate(14);
                     saveOptions();
                     $('#btm-ghost-bar').remove();

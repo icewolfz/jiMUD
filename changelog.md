@@ -63,6 +63,7 @@
   - Character manger: Select new character and focus on login field when created
   - Fix drag-grip being cut in half
   - Fix Tab and window title not being correctly set when drag and dropped
+  - Immortal tools: Fix queue panel drag and drop not factoring in status bar height
 - **Changed:**
   - `Character manager on row double click load in:` Now defaults to open in new tab
   - Character manger: new icon for new tab button
