@@ -3412,6 +3412,13 @@ function buildOptions(details, window, settings) {
                 case "height":
                 case "x":
                 case "y":
+                case "minWidth":
+                case "minHeight":
+                case "maxWidth":
+                case "maxHeight":
+                case "defaultFontSize":
+                case "defaultMonospaceFontSize":
+                case "minimumFontSize":
                     options[feature[0]] = parseInt(feature[1], 10);
                     options.features[feature[0]] = options[feature[0]];
                     break;

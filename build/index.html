@@ -3454,8 +3454,8 @@
             switch (name) {
                 case 'characters':
                     if (data && data.details)
-                        _options += ',' + buildWindowOptions(data.details.options, ['alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultX', 'defaultY', 'defaultWidth', 'defaultHeight', ...Object.keys(data.state || {})]);
-                    _windows['characters.html'] = window.open('characters.html', 'Characters-' + getId(), `defaultY=center,defaultX=center,alwaysOnTopClient=true,defaultHeight=555,defaultWidth=650,backgroundColor=#fff,icon=` + path.join(__dirname, '../assets/icons/png/user.png') + _options);
+                        _options += ',' + buildWindowOptions(data.details.options, ['minWidth', 'minHeight', 'alwaysOnTopClient', 'backgroundColor', 'icon', 'defaultX', 'defaultY', 'defaultWidth', 'defaultHeight', ...Object.keys(data.state || {})]);
+                    _windows['characters.html'] = window.open('characters.html', 'Characters-' + getId(), `minWidth=475,minHeight=250,defaultY=center,defaultX=center,alwaysOnTopClient=true,defaultHeight=555,defaultWidth=650,backgroundColor=#fff,icon=` + path.join(__dirname, '../assets/icons/png/user.png') + _options);
                     break;
                 case 'mapper':
                     if (data && data.details)
