@@ -2410,10 +2410,12 @@
                 _windowState.data.character = title;
                 if (!title)
                     title = getCharacterName();
-                if (title && title.length && lag && lag.length)
-                    title = `${title} - ${lag}`;
-                else if (lag && lag.length)
-                    title = `${lag}`;
+                if (client.connected && lag && lag.length) {
+                    if (title && title.length)
+                        title = `${title} - ${lag}`;
+                    else
+                        title = `${lag}`;
+                }
                 updateTitle(title);
                 ipcRenderer.send('update-title', { title: title });
             });
@@ -3405,10 +3407,10 @@
 
         ipcRenderer.on('activated', (event, newWindow) => {
             //setTimeout(() => {
-                doUpdate(4);
-                reloadIcon(newWindow);
-                updateTitle();
-                ipcRenderer.send('update-title', { title: getCharacterName() || '' });
+            doUpdate(4);
+            reloadIcon(newWindow);
+            updateTitle();
+            ipcRenderer.send('update-title', { title: getCharacterName() || '' });
             //}, 100);
         });
 
