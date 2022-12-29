@@ -2081,7 +2081,7 @@ ipcMain.on('update-title', (event, options) => {
         client.parent.webContents.send('update-title', getClientId(clients[clientId].view), options);
         if (options && typeof options.icon === 'number') {
             //only update if the overlay changed
-            if (client.overlay === options.icon) return;
+            if (!options.force && client.overlay === options.icon) return;
             client.overlay = options.icon;
             updateIcon(client.parent);
         }

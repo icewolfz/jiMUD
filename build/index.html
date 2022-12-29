@@ -3408,7 +3408,7 @@
         ipcRenderer.on('activated', (event, newWindow) => {
             //setTimeout(() => {
             doUpdate(4);
-            reloadIcon(newWindow);
+            reloadIcon(true);
             updateTitle();
             ipcRenderer.send('update-title', { title: getCharacterName() || '' });
             //}, 100);
@@ -4199,7 +4199,7 @@
 
         function updateIcon(icon, force) {
             if (!force && icon === _icon) return;
-            ipcRenderer.send('update-title', { icon: icon });
+            ipcRenderer.send('update-title', { icon: icon, force: force });
             _icon = icon;
         }
 
