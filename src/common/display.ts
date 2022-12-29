@@ -747,7 +747,7 @@ export class Display extends EventEmitter {
                         while (line.substr(ePos, 1).match(/([^\s.,/#!$%^&*;:{}=`~()[\]@&|\\?><"'+])/gu) && ePos < len) {
                             ePos++;
                         }
-                        if (sPos >= 0 && ePos <= len) {
+                        if (sPos >= 0 && ePos <= len && this._lines.length > 0) {
                             /*
                             this._prevSelection = {
                                 start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset },
@@ -769,7 +769,7 @@ export class Display extends EventEmitter {
             }
             else if (e.detail === 3) {
                 const o = this.getLineOffset(e.pageX, e.pageY);
-                if (o.y >= 0 && o.y < this._lines.length) {
+                if (o.y >= 0 && o.y < this._lines.length && this._lines.length > 0) {
                     /*
                     this._prevSelection = {
                         start: { x: this._currentSelection.end.x, y: this._currentSelection.end.y, lineID: this._currentSelection.end.lineID, lineOffset: this._currentSelection.end.lineOffset },
@@ -859,7 +859,11 @@ export class Display extends EventEmitter {
                         x = 0;
                         this._currentSelection.end.x = 0;
                     }
-                    if (this._currentSelection.end.y >= this._lines.length) {
+                    if(this._lines.length === 0) {
+                        this._currentSelection.end.lineID = null;
+                        this._currentSelection.end.lineOffset = null;
+                    }
+                    else if (this._currentSelection.end.y >= this._lines.length) {
                         this._currentSelection.end.lineID = this._lines[this._lines.length - 1].id;
                         this._currentSelection.end.lineOffset = this._lines[this._lines.length - 1].endOffset;
                     }
