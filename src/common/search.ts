@@ -50,25 +50,25 @@ export class Search extends EventEmitter {
             if (e.keyCode !== 8) return;
             clearTimeout(this._timer);
             //delay find update to try and batch group text updates ot improve speeds, make regex a little slower as regex can be more complex
-            this._timer = setTimeout(() => { this.find(); }, this._regex ? 500 : 250);
+            this._timer = setTimeout(() => { this.find(true); }, this._regex ? 500 : 250);
         });
 
         this._control.on('keypress', () => {
             clearTimeout(this._timer);
             //delay find update to try and batch group text updates ot improve speeds, make regex a little slower as regex can be more complex
-            this._timer = setTimeout(() => { this.find(); }, this._regex ? 500 : 250);
+            this._timer = setTimeout(() => { this.find(true); }, this._regex ? 500 : 250);
         });
 
         this._control.on('paste', (e) => {
             clearTimeout(this._timer);
             //delay find update to try and batch group text updates ot improve speeds, make regex a little slower as regex can be more complex
-            this._timer = setTimeout(() => { this.find(); }, this._regex ? 500 : 250);
+            this._timer = setTimeout(() => { this.find(true); }, this._regex ? 500 : 250);
         });
 
         this._control.on('cut', (e) => {
             clearTimeout(this._timer);
             //delay find update to try and batch group text updates ot improve speeds, make regex a little slower as regex can be more complex
-            this._timer = setTimeout(() => { this.find(); }, this._regex ? 500 : 250);
+            this._timer = setTimeout(() => { this.find(true); }, this._regex ? 500 : 250);
         });
 
         this.$canvas = document.createElement('canvas');
@@ -351,7 +351,11 @@ export class Search extends EventEmitter {
         while (o && o.nodeType !== 1) o = o.previousSibling;
         t = o || t.parentNode;
         if (t) {
-            t.scrollIntoView();
+            //var sp = getScrollParent(t);
+            //if(!sp)
+                t.scrollIntoView();
+            //else if (t.offsetTop < sp.scrollTop || t.offsetTop >= sp.scrollTop + sp.clientHeight - this._control.height())
+                //sp.scrollTop = t.offsetTop - this._control.height();
         }
     }
 
@@ -418,4 +422,12 @@ export class Search extends EventEmitter {
         this._control.remove();
         window.document.removeEventListener('keyup', this._key);
     }
+}
+
+function getScrollParent(node) {
+    if (node == null)
+        return null;
+    if (node.scrollHeight > node.clientHeight)
+        return node;
+    return getScrollParent(node.parentNode);
 }

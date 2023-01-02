@@ -64,6 +64,7 @@
   - Fix drag-grip being cut in half
   - Fix Tab and window title not being correctly set when drag and dropped
   - Immortal tools: Fix queue panel drag and drop not factoring in status bar height
+  - Help: Search correctly goes to first found result when text changed
 - **Changed:**
   - `Character manager on row double click load in:` Now defaults to open in new tab
   - Character manger:
