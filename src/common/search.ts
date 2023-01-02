@@ -353,9 +353,12 @@ export class Search extends EventEmitter {
         if (t) {
             //var sp = getScrollParent(t);
             //if(!sp)
+            if (t.scrollIntoViewIfNeeded)
+                t.scrollIntoViewIfNeeded(true);
+            else
                 t.scrollIntoView();
             //else if (t.offsetTop < sp.scrollTop || t.offsetTop >= sp.scrollTop + sp.clientHeight - this._control.height())
-                //sp.scrollTop = t.offsetTop - this._control.height();
+            //sp.scrollTop = t.offsetTop - this._control.height();
         }
     }
 
