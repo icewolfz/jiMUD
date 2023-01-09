@@ -59,12 +59,12 @@
   },
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
-    "@types/jquery": "^3.5.14",
-    "@types/node": "^18.11.17",
+    "@types/jquery": "^3.5.16",
+    "@types/node": "^18.11.18",
     "electron": "^22.0.0",
     "electron-builder": "^23.6.0",
     "electron-rebuild": "^3.2.9",
-    "eslint": "^8.30.0",
+    "eslint": "^8.31.0",
     "eslint-plugin-html": "^7.1.0",
     "sass": "^1.57.1",
     "terser": "^5.16.1"
