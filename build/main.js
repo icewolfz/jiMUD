@@ -5213,12 +5213,12 @@ ipcMain.on('progress', (event, ...args) => {
     window = BrowserWindow.fromWebContents(event.sender);
     const parent = window.getParentWindow();
     //no parent means the main window wants to send to progress
-    if (!parent) {
+    if (!parent || !window.getURL().endsWith('progress.html')) {
         const progress = progressMap.get(window);
-        progress.send('progress', ...args);
+        progress.webContents.send('progress', ...args);
     }
     else //else progress wants to send to main
-        parent.send('progress', ...args);
+        parent.webContents.send('progress', ...args);
 });
 
 ipcMain.on('addWordToSpellCheckerDictionary', (event, word) => {

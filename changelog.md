@@ -67,6 +67,8 @@
   - Help:
     - Search correctly goes to first found result when text changed
     - Fix search scrolling offsetting main help window
+  - Backup: Fix importing of paths when not defined
+  - Progress: Fix progress dialogs
 - **Changed:**
   - `Character manager on row double click load in:` Now defaults to open in new tab
   - Character manger:

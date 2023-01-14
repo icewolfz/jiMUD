@@ -67,8 +67,8 @@ export class Backup extends EventEmitter {
                     this._abort = false;
                     this._user = obj.user;
                     //this._action = obj.action;
-                    this.emit('progress-start', 'Loading data');
                     this._save = [obj.chunks || 1, obj.chunk || 0, obj.size, ''];
+                    this.emit('progress-start', 'Loading data');                    
                     //this.getChunk();
                     break;
                 case 'error':
@@ -560,19 +560,19 @@ export class Backup extends EventEmitter {
                 }
                 //attempt to normalize paths with windows vs linux
                 if (process.platform.indexOf('win') === 0) {
-                    if (this.client.options.theme.startsWith('{themes}'))
+                    if (this.client.options.theme && this.client.options.theme.startsWith('{themes}'))
                         this.client.options.theme = this.client.options.theme.replace(/\//g, '\\');
-                    if (this.client.options.soundPath.startsWith('{data}'))
+                    if (this.client.options.soundPath && this.client.options.soundPath.startsWith('{data}'))
                         this.client.options.soundPath = this.client.options.soundPath.replace(/\//g, '\\');
-                    if (this.client.options.logPath.startsWith('{data}'))
+                    if (this.client.options.logPath && this.client.options.logPath.startsWith('{data}'))
                         this.client.options.logPath = this.client.options.logPath.replace(/\//g, '\\');
                 }
                 else {
-                    if (this.client.options.theme.startsWith('{themes}'))
+                    if (this.client.options.theme && this.client.options.theme.startsWith('{themes}'))
                         this.client.options.theme = this.client.options.theme.replace(/\\/g, '/');
-                    if (this.client.options.soundPath.startsWith('{data}'))
+                    if (this.client.options.soundPath && this.client.options.soundPath.startsWith('{data}'))
                         this.client.options.soundPath = this.client.options.soundPath.replace(/\\/g, '/');
-                    if (this.client.options.logPath.startsWith('{data}'))
+                    if (this.client.options.logPath && this.client.options.logPath.startsWith('{data}'))
                         this.client.options.logPath = this.client.options.logPath.replace(/\\/g, '/');
                 }
                 this.client.clearCache();
