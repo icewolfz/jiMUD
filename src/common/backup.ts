@@ -8,7 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const sqlite3 = require('better-sqlite3');
 const LZString = require('lz-string');
-import { Settings } from './settings';
+import { Settings, SettingProperties } from './settings';
 
 /**
  * Control loading and saving system for ShadowMUD remote storage protocols
@@ -68,7 +68,7 @@ export class Backup extends EventEmitter {
                     this._user = obj.user;
                     //this._action = obj.action;
                     this._save = [obj.chunks || 1, obj.chunk || 0, obj.size, ''];
-                    this.emit('progress-start', 'Loading data');                    
+                    this.emit('progress-start', 'Loading data');
                     //this.getChunk();
                     break;
                 case 'error':
@@ -527,7 +527,6 @@ export class Backup extends EventEmitter {
                 this.client.options.commandDelay = data.settings.commandDelay;
                 this.client.options.commandDelayCount = data.settings.commandDelayCount;
 
-                //this.client.options.colors = data.settings.;
                 if (data.settings.soundPath)
                     this.client.options.soundPath = data.settings.soundPath;
                 if (data.settings.logPath)
@@ -541,22 +540,23 @@ export class Backup extends EventEmitter {
                 this.client.options.showErrorsExtended = data.settings.showErrorsExtended ? true : false;
                 this.client.options.prependTriggeredLine = data.settings.prependTriggeredLine ? true : false;
                 this.client.options.disableTriggerOnError = data.settings.disableTriggerOnError ? true : false;
-
-                let prop;
-                let prop2;
-
-                for (prop in this.client.options) {
-                    if (!this.client.options.hasOwnProperty(prop) || !data.settings.hasOwnProperty(prop)) {
+                let p, pl;
+                for (p = 0, pl = SettingProperties.length; p < pl; p++) {
+                    let prop = SettingProperties[p];
+                    if (!data.settings.hasOwnProperty(prop)) {
                         continue;
                     }
-                    if (prop === 'windows') {
-                        if ((this.loadSelection & BackupSelection.Windows) === BackupSelection.Windows)
-                            this.client.options[prop] = data.settings[prop];
-                    }
-                    else if (prop === 'extensions')
-                        this.setProperty(data.settings, this.client.options, prop, '');
-                    else
-                        this.setProperty(data.settings, this.client.options, prop, '', data.inherited);
+                    if (prop === 'chat' || prop === 'mapper' || prop === 'profiles' || prop === 'codeEditor' || prop === 'buttons' || prop === 'find' || prop === 'display' || prop === 'extensions' || prop === 'windows')
+                        continue;
+                    this.setProperty(data.settings, this.client.options, prop, '', data.inherited);
+                }
+                if (data.settings.windows && (this.loadSelection & BackupSelection.Windows) === BackupSelection.Windows)
+                    this.client.options.windows = data.settings.windows;
+                let props = ['chat', 'mapper', 'profiles', 'codeEditor', 'buttons', 'find', 'display', 'extensions'];
+                for (p = 0, pl = props.length; p < pl; p++) {
+                    if (!data.settings.hasOwnProperty(props[p]))
+                        continue;
+                    this.setProperty(data.settings, this.client.options, props[p], '');
                 }
                 //attempt to normalize paths with windows vs linux
                 if (process.platform.indexOf('win') === 0) {
