@@ -14,6 +14,10 @@ Install or download Node: https://nodejs.org/en/download/
 Install or download Typescript: https://www.typescriptlang.org/download/
   - easiest to just use npm globally
 
+### Electrion builder:
+
+Required modules or packages to build different installer types: https://www.electron.build/multi-platform-build.html
+
 ### Clone repository or use archive zip
 
 1. `git clone https://github.com/icewolfz/jiMUD.git` or `git pull` if already ready cloned, or you can download and unzip the source archive
