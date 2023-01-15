@@ -167,13 +167,20 @@ export class Backup extends EventEmitter {
             if (typeof data.settings[prop] === 'undefined')
                 data.settings[prop] = window.getSetting(prop);
         }
-
-        for (prop in this.client.options) {
-            if (!this.client.options.hasOwnProperty(prop))
+        let p, pl;
+        for (p = 0, pl = SettingProperties.length; p < pl; p++) {
+            //skip any already set
+            let prop = SettingProperties[p];
+            if (data.hasOwnProperty(prop))
+                continue;
+            if (prop.startsWith('chat.') || prop.startsWith('mapper.') || prop.startsWith('profiles.') || prop.startsWith('codeEditor.') || prop.startsWith('buttons.') || prop.startsWith('find.') || prop.startsWith('display.') || prop.startsWith('extensions.') || prop.startsWith('windows'))
                 continue;
             this.getProperty(this.client.options, data.settings, prop, '', data.inherited);
         }
-
+        let props = ['chat', 'mapper', 'profiles', 'codeEditor', 'buttons', 'find', 'display', 'extensions'];
+        for (p = 0, pl = props.length; p < pl; p++) {
+            this.getProperty(this.client.options, data.settings,  props[p], '', data.inherited);
+        }
         const rooms = {};
         if (rows) {
             const rl = rows.length;
@@ -546,7 +553,7 @@ export class Backup extends EventEmitter {
                     if (!data.settings.hasOwnProperty(prop)) {
                         continue;
                     }
-                    if (prop === 'chat' || prop === 'mapper' || prop === 'profiles' || prop === 'codeEditor' || prop === 'buttons' || prop === 'find' || prop === 'display' || prop === 'extensions' || prop === 'windows')
+                    if (prop.startsWith('chat.') || prop.startsWith('mapper.') || prop.startsWith('profiles.') || prop.startsWith('codeEditor.') || prop.startsWith('buttons.') || prop.startsWith('find.') || prop.startsWith('display.') || prop.startsWith('extensions.') || prop.startsWith('windows'))
                         continue;
                     this.setProperty(data.settings, this.client.options, prop, '', data.inherited);
                 }
