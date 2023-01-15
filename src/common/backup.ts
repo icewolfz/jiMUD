@@ -173,7 +173,7 @@ export class Backup extends EventEmitter {
             let prop = SettingProperties[p];
             if (data.hasOwnProperty(prop))
                 continue;
-            if (prop.startsWith('chat.') || prop.startsWith('mapper.') || prop.startsWith('profiles.') || prop.startsWith('codeEditor.') || prop.startsWith('buttons.') || prop.startsWith('find.') || prop.startsWith('display.') || prop.startsWith('extensions.') || prop.startsWith('windows'))
+            if (prop.startsWith('chat.') || prop.startsWith('mapper.') || prop.startsWith('profiles.') || prop.startsWith('codeEditor.') || prop.startsWith('buttons.') || prop.startsWith('find.') || prop.startsWith('display.') || prop.startsWith('extensions.') || prop.startsWith('windows.'))
                 continue;
             this.getProperty(this.client.options, data.settings, prop, '', data.inherited);
         }
@@ -553,7 +553,7 @@ export class Backup extends EventEmitter {
                     if (!data.settings.hasOwnProperty(prop)) {
                         continue;
                     }
-                    if (prop.startsWith('chat.') || prop.startsWith('mapper.') || prop.startsWith('profiles.') || prop.startsWith('codeEditor.') || prop.startsWith('buttons.') || prop.startsWith('find.') || prop.startsWith('display.') || prop.startsWith('extensions.') || prop.startsWith('windows'))
+                    if (prop.startsWith('chat.') || prop.startsWith('mapper.') || prop.startsWith('profiles.') || prop.startsWith('codeEditor.') || prop.startsWith('buttons.') || prop.startsWith('find.') || prop.startsWith('display.') || prop.startsWith('extensions.') || prop.startsWith('windows.'))
                         continue;
                     this.setProperty(data.settings, this.client.options, prop, '', data.inherited);
                 }
