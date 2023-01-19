@@ -6372,7 +6372,7 @@ export class Input extends EventEmitter {
                                         tmp2 = '' + tmp2;
                                 }
                                 else {
-                                    tmp2 += paramChar;
+                                    tmp2 = paramChar;
                                     idx = idx - arg.length - 2;
                                 }
                             }

@@ -72,6 +72,7 @@
     - Fix importing settings
   - Progress: Fix progress dialogs
   - Mapper: Fix export, remove, and other related buttons/menu items
+  - Parser: Fix appending undefined before unknown functions when using %{} scripting when expressions are disabled
 - **Changed:**
   - `Character manager on row double click load in:` Now defaults to open in new tab
   - Character manger:
