@@ -241,6 +241,8 @@
         }
 
         function setTitle(txt) {
+            if (!txt) return;
+            txt = '' + txt; //force to a string just to be safe
             if (txt.trim().length !== 0)
                 document.title = 'jiMUD - ' + txt.trim();
             else
