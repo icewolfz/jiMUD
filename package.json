@@ -61,10 +61,10 @@
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.5.16",
     "@types/node": "^18.11.18",
-    "electron": "^21.3.5",
+    "electron": "^21.4.0",
     "electron-builder": "^23.6.0",
     "electron-rebuild": "^3.2.9",
-    "eslint": "^8.32.0",
+    "eslint": "^8.33.0",
     "eslint-plugin-html": "^7.1.0",
     "sass": "^1.57.1",
     "terser": "^5.16.1"
