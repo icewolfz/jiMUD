@@ -3351,6 +3351,10 @@
         });
         //#endregion
 
+        ipcRenderer.on('cancel-close', () => {
+            _closeWindow = false;
+        });
+
         ipcRenderer.on('connection-settings', (event, options) => {
             if (!options) return;
             if (!_windowState) {
@@ -4269,6 +4273,7 @@
                         }
                         else if (window.getGlobal('noCloseAll')) {
                             _closeWindow = false;
+                            ipcRenderer.send('cancel-close');
                             return _closeWindow;
                         }
                         choice = dialog.showMessageBoxSync({
@@ -4285,6 +4290,7 @@
                         }
                         else if (choice === 3) { //no to all
                             _closeWindow = false;
+                            ipcRenderer.send('cancel-close');
                             window.setGlobal('noCloseAll', true);
                         }
                         else if (choice === 4) {
@@ -4296,8 +4302,10 @@
                             window.setSetting('askOnCloseAll', false);
                             _closeWindow = true;
                         }
-                        else if (choice !== 0)
+                        else if (choice !== 0) {
                             _closeWindow = false;
+                            ipcRenderer.send('cancel-close');
+                        }
                         else
                             _closeWindow = true;
                     }
@@ -4315,8 +4323,10 @@
                             client.saveOptions();
                             _closeWindow = true;
                         }
-                        else if (choice !== 0)
+                        else if (choice !== 0) {
                             _closeWindow = false;
+                            ipcRenderer.send('cancel-close');
+                            }
                         else
                             _closeWindow = true;
                     }

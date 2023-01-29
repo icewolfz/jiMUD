@@ -1781,6 +1781,14 @@ ipcMain.on('window-info', (event, info, id, ...args) => {
     }
 });
 
+ipcMain.on('cancel-close', event => {
+    for (clientId in clients) {
+        if (!Object.prototype.hasOwnProperty.call(clients, clientId))
+            continue;
+        clients[clientId].view.webContents.send('cancel-close');
+    }
+});
+
 //#region Client creation, docking, and related management
 ipcMain.on('new-client', (event, connection, data, name) => {
     newConnection(BrowserWindow.fromWebContents(event.sender), connection, data, name);
