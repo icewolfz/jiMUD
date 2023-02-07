@@ -2531,6 +2531,8 @@ async function removeClient(id) {
     idMap.delete(client.view);
     //close the view
     executeCloseHooks(client.view);
+    //remove the view to avoid crashing window
+    window.removeBrowserView(client.view);
     client.view.webContents.destroy();
     if (clients[id].name)
         delete names[clients[id].name];
