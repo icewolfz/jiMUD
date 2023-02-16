@@ -79,7 +79,7 @@
     - New icon for new tab button
     - Set a minimum width and height for when window is resized
   - Display: Adjust word wrap break points to have better flow
-  - Update electron 19.1.5 to 23.0.0
+  - Update electron 19.1.5 to 23.1.0
   - Update mathjs 11.3.3 to 11.5.1
   - Update better-sqlite3 7.6.2 to 8.1.0
   - Update fs-extra 10.1.0 to 11.1.0
