@@ -403,12 +403,19 @@ function createWindow(options) {
             const id = getWindowId(window);
             const index = getChildWindowIndex(windows[id].windows, childWindow);
             if (window && !window.isDestroyed()) {
-                if (index !== -1 && windows[id].windows[index].details.options.persistent) {
-                    e.preventDefault();
-                    executeScript('if(typeof closeHidden !== "function" || closeHidden(true)) window.hide();', childWindow);
+                if (index !== -1) {
+                    if (windows[id].windows[index].details.options.persistent) {
+                        e.preventDefault();
+                        executeScript('if(typeof closeHidden !== "function" || closeHidden(true)) window.hide();', childWindow);
+                    }
+                    else {
+                        windows[id].windows[index] = null;
+                        windows[id].windows.splice(index, 1);
+                    }
                 }
             }
         });
+
         windows[getWindowId(window)].windows.push({ window: childWindow, details: details });
         idMap.set(childWindow, getWindowId(window));
     });
@@ -3930,13 +3937,15 @@ async function saveWindowLayout(file, locked) {
                 options: windows[id].options,
                 windows: []
             }
-            const wl = windows[id].windows.length;
-            for (var idx = 0; idx < wl; idx++) {
-                wData.push({
-                    options: windows[id].windows[idx].details.options.features,
-                    state: saveWindowState(windows[id].windows[idx].window, stateMap.get(windows[id].windows[idx].window)),
-                    data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].windows[idx].window).catch(logError),
-                });
+            if (windows[id].windows) {
+                const wl = windows[id].windows.length;
+                for (var idx = 0; idx < wl; idx++) {
+                    wData.push({
+                        options: windows[id].windows[idx].details.options.features,
+                        state: saveWindowState(windows[id].windows[idx].window, stateMap.get(windows[id].windows[idx].window)),
+                        data: await executeScript('if(typeof saveWindow === "function") saveWindow()', windows[id].windows[idx].window).catch(logError),
+                    });
+                }
             }
             data.windows.push(wData);
         }
