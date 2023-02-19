@@ -43,57 +43,13 @@
 
         function initEditor(editor, diff) {
             if (diff) {
-                editor.getModifiedEditor().getContribution('editor.linkDetector').openerService.open = (url) => {
-                    shell.openExternal(url.toString());
-                };
-                editor.getOriginalEditor().getContribution('editor.linkDetector').openerService.open = (url) => {
-                    shell.openExternal(url.toString());
-                };
-                if (!editor.getOriginalEditor()._oldOpenCodeEditor)
-                    editor.getOriginalEditor()._oldOpenCodeEditor = editor._codeEditorService.openCodeEditor;
-                editor.getOriginalEditor()._codeEditorService.openCodeEditor = (input, source, sideBySide) => {
-                    if (!input || !input.resource)
-                        return editor.getOriginalEditor()._oldOpenCodeEditor(input, source, sideBySide);
-                    openFile(input.resource.fsPath);
-                    if (input.options) {
-                        let idx = manager.panes.indexOf(manager.activePane);
-                        if (idx !== -1) {
-                            var ed;
-                            if (window.$editors[idx]._domElement.style.display !== 'block')
-                                ed = window.$dEditors[idx];
-                            else
-                                ed = window.$editors[idx];
-                            ed.setPosition({ column: input.options.selection.startColumn, lineNumber: input.options.selection.startLineNumber });
-                        }
-                    }
-                    return Promise.resolve();
-                };
+                editorOverrides(editor.getModifiedEditor());
+                editorOverrides(editor.getOriginalEditor());
                 editorAddActions(editor.getOriginalEditor());
                 editorAddActions(editor.getModifiedEditor());
             }
             else {
-                editor.getContribution('editor.linkDetector').openerService.open = (url) => {
-                    shell.openExternal(url.toString());
-                };
-                if (!editor._oldOpenCodeEditor)
-                    editor._oldOpenCodeEditor = editor._codeEditorService.openCodeEditor;
-                editor._codeEditorService.openCodeEditor = (input, source, sideBySide) => {
-                    if (!input || !input.resource)
-                        return editor._oldOpenCodeEditor(input, source, sideBySide);
-                    openFile(input.resource.fsPath);
-                    if (input.options) {
-                        let idx = manager.panes.indexOf(manager.activePane);
-                        if (idx !== -1) {
-                            var ed;
-                            if (window.$editors[idx]._domElement.style.display !== 'block')
-                                ed = window.$dEditors[idx];
-                            else
-                                ed = window.$editors[idx];
-                            ed.setPosition({ column: input.options.selection.startColumn, lineNumber: input.options.selection.startLineNumber });
-                        }
-                    }
-                    return Promise.resolve();
-                };
+                editorOverrides(editor);
                 editorAddActions(editor);
             }
 
@@ -120,9 +76,6 @@
                     if (manager.active && manager.active.editor)
                         setViewState(manager.active.editor, editor);
                 });
-                editor._standaloneKeybindingService.addDynamicKeybinding(`-actions.findWithSelection`, undefined, () => { });
-                editor._standaloneKeybindingService.addDynamicKeybinding(`-actions.find`, undefined, () => { });
-                editor._standaloneKeybindingService.addDynamicKeybinding(`-editor.action.startFindReplaceAction`, undefined, () => { });
             }
             else {
                 let m = monaco.editor.createModel('', 'lpc');
@@ -163,18 +116,52 @@
                 editor.getModifiedEditor().onDidChangeModelDecorations(() => {
 
                 });
-
-                editor.getOriginalEditor()._standaloneKeybindingService.addDynamicKeybinding(`-actions.findWithSelection`, undefined, () => { });
-                editor.getOriginalEditor()._standaloneKeybindingService.addDynamicKeybinding(`-actions.find`, undefined, () => { });
-                editor.getOriginalEditor()._standaloneKeybindingService.addDynamicKeybinding(`-editor.action.startFindReplaceAction`, undefined, () => { });
-
-                editor.getModifiedEditor()._standaloneKeybindingService.addDynamicKeybinding(`-actions.findWithSelection`, undefined, () => { });
-                editor.getModifiedEditor()._standaloneKeybindingService.addDynamicKeybinding(`-actions.find`, undefined, () => { });
-                editor.getModifiedEditor()._standaloneKeybindingService.addDynamicKeybinding(`-editor.action.startFindReplaceAction`, undefined, () => { });
             }
 
             if (options && options.editorOptions)
                 editor.updateOptions(options.editorOptions);
+        }
+
+        function editorOverrides(editor) {
+            var ld = editor.getContribution('editor.linkDetector');
+            //have to search as newer monaco editors minifiy property names
+            //find openerService to support custom url opening
+            var found = Object.keys(ld).filter(i => ld[i] && ld[i].open);
+            if (found.length)
+                ld[found[0]].open = (url) => {
+                    shell.openExternal(url.toString());
+                };
+            //find _codeEditorService to do custom code editor opening
+            if (!editor._oldOpenCodeEditor) {
+                found = Object.keys(editor).filter(i => editor[i] && editor[i].openCodeEditor);
+                if(found.length) {
+                    editor._oldOpenCodeEditor = editor[found[0]].openCodeEditor;
+                    editor[found[0]].openCodeEditor = (input, source, sideBySide) => {
+                        if (!input || !input.resource)
+                            return editor._oldOpenCodeEditor(input, source, sideBySide);
+                        openFile(input.resource.fsPath);
+                        if (input.options) {
+                            let idx = manager.panes.indexOf(manager.activePane);
+                            if (idx !== -1) {
+                                var ed;
+                                if (window.$editors[idx].getContainerDomNode().style.display !== 'block')
+                                    ed = window.$dEditors[idx];
+                                else
+                                    ed = window.$editors[idx];
+                                ed.setPosition({ column: input.options.selection.startColumn, lineNumber: input.options.selection.startLineNumber });
+                            }
+                        }
+                        return Promise.resolve();
+                    };
+                }
+            }
+            //find _standaloneKeybindingService to remove some keybindings to avoid internal vs external
+            found = Object.keys(editor).filter(i => editor[i] && editor[i].addDynamicKeybinding);
+            if(found.length) {
+                editor[found[0]].addDynamicKeybinding(`-actions.findWithSelection`, undefined, () => { });
+                editor[found[0]].addDynamicKeybinding(`-actions.find`, undefined, () => { });
+                editor[found[0]].addDynamicKeybinding(`-editor.action.startFindReplaceAction`, undefined, () => { });            
+            }
         }
 
         function editorAddActions(editor) {
@@ -2309,9 +2296,9 @@
                                 if (manager.active.diffFile)
                                     stopWatchFile(manager.active.diffFile);
                                 manager.active.diffFile = null;
-                                window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = '';
+                                window.$dEditors[pane].getModifiedEditor().getContainerDomNode().parentElement.parentElement.style.display = '';
                                 toggleDiffNav(false);
-                                window.$editors[pane]._domElement.style.display = 'block';
+                                window.$editors[pane].getContainerDomNode().style.display = 'block';
                                 manager.active.editor.activate(window.$editors[pane]);
                                 window.$editors[pane].layout();
                                 doUpdate(2);
@@ -2327,9 +2314,9 @@
                                 manager.active.editor.diff = manager.active.editor.read();
                                 manager.active.diffFile = manager.active.editor.file;
                                 watchFile(manager.active.diffFile);
-                                window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
+                                window.$dEditors[pane].getModifiedEditor().getContainerDomNode().parentElement.parentElement.style.display = 'block';
                                 toggleDiffNav(true);
-                                window.$editors[pane]._domElement.style.display = '';
+                                window.$editors[pane].getContainerDomNode().style.display = '';
                                 manager.active.editor.activate(window.$dEditors[pane]);
                                 window.$dEditors[pane].layout();
                                 doUpdate(2);
@@ -2355,9 +2342,9 @@
                                     manager.active.editor.diff = manager.active.editor.read(result.filePaths[0]);
                                     manager.active.diffFile = result.filePaths[0];
                                     watchFile(manager.active.diffFile);
-                                    window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
+                                    window.$dEditors[pane].getModifiedEditor().getContainerDomNode().parentElement.parentElement.style.display = 'block';
                                     toggleDiffNav(true);
-                                    window.$editors[pane]._domElement.style.display = '';
+                                    window.$editors[pane].getContainerDomNode().style.display = '';
                                     manager.active.editor.activate(window.$dEditors[pane]);
                                     window.$dEditors[pane].layout();
                                     doUpdate(2);
@@ -2560,16 +2547,16 @@
     manager.on('removed', (e, pane) => {
         closeEditor(e.panel);
         if (manager.panes[pane].panels.length === 0) {
-            window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = '';
-            window.$editors[pane]._domElement.style.display = '';
+            window.$dEditors[pane].getModifiedEditor().getContainerDomNode().parentElement.parentElement.style.display = '';
+            window.$editors[pane].getContainerDomNode().style.display = '';
             toggleDiffNav(false);
         }
         doUpdate(1);
     });
     manager.on('dock-changed', (e, pane, oPane) => {
         if (manager.panes[oPane].panels.length === 0) {
-            window.$editors[oPane]._domElement.style.display = '';
-            window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = '';
+            window.$editors[oPane].getContainerDomNode().style.display = '';
+            window.$dEditors[pane].getModifiedEditor().getContainerDomNode().parentElement.parentElement.style.display = '';
             toggleDiffNav(false);
         }
         doUpdate(129);
@@ -2586,15 +2573,15 @@
         if (e.panel.editor) {
             if (e.panel.editor.type === 1) {
                 if (e.panel.editor.diff) {
-                    window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
-                    window.$editors[pane]._domElement.style.display = '';
+                    window.$dEditors[pane].getModifiedEditor().getContainerDomNode().parentElement.parentElement.style.display = 'block';
+                    window.$editors[pane].getContainerDomNode().style.display = '';
                     e.panel.editor.activate(window.$dEditors[pane]);
                     window.$dEditors[pane].layout();
                     toggleDiffNav(true);
                 }
                 else {
-                    window.$editors[pane]._domElement.style.display = 'block';
-                    window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = '';
+                    window.$editors[pane].getContainerDomNode().style.display = 'block';
+                    window.$dEditors[pane].getModifiedEditor().getContainerDomNode().parentElement.parentElement.style.display = '';
                     e.panel.editor.activate(window.$editors[pane]);
                     if (!e.panel.restored) {
                         var state = getViewState(e.panel.editor.file);
@@ -2607,16 +2594,16 @@
                 }
             }
             else {
-                window.$editors[pane]._domElement.style.display = '';
-                window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = '';
+                window.$editors[pane].getContainerDomNode().style.display = '';
+                window.$dEditors[pane].getModifiedEditor().getContainerDomNode().parentElement.parentElement.style.display = '';
                 e.panel.editor.activate();
                 toggleDiffNav(false);
             }
             setTimeout(() => { e.panel.editor.focus(); }, 50);
         }
         else {
-            window.$editors[pane]._domElement.style.display = '';
-            window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = '';
+            window.$editors[pane].getContainerDomNode().style.display = '';
+            window.$dEditors[pane].getModifiedEditor().getContainerDomNode().parentElement.parentElement.style.display = '';
             toggleDiffNav(false);
         }
         doUpdate(1);
@@ -3058,8 +3045,8 @@
                             stopWatchFile(_editors[p].diffFile);
                         _editors[p].diffFile = null;
                         if (a) {
-                            window.$dEditors[pane]._modifiedEditor._domElement.parentElement.parentElement.style.display = '';
-                            window.$editors[pane]._domElement.style.display = 'block';
+                            window.$dEditors[pane].getModifiedEditor().getContainerDomNode().parentElement.parentElement.style.display = '';
+                            window.$editors[pane].getContainerDomNode().style.display = 'block';
                             toggleDiffNav(false);
                             _editors[p].editor.activate(window.$editors[pane]);
                             window.$editors[pane].layout();
@@ -4433,9 +4420,9 @@
                     if (manager.active.diffFile)
                         stopWatchFile(manager.active.diffFile);
                     manager.active.editor.diff = manager.active.editor.read(item.local);
-                    window.$dEditors[dock]._modifiedEditor._domElement.parentElement.parentElement.style.display = 'block';
+                    window.$dEditors[dock].getModifiedEditor().getContainerDomNode().parentElement.parentElement.style.display = 'block';
                     toggleDiffNav(true);
-                    window.$editors[dock]._domElement.style.display = '';
+                    window.$editors[dock].getContainerDomNode().style.display = '';
                     manager.active.editor.activate(window.$dEditors[dock]);
                     window.$dEditors[dock].layout();
                     closeProgressDialog(item.ID);

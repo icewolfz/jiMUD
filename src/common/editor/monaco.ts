@@ -1085,22 +1085,19 @@ export class MonacoCodeEditor extends EditorBase {
         if (this.$oEditor && this.$oEditor.hasTextFocus()) {
             if (this.selected.length > 0)
                 this.$oEditor.getAction('actions.findWithSelection').run();
-            else
-                this.$oEditor.getAction('actions.find').run();
+            this.$oEditor.getAction('actions.find').run();
         }
         else if (this.$editor) {
             if (this.selected.length > 0)
                 this.$editor.getAction('actions.findWithSelection').run();
-            else
-                this.$editor.getAction('actions.find').run();
+            this.$editor.getAction('actions.find').run();
         }
     }
     public replace() {
         if (this.$oEditor && this.$oEditor.hasTextFocus()) {
             if (this.selected.length > 0)
                 this.$oEditor.getAction('actions.findWithSelection').run();
-            else
-                this.$oEditor.getAction('actions.find').run();
+            this.$oEditor.getAction('editor.action.startFindReplaceAction').run();
         }
         else if (this.$editor) {
             if (this.selected.length > 0)

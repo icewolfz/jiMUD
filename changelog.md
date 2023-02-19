@@ -44,6 +44,7 @@
     - Fix tab strip to scroll when a tab is dragged over scroll buttons
     - Fix goto/peek Definition menu and context items
     - Fix tab strip dropdown menu height when output panel visible
+    - Fix text search to focus on find dialog when using current selected text
   - Interface:
     - Fix tab strip to scroll when a tab is dragged over scroll buttons
     - Command input box resizes correctly to set font size to a max of 50% window height
@@ -85,6 +86,7 @@
   - Update fs-extra 10.1.0 to 11.1.0
   - Update @electron/remote 2.0.8 to 2.0.9
   - Update fswin 3.22.106 to 3.23.119
+  - Update monaco-editor 0.34.1 to 0.35.0
   - Advanced editor: Remove bold style as ansi uses colors instead
 
 ## 1.0.0-alpha
