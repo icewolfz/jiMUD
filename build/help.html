@@ -70,7 +70,7 @@
             {
                 text: 'User Interface',
                 id: 'interface'
-            },            
+            },
             {
                 text: 'Profiles',
                 id: 'profiles'
@@ -238,7 +238,10 @@
         }
 
         function loadOptions(data) {
-            options = data || window.opener.client.options.extensions.help;
+            if (!window.opener.client)
+                options = data || window.opener.options.help;
+            else
+                options = data || window.opener.client.options.extensions.help;
             if (!options) {
                 options = { 'navSize': 202 };
                 saveOptions();
@@ -250,10 +253,18 @@
         }
 
         function saveOptions() {
-            if (!window.opener.client.options.extensions.help)
-                window.opener.client.options.extensions.help = {};
-            window.opener.client.options.extensions.help = options;
-            window.opener.client.saveOptions();
+            if (!window.opener.client) {
+                if (!window.opener.options.help)
+                    window.opener.options.help = {};
+                window.opener.options.help = options;
+                window.opener.saveOptions();
+            }
+            else {
+                if (!window.opener.client.options.extensions.help)
+                    window.opener.client.options.extensions.help = {};
+                window.opener.client.options.extensions.help = options;
+                window.opener.client.saveOptions();
+            }
         }
 
         $(document).keydown((event) => {
@@ -455,7 +466,8 @@
                     dragging = false;
                 }
             });
-            window.opener.client.on('options-loaded', optionsLoaded);
+            if (window.opener.client)
+                window.opener.client.on('options-loaded', optionsLoaded);
         });
 
         function optionsLoaded() {
@@ -470,7 +482,8 @@
         }
 
         window.onbeforeunload = () => {
-            window.opener.client.removeListener('options-loaded', optionsLoaded);
+            if (window.opener.client)
+                window.opener.client.removeListener('options-loaded', optionsLoaded);
         };       
     </script>
 </head>

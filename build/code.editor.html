@@ -2423,13 +2423,6 @@
             id: 'help',
             submenu: [
                 {
-                    label: '&Immortal...',
-                    click: () => {
-                        shell.openExternal('http://www.shadowmud.com/tutorial', '_blank');
-                    },
-                    enabled: true
-                },
-                {
                     label: '&jiMUD...',
                     click: () => {
                         openWindow('help');
@@ -2443,16 +2436,16 @@
                 },
                 { type: 'separator' },
                 {
-                    label: '&Code editor',
+                    label: '&Immortal tutorial website...',
                     click: () => {
-                        shell.openExternal('https://github.com/icewolfz/jiMUD/tree/master/docs/codeeditor.md', '_blank');
+                        shell.openExternal('http://www.shadowmud.com/tutorial', '_blank');
                     },
                     enabled: true
                 },
                 {
-                    label: '&jiMUD',
+                    label: '&Code editor website...',
                     click: () => {
-                        shell.openExternal('https://github.com/icewolfz/jiMUD/tree/master/docs', '_blank');
+                        shell.openExternal('https://github.com/icewolfz/jiMUD/tree/master/docs/codeeditor.md', '_blank');
                     },
                     enabled: true
                 },
@@ -3106,6 +3099,8 @@
             showProblems();
         menubar.updateItem('view|output', { checked: options.output && options.outputTab === 0 });
         menubar.updateItem('view|problems', { checked: options.output && options.outputTab === 1 });
+        if(_windows && _windows['help.html'] && _windows['help.html'].loadOptions)
+            _windows['help.html'].loadOptions();
         doUpdate(4);
     }
 

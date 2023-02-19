@@ -45,6 +45,8 @@
     - Fix goto/peek Definition menu and context items
     - Fix tab strip dropdown menu height when output panel visible
     - Fix text search to focus on find dialog when using current selected text
+    - Cleanup help menu items
+    - Fix help dialog when using editor only mode
   - Interface:
     - Fix tab strip to scroll when a tab is dragged over scroll buttons
     - Command input box resizes correctly to set font size to a max of 50% window height
