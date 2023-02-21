@@ -70,6 +70,7 @@
   - Immortal tools:
     - Fix queue panel drag and drop not factoring in status bar height
     - Fix batch downloading of folders an files
+    - Fix issue with remote dropdown path list
   - Help:
     - Search correctly goes to first found result when text changed
     - Fix search scrolling offsetting main help window

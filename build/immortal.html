@@ -761,7 +761,6 @@
             info.remoteDirs = 0;
             info.remoteFiles = 0;
             var file;
-            var paths = [];
             var c = [], d, dl, cl;
             var pre = (p === '/' ? '' : p) + '/';
             for (d = 0, dl = dir.length; d < dl; d++) {
@@ -791,6 +790,7 @@
             $('#remote-path').val(p);
 
             setTimeout(() => {
+                var paths = [];
                 for (var pt = 0, pl = parts.length; pt < pl; pt++) {
                     c.push(parts[pt]);
                     if (pt === 0)
