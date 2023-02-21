@@ -47,6 +47,7 @@
     - Fix text search to focus on find dialog when using current selected text
     - Cleanup help menu items
     - Fix help dialog when using editor only mode
+    - Fix opening virtual areas and missing new flag
   - Interface:
     - Fix tab strip to scroll when a tab is dragged over scroll buttons
     - Command input box resizes correctly to set font size to a max of 50% window height
@@ -66,7 +67,9 @@
   - Character manger: Select new character and focus on login field when created
   - Fix drag-grip being cut in half
   - Fix Tab and window title not being correctly set when drag and dropped
-  - Immortal tools: Fix queue panel drag and drop not factoring in status bar height
+  - Immortal tools:
+    - Fix queue panel drag and drop not factoring in status bar height
+    - Fix batch downloading of folders an files
   - Help:
     - Search correctly goes to first found result when text changed
     - Fix search scrolling offsetting main help window

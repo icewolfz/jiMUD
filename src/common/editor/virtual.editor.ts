@@ -524,10 +524,10 @@ export class VirtualEditor extends EditorBase {
                 enterMoveFirst: true,
                 enterMoveNew: true
             };
+        this.$files = {};
         if (options && options.new) {
             this.$startValues.map = options.value || '';
             this.$mapRaw.value = this.$startValues.map;
-            this.$files = {};
             if (this.options.hasOwnProperty('terrainValue')) {
                 this.$startValues['virtual.terrain'] = options.terrainValue || '';
                 this.$terrainRaw.value = this.$startValues['virtual.terrain'];

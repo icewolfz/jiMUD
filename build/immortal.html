@@ -933,6 +933,11 @@
             updatingMenu = false;
         }
 
+        function getTimestamp(date) {
+            if(typeof date === 'number') return date;
+            return Math.floor(date.getTime()/1000);
+        }
+
         function renderFile(data, type, full) {
             if (type === 'sort' || type === 'type')
                 return data;
@@ -1382,7 +1387,7 @@
                             _ied.getDir(file, true, 'download:' + file, path.join(local, path.basename(file)));
                         }
                         else
-                            if (!await downNext(file, path.join(options.local, r), files[f])) {
+                            if (!await downNext(file, path.join(options.local, r, path.basename(file)), files[f])) {
                                 _progressCancel = true;
                                 break;
                             }
@@ -3136,7 +3141,7 @@
 
                         if (options.fileExistOverwrite === 2 || options.fileExistOverwrite === 6) {
                             //source older so skip
-                            if (remoteData.date <= localData.date)
+                            if (remoteData.date <= getTimestamp(localData.date))
                                 return true;
                         }
                         if (options.fileExistOverwrite === 4 || options.fileExistOverwrite === 6) {
@@ -3218,7 +3223,7 @@
 
                         if (options.fileExistOverwrite === 2 || options.fileExistOverwrite === 6) {
                             //source older so skip
-                            if (remoteData.date <= localData.date)
+                            if (remoteData.date <= getTimestamp(localData.date))
                                 return true;
                         }
                         if (options.fileExistOverwrite === 4 || options.fileExistOverwrite === 6) {
@@ -3282,7 +3287,7 @@
 
                     if (options.fileExistOverwrite === 2 || options.fileExistOverwrite === 6) {
                         //source older so skip
-                        if (remoteData.date <= localData.date)
+                        if (remoteData.date <= getTimestamp(localData.date))
                             return true;
                     }
                     if (options.fileExistOverwrite === 4 || options.fileExistOverwrite === 6) {
@@ -3310,6 +3315,7 @@
             setTimeout(async () => {
                 _ied.downloadTo(file, local, false, 0, true);
             }, 0);
+            return true;
         }
 
         // eslint-disable-next-line no-unused-vars

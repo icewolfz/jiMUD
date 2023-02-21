@@ -361,7 +361,7 @@ export class IED extends EventEmitter {
                     this._dir.shift();
                     if (this._dir.length) {
                         const t = this._dir.shift();
-                        this.getDir(t[0], t[1], t[2]);
+                        this.getDir(t[0], true, t[1], t[2]);
                     }
                 }
                 break;

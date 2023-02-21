@@ -9405,7 +9405,7 @@
                 if (p.editor.supports('buttons')) {
                     buttons.append(...p.editor.buttons);
                     if (window.opener)
-                        $('.connected').prop('disabled', !(connected && enabled));
+                        $('.connected').prop('disabled', !(connected && manager.active && manager.active.editor));
                 }
             });
             p.editor.on('contextmenu-diff', () => {
