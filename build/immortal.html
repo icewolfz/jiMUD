@@ -1387,7 +1387,7 @@
                             _ied.getDir(file, true, 'download:' + file, path.join(local, path.basename(file)));
                         }
                         else
-                            if (!await downNext(file, path.join(options.local, r, path.basename(file)), files[f])) {
+                            if (!await downNext(file, path.join(options.local, r), files[f])) {
                                 _progressCancel = true;
                                 break;
                             }
@@ -3277,8 +3277,8 @@
 
         async function downNext(file, local, remoteData) {
             try {
-                if (existsSync(local)) {
-                    var localData = IED.getFileInfo(local);
+                if (existsSync(path.join(local, path.basename(file)))) {
+                    var localData = IED.getFileInfo(path.join(local, path.basename(file)));
                     //if not applied to queue or always ask
                     if (_queue !== 4 && options.fileExistAlways !== 2) {
                         const result = await fileExist(remoteData, localData);
@@ -3297,10 +3297,9 @@
                     }
                     //rename
                     if (options.fileExistOverwrite === 8) {
-                        const localPath = path.dirname(local);
-                        name = getNewNamePath(path.basename(file), localPath);
+                        name = getNewNamePath(path.basename(file), local);
                         setTimeout(async () => {
-                            _ied.downloadTo(file, path.join(localPath, name), false, 0, true);
+                            _ied.downloadTo(file, path.join(local, name), false, 0, true);
                         }, 0);
                         return true;
                     }
