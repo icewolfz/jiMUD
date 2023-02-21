@@ -3856,6 +3856,7 @@ async function executeScript(script, window, focus) {
             return;
         }
         window.webContents.executeJavaScript(script).then(results => resolve(results)).catch(err => {
+            logError(new Error('Script error: ' + script), !getSetting('showErrorsExtended'));
             if (err)
                 logError(err);
             reject();
@@ -3875,6 +3876,7 @@ async function executeScriptClient(script, window, focus) {
         const id = windows[getWindowId(window)].current;
         if (!clients[id]) return;
         clients[id].view.webContents.executeJavaScript(script).then(results => resolve(results)).catch(err => {
+            logError(new Error('Script error: ' + script), !getSetting('showErrorsExtended'));
             if (err)
                 logError(err);
             reject();
