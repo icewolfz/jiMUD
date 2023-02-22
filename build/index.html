@@ -1105,8 +1105,8 @@
 
             _backup.on('import-map', (data) => {
                 if (!_windows['mapper.html'])
-                    openWindow('mapper').then(() => {
-                        _windows['mapper.html'].addEventListener('load', () => _windows['mapper.html'].importData(data), { once: true });
+                    openWindowLoaded('mapper').then(() => {
+                        __windows['mapper.html'].importData(data);
                     });
                 else
                     _windows['mapper.html'].importData(data);
@@ -2317,8 +2317,8 @@
                             if (_windows['profiles.html'])
                                 _windows['profiles.html'].manager.editItem(item.profile, 'buttons', +item.bIndex);
                             else
-                                openWindow('profiles').then(() => {
-                                    _windows['profiles.html'].addEventListener('load', () => _windows['profiles.html'].manager.editItem(item.profile, 'buttons', +item.bIndex), { once: true });
+                                openWindowLoaded('profiles').then(() => {
+                                    _windows['profiles.html'].manager.editItem(item.profile, 'buttons', +item.bIndex);
                                 });
                         }
                     }));
@@ -2759,11 +2759,11 @@
                         let file = _windowState.windows[w].details.url;
                         if (file.startsWith(_dir))
                             file = path.basename(file.substring(_dir.length), '.html');
-                        await openWindowFinish(file, _windowState.windows[w]);
+                        await openWindowContentLoaded(file, _windowState.windows[w]);
                     }
                 }
                 if (client.getOption('showCharacterManager'))
-                    await openWindowFinish('characters');
+                    await openWindowContentLoaded('characters');
                 initWindows();
             });
             createWatcher();
@@ -3444,7 +3444,7 @@
             delete _windows[file];
         }
 
-        async function openWindowFinish(name, data) {
+        async function openWindowContentLoaded(name, data) {
             return new Promise(async (resolve, reject) => {
                 openWindow(name, data).then(() => {
                     //not opened for what ever reason
@@ -3454,7 +3454,22 @@
                     }
                     _windows[name + '.html'].addEventListener('DOMContentLoaded', () => {
                         resolve();
-                    });
+                    }, { once: true });
+                }).catch(reject);
+            });
+        }
+
+        async function openWindowLoaded(name, data) {
+            return new Promise(async (resolve, reject) => {
+                openWindow(name, data).then(() => {
+                    //not opened for what ever reason
+                    if (!_windows[name + '.html']) {
+                        reject();
+                        return;
+                    }
+                    _windows[name + '.html'].addEventListener('load', () => {
+                        resolve();
+                    }, { once: true });
                 }).catch(reject);
             });
         }
@@ -3659,9 +3674,9 @@
             var enableBackgroundThrottling = window.getSetting('enableBackgroundThrottling');
             if (!_windows['mapper.html']) {
                 if (client.getOption('showMapper'))
-                    await openWindowFinish('mapper');
+                    await openWindowContentLoaded('mapper');
                 else if (client.getOption('mapper.enabled') || client.getOption('mapper.persistent'))
-                    await openWindowFinish('mapper', { state: { visible: false } });
+                    await openWindowContentLoaded('mapper', { state: { visible: false } });
             }
             else if (close && !client.getOption('showMapper') && !client.getOption('mapper.enabled') && !client.getOption('mapper.persistent'))
                 _windows['mapper.html'].close();
@@ -3676,9 +3691,9 @@
             }
             if (!_windows['editor.html']) {
                 if (client.getOption('showEditor'))
-                    await openWindowFinish('editor');
+                    await openWindowContentLoaded('editor');
                 else if (client.getOption('editorPersistent'))
-                    await openWindowFinish('editor', { state: { visible: false } });
+                    await openWindowContentLoaded('editor', { state: { visible: false } });
             }
             else if (close && !client.getOption('showEditor') && !client.getOption('editorPersistent'))
                 _windows['editor.html'].close();
@@ -3689,9 +3704,9 @@
                 });
             if (!_windows['chat.html']) {
                 if (client.getOption('showChat'))
-                    await openWindowFinish('chat');
+                    await openWindowContentLoaded('chat');
                 else if (client.getOption('chat.persistent') || client.getOption('chat.captureTells') || client.getOption('chat.captureTalk') || client.getOption('chat.captureLines'))
-                    await openWindowFinish('chat', { state: { visible: false } });
+                    await openWindowContentLoaded('chat', { state: { visible: false } });
             }
             else if (close && !client.getOption('showChat') && !client.getOption('chat.persistent') && !client.getOption('chat.captureTells') && client.getOption('chat.captureTalk') && client.getOption('chat.captureLines'))
                 _windows['chat.html'].close();
@@ -3705,9 +3720,9 @@
                 });
             if (!_windows['code.editor.html']) {
                 if (client.getOption('showCodeEditor'))
-                    await openWindowFinish('code.editor');
+                    await openWindowContentLoaded('code.editor');
                 else if (client.getOption('codeEditor.persistent'))
-                    await openWindowFinish('code.editor', { state: { visible: false } });
+                    await openWindowContentLoaded('code.editor', { state: { visible: false } });
             }
             else if (close && !client.getOption('showCodeEditor') && !client.getOption('codeEditor.persistent'))
                 _windows['code.editor.html'].close();
@@ -3726,10 +3741,10 @@
                         continue;
                     if (!_windows[name + '.html']) {
                         if (client.options.windows[name].options.show) {
-                            await openWindowFinish(name, { details: client.options.windows[name].options });
+                            await openWindowContentLoaded(name, { details: client.options.windows[name].options });
                         }
                         else if (client.options.windows[name].options.persistent) {
-                            await openWindowFinish(name, { details: client.options.windows[name].options, state: { visible: false } });
+                            await openWindowContentLoaded(name, { details: client.options.windows[name].options, state: { visible: false } });
                         }
                     }
                     else if (close && !client.options.windows[name].options.show && !client.options.windows[name].options.persistent)
@@ -3979,15 +3994,11 @@
             const fl = files.length;
             let f = 0;
             if (!_windows['code.editor.html']) {
-                openWindow('code.editor').then(() => {
-                    //not opened for what ever reason
-                    if (!_windows['code.editor.html']) return;
-                    _windows['code.editor.html'].addEventListener('load', () => {
-                        for (; f < fl; f++) {
-                            _windows['code.editor.html'].openEditor(files[f]);
-                        }
-                        _windows['code.editor.html'].focus();
-                    });
+                openWindowLoaded('code.editor').then(() => {
+                    for (; f < fl; f++) {
+                        _windows['code.editor.html'].openEditor(files[f]);
+                    }
+                    _windows['code.editor.html'].focus();
                 });
             }
             else {
