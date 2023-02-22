@@ -3659,9 +3659,9 @@
             var enableBackgroundThrottling = window.getSetting('enableBackgroundThrottling');
             if (!_windows['mapper.html']) {
                 if (client.getOption('showMapper'))
-                    openWindow('mapper');
+                    await openWindowFinish('mapper');
                 else if (client.getOption('mapper.enabled') || client.getOption('mapper.persistent'))
-                    openWindow('mapper', { state: { visible: false } });
+                    await openWindowFinish('mapper', { state: { visible: false } });
             }
             else if (close && !client.getOption('showMapper') && !client.getOption('mapper.enabled') && !client.getOption('mapper.persistent'))
                 _windows['mapper.html'].close();
@@ -3676,9 +3676,9 @@
             }
             if (!_windows['editor.html']) {
                 if (client.getOption('showEditor'))
-                    openWindow('editor');
+                    await openWindowFinish('editor');
                 else if (client.getOption('editorPersistent'))
-                    openWindow('editor', { state: { visible: false } });
+                    await openWindowFinish('editor', { state: { visible: false } });
             }
             else if (close && !client.getOption('showEditor') && !client.getOption('editorPersistent'))
                 _windows['editor.html'].close();
@@ -3689,9 +3689,9 @@
                 });
             if (!_windows['chat.html']) {
                 if (client.getOption('showChat'))
-                    openWindow('chat');
+                    await openWindowFinish('chat');
                 else if (client.getOption('chat.persistent') || client.getOption('chat.captureTells') || client.getOption('chat.captureTalk') || client.getOption('chat.captureLines'))
-                    openWindow('chat', { state: { visible: false } });
+                    await openWindowFinish('chat', { state: { visible: false } });
             }
             else if (close && !client.getOption('showChat') && !client.getOption('chat.persistent') && !client.getOption('chat.captureTells') && client.getOption('chat.captureTalk') && client.getOption('chat.captureLines'))
                 _windows['chat.html'].close();
@@ -3705,9 +3705,9 @@
                 });
             if (!_windows['code.editor.html']) {
                 if (client.getOption('showCodeEditor'))
-                    openWindow('code.editor');
+                    await openWindowFinish('code.editor');
                 else if (client.getOption('codeEditor.persistent'))
-                    openWindow('code.editor', { state: { visible: false } });
+                    await openWindowFinish('code.editor', { state: { visible: false } });
             }
             else if (close && !client.getOption('showCodeEditor') && !client.getOption('codeEditor.persistent'))
                 _windows['code.editor.html'].close();
@@ -3726,10 +3726,10 @@
                         continue;
                     if (!_windows[name + '.html']) {
                         if (client.options.windows[name].options.show) {
-                            openWindow(name, { details: client.options.windows[name].options });
+                            await openWindowFinish(name, { details: client.options.windows[name].options });
                         }
                         else if (client.options.windows[name].options.persistent) {
-                            openWindow(name, { details: client.options.windows[name].options, state: { visible: false } });
+                            await openWindowFinish(name, { details: client.options.windows[name].options, state: { visible: false } });
                         }
                     }
                     else if (close && !client.options.windows[name].options.show && !client.options.windows[name].options.persistent)
