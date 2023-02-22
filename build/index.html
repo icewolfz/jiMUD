@@ -2750,22 +2750,22 @@
             updateIcon(client.port === 1035 ? 3 : 0);
             if (client.getOption('find.show'))
                 client.display.showFind();
-            setTimeout(async () => {
-                if (_windowState.windows.length) {
-                    //@TODO recheck this in electron new electrons as 23 broke something when attempting to load child windows, have to now wait before loading next
-                    const _dir = 'file:///' + __dirname.replace(/\\/g, '/');
-                    const wl = _windowState.windows.length;
-                    for (let w = 0; w < wl; w++) {
-                        let file = _windowState.windows[w].details.url;
-                        if (file.startsWith(_dir))
-                            file = path.basename(file.substring(_dir.length), '.html');
-                        await openWindowContentLoaded(file, _windowState.windows[w]);
-                    }
+            //setTimeout(async () => {
+            if (_windowState.windows.length) {
+                //@TODO recheck this in electron new electrons as 23 broke something when attempting to load child windows, have to now wait before loading next
+                const _dir = 'file:///' + __dirname.replace(/\\/g, '/');
+                const wl = _windowState.windows.length;
+                for (let w = 0; w < wl; w++) {
+                    let file = _windowState.windows[w].details.url;
+                    if (file.startsWith(_dir))
+                        file = path.basename(file.substring(_dir.length), '.html');
+                    openWindow(file, _windowState.windows[w]);
                 }
-                if (client.getOption('showCharacterManager'))
-                    await openWindowContentLoaded('characters');
-                initWindows();
-            });
+            }
+            if (client.getOption('showCharacterManager'))
+                openWindow('characters');
+            initWindows();
+            //});
             createWatcher();
             autoConnect();
             doUpdate(71); //1,2,4,65
@@ -3674,9 +3674,9 @@
             var enableBackgroundThrottling = window.getSetting('enableBackgroundThrottling');
             if (!_windows['mapper.html']) {
                 if (client.getOption('showMapper'))
-                    await openWindowContentLoaded('mapper');
+                    openWindow('mapper');
                 else if (client.getOption('mapper.enabled') || client.getOption('mapper.persistent'))
-                    await openWindowContentLoaded('mapper', { state: { visible: false } });
+                    openWindow('mapper', { state: { visible: false } });
             }
             else if (close && !client.getOption('showMapper') && !client.getOption('mapper.enabled') && !client.getOption('mapper.persistent'))
                 _windows['mapper.html'].close();
@@ -3691,9 +3691,9 @@
             }
             if (!_windows['editor.html']) {
                 if (client.getOption('showEditor'))
-                    await openWindowContentLoaded('editor');
+                    openWindow('editor');
                 else if (client.getOption('editorPersistent'))
-                    await openWindowContentLoaded('editor', { state: { visible: false } });
+                    openWindow('editor', { state: { visible: false } });
             }
             else if (close && !client.getOption('showEditor') && !client.getOption('editorPersistent'))
                 _windows['editor.html'].close();
@@ -3704,9 +3704,9 @@
                 });
             if (!_windows['chat.html']) {
                 if (client.getOption('showChat'))
-                    await openWindowContentLoaded('chat');
+                    openWindow('chat');
                 else if (client.getOption('chat.persistent') || client.getOption('chat.captureTells') || client.getOption('chat.captureTalk') || client.getOption('chat.captureLines'))
-                    await openWindowContentLoaded('chat', { state: { visible: false } });
+                    openWindow('chat', { state: { visible: false } });
             }
             else if (close && !client.getOption('showChat') && !client.getOption('chat.persistent') && !client.getOption('chat.captureTells') && client.getOption('chat.captureTalk') && client.getOption('chat.captureLines'))
                 _windows['chat.html'].close();
@@ -3720,9 +3720,9 @@
                 });
             if (!_windows['code.editor.html']) {
                 if (client.getOption('showCodeEditor'))
-                    await openWindowContentLoaded('code.editor');
+                    openWindow('code.editor');
                 else if (client.getOption('codeEditor.persistent'))
-                    await openWindowContentLoaded('code.editor', { state: { visible: false } });
+                    openWindow('code.editor', { state: { visible: false } });
             }
             else if (close && !client.getOption('showCodeEditor') && !client.getOption('codeEditor.persistent'))
                 _windows['code.editor.html'].close();
@@ -3741,10 +3741,10 @@
                         continue;
                     if (!_windows[name + '.html']) {
                         if (client.options.windows[name].options.show) {
-                            await openWindowContentLoaded(name, { details: client.options.windows[name].options });
+                            openWindow(name, { details: client.options.windows[name].options });
                         }
                         else if (client.options.windows[name].options.persistent) {
-                            await openWindowContentLoaded(name, { details: client.options.windows[name].options, state: { visible: false } });
+                            openWindow(name, { details: client.options.windows[name].options, state: { visible: false } });
                         }
                     }
                     else if (close && !client.options.windows[name].options.show && !client.options.windows[name].options.persistent)

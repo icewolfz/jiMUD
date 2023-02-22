@@ -61,7 +61,7 @@
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.5.16",
     "@types/node": "^18.14.0",
-    "electron": "^23.1.0",
+    "electron": "^21.4.1",
     "electron-builder": "^23.6.0",
     "electron-rebuild": "^3.2.9",
     "eslint": "^8.34.0",
