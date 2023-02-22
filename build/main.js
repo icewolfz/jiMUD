@@ -298,6 +298,7 @@ function createWindow(options) {
         webPreferences: {
             nodeIntegration: true,
             nodeIntegrationInWorker: true,
+            nodeIntegrationInSubFrames: true,
             webviewTag: false,
             sandbox: false,
             spellcheck: _settings ? getSetting('spellchecking') : false,
@@ -2304,6 +2305,7 @@ function createClient(options) {
         webPreferences: {
             nodeIntegration: true,
             nodeIntegrationInWorker: true,
+            nodeIntegrationInSubFrames: true,
             webviewTag: false,
             sandbox: false,
             spellcheck: _settings ? getSetting('spellchecking') : false,
@@ -3398,6 +3400,7 @@ function buildOptions(details, window, settings) {
         webPreferences: {
             nodeIntegration: true,
             nodeIntegrationInWorker: true,
+            nodeIntegrationInSubFrames: true,
             webviewTag: false,
             sandbox: false,
             spellcheck: settings ? settings.spellchecking : false,

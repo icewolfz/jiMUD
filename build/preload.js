@@ -1,4 +1,4 @@
-const { ipcRenderer } = require('electron')
+const { ipcRenderer } = require('electron');
 const { parseTemplate, isFileSync } = require('./js/library.js');
 
 window.oldFocus = window.focus;

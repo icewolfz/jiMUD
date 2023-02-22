@@ -2750,19 +2750,22 @@
             updateIcon(client.port === 1035 ? 3 : 0);
             if (client.getOption('find.show'))
                 client.display.showFind();
-            if (_windowState.windows.length) {
-                const _dir = 'file:///' + __dirname.replace(/\\/g, '/');
-                const wl = _windowState.windows.length;
-                for (let w = 0; w < wl; w++) {
-                    let file = _windowState.windows[w].details.url;
-                    if (file.startsWith(file))
-                        file = path.basename(file.substring(__dirname.length + 9), '.html');
-                    openWindow(file, _windowState.windows[w]);
+            setTimeout(async () => {
+                if (_windowState.windows.length) {
+                    //@TODO recheck this in electron new electrons as 23 broke something when attempting to load child windows, have to now wait before loading next
+                    const _dir = 'file:///' + __dirname.replace(/\\/g, '/');
+                    const wl = _windowState.windows.length;
+                    for (let w = 0; w < wl; w++) {
+                        let file = _windowState.windows[w].details.url;
+                        if (file.startsWith(_dir))
+                            file = path.basename(file.substring(_dir.length), '.html');
+                        await openWindowFinish(file, _windowState.windows[w]);
+                    }
                 }
-            }
-            if (client.getOption('showCharacterManager'))
-                openWindow('characters');
-            initWindows();
+                if (client.getOption('showCharacterManager'))
+                    await openWindowFinish('characters');
+                initWindows();
+            });
             createWatcher();
             autoConnect();
             doUpdate(71); //1,2,4,65
@@ -3441,6 +3444,21 @@
             delete _windows[file];
         }
 
+        async function openWindowFinish(name, data) {
+            return new Promise(async (resolve, reject) => {
+                openWindow(name, data).then(() => {
+                    //not opened for what ever reason
+                    if (!_windows[name + '.html']) {
+                        reject();
+                        return;
+                    }
+                    _windows[name + '.html'].addEventListener('DOMContentLoaded', () => {
+                        resolve();
+                    });
+                }).catch(reject);
+            });
+        }
+
         async function openWindow(name, data) {
             if (name === 'log-viewer')
                 name = 'log.viewer';
@@ -4037,7 +4055,7 @@
                 if (($updating & 2048) === 2048) {
                     updateCommandInput();
                     $updating &= ~2048;
-                }                
+                }
                 if (($updating & 1024) === 1024) {
                     _resizeCommandInput();
                     $updating &= ~1024;
@@ -4331,7 +4349,7 @@
                         else if (choice !== 0) {
                             _closeWindow = false;
                             ipcRenderer.send('cancel-close');
-                            }
+                        }
                         else
                             _closeWindow = true;
                     }
