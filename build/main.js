@@ -2594,14 +2594,14 @@ function clientsChanged() {
 
 async function canCloseClient(id, warn, all, allWindows) {
     const client = clients[id];
-    let close = await executeScript(`if(typeof closeable === "function") closeable(${all}, ${allWindows}); else (function() { return true; })();`, client.view);
+    let close = await executeScript(`if(typeof closeable === "function") closeable(${all}, ${allWindows||false}); else (function() { return true; })();`, client.view);
     //main client can not close so no need to check children
     if (close === false)
         return false;
     const wl = client.windows.length;
     for (let w = 0; w < wl; w++) {
         //check each child window just to be safe
-        close = await executeScript(`if(typeof closeable === "function") closeable(${all}, ${allWindows}); else (function() { return true; })();`, client.windows[w].window);
+        close = await executeScript(`if(typeof closeable === "function") closeable(${all}, ${allWindows||false}); else (function() { return true; })();`, client.windows[w].window);
         if (client.windows[w].window && client.windows[w].window.isModal()) {
             if (warn) {
                 dialog.showMessageBox(client.parent, {
@@ -3856,7 +3856,7 @@ async function executeScript(script, window, focus) {
             return;
         }
         window.webContents.executeJavaScript(script).then(results => resolve(results)).catch(err => {
-            logError(new Error('Script error: ' + script), !getSetting('showErrorsExtended'));
+            logError(new Error(`Window: ${window.webContents.getURL() || 'Unknown'}\nScript error: ${script}`), !getSetting('showErrorsExtended'));
             if (err)
                 logError(err);
             reject();
@@ -3876,7 +3876,7 @@ async function executeScriptClient(script, window, focus) {
         const id = windows[getWindowId(window)].current;
         if (!clients[id]) return;
         clients[id].view.webContents.executeJavaScript(script).then(results => resolve(results)).catch(err => {
-            logError(new Error('Script error: ' + script), !getSetting('showErrorsExtended'));
+            logError(new Error(`Window: ${window.webContents.getURL() || 'Unknown'}\nScript error: ${script}`), !getSetting('showErrorsExtended'));
             if (err)
                 logError(err);
             reject();
