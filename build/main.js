@@ -2596,14 +2596,14 @@ function clientsChanged() {
 
 async function canCloseClient(id, warn, all, allWindows) {
     const client = clients[id];
-    let close = await executeScript(`if(typeof closeable === "function") closeable(${all}, ${allWindows||false}); else (function() { return true; })();`, client.view);
+    let close = await executeScript(`if(typeof closeable === "function") closeable(${all}, ${allWindows || false}); else (function() { return true; })();`, client.view);
     //main client can not close so no need to check children
     if (close === false)
         return false;
     const wl = client.windows.length;
     for (let w = 0; w < wl; w++) {
         //check each child window just to be safe
-        close = await executeScript(`if(typeof closeable === "function") closeable(${all}, ${allWindows||false}); else (function() { return true; })();`, client.windows[w].window);
+        close = await executeScript(`if(typeof closeable === "function") closeable(${all}, ${allWindows || false}); else (function() { return true; })();`, client.windows[w].window);
         if (client.windows[w].window && client.windows[w].window.isModal()) {
             if (warn) {
                 dialog.showMessageBox(client.parent, {
@@ -3986,16 +3986,18 @@ async function saveWindowLayout(file, locked) {
                     //get any custom data from window
                     data: templateObject(await executeScript('if(typeof saveWindow === "function") saveWindow()', window).catch(logError))
                 }
-                for (key in wData.state) {
-                    if (!Object.prototype.hasOwnProperty.call(wData.state, key) || key === 'alwaysOnTop')
-                        continue;
-                    if (key in wData.details.options)
-                        delete wData.details.options[key];
+                if (wData.details.options) {
+                    for (key in wData.state) {
+                        if (!Object.prototype.hasOwnProperty.call(wData.state, key) || key === 'alwaysOnTop')
+                            continue;
+                        if (key in wData.details.options)
+                            delete wData.details.options[key];
+                    }
+                    delete wData.details.options.x;
+                    delete wData.details.options.y;
+                    delete wData.details.options.width;
+                    delete wData.details.options.height;
                 }
-                delete wData.details.options.x;
-                delete wData.details.options.y;
-                delete wData.details.options.width;
-                delete wData.details.options.height;
                 cData.windows.push(wData);
             }
             data.clients.push(cData);
