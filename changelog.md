@@ -93,7 +93,7 @@
   - Update fs-extra 10.1.0 to 11.1.0
   - Update @electron/remote 2.0.8 to 2.0.9
   - Update fswin 3.22.106 to 3.23.119
-  - Update monaco-editor 0.34.1 to 0.36.0
+  - Update monaco-editor 0.34.1 to 0.36.1
   - Advanced editor: Remove bold style as ansi uses colors instead
 
 ## 1.0.0-alpha
