@@ -6124,7 +6124,7 @@ export class Input extends EventEmitter {
                             return out;
                         }
                         if (str !== null) {
-                            out += str;
+                            out += str + '\n';
                             /*
                             if (str.startsWith(cmdChar))
                                 out += cmdChar + this.parseOutgoing(str.substr(1));
