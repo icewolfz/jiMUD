@@ -5831,7 +5831,9 @@ export class Input extends EventEmitter {
                 this.client.echo(raw, -3, -4, true, true);
             return data.return;
         }
-        return data.raw + '\n';
+        if (data.raw.startsWith(cmdChar))
+            return cmdChar + this.parseOutgoing(data.raw.substr(1));    
+        return this.parseOutgoing(data.raw + '\n');
     }
 
     private executeForLoop(start: number, end: number, commands: string) {

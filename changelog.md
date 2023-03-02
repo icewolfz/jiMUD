@@ -57,6 +57,7 @@
     - Allow history navigation only if no modifier keys are held down, fixing shift selection support
     - Newline shortcut now correctly scrolls to the empty line
     - Fix command stacking when using command character not correctly stacking
+    - Fix #command parsing when command does not exist to correctly parse all text after the # character
   - Fix alias, macro, and trigger script type to use inherited showScriptErrors setting correctly
   - Fix context menu script type 'this' error
   - Profile manager: Fix cut marking items in newly expanded profiles with wrong state style
