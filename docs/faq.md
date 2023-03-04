@@ -333,6 +333,7 @@ Open an issue about it or log on to [ShadowMUD](http://www,shadowmud.com) using 
 | characterManagerAddButtonAction   | integer       | 0                                 |
 | enableCrashReporting              | boolean       | false                             |
 | characterManagerPanelWidth        | number        | 0                                 |
+| ignoreInputLeadingWhitespace      | boolean       | false                             |
 
 ### trayClick and trayDblClick values
 

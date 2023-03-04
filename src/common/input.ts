@@ -1665,7 +1665,7 @@ export class Input extends EventEmitter {
     }
 
     private async initPads() {
-        if(!this.client || !this.client.options) {
+        if (!this.client || !this.client.options) {
             setTimeout(this.initPads, 5);
             return;
         }
@@ -5832,7 +5832,7 @@ export class Input extends EventEmitter {
             return data.return;
         }
         if (data.raw.startsWith(cmdChar))
-            return cmdChar + this.parseOutgoing(data.raw.substr(1), null, null, null, true);    
+            return cmdChar + this.parseOutgoing(data.raw.substr(1), null, null, null, true);
         return this.parseOutgoing(data.raw + '\n', null, null, null, true);
     }
 
@@ -5926,6 +5926,8 @@ export class Input extends EventEmitter {
         const bComments: boolean = this.client.getOption('enableBlockComments') && !noComments;
         const iCommentsStr: string[] = this.client.getOption('inlineCommentString').split('');
         const bCommentsStr: string[] = this.client.getOption('blockCommentString').split('');
+        const bTrim: boolean = this.client.getOption('ignoreInputLeadingWhitespace');
+        let sTrim = '';
         let args = [];
         let arg: any = '';
         let findAlias: boolean = true;
@@ -6126,7 +6128,7 @@ export class Input extends EventEmitter {
                             return out;
                         }
                         if (str !== null) {
-                            out += str + '\n';
+                            out += sTrim + str + '\n';
                             /*
                             if (str.startsWith(cmdChar))
                                 out += cmdChar + this.parseOutgoing(str.substr(1));
@@ -6712,6 +6714,14 @@ export class Input extends EventEmitter {
                     else if (!noFunctions && eCmd && start && c === cmdChar) {
                         state = ParseState.function;
                         start = false;
+                        if (alias.length) {
+                            sTrim = alias;
+                            alias = '';
+                        }
+                        else {
+                            sTrim = str || '';                        
+                            str = '';
+                        }
                     }
                     else if (eVerbatim && start && c === verbatimChar) {
                         state = ParseState.verbatim;
@@ -6737,9 +6747,15 @@ export class Input extends EventEmitter {
                         state = ParseState.singleQuoted;
                         start = false;
                     }
+                    else if (start && bTrim && (c === ' ' || c === '\t')) {
+                        if (eAlias && findAlias)
+                            alias += c;
+                        else
+                            str += c;
+                    }
                     //if looking for an alias and a space check
                     else if (eAlias && findAlias && c === ' ') {
-                        AliasesCached = FilterArrayByKeyValue(aliases, 'pattern', alias);
+                        AliasesCached = FilterArrayByKeyValue(aliases, 'pattern', bTrim ? alias.trimStart() : alias);
                         //are aliases enabled and does it match an alias?
                         if (AliasesCached.length > 0) {
                             //move to alias parsing
@@ -6747,7 +6763,7 @@ export class Input extends EventEmitter {
                             //init args
                             args.length = 0;
                             arg = '';
-                            args.push(alias);
+                            args.push(bTrim ? alias.trimStart() : alias);
                         }
                         else //else not an alias so normal space
                         {
@@ -6761,10 +6777,10 @@ export class Input extends EventEmitter {
                     }
                     else if (c === '\n' || (stacking && c === stackingChar)) {
                         if (eAlias && findAlias && alias.length > 0) {
-                            AliasesCached = FilterArrayByKeyValue(aliases, 'pattern', alias);
+                            AliasesCached = FilterArrayByKeyValue(aliases, 'pattern', bTrim ? alias.trimStart() : alias);
                             //are aliases enabled and does it match an alias?
                             if (AliasesCached.length > 0) {
-                                args.push(alias);
+                                args.push(bTrim ? alias.trimStart() : alias);
                                 //move to alias parsing
                                 al = AliasesCached.length;
                                 for (a = 0; a < al; a++) {
@@ -6941,7 +6957,7 @@ export class Input extends EventEmitter {
                     this.stack.used = this.stack.args.length;
                     if (r) str += '\n';
                 }
-                out += str;
+                out += sTrim + str;
             }
             else if (out.length === 0) return null;
             if (this.stack.continue || this.stack.break) {
@@ -6985,11 +7001,11 @@ export class Input extends EventEmitter {
             }
             if (str.length > 0)
                 alias += str;
-            AliasesCached = FilterArrayByKeyValue(aliases, 'pattern', alias);
+            AliasesCached = FilterArrayByKeyValue(aliases, 'pattern', bTrim ? alias.trimStart() : alias);
             //are aliases enabled and does it match an alias?
             if (AliasesCached.length > 0) {
                 //move to alias parsing
-                args.push(alias);
+                args.push(bTrim ? alias.trimStart() : alias);
                 al = AliasesCached.length;
                 for (a = 0; a < al; a++) {
                     str = this.ExecuteAlias(AliasesCached[a], args);

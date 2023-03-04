@@ -235,6 +235,7 @@ Controls what is captured into the chat window
 - `Enable Double Parameter Escaping` Enable doubling up of the parameter character `%` to escape as well as using escape character
 - `Ignore Eval Undefined` When enabled will make undefined results blank, else it will display the word undefined
 - `Allow Comments From Command` Allow inline and block comments from the command input
+- `Ignore leading whitespace` Ignore leading whitespace for commands and aliases
 - `Save Trigger State Changes` When a trigger state changes save profile
 - `Delay between path commands` The amount of milliseconds between sending of path commands for speed paths.
 - `Amount of path commands to send` the # of commands to send between speed path delay

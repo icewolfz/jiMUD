@@ -28,6 +28,7 @@
       - `Scrollbars` Add scrollbars when needed to command input
     - `Character Manager Add Button Action` Control the action of the add button
     - `Enable crash reporting` Enable crash reporting, will save mini dump files to local by default to {data}\Crashpad
+    - `Ignore leading whitespace` Ignore leading whitespace for commands and aliases
   - Code editor:
     - Add right click spell check support for systems that support it
     - Add basic spell checking
