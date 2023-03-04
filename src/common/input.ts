@@ -6719,7 +6719,7 @@ export class Input extends EventEmitter {
                             alias = '';
                         }
                         else {
-                            sTrim = str || '';                        
+                            sTrim = str || '';
                             str = '';
                         }
                     }
@@ -6747,7 +6747,8 @@ export class Input extends EventEmitter {
                         state = ParseState.singleQuoted;
                         start = false;
                     }
-                    else if (start && bTrim && (c === ' ' || c === '\t')) {
+                    //\f\r\t\v\u0020\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff
+                    else if (start && bTrim && (c === ' ' || c === '\t' || c === '\f' || c === '\r' || c === '\v' || c === '\u0020' || c === '\u00a0' || c === '\u1680' || c === '\u2000-' || c === '\u200a' || c === '\u2028' || c === '\u2029' || c === '\u202f' || c === '\u205f' || c === '\u3000' || c === '\ufeff')) {
                         if (eAlias && findAlias)
                             alias += c;
                         else
