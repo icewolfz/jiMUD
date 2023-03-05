@@ -60,7 +60,7 @@
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.5.16",
-    "@types/node": "^18.14.2",
+    "@types/node": "^18.14.6",
     "electron": "^21.4.2",
     "electron-builder": "^23.6.0",
     "electron-rebuild": "^3.2.9",
@@ -156,7 +156,7 @@
     "font-list": "^1.4.5",
     "fs-extra": "^11.1.0",
     "fswin": "^3.23.119",
-    "lz-string": "^1.4.4",
+    "lz-string": "^1.5.0",
     "markdown-it": "^13.0.1",
     "mathjs": "^11.6.0",
     "moment": "^2.29.4",
