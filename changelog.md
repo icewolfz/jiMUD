@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0-alpha.1
+## 1.0.0 2023-03-05
 
 - **New:**
   - Preferences:
@@ -100,7 +100,7 @@
   - Update lz-string 1.4.4 to 1.5.0
   - Advanced editor: Remove bold style as ansi uses colors instead
 
-## 1.0.0-alpha
+## 1.0.0-alpha 2022-11-15
 
 - **New:**
   - New Multiple Document Interface:
