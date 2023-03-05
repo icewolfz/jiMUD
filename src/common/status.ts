@@ -863,4 +863,9 @@ export class Status extends EventEmitter {
             el.removeChild(el.firstChild);
         }
     }
+
+    get currentLag(): string {
+        if (!this.lagMeter || !this.lagMeter.firstElementChild) return '';
+        return this.lagMeter.firstElementChild.textContent || '';
+    }
 }

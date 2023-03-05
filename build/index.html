@@ -3417,8 +3417,15 @@
             //setTimeout(() => {
             doUpdate(4);
             reloadIcon(true);
-            updateTitle();
-            ipcRenderer.send('update-title', { title: getCharacterName() || '' });
+            var title = getCharacterName() || '';
+            if (client.getOption('showLagInTitle') && client.connected && _status.currentLag && _status.currentLag.length) {
+                if (title && title.length)
+                    title = `${title} - ${_status.currentLag}`;
+                else
+                    title = `${_status.currentLag}`;
+            }
+            updateTitle(title);
+            ipcRenderer.send('update-title', { title: title });
             //}, 100);
         });
 
