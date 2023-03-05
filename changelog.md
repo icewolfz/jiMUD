@@ -2,6 +2,9 @@
 
 ## 1.0.1
 
+- **Fixed:**
+  - Tray context menu hide show/hide all windows if only 1 window exists for simple menu
+
 ## 1.0.0 2023-03-05
 
 - **New:**

@@ -5763,14 +5763,18 @@ async function _updateTrayContext() {
                     else
                         active.window.minimize();
                 }
-            },
-            { type: 'separator' },
-            {
-                label: '&Show all windows', click: showAllWindows
-            },
-            {
-                label: 'H&ide all windows', click: hideAllWindows
-            },
+            }]);
+        if (Object.keys(windows).length > 1)
+            contextMenu.push(...[
+                { type: 'separator' },
+                {
+                    label: '&Show all windows', click: showAllWindows
+                },
+                {
+                    label: 'H&ide all windows', click: hideAllWindows
+                },
+            ]);
+        contextMenu.push(...[
             { type: 'separator' },
             {
                 label: '&Windows...',
