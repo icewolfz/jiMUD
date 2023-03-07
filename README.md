@@ -2,6 +2,18 @@
 
 A mud client using electron for [ShadowMUD](http://www.shadowmud.com) based on it's web client.
 
+## Installation
+
+- Window
+  - Download the msi or exe of your choice to install, follow any on screen prompts
+  - Portable: down load jiMUD._VERSION_windows_portable-ARCH.exe to a folder and run, all files will be contained in that folder
+- Linux
+  - Deb: sudo app install ./jiMUD_VERSION.amd64.deb
+  - Snap: sudo snap install ./jiMUD_VERSION.amd64.snap --dangerous
+  - Rmp: rpm -i ./jiMUD_VERSION.amd64.rpm
+  - AppImage: set to executable and run
+    - Recommended: https://github.com/TheAssassin/AppImageLauncher
+
 ## Build
 
   To build jiMUD you must have node, npm, typescript 2.3+, cPython installed
@@ -14,7 +26,7 @@ Install or download Node: https://nodejs.org/en/download/
 Install or download Typescript: https://www.typescriptlang.org/download/
   - easiest to just use npm globally
 
-### Electrion builder:
+### Electron builder:
 
 Required modules or packages to build different installer types: https://www.electron.build/multi-platform-build.html
 
