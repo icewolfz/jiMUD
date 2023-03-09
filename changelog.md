@@ -4,6 +4,8 @@
 
 - **Fixed:**
   - Tray context menu hide show/hide all windows if only 1 window exists for simple menu
+- **Changed:**
+  - Update better-sqlite3 8.1.0 to 8.2.0
 
 ## 1.0.0 2023-03-05
 
