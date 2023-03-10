@@ -132,6 +132,7 @@ Usage: `jiMUD [arguments...]`
   - Tray icon: When app indicator is used on Linux, the click event is ignored, see [Electron docs for more limits](https://www.electronjs.org/docs/api/tray)
   - Auto updating is only supported by Appimage
   - Show in task bar is no longer supported because Electron removed support due to wayland
+  - Immortal tools: may get permission denied errors when using snap when trying to build path navigation drop down
 - Display:
   - Unicode RTL text selection display is not correct
   - MXP Image height is limited to line height

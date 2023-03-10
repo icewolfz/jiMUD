@@ -6,6 +6,8 @@
   - Tray context menu hide show/hide all windows if only 1 window exists for simple menu
   - Fixed error when theme file not found
   - Fixed default paths for themes, sounds and logs for none window systems
+  - Immortal tools:
+    - Fixed issue with drop down path navigation on linux with duplicate paths listed
 - **Changed:**
   - Update better-sqlite3 8.1.0 to 8.2.0
   - Replace font-list with native queryLocalFonts

@@ -686,6 +686,7 @@
             nodeDiskInfo.getDiskInfo().then((drives) => {
                 var paths = [];
                 var found = false;
+                var added = {};
                 var c = '', pt, d, dl, pl, cl;
                 if (drives.length > 0) {
                     for (d = 0, dl = drives.length; d < dl; d++) {
@@ -695,29 +696,41 @@
                         c = '';
                         for (pt = 0, pl = sd.length; pt < pl; pt++) {
                             c = path.join(c, sd[pt], path.sep);
+                            if (added[c]) continue;
                             if (c.toLowerCase() === parts[0].toLowerCase() + path.sep) {
                                 found = true;
                                 if (pt === 0)
-                                    paths.push({ drive: true, path: c, name: sd[pt], count: pt, open: parts.length === 1 });
+                                    paths.push({ drive: true, path: c, name: sd[pt] || path.sep, count: pt, open: parts.length === 1 });
                                 else if (sd[pt].length > 0)
                                     paths.push({ path: c, name: sd[pt], count: pt, open: parts.length === 1 });
                             }
                             else if (pt === 0)
-                                paths.push({ drive: true, path: c, name: sd[pt], count: pt });
+                                paths.push({ drive: true, path: c, name: sd[pt] || path.sep, count: pt });
                             else if (sd[pt].length > 0)
                                 paths.push({ path: c, name: sd[pt], count: pt });
+                            added[c] = 1;
                         }
                     }
                 }
                 c = found ? c = path.join(parts[0], path.sep) : '';
                 for (pt = found ? 1 : 0, pl = parts.length; pt < pl; pt++) {
                     c = path.join(c, parts[pt], path.sep);
+                    if (added[c]) {
+                        if (pt === pl - 1)
+                            paths.forEach((p, index) => {
+                                if (p.path === c)
+                                    paths[index].open = true;
+                            })
+                        continue;
+                    }
                     if (pt === pl - 1)
                         paths.push({ path: c, name: parts[pt], count: pt, open: true });
                     else
                         paths.push({ path: c, name: parts[pt], count: pt });
+                    added[c] = 1;
                 }
                 for (d = 0, dl = dirs.length; d < dl; d++) {
+                    if (added[dirs[d].path] || added[dirs[d].path + path.sep]) continue;
                     paths.push({ path: dirs[d].path, name: dirs[d].name, count: pt });
                 }
 
@@ -934,8 +947,8 @@
         }
 
         function getTimestamp(date) {
-            if(typeof date === 'number') return date;
-            return Math.floor(date.getTime()/1000);
+            if (typeof date === 'number') return date;
+            return Math.floor(date.getTime() / 1000);
         }
 
         function renderFile(data, type, full) {
