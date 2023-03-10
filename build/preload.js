@@ -39,8 +39,10 @@ window.loadTheme = (theme, force) => {
     var el = document.getElementById('theme');
     if (!el) return;
     theme = parseTemplate(theme) + '.css';
-    if (!isFileSync(theme))
+    if (!isFileSync(theme)) {
+        const path = require('path');
         theme = parseTemplate(path.join('{themes}', 'default')) + '.css';
+    }
     if (el.getAttribute('href') !== theme || force)
         el.setAttribute('href', theme);
 }
