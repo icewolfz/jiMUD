@@ -346,9 +346,9 @@ export let SettingList: any[] = [
     ['escapeChar', 0, 0, '\\', 1],
     ['enableVerbatim', 0, 1, true],
     ['verbatimChar', 0, 0, '`'],
-    ['soundPath', 0, 0, '{data}\\sounds'],
-    ['logPath', 0, 0, '{data}\\logs'],
-    ['theme', 0, 0, '{themes}\\default'],
+    ['soundPath', 0, 0, path.join('{data}', 'sounds')],
+    ['logPath', 0, 0, path.join('{data}', 'logs')],
+    ['theme', 0, 0, path.join('{themes}', 'default')],
     ['gamepads', 0, 1, false],
     ['buttons.connect', 0, 1, true],
     ['buttons.characters', 0, 1, true],
@@ -1881,9 +1881,9 @@ export class Settings {
             case 'escapeChar': return '\\';
             case 'enableVerbatim': return true;
             case 'verbatimChar': return '`';
-            case 'soundPath': return '{data}\\sounds';
-            case 'logPath': return '{data}\\logs';
-            case 'theme': return '{themes}\\default';
+            case 'soundPath': return  path.join('{data}', 'sounds');
+            case 'logPath': return  path.join('{data}', 'logs');
+            case 'theme': return  path.join('{data}', 'default');
             case 'gamepads': return false;
             case 'buttons.connect': return true;
             case 'buttons.characters': return true;
