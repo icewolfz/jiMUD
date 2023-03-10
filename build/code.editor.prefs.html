@@ -85,7 +85,6 @@
         const { ipcRenderer, shell } = require('electron');
         const path = require('path');
         const fs = require('fs-extra');
-        const fontList = require('font-list');
 
         var _settings;
         if (window.module) module = window.module;
@@ -104,27 +103,30 @@
                 $('.win32').css('display', 'block');
             else
                 $('.win32').css('display', 'none');
-            fontList.getFonts()
-                .then(fonts => {
-                    var fl = fonts.length;
-                    var f = 0;
-                    var ops = [];
-                    //fonts.sort((a, b) => a.localeCompare(b));
-                    for (f = 0; f < fl; f++) {
-                        ops.push(`<option style="font-family: ${fonts[f].replace(/"/g, '\'')}" value="${fonts[f].replace(/"/g, '\'')}">${fonts[f].replace(/"/g, '')}</option>`);
-                    }
-                    ops = ops.join('');
-                    $('#font-system').append(ops);
-                    $('#raw-font-system').append(ops);
-                    $('#preview-font-system').append(ops);
-                    $('#editorOptions-fontFamily').selectpicker('refresh');
-                    $('#virtualOptions-rawFontFamily').selectpicker('refresh');
-                    $('#virtualOptions-previewFontFamily').selectpicker('refresh');
-                    $('#designOptions-previewFontFamily').selectpicker('refresh');
-                })
-                .catch(err => {
-                    ipcRenderer.send('error', err);
+
+            queryLocalFonts().then(data => {
+                let fams = {};
+                let dl = data.length;
+                var ops = [];
+                data.map(font => {
+                    if (fams[font.family]) return;
+                    var el = font.family.replace(/"/g, '\'');
+                    if (el.indexOf(' ') !== -1)
+                        el = `'${el}'`;
+                    ops.push('<option style="font-family: ', el, '" value="', el, '">', el, '</option>');
+                    fams[font.family] = 1;
                 });
+                $('#font-system').append(ops);
+                $('#raw-font-system').append(ops);
+                $('#preview-font-system').append(ops);
+                $('#editorOptions-fontFamily').selectpicker('refresh');
+                $('#virtualOptions-rawFontFamily').selectpicker('refresh');
+                $('#virtualOptions-previewFontFamily').selectpicker('refresh');
+                $('#designOptions-previewFontFamily').selectpicker('refresh');
+            }).catch(err => {
+                ipcRenderer.send('error', err);
+            });
+
 
             $('#editorOptions-fontFamily').change(() => {
                 $('#editorOptions-font-sample').css('font-family', $('#editorOptions-fontFamily').val());

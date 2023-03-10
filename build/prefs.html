@@ -134,7 +134,6 @@
         const RGBColor = require('rgbcolor');
         const path = require('path');
         const fs = require('fs');
-        const fontList = require('font-list');
         var currentColors;
         var globalColors;
         var archiver, archive;
@@ -284,42 +283,44 @@
                 $('.global').css('display', 'none');
                 $('.notGlobal').css('display', '');
             }
-            fontList.getFonts()
-                .then(fonts => {
-                    loading++;
-                    var fl = fonts.length;
-                    var f = 0;
-                    var ops = [];
-                    var el;
-                    //fonts.sort((a, b) => a.localeCompare(b));
-                    for (f = 0; f < fl; f++) {
-                        el = fonts[f].replace(/"/g, '\'');
-                        ops.push('<option style="font-family: ', el, '" value="', el, '">', el, '</option>');
-                    }
-                    ops = ops.join('');
-                    $('#font-system').append(ops);
-                    $('#cmdfont-system').append(ops);
-                    $('#chat-font-system').append(ops);
 
-                    el = $('#font');
-                    el.selectpicker('refresh');
-                    el.val(getSettingValue('font'));
-                    el.selectpicker('render');
-                    el.change();
+            queryLocalFonts().then(data => {
+                loading++;
+                let fams = {};
+                let dl = data.length;
+                var ops = [];
+                data.map(font => {
+                    if (fams[font.family]) return;
+                    var el = font.family.replace(/"/g, '\'');
+                    if (el.indexOf(' ') !== -1)
+                        el = `'${el}'`;
+                    ops.push('<option style="font-family: ', el, '" value="', el, '">', el, '</option>');
+                    fams[font.family] = 1;
+                });
+                ops = ops.join('');
+                $('#font-system').append(ops);
+                $('#cmdfont-system').append(ops);
+                $('#chat-font-system').append(ops);
 
-                    el = $('#cmdfont');
-                    el.selectpicker('refresh');
-                    el.val(getSettingValue('cmdfont'));
-                    el.selectpicker('render');
-                    el.change();
+                el = $('#font');
+                el.selectpicker('refresh');
+                el.val(getSettingValue('font'));
+                el.selectpicker('render');
+                el.change();
 
-                    el = $('#chat-font');
-                    el.selectpicker('refresh');
-                    el.val(getSettingValue('chat.font'));
-                    el.selectpicker('render');
-                    el.change();
-                    loading--;
-                })
+                el = $('#cmdfont');
+                el.selectpicker('refresh');
+                el.val(getSettingValue('cmdfont'));
+                el.selectpicker('render');
+                el.change();
+
+                el = $('#chat-font');
+                el.selectpicker('refresh');
+                el.val(getSettingValue('chat.font'));
+                el.selectpicker('render');
+                el.change();
+                loading--;
+            })
                 .catch(err => {
                     window.error(err);
                 });
@@ -3169,7 +3170,7 @@
                         <label class="control-label">
                             <input type="checkbox" id="ignoreInputLeadingWhitespace" /> Ignore leading whitespace
                         </label>
-                    </div>                      
+                    </div>
                     <div class="col-sm-12 form-group" style="margin:0;padding:0">
                         <div class="col-sm-6 form-group">
                             <label class="control-label">
@@ -3219,7 +3220,7 @@
                                 <input type="checkbox" id="echo-4"> Commands
                             </label>
                         </div>
-                    </div>                  
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="advanced">
                     <div class="col-sm-6 form-group global">

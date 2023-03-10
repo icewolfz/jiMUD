@@ -8,6 +8,7 @@
   - Fixed default paths for themes, sounds and logs for none window systems
 - **Changed:**
   - Update better-sqlite3 8.1.0 to 8.2.0
+  - Replace font-list with native queryLocalFonts
 
 ## 1.0.0 2023-03-05
 
