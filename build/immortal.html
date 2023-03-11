@@ -724,9 +724,9 @@
                         continue;
                     }
                     if (pt === pl - 1)
-                        paths.push({ path: c, name: parts[pt], count: pt, open: true });
+                        paths.push({ path: c, name: parts[pt] || path.sep, count: pt, open: true });
                     else
-                        paths.push({ path: c, name: parts[pt], count: pt });
+                        paths.push({ path: c, name: parts[pt] || path.sep, count: pt });
                     added[c] = 1;
                 }
                 for (d = 0, dl = dirs.length; d < dl; d++) {
@@ -1976,7 +1976,7 @@
                 e.preventDefault();
                 e.cancelBubble = true;
                 var p = $(e.target).data('path');
-                if (options.syncFolders) {
+                if (p && options.syncFolders) {
                     if (p.startsWith(options.local) && _remote[path.basename(p)] && (path.basename(options.remote) === path.basename(options.local) || options.remote === '/'))
                         _ied.getDir(options.remote + '/' + path.basename(p), true);
                     else if (path.basename(path.dirname(options.remote)).length === 0 && path.dirname(options.local) === p)
