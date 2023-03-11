@@ -702,12 +702,12 @@
                                 if (pt === 0)
                                     paths.push({ drive: true, path: c, name: sd[pt] || path.sep, count: pt, open: parts.length === 1 });
                                 else if (sd[pt].length > 0)
-                                    paths.push({ path: c, name: sd[pt], count: pt, open: parts.length === 1 });
+                                    paths.push({ path: c, name: sd[pt] || path.sep, count: pt, open: parts.length === 1 });
                             }
                             else if (pt === 0)
                                 paths.push({ drive: true, path: c, name: sd[pt] || path.sep, count: pt });
                             else if (sd[pt].length > 0)
-                                paths.push({ path: c, name: sd[pt], count: pt });
+                                paths.push({ path: c, name: sd[pt] || path.sep, count: pt });
                             added[c] = 1;
                         }
                     }
