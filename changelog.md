@@ -10,6 +10,7 @@
     - Fixed issue with drop down path navigation on linux with duplicate paths listed
 - **Changed:**
   - Update better-sqlite3 8.1.0 to 8.2.0
+  - Update fswin 3.23.119 to 3.23.311
   - Replace font-list with native queryLocalFonts
 
 ## 1.0.0 2023-03-05
