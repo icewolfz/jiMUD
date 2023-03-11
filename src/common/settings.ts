@@ -1883,7 +1883,7 @@ export class Settings {
             case 'verbatimChar': return '`';
             case 'soundPath': return  path.join('{data}', 'sounds');
             case 'logPath': return  path.join('{data}', 'logs');
-            case 'theme': return  path.join('{data}', 'default');
+            case 'theme': return  path.join('{themes}', 'default');
             case 'gamepads': return false;
             case 'buttons.connect': return true;
             case 'buttons.characters': return true;
