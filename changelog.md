@@ -8,6 +8,7 @@
   - Fixed default paths for themes, sounds and logs for none window systems
   - Immortal tools:
     - Fixed issue with drop down path navigation on linux with duplicate paths listed
+  - Code editor: Fix toggle word wrap
 - **Changed:**
   - Update better-sqlite3 8.1.0 to 8.2.0
   - Update fswin 3.23.119 to 3.23.311
