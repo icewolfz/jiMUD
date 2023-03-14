@@ -2,6 +2,9 @@
 
 ## 1.0.2
 
+- **Fixed:**
+  - Fix auto update progress dialog not updating title or progress state
+
 ## 1.0.1 2023-03-14
 
 - **Fixed:**

@@ -3219,7 +3219,7 @@ async function allWindowsClosed() {
 //#region Auto updates
 function createUpdater(window) {
     const autoUpdater = require('electron-updater').autoUpdater;
-    autoUpdater.on('downloafd-progress', progressObj => {
+    autoUpdater.on('download-progress', progressObj => {
         window.setProgressBar(progressObj.percent / 100);
         const progress = progressMap.get(window);
         if (progress)
@@ -5382,7 +5382,7 @@ function openProgress(parent, title, modal) {
             stateMap.delete(window);
             progressMap.delete(parent);
         });
-        window.webContents.send(title);
+        window.webContents.send('progress', 'title', title);
         progressMap.set(parent, window);
     }
     return window;
