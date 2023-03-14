@@ -1,13 +1,14 @@
 # Changelog
 
-## 1.0.1
+## 1.0.1 2023-03-14
 
 - **Fixed:**
   - Tray context menu hide show/hide all windows if only 1 window exists for simple menu
   - Fixed error when theme file not found
-  - Fixed default paths for themes, sounds and logs for none window systems
+  - Fixed default paths for themes, sounds and logs for non window systems
   - Immortal tools:
     - Fixed issue with drop down path navigation on linux with duplicate paths listed
+    - Display / as root name instead of a blank entry on linux
   - Code editor:
     - Fix toggle word wrap
     - Fix spell checker snippet insert not adjusting old marker lines
