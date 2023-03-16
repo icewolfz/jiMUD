@@ -4,6 +4,9 @@
 
 - **Fixed:**
   - Fix auto update progress dialog not updating title or progress state
+- **Changed:**
+  - Update electron 21.4.2 to 21.4.3
+  - Update mathjs 11.6.0 to 11.7.0
 
 ## 1.0.1 2023-03-14
 
