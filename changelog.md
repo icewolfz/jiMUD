@@ -7,6 +7,7 @@
 - **Changed:**
   - Update electron 21.4.2 to 21.4.3
   - Update mathjs 11.6.0 to 11.7.0
+  - Update fs-extra 11.1.0 to 11.1.1
 
 ## 1.0.1 2023-03-14
 
