@@ -251,7 +251,7 @@ function displayConsoleHelp() {
     console.log('-nt=[id], --new-tab=[id]                   Open a new tab and load a character, similar to --character but will not replace current active connection if it exist');
     console.log('-el=[file], --error-log=[file]             Set a custom error log path');
     console.log('-cr, --crash-reporting                     Enable crash reporting to local folder');
-    console.log('-crp=[path], --crash-reporting-path=[path] Path where crash reprting data is saved');
+    console.log('-crp=[path], --crash-reporting-path=[path] Path where crash reporting data is saved');
 }
 
 //id, data, file, title, icon
