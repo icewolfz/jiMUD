@@ -158,9 +158,9 @@
             //find _standaloneKeybindingService to remove some keybindings to avoid internal vs external
             found = Object.keys(editor).filter(i => editor[i] && editor[i].addDynamicKeybinding);
             if(found.length) {
-                editor[found[0]].addDynamicKeybinding(`-actions.findWithSelection`, undefined, () => { });
-                editor[found[0]].addDynamicKeybinding(`-actions.find`, undefined, () => { });
-                editor[found[0]].addDynamicKeybinding(`-editor.action.startFindReplaceAction`, undefined, () => { });            
+                editor[found[0]].addDynamicKeybinding(`-actions.findWithSelection`, 0, () => { });
+                editor[found[0]].addDynamicKeybinding(`-actions.find`, 0, () => { });
+                editor[found[0]].addDynamicKeybinding(`-editor.action.startFindReplaceAction`, 0, () => { });            
             }
         }
 
