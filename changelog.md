@@ -12,7 +12,7 @@
   - Update mathjs 11.6.0 to 11.8.0
   - Update fs-extra 11.1.0 to 11.1.1
   - Update better-sqlite3 8.1.0 to 8.3.0
-  - Update monaco-editor 0.36.1 to 0.37.1
+  - Update monaco-editor 0.36.1 to 0.38.0
 
 ## 1.0.1 2023-03-14
 
