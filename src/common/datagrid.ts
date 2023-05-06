@@ -501,13 +501,19 @@ export class DataGrid extends EventEmitter {
                     this.addNewRow();
                 }
             });
-            if (this.$selected.length > 0) {
+            if (this.$rows.length > 0) {
                 temp.push({
                     label: 'Edit',
                     click: () => {
-                        this.beginEditRow(this.$selected[0]);
+                        let eRow = (<HTMLElement>(e.currentTarget || e.target || e.srcElement)).parentElement;
+                        if (this.$editor && this.$editor.el !== eRow && !this.clearEditor())
+                            return;
+                        //var sIdx = +eRow.dataset.row;
+                        this.beginEditRow([...eRow.parentElement.children].indexOf(eRow));
                     }
                 });
+            }
+            if (this.$selected.length > 0) {
                 temp.push({ type: 'separator' });
                 temp.push({
                     label: 'Cut',
@@ -1149,7 +1155,7 @@ export class DataGrid extends EventEmitter {
         const dataIndex = +cEl.dataset.dataIndex;
         const parent = +cEl.dataset.parent;
         if (parent === -1)
-            this.beginEdit(this.$sortedRows.indexOf(dataIndex));
+            this.beginEdit(dataIndex);
         else {
             const child = +cEl.dataset.child;
             this.beginEditChild(dataIndex, child);
