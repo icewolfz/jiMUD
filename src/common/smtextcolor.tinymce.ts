@@ -29,7 +29,6 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
 
     let _lastButton;
 
-
     interface Cell<T> {
         get: () => T;
         set: (value: T) => void;
@@ -51,6 +50,9 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
             set
         };
     };
+
+    let _forecolor = Cell(fallbackColor);
+    let _backcolor = Cell(fallbackColor);
 
     const getCurrentColor = (editor, format: ColorFormat) => {
         let color: string | undefined;
@@ -150,8 +152,10 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
     };
 
     this.setColor = function (name, color) {
-        if (_lastButton)
+        if (_lastButton) {
             setIconColor(_lastButton, name === 'forecolor' ? 'smforecolor' : name, color);
+            (name === 'forecolor' ? _forecolor : _backcolor).set(color); 
+        }
     }
 
     const registerTextColorButton = (editor, name: string, format: ColorFormat, tooltip: string, lastColor) => {
@@ -214,8 +218,8 @@ tinymce.PluginManager.add('smtextcolor', function (editor, url) {
     };
 
     registerCommands(editor);
-    registerTextColorButton(editor, 'smforecolor', 'forecolor', 'Text color', Cell(fallbackColor));
-    registerTextColorButton(editor, 'smbackcolor', 'hilitecolor', 'Background color', Cell(fallbackColor));
+    registerTextColorButton(editor, 'smforecolor', 'forecolor', 'Text color', _forecolor);
+    registerTextColorButton(editor, 'smbackcolor', 'hilitecolor', 'Background color', _backcolor);
 
     registerTextColorMenuItem(editor, 'smforecolor', 'forecolor', 'Text color');
     registerTextColorMenuItem(editor, 'smbackcolor', 'hilitecolor', 'Background color');
