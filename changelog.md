@@ -8,7 +8,9 @@
     - Fix datagrid edit context item
     - Make edit context item edit item clicked on instead of first selected item
   - Fix skill window drop down filter not correctly including all item on first load
-  - Code editor: Fix remote browse dialog file type filter drop down
+  - Code editor:
+    - Fix remote browse dialog file type filter drop down
+    - Fix textbox context menus not working in editor only mode
   - Advanced editor: Fix not correctly storing last color when using advanced dialog
 - **Changed:**
   - Update electron 21.4.2 to 21.4.3

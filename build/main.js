@@ -597,6 +597,7 @@ function createWindow(options) {
         options.menubar.enabled = false;
     }
     idMap.set(window, options.id);
+    addInputContext(window, getSetting('spellchecking'));
     return options.id;
 }
 
@@ -3848,6 +3849,7 @@ function newEditorWindow(caller, files) {
         else
             window.setOverlayIcon(path.join(__dirname, '../assets/icons/png/codeol.png'), 'Code editor');
     });
+    addInputContext(window, getSetting('spellchecking'));
     return window;
 }
 //#region Execute scripts in window/view
