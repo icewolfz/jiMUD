@@ -2631,6 +2631,16 @@
         }
 
         function setTitle(title, lag) {
+            if(!window.opener)
+            {
+                ipcRenderer.send('error', "Immortal tools lost parent window.");
+                return;
+            }
+            if(!window.opener.client)
+            {
+                ipcRenderer.send('error', "Immortal tools lost client access.");
+                return;
+            }            
             if (title && title.length > 0)
                 document.title = 'Immortal tools - ' + title + (window.opener.client.port === 1035 ? ' - Development' : '');
             else
