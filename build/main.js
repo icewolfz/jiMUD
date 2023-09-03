@@ -1964,6 +1964,7 @@ ipcMain.on('dock-client', (event, id, options) => {
     const oldIdx = windows[oldWindowId].clients.indexOf(id);
     windows[oldWindowId].clients.splice(oldIdx, 1);
     oldWindow.webContents.send('removed-client', id);
+    setClientWindowsParent(id, window, oldWindow);
     //all views removed so close the window
     if (windows[oldWindowId].clients.length === 0)
         oldWindow.close();
@@ -1971,7 +1972,7 @@ ipcMain.on('dock-client', (event, id, options) => {
     if (options && typeof options.index !== 'undefined' && options.index !== -1 && options.index < windows[windowId].clients.length)
         windows[windowId].clients.splice(options.index, 0, id);
     else
-        windows[windowId].clients.push(id);
+        windows[windowId].clients.push(id);    
     clients[id].parent = window;
     clients[id].parent.addBrowserView(clients[id].view);
     if (windowId === focusedWindow)
@@ -1980,8 +1981,7 @@ ipcMain.on('dock-client', (event, id, options) => {
         clients[windows[windowId].current].view.webContents.send('deactivated');
     windows[windowId].current = id;
     clients[id].view.webContents.send('activated', true);
-    window.setTopBrowserView(clients[id].view);
-    setClientWindowsParent(id, window, oldWindow);
+    window.setTopBrowserView(clients[id].view);    
     if (options)
         window.webContents.send('new-client', { id: id, index: options.index });
     else
@@ -2567,6 +2567,7 @@ function closeClientWindows(id) {
 }
 
 function setClientWindowsParent(id, parent, oldParent) {
+    return;
     //no windows so just bail
     if (clients[id].windows.length === 0) return;
     const wl = clients[id].windows.length;
