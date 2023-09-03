@@ -14,11 +14,11 @@
   - Advanced editor: Fix not correctly storing last color when using advanced dialog
 - **Changed:**
   - Update electron 21.4.2 to 21.4.3
-  - Update mathjs 11.6.0 to 11.10.0
+  - Update mathjs 11.6.0 to 11.10.1
   - Update fs-extra 11.1.0 to 11.1.1
-  - Update better-sqlite3 8.1.0 to 8.5.2
+  - Update better-sqlite3 8.1.0 to 8.6.0
   - Update monaco-editor 0.36.1 to 0.41.0
-  - Update @electron/remote 2.0.9 to 2.0.10
+  - Update @electron/remote 2.0.9 to 2.0.11
   - Update electron-updater 5.3.0 to 6.1.1
 
 ## 1.0.1 2023-03-14
