@@ -1972,7 +1972,7 @@ ipcMain.on('dock-client', (event, id, options) => {
     if (options && typeof options.index !== 'undefined' && options.index !== -1 && options.index < windows[windowId].clients.length)
         windows[windowId].clients.splice(options.index, 0, id);
     else
-        windows[windowId].clients.push(id);    
+        windows[windowId].clients.push(id);
     clients[id].parent = window;
     clients[id].parent.addBrowserView(clients[id].view);
     if (windowId === focusedWindow)
@@ -1981,7 +1981,7 @@ ipcMain.on('dock-client', (event, id, options) => {
         clients[windows[windowId].current].view.webContents.send('deactivated');
     windows[windowId].current = id;
     clients[id].view.webContents.send('activated', true);
-    window.setTopBrowserView(clients[id].view);    
+    window.setTopBrowserView(clients[id].view);
     if (options)
         window.webContents.send('new-client', { id: id, index: options.index });
     else
@@ -2295,7 +2295,20 @@ ipcMain.on('get-client-parent-id', (event, id) => {
         event.returnValue = getWindowId(clients[id].parent);
     else
         event.returnValue = -1;
-})
+});
+
+ipcMain.on('set-client-bounds', (event, id, bounds) => {
+    if (!id || !clients[id] || !bounds) return;
+    clients[id].view.setBounds(bounds);
+});
+
+ipcMain.on('get-window-content-bounds', (event, id) => {
+    if (windows[id])
+        event.returnValue = windows[id].window.getContentBounds();
+    else        
+        event.returnValue = BrowserWindow.fromWebContents(event.sender).getContentBounds();
+});
+
 
 //bounds, id, data, file
 function createClient(options) {

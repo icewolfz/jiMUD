@@ -17,7 +17,7 @@
   - Update mathjs 11.6.0 to 11.11.0
   - Update fs-extra 11.1.0 to 11.1.1
   - Update better-sqlite3 8.1.0 to 8.6.0
-  - Update monaco-editor 0.36.1 to 0.41.0
+  - Update monaco-editor 0.36.1 to 0.43.0
   - Update @electron/remote 2.0.9 to 2.0.11
   - Update electron-updater 5.3.0 to 6.1.4
 
