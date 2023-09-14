@@ -66,7 +66,7 @@
     "electron-rebuild": "^3.2.9",
     "eslint": "^8.49.0",
     "eslint-plugin-html": "^7.1.0",
-    "sass": "^1.66.1",
+    "sass": "^1.67.0",
     "terser": "^5.19.4"
   },
   "build": {
