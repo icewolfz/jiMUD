@@ -975,7 +975,7 @@ export class Client extends EventEmitter {
                     this.error(err.code + ': ' + msg.join(', '));
                 else
                     this.error(msg.join(', '));
-                if (err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET')
+                if (err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT')
                     this.close();
                 else
                     this.emit('reconnect');
@@ -1324,7 +1324,7 @@ export class Client extends EventEmitter {
             fs.writeFileSync(window.getGlobal('errorLog'), `${new Date().toLocaleString()}\n${msg}\n`, { flag: 'a' });
         }
 
-        if (err === 'Error: ECONNRESET - read ECONNRESET.' && this.telnet.connected)
+        if ((err === 'Error: ECONNRESET - read ECONNRESET.' || msg.startsWith('Error: ETIMEDOUT')) && this.telnet.connected)
             this.close();
         //else
         //this.emit('reconnect');
