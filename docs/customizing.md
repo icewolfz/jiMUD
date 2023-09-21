@@ -4,6 +4,7 @@ When loading the client will look for and load files in jiMUD's data directory:
 
 - `%APPDATA%\jiMUD` on Windows
 - `$XDG_CONFIG_HOME/jiMUD` or `~/.config/jiMUD` on Linux
+- `~/snap/jimud/VERSION/.config/jiMUD` on Linux using snap build
 - `~/Library/Application Support/jiMUD` on macOS
 
 ## Themes
