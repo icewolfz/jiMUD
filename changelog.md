@@ -13,6 +13,7 @@
     - Fix textbox context menus not working in editor only mode
   - Advanced editor: Fix not correctly storing last color when using advanced dialog
   - Prevent connection timeouts from staying connected
+  - Do not update client when active tab is clicked
 - **Changed:**
   - Update electron 21.4.2 to 21.4.3
   - Update mathjs 11.6.0 to 11.11.0
