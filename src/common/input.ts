@@ -1370,7 +1370,15 @@ export class Input extends EventEmitter {
                 else
                     throw new Error('Too many arguments for clientname');
                 return;
-            }
+            },
+            prompt: (args, math, scope) => {
+                if (args.length > 3)
+                    throw new Error('Too many arguments');
+                if (args.length === 0)
+                    return window.prompt();
+                args = args.map(a => a.compile().evaluate(scope).toString());
+                return window.prompt(...args);
+            },
         };
         for (let fun in functions) {
             if (!functions.hasOwnProperty(fun) || typeof functions[fun] !== 'function') {
@@ -5810,6 +5818,35 @@ export class Input extends EventEmitter {
                     this.client.saveOptions();
                 }
                 return null;
+            case 'prompt':
+            case 'pr':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
+                if (args.length === 0 || args.length > 4)
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'pr\x1b[0;-11;-12mompt variable \x1b[3mmessage defaultValue mask\x1b[0;-11;-12m');
+                else {
+                    i = args.shift();
+                    if (i.match(/^\{.*\}$/g))
+                        i = i.substr(1, i.length - 2);
+                    i = this.parseInline(i);
+                    if (!isValidIdentifier(i))
+                        throw new Error("Invalid variable name");                        
+                    args = args.map(a => this.parseInline(this.stripQuotes(a)))
+                    if(args.length === 3 && args[2] && args[2].toLowerCase() === 'true')
+                        args[2] = true;
+                    args = window.prompt(...args);
+                    if (args?.match(/^\s*?[-|+]?\d+\s*?$/))
+                        this.client.variables[i] = parseInt(args, 10);
+                    else if (args?.match(/^\s*?[-|+]?\d+\.\d+\s*?$/))
+                        this.client.variables[i] = parseFloat(args);
+                    else if (args === "true")
+                        this.client.variables[i] = true;
+                    else if (args === "false")
+                        this.client.variables[i] = false;
+                    else
+                        this.client.variables[i] = args;
+                }
+                return null;
         }
         if (fun.match(/^[-|+]?\d+$/)) {
             if ((this.client.getOption('echo') & 4) === 4)
@@ -8106,6 +8143,14 @@ export class Input extends EventEmitter {
                 else
                     throw new Error('Too many arguments for clientname');
                 return null;
+            case 'prompt':
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
+                if (args.length === 0)
+                    return window.prompt() || '';
+                if (args.length > 3)
+                    throw new Error('Too many arguments');
+                args = args.map(a => this.stripQuotes(a));
+                return window.prompt(...args) || '';
         }
         return null;
     }

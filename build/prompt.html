@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/main.css" rel="stylesheet" type="text/css" />
+    <title></title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 1em;
+            border: 1px solid black;
+            box-shadow: 3px 3px 5px #535353;
+        }
+
+        button {
+            float: right;
+            margin-left: 10px;
+        }
+
+        label,
+        input {
+            margin-bottom: 10px;
+            width: 100%;
+            display: block;
+        }
+
+        label {
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
+
+        .dialog-footer {
+            bottom: 1px;
+            left: 1px;
+            right: 1px;
+        }
+    </style>
+    <script type="text/javascript">
+        var _mask;
+        var _value;
+
+        function setValue(value, mask) {
+            _mask = mask;
+            if (_mask && typeof _mask === 'string' && _mask.length) {
+                _value = value;
+                document.getElementById('val').value = _mask.repeat(_value.length);
+                document.getElementById('val').addEventListener("keydown", event => {
+                    let selectionStart = event.target.selectionStart;
+                    let selectionEnd = event.target.selectionEnd;
+                    if (event.key === "Backspace" || event.key === "Delete") {
+                        selectionStart = selectionStart - 1 <= 0 ? 0 : selectionStart - 1;
+                        _value = _value.slice(0, selectionStart) + _value.slice(selectionStart + 1);
+                        return;
+                    }
+                    else if (event.key.length > 1)
+                        return;
+                    else if (selectionStart >= _value.length) {
+                        _value += event.key;
+                        selectionStart++;
+                        event.preventDefault();
+                    }
+                    else {
+                        _value = _value.substring(0, selectionStart) + event.key + _value.substring(selectionEnd);
+                        selectionStart++;
+                        event.preventDefault();
+                    }
+                    event.target.value = _mask.repeat(_value.length);
+                    event.target.selectionStart = selectionStart;
+                    event.target.selectionEnd = selectionStart;
+
+                });
+            }
+            else {
+                if (_mask === true || _mask === 1)
+                    document.getElementById('val').type = 'password';
+                document.getElementById('val').value = value;
+            }
+        }
+        function setPrompt(prompt) {
+            if (prompt) {
+                document.getElementById('prompt').innerHTML = prompt;
+                document.getElementById('prompt').style.display = '';
+            }
+            else {
+                document.getElementById('prompt').innerHTML = '';
+                document.getElementById('prompt').style.display = 'none';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('ok').addEventListener('click', () => {
+                if (_mask && typeof _mask === 'string' && _mask.length)
+                    require('electron').ipcRenderer.send('prompt-response', _value);
+                else
+                    require('electron').ipcRenderer.send('prompt-response', document.getElementById('val').value);
+                window.close();
+            });
+        });
+
+        window.addEventListener('keydown', (event) => {
+            if (event.which == 27)
+                window.close()
+            else if (event.which == 13) {
+                if (_mask && typeof _mask === 'string' && _mask.length)
+                    require('electron').ipcRenderer.send('prompt-response', _value);
+                else
+                    require('electron').ipcRenderer.send('prompt-response', document.getElementById('val').value);
+                window.close();
+            }
+        });        
+    </script>
+</head>
+
+<body>
+    <div class="dialog-body">
+        <label for="val" id="prompt"></label>
+        <input class="form-control" id="val" autofocus />
+    </div>
+    <div class="dialog-footer">
+        <button class="btn btn-default" onclick="window.close()">Cancel</button>
+        <button id="ok" class="btn btn-primary">Ok</button>
+    </div>
+</body>
+
+</html>

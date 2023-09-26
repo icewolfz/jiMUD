@@ -633,7 +633,8 @@ function createDialog(options) {
         y: options.bounds.y,
         width: options.bounds.width || 500,
         height: options.bounds.height || 560,
-        movable: options.modal ? false : true,
+        movable: options.modal ? false : options.movable,
+        alwaysOnTop: options.alwaysOnTop || false,
         minimizable: false,
         maximizable: false,
         skipTaskbar: true,
@@ -642,6 +643,7 @@ function createDialog(options) {
         title: options.title || 'jiMUD',
         icon: options.icon || path.join(__dirname, '../assets/icons/png/64x64.png'),
         backgroundColor: options.backgroundColor || '#000',
+        frame: options.hasOwnProperty('frame') ? options.frame : true,
         webPreferences: {
             nodeIntegration: true,
             webviewTag: false,
@@ -693,11 +695,14 @@ function createDialog(options) {
 
     window.removeMenu();
     // and load the index.html of the app.
-    window.loadURL(URL.format({
-        pathname: options.url || path.join(__dirname, 'blank.html'),
-        protocol: 'file:',
-        slashes: true
-    }));
+    if (options.rawUrl)
+        window.loadURL(options.rawUrl);
+    else
+        window.loadURL(URL.format({
+            pathname: options.url || path.join(__dirname, 'blank.html'),
+            protocol: 'file:',
+            slashes: true
+        }));
 
     window.once('ready-to-show', () => {
         if (options.show)
@@ -2305,7 +2310,7 @@ ipcMain.on('set-client-bounds', (event, id, bounds) => {
 ipcMain.on('get-window-content-bounds', (event, id) => {
     if (windows[id])
         event.returnValue = windows[id].window.getContentBounds();
-    else        
+    else
         event.returnValue = BrowserWindow.fromWebContents(event.sender).getContentBounds();
 });
 
@@ -6036,3 +6041,38 @@ function onContentsLoaded(contents) {
             resolve();
     })
 }
+
+/**
+ * Prompt dialog
+ * 
+ * Adds a dialog to simulate window.prompt dialog
+ */
+ipcMain.on('prompt', (event, options) => {
+    var promptResponse;
+    var promptResponseEvent = (event, arg) => promptResponse = (arg === '' ? null : arg)
+    options.val = options.val || '';
+    let height = 120;
+    if ((options.prompt && options.prompt.length) || (options.title && options.title.length))
+        height = 148;
+    var promptWindow = createDialog({
+        show: true,
+        parent: BrowserWindow.fromWebContents(event.sender),
+        url: path.join(__dirname, 'prompt.html'),
+        title: options.title || options.prompt,
+        bounds: { width: options.width || 350, height: options.height || height },
+        modal: true,
+        backgroundColor: options.background || '#fff',
+        frame: false
+    });
+    promptWindow.on('closed', function () {
+        event.returnValue = promptResponse;
+        promptWindow = null;
+        ipcMain.removeListener('prompt-response', promptResponseEvent);
+    });
+    promptWindow.once('ready-to-show', () => {
+        executeScript(`setValue('${options.val}',${options.mask && typeof options.mask === 'string' ? ('\'' + options.mask + '\'') : options.mask});
+        setPrompt(${(options.prompt || options.title) ? '\'' + (options.prompt || options.title) + '\'' : 0});
+        document.title = '${options.title || options.prompt || ''}';`, promptWindow);
+    });
+    ipcMain.on('prompt-response', promptResponseEvent)
+});

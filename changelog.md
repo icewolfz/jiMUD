@@ -2,6 +2,10 @@
 
 ## 1.0.2
 
+- **New:**
+  - Add a working javascript prompt() function
+  - Add [%prompt(*prompt*, *defaultValue*, *mask*)](docs/functions.md#miscellaneous) Display input prompt
+  - Add [#PROMPT](docs/commands/PROMPT.md) Displays a prompt dialog to enter text and store results in variable
 - **Fixed:**
   - Fix auto update progress dialog not updating title or progress state
   - Datagrid: 

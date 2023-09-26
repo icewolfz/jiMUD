@@ -24,6 +24,12 @@ window.debug = (message) => ipcRenderer.send('debug', message);
 window.addContext = func => ipcRenderer.addListener('context-menu', func);
 window.removeContext = func => ipcRenderer.removeListener('context-menu', func);
 
+window.prompt = function (prompt, val, mask) {
+    if(typeof prompt === 'object')
+        return ipcRenderer.sendSync('prompt', prompt);
+    return ipcRenderer.sendSync('prompt', { prompt: prompt, val: val, mask: mask});
+}
+
 dialog = {
     showOpenDialog: (options) => ipcRenderer.invoke('show-dialog', 'showOpenDialog', options),
     showSaveDialog: (options) => ipcRenderer.invoke('show-dialog', 'showSaveDialog', options),

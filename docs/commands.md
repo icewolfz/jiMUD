@@ -273,7 +273,15 @@ Display text to the screen, and the display text will not fire triggers
 >Does nothing, but will expand arguments
 
 <u>#NOT</u>IFY title message *{icon}*
->display a notification popup with no sound, use [client.notify](scripting.md#basic-function-list) to turn off silent option or #playsound
+>Display a notification popup with no sound, use [client.notify](scripting.md#basic-function-list) to turn off silent option or #playsound
+
+[<u>#PR</u>OMPT](commands/prompt.md) variable *message defaultValue mask*
+>Displays a prompt dialog to enter text and store results in variable
+  - `variable` Variable name to store returned result
+  - `prompt` Optional prompt message to display, if '' or null will not be displayed
+  - `defaultValue` Default value to set input value to
+  - `mask` true to use default masking or a character to use as a mask, *Only the first letter is used when supplying a custom mask if more then one letter*
+>**Warning** This is a blocking command and may cause the client to appear frozen until input has been returned from the dialog
 
 <u>#SE</u>ND file *prefix suffix*
 >Send file to mud line by line pre-pending and appending supplied prefix and suffix to each line as if sent from command input
