@@ -320,6 +320,7 @@ Controls what is captured into the chat window
   - `Empty` Create a character with an empty map
 - `Enable Notifications` Enable notifications, effects [#notify](commands.md#Miscellaneous) and [client.notify](scripting.md)
 - `Enable crash reporting` Enable crash reporting, will save mini dump files to local by default to {data}\Crashpad **Requires restart** <span style="font-size:0.8em;background-color: #555;border-radius: 4px;padding: 0px 4px">*Global preference*</span>
+- `Parse commands` Enable parsing of commands from command line or sendBackground/sendCommand scripting functions
 
 ## Advanced > Backup
 
