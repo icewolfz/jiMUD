@@ -8,6 +8,10 @@
   - Add [#PROMPT](docs/commands/PROMPT.md) Displays a prompt dialog to enter text and store results in variable
   - Preferences:
     - `Parse commands` Enable parsing of commands from command line or sendBackground/sendCommand scripting functions
+  - Advanced editor:
+    - Add paste as text option to ignore all formatting
+    - Add paste, paste formatted, and paste as text toolbar buttons
+    - Give paste formatted its own icon
 - **Fixed:**
   - Fix auto update progress dialog not updating title or progress state
   - Datagrid: 
@@ -17,7 +21,10 @@
   - Code editor:
     - Fix remote browse dialog file type filter drop down
     - Fix textbox context menus not working in editor only mode
-  - Advanced editor: Fix not correctly storing last color when using advanced dialog
+  - Advanced editor:
+    - Fix not correctly storing last color when using advanced dialog
+    - Fix paste formatted not saving newlines
+    - Fix paste white space being stripped
   - Prevent connection timeouts from staying connected
   - Do not update client when active tab is clicked
 - **Changed:**
