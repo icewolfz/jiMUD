@@ -8072,7 +8072,7 @@
         fs.closeSync(fd);
     }
 
-    function openRemote(remoteFile) {
+    async function openRemote(remoteFile) {
         var p;
         if (p = findEditor('remote:' + remoteFile)) {
             manager.switchToPanel(p);
@@ -8159,7 +8159,7 @@
         }
     }
 
-    function openFiles(files, exists, dock) {
+    async function openFiles(files, exists, dock) {
         if (files.length === 0) return;
         var panels = [];
         for (var f = 0, fl = files.length; f < fl; f++) {
@@ -8287,7 +8287,7 @@
         doUpdate(4);
     }
 
-    function buildRecent() {
+    async function buildRecent() {
         var menu = [];
         var r = options.recent.length;
         while (r--) {
