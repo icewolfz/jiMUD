@@ -920,7 +920,7 @@ export class Display extends EventEmitter {
             clearTimeout(this.wResizeTimeout);
             this.wResizeTimeout = setTimeout(() => {
                 if (this.split) this.split.dirty = true;
-                this.doUpdate(UpdateType.update);
+                this.doUpdate(UpdateType.calculateLines | UpdateType.update);
             }, 250);
         };
         window.addEventListener('mousemove', this._wMove.bind(this));
@@ -992,7 +992,7 @@ export class Display extends EventEmitter {
                     this.update();
                     this.$resizeObserverCache = { width: entries[0].contentRect.width, height: entries[0].contentRect.height };
                     if (this.split) this.split.dirty = true;
-                    this.doUpdate(UpdateType.view);
+                    this.doUpdate(UpdateType.calculateLines | UpdateType.view);
                     this.emit('resize');
                 }
             }, 250);

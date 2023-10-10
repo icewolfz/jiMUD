@@ -28,6 +28,7 @@
   - Prevent connection timeouts from staying connected
   - Do not update client when active tab is clicked
   - Fix scroll corner font alignment issues for split scroll icon
+  - Recalculate word wrap on resize sooner to reduce flickering
 - **Changed:**
   - Update electron 21.4.2 to 27.0.0
   - Update mathjs 11.6.0 to 11.11.1
