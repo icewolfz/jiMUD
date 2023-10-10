@@ -492,6 +492,7 @@
         var _windows = {};
         let _closeWindow = false;
         let _chat;
+        let _resizeTimeout = 0;
         //#endregion
         //#region window events
         window.addEventListener('keydown', (event) => {
@@ -2099,7 +2100,8 @@
             });
             window.addEventListener('resize', function () {
                 //client.UpdateWindow();
-                doUpdate(384 | 1024 | 2048);
+                clearTimeout(_resizeTimeout);
+                _resizeTimeout = setTimeout(() => doUpdate(384 | 1024 | 2048), 250);
             });
             window.addEventListener('dragstart', (e) => {
                 if (e.dataTransfer.types && e.dataTransfer.types.indexOf('jimud/tab') !== -1) {

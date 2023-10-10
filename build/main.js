@@ -2479,10 +2479,10 @@ function createClient(options) {
         });
     }
 
-    view.setAutoResize({
-        width: true,
-        height: true
-    })
+    //view.setAutoResize({
+        //width: true,
+        //height: true
+    //})
     if (options.data && options.data.state) {
         view.setBounds(options.data.state.bounds);
         if (global.debug)

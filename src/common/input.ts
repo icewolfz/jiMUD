@@ -148,7 +148,7 @@ export class Input extends EventEmitter {
     private _LastTrigger = null;
     private _scrollLock: boolean = false;
     private _gag: number = 0;
-    private _gagID: NodeJS.Timer[] = [];
+    private _gagID: NodeJS.Timeout[] = [];
     private _gags: any[] = [];
     private _stack = [];
     private _vStack = [];
@@ -159,7 +159,7 @@ export class Input extends EventEmitter {
     private _MacroCache = {};
     private _loops: number[] = [];
     private _pathQueue = [];
-    private _pathTimeout: NodeJS.Timer = null;
+    private _pathTimeout: NodeJS.Timeout = null;
     private _pathPaused: boolean = false;
 
     public client: Client = null;

@@ -134,7 +134,7 @@
             //find _codeEditorService to do custom code editor opening
             if (!editor._oldOpenCodeEditor) {
                 found = Object.keys(editor).filter(i => editor[i] && editor[i].openCodeEditor);
-                if(found.length) {
+                if (found.length) {
                     editor._oldOpenCodeEditor = editor[found[0]].openCodeEditor;
                     editor[found[0]].openCodeEditor = (input, source, sideBySide) => {
                         if (!input || !input.resource)
@@ -157,10 +157,10 @@
             }
             //find _standaloneKeybindingService to remove some keybindings to avoid internal vs external
             found = Object.keys(editor).filter(i => editor[i] && editor[i].addDynamicKeybinding);
-            if(found.length) {
+            if (found.length) {
                 editor[found[0]].addDynamicKeybinding(`-actions.findWithSelection`, 0, () => { });
                 editor[found[0]].addDynamicKeybinding(`-actions.find`, 0, () => { });
-                editor[found[0]].addDynamicKeybinding(`-editor.action.startFindReplaceAction`, 0, () => { });            
+                editor[found[0]].addDynamicKeybinding(`-editor.action.startFindReplaceAction`, 0, () => { });
             }
         }
 
@@ -424,14 +424,8 @@
                 rulers: [80],
                 contextmenu: false,
                 theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme') : 'lpcTheme'),
-                model: null,
+                model: null
             })];
-            window.$dNavs = [
-                monaco.editor.createDiffNavigator(window.$dEditors[0], {
-                    followsCaret: true, // resets the navigator state when the user selects something in the editor
-                    ignoreCharChanges: true // jump from line to line
-                })
-            ];
             initEditor(window.$dEditors[0], 1);
             monaco.editor.onDidChangeMarkers(buildProblems);
             _ready = true;
@@ -2514,7 +2508,6 @@
             followsCaret: true, // resets the navigator state when the user selects something in the editor
             ignoreCharChanges: true // jump from line to line
         });
-        window.$dNavs.splice(idx, 0, nav);
         doUpdate(128);
     });
     manager.on('destroy-pane', (idx) => {
@@ -2522,8 +2515,6 @@
         window.$editors.splice(idx, 1);
         window.$dEditors[idx].dispose();
         window.$dEditors.splice(idx, 1);
-        window.$dNavs[idx].dispose();
-        window.$dNavs.splice(idx, 1);
         if (idx === 0)
             window.$editor = window.$editors[0];
         doUpdate(128);
@@ -3099,7 +3090,7 @@
             showProblems();
         menubar.updateItem('view|output', { checked: options.output && options.outputTab === 0 });
         menubar.updateItem('view|problems', { checked: options.output && options.outputTab === 1 });
-        if(_windows && _windows['help.html'] && _windows['help.html'].loadOptions)
+        if (_windows && _windows['help.html'] && _windows['help.html'].loadOptions)
             _windows['help.html'].loadOptions();
         doUpdate(4);
     }
@@ -4036,16 +4027,68 @@
         if (!manager.active && !manager.active.editor && manager.active.editor.type !== 1)
             return;
         var idx = manager.panes.indexOf(manager.active.dock);
-        if (idx !== -1)
-            window.$dNavs[idx].next();
+        if (idx !== -1) {
+            const dEdit = window.$dEditors[0];
+            const current = dEdit.getPosition();
+            const changes = window.$dEditors[0].getLineChanges();
+            for (var c = 0, cl = changes.length; c < cl; c++) {
+                if (changes[c].modifiedStartLineNumber > current.lineNumber) {
+                    dEdit.setPosition({ column: 0, lineNumber: changes[c].modifiedStartLineNumber })
+                    //dEdit.revealLine(changes[c].modifiedStartLineNumber);
+                    dEdit.revealRange({
+                        endColumn: 1,
+                        endLineNumber: changes[c].modifiedEndLineNumber,
+                        startColumn: 1,
+                        startLineNumber: changes[c].modifiedStartLineNumber
+                    });
+                    break;
+                }
+            }
+            if (changes.length > 0) {
+                dEdit.setPosition({ column: 0, lineNumber: changes[changes.length - 1].modifiedStartLineNumber })
+                //dEdit.revealLine(changes[c].modifiedStartLineNumber);
+                dEdit.revealRange({
+                    endColumn: 1,
+                    endLineNumber: changes[changes.length - 1].modifiedEndLineNumber,
+                    startColumn: 1,
+                    startLineNumber: changes[changes.length - 1].modifiedStartLineNumber
+                });
+            }
+        }
     }
 
     function gotoPrevChange() {
         if (!manager.active && !manager.active.editor && manager.active.editor.type !== 1)
             return;
         var idx = manager.panes.indexOf(manager.active.dock);
-        if (idx !== -1)
-            window.$dNavs[idx].previous();
+        if (idx !== -1) {
+            const dEdit = window.$dEditors[0];
+            const current = dEdit.getPosition();
+            const changes = window.$dEditors[0].getLineChanges();
+            for (var c = changes.length - 1; c >= 0; c--) {
+                if (changes[c].modifiedStartLineNumber < current.lineNumber) {
+                    dEdit.setPosition({ column: 0, lineNumber: changes[c].modifiedStartLineNumber })
+                    //dEdit.revealLine(changes[c].modifiedStartLineNumber);
+                    dEdit.revealRange({
+                        endColumn: 1,
+                        endLineNumber: changes[c].modifiedEndLineNumber,
+                        startColumn: 1,
+                        startLineNumber: changes[c].modifiedStartLineNumber
+                    });
+                    break;
+                }
+            }
+            if (changes.length > 0) {
+                dEdit.setPosition({ column: 0, lineNumber: changes[0].modifiedStartLineNumber })
+                //dEdit.revealLine(changes[c].modifiedStartLineNumber);
+                dEdit.revealRange({
+                    endColumn: 1,
+                    endLineNumber: changes[0].modifiedEndLineNumber,
+                    startColumn: 1,
+                    startLineNumber: changes[0].modifiedStartLineNumber
+                });
+            }
+        }
     }
 
     $(document).ready(() => {

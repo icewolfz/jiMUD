@@ -932,7 +932,7 @@ export class AreaDesigner extends EditorBase {
     private _os;
     private _wMove;
     private _wUp;
-    private _scrollTimer: NodeJS.Timer;
+    private _scrollTimer: NodeJS.Timeout;
     private $reSizer;
     private $reSizerCache;
     private $observer: MutationObserver;

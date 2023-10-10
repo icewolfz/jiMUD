@@ -51,7 +51,7 @@ export class TabStrip extends EventEmitter {
 
     private _updating: UpdateType = UpdateType.none;
     private _scroll: number = 0;
-    private _scrollTimer: NodeJS.Timer;
+    private _scrollTimer: NodeJS.Timeout;
     private $addCache = [];
     private $measure: HTMLElement;
     private _showAddButton: boolean = true;

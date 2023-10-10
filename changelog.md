@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.2
+## 1.1.0
 
 - **New:**
   - Add a working javascript prompt() function
@@ -29,13 +29,15 @@
   - Do not update client when active tab is clicked
   - Fix scroll corner font alignment issues for split scroll icon
 - **Changed:**
-  - Update electron 21.4.2 to 21.4.3
-  - Update mathjs 11.6.0 to 11.11.0
+  - Update electron 21.4.2 to 27.0.0
+  - Update mathjs 11.6.0 to 11.11.1
   - Update fs-extra 11.1.0 to 11.1.1
-  - Update better-sqlite3 8.1.0 to 8.6.0
-  - Update monaco-editor 0.36.1 to 0.43.0
-  - Update @electron/remote 2.0.9 to 2.0.11
+  - Update better-sqlite3 8.1.0 to 8.7.0
+  - Update monaco-editor 0.36.1 to 0.44.0
+  - Update @electron/remote 2.0.9 to 2.0.12
   - Update electron-updater 5.3.0 to 6.1.4
+  - Update markdown-it 13.0.1 to 13.0.2
+  - Adjust window resize systems to only adjust clients and send data after all resizing has stopped
 
 ## 1.0.1 2023-03-14
 

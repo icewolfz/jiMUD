@@ -304,7 +304,7 @@
                 ipcRenderer.send('new-client');
             });
             tabstrip.on('tab-click', e => {
-                if(e.tab.client === _current) return;
+                if (e.tab.client === _current) return;
                 ipcRenderer.send('switch-client', e.tab.client, getClientOffset());
                 _current = e.tab.client;
             });
@@ -540,16 +540,14 @@
                 //tabstrip.focused = false;
             })
             //some type of bug on linux with double clicked titles not resizing correctly, hack around that
-            if (process.platform === 'linux') {
-                var _resize = 0;
-                window.addEventListener('resize', e => {
-                    if (_resize) return;
-                    _resize = setTimeout(() => {
-                        ipcRenderer.send('update-client', _current, getClientOffset());
-                        _resize = 0;
-                    });
-                });
-            }
+            //if (process.platform === 'linux') {
+            //Do custom resizing for all platforms and only resize after all are done to reduce tearing and performance issues
+            var _resize;
+            window.addEventListener('resize', e => {
+                clearTimeout(_resize);
+                _resize = setTimeout(() => ipcRenderer.send('update-client', _current, getClientOffset()), 100);
+            });
+            //}
             _loading++;
             if (_load.length) {
                 setClients(_load);

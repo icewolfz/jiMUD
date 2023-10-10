@@ -49,9 +49,9 @@ export class Client extends EventEmitter {
         alarms: null,
         alarmPatterns: []
     };
-    private _alarm: NodeJS.Timer;
+    private _alarm: NodeJS.Timeout;
     private _profileSaves = {}; //store profile to save/change flag
-    private _profileSaveTimeout: NodeJS.Timer = null; //track timeout
+    private _profileSaveTimeout: NodeJS.Timeout = null; //track timeout
     private _optionCache = {};
 
     public MSP: MSP;

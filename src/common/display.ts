@@ -28,7 +28,7 @@ interface Overlays {
 
 interface Selection extends OverlayRange {
     drag: boolean;
-    scrollTimer: NodeJS.Timer;
+    scrollTimer: NodeJS.Timeout;
 }
 
 interface Range {
@@ -121,6 +121,8 @@ export class Display extends EventEmitter {
     private _el: HTMLElement;
     private _os;
     private _padding = [0, 0, 0, 0];
+    private wResizeTimeout: NodeJS.Timeout;
+    private resizeTimeout: NodeJS.Timeout;
 
     private _overlay: HTMLElement;
     private _view: HTMLElement;
@@ -859,7 +861,7 @@ export class Display extends EventEmitter {
                         x = 0;
                         this._currentSelection.end.x = 0;
                     }
-                    if(this._lines.length === 0) {
+                    if (this._lines.length === 0) {
                         this._currentSelection.end.lineID = null;
                         this._currentSelection.end.lineOffset = null;
                     }
@@ -915,10 +917,12 @@ export class Display extends EventEmitter {
             }
         };
         this._wResize = (e) => {
-            if (this.split) this.split.dirty = true;
-            this.doUpdate(UpdateType.update);
+            clearTimeout(this.wResizeTimeout);
+            this.wResizeTimeout = setTimeout(() => {
+                if (this.split) this.split.dirty = true;
+                this.doUpdate(UpdateType.update);
+            }, 250);
         };
-
         window.addEventListener('mousemove', this._wMove.bind(this));
 
         window.addEventListener('mouseup', this._wUp.bind(this));
@@ -982,13 +986,16 @@ export class Display extends EventEmitter {
             if (entries.length === 0) return;
             if (!entries[0].contentRect || entries[0].contentRect.width === 0 || entries[0].contentRect.height === 0)
                 return;
-            if (!this.$resizeObserverCache || this.$resizeObserverCache.width !== entries[0].contentRect.width || this.$resizeObserverCache.height !== entries[0].contentRect.height) {
-                this.update();
-                this.$resizeObserverCache = { width: entries[0].contentRect.width, height: entries[0].contentRect.height };
-                if (this.split) this.split.dirty = true;
-                this.doUpdate(UpdateType.view);
-                this.emit('resize');
-            }
+            clearTimeout(this.resizeTimeout);
+            this.resizeTimeout = setTimeout(() => {
+                if (!this.$resizeObserverCache || this.$resizeObserverCache.width !== entries[0].contentRect.width || this.$resizeObserverCache.height !== entries[0].contentRect.height) {
+                    this.update();
+                    this.$resizeObserverCache = { width: entries[0].contentRect.width, height: entries[0].contentRect.height };
+                    if (this.split) this.split.dirty = true;
+                    this.doUpdate(UpdateType.view);
+                    this.emit('resize');
+                }
+            }, 250);
         });
         this.$resizeObserver.observe(this._el);
         this.$observer = new MutationObserver((mutationsList) => {
@@ -2403,7 +2410,7 @@ export class Display extends EventEmitter {
         let e = sel.end.x;
         let sL = sel.start.y;
         let eL = sel.end.y;
-        if((sL === -1 && eL === -1) || sL === null || eL === null)
+        if ((sL === -1 && eL === -1) || sL === null || eL === null)
             return '';
         if (sL < 0)
             sL = 0;
@@ -3399,7 +3406,7 @@ export class Display extends EventEmitter {
         indent = (indent || 0) * charWidth;
         const wrapLines: WrapLine[] = [];
         const lineID = this._model.getLineID(line);
-        const rnd = function(num) { return Math.round(num * 100000) / 100000.0 };
+        const rnd = function (num) { return Math.round(num * 100000) / 100000.0 };
         //const rnd = function (num) { return +num.toFixed(6); };
         width = rnd(width);
         let currentLine: WrapLine = {
@@ -3579,7 +3586,7 @@ export class Display extends EventEmitter {
                                     }
                                 }
                                 //if (formatEnd === currentOffset && currentFormat.formatType !== FormatType.Normal)
-                                    //formatIdx++;
+                                //formatIdx++;
                                 currentLine.formatWidths[formatIdx] = currentWidth;
                                 breakOffset = -1;
                                 currentLine.endFormat = formatIdx;

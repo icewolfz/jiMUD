@@ -264,7 +264,7 @@ export class VirtualEditor extends EditorBase {
     private _os;
     private _wMove;
     private _wUp;
-    private _scrollTimer: NodeJS.Timer;
+    private _scrollTimer: NodeJS.Timeout;
     private $resizeObserver;
     private $resizeObserverCache;
     private $observer: MutationObserver;
