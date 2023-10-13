@@ -218,8 +218,8 @@
             var codes = [];
             var t = 0;
             var tl = text.length;
-            var bold = 0;
-            var clr = 0;
+            var bold = true;
+            var clr = 'WHITE';
             var classes = [];
             for (; t < tl; t++) {
                 switch (text[t]) {
@@ -254,11 +254,11 @@
                             stack.push(codes[c]);
                         codes = [];
                         classes = [];
-                        bold = 0;
-                        clr = 0;
+                        bold = false;
+                        clr = 'WHITE';
                         break;
                     case 'BOLD':
-                        bold = 1;
+                        bold = true;
                         break;
                     case '':
                         break;
@@ -278,30 +278,15 @@
                         }
                         else if (_colorCodes[text[t]]) {
                             clr = text[t];
-                            if (bold && !_colorCodes['BOLD%^%^' + text[t]]) {
-                                stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^WHITE'] + '">');
-                                codes.push('</span>');
-                            }
-                            else if (bold) {
-                                stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^' + text[t]] + '">');
-                                codes.push('</span>');
-                                bold = 2;
-                                continue;
-                            }
-                            stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes[text[t]] + '">');
+                            if (bold)
+                                stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + (_colorCodes['BOLD%^%^' + clr] || _colorCodes['BOLD%^%^WHITE']) + '">');
+                            else
+                                stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes[clr] + '">');
                             codes.push('</span>');
-                            bold = 2;
                             continue;
                         }
-                        else if (bold == 1) {
-                            if(clr)
-                            {
-                                stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^' + clr] + '">');
-                                codes.push('</span>');
-                                bold = 2;
-                            }
-                            else
-                                stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^WHITE'] + '">');
+                        else if (bold) {
+                            stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + (_colorCodes['BOLD%^%^' + clr] || _colorCodes['BOLD%^%^WHITE']) + '">');
                             codes.push('</span>');
                         }
                         if (classes.length) {
@@ -1040,12 +1025,12 @@
                     icon: 'pasteformatted',
                     tooltip: 'Paste formatted',
                     onAction: buttonApi => insertFormatted(clipboard.readText('selection') || '')
-                });     
+                });
                 editor.ui.registry.addButton('pasteastext', {
                     icon: 'paste-text',
                     tooltip: 'Paste as text',
                     onAction: buttonApi => tinymce.activeEditor.execCommand('mceInsertContent', false, (clipboard.readText('selection') || '').replace(/(\r\n|\r|\n)/g, '<br/>').replaceAll('  ', '&nbsp;&nbsp;'))
-                });     
+                });
 
                 editor.ui.registry.addToggleButton('overline', {
                     icon: 'overline',
@@ -1214,7 +1199,7 @@
                     });
                     editor.shortcuts.add('ctrl+alt+p', 'Paste as text', () => {
                         tinymce.activeEditor.execCommand('mceInsertContent', false, (clipboard.readText('selection') || '').replace(/(\r\n|\r|\n)/g, '<br/>').replaceAll('  ', '&nbsp;&nbsp;'));
-                    });                    
+                    });
                     editor.on('PastePreProcess', function (e) {
                         if (getOption('enableDebug'))
                             window.opener.client.debug('Advanced Before Editor PastePreProcess: ' + e.content);
