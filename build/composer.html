@@ -248,7 +248,7 @@
                         classes.push('overline');
                         break;
                     case 'FLASH':
-                        if (getOption('flashing'))
+                        if (window.opener.client.getOption('flashing'))
                             classes.push('flash');
                         else
                             classes.push('noflash');
