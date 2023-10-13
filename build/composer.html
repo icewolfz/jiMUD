@@ -25,7 +25,7 @@
         //spell-checker:ignore smtextcolor, rgbcolor, noflash, dblunderline, shadowfore, shadowback, textcolor, cmdfont, editorcontent
         //spell-checker:ignore BOLDOFF ITALICOFF UNDERLINEOFF FLASHOFF INVERSEOFF STRIKEOUTOFF OVERLINEOFF hellip, selectall, strikethrough, nocolor, forecolor, hilitecolor, backcolor, splitbutton, nonbreaking, sendraw, onpostrender, insertdatetime
         /* global tinymce */
-        const { ipcRenderer, webFrame, nativeImage } = require('electron');
+        const { ipcRenderer, webFrame, nativeImage, clipboard } = require('electron');
         const remote = require('@electron/remote');
         const { Menu, MenuItem } = remote;
         const { stripHTML, htmlEncode, invert, parseTemplate, getColors, createColorDialog } = require('./js/library');
@@ -226,7 +226,8 @@
             var codes = [];
             var t = 0;
             var tl = text.length;
-            var bold = false;
+            var bold = 0;
+            var clr = 0;
             var classes = [];
             for (; t < tl; t++) {
                 switch (text[t]) {
@@ -247,7 +248,7 @@
                         classes.push('overline');
                         break;
                     case 'FLASH':
-                        if (window.opener.client.getOption('flashing'))
+                        if (getOption('flashing'))
                             classes.push('flash');
                         else
                             classes.push('noflash');
@@ -261,25 +262,30 @@
                             stack.push(codes[c]);
                         codes = [];
                         classes = [];
+                        bold = 0;
+                        clr = 0;
                         break;
                     case 'BOLD':
-                        bold = true;
+                        bold = 1;
                         break;
                     case '':
                         break;
                     default:
                         if (text[t].startsWith('B_')) {
                             text[t] = text[t].substr(2);
+                            /*
                             if (bold) {
                                 stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^WHITE'] + '">');
                                 codes.push('</span>');
                             }
+                            */
                             stack.push('<span style=border: inherit;text-decoration:inherit;"background-color: #' + _colorCodes[text[t]] + '">');
                             codes.push('</span>');
-                            bold = false;
+                            //bold = 0;
                             continue;
                         }
                         else if (_colorCodes[text[t]]) {
+                            clr = text[t];
                             if (bold && !_colorCodes['BOLD%^%^' + text[t]]) {
                                 stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^WHITE'] + '">');
                                 codes.push('</span>');
@@ -287,14 +293,22 @@
                             else if (bold) {
                                 stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^' + text[t]] + '">');
                                 codes.push('</span>');
+                                bold = 2;
                                 continue;
                             }
                             stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes[text[t]] + '">');
                             codes.push('</span>');
+                            bold = 2;
                             continue;
                         }
-                        else if (bold) {
-                            stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^WHITE'] + '">');
+                        else if (bold == 1) {
+                            if (clr) {
+                                stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^' + clr] + '">');
+                                codes.push('</span>');
+                                bold = 2;
+                            }
+                            else
+                                stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^WHITE'] + '">');
                             codes.push('</span>');
                         }
                         if (classes.length) {
@@ -302,7 +316,7 @@
                             codes.push('</span>');
                             classes = [];
                         }
-                        stack.push(text[t]);
+                        stack.push(text[t].replaceAll(' ', '&nbsp;'));
                         bold = false;
                         break;
                 }
@@ -314,8 +328,7 @@
             for (t = 0, tl = codes.length; t < tl; t++)
                 stack.push(codes[t]);
             //format text
-            tinymce.activeEditor.execCommand('insertHTML', false, stack.join(''));
-
+            tinymce.activeEditor.execCommand('insertHTML', false, stack.join('').replace(/(\r\n|\r|\n)/g, '<br/>'));
         }
 
         function buildHTMLStack(els) {
@@ -734,9 +747,16 @@
                         cMenu.append(new MenuItem({ role: 'paste', icon: path.join(__dirname, '../assets/icons/png/paste.png') }));
                         cMenu.append(new MenuItem({
                             label: 'Paste formatted',
-                            icon: path.join(__dirname, '../assets/icons/png/paste.png'),
+                            icon: path.join(__dirname, '../assets/icons/png/pasteformatted.png'),
                             click: () => {
                                 insertFormatted(clipboard.readText('selection') || '');
+                            }
+                        }));
+                        cMenu.append(new MenuItem({
+                            label: 'Paste as text',
+                            icon: path.join(__dirname, '../assets/icons/png/pastetext.png'),
+                            click: () => {
+                                tinymce.activeEditor.execCommand('mceInsertContent', false, (clipboard.readText('selection') || '').replace(/(\r\n|\r|\n)/g, '<br/>').replaceAll('  ', '&nbsp;&nbsp;'));
                             }
                         }));
                     }
@@ -863,6 +883,7 @@
                 editor.ui.registry.addIcon('dblunderline', '<img src="../assets/icons/png/dblunderline.png" />');
                 editor.ui.registry.addIcon('flash', '<img src="../assets/icons/png/flash.png" />');
                 editor.ui.registry.addIcon('reverse', '<img src="../assets/icons/png/reverse.png" />');
+                editor.ui.registry.addIcon('pasteformatted', '<img src="../assets/icons/png/pasteformatted2.png" />');
 
                 editor.ui.registry.addSplitButton('send', {
                     icon: 'sendraw',
@@ -951,6 +972,16 @@
                     icon: 'open',
                     tooltip: 'Append file...',
                     onAction: appendFile
+                });
+                editor.ui.registry.addButton('pasteformatted', {
+                    icon: 'pasteformatted',
+                    tooltip: 'Paste formatted',
+                    onAction: buttonApi => insertFormatted(clipboard.readText('selection') || '')
+                });
+                editor.ui.registry.addButton('pasteastext', {
+                    icon: 'paste-text',
+                    tooltip: 'Paste as text',
+                    onAction: buttonApi => tinymce.activeEditor.execCommand('mceInsertContent', false, (clipboard.readText('selection') || '').replace(/(\r\n|\r|\n)/g, '<br/>').replaceAll('  ', '&nbsp;&nbsp;'))
                 });
                 editor.ui.registry.addToggleButton('overline', {
                     icon: 'overline',
@@ -1268,7 +1299,7 @@
                 //textcolor_cols: "16",
                 textcolor_rows: '3',
                 textcolor_cols: '8',
-                toolbar: 'send | append | undo redo | smforecolor smbackcolor | italic underline strikethrough overline dblunderline flash reverse | insertdatetime',
+                toolbar: 'send | append | undo redo | paste pasteformatted pasteastext | smforecolor smbackcolor | italic underline strikethrough overline dblunderline flash reverse | insertdatetime',
                 content_css: 'css/editorcontent.css',
                 formats: {
                     bold: { inline: 'strong', exact: true, links: true, remove_similar: true },
@@ -1290,6 +1321,9 @@
                     editor.shortcuts.add('ctrl+shift+p', 'Paste formatted', () => {
                         insertFormatted(clipboard.readText('selection') || '');
                     });
+                    editor.shortcuts.add('ctrl+alt+p', 'Paste as text', () => {
+                        tinymce.activeEditor.execCommand('mceInsertContent', false, (clipboard.readText('selection') || '').replace(/(\r\n|\r|\n)/g, '<br/>').replaceAll('  ', '&nbsp;&nbsp;'));
+                    });
                     editor.on('PastePreProcess', function (e) {
                         if (window.opener.client.getOption('enableDebug'))
                             window.opener.client.debug('Compose Before Editor PastePreProcess: ' + e.content);
@@ -1303,7 +1337,7 @@
                             if (m.index === regex.lastIndex) {
                                 regex.lastIndex++;
                             }
-                            e.content = e.content.substring(0, m.index) + e.content.substring(m.index, regex.lastIndex).replace(/\n/g, '<br>') + e.content.substring(regex.lastIndex);
+                            e.content = e.content.substring(0, m.index) + e.content.substring(m.index, regex.lastIndex).replace(/(\r\n|\r|\n)/g, '<br/>').replaceAll('  ', '&nbsp;&nbsp;') + e.content.substring(regex.lastIndex);
                         }
                         if (window.opener.client.getOption('enableDebug'))
                             window.opener.client.debug('Compose After Editor PastePreProcess: ' + e.content);

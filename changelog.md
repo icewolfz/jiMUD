@@ -25,10 +25,16 @@
     - Fix not correctly storing last color when using advanced dialog
     - Fix paste formatted not saving newlines
     - Fix paste white space being stripped
+    - Improve paste format bold support
   - Prevent connection timeouts from staying connected
   - Do not update client when active tab is clicked
   - Fix scroll corner font alignment issues for split scroll icon
   - Recalculate word wrap on resize sooner to reduce flickering
+  - Compose mail:
+    - Fix not correctly storing last color when using advanced dialog
+    - Fix paste formatted not saving newlines
+    - Fix paste white space being stripped
+    - Improve paste format bold support
 - **Changed:**
   - Update electron 21.4.2 to 27.0.0
   - Update mathjs 11.6.0 to 11.11.2
