@@ -35,6 +35,7 @@
     - Fix paste formatted not saving newlines
     - Fix paste white space being stripped
     - Improve paste format bold support
+    - Fix loading of options setting wrong fonts font and flashing effects
 - **Changed:**
   - Update electron 21.4.2 to 27.0.0
   - Update mathjs 11.6.0 to 11.11.2

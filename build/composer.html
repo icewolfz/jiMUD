@@ -248,7 +248,7 @@
                         classes.push('overline');
                         break;
                     case 'FLASH':
-                        if (window.opener.client.getOption('flashing'))
+                        if (getOption('flashing'))
                             classes.push('flash');
                         else
                             classes.push('noflash');
@@ -481,7 +481,7 @@
             var buffer = [];
             var codes = [];
             var color, d, dl, rgb;
-            if (window.opener.client.getOption('enableDebug'))
+            if (getOption('enableDebug'))
                 window.opener.client.debug('Composer Editor Get Raw HTML: ' + tinymce.activeEditor.getContent({ format: 'raw' }));
             for (d = data.length - 1; d >= 0; d--) {
                 if (!data[d].startsWith('"') && data[d] != 'BR' && data[d] != 'RESET')
@@ -1325,7 +1325,7 @@
                         tinymce.activeEditor.execCommand('mceInsertContent', false, (clipboard.readText('selection') || '').replace(/(\r\n|\r|\n)/g, '<br/>').replaceAll('  ', '&nbsp;&nbsp;'));
                     });
                     editor.on('PastePreProcess', function (e) {
-                        if (window.opener.client.getOption('enableDebug'))
+                        if (getOption('enableDebug'))
                             window.opener.client.debug('Compose Before Editor PastePreProcess: ' + e.content);
                         clearReverse($('.reverse', $(editor.getDoc()).contents()));
                         e.content = e.content.replace(/<\/p>/g, '<br>');
@@ -1339,7 +1339,7 @@
                             }
                             e.content = e.content.substring(0, m.index) + e.content.substring(m.index, regex.lastIndex).replace(/(\r\n|\r|\n)/g, '<br/>').replaceAll('  ', '&nbsp;&nbsp;') + e.content.substring(regex.lastIndex);
                         }
-                        if (window.opener.client.getOption('enableDebug'))
+                        if (getOption('enableDebug'))
                             window.opener.client.debug('Compose After Editor PastePreProcess: ' + e.content);
                     });
                     editor.on('PastePreProcess', function () {
@@ -1392,7 +1392,7 @@
             var c, color, r, g, b, idx, _bold = [], bl;
             _ColorTable = [];
             _colors = {};
-            var ClientColors = window.opener.client.getOption('colors') || [];
+            var ClientColors = getOption('colors') || [];
             color = new rgbcolor(ClientColors[0] || _dColors[0]).toHex().substr(1).toUpperCase();
             _colors[color] = 'BLACK';
             _ColorTable.push(color, 'BLACK');
@@ -1514,14 +1514,23 @@
         }
 
         function loadOptions() {
-            options = window.opener.client.options;
-            $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-size', options.cmdfontSize);
-            $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-family', options.cmdfont + ', monospace');
+            if (!window.opener.client)
+                options = Settings.load(window.getGlobal('settingsFile'));
+            else if (window.opener.client)
+                options = window.opener.client.options;                      
+            $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-size', getOption('cmdfontSize'));
+            $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-family', getOption('cmdfont') + ', monospace');
             if (tinymce.activeEditor.formatter)
-                tinymce.activeEditor.formatter.register('flash', { inline: 'span', 'classes': options.flashing ? 'flash' : 'noflash', links: true, remove_similar: true });
+                tinymce.activeEditor.formatter.register('flash', { inline: 'span', 'classes': getOption('flashing') ? 'flash' : 'noflash', links: true, remove_similar: true });
             else
-                tinymce.activeEditor.settings.formats['flash'] = { inline: 'span', 'classes': options.flashing ? 'flash' : 'noflash', links: true, remove_similar: true };
+                tinymce.activeEditor.settings.formats['flash'] = { inline: 'span', 'classes': getOption('flashing') ? 'flash' : 'noflash', links: true, remove_similar: true };
             loadColors();
+        }
+
+        function getOption(key) {
+            if (!window.opener.client)
+                return options.getValue(key);
+            return window.opener.client.getOption(key);
         }
 
         function openColorDialog(type, color) {
