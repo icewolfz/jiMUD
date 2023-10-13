@@ -60,7 +60,7 @@
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.5.22",
-    "@types/node": "^18.18.4",
+    "@types/node": "^18.18.5",
     "electron": "^27.0.0",
     "electron-builder": "^24.6.4",
     "electron-rebuild": "^3.2.9",
