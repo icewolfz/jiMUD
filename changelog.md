@@ -12,6 +12,7 @@
     - Add paste as text option to ignore all formatting
     - Add paste, paste formatted, and paste as text toolbar buttons
     - Give paste formatted its own icon
+  - Code editor: Toggle word wrap menu item now displays if wrap is on or off
 - **Fixed:**
   - Fix auto update progress dialog not updating title or progress state
   - Datagrid: 

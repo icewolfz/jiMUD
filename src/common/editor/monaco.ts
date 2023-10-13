@@ -1503,8 +1503,17 @@ export class MonacoCodeEditor extends EditorBase {
                 {
                     label: 'Toggle &Word Wrap',
                     accelerator: 'Alt+Z',
+                    type: 'checkbox',
+                    checked: this.$editor && this.$editor.getRawOptions().wordWrap === 'on' ? true : false,
                     click: () => {
-                        this.$editor.updateOptions({ wordWrap: (this.$editor.getRawOptions().wordWrap === 'on' ? 'off' : 'on') });
+                        let wrap = this.$editor.getRawOptions().wordWrap === 'on';
+                        if(this.$dEditor)
+                            this.$dEditor.updateOptions({ wordWrap: ( wrap ? 'off' : 'on') });
+                        else
+                            this.$editor.updateOptions({ wordWrap: (wrap ? 'off' : 'on') });
+                        this.emit('menu-update', 'view|toggle word wrap', { checked: wrap ? false : true });
+                        //if(this.$oEditor)
+                            //this.$oEditor.updateOptions({ wordWrap: (this.$editor.getRawOptions().wordWrap === 'on' ? 'off' : 'on') });
                     }
                 },
                 { type: 'separator' },
