@@ -386,9 +386,9 @@
     function updateUI() {
         var enabled = (manager.active && manager.active.viewer) ? true : false;
         if (enabled)
-            document.title = 'Log viewer - ' + manager.active.tab.innerText;
+            document.title = 'Log viewer - ' + manager.active.tab.innerText + window.opener.childWindowTitle();
         else
-            document.title = 'Log viewer';
+            document.title = 'Log viewer' + window.opener.childWindowTitle();
         $('#btn-close').prop('disabled', !enabled);
         $('#btn-close-all').prop('disabled', !enabled);
         menubar.updateItem('File|Close', { enabled: enabled });

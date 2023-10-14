@@ -201,9 +201,9 @@
 
         function setTitle(title, lag) {
             if (title && title.length > 0)
-                document.title = 'Skills - ' + title+ (window.opener.client.port === 1035 ? ' - Development' : '');
+                document.title = 'Skills - ' + title + window.opener.childWindowTitle(true);
             else
-                document.title = 'Skills'+ (window.opener.client.port === 1035 ? ' - Development' : '');
+                document.title = 'Skills' + window.opener.childWindowTitle(true);
         }
 
         function updateCharacter(e) {
@@ -357,7 +357,9 @@
     <div id="toolbar" class="btn-toolbar" role="toolbar">
         <div class="btn-group" style="float: none;">
             <label for="filter-skills" style="float: left">Display:</label>
-            <select id="filter-skills" class="form-control" title="Filter Skills"><option value="All">All</option></select>
+            <select id="filter-skills" class="form-control" title="Filter Skills">
+                <option value="All">All</option>
+            </select>
         </div>
     </div>
     <div id="body"></div>

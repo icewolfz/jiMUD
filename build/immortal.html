@@ -2642,9 +2642,9 @@
                 return;
             }            
             if (title && title.length > 0)
-                document.title = 'Immortal tools - ' + title + (window.opener.client.port === 1035 ? ' - Development' : '');
+                document.title = 'Immortal tools - ' + title + window.opener.childWindowTitle(true);
             else
-                document.title = 'Immortal tools' + (window.opener.client.port === 1035 ? ' - Development' : '');
+                document.title = 'Immortal tools' + window.opener.childWindowTitle(true);
         }
 
         function updateCharacter(e) {

@@ -3795,6 +3795,15 @@
             win.update(data);
         }
 
+        function childWindowTitle(noName) {
+            if (!noName) {
+                let char = getCharacterName();
+                if (char && char.length)
+                    return ' - ' + char + (client.port === 1035 ? ' - Development' : '');
+            }
+            return (client.port === 1035 ? ' - Development' : '');
+        }
+
         function send(channel, ...args) {
             ipcRenderer.send(channel, ...args);
         }

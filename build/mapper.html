@@ -927,9 +927,9 @@
 
         function setTitle(title, lag) {
             if (title && title.length > 0)
-                document.title = 'Mapper - ' + title + (window.opener.client.port === 1035 ? ' - Development' : '');
+                document.title = 'Mapper - ' + title + window.opener.childWindowTitle(true);
             else
-                document.title = 'Mapper' + (window.opener.client.port === 1035 ? ' - Development' : '');
+                document.title = 'Mapper' + window.opener.childWindowTitle(true);
         }
 
         function optionsLoaded() {

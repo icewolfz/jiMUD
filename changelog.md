@@ -37,6 +37,7 @@
     - Fix paste white space being stripped
     - Improve paste format bold support
     - Fix loading of options setting wrong fonts and flashing effects
+  - Child windows: Improve document titles by including character name/development tags in more places
 - **Changed:**
   - Update electron 21.4.2 to 27.0.0
   - Update mathjs 11.6.0 to 11.11.2

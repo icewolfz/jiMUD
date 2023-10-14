@@ -2792,6 +2792,23 @@
 
     const _windows = {};
 
+    function setTitle(title, lag) {
+        if (title && title.length > 0)
+            title = ' - ' + title;
+        else
+            title = '';
+        if (manager.active && manager.active.editor)
+            document.title = 'Code editor - ' + manager.active.tab.innerText + title + window.opener.childWindowTitle(true);
+        else
+            document.title = 'Code editor' + title + window.opener.childWindowTitle(true);
+    }
+
+    function updateCharacter(e) {
+        if (!window.opener) return;
+        setTitle(window.opener.getCharacterName());
+    }
+
+
     function openAdvancedEditor(text) {
         if (_windows['editor.html'] && !_windows['editor.html'].closed) {
             _windows['editor.html'].show();
@@ -2836,9 +2853,9 @@
     function updateUI() {
         var enabled = (manager.active && manager.active.editor) ? true : false;
         if (enabled)
-            document.title = 'Code editor - ' + manager.active.tab.innerText;
+            document.title = 'Code editor - ' + manager.active.tab.innerText + (window.opener ? window.opener.childWindowTitle() : '');
         else
-            document.title = 'Code editor';
+            document.title = 'Code editor' + (window.opener ? window.opener.childWindowTitle() : '');
         $('#btn-close').prop('disabled', !enabled);
         $('#btn-close-all').prop('disabled', !enabled);
         menubar.updateItem('File|Close', { enabled: enabled });
@@ -4097,6 +4114,10 @@
             window.opener.client.on('received-GMCP', processGMCP);
             window.opener.client.on('connected', clientConnected);
             window.opener.client.on('closed', clientClosed);
+            window.opener._status.on('set-title', setTitle);
+            window.opener.addEventListener('loadCharacter', updateCharacter);
+            window.opener.addEventListener('updateCharacter', updateCharacter);
+            window.opener.addEventListener('resetCharacter', updateCharacter);            
             //#region init IED
             _ied = new IED();
             _ied.prefix = 'editor-';
@@ -4852,6 +4873,10 @@
             window.opener.client.off('received-GMCP', processGMCP);
             window.opener.client.off('connected', clientConnected);
             window.opener.client.off('closed', clientClosed);
+            window.opener._status.off('set-title', setTitle);
+            window.opener.removeEventListener('loadCharacter', updateCharacter);
+            window.opener.removeEventListener('updateCharacter', updateCharacter);
+            window.opener.removeEventListener('resetCharacter', updateCharacter);            
         }
         var keys = Object.keys(_editors);
         var p = keys.length;
@@ -8454,7 +8479,7 @@
         manager.setPanelTooltip(panel.editor.file, panel);
         manager.setPanelTitle(panel.editor.filename, panel);
         if (manager.active && manager.active.editor && manager.active.editor === panel.editor)
-            document.title = 'Code editor - ' + manager.active.tab.innerText;
+            document.title = 'Code editor - ' + manager.active.tab.innerText + (window.opener ? window.opener.childWindowTitle() : '');
         try {
             panel.editor.save();
         }
