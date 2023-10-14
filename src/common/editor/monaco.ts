@@ -1501,7 +1501,7 @@ export class MonacoCodeEditor extends EditorBase {
         else if (menu === 'view')
             return [
                 {
-                    label: 'Toggle &Word Wrap',
+                    label: '&Word Wrap',
                     accelerator: 'Alt+Z',
                     type: 'checkbox',
                     checked: this.$editor && this.$editor.getRawOptions().wordWrap === 'on' ? true : false,
@@ -1511,7 +1511,7 @@ export class MonacoCodeEditor extends EditorBase {
                             this.$dEditor.updateOptions({ wordWrap: ( wrap ? 'off' : 'on') });
                         else
                             this.$editor.updateOptions({ wordWrap: (wrap ? 'off' : 'on') });
-                        this.emit('menu-update', 'view|toggle word wrap', { checked: wrap ? false : true });
+                        this.emit('menu-update', 'view|word wrap', { checked: wrap ? false : true });
                         //if(this.$oEditor)
                             //this.$oEditor.updateOptions({ wordWrap: (this.$editor.getRawOptions().wordWrap === 'on' ? 'off' : 'on') });
                     }
