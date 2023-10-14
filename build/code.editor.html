@@ -2500,14 +2500,11 @@
             rulers: [80],
             contextmenu: false,
             theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme') : 'lpcTheme'),
-            model: null
+            model: null,
+            diffWordWrap: 'on'
         });
         initEditor(editor, 1);
         window.$dEditors.splice(idx, 0, editor);
-        var nav = monaco.editor.createDiffNavigator(editor, {
-            followsCaret: true, // resets the navigator state when the user selects something in the editor
-            ignoreCharChanges: true // jump from line to line
-        });
         doUpdate(128);
     });
     manager.on('destroy-pane', (idx) => {
