@@ -42,6 +42,8 @@
     - Fix loading of options setting wrong fonts and flashing effects
   - Child windows: Improve document titles by including character name/development tags in more places
   - About: Fix open theme folder
+  - Fix connection if dns lookup fails by correctly closing it
+  - Fix on some reconnects not resetting logs, button states, and icons/titles
 - **Changed:**
   - Update electron 21.4.2 to 27.0.0
   - Update mathjs 11.6.0 to 11.11.2

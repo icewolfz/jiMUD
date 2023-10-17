@@ -1782,6 +1782,24 @@
             client.on('reconnect', () => {
                 if (client.errored || client.connected)
                     return;
+                if (_windowState.data.characterId > 0) {
+                    if (!client.disconnectTime)
+                        client.disconnectTime = Date.now();
+                    ipcRenderer.send('update-character-time', { ID: _windowState.data.characterId, LastDisconnected: client.disconnectTime, TotalMilliseconds: client.disconnectTime - (client.connectTime || Date.now()) });
+                }
+                if (client.getOption('buttons.connect')) {
+                    document.getElementById('connect').style.display = '';
+                    document.getElementById('disconnect').style.display = 'none';
+                }
+                autoLoginCounter = 0;
+                ipcRenderer.send('update-menuitems', [
+                    { menu: ['file', 'connect'], options: { enabled: true } },
+                    { menu: ['file', 'disconnect'], options: { enabled: false } }
+                ]);
+                updateTitle();
+                updateIcon(client.port === 1035 ? 3 : 0);
+                _logger.postMessage({ action: 'connected', args: client.connected });
+                _logger.postMessage({ action: 'stop' });
                 switch (client.getOption('onDisconnect')) {
                     case 1: //reconnect
                         autoConnect();
