@@ -13,6 +13,9 @@
     - Add paste, paste formatted, and paste as text toolbar buttons
     - Give paste formatted its own icon
   - Code editor: Toggle word wrap menu item now displays if wrap is on or off
+  - About:
+    - Add support to copy paths to clipboard
+    - Add error log path
 - **Fixed:**
   - Fix auto update progress dialog not updating title or progress state
   - Datagrid: 
@@ -38,6 +41,7 @@
     - Improve paste format bold support
     - Fix loading of options setting wrong fonts and flashing effects
   - Child windows: Improve document titles by including character name/development tags in more places
+  - About: Fix open theme folder
 - **Changed:**
   - Update electron 21.4.2 to 27.0.0
   - Update mathjs 11.6.0 to 11.11.2
