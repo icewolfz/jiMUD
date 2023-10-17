@@ -1780,7 +1780,7 @@
             });
 
             client.on('reconnect', () => {
-                if (client.errored || client.connected)
+                if (client.connected)
                     return;
                 if (_windowState.data.characterId > 0) {
                     if (!client.disconnectTime)
@@ -1800,6 +1800,8 @@
                 updateIcon(client.port === 1035 ? 3 : 0);
                 _logger.postMessage({ action: 'connected', args: client.connected });
                 _logger.postMessage({ action: 'stop' });
+                if (client.errored)
+                    return;                
                 switch (client.getOption('onDisconnect')) {
                     case 1: //reconnect
                         autoConnect();
