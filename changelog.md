@@ -45,7 +45,7 @@
   - Fix connection if dns lookup fails by correctly closing it
   - Fix on some reconnects not resetting logs, button states, and icons/titles
 - **Changed:**
-  - Update electron 21.4.2 to 27.0.0
+  - Update electron 21.4.2 to 27.0.1
   - Update mathjs 11.6.0 to 11.11.2
   - Update fs-extra 11.1.0 to 11.1.1
   - Update better-sqlite3 8.1.0 to 9.0.0
