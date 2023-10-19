@@ -1467,8 +1467,11 @@
         }
 
         function setMap(map) {
-            if (map && map.length)
+            if (map && map.length) {
+                saveRoom();
                 mapper.mapFile = map;
+                mapper.refresh();
+            }
         }
 
         function showProgress(title, cancel) {
