@@ -183,7 +183,7 @@
                 dialog.showOpenDialog({
                     defaultPath: path.dirname($('#editor').val()),
                     filters: process.platform === 'win32' ? [
-                        { name: 'Programs (*.exe, *.com)', extensions: ['exe', 'com', 'com'] },
+                        { name: 'Programs (*.exe, *.com)', extensions: ['exe', 'com'] },
                         { name: 'All files (*.*)', extensions: ['*'] },
                     ]
                         :

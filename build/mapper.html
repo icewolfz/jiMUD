@@ -1474,12 +1474,33 @@
             });
         }
 
-        function setMap(map) {
+        function setMap(map, force) {
             if (map && map.length) {
+                //only set if custom not loaded and not forced
+                if (_custom && !force) return;
                 saveRoom();
                 mapper.mapFile = map;
                 mapper.refresh();
             }
+        }
+
+        function openMap() {
+            const path = require('path');
+            clearButton('export');
+            dialog.showOpenDialog({
+                filters: [
+                    { name: 'Map files (*.map, *.sqlite, *.db)', extensions: ['map', 'sqlite', 'db'] },
+                    { name: 'All files (*.*)', extensions: ['*'] },
+                ],
+                properties: ['openFile', 'promptToCreate'],
+                defaultPath: path.dirname(mapper.mapFile || '')
+            }).then(result => {
+                if (result.filePaths === undefined || result.filePaths.length === 0) {
+                    return;
+                }
+                setMap(result.filePaths[0], true);
+                _custom = true;                
+            });
         }
 
         function showProgress(title, cancel) {
