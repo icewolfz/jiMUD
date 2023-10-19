@@ -48,7 +48,9 @@
   - Fix connection if dns lookup fails by correctly closing it
   - Fix on some reconnects not resetting logs, button states, and icons/titles
   - Character manger: Fix mapper not resetting to default map when loading global as current tab 
-  - Mapper: Only update the loaded map once when options loaded
+  - Mapper:
+    - Only update the loaded map once when options loaded
+    - Save current room changes before switching maps
 - **Changed:**
   - Update electron 21.4.2 to 27.0.1
   - Update mathjs 11.6.0 to 11.11.2

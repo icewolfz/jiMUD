@@ -934,6 +934,7 @@
         }
 
         function optionsLoaded() {
+            saveRoom();
             save(function () {
                 try {
                     const client = window.opener.client;
@@ -964,6 +965,7 @@
             //loaded a custom map so do not reload map file
             if (_custom) return;
             try {
+                saveRoom();
                 mapper.mapFile = window.opener.getMapFile();
             }
             catch (err) {
