@@ -153,6 +153,7 @@
         var _enableDebug = false;
         var $splitterEditor;
         var $roomEditor;
+        var _custom = false;
 
         var menubar = new Menubar([
             {
@@ -936,11 +937,16 @@
             save(function () {
                 try {
                     const client = window.opener.client;
-                    mapper.memorySavePeriod = client.getOption('mapper.memorySavePeriod');
-                    mapper.memory = client.getOption('mapper.memory');
-                    mapper.mapFile = window.opener.getMapFile();
-                    mapper.commandDelay = client.getOption('commandDelay');
-                    mapper.commandDelayCount = client.getOption('commandDelayCount');
+                    const opts = {
+                        memory: client.getOption('mapper.memory'),
+                        memorySavePeriod: client.getOption('mapper.memorySavePeriod'),
+                        commandDelay: client.getOption('commandDelay'),
+                        commandDelayCount: client.getOption('commandDelayCount')
+                    }
+                    //loaded a custom map so do not reload map file
+                    if (!_custom)
+                        opts.mapFile = window.opener.getMapFile();
+                    mapper.updateOptions(ops);
                     importType = client.getOption('mapper.importType');
                     _enableDebug = client.getOption('enableDebug');
                 }
@@ -955,6 +961,8 @@
 
         function updateCharacter(e) {
             setTitle(window.opener.getCharacterName());
+            //loaded a custom map so do not reload map file
+            if (_custom) return;
             try {
                 mapper.mapFile = window.opener.getMapFile();
             }

@@ -2284,7 +2284,7 @@ export class Mapper extends EventEmitter {
     public SendCommands(cmds) {
         let tmp;
         let cnt = this.commandDelayCount;
-        if(cnt < 0) cnt = 1;
+        if (cnt < 0) cnt = 1;
         if (cmds.length > cnt) {
             tmp = cmds.slice(cnt);
             cmds = cmds.slice(0, cnt);
@@ -2728,7 +2728,7 @@ export class Mapper extends EventEmitter {
     public resetMap() {
         this.save(() => {
             this._db.close();
-            if(ipcRenderer.sendSync('trash-item-sync', this.mapFile)) {
+            if (ipcRenderer.sendSync('trash-item-sync', this.mapFile)) {
                 this.initializeDatabase();
             }
             /*
@@ -2742,5 +2742,33 @@ export class Mapper extends EventEmitter {
             });           
             */
         });
+    }
+
+    public updateOptions(options) {
+        var _m = null;
+        var _f = null;
+        if (!options) return;
+        for (let option in options) {
+            if (!Object.prototype.hasOwnProperty.call(options, option))
+                continue;
+            if (option === 'memory')
+                _m = options[option];
+            else if (option === 'mapFile' || option === 'map')
+                _f = options[option];
+            else
+                this[option] = options[option];
+        }
+        //only update if memory or file changed
+        if (_m !== null || _f !== null)
+            this.save(() => {
+                this._db.close();
+                if (_m !== null && _m !== this._memory)
+                    this._memory = _m;
+                if (_f !== null && _f !== this._mapFile)
+                    this._mapFile = _f;
+                this.initializeDatabase();
+            });
+
+        //memory?: boolean, memoryPeriod?: (number | string), map?: string
     }
 }
