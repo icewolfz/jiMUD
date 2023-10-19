@@ -1507,13 +1507,18 @@ export class MonacoCodeEditor extends EditorBase {
                     checked: this.$editor && this.$editor.getRawOptions().wordWrap === 'on' ? true : false,
                     click: () => {
                         let wrap = this.$editor.getRawOptions().wordWrap === 'on';
-                        if(this.$dEditor)
-                            this.$dEditor.updateOptions({ wordWrap: ( wrap ? 'off' : 'on') });
-                        else
+                        if (this.$dEditor) {
+                            this.$dEditor.updateOptions({ wordWrap: (wrap ? 'off' : 'on') });
+                            this.$dEditor.updateOptions({ wordWrapOverride2: (wrap ? 'off' : 'on') });
+                        }
+                        else {
                             this.$editor.updateOptions({ wordWrap: (wrap ? 'off' : 'on') });
+                            this.$editor.updateOptions({ wordWrapOverride2: (wrap ? 'off' : 'on') });
+                        }
                         this.emit('menu-update', 'view|word wrap', { checked: wrap ? false : true });
                         //if(this.$oEditor)
-                            //this.$oEditor.updateOptions({ wordWrap: (this.$editor.getRawOptions().wordWrap === 'on' ? 'off' : 'on') });
+                        //this.$oEditor.updateOptions({ wordWrap: (this.$editor.getRawOptions().wordWrap === 'on' ? 'off' : 'on') });
+                        this.emit('option-changed', 'wordWrap', wrap ? 'off' : 'on');
                     }
                 },
                 { type: 'separator' },

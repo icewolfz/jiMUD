@@ -12,7 +12,9 @@
     - Add paste as text option to ignore all formatting
     - Add paste, paste formatted, and paste as text toolbar buttons
     - Give paste formatted its own icon
-  - Code editor: Toggle word wrap menu item now displays if wrap is on or off
+  - Code editor:
+   - Toggle word wrap menu item now displays if wrap is on or off
+   - Last set editor options are now saved
   - About:
     - Add support to copy paths to clipboard
     - Add error log path
@@ -25,6 +27,7 @@
   - Code editor:
     - Fix remote browse dialog file type filter drop down
     - Fix textbox context menus not working in editor only mode
+    - Fix diff display not supporting word wrap
   - Advanced editor:
     - Fix not correctly storing last color when using advanced dialog
     - Fix paste formatted not saving newlines

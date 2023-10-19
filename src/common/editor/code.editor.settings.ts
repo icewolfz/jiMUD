@@ -79,7 +79,9 @@ export class EditorSettings {
         },
         dropIntoEditor: {
             enabled: false
-        }
+        },
+        wordWrap: 'off',
+        wordWrapOverride2: 'off'
     };
 
     public virtualOptions = {

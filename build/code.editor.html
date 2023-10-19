@@ -2313,6 +2313,7 @@
                                 window.$editors[pane].getContainerDomNode().style.display = '';
                                 manager.active.editor.activate(window.$dEditors[pane]);
                                 window.$dEditors[pane].layout();
+                                window.$dEditors[pane].updateOptions(window.$editors[pane].getRawOptions());
                                 doUpdate(2);
                             },
                             enabled: false
@@ -2341,6 +2342,7 @@
                                     window.$editors[pane].getContainerDomNode().style.display = '';
                                     manager.active.editor.activate(window.$dEditors[pane]);
                                     window.$dEditors[pane].layout();
+                                    window.$dEditors[pane].updateOptions(window.$editors[pane].getRawOptions());
                                     doUpdate(2);
                                 });
                             },
@@ -2500,8 +2502,7 @@
             rulers: [80],
             contextmenu: false,
             theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme') : 'lpcTheme'),
-            model: null,
-            diffWordWrap: 'on'
+            model: null
         });
         initEditor(editor, 1);
         window.$dEditors.splice(idx, 0, editor);
@@ -4481,6 +4482,7 @@
                     window.$editors[dock].getContainerDomNode().style.display = '';
                     manager.active.editor.activate(window.$dEditors[dock]);
                     window.$dEditors[dock].layout();
+                    window.$dEditors[pane].updateOptions(window.$editors[pane].getRawOptions());
                     closeProgressDialog(item.ID);
                     doUpdate(2);
                 }
@@ -9794,11 +9796,17 @@
             });
             p.editor.on('option-changed', (option, value) => {
                 if (_loading) return;
-                if (p.editor.type === 2) {
+                if(p.editor.type === 1) {
+                    var pane = manager.panes.indexOf(p.dock);
+                    if(pane === -1) return;
+                    options.editorOptions = window.$editors[pane].getRawOptions();
+                    saveOptions();
+                }
+                else if (p.editor.type === 2) {
                     options.virtualOptions[option] = value;
                     saveOptions();
                 }
-                if (p.editor.type === 3) {
+                else if (p.editor.type === 3) {
                     options.designOptions[option] = value;
                     saveOptions();
                 }
