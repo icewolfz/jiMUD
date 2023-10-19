@@ -1466,6 +1466,11 @@
             });
         }
 
+        function setMap(map) {
+            if (map && map.length)
+                mapper.mapFile = map;
+        }
+
         function showProgress(title, cancel) {
             menubar.enabled = false;
             window.opener.updateProgress(0);

@@ -3748,6 +3748,17 @@
             return _windowState.data.map;
         }
 
+        function setMapFile(file, char) {
+            if (!_windowState)
+                _windowState = { data: { map: file } };
+            else if (!_windowState.data)
+                _windowState.data = { map: file };
+            else
+                _windowState.data.map = file;
+            if (char && _windowState.data.characterId > 0)
+                ipcRenderer.send('update-character', { ID: _windowState.data.characterId, Map: file }, 0, true);            
+        }
+
         /*
         // eslint-disable-next-line no-unused-vars
         function showMail() {
@@ -4173,7 +4184,7 @@
                 else
                     title += ' from Development';
             }
-            document.title = title;             
+            document.title = title;
         }
 
         function resetConnection() {
