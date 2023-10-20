@@ -1639,7 +1639,8 @@ export class MonacoCodeEditor extends EditorBase {
         this.emit('menu-update', 'edit|formatting|block comment', { enabled: selected });
     }
 
-    public activate(editor) {
+    public activate(editor, state?) {
+        if(state) this.$state = state;
         if (editor.getEditorType() === 'vs.editor.ICodeEditor') {
             this.$editor = editor;
             this.$oEditor = null;
@@ -1661,13 +1662,13 @@ export class MonacoCodeEditor extends EditorBase {
             });
         }
     }
-    public deactivate(editor) {
+    public deactivate(editor, state?) {
         if (editor.getEditorType() === 'vs.editor.ICodeEditor') {
-            this.$state = editor.saveViewState();
+            this.$state = state || editor.saveViewState();
             editor.setModel(null);
         }
         else {
-            this.$state = editor.saveViewState().modified;
+            this.$state = state || editor.saveViewState().modified;
             this.$diffState = editor.saveViewState().original;
             editor.setModel(null);
         }
