@@ -2293,7 +2293,6 @@
                                 window.$dEditors[pane].getModifiedEditor().getContainerDomNode().parentElement.parentElement.style.display = '';
                                 toggleDiffNav(false);
                                 window.$editors[pane].getContainerDomNode().style.display = 'block';
-                                window.$editors[pane].layout();
                                 manager.active.editor.activate(window.$editors[pane]);
                                 doUpdate(2);
                             },
@@ -2311,7 +2310,6 @@
                                 window.$dEditors[pane].getModifiedEditor().getContainerDomNode().parentElement.parentElement.style.display = 'block';
                                 toggleDiffNav(true);
                                 window.$editors[pane].getContainerDomNode().style.display = '';
-                                window.$dEditors[pane].layout();
                                 manager.active.editor.activate(window.$dEditors[pane]);
                                 window.$dEditors[pane].updateOptions(window.$editors[pane].getRawOptions());
                                 doUpdate(2);
@@ -2340,7 +2338,6 @@
                                     window.$dEditors[pane].getModifiedEditor().getContainerDomNode().parentElement.parentElement.style.display = 'block';
                                     toggleDiffNav(true);
                                     window.$editors[pane].getContainerDomNode().style.display = '';
-                                    window.$dEditors[pane].layout();
                                     manager.active.editor.activate(window.$dEditors[pane]);
                                     window.$dEditors[pane].updateOptions(window.$editors[pane].getRawOptions());
                                     doUpdate(2);
@@ -2557,14 +2554,12 @@
                 if (e.panel.editor.diff) {
                     window.$dEditors[pane].getModifiedEditor().getContainerDomNode().parentElement.parentElement.style.display = 'block';
                     window.$editors[pane].getContainerDomNode().style.display = '';
-                    window.$dEditors[pane].layout();
                     e.panel.editor.activate(window.$dEditors[pane]);                    
                     toggleDiffNav(true);
                 }
                 else {
                     window.$editors[pane].getContainerDomNode().style.display = 'block';
                     window.$dEditors[pane].getModifiedEditor().getContainerDomNode().parentElement.parentElement.style.display = '';
-                    window.$editors[pane].layout();
                     var state;
                     if (!e.panel.restored) {
                         state = getViewState(e.panel.editor.file);
@@ -3047,7 +3042,6 @@
                             window.$dEditors[pane].getModifiedEditor().getContainerDomNode().parentElement.parentElement.style.display = '';
                             window.$editors[pane].getContainerDomNode().style.display = 'block';
                             toggleDiffNav(false);
-                            window.$editors[pane].layout();
                             _editors[p].editor.activate(window.$editors[pane]);
                             doUpdate(2);
                         }
@@ -4480,7 +4474,6 @@
                     window.$dEditors[dock].getModifiedEditor().getContainerDomNode().parentElement.parentElement.style.display = 'block';
                     toggleDiffNav(true);
                     window.$editors[dock].getContainerDomNode().style.display = '';
-                    window.$dEditors[dock].layout();
                     manager.active.editor.activate(window.$dEditors[dock]);
                     window.$dEditors[pane].updateOptions(window.$editors[pane].getRawOptions());
                     closeProgressDialog(item.ID);

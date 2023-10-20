@@ -1641,6 +1641,7 @@ export class MonacoCodeEditor extends EditorBase {
 
     public activate(editor, state?) {
         if(state) this.$state = state;
+        editor.layout();
         if (editor.getEditorType() === 'vs.editor.ICodeEditor') {
             this.$editor = editor;
             this.$oEditor = null;
