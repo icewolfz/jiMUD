@@ -18,6 +18,7 @@
   - About:
     - Add support to copy paths to clipboard
     - Add error log path
+  - Mapper: Allow opening of maps directly with options to set them for connection/loaded character
 - **Fixed:**
   - Fix auto update progress dialog not updating title or progress state
   - Datagrid: 

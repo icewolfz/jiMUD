@@ -23,6 +23,9 @@
 
 <body>
     <div id="mapper-toolbar" class="btn-toolbar" role="toolbar">
+        <button id="btn-open" type="button" class="btn btn-default btn-xs" title="Open map..." onclick="openMap()">
+            <i class="fa fa-folder-o"></i>
+        </button>
         <div class="btn-group" role="group">
             <button id="btn-enable" type="button" class="btn btn-default btn-xs" title="Enabled" onclick="toggleEnabled()">
                 <i class="fa fa-map-o"></i>
@@ -135,6 +138,7 @@
         const { PropertyGrid } = require('./js/propertygrid');
         const { Splitter, Orientation } = require('./js/splitter');
         const { EditorType } = require('./js/value.editors');
+        const { parseTemplate } = require('./js/library.js');
         const fs = require('fs');
 
         window.addEventListener('error', (e) => {
@@ -160,6 +164,47 @@
                 label: '&File',
                 id: 'file',
                 submenu: [
+                    {
+                        label: '&Open map...',
+                        click: openMap,
+                        accelerator: 'CmdOrCtrl+O'
+                    },
+                    {
+                        label: 'Open &default map',
+                        id: 'defaultMap',
+                        enabled: false,
+                        click: () => {
+                            clearButton('export');
+                            setMap(window.opener.getMapFile(), true);
+                            _custom = false;//no longer custom so clear flag
+                            updateMenu();
+                        },
+                        accelerator: 'CmdOrCtrl+D'
+                    },
+                    { type: 'separator' },
+                    {
+                        label: 'Set map for character',
+                        id: 'character',
+                        enabled: false,
+                        click: () => {
+                            clearButton('export');
+                            window.opener.setMapFile(mapper.mapFile, true);
+                            _custom = false;//no longer custom so clear flag
+                            updateMenu();
+                        }
+                    },
+                    {
+                        label: 'Set map for connection',
+                        id: 'connection',
+                        enabled: false,
+                        click: () => {
+                            clearButton('export');
+                            window.opener.setMapFile(mapper.mapFile);
+                            _custom = false;//no longer custom so clear flag
+                            updateMenu();
+                        }
+                    },
+                    { type: 'separator' },
                     {
                         label: '&Enabled',
                         type: 'checkbox',
@@ -1501,8 +1546,22 @@
                     return;
                 }
                 setMap(result.filePaths[0], true);
-                _custom = true;                
+                _custom = true;
+                updateMenu();
             });
+        }
+
+        function updateMenu() {
+            var current = window.opener.getMapFile();
+            var charID = window.opener.getCharacterId();
+            menubar.updateItem('file|defaultMap', { enabled: current !== mapper.mapFile });
+            if (charID != -1) {
+                var char = parseTemplate(ipcRenderer.sendSync('get-character', charID, 'Map') || '');
+                menubar.updateItem('file|character', { enabled: char !== mapper.mapFile });
+            }
+            else
+                menubar.updateItem('file|character', { enabled: false });
+            menubar.updateItem('file|connection', { enabled: current !== mapper.mapFile });
         }
 
         function showProgress(title, cancel) {
