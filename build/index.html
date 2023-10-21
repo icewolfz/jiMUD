@@ -459,7 +459,7 @@
         const { shell, clipboard, ipcRenderer, webFrame, nativeImage } = require('electron');
         const remote = require('@electron/remote');
         const { Menu, MenuItem } = remote;
-        const { parseTemplate, setSelectionRange, decrypt, offset } = require('./js/library.js');
+        const { parseTemplate, templatePath, setSelectionRange, decrypt, offset } = require('./js/library.js');
         const { ProfileSaveType } = require('./js/types.js');
         const path = require('path');
         //#endregion
@@ -3750,13 +3750,13 @@
 
         function setMapFile(file, char) {
             if (!_windowState)
-                _windowState = { data: { map: file } };
+                _windowState = { data: { map: parseTemplate(file) } };
             else if (!_windowState.data)
-                _windowState.data = { map: file };
+                _windowState.data = { map: parseTemplate(file) };
             else
-                _windowState.data.map = file;
+                _windowState.data.map = parseTemplate(file);
             if (char && _windowState.data.characterId > 0)
-                ipcRenderer.send('update-character', { ID: _windowState.data.characterId, Map: file }, 0, true);            
+                ipcRenderer.send('update-character', { ID: _windowState.data.characterId, Map: templatePath(file) }, 0, true);            
         }
 
         /*
