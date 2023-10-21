@@ -6,6 +6,7 @@
   - Add a working javascript prompt() function
   - Add [%prompt(*prompt*, *defaultValue*, *mask*)](docs/functions.md#miscellaneous) Display input prompt
   - Add [#PROMPT](docs/commands/PROMPT.md) Displays a prompt dialog to enter text and store results in variable
+  - Add [#SETMAP](docs/commands/SETMAP.md) Set the map file for the current connection and open mapper with optional flag to set to character if using character manager
   - Preferences:
     - `Parse commands` Enable parsing of commands from command line or sendBackground/sendCommand scripting functions
   - Advanced editor:

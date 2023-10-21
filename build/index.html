@@ -3748,15 +3748,20 @@
             return _windowState.data.map;
         }
 
-        function setMapFile(file, char) {
+        function setMapFile(file, char, mapper) {
             if (!_windowState)
                 _windowState = { data: { map: parseTemplate(file) } };
             else if (!_windowState.data)
                 _windowState.data = { map: parseTemplate(file) };
             else
                 _windowState.data.map = parseTemplate(file);
+
+            _backup.mapFile = _windowState.data.map;
+            if (mapper && _windows['mapper.html'])
+                _windows['mapper.html'].setMap(_windowState.data.map);
+
             if (char && _windowState.data.characterId > 0)
-                ipcRenderer.send('update-character', { ID: _windowState.data.characterId, Map: templatePath(file) }, 0, true);            
+                ipcRenderer.send('update-character', { ID: _windowState.data.characterId, Map: templatePath(file) }, 0, true);
         }
 
         /*

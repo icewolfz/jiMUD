@@ -21,6 +21,7 @@ declare let getId;
 declare let getName;
 declare let clearName;
 declare let resizeCommandInput;
+declare let setMapFile;
 
 /**
  * MATHJS expression engine
@@ -5830,9 +5831,9 @@ export class Input extends EventEmitter {
                         i = i.substr(1, i.length - 2);
                     i = this.parseInline(i);
                     if (!isValidIdentifier(i))
-                        throw new Error("Invalid variable name");                        
+                        throw new Error("Invalid variable name");
                     args = args.map(a => this.parseInline(this.stripQuotes(a)))
-                    if(args.length === 3 && args[2] && args[2].toLowerCase() === 'true')
+                    if (args.length === 3 && args[2] && args[2].toLowerCase() === 'true')
                         args[2] = true;
                     args = window.prompt(...args);
                     if (args?.match(/^\s*?[-|+]?\d+\s*?$/))
@@ -5846,6 +5847,20 @@ export class Input extends EventEmitter {
                     else
                         this.client.variables[i] = args;
                 }
+                return null;
+            case 'setmap':
+                if ((this.client.getOption('echo') & 4) === 4)
+                    this.client.echo(raw, -3, -4, true, true);
+                if (args.length === 0)
+                    throw new Error('Invalid syntax use ' + cmdChar + 'setmap file \x1b[3msetCharacter\x1b[0;-11;-12m');
+                tmp = parseTemplate(this.stripQuotes(this.parseInline(args.shift())) || '');
+                if(!tmp || !tmp.length)
+                    throw new Error('Empty file\x1b[0;-11;-12m');
+                if (args.length > 1)
+                    p = this.stripQuotes(this.parseInline(args.join(' '))).toLocaleLowerCase().trim();                    
+                else
+                    p = '';
+                setMapFile(tmp, p === 'true' || p === 'yes', true);
                 return null;
         }
         if (fun.match(/^[-|+]?\d+$/)) {

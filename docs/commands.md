@@ -301,6 +301,9 @@ Display text to the screen, and the display text will not fire triggers
 <u>#SETS</u>ETTING name value
 >alter a setting value see: [Keys and value types](faq.md#setting-keys-value-type-and-default-value)
 
+[#SETMAP](commands/SETMAP.md) file *setCharacter*
+>Set the map file for the current connection and open mapper with optional flag to set to character if using character manager
+
 <u>#SHOWCL</u>IENT
 >Show client window
 
