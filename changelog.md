@@ -13,8 +13,8 @@
     - Add paste, paste formatted, and paste as text toolbar buttons
     - Give paste formatted its own icon
   - Code editor:
-   - Toggle word wrap menu item now displays if wrap is on or off
-   - Last set editor options are now saved
+    - Toggle word wrap menu item now displays if wrap is on or off
+    - Last set editor options are now saved
   - About:
     - Add support to copy paths to clipboard
     - Add error log path
