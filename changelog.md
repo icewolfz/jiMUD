@@ -7,6 +7,7 @@
   - Add [%prompt(*prompt*, *defaultValue*, *mask*)](docs/functions.md#miscellaneous) Display input prompt
   - Add [#PROMPT](docs/commands/PROMPT.md) Displays a prompt dialog to enter text and store results in variable
   - Add [#SETMAP](docs/commands/SETMAP.md) Set the map file for the current connection and open mapper with optional flag to set to character if using character manager
+  - Add [%fileprompt(*filters*, *defaultPath*)](docs/functions.md#miscellaneous) Display open file dialog, returns first file path or empty string
   - Preferences:
     - `Parse commands` Enable parsing of commands from command line or sendBackground/sendCommand scripting functions
   - Advanced editor:
@@ -53,6 +54,7 @@
   - Mapper:
     - Only update the loaded map once when options loaded
     - Save current room changes before switching maps
+  - Input parser: Fix bug when splitting by quotes and empty string
 - **Changed:**
   - Update electron 21.4.2 to 27.0.2
   - Update mathjs 11.6.0 to 11.11.2

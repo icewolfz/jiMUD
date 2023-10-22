@@ -1338,7 +1338,6 @@ export class Input extends EventEmitter {
                     fs.appendFileSync(notes, args[0]);
                 else
                     fs.appendFileSync(notes, '\n' + args[0]);
-                return;
             },
             charnotes: (args, math, scope) => {
                 let notes;
@@ -1353,7 +1352,6 @@ export class Input extends EventEmitter {
                 notes = getCharacterNotes();
                 args[0] = args[0].compile().evaluate(scope).toString();
                 fs.writeFileSync(notes, args[0]);
-                return;
             },
             //clientid: getId(),
             clientname: (args, math, scope) => {
@@ -1370,7 +1368,6 @@ export class Input extends EventEmitter {
                 }
                 else
                     throw new Error('Too many arguments for clientname');
-                return;
             },
             prompt: (args, math, scope) => {
                 if (args.length > 3)
@@ -1380,6 +1377,26 @@ export class Input extends EventEmitter {
                 args = args.map(a => a.compile().evaluate(scope).toString());
                 return window.prompt(...args);
             },
+            fileprompt: (args, math, scope) => {
+                if (args.length > 2)
+                    throw new Error('Too many arguments');
+                args = args.map(a => a.compile().evaluate(scope).toString());
+                let f = [
+                    { name: 'All files (*.*)', extensions: ['*'] },
+                ];
+                if (args.length > 0 && args[0].trim().length > 0) {
+                    f.unshift({
+                        name: args[0],
+                        extensions: args[0].split(',').map(a => a.trim())
+                    })
+                }
+                var files = dialog.showOpenDialogSync({
+                    filters: f,
+                    properties: ['openFile', 'promptToCreate'],
+                    defaultPath: args.length === 2 ? args[1] : ''
+                });
+                if (files && files.length) return files[0];
+            }
         };
         for (let fun in functions) {
             if (!functions.hasOwnProperty(fun) || typeof functions[fun] !== 'function') {
@@ -5854,10 +5871,10 @@ export class Input extends EventEmitter {
                 if (args.length === 0)
                     throw new Error('Invalid syntax use ' + cmdChar + 'setmap file \x1b[3msetCharacter\x1b[0;-11;-12m');
                 tmp = parseTemplate(this.stripQuotes(this.parseInline(args.shift())) || '');
-                if(!tmp || !tmp.length)
+                if (!tmp || !tmp.length)
                     throw new Error('Empty file\x1b[0;-11;-12m');
                 if (args.length > 1)
-                    p = this.stripQuotes(this.parseInline(args.join(' '))).toLocaleLowerCase().trim();                    
+                    p = this.stripQuotes(this.parseInline(args.join(' '))).toLocaleLowerCase().trim();
                 else
                     p = '';
                 setMapFile(tmp, p === 'true' || p === 'yes', true);
@@ -8166,6 +8183,27 @@ export class Input extends EventEmitter {
                     throw new Error('Too many arguments');
                 args = args.map(a => this.stripQuotes(a));
                 return window.prompt(...args) || '';
+            case 'fileprompt':
+                args = this.splitByQuotes(this.parseInline(res[2]), ',');
+                if (args.length > 2)
+                    throw new Error('Too many arguments');
+                args = args.map(a => this.stripQuotes(a));
+                let f = [
+                    { name: 'All files (*.*)', extensions: ['*'] },
+                ];
+                if (args.length > 0 && args[0].trim().length > 0) {
+                    f.unshift({
+                        name: args[0],
+                        extensions: args[0].split(',').map(a => a.trim())
+                    })
+                }
+                var files = dialog.showOpenDialogSync({
+                    filters: f,
+                    properties: ['openFile', 'promptToCreate'],
+                    defaultPath: args.length === 2 ? args[1] : ''
+                });
+                if (files && files.length) return files[0];
+                return '';
         }
         return null;
     }
@@ -9408,7 +9446,7 @@ export class Input extends EventEmitter {
         let t = 0;
         let e = 0;
         if (!str || str.length === 0)
-            return str;
+            return [];
         if (force || this.client.getOption('parseDoubleQuotes')) {
             t |= 2;
             e |= this.client.getOption('allowEscape') ? 2 : 0;

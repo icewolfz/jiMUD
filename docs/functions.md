@@ -324,3 +324,9 @@ charnotes(*text*)
   - `defaultValue` Default value to set input value to
   - `mask` true to use default masking or a character to use as a mask, *Only the first letter is used when supplying a custom mask if more then one letter*
 >**Warning** This is a blocking command and may cause the client to appear frozen until input has been returned from the dialog
+
+[fileprompt(*filters*, *defaultPath*)](functions/fileprompt.md)
+>Display open file dialog, returns first file path or empty string
+  - `filters` Optional comma delimited string of file extensions to filter by
+  - `defaultPath` Optional path to open the dialog to
+>**Warning** This is a blocking command and may cause the client to appear frozen until input has been returned from the dialog
