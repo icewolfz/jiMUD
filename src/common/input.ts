@@ -1393,7 +1393,7 @@ export class Input extends EventEmitter {
                 var files = dialog.showOpenDialogSync({
                     filters: f,
                     properties: ['openFile', 'promptToCreate'],
-                    defaultPath: args.length === 2 ? args[1] : ''
+                    defaultPath: args.length >= 2 ? parseTemplate(args[1]) : ''
                 });
                 if (files && files.length) return files[0];
             }
@@ -8200,7 +8200,7 @@ export class Input extends EventEmitter {
                 var files = dialog.showOpenDialogSync({
                     filters: f,
                     properties: ['openFile', 'promptToCreate'],
-                    defaultPath: args.length === 2 ? args[1] : ''
+                    defaultPath: args.length >= 2 ? parseTemplate(args[1]) : ''
                 });
                 if (files && files.length) return files[0];
                 return '';
