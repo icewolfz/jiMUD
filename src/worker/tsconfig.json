@@ -4,7 +4,7 @@
         "incremental": true,
         "target": "es2017",
         "module": "none",
-        "moduleResolution": "classic",
+        "moduleResolution": "node",
         "sourceMap": false,
         "noImplicitAny": false,
         "allowJs": true,
