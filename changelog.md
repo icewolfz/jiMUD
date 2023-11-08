@@ -5,6 +5,7 @@
 - **Changed:**
   - Update electron 27.0.2 to 27.0.3
   - Update mathjs 11.11.2 to 12.0.0
+  - Update @electron/remote 2.0.12 to 2.1.0
 
 ## 1.1.0 2023-10-22
 
