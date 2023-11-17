@@ -3,7 +3,7 @@
 ## 1.1.1
 
 - **Changed:**
-  - Update electron 27.0.2 to 27.0.4
+  - Update electron 27.0.2 to 27.1.0
   - Update mathjs 11.11.2 to 12.0.0
   - Update @electron/remote 2.0.12 to 2.1.0
   - Update better-sqlite3 9.0.0 to 9.1.1
