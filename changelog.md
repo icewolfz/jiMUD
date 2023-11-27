@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.1
+## 1.1.1 2023-11-27
 
 - **Fixed:**
   - Immortal tools: Fix build downloading
