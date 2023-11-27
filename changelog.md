@@ -2,11 +2,14 @@
 
 ## 1.1.1
 
+- **Fixed:**
+  - Immortal tools: Fix build downloading
 - **Changed:**
-  - Update electron 27.0.2 to 27.1.0
-  - Update mathjs 11.11.2 to 12.0.0
+  - Update electron 27.0.2 to 27.1.2
+  - Update mathjs 11.11.2 to 12.1.0
   - Update @electron/remote 2.0.12 to 2.1.0
   - Update better-sqlite3 9.0.0 to 9.1.1
+  - Update electron-updater 6.1.4 to 6.1.7
 
 ## 1.1.0 2023-10-22
 

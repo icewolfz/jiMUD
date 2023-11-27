@@ -361,7 +361,7 @@ export class IED extends EventEmitter {
                     this._dir.shift();
                     if (this._dir.length) {
                         const t = this._dir.shift();
-                        this.getDir(t[0], true, t[1], t[2]);
+                        this.getDir(t[0], true, t[1], t[2], true);
                     }
                 }
                 break;
@@ -458,12 +458,12 @@ export class IED extends EventEmitter {
         }
     }
 
-    public getDir(dir: string, noResolve?: boolean, tag?, local?: string) {
+    public getDir(dir: string, noResolve?: boolean, tag?, local?: string, force?:boolean) {
         if (local)
             this._paths[this.prefix + 'dir:' + (tag || 'browse')] = local;
         if (noResolve) {
             this._dir.push([dir, tag, local]);
-            if(this._dir.length > 1) return;
+            if(!force && this._dir.length > 1) return;
             this.emit('send-gmcp', 'IED.dir ' + JSON.stringify({ path: dir, tag: this.prefix + 'dir:' + (tag || 'browse'), compress: this.compressDir ? 1 : 0 }));
             this.emit('message', 'Getting Directory: ' + dir);
         }
