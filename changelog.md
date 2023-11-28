@@ -2,6 +2,9 @@
 
 ## 1.1.2
 
+- **Fixed:**
+  - Fix progress dialog text not updating when first shown
+
 ## 1.1.1 2023-11-27
 
 - **Fixed:**

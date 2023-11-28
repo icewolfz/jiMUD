@@ -5403,7 +5403,9 @@ function openProgress(parent, title, modal) {
             stateMap.delete(window);
             progressMap.delete(parent);
         });
-        window.webContents.send('progress', 'title', title);
+        window.once('ready-to-show', () => {
+            window.webContents.send('progress', 'title', title);
+        });                
         progressMap.set(parent, window);
     }
     return window;
