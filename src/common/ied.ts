@@ -1031,7 +1031,7 @@ export class IED extends EventEmitter {
         this._activeIdx = -1;
         const ql = this.queue.length;
         for (let q = 0; q < ql; q++) {
-            if (this.queue[q].state !== ItemState.working && this.queue[q].state !== ItemState.error) continue;
+            if (this.queue[q].state !== ItemState.working) continue;
             this.active = this.queue[q];
             this._activeIdx = q;
             break;
