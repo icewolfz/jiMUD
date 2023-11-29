@@ -7,6 +7,9 @@
   - Immortal tools:
     - Fix being stuck on errored downloads or uploads
     - Fix permission denied breaking downloading of folders
+    - Fix download override failing to sanitize file names when checking remote names to local
+- **Changed:**
+  - Immortal tools: Make unknown download/upload error messages more verbose
 
 ## 1.1.1 2023-11-27
 

@@ -1220,9 +1220,7 @@
                                 case ItemState.paused:
                                     return 'Paused';
                                 case ItemState.error:
-                                    if (typeof full.error === 'number')
-                                        return IED.errorMessage(full.error);
-                                    return full.error;
+                                    return IED.errorMessage(full.error);
                                 case ItemState.done:
                                     return 'Success';
                                 case ItemState.stopped:
@@ -1333,6 +1331,7 @@
                                 title: 'Can not read',
                                 message: 'Can not read or permission denied'
                             });
+                            
 
                             if (pTotal && $('#Progress')[0].open) {
                                 pTotal--;
@@ -3049,26 +3048,27 @@
         }
 
         async function downloadFile(file) {
-            if (_local[path.basename(file)]) {
+            let sn = IED.sanitizeFile(path.basename(file));
+            if (_local[sn]) {
                 //if not applied to queue or always ask
                 if (_queue !== 4 && options.fileExistAlways !== 2) {
-                    const result = await fileExist(_remote[path.basename(file)], _local[path.basename(file)]);
+                    const result = await fileExist(_remote[path.basename(file)], _local[sn]);
                     if (!result) return false;
                 }
 
                 if (options.fileExistOverwrite === 2 || options.fileExistOverwrite === 6) {
                     //source older so skip
-                    if (_remote[path.basename(file)].date <= _local[path.basename(file)].date)
+                    if (_remote[path.basename(file)].date <= _local[sn].date)
                         return true;
                 }
                 if (options.fileExistOverwrite === 4 || options.fileExistOverwrite === 6) {
                     //same size so skip
-                    if (_remote[path.basename(file)].size === _local[path.basename(file)].size)
+                    if (_remote[path.basename(file)].size === _local[sn].size)
                         return true;
                 }
                 //rename
                 if (options.fileExistOverwrite === 8) {
-                    name = getNewName(path.basename(file), _local);
+                    name = getNewName(sn, _local);
                     _ied.downloadTo(file, path.join(options.local, name), false, 0, true);
                 }
                 //skip
@@ -3309,9 +3309,10 @@
         }
 
         async function downNext(file, local, remoteData) {
+            let sn = IED.sanitizeFile(path.basename(file));
             try {
-                if (existsSync(path.join(local, path.basename(file)))) {
-                    var localData = IED.getFileInfo(path.join(local, path.basename(file)));
+                if (existsSync(path.join(local, sn))) {
+                    var localData = IED.getFileInfo(path.join(local, sn));
                     //if not applied to queue or always ask
                     if (_queue !== 4 && options.fileExistAlways !== 2) {
                         const result = await fileExist(remoteData, localData);
@@ -3330,7 +3331,7 @@
                     }
                     //rename
                     if (options.fileExistOverwrite === 8) {
-                        name = getNewNamePath(path.basename(file), local);
+                        name = getNewNamePath(sn, local);
                         setTimeout(async () => {
                             _ied.downloadTo(file, path.join(local, name), false, 0, true);
                         }, 0);

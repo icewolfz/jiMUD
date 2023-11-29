@@ -162,7 +162,7 @@ export class IED extends EventEmitter {
                         item = this.getItem(obj.tag);
                         if (item) {
                             item.state = ItemState.error;
-                            item.error = obj.code;
+                            item.error = { code: obj.code, msg: obj.msg };
                         }
                         this.nextItem();
                         this.emit('message', `Download error for '${obj.path}/${obj.file}': ${obj.msg}`);
@@ -176,7 +176,7 @@ export class IED extends EventEmitter {
                         item = this.getItem(obj.tag);
                         if (item) {
                             item.state = ItemState.error;
-                            item.error = obj.code;
+                            item.error = { code: obj.code, msg: obj.msg };
                         }
                         this.nextItem();
                         this.emit('message', `Download aborted for '${obj.path}/${obj.file}': ${obj.msg}`);
@@ -197,7 +197,7 @@ export class IED extends EventEmitter {
                         item = this.getItem(obj.tag);
                         if (item) {
                             item.state = ItemState.error;
-                            item.error = obj.code;
+                            item.error = { code: obj.code, msg: obj.msg };
                         }
                         this.nextItem();
                         this.emit('message', `Upload error for '${obj.path}/${obj.file}': ${obj.msg}`);
@@ -216,7 +216,7 @@ export class IED extends EventEmitter {
                         item = this.getItem(obj.tag);
                         if (item) {
                             item.state = ItemState.error;
-                            item.error = obj.code;
+                            item.error = { code: obj.code, msg: obj.msg };
                         }
                         this.nextItem();
                         this.emit('message', `Upload aborted for '${obj.path}/${obj.file}': ${obj.msg}`);
@@ -256,10 +256,9 @@ export class IED extends EventEmitter {
                         this.emit('message', `File not a directory: '${obj.path}/${obj.file}`);
                         break;
                     case IEDError.DIR_CANTREAD:
-                    if(this._dir.length)    
-                        {
-                            for(let d = this._dir.length - 1; d >= 0; d--) {
-                                if(this._dir[d][0] === obj.path) {
+                        if (this._dir.length) {
+                            for (let d = this._dir.length - 1; d >= 0; d--) {
+                                if (this._dir[d][0] === obj.path) {
                                     this._dir.splice(d, 1);
                                     break;
                                 }
@@ -267,7 +266,7 @@ export class IED extends EventEmitter {
                             if (this._dir.length) {
                                 const t = this._dir.shift();
                                 this.getDir(t[0], true, t[1], t[2], true);
-                            }                            
+                            }
                         }
                         break;
                 }
@@ -473,12 +472,12 @@ export class IED extends EventEmitter {
         }
     }
 
-    public getDir(dir: string, noResolve?: boolean, tag?, local?: string, force?:boolean) {
+    public getDir(dir: string, noResolve?: boolean, tag?, local?: string, force?: boolean) {
         if (local)
             this._paths[this.prefix + 'dir:' + (tag || 'browse')] = local;
         if (noResolve) {
             this._dir.push([dir, tag, local]);
-            if(!force && this._dir.length > 1) return;
+            if (!force && this._dir.length > 1) return;
             this.emit('send-gmcp', 'IED.dir ' + JSON.stringify({ path: dir, tag: this.prefix + 'dir:' + (tag || 'browse'), compress: this.compressDir ? 1 : 0 }));
             this.emit('message', 'Getting Directory: ' + dir);
         }
@@ -863,6 +862,11 @@ export class IED extends EventEmitter {
     }
 
     public static errorMessage(code: number): string {
+        let msg = 'Unknown';
+        if (typeof code === 'object') {
+            msg = (<any>code).msg || 'Unknown';
+            code = (<any>code).code;
+        }
         if (typeof code !== 'number')
             return code;
 
@@ -876,7 +880,9 @@ export class IED extends EventEmitter {
             case IEDError.DL_INVALIDFMT:
                 return `Invalid download data [${('' + code).padStart(2, '0')}]`;
             case IEDError.DL_UNKNOWN:
-                return `Unknown download error [${('' + code).padStart(2, '0')}]`;
+                if (msg === 'Unknown')
+                    return `Unknown download error [${('' + code).padStart(2, '0')}]`;
+                return `${msg} [${('' + code).padStart(2, '0')}]`;
             case IEDError.DL_USERABORT:
                 return `Download aborted [${('' + code).padStart(2, '0')}]`;
             case IEDError.DL_INVALIDFILE:
@@ -898,7 +904,9 @@ export class IED extends EventEmitter {
             case IEDError.UL_FAILWRITE:
                 return `Failed to save upload data [${('' + code).padStart(2, '0')}]`;
             case IEDError.UL_UNKNOWN:
-                return `Unknown upload error [${('' + code).padStart(2, '0')}]`;
+                if (msg === 'Unknown')
+                    return `Unknown upload error [${('' + code).padStart(2, '0')}]`;
+                return `${msg} [${('' + code).padStart(2, '0')}]`;
             case IEDError.UL_INVALIDFILE:
                 return `Invalid upload filename [${('' + code).padStart(2, '0')}]`;
             case IEDError.UL_INVALIDPATH:
@@ -909,7 +917,7 @@ export class IED extends EventEmitter {
                 return `Error creating upload path [${('' + code).padStart(2, '0')}]`;
         }
         if (typeof code === 'number')
-            return `Unknown [${('' + code).padStart(2, '0')}]`;
+            return `${msg} [${('' + code).padStart(2, '0')}]`;
         return code;
     }
 
