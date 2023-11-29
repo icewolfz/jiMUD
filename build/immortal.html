@@ -1333,6 +1333,16 @@
                                 title: 'Can not read',
                                 message: 'Can not read or permission denied'
                             });
+
+                            if (pTotal && $('#Progress')[0].open) {
+                                pTotal--;
+                                if (pTotal <= 0) {
+                                    pTotal = 0;
+                                    if ($('#Progress')[0].open)
+                                        $('#Progress')[0].close();
+                                    return;
+                                }
+                            }
                             break;
                     }
                 }
@@ -2631,16 +2641,14 @@
         }
 
         function setTitle(title, lag) {
-            if(!window.opener)
-            {
+            if (!window.opener) {
                 ipcRenderer.send('error', "Immortal tools lost parent window.");
                 return;
             }
-            if(!window.opener.client)
-            {
+            if (!window.opener.client) {
                 ipcRenderer.send('error', "Immortal tools lost client access.");
                 return;
-            }            
+            }
             if (title && title.length > 0)
                 document.title = 'Immortal tools - ' + title + window.opener.childWindowTitle(true);
             else

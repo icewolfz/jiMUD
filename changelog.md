@@ -4,7 +4,9 @@
 
 - **Fixed:**
   - Fix progress dialog text not updating when first shown
-  - Immortal tools: Fix being stuck on errored downloads or uploads
+  - Immortal tools:
+    - Fix being stuck on errored downloads or uploads
+    - Fix permission denied breaking downloading of folders
 
 ## 1.1.1 2023-11-27
 

@@ -255,6 +255,21 @@ export class IED extends EventEmitter {
                         }
                         this.emit('message', `File not a directory: '${obj.path}/${obj.file}`);
                         break;
+                    case IEDError.DIR_CANTREAD:
+                    if(this._dir.length)    
+                        {
+                            for(let d = this._dir.length - 1; d >= 0; d--) {
+                                if(this._dir[d][0] === obj.path) {
+                                    this._dir.splice(d, 1);
+                                    break;
+                                }
+                            }
+                            if (this._dir.length) {
+                                const t = this._dir.shift();
+                                this.getDir(t[0], true, t[1], t[2], true);
+                            }                            
+                        }
+                        break;
                 }
                 this.emit('error', obj);
                 break;
