@@ -2480,8 +2480,8 @@ function createClient(options) {
     }
 
     //view.setAutoResize({
-        //width: true,
-        //height: true
+    //width: true,
+    //height: true
     //})
     if (options.data && options.data.state) {
         view.setBounds(options.data.state.bounds);
@@ -5405,7 +5405,7 @@ function openProgress(parent, title, modal) {
         });
         window.once('ready-to-show', () => {
             window.webContents.send('progress', 'title', title);
-        });                
+        });
         progressMap.set(parent, window);
     }
     return window;
@@ -6076,5 +6076,34 @@ ipcMain.on('prompt', (event, options) => {
         setPrompt(${(options.prompt || options.title) ? '\'' + (options.prompt || options.title) + '\'' : 0});
         document.title = '${options.title || options.prompt || ''}';`, promptWindow);
     });
-    ipcMain.on('prompt-response', promptResponseEvent)
+    ipcMain.on('prompt-response', promptResponseEvent);
+});
+
+/**
+ * Prompt dialog
+ * 
+ * Adds a dialog to simulate window.prompt dialog
+ */
+ipcMain.on('file-exist-dialog', (event, source, target, options) => {
+    var dialogResponse;
+    var dialogResponseEvent = (event, arg) => dialogResponse = (arg === '' ? null : arg)
+    var dialogWindow = createDialog({
+        show: true,
+        parent: BrowserWindow.fromWebContents(event.sender),
+        url: path.join(__dirname, 'file.exists.html'),
+        title: 'File exist...',
+        bounds: { width: 600, height: 393 },
+        modal: true,
+        backgroundColor: '#fff',
+        frame: false
+    });
+    dialogWindow.on('closed', function () {
+        event.returnValue = dialogResponse;
+        dialogWindow = null;
+        ipcMain.removeListener('file-exist-response', dialogResponseEvent);
+    });
+    dialogWindow.once('ready-to-show', () => {
+        executeScript(`setData(${JSON.stringify(source)}, ${JSON.stringify(target)}, ${JSON.stringify(options)});`, dialogWindow);
+    });
+    ipcMain.on('file-exist-response', dialogResponseEvent);
 });

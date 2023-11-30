@@ -8,6 +8,8 @@
     - Fix being stuck on errored downloads or uploads
     - Fix permission denied breaking downloading of folders
     - Fix download override failing to sanitize file names when checking remote names to local
+    - Fix file exist dialog overriding when bulk downloading or uploading
+    - Fix file exist dialog source date and path when bulk downloading
 - **Changed:**
   - Immortal tools: Make unknown download/upload error messages more verbose
 

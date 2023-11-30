@@ -1331,7 +1331,6 @@
                                 title: 'Can not read',
                                 message: 'Can not read or permission denied'
                             });
-                            
 
                             if (pTotal && $('#Progress')[0].open) {
                                 pTotal--;
@@ -1401,6 +1400,8 @@
                     */
                     for (f = 0, fl = files.length; f < fl; f++) {
                         file = (dir === '/' ? '' : dir) + '/' + files[f].file;
+                        //add ms as remote does not
+                        files[f].date *= 1000;
                         if (files[f].size == -2) {
                             //create local
                             if (local && !existsSync(path.join(local, path.basename(file)))) {
@@ -2260,7 +2261,6 @@
             };
 
             window.onmouseout = () => {
-                if (document.getElementById('FileExist').open) return;
                 _localDrag = 0;
                 _remoteDrag = 0;
             };
@@ -3020,7 +3020,7 @@
             if (_remote[path.basename(file)]) {
                 //if not applied to queue or always ask
                 if (_queue !== 4 && options.fileExistAlways !== 2) {
-                    const result = await fileExist(_local[path.basename(file)], _remote[path.basename(file)]);
+                    const result = fileExist(_local[path.basename(file)], _remote[path.basename(file)]);
                     if (!result) return false;
                 }
 
@@ -3052,7 +3052,7 @@
             if (_local[sn]) {
                 //if not applied to queue or always ask
                 if (_queue !== 4 && options.fileExistAlways !== 2) {
-                    const result = await fileExist(_remote[path.basename(file)], _local[sn]);
+                    const result = fileExist(_remote[path.basename(file)], _local[sn]);
                     if (!result) return false;
                 }
 
@@ -3161,7 +3161,7 @@
                         var localData = IED.getFileInfo(file);
                         //if not applied to queue or always ask
                         if (_queue !== 4 && options.fileExistAlways !== 2) {
-                            const result = await fileExist(localData, remoteData);
+                            const result = fileExist(localData, remoteData);
                             if (!result) {
                                 _progressCancel = true;
                                 pFiles = null;
@@ -3252,7 +3252,7 @@
                         var localData = IED.getFileInfo(item.local);
                         //if not applied to queue or always ask
                         if (_queue !== 4 && options.fileExistAlways !== 2)
-                            if (!await fileExist(localData, remoteData)) return false;
+                            if (!fileExist(localData, remoteData)) return false;
 
                         if (options.fileExistOverwrite === 2 || options.fileExistOverwrite === 6) {
                             //source older so skip
@@ -3315,7 +3315,9 @@
                     var localData = IED.getFileInfo(path.join(local, sn));
                     //if not applied to queue or always ask
                     if (_queue !== 4 && options.fileExistAlways !== 2) {
-                        const result = await fileExist(remoteData, localData);
+                        //set file so it has full path
+                        remoteData.file = file;
+                        const result = fileExist(remoteData, localData);
                         if (!result) return false;
                     }
 
@@ -4203,72 +4205,18 @@
                 shell.showItemInFolder(selected[d]);
         }
 
-        async function fileExist(source, target) {
-            return new Promise((resolve, reject) => {
-                const feDialog = document.getElementById('FileExist');
-                const fnClose = () => {
-                    menubar.enabled = true;
-                    feDialog.close();
-                    feDialog.replaceWith(feDialog.cloneNode(true));
-                    resolve(null);
-                }
-                feDialog.addEventListener('close', fnClose);
-                feDialog.addEventListener('cancel', fnClose);
-                document.getElementById('FileExist-cancel').addEventListener('click', fnClose);
-                document.getElementById('FileExist-header-close').addEventListener('click', fnClose);
-                document.getElementById('FileExist-ok').addEventListener('click', () => {
-                    feDialog.close();
-                    options.fileExistOverwrite = 1;
-                    if (document.getElementById('action-Overwrite-2').checked)
-                        options.fileExistOverwrite = 2;
-                    else if (document.getElementById('action-Overwrite-4').checked)
-                        options.fileExistOverwrite = 4;
-                    else if (document.getElementById('action-Overwrite-6').checked)
-                        options.fileExistOverwrite = 6;
-                    else if (document.getElementById('action-Overwrite-8').checked)
-                        options.fileExistOverwrite = 8;
-                    else if (document.getElementById('action-Overwrite-16').checked)
-                        options.fileExistOverwrite = 16;
-                    options.fileExistAlways = 0;
-                    if (document.getElementById('always-2').checked)
-                        options.fileExistAlways = 2;
-                    else if (document.getElementById('always-4').checked) {
-                        options.fileExistAlways = 4;
-                        _queue = 4;
-                    }
-                    resolve({
-                        action: options.fileExistOverwrite,
-                        always: options.fileExistAlways
-                    });
-                    saveOptions();
-                    feDialog.replaceWith(feDialog.cloneNode(true));
-                });
-                document.getElementById('always-1').checked = options.fileExistAlways === 0;
-                document.getElementById('always-2').checked = options.fileExistAlways === 2;
-                document.getElementById('always-4').checked = !('fileExistAlways' in options) || options.fileExistAlways === 4;
-                document.getElementById('action-Overwrite-' + (options.fileExistOverwrite || 1)).checked = true;
-                if (source) {
-                    document.getElementById('FileExist-source').style.display = '';
-                    document.getElementById('FileExist-source-name').textContent = source.path || source.name || '';
-                    document.getElementById('FileExist-source-name').title = source.path || source.name || '';
-                    document.getElementById('FileExist-source-date').textContent = source.date ? new moment(source.date).format('MM/DD/YYYY hh:mm:ss A') : '';
-                    document.getElementById('FileExist-source-size').textContent = formatSize(source.size || 0);
-                }
-                else
-                    document.getElementById('FileExist-source').style.display = 'none';
-                if (target) {
-                    document.getElementById('FileExist-target').style.display = '';
-                    document.getElementById('FileExist-target-name').textContent = target.path || target.name || '';
-                    document.getElementById('FileExist-target-name').title = target.path || target.name || '';
-                    document.getElementById('FileExist-target-date').textContent = target.date ? new moment(target.date).format('MM/DD/YYYY hh:mm:ss A') : '';
-                    document.getElementById('FileExist-target-size').textContent = formatSize(target.size || 0);
-                }
-                else
-                    document.getElementById('FileExist-target').style.display = 'none';
-                menubar.enabled = false;
-                feDialog.showModal();
-            });
+        function fileExist(source, target) {
+            let results = ipcRenderer.sendSync('file-exist-dialog', source, target, options);
+            if (results) {
+                options.fileExistAlways = results.always;
+                options.fileExistOverwrite = results.action;
+                if (results.always)
+                    _queue = 4;
+                saveOptions();
+            }
+            return results;
         }
+
     </script>
 </head>
 
@@ -4511,89 +4459,6 @@
             <button onclick="progressCancel()">
                 Cancel
             </button>
-        </div>
-    </dialog>
-    <dialog id="FileExist" style="z-index:1000;height:393px;width:600px;">
-        <div class="dialog-header" style="font-weight: bold">
-            <button id="FileExist-header-close" type="button" class="close" data-dismiss="modal">&times;</button>
-            <div style="padding-top: 2px;">File exists...</div>
-        </div>
-        <div class="dialog-body" style="margin-top:23px">
-            <fieldset id="FileExist-source" class="col-sm-6 form-group" style="overflow: hidden">
-                <legend style="margin:0">Source:</legend>
-                <div id="FileExist-source-name" style="width: 100%;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;"></div>
-                <div id="FileExist-source-date"></div>
-                <div id="FileExist-source-size"></div>
-            </fieldset>
-            <fieldset id="FileExist-target" class="col-sm-6 form-group" style="overflow: hidden">
-                <legend style="margin:0">Target:</legend>
-                <div id="FileExist-target-name" style="width: 100%;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;"></div>
-                <div id="FileExist-target-date"></div>
-                <div id="FileExist-target-size"></div>
-            </fieldset>
-            <div class="col-sm-8 form-group">
-                <fieldset>
-                    <legend style="margin:0">Action</legend>
-                    <ul style="list-style-type: none; margin: 0;padding: 0;">
-                        <li>
-                            <label>
-                                <input type="radio" name="action-Overwrite" id="action-Overwrite-1"> Overwrite
-                            </label>
-                        </li>
-                        <li>
-                            <label>
-                                <input type="radio" name="action-Overwrite" id="action-Overwrite-2"> Overwrite if source newer
-                            </label>
-                        </li>
-                        <li>
-                            <label>
-                                <input type="radio" name="action-Overwrite" id="action-Overwrite-4"> Overwrite if different sizes
-                            </label>
-                        </li>
-                        <li>
-                            <label>
-                                <input type="radio" name="action-Overwrite" id="action-Overwrite-6"> Overwrite if source newer or different sizes
-                            </label>
-                        </li>
-                        <li>
-                            <label>
-                                <input type="radio" name="action-Overwrite" id="action-Overwrite-8"> Rename
-                            </label>
-                        </li>
-                        <li>
-                            <label>
-                                <input type="radio" name="action-Overwrite" id="action-Overwrite-16"> Skip
-                            </label>
-                        </li>
-                    </ul>
-                </fieldset>
-            </div>
-            <div class="col-sm-4 form-group">
-                <fieldset>
-                    <legend style="margin:0">Apply</legend>
-                    <ul style="list-style-type: none; margin: 0;padding: 0;">
-                        <li>
-                            <label>
-                                <input type="radio" name="always" id="always-1"> Just this file
-                            </label>
-                        </li>
-                        <li>
-                            <label>
-                                <input type="radio" name="always" id="always-2"> Always
-                            </label>
-                        </li>
-                        <li>
-                            <label>
-                                <input type="radio" name="always" id="always-4"> Just for this queue
-                            </label>
-                        </li>
-                    </ul>
-                </fieldset>
-            </div>
-        </div>
-        <div class="dialog-footer">
-            <button id="FileExist-cancel" style="float: right" type="button" class="btn btn-default">Cancel</button>
-            <button id="FileExist-ok" style="float: right" type="button" class="btn btn-primary">Ok</button>
         </div>
     </dialog>
 </body>

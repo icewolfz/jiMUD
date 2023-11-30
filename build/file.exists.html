@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <link href="../lib/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/bootstrap-theme.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <link href="css/immortal.css" rel="stylesheet" type="text/css" />
+    <link href="css/form.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/datatables.min.css" rel="stylesheet" type="text/css" />
+    <title>File exist...</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 1em;
+            border: 1px solid black;
+            box-shadow: 3px 3px 5px #535353;
+        }
+
+        .dialog-footer {
+            bottom: 1px;
+            left: 1px;
+            right: 1px;
+        }
+    </style>
+    <script type="text/javascript">
+        const moment = require('moment');
+        const { formatSize } = require('./js/library');
+
+        function setData(source, target, options) {
+            document.getElementById('always-1').checked = options.fileExistAlways === 0;
+            document.getElementById('always-2').checked = options.fileExistAlways === 2;
+            document.getElementById('always-4').checked = !('fileExistAlways' in options) || options.fileExistAlways === 4;
+            document.getElementById('action-Overwrite-' + (options.fileExistOverwrite || 1)).checked = true;
+            if (source) {
+                document.getElementById('FileExist-source').style.display = '';
+                document.getElementById('FileExist-source-name').textContent = source.file || source.path || source.name || '';
+                document.getElementById('FileExist-source-name').title = source.file || source.path || source.name || '';
+                document.getElementById('FileExist-source-date').textContent = source.date ? new moment(source.date).format('MM/DD/YYYY hh:mm:ss A') : '';
+                document.getElementById('FileExist-source-size').textContent = formatSize(source.size || 0);
+            }
+            else
+                document.getElementById('FileExist-source').style.display = 'none';
+            if (target) {
+                document.getElementById('FileExist-target').style.display = '';
+                document.getElementById('FileExist-target-name').textContent = target.path || target.name || '';
+                document.getElementById('FileExist-target-name').title = target.path || target.name || '';
+                document.getElementById('FileExist-target-date').textContent = target.date ? new moment(target.date).format('MM/DD/YYYY hh:mm:ss A') : '';
+                document.getElementById('FileExist-target-size').textContent = formatSize(target.size || 0);
+            }
+            else
+                document.getElementById('FileExist-target').style.display = 'none';
+        }
+
+        function returnResults() {
+            let fileExistOverwrite = 1;
+            if (document.getElementById('action-Overwrite-2').checked)
+                fileExistOverwrite = 2;
+            else if (document.getElementById('action-Overwrite-4').checked)
+                fileExistOverwrite = 4;
+            else if (document.getElementById('action-Overwrite-6').checked)
+                fileExistOverwrite = 6;
+            else if (document.getElementById('action-Overwrite-8').checked)
+                fileExistOverwrite = 8;
+            else if (document.getElementById('action-Overwrite-16').checked)
+                fileExistOverwrite = 16;
+            let fileExistAlways = 0;
+            if (document.getElementById('always-2').checked)
+                fileExistAlways = 2;
+            else if (document.getElementById('always-4').checked)
+                fileExistAlways = 4;
+            require('electron').ipcRenderer.send('file-exist-response', {
+                action: fileExistOverwrite,
+                always: fileExistAlways
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('FileExist-ok').addEventListener('click', () => {
+                returnResults();
+                window.close();
+            });
+        });
+
+        window.addEventListener('keydown', (event) => {
+            if (event.which == 27)
+                window.close()
+            else if (event.which == 13) {
+                returnResults();
+                window.close();
+            }
+        });        
+    </script>
+</head>
+
+<body>
+    <div class="dialog-header" style="font-weight: bold">
+        <button id="FileExist-header-close" type="button" class="close" data-dismiss="modal">&times;</button>
+        <div style="padding-top: 2px;">File exists...</div>
+    </div>
+    <div class="dialog-body" style="margin-top:23px">
+        <fieldset id="FileExist-source" class="col-sm-6 form-group" style="overflow: hidden;float: left;width:50%;">
+            <legend style="margin:0">Source:</legend>
+            <div id="FileExist-source-name" style="width: 100%;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;"></div>
+            <div id="FileExist-source-date"></div>
+            <div id="FileExist-source-size"></div>
+        </fieldset>
+        <fieldset id="FileExist-target" class="col-sm-6 form-group" style="overflow: hidden;float: left;width:50%;">
+            <legend style="margin:0">Target:</legend>
+            <div id="FileExist-target-name" style="width: 100%;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;"></div>
+            <div id="FileExist-target-date"></div>
+            <div id="FileExist-target-size"></div>
+        </fieldset>
+        <div class="col-sm-8 form-group" style="float: left;">
+            <fieldset>
+                <legend style="margin:0">Action</legend>
+                <ul style="list-style-type: none; margin: 0;padding: 0;">
+                    <li>
+                        <label>
+                            <input type="radio" name="action-Overwrite" id="action-Overwrite-1"> Overwrite
+                        </label>
+                    </li>
+                    <li>
+                        <label>
+                            <input type="radio" name="action-Overwrite" id="action-Overwrite-2"> Overwrite if source newer
+                        </label>
+                    </li>
+                    <li>
+                        <label>
+                            <input type="radio" name="action-Overwrite" id="action-Overwrite-4"> Overwrite if different sizes
+                        </label>
+                    </li>
+                    <li>
+                        <label>
+                            <input type="radio" name="action-Overwrite" id="action-Overwrite-6"> Overwrite if source newer or different sizes
+                        </label>
+                    </li>
+                    <li>
+                        <label>
+                            <input type="radio" name="action-Overwrite" id="action-Overwrite-8"> Rename
+                        </label>
+                    </li>
+                    <li>
+                        <label>
+                            <input type="radio" name="action-Overwrite" id="action-Overwrite-16"> Skip
+                        </label>
+                    </li>
+                </ul>
+            </fieldset>
+        </div>
+        <div class="col-sm-4 form-group" style="float: left;">
+            <fieldset>
+                <legend style="margin:0">Apply</legend>
+                <ul style="list-style-type: none; margin: 0;padding: 0;">
+                    <li>
+                        <label>
+                            <input type="radio" name="always" id="always-1"> Just this file
+                        </label>
+                    </li>
+                    <li>
+                        <label>
+                            <input type="radio" name="always" id="always-2"> Always
+                        </label>
+                    </li>
+                    <li>
+                        <label>
+                            <input type="radio" name="always" id="always-4"> Just for this queue
+                        </label>
+                    </li>
+                </ul>
+            </fieldset>
+        </div>
+    </div>
+    <div class="dialog-footer">
+        <button id="FileExist-cancel" style="float: right" type="button" class="btn btn-default" onclick="window.close()">Cancel</button>
+        <button id="FileExist-ok" style="float: right" type="button" class="btn btn-primary">Ok</button>
+    </div>
+</body>
+
+</html>
