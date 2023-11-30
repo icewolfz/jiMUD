@@ -60,7 +60,7 @@
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.5.29",
-    "@types/node": "^18.18.13",
+    "@types/node": "^18.18.14",
     "electron": "^27.1.2",
     "electron-builder": "^24.9.1",
     "electron-rebuild": "^3.2.9",
@@ -153,7 +153,7 @@
     "buzz": "^1.2.1",
     "chokidar": "^3.5.3",
     "electron-updater": "^6.1.7",
-    "fs-extra": "^11.1.1",
+    "fs-extra": "^11.2.0",
     "fswin": "^3.23.311",
     "lz-string": "^1.5.0",
     "markdown-it": "^13.0.2",
