@@ -6080,9 +6080,9 @@ ipcMain.on('prompt', (event, options) => {
 });
 
 /**
- * Prompt dialog
+ * File exist dialog
  * 
- * Adds a dialog to simulate window.prompt dialog
+ * Adds a dialog to ask how to handle file overwrite with the action and always option or null
  */
 ipcMain.on('file-exist-dialog', (event, source, target, options) => {
     var dialogResponse;

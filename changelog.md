@@ -13,6 +13,7 @@
 - **Changed:**
   - Immortal tools: Make unknown download/upload error messages more verbose
   - Update fs-extra 11.1.1 to 11.2.0
+  - Fix linux snap packages by moving to core22
 
 ## 1.1.1 2023-11-27
 
