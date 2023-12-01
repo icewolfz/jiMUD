@@ -10,10 +10,11 @@
     - Fix download override failing to sanitize file names when checking remote names to local
     - Fix file exist dialog overriding when bulk downloading or uploading
     - Fix file exist dialog source date and path when bulk downloading
+  - Fix linux snap packages by moving to core22
 - **Changed:**
   - Immortal tools: Make unknown download/upload error messages more verbose
   - Update fs-extra 11.1.1 to 11.2.0
-  - Fix linux snap packages by moving to core22
+  - Update electron 27.1.2 to 27.1.3
 
 ## 1.1.1 2023-11-27
 
