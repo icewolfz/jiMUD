@@ -145,7 +145,6 @@
     },
     "snap": {
       "base": "core22",
-      "confinement": "classic",
       "summary": "MUD client coded in javascript."
     }
   },
