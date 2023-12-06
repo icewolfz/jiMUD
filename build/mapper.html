@@ -992,7 +992,7 @@
                     //loaded a custom map so do not reload map file
                     if (!_custom)
                         opts.mapFile = window.opener.getMapFile();
-                    mapper.updateOptions(ops);
+                    mapper.updateOptions(opts);
                     importType = client.getOption('mapper.importType');
                     _enableDebug = client.getOption('enableDebug');
                 }

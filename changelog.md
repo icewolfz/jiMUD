@@ -11,6 +11,7 @@
     - Fix file exist dialog overriding when bulk downloading or uploading
     - Fix file exist dialog source date and path when bulk downloading
   - Fix linux snap packages by moving to core22
+  - Mapper: Fix options load bug
 - **Changed:**
   - Immortal tools: Make unknown download/upload error messages more verbose
   - Update fs-extra 11.1.1 to 11.2.0
