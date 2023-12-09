@@ -25,6 +25,7 @@ Open an issue about it or log on to [ShadowMUD](http://www,shadowmud.com) using 
 * `{appData}` Per-user application data directory, which by default points to:
   * `%APPDATA%` on Windows
   * `$XDG_CONFIG_HOME` or `~/.config` on Linux
+  * `SNAP_USER_DATA` folder for snap package, this is normally`~/snap`
   * `~/Library/Application Support` on macOS
 * `{data}` The directory for storing jiMUD's configuration files is `{appData}\jiMUD`
 * `{temp}` Temporary directory.
