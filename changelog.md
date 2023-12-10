@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.2.0
+## 1.1.2
 
 - **Fixed:**
   - Fix progress dialog text not updating when first shown
@@ -15,7 +15,7 @@
 - **Changed:**
   - Immortal tools: Make unknown download/upload error messages more verbose
   - Update fs-extra 11.1.1 to 11.2.0
-  - Update electron 27.1.2 to 28.0.0
+  - Update electron 27.1.2 to 27.1.3
   - Update better-sqlite3 9.1.1 to 9.2.2
   - Update mathjs 12.1.0 to 12.2.0
 
