@@ -10010,6 +10010,12 @@
             return file.toLowerCase();
         return file;
     }
+
+    function executeContextItem(idx, itemId, itemLabel, itemRole, keyboard) {
+        if(manager && manager.active && manager.active.editor && typeof manager.active.editor.executeContxtItem === 'function') {
+            manager.active.editor.executeContxtItem(idx, itemId, itemLabel, itemRole, keyboard);
+        }
+    }
 </script>
 
 </html>
