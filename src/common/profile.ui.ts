@@ -224,7 +224,7 @@ const menubar: Menubar = new Menubar([
             { type: 'separator' },
             { label: '&Import...', click: importProfiles },
             { type: 'separator' },
-            { label: '&Open profiles folder...', click: ()=> openFolder('{profiles}')},
+            { label: '&Open profiles folder...', click: () => openFolder('{profiles}') },
             { type: 'separator' },
             { label: '&Close', click: doClose }
         ]
@@ -873,6 +873,7 @@ function addItem(type: string, key: string, item, idx?: number, profile?: Profil
     $('#profile-tree').treeview('addNode', [nodes, n, false, { silent: false }]);
     $('#profile-tree').treeview('selectNode', [nodes, { silent: false }]);
     sortNodeChildren('Profile' + profileID(profile.name) + key);
+    selectItem('Profile' + profileID(profile.name) + getKey(type) + idx);
     if (!customUndo)
         pushUndo({ action: 'add', type: type.toLowerCase(), item: item.clone(), data: { type: type, key: key, item: item, idx: idx, profile: profile.name.toLowerCase() } });
 }
@@ -2740,6 +2741,7 @@ function buildTreeview(data, skipInit?) {
                     if (_profileLoadExpand)
                         $('#profile-tree').treeview('expandNode', [n]);
                     $('#profile-tree').treeview('selectNode', [n]);
+                    //selectItem(n);
                 }
                 else if (!currentNode)
                     currentNode = $('#profile-tree').treeview('getSelected')[0];
@@ -4421,13 +4423,16 @@ function DeleteItem(type: string, key: string, idx: number, profile?: Profile, c
     let newNode;
     let selected;
     let name;
+    let wasSelected;
     if (!profile) profile = currentProfile;
     if (!customUndo)
         pushUndo({ action: 'delete', type: type, data: { key: key, idx: idx, profile: profile.name.toLowerCase() }, item: profile[key][idx] });
     name = profileID(profile.name);
     node = $('#profile-tree').treeview('findNodes', ['Profile' + name + key + idx, 'id']);
-    if (node && node.length > 0 && node[0].state.selected)
+    if (node && node.length > 0 && node[0].state.selected) {
         currentNode = null;
+        wasSelected = true;
+    }
     $('#profile-tree').treeview('removeNode', [node, { silent: true }]);
     profile[key].splice(idx, 1);
     il = profile[key].length;
@@ -4449,6 +4454,17 @@ function DeleteItem(type: string, key: string, idx: number, profile?: Profile, c
             const n = $('#profile-tree').treeview('findNodes', ['^' + selected + '$', 'id'])[0];
             currentNode = n[0];
             $('#profile-tree').treeview('selectNode', [n]);
+            //selectItem(n);
+        }
+        else if (wasSelected && profile[key].length > 0) {
+            if (idx > 0)
+                idx--;
+            const n = $('#profile-tree').treeview('findNodes', ['^Profile' + name + key + idx + '$', 'id']);
+            if (n.length > 0) {
+                currentNode = n[0][0];
+                $('#profile-tree').treeview('selectNode', n);
+                //selectItem(n);
+            }
         }
     }
 }
@@ -4932,4 +4948,11 @@ export function validateIdentifiers(el: HTMLInputElement, focus?) {
             el.focus();
     }
     return ids.length === 0;
+}
+
+function selectItem(id) {
+    //setTimeout(() => {
+    const n = $('#profile-tree').treeview('findNodes', ['^' + id + '$', 'id']);
+    n[0].$el[0].scrollIntoView({block: 'center'});
+    //}, 1000);
 }

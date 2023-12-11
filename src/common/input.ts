@@ -9299,6 +9299,7 @@ export class Input extends EventEmitter {
         this._TriggerCache = null;
         this._TriggerStates = {};
         this._TriggerFunctionCache = {};
+        this._TriggerRegExCache = {};
         this._gamepadCaches = null;
         this._lastSuspend = -1;
         this._MacroCache = {};

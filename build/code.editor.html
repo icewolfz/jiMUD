@@ -2554,7 +2554,7 @@
                 if (e.panel.editor.diff) {
                     window.$dEditors[pane].getModifiedEditor().getContainerDomNode().parentElement.parentElement.style.display = 'block';
                     window.$editors[pane].getContainerDomNode().style.display = '';
-                    e.panel.editor.activate(window.$dEditors[pane]);                    
+                    e.panel.editor.activate(window.$dEditors[pane]);
                     toggleDiffNav(true);
                 }
                 else {
@@ -2588,7 +2588,7 @@
         doUpdate(1);
     });
     manager.on('deactivated', (e, pane) => {
-        if(_loading) return;
+        if (_loading) return;
         if (e.panel.editor.type === 1) {
             if (e.panel.editor.diff)
                 e.panel.editor.deactivate(window.$dEditors[pane]);
@@ -4112,7 +4112,7 @@
             window.opener._status.on('set-title', setTitle);
             window.opener.addEventListener('loadCharacter', updateCharacter);
             window.opener.addEventListener('updateCharacter', updateCharacter);
-            window.opener.addEventListener('resetCharacter', updateCharacter);            
+            window.opener.addEventListener('resetCharacter', updateCharacter);
             //#region init IED
             _ied = new IED();
             _ied.prefix = 'editor-';
@@ -4871,7 +4871,7 @@
             window.opener._status.off('set-title', setTitle);
             window.opener.removeEventListener('loadCharacter', updateCharacter);
             window.opener.removeEventListener('updateCharacter', updateCharacter);
-            window.opener.removeEventListener('resetCharacter', updateCharacter);            
+            window.opener.removeEventListener('resetCharacter', updateCharacter);
         }
         var keys = Object.keys(_editors);
         var p = keys.length;
@@ -9789,9 +9789,9 @@
             });
             p.editor.on('option-changed', (option, value) => {
                 if (_loading) return;
-                if(p.editor.type === 1) {
+                if (p.editor.type === 1) {
                     var pane = manager.panes.indexOf(p.dock);
-                    if(pane === -1) return;
+                    if (pane === -1) return;
                     options.editorOptions = window.$editors[pane].getRawOptions();
                     saveOptions();
                 }
@@ -10012,9 +10012,14 @@
     }
 
     function executeContextItem(idx, itemId, itemLabel, itemRole, keyboard) {
-        if(manager && manager.active && manager.active.editor && typeof manager.active.editor.executeContxtItem === 'function') {
+        if (manager && manager.active && manager.active.editor && typeof manager.active.editor.executeContxtItem === 'function') {
             manager.active.editor.executeContxtItem(idx, itemId, itemLabel, itemRole, keyboard);
         }
+        window.dispatchEvent(new CustomEvent('context-item', {
+            detail: {
+                idx: idx, itemId: itemId, itemLabel: itemLabel, itemRole: itemRole, keyboard: keyboard
+            }
+        }));
     }
 </script>
 

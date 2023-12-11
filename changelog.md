@@ -12,6 +12,10 @@
     - Fix file exist dialog source date and path when bulk downloading
   - Fix linux snap packages by moving to core22
   - Mapper: Fix options load bug
+  - Triggers: clear regex cache when profiles are saved to prevent old ones from staying in memory
+  - Profile manager:
+    - Scroll to new item in treeview when added
+    - When item deleted select the item before it instead of the main profile
 - **Changed:**
   - Immortal tools: Make unknown download/upload error messages more verbose
   - Update fs-extra 11.1.1 to 11.2.0
