@@ -4033,71 +4033,13 @@
     function gotoNextChange() {
         if (!manager.active && !manager.active.editor && manager.active.editor.type !== 1)
             return;
-        if (!manager.active && !manager.active.editor && manager.active.editor.type !== 1)
-            return;
-        var idx = manager.panes.indexOf(manager.active.dock);
-        if (idx !== -1) {
-            const dEdit = window.$dEditors[0];
-            const current = dEdit.getPosition();
-            const changes = window.$dEditors[0].getLineChanges();
-            for (var c = 0, cl = changes.length; c < cl; c++) {
-                if (changes[c].modifiedStartLineNumber > current.lineNumber) {
-                    dEdit.setPosition({ column: 0, lineNumber: changes[c].modifiedStartLineNumber })
-                    //dEdit.revealLine(changes[c].modifiedStartLineNumber);
-                    dEdit.revealRange({
-                        endColumn: 1,
-                        endLineNumber: changes[c].modifiedEndLineNumber,
-                        startColumn: 1,
-                        startLineNumber: changes[c].modifiedStartLineNumber
-                    });
-                    break;
-                }
-            }
-            if (changes.length > 0) {
-                dEdit.setPosition({ column: 0, lineNumber: changes[changes.length - 1].modifiedStartLineNumber })
-                //dEdit.revealLine(changes[c].modifiedStartLineNumber);
-                dEdit.revealRange({
-                    endColumn: 1,
-                    endLineNumber: changes[changes.length - 1].modifiedEndLineNumber,
-                    startColumn: 1,
-                    startLineNumber: changes[changes.length - 1].modifiedStartLineNumber
-                });
-            }
-        }
+        window.$dEditors[manager.panes.indexOf(manager.activePane)].goToDiff('next');
     }
 
     function gotoPrevChange() {
         if (!manager.active && !manager.active.editor && manager.active.editor.type !== 1)
             return;
-        var idx = manager.panes.indexOf(manager.active.dock);
-        if (idx !== -1) {
-            const dEdit = window.$dEditors[0];
-            const current = dEdit.getPosition();
-            const changes = window.$dEditors[0].getLineChanges();
-            for (var c = changes.length - 1; c >= 0; c--) {
-                if (changes[c].modifiedStartLineNumber < current.lineNumber) {
-                    dEdit.setPosition({ column: 0, lineNumber: changes[c].modifiedStartLineNumber })
-                    //dEdit.revealLine(changes[c].modifiedStartLineNumber);
-                    dEdit.revealRange({
-                        endColumn: 1,
-                        endLineNumber: changes[c].modifiedEndLineNumber,
-                        startColumn: 1,
-                        startLineNumber: changes[c].modifiedStartLineNumber
-                    });
-                    break;
-                }
-            }
-            if (changes.length > 0) {
-                dEdit.setPosition({ column: 0, lineNumber: changes[0].modifiedStartLineNumber })
-                //dEdit.revealLine(changes[c].modifiedStartLineNumber);
-                dEdit.revealRange({
-                    endColumn: 1,
-                    endLineNumber: changes[0].modifiedEndLineNumber,
-                    startColumn: 1,
-                    startLineNumber: changes[0].modifiedStartLineNumber
-                });
-            }
-        }
+        window.$dEditors[manager.panes.indexOf(manager.activePane)].goToDiff('previous');
     }
 
     $(document).ready(() => {

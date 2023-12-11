@@ -16,12 +16,15 @@
   - Profile manager:
     - Scroll to new item in treeview when added
     - When item deleted select the item before it instead of the main profile
+  - Code editor: Update diff navigation to new monaco-editor systems
 - **Changed:**
   - Immortal tools: Make unknown download/upload error messages more verbose
   - Update fs-extra 11.1.1 to 11.2.0
   - Update electron 27.1.2 to 27.1.3
   - Update better-sqlite3 9.1.1 to 9.2.2
   - Update mathjs 12.1.0 to 12.2.0
+  - Update markdown-it 13.0.2 to 14.0.0
+  - Update monaco-editor 0.44.0 to 0.45.0
 
 ## 1.1.1 2023-11-27
 
