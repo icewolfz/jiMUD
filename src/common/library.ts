@@ -2220,3 +2220,17 @@ export function boldUnicodeText(text) {
 export function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 }
+
+export function insertValue(input, value) {
+    if(!input) return;
+    document.execCommand("insertText", false, value);
+    /*
+    var startPos = input.selectionStart;
+    var endPos = input.selectionEnd;
+    input.value = input.value.substring(0, startPos)
+        + value
+        + input.value.substring(endPos, input.value.length);
+    input.selectionStart = startPos;
+    input.selectionEnd = startPos + value.length;
+    */
+}

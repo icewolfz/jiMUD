@@ -9,7 +9,7 @@
 /// <reference types="mathjs" />
 import { EventEmitter } from 'events';
 import { MacroModifiers, MacroDisplay, Alias, Trigger, Button, Profile, TriggerType, TriggerTypes, SubTriggerTypes, convertPattern } from './profile';
-import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync, splitQuoted, isValidIdentifier, fileSizeSync, getCursor } from './library';
+import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync, splitQuoted, isValidIdentifier, fileSizeSync, getCursor, insertValue } from './library';
 import { Client } from './client';
 import { Tests } from './test';
 import { NewLineType, ProfileSaveType, ScriptEngineType, TabCompletion } from './types';
@@ -1479,6 +1479,8 @@ export class Input extends EventEmitter {
                     this._tabIdx = -1;
                     this._tabWords = null;
                     this._tabSearch = null
+                    if (this.client.getOption('commandAutoSize') || this.client.getOption('commandScrollbars'))
+                        resizeCommandInput();                    
                     break;
                 case 'ArrowUp': //up
                     //any modifier set not a proper history navigation    
@@ -1523,7 +1525,7 @@ export class Input extends EventEmitter {
                     switch (this.client.getOption('newlineShortcut')) {
                         case NewLineType.Ctrl:
                             if (event.ctrlKey && !event.shiftKey && !event.metaKey && !event.altKey) {
-                                this.client.commandInput.value += '\n';
+                                insertValue(this.client.commandInput, '\n');
                                 if (this.client.getOption('commandAutoSize') || this.client.getOption('commandScrollbars'))
                                     resizeCommandInput();
                                 this.client.commandInput.blur();
@@ -1533,7 +1535,7 @@ export class Input extends EventEmitter {
                             break;
                         case NewLineType.CtrlAndShift:
                             if (event.ctrlKey && event.shiftKey && !event.metaKey && !event.altKey) {
-                                this.client.commandInput.value += '\n';
+                                insertValue(this.client.commandInput, '\n');
                                 if (this.client.getOption('commandAutoSize') || this.client.getOption('commandScrollbars'))
                                     resizeCommandInput();
                                 this.client.commandInput.blur();
@@ -1543,7 +1545,7 @@ export class Input extends EventEmitter {
                             break;
                         case NewLineType.CtrlOrShift:
                             if ((event.ctrlKey || event.shiftKey) && !event.metaKey && !event.altKey) {
-                                this.client.commandInput.value += '\n';
+                                insertValue(this.client.commandInput, '\n');
                                 if (this.client.getOption('commandAutoSize') || this.client.getOption('commandScrollbars'))
                                     resizeCommandInput();
                                 this.client.commandInput.blur();
@@ -1553,7 +1555,7 @@ export class Input extends EventEmitter {
                             break;
                         case NewLineType.Shift:
                             if ((event.ctrlKey && event.shiftKey) && !event.metaKey && !event.altKey) {
-                                this.client.commandInput.value += '\n';
+                                insertValue(this.client.commandInput, '\n');
                                 if (this.client.getOption('commandAutoSize') || this.client.getOption('commandScrollbars'))
                                     resizeCommandInput();
                                 this.client.commandInput.blur();

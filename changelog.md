@@ -17,6 +17,9 @@
     - Scroll to new item in treeview when added
     - When item deleted select the item before it instead of the main profile
   - Code editor: Update diff navigation to new monaco-editor systems
+  - Command input:
+    - Correctly insert newline at cursor position instead of at end of text
+    - Fix resize when escape hit
 - **Changed:**
   - Immortal tools: Make unknown download/upload error messages more verbose
   - Update fs-extra 11.1.1 to 11.2.0
