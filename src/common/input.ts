@@ -1633,6 +1633,10 @@ export class Input extends EventEmitter {
                     if (this._tabIdx >= this._tabWords.length) this._tabIdx = 0;
 
                     const tabCasing = this.client.getOption('tabCompletionReplaceCasing');
+                    //Fixes undo/redo but saves all tab changes better to just break undo i think
+                    //this.client.commandInput.selectionStart = start;
+                    //this.client.commandInput.selectionEnd = end;
+                    //insertValue(this.client.commandInput, (tabCasing === 1 ? (this._tabWords[this._tabIdx].toLowerCase()) : (tabCasing === 2 ? this._tabWords[this._tabIdx].toUpperCase() : this._tabWords[this._tabIdx])));
                     this.client.commandInput.value = this.client.commandInput.value.substring(0, start)
                         + (tabCasing === 1 ? (this._tabWords[this._tabIdx].toLowerCase()) : (tabCasing === 2 ? this._tabWords[this._tabIdx].toUpperCase() : this._tabWords[this._tabIdx]))
                         + this.client.commandInput.value.substring(end, this.client.commandInput.value.length);

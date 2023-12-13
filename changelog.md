@@ -20,6 +20,7 @@
   - Command input:
     - Correctly insert newline at cursor position instead of at end of text
     - Fix resize when escape hit
+    - Paste/Paste special no longer break undo/redo
 - **Changed:**
   - Immortal tools: Make unknown download/upload error messages more verbose
   - Update fs-extra 11.1.1 to 11.2.0
