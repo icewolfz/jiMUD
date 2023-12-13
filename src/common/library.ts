@@ -2224,10 +2224,10 @@ export function escapeRegExp(string) {
 export function insertValue(input, value) {
     if(!input) return;
     const active = <HTMLElement>document.activeElement;
-    if(active != input)
+    if(!active || active != input)
         input.focus();
     document.execCommand("insertText", false, value);
-    if(active != input)
+    if(active && active != input)
         active.focus();
     /*
     var startPos = input.selectionStart;
