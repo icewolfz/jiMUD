@@ -93,20 +93,6 @@ body {
     opacity: 1;
 }
 
-.drop,
-.cm-tabstrip li.drop,
-.cm-tabstrip li.new.drop,
-.cm-tabstrip li.active.drop,
-.cm-tabstrip li.changed.drop,
-.cm-tabstrip li.active.changed.drop,
-.cm-tabstrip li.new.active.drop {
-    background-color: rgba(158, 158, 158, 0.5) !important;
-    color: white !important;
-    border-color: black;
-    box-shadow: initial;
-    text-shadow: 0 1px black;
-}
-
 .cm-tabstrip li .title {
     margin-left: 22px;
     margin-right: 20px;
@@ -467,4 +453,31 @@ body {
     border-radius: 4px;
     color: white;
     text-shadow: 0 1px black;    
+}
+
+.drop,
+.cm-tabstrip li.drop,
+.cm-tabstrip li.new.drop,
+.cm-tabstrip li.active.drop,
+.cm-tabstrip li.changed.drop,
+.cm-tabstrip li.active.changed.drop,
+.cm-tabstrip li.new.active.drop {
+    background-color: rgba(158, 158, 158, 0.5) !important;
+    color: white !important;
+    border-color: black;
+    box-shadow: initial;
+    text-shadow: 0 1px black;
+}
+
+
+.drop .close,
+.cm-tabstrip li.drop .close,
+.cm-tabstrip li.new.drop .close,
+.cm-tabstrip li.active.drop .close,
+.cm-tabstrip li.changed.drop .close,
+.cm-tabstrip li.active.changed.drop .close,
+.cm-tabstrip li.new.active.drop .close {
+    color: white !important;
+    text-shadow: 0 1px black;
+    opacity: 0.6;
 }
