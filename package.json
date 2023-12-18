@@ -46,6 +46,7 @@
     "package:linux32": "electron-builder --linux deb AppImage rpm tar.xz --ia32",
     "package:linux64": "electron-builder --linux deb AppImage rpm tar.xz snap --x64",
     "package:snap-classic": "electron-builder --linux snap --x64 --c.snap.confinement=classic --c.artifactName=$\\{name\\}_$\\{version\\}_$\\{arch\\}_classic.$\\{ext\\}",
+    "package:flatpak": "electron-builder --linux flatpak --c.appId=com.electron.$\\{name\\}",
     "min": "node minify",
     "release:win": "npm run compile && npm run package:win",
     "release:linux": "npm run compile && npm run package:linux",
@@ -147,6 +148,10 @@
     "snap": {
       "base": "core22",
       "summary": "MUD client coded in javascript."
+    },
+    "flatpak": {
+      "baseVersion": 23.08,
+      "runtimeVersion": 23.08
     }
   },
   "dependencies": {
