@@ -11,6 +11,7 @@ A mud client using electron for [ShadowMUD](http://www.shadowmud.com) based on i
   - Deb: sudo app install ./jimud_VERSION.amd64.deb
   - Snap: sudo snap install ./jimud_VERSION.amd64.snap --dangerous
   - Snap classic: sudo snap install ./jimud_VERSION.amd64_classic.snap --dangerous --classic
+  - Flatpak: sudo flatpak install ./jiMUD-VERSION.-x86_64.flatpak
   - Rmp: rpm -i ./jimud0VERSION.x86_64.rpm
   - AppImage: set to executable and run
     - Recommended: https://github.com/TheAssassin/AppImageLauncher
