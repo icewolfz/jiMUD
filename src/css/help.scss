@@ -458,6 +458,10 @@ body {
     z-index: 10;
 }
 
+.find-selection {
+    display: none !important;
+}
+
 #help-drag-bar {
     background-color: transparent;
     height: 100%;

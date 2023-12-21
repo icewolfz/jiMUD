@@ -2,6 +2,9 @@
 
 ## 1.2.1
 
+- **Fixed:**
+  - Help: Hide find in selection button as not implemented
+
 - **Changed:**
   - Update mathjs 12.2.0 to 12.2.1
 
