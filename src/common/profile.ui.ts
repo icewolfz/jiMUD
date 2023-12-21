@@ -12,7 +12,7 @@ const path = require('path');
 const fs = require('fs');
 //const trash = require('trash');
 
-declare let ace, dialog;
+declare let ace, dialog, search;
 declare global {
     interface Window {
         getGlobal: any;
@@ -20,7 +20,8 @@ declare global {
     }
 }
 
-let profiles = new ProfileCollection();
+export let profiles = new ProfileCollection();
+export let noEditorFocus = false;
 let currentProfile;
 let currentNode;
 let watcher;
@@ -240,7 +241,9 @@ const menubar: Menubar = new Menubar([
             { label: 'Cu&t', enabled: false, accelerator: 'CmdOrCtrl+X', click: doCut },
             { label: '&Copy', enabled: false, accelerator: 'CmdOrCtrl+C', click: doCopy },
             { label: '&Paste', enabled: false, accelerator: 'CmdOrCtrl+V', click: doPaste },
-            { label: '&Delete', enabled: false, accelerator: 'Delete', click: doDelete }
+            { label: '&Delete', enabled: false, accelerator: 'Delete', click: doDelete },
+            { type: 'separator' },
+            { label: '&Find', accelerator: 'CmdOrCtrl+F', click: () => search.show() }
         ]
     }
 ]);
@@ -845,7 +848,7 @@ function clearButton(id) {
     $(id).blur();
 }
 
-function GetDisplay(arr) {
+export function GetDisplay(arr) {
     if (arr.displaytype === 1) {
         /*jslint evil: true */
         const f = new Function('item', arr.display);
@@ -1061,6 +1064,7 @@ function setEditorValue(editor, value) {
 }
 
 function focusEditor(editor) {
+    if(noEditorFocus) return;
     if (editors[editor])
         editors[editor].focus();
     else

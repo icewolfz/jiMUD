@@ -2,6 +2,8 @@
 
 ## 1.2.1
 
+- **New:**
+  - Profile manager: Add simple search to allow searching for item/profile names/trigger patterns and similar item text
 - **Fixed:**
   - Help: Hide find in selection button as not implemented
 
