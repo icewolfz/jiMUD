@@ -24,6 +24,10 @@ interface FindOptions {
     location?: number[];
 }
 
+interface FindOptionsProfiles extends FindOptions {
+    value?: boolean;
+}
+
 interface ButtonOptions {
     connect?: boolean;
     characters?: boolean;
@@ -109,6 +113,7 @@ export class Profiles {
     public showInTaskBar: boolean;
     public profileSelected: string;
     public profileExpandSelected: boolean;
+    public find: FindOptionsProfiles = {};
 }
 
 /**
@@ -524,10 +529,17 @@ export let SettingList: any[] = [
     ['characterManagerAddButtonAction', 0, SettingType.Number, 0],
     ['enableCrashReporting', 0, SettingType.Boolean, false],
     ['characterManagerPanelWidth', 0, SettingType.Number, 0],
-    ['ignoreInputLeadingWhitespace', 0, SettingType.Boolean, false]
+    ['ignoreInputLeadingWhitespace', 0, SettingType.Boolean, false],
+    ['profiles.find.case', 0, 1, false],
+    ['profiles.find.word', 0, 1, false],
+    ['profiles.find.reverse', 0, 1, false],
+    ['profiles.find.regex', 0, 1, false],
+    ['profiles.find.selection', 0, 1, false],
+    ['profiles.find.show', 0, 1, false],    
+    ['profiles.find.value', 0, 1, false]
 ];
 
-export const SettingProperties = ['bufferSize', 'commandDelay', 'commandDelayCount', 'commandHistorySize', 'fontSize', 'cmdfontSize', 'commandEcho', 'flashing', 'autoConnect', 'enableAliases', 'enableTriggers', 'enableMacros', 'showScriptErrors', 'commandStacking', 'commandStackingChar', 'htmlLog', 'keepLastCommand', 'enableMCCP', 'enableUTF8', 'font', 'cmdfont', 'mapper.follow', 'mapper.enabled', 'mapper.split', 'mapper.fill', 'showMapper', 'fullScreen', 'enableMXP', 'enableMSP', 'parseCommands', 'lagMeter', 'enablePing', 'enableEcho', 'enableSpeedpaths', 'speedpathsChar', 'parseSpeedpaths', 'profile', 'parseSingleQuotes', 'parseDoubleQuotes', 'logEnabled', 'logPrepend', 'logOffline', 'logUniqueOnConnect', 'enableURLDetection', 'notifyMSPPlay', 'CommandonClick', 'allowEval', 'allowEscape', 'AutoCopySelectedToClipboard', 'enableDebug', 'editorPersistent', 'askonclose', 'dev', 'chat.captureLines', 'chat.captureAllLines', 'chat.captureReviews', 'chat.captureTells', 'chat.captureTalk', 'chat.gag', 'chat.CaptureOnlyOpen', 'checkForUpdates', 'autoCreateCharacter', 'askonchildren', 'mapper.legend', 'mapper.room', 'mapper.importType', 'mapper.vscroll', 'mapper.hscroll', 'mapper.scale', 'mapper.alwaysOnTop', 'mapper.alwaysOnTopClient', 'mapper.memory', 'mapper.memorySavePeriod', 'mapper.active.ID', 'mapper.active.x', 'mapper.active.y', 'mapper.active.z', 'mapper.active.area', 'mapper.active.zone', 'mapper.persistent', 'profiles.split', 'profiles.askoncancel', 'profiles.triggersAdvanced', 'profiles.aliasesAdvanced', 'profiles.buttonsAdvanced', 'profiles.macrosAdvanced', 'profiles.contextsAdvanced', 'profiles.codeEditor', 'profiles.watchFiles', 'chat.alwaysOnTop', 'chat.alwaysOnTopClient', 'chat.log', 'chat.persistent', 'chat.zoom', 'chat.font', 'chat.fontSize', 'title', 'logGagged', 'logTimeFormat', 'autoConnectDelay', 'autoLogin', 'onDisconnect', 'enableKeepAlive', 'keepAliveDelay', 'newlineShortcut', 'logWhat', 'logErrors', 'showErrorsExtended', 'reportCrashes', 'enableCommands', 'commandChar', 'escapeChar', 'enableVerbatim', 'verbatimChar', 'soundPath', 'logPath', 'theme', 'gamepads', 'buttons.connect', 'buttons.characters', 'buttons.preferences', 'buttons.log', 'buttons.clear', 'buttons.lock', 'buttons.map', 'buttons.user', 'buttons.mail', 'buttons.compose', 'buttons.immortal', 'buttons.codeEditor', 'find.case', 'find.word', 'find.reverse', 'find.regex', 'find.selection', 'find.show', 'display.split', 'display.splitHeight', 'display.splitLive', 'display.roundedOverlays', 'backupLoad', 'backupSave', 'backupAllProfiles', 'scrollLocked', 'showStatus', 'showCharacterManager', 'showChat', 'showEditor', 'showArmor', 'showStatusWeather', 'showStatusLimbs', 'showStatusHealth', 'showStatusExperience', 'showStatusPartyHealth', 'showStatusCombatHealth', 'showButtonBar', 'allowNegativeNumberNeeded', 'spellchecking', 'hideOnMinimize', 'showTrayIcon', 'statusExperienceNeededProgressbar', 'trayClick', 'trayDblClick', 'pasteSpecialPrefix', 'pasteSpecialPostfix', 'pasteSpecialReplace', 'pasteSpecialPrefixEnabled', 'pasteSpecialPostfixEnabled', 'pasteSpecialReplaceEnabled', 'display.showSplitButton', 'chat.split', 'chat.splitHeight', 'chat.splitLive', 'chat.roundedOverlays', 'chat.showSplitButton', 'chat.bufferSize', 'chat.flashing', 'display.hideTrailingEmptyLine', 'display.enableColors', 'display.enableBackgroundColors', 'enableSound', 'allowHalfOpen', 'editorClearOnSend', 'editorCloseOnSend', 'askOnCloseAll', 'askonloadCharacter', 'mapper.roomWidth', 'mapper.roomGroups', 'mapper.showInTaskBar', 'profiles.enabled', 'profiles.sortOrder', 'profiles.sortDirection', 'profiles.showInTaskBar', 'profiles.profileSelected', 'profiles.profileExpandSelected', 'chat.lines', 'chat.showInTaskBar', 'chat.showTimestamp', 'chat.timestampFormat', 'chat.tabWidth', 'chat.displayControlCodes', 'chat.emulateTerminal', 'chat.emulateControlCodes', 'chat.wordWrap', 'chat.wrapAt', 'chat.indent', 'chat.scrollLocked', 'chat.find.case', 'chat.find.word', 'chat.find.reverse', 'chat.find.regex', 'chat.find.selection', 'chat.find.show', 'chat.find.highlight', 'chat.find.location', 'codeEditor.showInTaskBar', 'codeEditor.persistent', 'codeEditor.alwaysOnTop', 'codeEditor.alwaysOnTopClient', 'autoTakeoverLogin', 'fixHiddenWindows', 'maxReconnectDelay', 'enableBackgroundThrottling', 'enableBackgroundThrottlingClients', 'showInTaskBar', 'showLagInTitle', 'mspMaxRetriesOnError', 'logTimestamp', 'logTimestampFormat', 'disableTriggerOnError', 'prependTriggeredLine', 'enableParameters', 'parametersChar', 'enableNParameters', 'nParametersChar', 'enableParsing', 'externalWho', 'externalHelp', 'watchForProfilesChanges', 'onProfileChange', 'onProfileDeleted', 'enableDoubleParameterEscaping', 'ignoreEvalUndefined', 'enableInlineComments', 'enableBlockComments', 'inlineCommentString', 'blockCommentString', 'allowCommentsFromCommand', 'saveTriggerStateChanges', 'groupProfileSaves', 'groupProfileSaveDelay', 'returnNewlineOnEmptyValue', 'pathDelay', 'pathDelayCount', 'echoSpeedpaths', 'alwaysShowTabs', 'scriptEngineType', 'initializeScriptEngineOnLoad', 'find.highlight', 'find.location', 'display.showInvalidMXPTags', 'display.showTimestamp', 'display.timestampFormat', 'display.displayControlCodes', 'display.emulateTerminal', 'display.emulateControlCodes', 'display.wordWrap', 'display.tabWidth', 'display.wrapAt', 'display.indent', 'statusWidth', 'showEditorInTaskBar', 'trayMenu', 'lockLayout', 'loadLayout', 'useSingleInstance', 'statusWidth', 'characterManagerDblClick', 'warnAdvancedSettings', 'showAdvancedSettings', 'enableTabCompletion', 'tabCompletionBufferLimit', 'ignoreCaseTabCompletion', 'enableNotifications', 'commandAutoSize', 'commandWordWrap', 'commandScrollbars', 'tabCompletionList', 'tabCompletionLookupType', 'tabCompletionReplaceCasing', 'characterManagerAddButtonAction', 'enableCrashReporting', 'characterManagerPanelWidth', 'ignoreInputLeadingWhitespace'];
+export const SettingProperties = ['bufferSize', 'commandDelay', 'commandDelayCount', 'commandHistorySize', 'fontSize', 'cmdfontSize', 'commandEcho', 'flashing', 'autoConnect', 'enableAliases', 'enableTriggers', 'enableMacros', 'showScriptErrors', 'commandStacking', 'commandStackingChar', 'htmlLog', 'keepLastCommand', 'enableMCCP', 'enableUTF8', 'font', 'cmdfont', 'mapper.follow', 'mapper.enabled', 'mapper.split', 'mapper.fill', 'showMapper', 'fullScreen', 'enableMXP', 'enableMSP', 'parseCommands', 'lagMeter', 'enablePing', 'enableEcho', 'enableSpeedpaths', 'speedpathsChar', 'parseSpeedpaths', 'profile', 'parseSingleQuotes', 'parseDoubleQuotes', 'logEnabled', 'logPrepend', 'logOffline', 'logUniqueOnConnect', 'enableURLDetection', 'notifyMSPPlay', 'CommandonClick', 'allowEval', 'allowEscape', 'AutoCopySelectedToClipboard', 'enableDebug', 'editorPersistent', 'askonclose', 'dev', 'chat.captureLines', 'chat.captureAllLines', 'chat.captureReviews', 'chat.captureTells', 'chat.captureTalk', 'chat.gag', 'chat.CaptureOnlyOpen', 'checkForUpdates', 'autoCreateCharacter', 'askonchildren', 'mapper.legend', 'mapper.room', 'mapper.importType', 'mapper.vscroll', 'mapper.hscroll', 'mapper.scale', 'mapper.alwaysOnTop', 'mapper.alwaysOnTopClient', 'mapper.memory', 'mapper.memorySavePeriod', 'mapper.active.ID', 'mapper.active.x', 'mapper.active.y', 'mapper.active.z', 'mapper.active.area', 'mapper.active.zone', 'mapper.persistent', 'profiles.split', 'profiles.askoncancel', 'profiles.triggersAdvanced', 'profiles.aliasesAdvanced', 'profiles.buttonsAdvanced', 'profiles.macrosAdvanced', 'profiles.contextsAdvanced', 'profiles.codeEditor', 'profiles.watchFiles', 'chat.alwaysOnTop', 'chat.alwaysOnTopClient', 'chat.log', 'chat.persistent', 'chat.zoom', 'chat.font', 'chat.fontSize', 'title', 'logGagged', 'logTimeFormat', 'autoConnectDelay', 'autoLogin', 'onDisconnect', 'enableKeepAlive', 'keepAliveDelay', 'newlineShortcut', 'logWhat', 'logErrors', 'showErrorsExtended', 'reportCrashes', 'enableCommands', 'commandChar', 'escapeChar', 'enableVerbatim', 'verbatimChar', 'soundPath', 'logPath', 'theme', 'gamepads', 'buttons.connect', 'buttons.characters', 'buttons.preferences', 'buttons.log', 'buttons.clear', 'buttons.lock', 'buttons.map', 'buttons.user', 'buttons.mail', 'buttons.compose', 'buttons.immortal', 'buttons.codeEditor', 'find.case', 'find.word', 'find.reverse', 'find.regex', 'find.selection', 'find.show', 'display.split', 'display.splitHeight', 'display.splitLive', 'display.roundedOverlays', 'backupLoad', 'backupSave', 'backupAllProfiles', 'scrollLocked', 'showStatus', 'showCharacterManager', 'showChat', 'showEditor', 'showArmor', 'showStatusWeather', 'showStatusLimbs', 'showStatusHealth', 'showStatusExperience', 'showStatusPartyHealth', 'showStatusCombatHealth', 'showButtonBar', 'allowNegativeNumberNeeded', 'spellchecking', 'hideOnMinimize', 'showTrayIcon', 'statusExperienceNeededProgressbar', 'trayClick', 'trayDblClick', 'pasteSpecialPrefix', 'pasteSpecialPostfix', 'pasteSpecialReplace', 'pasteSpecialPrefixEnabled', 'pasteSpecialPostfixEnabled', 'pasteSpecialReplaceEnabled', 'display.showSplitButton', 'chat.split', 'chat.splitHeight', 'chat.splitLive', 'chat.roundedOverlays', 'chat.showSplitButton', 'chat.bufferSize', 'chat.flashing', 'display.hideTrailingEmptyLine', 'display.enableColors', 'display.enableBackgroundColors', 'enableSound', 'allowHalfOpen', 'editorClearOnSend', 'editorCloseOnSend', 'askOnCloseAll', 'askonloadCharacter', 'mapper.roomWidth', 'mapper.roomGroups', 'mapper.showInTaskBar', 'profiles.enabled', 'profiles.sortOrder', 'profiles.sortDirection', 'profiles.showInTaskBar', 'profiles.profileSelected', 'profiles.profileExpandSelected', 'chat.lines', 'chat.showInTaskBar', 'chat.showTimestamp', 'chat.timestampFormat', 'chat.tabWidth', 'chat.displayControlCodes', 'chat.emulateTerminal', 'chat.emulateControlCodes', 'chat.wordWrap', 'chat.wrapAt', 'chat.indent', 'chat.scrollLocked', 'chat.find.case', 'chat.find.word', 'chat.find.reverse', 'chat.find.regex', 'chat.find.selection', 'chat.find.show', 'chat.find.highlight', 'chat.find.location', 'codeEditor.showInTaskBar', 'codeEditor.persistent', 'codeEditor.alwaysOnTop', 'codeEditor.alwaysOnTopClient', 'autoTakeoverLogin', 'fixHiddenWindows', 'maxReconnectDelay', 'enableBackgroundThrottling', 'enableBackgroundThrottlingClients', 'showInTaskBar', 'showLagInTitle', 'mspMaxRetriesOnError', 'logTimestamp', 'logTimestampFormat', 'disableTriggerOnError', 'prependTriggeredLine', 'enableParameters', 'parametersChar', 'enableNParameters', 'nParametersChar', 'enableParsing', 'externalWho', 'externalHelp', 'watchForProfilesChanges', 'onProfileChange', 'onProfileDeleted', 'enableDoubleParameterEscaping', 'ignoreEvalUndefined', 'enableInlineComments', 'enableBlockComments', 'inlineCommentString', 'blockCommentString', 'allowCommentsFromCommand', 'saveTriggerStateChanges', 'groupProfileSaves', 'groupProfileSaveDelay', 'returnNewlineOnEmptyValue', 'pathDelay', 'pathDelayCount', 'echoSpeedpaths', 'alwaysShowTabs', 'scriptEngineType', 'initializeScriptEngineOnLoad', 'find.highlight', 'find.location', 'display.showInvalidMXPTags', 'display.showTimestamp', 'display.timestampFormat', 'display.displayControlCodes', 'display.emulateTerminal', 'display.emulateControlCodes', 'display.wordWrap', 'display.tabWidth', 'display.wrapAt', 'display.indent', 'statusWidth', 'showEditorInTaskBar', 'trayMenu', 'lockLayout', 'loadLayout', 'useSingleInstance', 'statusWidth', 'characterManagerDblClick', 'warnAdvancedSettings', 'showAdvancedSettings', 'enableTabCompletion', 'tabCompletionBufferLimit', 'ignoreCaseTabCompletion', 'enableNotifications', 'commandAutoSize', 'commandWordWrap', 'commandScrollbars', 'tabCompletionList', 'tabCompletionLookupType', 'tabCompletionReplaceCasing', 'characterManagerAddButtonAction', 'enableCrashReporting', 'characterManagerPanelWidth', 'ignoreInputLeadingWhitespace', 'profiles.find.case', 'profiles.find.word', 'profiles.find.reverse', 'profiles.find.regex', 'profiles.find.selection', 'profiles.find.show','profiles.find.value'];
 
 /**
  * Class that contains all options, sets default values and allows loading and saving to json files
@@ -849,6 +861,13 @@ export class Settings {
             case 'profiles.contextsAdvanced': return this.profiles.contextsAdvanced;
             case 'profiles.codeEditor': return this.profiles.codeEditor;
             case 'profiles.watchFiles': return this.profiles.watchFiles;
+            case 'profiles.find.case': return this.profiles.find.case;
+            case 'profiles.find.word': return this.profiles.find.word;
+            case 'profiles.find.reverse': return this.profiles.find.reverse;
+            case 'profiles.find.regex': return this.profiles.find.regex;
+            case 'profiles.find.selection': return this.profiles.find.selection;
+            case 'profiles.find.show': return this.profiles.find.show;
+            case 'profiles.find.value': return this.profiles.find.value;
             case 'chat.alwaysOnTop': return this.chat.alwaysOnTop;
             case 'chat.alwaysOnTopClient': return this.chat.alwaysOnTopClient;
             case 'chat.log': return this.chat.log;
@@ -1073,6 +1092,28 @@ export class Settings {
                 return true;
             case 'profiles.watchFiles':
                 this.profiles.watchFiles = value;
+                return true;
+
+            case 'profiles.find.case':
+                this.profiles.find.case = value;
+                return true;
+            case 'profiles.find.word':
+                this.profiles.find.word = value;
+                return true;
+            case 'profiles.find.reverse':
+                this.profiles.find.reverse = value;
+                return true;
+            case 'profiles.find.regex':
+                this.profiles.find.regex = value;
+                return true;
+            case 'profiles.find.selection':
+                this.profiles.find.selection = value;
+                return true;
+            case 'profiles.find.show':
+                this.profiles.find.show = value;
+                return true;
+            case 'profiles.find.value':
+                this.profiles.find.value = value;
                 return true;
             case 'chat.alwaysOnTop':
                 this.chat.alwaysOnTop = value;
@@ -1856,6 +1897,13 @@ export class Settings {
             case 'profiles.contextsAdvanced': return false;
             case 'profiles.codeEditor': return true;
             case 'profiles.watchFiles': return true;
+            case 'profiles.find.case': return false;
+            case 'profiles.find.word': return false;
+            case 'profiles.find.reverse': return false;
+            case 'profiles.find.regex': return false;
+            case 'profiles.find.selection': return false;
+            case 'profiles.find.show': return false;            
+            case 'profiles.find.value': return false;
             case 'chat.alwaysOnTop': return false;
             case 'chat.alwaysOnTopClient': return true;
             case 'chat.log': return false;
@@ -1881,9 +1929,9 @@ export class Settings {
             case 'escapeChar': return '\\';
             case 'enableVerbatim': return true;
             case 'verbatimChar': return '`';
-            case 'soundPath': return  path.join('{data}', 'sounds');
-            case 'logPath': return  path.join('{data}', 'logs');
-            case 'theme': return  path.join('{themes}', 'default');
+            case 'soundPath': return path.join('{data}', 'sounds');
+            case 'logPath': return path.join('{data}', 'logs');
+            case 'theme': return path.join('{themes}', 'default');
             case 'gamepads': return false;
             case 'buttons.connect': return true;
             case 'buttons.characters': return true;

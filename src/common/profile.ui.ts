@@ -60,7 +60,7 @@ let _iCommentsStr = ['/', '/'];
 let _bCommentsStr = ['/', '*'];
 
 let _saving = false;
-let options = getOptions();
+export let options = getOptions();
 
 const _controllers = {};
 let _controllersCount = 0;
@@ -2769,7 +2769,7 @@ function getProfileData() {
 }
 
 
-function getOption(option) {
+export function getOption(option) {
     if (window.opener)
         return window.opener.client.getOption(option);
     return options.getValue(option);
@@ -2781,7 +2781,7 @@ function getOptions() {
     return Settings.load(window.getGlobal('settingsFile'));
 }
 
-function saveOptions() {
+export function saveOptions() {
     _saving = true;
     if (window.opener)
         window.opener.client.saveOptions();

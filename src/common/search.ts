@@ -120,7 +120,7 @@ export class Search extends EventEmitter {
     set RegularExpression(value: boolean) {
         if (value !== this._regex) {
             this._regex = value;
-            if (this._case)
+            if (this._regex)
                 $('#' + this.id + '-find-regex', this._control).addClass('active');
             else
                 $('#' + this.id + '-find-regex', this._control).removeClass('active');

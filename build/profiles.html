@@ -29,7 +29,7 @@
             <button id="btn-add-dropdown" type="button" class="btn btn-default btn-xs" title="New...">
                 <span class="caret"></span>
             </button>
-        </div>        
+        </div>
         <div class="btn-group" role="group">
             <button id="btn-undo" type="button" disabled="disabled" class="btn btn-default btn-xs" title="Undo" onclick="manager.doUndo()">
                 <i class="fa fa-undo"></i>
@@ -54,7 +54,7 @@
         </div>
         <button id="btn-find" type="button" class="btn btn-default btn-xs" title="Find" onclick="search.show()">
             <i class="fa fa-search"></i>
-        </button>        
+        </button>
         <button id="export" type="button" class="btn btn-default btn-xs" aria-haspopup="true" title="Import/Export">
             <i class="fa fa-exchange"></i>&nbsp;
             <span class="caret"></span>
@@ -685,6 +685,43 @@
 
         const { ProfileSearch } = require('./js/profile.search');
         let search = new ProfileSearch(manager, $('#profile-tree'), document.body);
+        search.MatchCase = manager.getOption('profiles.find.case');
+        search.MatchWord = manager.getOption('profiles.find.word');
+        search.Reverse = manager.getOption('profiles.find.reverse');
+        search.RegularExpression = manager.getOption('profiles.find.regex');
+        search.SearchValue = manager.getOption('profiles.find.value');
+        if (manager.getOption('profiles.find.show'))
+            search.show();
+
+        search.on('word', () => {
+            manager.options.profiles.find.word = search.MatchWord;
+            manager.saveOptions();
+        });
+        search.on('case', () => {
+            manager.options.profiles.find.case = search.MatchCase;
+            manager.saveOptions();
+        });
+        search.on('reverse', () => {
+            manager.options.profiles.find.reverse = search.Reverse;
+            manager.saveOptions();
+        });
+        search.on('regex', () => {
+            manager.options.profiles.find.regex = search.RegularExpression;
+            manager.saveOptions();
+        });
+        search.on('value', () => {
+            manager.options.profiles.find.value = search.SearchValue;
+            manager.saveOptions();
+        });
+
+        search.on('shown', () => {
+            manager.options.profiles.find.show = true;
+            manager.saveOptions();
+        });
+        search.on('closed', () => {
+            manager.options.profiles.find.show = false;;
+            manager.saveOptions();
+        });
 
         function closeable(all) {
             return manager.closeable(all);

@@ -20,6 +20,7 @@ export class ProfileSearch extends EventEmitter {
     private _reverse;
     private _regex;
     private _key;
+    private _value;
     //private $profiles = [];
 
     public manager;
@@ -141,7 +142,7 @@ export class ProfileSearch extends EventEmitter {
     set RegularExpression(value: boolean) {
         if (value !== this._regex) {
             this._regex = value;
-            if (this._case)
+            if (this._regex)
                 $('#' + this.id + '-find-regex', this._control).addClass('active');
             else
                 $('#' + this.id + '-find-regex', this._control).removeClass('active');
@@ -191,8 +192,24 @@ export class ProfileSearch extends EventEmitter {
         }
     }
 
+    get SearchValue(): boolean {
+        return this._value;
+    }
+
+    set SearchValue(value: boolean) {
+        if (value !== this._value) {
+            this._value = value;
+            if (this._value)
+                $('#' + this.id + '-find-value', this._control).addClass('active');
+            else
+                $('#' + this.id + '-find-value', this._control).removeClass('active');
+            this.find(true);
+            this.emit('value');
+        }
+    }
+
     private createControl() {
-        this._control = $('<div id="' + this.id + '-find" class="find"><input placeholder="Find" /><button id="' + this.id + '-find-case" title="Match Case" class="find-case">Aa</button><button id="' + this.id + '-find-word" title="Match Whole Word" class="find-word">Aa|</button><button id="' + this.id + '-find-regex" title="Use Regular Expression" class="find-regex">.*</button><div id="' + this.id + '-find-count" class="find-count"></div><button id="' + this.id + '-find-prev" title="Previous Match" disabled="disabled" class="find-prev"><i class="fa fa-arrow-up"></i></button><button id="' + this.id + '-find-next" title="Next Match" disabled="disabled" class="find-next"><i class="fa fa-arrow-down"></i></button><button id="' + this.id + '-find-selection" title="Find in selection" disabled="disabled" class="find-selection"><i class="fa fa-align-left"></i></button><button id="' + this.id + '-find-reverse" title="Search Up" class="find-reverse"><i class="fa fa-caret-up"></i></button><button id="' + this.id + '-find-close" title="Close" class="find-close"><i class="fa fa-close"></i></button></div>');
+        this._control = $('<div id="' + this.id + '-find" class="find"><input placeholder="Find" /><button id="' + this.id + '-find-case" title="Match Case" class="find-case">Aa</button><button id="' + this.id + '-find-word" title="Match Whole Word" class="find-word">Aa|</button><button id="' + this.id + '-find-regex" title="Use Regular Expression" class="find-regex">.*</button><button id="' + this.id + '-find-value" title="Search values" class="find-value"><i class="fa fa-code"></i></button><div id="' + this.id + '-find-count" class="find-count"></div><button id="' + this.id + '-find-prev" title="Previous Match" disabled="disabled" class="find-prev"><i class="fa fa-arrow-up"></i></button><button id="' + this.id + '-find-next" title="Next Match" disabled="disabled" class="find-next"><i class="fa fa-arrow-down"></i></button><button id="' + this.id + '-find-selection" title="Find in selection" disabled="disabled" class="find-selection"><i class="fa fa-align-left"></i></button><button id="' + this.id + '-find-reverse" title="Search Up" class="find-reverse"><i class="fa fa-caret-up"></i></button><button id="' + this.id + '-find-close" title="Close" class="find-close"><i class="fa fa-close"></i></button></div>');
         $('#' + this.id + '-find-close', this._control).on('click', () => {
             this.hide();
         });
@@ -214,6 +231,9 @@ export class ProfileSearch extends EventEmitter {
         $('#' + this.id + '-find-regex', this._control).on('click', () => {
             this.RegularExpression = !this.RegularExpression;
         });
+        $('#' + this.id + '-find-value', this._control).on('click', () => {
+            this.SearchValue = !this.SearchValue;
+        });        
         window.document.body.appendChild(this._control[0]);
     }
 
@@ -321,12 +341,12 @@ export class ProfileSearch extends EventEmitter {
         this.emit('found-results', this._results);
     }
 
-    private matchItem(re, item, value?) {
+    private matchItem(re, item) {
         if (re.exec(item.name))
             return true;
         if (re.exec(this.manager.GetDisplay(item)))
             return true;
-        if (value && re.exec(item.value))
+        if (this._value && re.exec(item.value))
             return true;
         return false;
     }
