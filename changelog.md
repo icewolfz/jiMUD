@@ -9,6 +9,7 @@
 
 - **Changed:**
   - Update mathjs 12.2.0 to 12.2.1
+  - Update electron 28.0.0 to 28.1.0
 
 ## 1.2.0 2023-12-18
 
