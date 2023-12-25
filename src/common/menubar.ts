@@ -79,6 +79,10 @@ export class Menubar {
                 if ((items[m].id || '').toLowerCase() === menu[i] || (items[m].label || '').toLowerCase().replace(/&/g, '') === menu[i]) {
                     item = items[m];
                     tItem = tItems[m];
+                    if (item.id != tItem.id || item.label !== tItem.label) {
+                        let n = tItems.findIndex((i) => i.id == item.id && i.label === item.label);
+                        tItem = tItems[n];
+                    }
                     if (item.submenu && item.submenu.items) {
                         items = item.submenu.items;
                         tItems = tItem.submenu;

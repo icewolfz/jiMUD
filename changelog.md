@@ -4,9 +4,10 @@
 
 - **New:**
   - Profile manager: Add simple search to allow searching for item/profile names/trigger patterns and similar item text
+  - Code editor: Add column selection mode menu toggle
 - **Fixed:**
   - Help: Hide find in selection button as not implemented
-
+  - Fix issue with moving items on menubars
 - **Changed:**
   - Update mathjs 12.2.0 to 12.2.1
   - Update electron 28.0.0 to 28.1.0

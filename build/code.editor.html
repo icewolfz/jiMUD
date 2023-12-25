@@ -2082,6 +2082,7 @@
             { type: 'separator' },
             {
                 label: '&Select All',
+                id: 'SelectAll',
                 accelerator: 'CmdOrCtrl+A',
                 enabled: false,
                 click: () => {
@@ -2896,6 +2897,8 @@
     }
 
     function updateMenu(menu, length) {
+        //filter out any dynamic items
+        subMenus[menu] = subMenus[menu].filter( i => !i.after && !i.before && !i.beforeGroupContaining && !i.afterGroupContaining );
         var items = subMenus[menu].slice(0, length);
         if (manager.active && manager.active.editor && manager.active.editor.supports('menu|' + menu)) {
             var cItems = manager.active.editor.menu(menu);

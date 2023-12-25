@@ -81,7 +81,8 @@ export class EditorSettings {
             enabled: false
         },
         wordWrap: 'off',
-        wordWrapOverride2: 'off'
+        wordWrapOverride2: 'off',
+        columnSelectionMode: false
     };
 
     public virtualOptions = {

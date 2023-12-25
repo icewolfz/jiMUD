@@ -1316,6 +1316,25 @@ export class MonacoCodeEditor extends EditorBase {
                     this.$editor.getAction('editor.action.gotoLine').run();
                 }
             });
+            m.push({ type: 'separator' });
+            m.push({
+                after: ['SelectAll'],
+                label: '&Column selection mode',
+                accelerator: 'CmdOrCtrl+Shift+A',
+                type: 'checkbox',
+                checked: this.$editor && this.$editor.getRawOptions().columnSelection,
+                click: () => {
+                    let mode = !this.$editor.getRawOptions().columnSelection;
+                    if (this.$dEditor) {
+                        this.$dEditor.updateOptions({ columnSelection: mode });
+                    }
+                    else {
+                        this.$editor.updateOptions({ columnSelection: mode });
+                    }
+                    this.emit('menu-update', 'view|column selection mode', { checked: mode });
+                    this.emit('option-changed', 'columnSelectionMode', mode);
+                }
+            });
             return m;
         }
         else if (menu === 'context') {
@@ -1640,7 +1659,7 @@ export class MonacoCodeEditor extends EditorBase {
     }
 
     public activate(editor, state?) {
-        if(state) this.$state = state;
+        if (state) this.$state = state;
         editor.layout();
         if (editor.getEditorType() === 'vs.editor.ICodeEditor') {
             this.$editor = editor;
