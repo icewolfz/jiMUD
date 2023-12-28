@@ -1822,6 +1822,12 @@
 
             client.on('window', (window, args, name) => {
                 switch (window) {
+                    case 'map':
+                        if (args === 'close')
+                            closeWindow('mapper');
+                        else
+                            openWindow('mapper');
+                        break;
                     case 'mapper':
                     case 'editor':
                     case 'chat':
@@ -3861,7 +3867,7 @@
             else if (post && post.length)
                 txt = txt.replace(/\n/g, `${post}\n`) + post;
             client.commandInput.selectionStart = parseInt(client.commandInput.dataset.selStart, 10);
-            client.commandInput.selectionEnd = parseInt(client.commandInput.dataset.selEnd, 10);            
+            client.commandInput.selectionEnd = parseInt(client.commandInput.dataset.selEnd, 10);
             insertValue(client.commandInput, txt);
             setTimeout(() => {
                 if (client.getOption('CommandonClick'))
@@ -3873,7 +3879,7 @@
             if (clipboard.readText().length === 0)
                 return;
             client.commandInput.selectionStart = parseInt(client.commandInput.dataset.selStart, 10);
-            client.commandInput.selectionEnd = parseInt(client.commandInput.dataset.selEnd, 10);            
+            client.commandInput.selectionEnd = parseInt(client.commandInput.dataset.selEnd, 10);
             insertValue(client.commandInput, clipboard.readText());
             setTimeout(() => {
                 if (client.getOption('CommandonClick'))
