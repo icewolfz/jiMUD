@@ -5,11 +5,16 @@
 - **New:**
   - Add 'map' as supported shot version of mapper window
   - Profile manager: Add simple search to allow searching for item/profile names/trigger patterns and similar item text
-  - Code editor: Add column selection mode menu toggle
+  - Code editor:
+    - Add column selection mode menu toggle
+    - Add waterdrink room template
 - **Fixed:**
   - Help: Hide find in selection button as not implemented
   - Fix issue with moving items on menubars
 - **Changed:**
+  - Code editor:
+    - Change WATERSOURCE to WATERDRINK to avoid naming issues in code complete
+    - Add waterdrink doc references to pier
   - Update mathjs 12.2.0 to 12.2.1
   - Update electron 28.0.0 to 28.1.0
   - Update moment 2.29.4 to 2.30.1

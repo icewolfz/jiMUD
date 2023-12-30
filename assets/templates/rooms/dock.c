@@ -11,6 +11,7 @@
  * @doc /doc/build/room/Advanced
  * @doc /doc/build/room/types/pier
  * @doc /doc/build/room/types/dock
+ * @doc /doc/build/room/waterdrink
  */
 #include <std.h>
 

@@ -12,6 +12,7 @@
  * @doc /doc/build/room/types/vault
  * @doc /doc/build/room/types/pier
  * @doc /doc/build/room/fishing
+ * @doc /doc/build/room/waterdrink
  */
 #include <std.h>
 

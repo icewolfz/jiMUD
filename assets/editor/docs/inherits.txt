@@ -5,7 +5,7 @@ inherit STD_COMMAND;
 inherit STD_STORAGE;
 inherit STD_CLIMBING;
 inherit STD_SCRIPTER;
-inherit STD_WATERSOURCE;
+inherit STD_WATERDRINK;
 inherit STD_GERM;
 inherit STD_GENERIC_VIRTUAL;
 
