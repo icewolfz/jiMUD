@@ -36,7 +36,7 @@
  }
 
  /**
- Override init to suppose both room and waterdrink inherits
+ Override init to support both room and waterdrink inherits
  */
  void init()
  {
