@@ -3,7 +3,7 @@
 ## 1.2.1
 
 - **New:**
-  - Add 'map' as supported shot version of mapper window
+  - [#WINDOW](docs/commands.md) Add 'map' as supported short version of mapper window
   - Profile manager: Add simple search to allow searching for item/profile names/trigger patterns and similar item text
   - Code editor:
     - Add column selection mode menu toggle
