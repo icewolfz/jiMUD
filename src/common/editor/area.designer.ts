@@ -307,6 +307,14 @@ export class Room {
                     if (this[prop].filter((v, i) => room[prop][i] !== v).length !== 0)
                         return false;
                     break;
+                case 'waterGerms':
+                    if (this[prop].length !== room[prop].length)
+                        return false;
+                    if (!this[prop].every(function (element, index) {
+                        return element === room[prop][index];
+                    }))
+                        return false;
+                    break;
                 case 'exitsDetails':
                     const k = Object.keys(this.exitsDetails).sort();
                     const k2 = Object.keys(room.exitsDetails).sort();
@@ -3194,6 +3202,16 @@ export class AreaDesigner extends EditorBase {
                             this.RoomChanged(curr, old, true);
                             old[prop] = copy(newValue);
                             break;
+                        case 'waterGerms':
+                            oldValues[sl] = copy(old[prop]);
+                            curr[prop] = newValue.map(function (item) {
+                                return item['germ'];
+                            });
+                            this.RoomChanged(curr, old, true);
+                            old[prop] = newValue.map(function (item) {
+                                return item['germ'];
+                            });
+                            break;
                         default:
                             oldValues[sl] = old[prop];
                             curr[prop] = newValue;
@@ -4059,6 +4077,50 @@ export class AreaDesigner extends EditorBase {
                     options: {
                         min: -100,
                         max: 100
+                    }
+                }
+            },
+            {
+                property: 'waterGerms',
+                label: 'Water Germs',
+                group: 'Advanced',
+                formatter: this.formatCollection.bind(this),
+                tooltipFormatter: this.formatCollection.bind(this),
+                sort: 6,
+                editor: {
+                    type: EditorType.collection,
+                    options: {
+                        open: true,
+                        columns: [
+                            {
+                                label: 'Germ',
+                                field: 'germ',
+                                width: 300,
+                                spring: true,
+                                editor: {
+                                    type: EditorType.custom,
+                                    editor: FileBrowseValueEditor,
+                                    options: {
+                                        placeholder: 'Input file path to create germ',
+                                        browse: e => {
+                                            this.emit('browse-file', e);
+                                        }
+                                    },
+                                    show: (prop, value) => {
+                                        return value;
+                                    }
+                                }
+                            }
+                        ],
+                        onAdd: (e) => {
+                            e.data = {
+                                germ: '',
+                            };
+                        },
+                        type: 'waterGerms',
+                        enterMoveFirst: this.$enterMoveFirst,
+                        enterMoveNext: this.$enterMoveNext,
+                        enterMoveNew: this.$enterMoveNew
                     }
                 }
             },
@@ -8101,6 +8163,8 @@ export class AreaDesigner extends EditorBase {
                 return value.map(v => v.exit).join(', ');
             case 'reads':
                 return value.map(v => v.read).join(', ');
+            case 'waterGerms':
+                return value.map(v => v.germ).join(', ');
         }
         return value;
     }
@@ -9528,7 +9592,7 @@ export class AreaDesigner extends EditorBase {
         this.$enterMoveNew = value.enterMoveNew;
 
         if (this.$roomEditor) {
-            const props = ['items', 'exitsDetails', 'sounds', 'smells', 'objects', 'monsters', 'searches', 'forageObjects'];
+            const props = ['items', 'exitsDetails', 'sounds', 'smells', 'objects', 'monsters', 'searches', 'forageObjects', 'waterGerms'];
             let pl = props.length;
             while (pl--) {
                 const ops = this.$roomEditor.getPropertyOptions(props[pl]);
@@ -10629,6 +10693,7 @@ export class AreaDesigner extends EditorBase {
                     if (o[v].length === 0)
                         o[v] = ri;
                 });
+                o.waterGerms = o['waterGerms'].map(i => { return { 'germ': i } });
                 objects.unshift(o);
             }
         }
@@ -11854,22 +11919,21 @@ export class AreaDesigner extends EditorBase {
         //if water drink and not base room inherit and setup basic water drink data
         let germs;
         if ((room.flags & RoomFlags.WaterDrink) === RoomFlags.WaterDrink && (base.flags & RoomFlags.WaterDrink) !== RoomFlags.WaterDrink) {
-            germs = room.waterGerms.filter(i => !base.waterGerms.includes(i));
             data.inherits += '\ninherit STD_WATERDRINK;';
             data.doc.push('/doc/build/etc/waterdrink');
             data['create post'] += '\n\nvoid init()\n{\n   room::init();\n\n    waterdrink::init();\n}';
             if (room.waterQuality !== 5)//default is 5
                 data['create body'] += `   set_water_quality("${room.waterQuality}");\n`;
-                if (germs.length)
-                data['create body'] += `   set_germs(${formatArgumentList(germs.join(', '), 55, 0, 0, true)});\n`;            
+            if (room.waterGerms.length)
+                data['create body'] += `   set_germs(${formatArgumentList(room.waterGerms.join(', '), 55, 0, 0, true)});\n`;
         }//if base room is water drink setup anyting that is set
         else if ((base.flags & RoomFlags.WaterDrink) === RoomFlags.WaterDrink) {
             //not default 5 and not the same as base room set
-            germs = room.waterGerms.filter(i => !base.waterGerms.includes(i));
             if (room.waterQuality !== 5 && base.waterQuality != room.waterQuality)
                 data['create body'] += `   set_water_quality("${room.waterQuality}");\n`;
-            if (germs.length)
-                data['create body'] += `   set_germs(${formatArgumentList(germs.join(', '), 55, 0, 0, true)});\n`;
+            //replaces base room germs
+            if (room.waterGerms.length)
+                data['create body'] += `   set_germs(${formatArgumentList(room.waterGerms.join(', '), 55, 0, 0, true)});\n`;
         }
 
         room.preventPeer = (room.preventPeer || '').trim();
