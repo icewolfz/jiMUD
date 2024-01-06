@@ -5175,10 +5175,7 @@ export class AreaDesigner extends EditorBase {
                                     if (e.data['room-wiz-waterdrink'])
                                         nRoom.flags |= RoomFlags.WaterDrink;
                                     nRoom.waterQuality = +e.data['room-wiz-water-quality'];
-                                    if(e.data['room-wiz-water-germs'])
-                                        nRoom.waterGerms = e.data['room-wiz-water-germs'];
-                                    else
-                                        nRoom.waterGerms = [];
+                                    nRoom.waterGerms = e.data['room-wiz-water-germs'] || [];
                                     nRoom.forage = +e.data['room-wiz-forage'];
                                     nRoom.maxForage = +e.data['room-wiz-max-forage'];
                                     nRoom.secretExit = e.data['room-wiz-secret-exit'];
