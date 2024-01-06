@@ -2898,7 +2898,7 @@
 
     function updateMenu(menu, length) {
         //filter out any dynamic items
-        subMenus[menu] = subMenus[menu].filter( i => !i.after && !i.before && !i.beforeGroupContaining && !i.afterGroupContaining );
+        subMenus[menu] = subMenus[menu].filter(i => !i.after && !i.before && !i.beforeGroupContaining && !i.afterGroupContaining);
         var items = subMenus[menu].slice(0, length);
         if (manager.active && manager.active.editor && manager.active.editor.supports('menu|' + menu)) {
             var cItems = manager.active.editor.menu(menu);
@@ -6055,6 +6055,9 @@
                             if (data['room-wiz-no-dirt']) sum += '<div><span style="font-weight:bold">No dirt:</span> Yes</div>';
                             if (data['room-wiz-no-mgive']) sum += '<div><span style="font-weight:bold">No mgive:</span> Yes</div>';
                             if (data['room-wiz-underwater']) sum += '<div><span style="font-weight:bold">Underwater:</span> Yes</div>';
+                            if (data['room-wiz-waterdrink']) sum += '<div><span style="font-weight:bold">Water drink:</span> Yes</div>';
+                            if (data['room-wiz-water-quality'] != 5) sum += '<div><span style="font-weight:bold">Water quality:</span> ' + data['room-wiz-water-quality'] + '</div>';
+                            if (data['room-wiz-water-germs'] && data['room-wiz-water-germs'].length) sum += '<div><span style="font-weight:bold">Water germs:</span> ' + data['room-wiz-water-germs'].length + '</div>';
                             if (data['room-wiz-max-forage'] > 0)
                                 sum += '<div><span style="font-weight:bold">Max forage:</span> ' + data['room-wiz-max-forage'] + '</div>';
                             if (data['room-wiz-dirt'].length > 0)
@@ -6153,7 +6156,7 @@
                 tmpl.inherit = data['room-wiz-type'].value;
                 tmpl.inherits = '';
                 if (climbs.length > 0 && data['room-wiz-type'].display !== 'Climb') {
-                    tmpl.inherits += '\ninherit CLIMBING;';
+                    tmpl.inherits += '\ninherit STD_CLIMBING;';
                     tmpl.doc.push('/doc/build/etc/climbing');
                 }
                 if (data['room-wiz-type'].display === 'Base' || $dialogs.room.defaults['room-wiz-virtual'])
@@ -6417,6 +6420,15 @@
                 if (data['room-wiz-night-adjust'] !== 0)
                     tmpl['create body'] += `   set_night_adjust(${data['room-wiz-night-adjust']});\n`;
 
+                if (data['room-wiz-waterdrink']) {
+                    tmpl.inherits += '\ninherit STD_WATERDRINK;';
+                    tmpl.doc.push('/doc/build/room/waterdrink');
+                    tmpl['create post'] += '\n\nvoid init()\n{\n   room::init();\n\n    waterdrink::init();\n}';
+                    if (data['room-wiz-water-quality'] !== 5)//default is 5
+                        tmpl['create body'] += `   set_water_quality("${data['room-wiz-water-quality']}");\n`;
+                    if (data['room-wiz-water-germs'] && data['room-wiz-water-germs'].length)
+                        data['create body'] += `   set_germs(${formatArgumentList(data['room-wiz-water-germs'].join(', '), 55, 0, 0, true)});\n`;
+                }
                 data['room-wiz-prevent-peer'] = data['room-wiz-prevent-peer'].trim();
                 if (data['room-wiz-prevent-peer'] === 'false') { /**/ }
                 else if (data['room-wiz-prevent-peer'].startsWith('(:')) {

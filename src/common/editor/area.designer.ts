@@ -33,6 +33,7 @@ interface AreaDesignerOptions extends EditorOptions {
 }
 
 export enum RoomFlags {
+    WaterDrink = 1 << 17,
     Underwater = 1 << 16,
     No_MGive = 1 << 15,
     Melee_As_Ability = 1 << 14,
@@ -253,6 +254,8 @@ export class Room {
     public temperature: number = 0;
     public notes: string = '';
     public reads: Read[] = [];
+    public waterQuality = 5;
+    public waterGerms: string[] = [];
 
     constructor(x, y, z, data?, type?) {
         if (data)
@@ -805,7 +808,7 @@ class Area {
             return new Area(25, 25, 1);
         try {
             //compressed so un-compress it
-            if(!data.startsWith('{'))
+            if (!data.startsWith('{'))
                 data = unzipSync(Buffer.from(data, 'base64')).toString();
             data = JSON.parse(data);
         }
@@ -866,7 +869,7 @@ class Area {
         return area;
     }
 
-    public save(file) {        
+    public save(file) {
         fs.writeFileSync(file, deflateSync(this.raw).toString('base64'));
     }
 
@@ -4048,6 +4051,18 @@ export class AreaDesigner extends EditorBase {
                 sort: 6
             },
             {
+                property: 'waterQuality',
+                label: 'Water Quality',
+                group: 'Advanced',
+                sort: 6,
+                editor: {
+                    options: {
+                        min: -100,
+                        max: 100
+                    }
+                }
+            },
+            {
                 property: 'notes',
                 label: 'Notes',
                 group: 'Advanced',
@@ -5090,6 +5105,9 @@ export class AreaDesigner extends EditorBase {
                                     'room-wiz-hide-exits': (ed.value.flags & RoomFlags.Hide_Exits) === RoomFlags.Hide_Exits,
                                     'room-wiz-no-forage': (ed.value.flags & RoomFlags.No_Forage) === RoomFlags.No_Forage,
                                     'room-wiz-underwater': (ed.value.flags & RoomFlags.Underwater) === RoomFlags.Underwater,
+                                    'room-wiz-waterdrink': (ed.value.flags & RoomFlags.WaterDrink) === RoomFlags.WaterDrink,
+                                    'room-wiz-water-quality': ed.value.waterQuality,
+                                    'room-wiz-water-germs': ed.value.waterGerms,
                                     'room-wiz-forage': '' + ed.value.forage,
                                     'room-wiz-max-forage': '' + ed.value.maxForage,
                                     'room-wiz-secret-exit': ed.value.secretExit,
@@ -5154,6 +5172,11 @@ export class AreaDesigner extends EditorBase {
                                         nRoom.flags |= RoomFlags.No_Dirt;
                                     if (e.data['room-wiz-underwater'])
                                         nRoom.flags |= RoomFlags.Underwater;
+                                    if (e.data['room-wiz-waterdrink'])
+                                        nRoom.flags |= RoomFlags.WaterDrink;
+                                    nRoom.waterQuality = +e.data['room-wiz-water-quality'];
+                                    if(e.data['room-wiz-water-germs'])
+                                        nRoom.waterGerms = +e.data['room-wiz-water-germs'];
                                     nRoom.forage = +e.data['room-wiz-forage'];
                                     nRoom.maxForage = +e.data['room-wiz-max-forage'];
                                     nRoom.secretExit = e.data['room-wiz-secret-exit'];
@@ -11531,7 +11554,7 @@ export class AreaDesigner extends EditorBase {
         data.inherit = files[room.type + 'room'] || room.type.toUpperCase();
         data.inherits = '';
         if (climbs.length !== 0 && room.type !== 'ROOMTYPE_CLIMB' && base.type !== 'ROOMTYPE_CLIMB') {
-            data.inherits += '\ninherit CLIMBING;';
+            data.inherits += '\ninherit STD_CLIMBING;';
             data.doc.push('/doc/build/etc/climbing');
         }
         data.doc.push('/doc/build/areas/tutorial');
@@ -11828,6 +11851,27 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += '   set_explored_marker(1);\n';
         if (room.nightAdjust !== base.nightAdjust)
             data['create body'] += `   set_night_adjust(${room.nightAdjust});\n`;
+
+        //if water drink and not base room inherit and setup basic water drink data
+        let germs;
+        if ((room.flags & RoomFlags.WaterDrink) === RoomFlags.WaterDrink && (base.flags & RoomFlags.WaterDrink) !== RoomFlags.WaterDrink) {
+            germs = room.waterGerms.filter(i => !base.waterGerms.includes(i));
+            data.inherits += '\ninherit STD_WATERDRINK;';
+            data.doc.push('/doc/build/etc/waterdrink');
+            data['create post'] += '\n\nvoid init()\n{\n   room::init();\n\n    waterdrink::init();\n}';
+            if (room.waterQuality !== 5)//default is 5
+                data['create body'] += `   set_water_quality("${room.waterQuality}");\n`;
+                if (germs.length)
+                data['create body'] += `   set_germs(${formatArgumentList(germs.join(', '), 55, 0, 0, true)});\n`;            
+        }//if base room is water drink setup anyting that is set
+        else if ((base.flags & RoomFlags.WaterDrink) === RoomFlags.WaterDrink) {
+            //not default 5 and not the same as base room set
+            germs = room.waterGerms.filter(i => !base.waterGerms.includes(i));
+            if (room.waterQuality !== 5 && base.waterQuality != room.waterQuality)
+                data['create body'] += `   set_water_quality("${room.waterQuality}");\n`;
+            if (germs.length)
+                data['create body'] += `   set_germs(${formatArgumentList(germs.join(', '), 55, 0, 0, true)});\n`;
+        }
 
         room.preventPeer = (room.preventPeer || '').trim();
         if (room.preventPeer !== (base.preventPeer || '').trim()) {

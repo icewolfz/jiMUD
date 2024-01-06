@@ -8,6 +8,7 @@
   - Code editor:
     - Add column selection mode menu toggle
     - Add waterdrink room template
+    - Area designer: Add basic water drink property to side property room editor
 - **Fixed:**
   - Help: Hide find in selection button as not implemented
   - Fix issue with moving items on menubars
