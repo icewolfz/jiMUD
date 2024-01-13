@@ -1552,9 +1552,9 @@
 
         function setTitle(title, lag) {
             if (title && title.length > 0)
-                document.title = 'Composer - ' + title + window.opener.childWindowTitle(true);
+                document.title = 'Composer - ' + title + (window.opener ? window.opener.childWindowTitle(true) : '');
             else
-                document.title = 'Composer' + window.opener.childWindowTitle(true);
+                document.title = 'Composer' + (window.opener ? window.opener.childWindowTitle(true) : '');
         }
 
         function updateCharacter(e) {

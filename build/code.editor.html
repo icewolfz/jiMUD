@@ -2794,12 +2794,10 @@
             title = ' - ' + title;
         else
             title = '';
-        if (!window.opener)
-            document.title = 'Code editor' + title;
-        else if (manager.active && manager.active.editor)
-            document.title = 'Code editor - ' + manager.active.tab.innerText + title + window.opener.childWindowTitle(true);
+        if (manager.active && manager.active.editor)
+            document.title = 'Code editor - ' + manager.active.tab.innerText + title + (window.opener ? window.opener.childWindowTitle(true) : '');
         else
-            document.title = 'Code editor' + title + window.opener.childWindowTitle(true);
+            document.title = 'Code editor' + title + (window.opener ? window.opener.childWindowTitle(true) : '');
     }
 
     function updateCharacter(e) {

@@ -298,9 +298,9 @@
                 if (_logger)
                     _logger.postMessage({ action: 'name', args: title || '' });
                 if (title && title.length > 0)
-                    document.title = 'Chat - ' + title + window.opener.childWindowTitle(true);
+                    document.title = 'Chat - ' + title + (window.opener ? window.opener.childWindowTitle(true) : '');
                 else
-                    document.title = 'Chat' + window.opener.childWindowTitle(true);
+                    document.title = 'Chat' + (window.opener ? window.opener.childWindowTitle(true) : '');
             },
             'options-loaded': () => {
                 loadOptions();

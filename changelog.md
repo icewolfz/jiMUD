@@ -42,6 +42,7 @@
     - Fix resize when escape hit
     - Paste/Paste special no longer break undo/redo
   - Fix window tab drag over effects to highlight which tab it will be inserted at
+  - Fix child windows incase one crashes does not break main client
 - **Changed:**
   - Immortal tools: Make unknown download/upload error messages more verbose
   - Update fs-extra 11.1.1 to 11.2.0

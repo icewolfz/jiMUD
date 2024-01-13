@@ -2846,9 +2846,9 @@ function optionsLoaded() {
 
 function setTitle(title, lag?) {
     if (title && title.length > 0)
-        document.title = 'Profile manager - ' + title + window.opener.childWindowTitle(true);
+        document.title = 'Profile manager - ' + title + (window.opener ? window.opener.childWindowTitle(true) : '');
     else
-        document.title = 'Profile manager' + window.opener.childWindowTitle(true);
+        document.title = 'Profile manager' + (window.opener ? window.opener.childWindowTitle(true) : '');
 }
 
 function updateCharacter(e) {
