@@ -255,7 +255,11 @@ export class Room {
     public notes: string = '';
     public reads: Read[] = [];
     public waterQuality = 5;
+    public waterPoisoned = 0;
     public waterGerms: string[] = [];
+    public waterSource: string = 'the water';
+    public waterDrinkMessage: string = '';
+    public waterWashMessage: string = '';
 
     constructor(x, y, z, data?, type?) {
         if (data)
@@ -4081,6 +4085,54 @@ export class AreaDesigner extends EditorBase {
                 }
             },
             {
+                property: 'waterPoisoned',
+                label: 'Water Poisoned',
+                group: 'Advanced',
+                sort: 6,
+                editor: {
+                    options: {
+                        min: -100,
+                        max: 100
+                    }
+                }
+            },
+            {
+                property: 'waterSource',
+                label: 'Water Source',
+                group: 'Advanced',
+                sort: 6,
+                editor: {
+                    options: {
+                        singleLine: true,
+                        container: document.body
+                    }
+                }
+            },
+            {
+                property: 'waterDrinkMessage',
+                label: 'Water Drink Message',
+                group: 'Advanced',
+                sort: 6,
+                editor: {
+                    options: {
+                        singleLine: true,
+                        container: document.body
+                    }
+                }
+            },
+            {
+                property: 'waterWashMessage',
+                label: 'Water Wash Message',
+                group: 'Advanced',
+                sort: 6,
+                editor: {
+                    options: {
+                        singleLine: true,
+                        container: document.body
+                    }
+                }
+            },
+            {
                 property: 'waterGerms',
                 label: 'Water Germs',
                 group: 'Advanced',
@@ -5169,6 +5221,10 @@ export class AreaDesigner extends EditorBase {
                                     'room-wiz-underwater': (ed.value.flags & RoomFlags.Underwater) === RoomFlags.Underwater,
                                     'room-wiz-waterdrink': (ed.value.flags & RoomFlags.WaterDrink) === RoomFlags.WaterDrink,
                                     'room-wiz-water-quality': ed.value.waterQuality,
+                                    'room-wiz-water-poisoned': ed.value.waterPoisoned,
+                                    'room-wiz-water-source': ed.value.waterSource,
+                                    'room-wiz-water-drink-message': ed.value.waterDrinkMessage,
+                                    'room-wiz-water-wash-message': ed.value.waterWashMessage,
                                     'room-wiz-water-germs': ed.value.waterGerms,
                                     'room-wiz-forage': '' + ed.value.forage,
                                     'room-wiz-max-forage': '' + ed.value.maxForage,
@@ -5237,6 +5293,10 @@ export class AreaDesigner extends EditorBase {
                                     if (e.data['room-wiz-waterdrink'])
                                         nRoom.flags |= RoomFlags.WaterDrink;
                                     nRoom.waterQuality = +e.data['room-wiz-water-quality'];
+                                    nRoom.waterPoisoned = +e.data['room-wiz-water-poisoned'];
+                                    nRoom.waterSource = +e.data['room-wiz-water-source'];
+                                    nRoom.waterDrinkMessage = +e.data['room-wiz-water-drink-message'];
+                                    nRoom.waterWashMessage = +e.data['room-wiz-water-was-message'];
                                     nRoom.waterGerms = e.data['room-wiz-water-germs'] || [];
                                     nRoom.forage = +e.data['room-wiz-forage'];
                                     nRoom.maxForage = +e.data['room-wiz-max-forage'];
@@ -11923,17 +11983,75 @@ export class AreaDesigner extends EditorBase {
             data.doc.push('/doc/build/etc/waterdrink');
             data['create post'] += '\n\nvoid init()\n{\n   room::init();\n\n    waterdrink::init();\n}';
             if (room.waterQuality !== 5)//default is 5
-                data['create body'] += `   set_water_quality("${room.waterQuality}");\n`;
+                data['create body'] += `   set_water_quality(${room.waterQuality});\n`;
+            if (room.waterPoisoned !== 0)//default is 0
+                data['create body'] += `   set_water_poisoned(${room.waterPoisoned});\n`;
             if (room.waterGerms.length)
                 data['create body'] += `   set_germs(${formatArgumentList(room.waterGerms.join(', '), 55, 0, 0, true)});\n`;
+
+            if (room.waterSource !== 'the water')//the water
+            {
+                if (!room.waterSource.startsWith('"') && !room.waterSource.endsWith('"'))
+                    data['create body'] += `   set_water_source("${room.waterSource}");\n`;
+                else
+                    data['create body'] += `   set_water_source(${room.waterSource});\n`;
+            }
+            if (room.waterDrinkMessage && room.waterDrinkMessage.length) {
+                if (room.waterDrinkMessage.startsWith('(:'))
+                    data['create body'] += `   set_water_drink(${formatFunctionPointer(room.waterDrinkMessage)});\n`;
+                else if (!room.waterDrinkMessage.startsWith('"') && !room.waterDrinkMessage.endsWith('"'))
+                    data['create body'] += `   set_water_drink("${room.waterDrinkMessage}");\n`;
+                else
+                    data['create body'] += `   set_water_drink(${room.waterDrinkMessage});\n`;
+            }
+            if (room.waterWashMessage && room.waterWashMessage.length) {
+                if (room.waterWashMessage.startsWith('(:'))
+                    data['create body'] += `   set_water_wash(${formatFunctionPointer(room.waterWashMessage)});\n`;
+                else if (!room.waterWashMessage.startsWith('"') && !room.waterWashMessage.endsWith('"'))
+                    data['create body'] += `   set_water_wash("${room.waterWashMessage}");\n`;
+                else
+                    data['create body'] += `   set_water_wash(${room.waterWashMessage});\n`;
+            }
         }//if base room is water drink setup anyting that is set
         else if ((base.flags & RoomFlags.WaterDrink) === RoomFlags.WaterDrink) {
             //not default 5 and not the same as base room set
             if (room.waterQuality !== 5 && base.waterQuality != room.waterQuality)
-                data['create body'] += `   set_water_quality("${room.waterQuality}");\n`;
+                data['create body'] += `   set_water_quality(${room.waterQuality});\n`;
+            if (room.waterPoisoned !== 0 && base.waterPoisoned != room.waterPoisoned)//default is 0
+                data['create body'] += `   set_water_poisoned(${room.waterPoisoned});\n`;
             //replaces base room germs
             if (room.waterGerms.length)
                 data['create body'] += `   set_germs(${formatArgumentList(room.waterGerms.join(', '), 55, 0, 0, true)});\n`;
+            if (room.waterSource !== 'the water' && base.waterSource != room.waterSource)//the water
+                data['create body'] += `   set_water_source("${room.waterSource}");\n`;
+            if (room.waterDrinkMessage && room.waterDrinkMessage.length && base.waterDrinkMessage != room.waterDrinkMessage)//default is empty string
+                data['create body'] += `   set_water_drink("${room.waterDrinkMessage}");\n`;
+            if (room.waterWashMessage && room.waterWashMessage.length && base.waterWashMessage != room.waterWashMessage)//default is empty string
+                data['create body'] += `   set_water_wash("${room.waterWashMessage}");\n`;
+
+            if (room.waterSource !== 'the water' && base.waterSource != room.waterSource)//the water
+            {
+                if (!room.waterSource.startsWith('"') && !room.waterSource.endsWith('"'))
+                    data['create body'] += `   set_water_source("${room.waterSource}");\n`;
+                else
+                    data['create body'] += `   set_water_source(${room.waterSource});\n`;
+            }
+            if (room.waterDrinkMessage && room.waterDrinkMessage.length && base.waterDrinkMessage != room.waterDrinkMessage) {
+                if (room.waterDrinkMessage.startsWith('(:'))
+                    data['create body'] += `   set_water_drink(${formatFunctionPointer(room.waterDrinkMessage)});\n`;
+                else if (!room.waterDrinkMessage.startsWith('"') && !room.waterDrinkMessage.endsWith('"'))
+                    data['create body'] += `   set_water_drink("${room.waterDrinkMessage}");\n`;
+                else
+                    data['create body'] += `   set_water_drink(${room.waterDrinkMessage});\n`;
+            }
+            if (room.waterWashMessage && room.waterWashMessage.length && base.waterWashMessage != room.waterWashMessage) {
+                if (room.waterWashMessage.startsWith('(:'))
+                    data['create body'] += `   set_water_wash(${formatFunctionPointer(room.waterWashMessage)});\n`;
+                else if (!room.waterWashMessage.startsWith('"') && !room.waterWashMessage.endsWith('"'))
+                    data['create body'] += `   set_water_wash("${room.waterWashMessage}");\n`;
+                else
+                    data['create body'] += `   set_water_wash(${room.waterWashMessage});\n`;
+            }
         }
 
         room.preventPeer = (room.preventPeer || '').trim();

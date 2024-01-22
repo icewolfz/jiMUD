@@ -33,6 +33,7 @@
  
       ]) );    
     set_water_quality(5);
+    set_water_source("the water");
  }
 
  /**

@@ -6057,6 +6057,10 @@
                             if (data['room-wiz-underwater']) sum += '<div><span style="font-weight:bold">Underwater:</span> Yes</div>';
                             if (data['room-wiz-waterdrink']) sum += '<div><span style="font-weight:bold">Water drink:</span> Yes</div>';
                             if (data['room-wiz-water-quality'] != 5) sum += '<div><span style="font-weight:bold">Water quality:</span> ' + data['room-wiz-water-quality'] + '</div>';
+                            if (data['room-wiz-water-_poisoned'] != 0) sum += '<div><span style="font-weight:bold">Water poisoned:</span> ' + data['room-wiz-water-poisoned'] + '</div>';
+                            if (data['room-wiz-water-source'] != 'the water') sum += '<div><span style="font-weight:bold">Water source:</span> ' + data['room-wiz-water-source'] + '</div>';
+                            if (data['room-wiz-water-drink-message'].length > 0) sum += '<div><span style="font-weight:bold">Water drink message:</span> ' + data['room-wiz-water-drink-message'] + '</div>';
+                            if (data['room-wiz-water-wash-message'].length > 0) sum += '<div><span style="font-weight:bold">Water wash message:</span> ' + data['room-wiz-water-wash-message'] + '</div>';
                             if (data['room-wiz-water-germs'] && data['room-wiz-water-germs'].length) sum += '<div><span style="font-weight:bold">Water germs:</span> ' + data['room-wiz-water-germs'].length + '</div>';
                             if (data['room-wiz-max-forage'] > 0)
                                 sum += '<div><span style="font-weight:bold">Max forage:</span> ' + data['room-wiz-max-forage'] + '</div>';
@@ -6425,9 +6429,36 @@
                     tmpl.doc.push('/doc/build/room/waterdrink');
                     tmpl['create post'] += '\n\nvoid init()\n{\n   room::init();\n\n    waterdrink::init();\n}';
                     if (data['room-wiz-water-quality'] !== 5)//default is 5
-                        tmpl['create body'] += `   set_water_quality("${data['room-wiz-water-quality']}");\n`;
+                        tmpl['create body'] += `   set_water_quality(${data['room-wiz-water-quality']});\n`;
+                    if (data['room-wiz-water-poisoned'] != 0)//default is 5
+                        tmpl['create body'] += `   set_water_poisoned(${data['room-wiz-water-poisoned']});\n`;                        
                     if (data['room-wiz-water-germs'] && data['room-wiz-water-germs'].length)
                         data['create body'] += `   set_germs(${formatArgumentList(data['room-wiz-water-germs'].join(', '), 55, 0, 0, true)});\n`;
+                    if (data['room-wiz-water-source'] !== 'the water')//default is the water
+                    {
+                        if (!data['room-wiz-water-source'].startsWith('"') && !data['room-wiz-water-source'].endsWith('"'))
+                            tmpl['create body'] += `   set_water_source("${data['room-wiz-water-source']}"");\n`;
+                        else
+                            tmpl['create body'] += `   set_water_source(${data['room-wiz-water-source']});\n`;
+                    }
+
+                    if (data['room-wiz-water-drink-message'] && data['room-wiz-water-drink-message'].length) {
+                        if (data['room-wiz-water-drink-message'].startsWith('(:'))//default is empty string
+                            data['create body'] += `   set_water_drink(${formatFunctionPointer(data['room-wiz-water-drink-message'])});\n`;
+                        else if (!data['room-wiz-water-drink-message'].startsWith('"') && !data['room-wiz-water-drink-message'].endsWith('"'))
+                            tmpl['create body'] += `   set_water_drink("${data['room-wiz-water-drink-message']}");\n`;
+                        else
+                            tmpl['create body'] += `   set_water_drink(${data['room-wiz-water-drink-message']});\n`;
+                    }
+
+                    if (data['room-wiz-water-wash-message'] && data['room-wiz-water-wash-message'].length) {
+                        if (data['room-wiz-water-wash-message'].startsWith('(:'))//default is empty string
+                            data['create body'] += `   set_water_wash(${formatFunctionPointer(data['room-wiz-water-wash-message'])});\n`;
+                        else if (!data['room-wiz-water-wash-message'].startsWith('"') && !data['room-wiz-water-wash-message'].endsWith('"'))
+                            tmpl['create body'] += `   set_water_wash("${data['room-wiz-water-wash-message']}");\n`;
+                        else
+                            tmpl['create body'] += `   set_water_wash(${data['room-wiz-water-wash-message']});\n`;
+                    }
                 }
                 data['room-wiz-prevent-peer'] = data['room-wiz-prevent-peer'].trim();
                 if (data['room-wiz-prevent-peer'] === 'false') { /**/ }
