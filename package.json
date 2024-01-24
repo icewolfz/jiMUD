@@ -62,8 +62,8 @@
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.5.29",
-    "@types/node": "^18.19.8",
-    "electron": "^28.1.4",
+    "@types/node": "^18.19.9",
+    "electron": "^28.2.0",
     "electron-builder": "^24.9.1",
     "electron-rebuild": "^3.2.9",
     "eslint": "^8.56.0",
