@@ -16,8 +16,8 @@
   - Code editor:
     - Change WATERSOURCE to WATERDRINK to avoid naming issues in code complete
     - Add waterdrink doc references to pier
-  - Update mathjs 12.2.0 to 12.3.0
-  - Update electron 28.0.0 to 28.2.0
+  - Update mathjs 12.2.0 to 12.3.1
+  - Update electron 28.0.0 to 28.2.1
   - Update moment 2.29.4 to 2.30.1
   - Update better-sqlite3 9.2.2 to 9.3.0
   - Update @electron/remote 2.1.1 to 2.1.2
