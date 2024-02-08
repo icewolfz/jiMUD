@@ -12,6 +12,9 @@
 - **Fixed:**
   - Help: Hide find in selection button as not implemented
   - Fix issue with moving items on menubars
+  - Code editor:
+    - Fix remote diff options not being correctly applied on first use
+    - Fix remote browsing icon alignments
 - **Changed:**
   - Code editor:
     - Change WATERSOURCE to WATERDRINK to avoid naming issues in code complete

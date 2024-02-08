@@ -3667,7 +3667,7 @@
                             case '.h':
                                 return '<i class="fa fa-file-code-o icon-h" style="margin-right: 2px"></i>' + data.cell;
                             case '.c':
-                                return '<i class="fa fa-file-code-o icon-c style="margin-right: 2px"></i>' + data.cell;
+                                return '<i class="fa fa-file-code-o icon-c" style="margin-right: 2px"></i>' + data.cell;
 
                         }
                         return '<i class="fa fa-file-o" style="margin-right: 2px"></i>' + data.cell;
@@ -4420,7 +4420,7 @@
                     toggleDiffNav(true);
                     window.$editors[dock].getContainerDomNode().style.display = '';
                     manager.active.editor.activate(window.$dEditors[dock]);
-                    window.$dEditors[pane].updateOptions(window.$editors[pane].getRawOptions());
+                    window.$dEditors[dock].updateOptions(window.$editors[dock].getRawOptions());
                     closeProgressDialog(item.ID);
                     doUpdate(2);
                 }
