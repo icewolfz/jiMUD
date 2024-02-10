@@ -414,7 +414,11 @@ export const language = <ILanguage>{
         'nullp',
         'undefinedp',
         'errorp',
-        'mapp'
+        'mapp',
+        'compress',
+        'uncompress',
+        'compress_file',
+        'uncompress_file'
     ],
 
     sefuns: [
@@ -599,7 +603,9 @@ export const language = <ILanguage>{
         'absolute_value',
         'create_auto_load',
         'save_auto_load',
-        'find_room'
+        'find_room',
+        'compress_save_auto_load',
+        'uncompress_create_auto_load'
     ],
 
     abbr: [

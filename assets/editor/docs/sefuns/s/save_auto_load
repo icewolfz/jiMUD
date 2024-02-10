@@ -25,5 +25,5 @@ Note: if passing an array of objects, all non auto loading objects will be skipp
     and no error will be returned only data on any autoloading objects
 
 SEE ALSO
-create_auto_load, query_auto_load
+create_auto_load, query_auto_load, compress_save_auto_load, uncompress_create_auto_load
 

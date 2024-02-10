@@ -1,0 +1,29 @@
+varargs mixed compress_save_auto_load(mixed ob, mixed file, object target)
+
+buffer compress_save_auto_load(object ob)
+buffer compress_save_auto_load(object ob, object target)
+buffer compress_save_auto_load(object *ob)
+buffer compress_save_auto_load(object *obs, object target)
+int compress_save_auto_load(object ob, string file)
+int compress_save_auto_load(object ob, string file, object target)
+int compress_save_auto_load(object *ob, string file)
+int compress_save_auto_load(object *ob, string file, object target)
+
+save or return compressed seriailzed data of an autoloading object or array of objects
+
+object ob - the object to be saved, and saved if query_auto_load is enabled
+object *obs - an array of objects to be saved, if array contains non autoloading object they will be skipped
+                and only data for autoloading objects returned
+string file - the optional file name to save to
+object target - the one the object should autoload for, defaults to this_player()|previous_object()
+
+returns 0 if fails to save or object is non autoloading
+returns 1 if succesfully saved to file
+returns buffer if succesfully able to compress serialized autoloading data
+
+Note: if passing an array of objects, all non auto loading objects will be skipped
+    and no error will be returned only data on any autoloading objects
+
+SEE ALSO
+create_auto_load, query_auto_load, uncompress_create_auto_load
+
