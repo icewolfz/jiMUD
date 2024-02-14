@@ -2350,7 +2350,7 @@
                             label: '&Remote...',
                             click: () => {
                                 showBrowseDialog({
-                                    defaultFile: manager.active.editor.remote,
+                                    defaultFile: manager.active.editor.remote || (options.remote + "/" + path.basename(manager.active.editor.file)),
                                     properties: ['openFile'],
                                     filters: $fileFilters,
                                 }, (files) => {
@@ -5028,7 +5028,7 @@
             });
             $('#btn-new-area-remote-path').on('click', () => {
                 showBrowseDialog({
-                    defaultFile: $dialogs.area.remote.value || (manager.active ? (manager.active.editor.remote || options.uploadAs) : options.uploadAs),
+                    defaultFile: $dialogs.area.remote.value || (manager.active ? (manager.active.editor.remote || options.uploadAs || (options.remote + "/" + path.basename(manager.active.editor.file))) : options.uploadAs),
                     title: 'Select remote folder',
                     properties: ['openDirectory']
                 }, (files) => {
@@ -5182,7 +5182,7 @@
             });
             $('#btn-new-virtual-area-remote-path').on('click', () => {
                 showBrowseDialog({
-                    defaultFile: manager.active ? (manager.active.editor.remote || options.uploadAs) : options.uploadAs,
+                    defaultFile: manager.active ? (manager.active.editor.remote || options.uploadAs || (options.remote + "/" + path.basename(manager.active.editor.file))) : options.uploadAs,
                     title: 'Select remote folder',
                     properties: ['openDirectory']
                 }, (files) => {
@@ -8152,7 +8152,7 @@
         }
         else {
             showBrowseDialog({
-                defaultFile: manager.active.editor.remote,
+                defaultFile: manager.active.editor.remote || (options.remote + "/" + path.basename(manager.active.editor.file)),
                 properties: ['openFile'],
                 filters: $fileFilters,
             }, (files) => {
@@ -8507,7 +8507,7 @@
         if (!panel.editor.supports('upload')) return;
         if (!panel.editor.remote || panel.editor.remote.length === 0) {
             showBrowseDialog({
-                defaultFile: panel.editor.remote,
+                defaultFile: panel.editor.remote || (options.remote + "/" + path.basename(manager.active.editor.file)),
                 properties: ['saveFile'],
                 filters: $fileFilters,
                 arguments: panel
@@ -8541,7 +8541,7 @@
         }
         if (!panel.editor.supports('upload-as')) return;
         showBrowseDialog({
-            defaultFile: remoteEdit ? panel.editor.remote : (options.uploadAs || panel.editor.remote),
+            defaultFile: remoteEdit ? panel.editor.remote : (options.uploadAs || panel.editor.remote || (options.remote + "/" + path.basename(manager.active.editor.file))),
             title: 'Save remote file as...',
             properties: ['saveFile'],
             filters: $fileFilters,
@@ -9301,7 +9301,7 @@
                 }
                 if (!p.editor.remote)
                     showBrowseDialog({
-                        defaultFile: p.editor.remote,
+                        defaultFile: p.editor.remote || (options.remote + "/" + path.basename(p.editor.file)),
                         filters: $fileFilters,
                     }, (files) => {
                         if (!files || files.length === 0) return;

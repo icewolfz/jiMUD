@@ -19,6 +19,7 @@
   - Code editor:
     - Change WATERSOURCE to WATERDRINK to avoid naming issues in code complete
     - Add waterdrink doc references to pier
+    - When uploading file use current remote path + file name if no valid remote path or upload as option set
   - Update mathjs 12.2.0 to 12.3.2
   - Update electron 28.0.0 to 28.2.2
   - Update moment 2.29.4 to 2.30.1
