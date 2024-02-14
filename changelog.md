@@ -22,7 +22,7 @@
   - Update mathjs 12.2.0 to 12.3.2
   - Update electron 28.0.0 to 28.2.2
   - Update moment 2.29.4 to 2.30.1
-  - Update better-sqlite3 9.2.2 to 9.4.0
+  - Update better-sqlite3 9.2.2 to 9.4.1
   - Update @electron/remote 2.1.1 to 2.1.2
   - Update monaco-editor 0.45.0 to 0.46.0
   - Update chokidar 3.5.3 to 3.6.0
