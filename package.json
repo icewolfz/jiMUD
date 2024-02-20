@@ -62,14 +62,14 @@
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.5.29",
-    "@types/node": "^18.19.15",
-    "electron": "^28.2.2",
-    "electron-builder": "^24.9.1",
+    "@types/node": "^18.19.17",
+    "electron": "^28.2.3",
+    "electron-builder": "^24.12.0",
     "electron-rebuild": "^3.2.9",
     "eslint": "^8.56.0",
     "eslint-plugin-html": "^8.0.0",
-    "sass": "^1.70.0",
-    "terser": "^5.27.0"
+    "sass": "^1.71.0",
+    "terser": "^5.27.2"
   },
   "build": {
     "appId": "jiMUD",
@@ -159,7 +159,7 @@
     "better-sqlite3": "^9.4.1",
     "buzz": "^1.2.1",
     "chokidar": "^3.6.0",
-    "electron-updater": "^6.1.7",
+    "electron-updater": "^6.1.8",
     "fs-extra": "^11.2.0",
     "fswin": "^3.23.311",
     "lz-string": "^1.5.0",
@@ -171,7 +171,7 @@
     "rgbcolor": "^1.0.1",
     "tmp": "^0.2.1",
     "yargs-parser": "^21.1.1",
-    "yauzl": "^2.10.0",
+    "yauzl": "^3.1.0",
     "yazl": "^2.5.1"
   }
 }

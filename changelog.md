@@ -21,12 +21,14 @@
     - Add waterdrink doc references to pier
     - When uploading file use current remote path + file name if no valid remote path or upload as option set
   - Update mathjs 12.2.0 to 12.3.2
-  - Update electron 28.0.0 to 28.2.2
+  - Update electron 28.0.0 to 28.2.3
   - Update moment 2.29.4 to 2.30.1
   - Update better-sqlite3 9.2.2 to 9.4.1
   - Update @electron/remote 2.1.1 to 2.1.2
   - Update monaco-editor 0.45.0 to 0.46.0
   - Update chokidar 3.5.3 to 3.6.0
+  - Update electron-updater 6.1.7 to 6.1.8
+  - Update yauzl 2.10.0 to 3.1.0
 
 ## 1.2.0 2023-12-18
 
