@@ -521,7 +521,7 @@ export class Variable extends Item {
                     value = value ? 1.0 : 0.0;
                 break;
         }
-        super.value = value;
+        this.value = value;
         this._type = typeof value;
     }
     public get getValue(): any {
