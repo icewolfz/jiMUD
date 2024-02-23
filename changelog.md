@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.2.1
+## 1.2.1 2024-02-23
 
 - **New:**
   - [#WINDOW](docs/commands.md) Add 'map' as supported short version of mapper window
