@@ -20,10 +20,10 @@
     - Change WATERSOURCE to WATERDRINK to avoid naming issues in code complete
     - Add waterdrink doc references to pier
     - When uploading file use current remote path + file name if no valid remote path or upload as option set
-  - Update mathjs 12.2.0 to 12.3.2
+  - Update mathjs 12.2.0 to 12.4.0
   - Update electron 28.0.0 to 28.2.4
   - Update moment 2.29.4 to 2.30.1
-  - Update better-sqlite3 9.2.2 to 9.4.2
+  - Update better-sqlite3 9.2.2 to 9.4.3
   - Update @electron/remote 2.1.1 to 2.1.2
   - Update monaco-editor 0.45.0 to 0.46.0
   - Update chokidar 3.5.3 to 3.6.0
