@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.0
+
+- **Changed:**
+  - Update electron 28.2.4 to 28.2.5
+  - Update tmp 0.2.1 to 0.2.3
+  - Update yauzl 3.1.0 to 3.1.1
+
 ## 1.2.1 2024-02-23
 
 - **New:**
