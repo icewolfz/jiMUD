@@ -12,7 +12,7 @@
   - Update monaco-editor 0.46.0 to 0.47.0
   - Update mathjs 12.4.0 to 12.4.1
   - Update markdown-it 14.0.0 to 14.1.0
-  - Switch to better-sqlite by neoxpert until official build merges update
+  - Update better-sqlite3 9.4.3 to 9.4.4
 
 ## 1.2.1 2024-02-23
 

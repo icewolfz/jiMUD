@@ -69,7 +69,7 @@
     "eslint": "^8.57.0",
     "eslint-plugin-html": "^8.0.0",
     "sass": "^1.72.0",
-    "terser": "^5.30.2"
+    "terser": "^5.30.3"
   },
   "build": {
     "appId": "jiMUD",
@@ -156,7 +156,7 @@
   },
   "dependencies": {
     "@electron/remote": "^2.1.2",
-    "better-sqlite3": "github:neoxpert/better-sqlite3#fix_electron29_build",
+    "better-sqlite3": "^9.4.4",
     "buzz": "^1.2.1",
     "chokidar": "^3.6.0",
     "electron-updater": "^6.1.8",
