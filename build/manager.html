@@ -30,6 +30,7 @@
         var tabStrip;
         var _current = 0;
         var _loading = 0;
+        var _resize;
 
         window.addEventListener('error', (e) => {
             const { message, filename, lineno, colno, error } = e;
@@ -277,6 +278,12 @@
                 return 0;
             return tabstrip.height || 0;
         }
+
+        //issue in new kde 6 resize does not always fire, so capture it in main process and trigger on ipc
+        ipcRenderer.on('resize', () => {
+            clearTimeout(_resize);
+            _resize = setTimeout(() => ipcRenderer.send('update-client', _current, getClientOffset()), 50);
+        })
 
         function init() {
             tabstrip = new TabStrip();
@@ -534,7 +541,9 @@
             window.addEventListener('focus', e => {
                 //if(tabstrip.focused === true) return;
                 tabstrip.focused = true;
-                ipcRenderer.send('focus-client', _current);
+                //hack for newer linux, it seems sometimes it will double focus and cause the window to never minimize, by checking if visible it prevents double focus
+                if(window.isVisible())
+                    ipcRenderer.send('focus-client', _current);
             })
             window.addEventListener('blur', e => {
                 //tabstrip.focused = false;
@@ -542,10 +551,9 @@
             //some type of bug on linux with double clicked titles not resizing correctly, hack around that
             //if (process.platform === 'linux') {
             //Do custom resizing for all platforms and only resize after all are done to reduce tearing and performance issues
-            var _resize;
             window.addEventListener('resize', e => {
                 clearTimeout(_resize);
-                _resize = setTimeout(() => ipcRenderer.send('update-client', _current, getClientOffset()), 100);
+                _resize = setTimeout(() => ipcRenderer.send('update-client', _current, getClientOffset()), 50);
             });
             //}
             _loading++;

@@ -502,6 +502,12 @@ function createWindow(options) {
 
     window.on('resize', () => {
         if (window.isMaximized() || window.isFullScreen()) return;
+        //Issues with linux KDE 6 on javascript resize, so lets send an IPC version just in case
+        if(window.webContents)
+            window.webContents.send('resize');
+        const active = getActiveClient(window);
+        if (active)
+            active.view.webContents.send('resize');      
         states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
         stateMap.set(window, states[options.file]);
     });

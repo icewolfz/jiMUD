@@ -723,8 +723,11 @@
                 if (loading > 0) return;
                 var idx = parseInt($(this).attr('id').match(/\d+/)[0], 10);
                 var color = new RGBColor($(this).val());
-                if (color.ok)
+                if (color.ok) {
+                    if(!_settings.colors)
+                        _settings.colors = getSettingValue('colors') || [];
                     _settings.colors[idx] = color.toRGB();
+                }
             });
 
             $('.selectpicker').change(function () {
