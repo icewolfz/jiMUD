@@ -6,13 +6,13 @@
   - Preferences: Fix color changing erroring when colors have never been set
   - Fix focus and resize issues with new KDE 6
 - **Changed:**
-  - Update electron 28.2.4 to 29.1.6
+  - Update electron 28.2.4 to 29.2.0
   - Update tmp 0.2.1 to 0.2.3
   - Update yauzl 3.1.0 to 3.1.2
   - Update monaco-editor 0.46.0 to 0.47.0
   - Update mathjs 12.4.0 to 12.4.1
   - Update markdown-it 14.0.0 to 14.1.0
-  - Update better-sqlite3 9.4.3 to 9.4.4
+  - Update better-sqlite3 9.4.3 to 9.4.5
 
 ## 1.2.1 2024-02-23
 
