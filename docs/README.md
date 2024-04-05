@@ -51,6 +51,11 @@ Required modules or packages to build different installer types: https://www.ele
 1. npm install - install all the node modules, **Note** you will need to rerun this only if modules have been updated in the package.json
 1. npm run release:linux - build tar, deb, appImage, and rpm packages
 
+#### Linux Slim - Build without flatpak
+
+1. npm install - install all the node modules, **Note** you will need to rerun this only if modules have been updated in the package.json
+1. npm run release:linux-slim - build tar, deb, appImage, and rpm packages
+
 ### Mac
 
 1. npm install - install node modules, **Note** you will need to rerun this only if modules have been updated in the package.json
