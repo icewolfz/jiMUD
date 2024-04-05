@@ -50,6 +50,7 @@
     "min": "node minify",
     "release:win": "npm run compile && npm run package:win",
     "release:linux": "npm run compile && npm run package:linux",
+    "release:linux-slim": "npm run compile && npm run package:linux64",
     "release:mac": "npm run compile && npm run package:mac",
     "clean:code": "del /q .\\out\\*.js && del /q .\\out\\editor\\*.js && del /q .\\build\\js\\*.js && del /q .\\build\\js\\editor\\*.js",
     "clean:css": "del /q .\\build\\css\\*.css",
