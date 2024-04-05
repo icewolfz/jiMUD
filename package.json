@@ -47,6 +47,7 @@
     "package:linux64": "electron-builder --linux deb AppImage rpm tar.xz snap --x64",
     "package:snap-classic": "electron-builder --linux snap --x64 --c.snap.confinement=classic --c.artifactName=$\\{name\\}_$\\{version\\}_$\\{arch\\}_classic.$\\{ext\\}",
     "package:flatpak": "electron-builder --linux flatpak --c.appId=com.electron.jiMUD",
+    "package:flatpak-debug": "env DEBUG=\"@malept/flatpak-bundler\" electron-builder build --linux flatpak --c.appId=com.electron.jiMUD",
     "min": "node minify",
     "release:win": "npm run compile && npm run package:win",
     "release:linux": "npm run compile && npm run package:linux",
