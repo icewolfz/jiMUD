@@ -32,6 +32,11 @@ Install or download Typescript: https://www.typescriptlang.org/download/
 
 Required modules or packages to build different installer types: https://www.electron.build/multi-platform-build.html
 
+#### Flatpak Prerequisites
+
+1. Ensure flatpak and flatpak-builder are installed on build system
+1. Ensure the platform and sdk runtimes are installed: flatpak install flathub org.freedesktop.Platform//23.08 org.freedesktop.Sdk//23.08
+
 ### Clone repository or use archive zip
 
 1. `git clone https://github.com/icewolfz/jiMUD.git` or `git pull` if already ready cloned, or you can download and unzip the source archive
