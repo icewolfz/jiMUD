@@ -70,7 +70,7 @@
     "electron-rebuild": "^3.2.9",
     "eslint": "^9.0.0",
     "eslint-plugin-html": "^8.1.0",
-    "sass": "^1.74.1",
+    "sass": "^1.75.0",
     "terser": "^5.30.3"
   },
   "build": {
