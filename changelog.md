@@ -5,6 +5,7 @@
 - **Fixed:**
   - Preferences: Fix color changing erroring when colors have never been set
   - Fix focus and resize issues with new KDE 6
+  - Reduce resize white border on resize for linux
 - **Changed:**
   - Update electron 28.2.4 to 29.3.0
   - Update tmp 0.2.1 to 0.2.3

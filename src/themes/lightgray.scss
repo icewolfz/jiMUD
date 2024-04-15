@@ -4,7 +4,7 @@ $color: "#333";
 $panelBackground: "rgb(240, 240, 240)";
 $panelInsetBackground: "rgb(240, 240, 240)";
 
-body {
+html, body {
     background-color: #{$panelBackground};
 }
 
