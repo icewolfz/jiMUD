@@ -502,11 +502,11 @@ function createWindow(options) {
 
     window.on('resize', () => {
         //Issues with linux KDE 6 on javascript resize, so lets send an IPC version just in case
-        if(window.webContents)
+        if (window.webContents)
             window.webContents.send('resize');
         const active = getActiveClient(window);
         if (active)
-            active.view.webContents.send('resize');      
+            active.view.webContents.send('resize');
         //on lt store state changes if not full screen
         if (window.isMaximized() || window.isFullScreen()) return;
         states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
@@ -578,18 +578,7 @@ function createWindow(options) {
         */
     });
 
-    if (global.debug) {
-        window.webContents.on('ipc-message', (event, channel, ...args) => {
-            if (channel.startsWith('REMOTE_')) return;
-            console.log(`Window Id: ${getWindowId(window)}, ipc-message: ${channel}`);
-            console.log(args);
-        });
-        window.webContents.on('ipc-message-sync', (event, channel, ...args) => {
-            if (channel.startsWith('REMOTE_')) return;
-            console.log(`Window Id: ${getWindowId(window)}, ipc-message-sync: ${channel}`);
-            console.log(args);
-        });
-    }
+    initializeIPCDebug(window.webContents, `Window Id: ${getWindowId(window)}`);
 
     if (!options.id) {
         _windowID++;
@@ -687,18 +676,7 @@ function createDialog(options) {
         });
     });
 
-    if (global.debug) {
-        window.webContents.on('ipc-message', (event, channel, ...args) => {
-            if (channel.startsWith('REMOTE_')) return;
-            console.log(`Dialog URL: ${options.url}, ipc-message: ${channel}`);
-            console.log(args);
-        });
-        window.webContents.on('ipc-message-sync', (event, channel, ...args) => {
-            if (channel.startsWith('REMOTE_')) return;
-            console.log(`Dialog URL: ${options.url}, ipc-message-sync: ${channel}`);
-            console.log(args);
-        });
-    }
+    initializeIPCDebug(window.webContents, `Dialog URL: ${options.url}`);
 
     window.removeMenu();
     // and load the index.html of the app.
@@ -2090,8 +2068,21 @@ async function quitApp() {
     }
 }
 
+ipcMain.on('save-window-layout', async (event, checkWindows) => {
+    if (_loaded && !_saved) {
+        if (checkWindows && Object.keys(windows).length > 1)
+            return;
+        await saveWindowLayout(null, getSetting('lockLayout'));
+        _saved = true;
+    }
+    event.returnValue = true;
+});
+
 ipcMain.on('can-close-client', async (event, id) => {
-    event.returnValue = await canCloseClient(id);
+    if (id === undefined || !clients[id])
+        event.returnValue = false;
+    else
+        event.returnValue = await canCloseClient(id);
 });
 
 ipcMain.on('can-close-all-client', async (event) => {
@@ -2473,18 +2464,7 @@ function createClient(options) {
         idMap.set(childWindow, getClientId(view));
     });
 
-    if (global.debug) {
-        view.webContents.on('ipc-message', (event, channel, ...args) => {
-            if (channel.startsWith('REMOTE_')) return;
-            console.log(`Client Id: ${getClientId(view)}, ipc-message: ${channel}`);
-            console.log(args);
-        });
-        view.webContents.on('ipc-message-sync', (event, channel, ...args) => {
-            if (channel.startsWith('REMOTE_')) return;
-            console.log(`Client Id: ${getClientId(view)}, ipc-message-sync: ${channel}`);
-            console.log(args);
-        });
-    }
+    initializeIPCDebug(view.webContents, `Client Id: ${getClientId(view)}`);
 
     //view.setAutoResize({
     //width: true,
@@ -2629,22 +2609,23 @@ async function canCloseClient(id, warn, all, allWindows) {
         return false;
     const wl = client.windows.length;
     for (let w = 0; w < wl; w++) {
+        let window = client.windows[w].window;
         //check each child window just to be safe
-        close = await executeScript(`if(typeof closeable === "function") closeable(${all}, ${allWindows || false}); else (function() { return true; })();`, client.windows[w].window);
-        if (client.windows[w].window && client.windows[w].window.isModal()) {
+        close = await executeScript(`if(typeof closeable === "function") closeable(${all}, ${allWindows || false}); else (function() { return true; })();`, window);
+        if (window && !window.isDestroyed() && window.isModal()) {
             if (warn) {
                 dialog.showMessageBox(client.parent, {
                     type: 'info',
                     message: `All modal dialogs must be closed before you can exit.`
                 });
-                client.windows[w].window.focus();
+                window.focus();
             }
             return false;
         }
         if (close === false)
             return false;
     }
-    return true;;
+    return true;
 }
 
 async function canCloseAllClients(windowId, warn, all) {
@@ -3642,7 +3623,8 @@ function focusClient(clientId, focusWindow, switchClient) {
     const windowId = getWindowId(client.parent);
     if (switchClient && windows[windowId].current !== clientId)
         client.parent.webContents.send('switch-client', clientId);
-    client.view.webContents.focus();
+    if (client.view && client.view.webContents)
+        client.view.webContents.focus();
 }
 
 function updateWindow(window, parent, options) {
@@ -6017,7 +5999,7 @@ async function updateTray() {
 }
 //#endregion
 
-//#region Debug timers
+//#region Debug
 function StartDebugTimer() {
     timers.push(Date.now());
 }
@@ -6035,6 +6017,24 @@ ipcMain.on('StartDebugTimer', event => {
 ipcMain.on('EndDebugTimer', (event, label) => {
     EndDebugTimer(label);
 });
+
+function initializeIPCDebug(webContents, prefix) {
+    if (!global.debug) return;
+    if(prefix)
+        prefix += ', ';
+    else 
+        prefix = '';
+    webContents.on('ipc-message', (event, channel, ...args) => {
+        if (channel.startsWith('REMOTE_')) return;
+        console.log(`${prefix}ipc-message: ${channel}`);
+        console.log(args);
+    });
+    webContents.on('ipc-message-sync', (event, channel, ...args) => {
+        if (channel.startsWith('REMOTE_')) return;
+        console.log(`${prefix}ipc-message-sync: ${channel}`);
+        console.log(args);
+    });
+}
 //#endregion
 //Wrapper for loading contents as some times it may already be loaded and the event may not fire
 function onContentsLoaded(contents) {

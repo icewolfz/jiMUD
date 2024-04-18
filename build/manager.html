@@ -542,7 +542,7 @@
                 //if(tabstrip.focused === true) return;
                 tabstrip.focused = true;
                 //hack for newer linux, it seems sometimes it will double focus and cause the window to never minimize, by checking if visible it prevents double focus
-                if(window.isVisible())
+                if (window.isVisible())
                     ipcRenderer.send('focus-client', _current);
             })
             window.addEventListener('blur', e => {
