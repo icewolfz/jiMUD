@@ -396,7 +396,7 @@ export class Telnet extends EventEmitter {
         }
         else if (this.enableLatency)
             this._latencyTime = null;
-        this.emit('data-sent', data);
+        this.emit('data-sent', data, raw);
     }
 
     /**
