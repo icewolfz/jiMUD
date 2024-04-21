@@ -9,7 +9,7 @@
 - **Changed:**
   - Update electron 28.2.4 to 29.3.0
   - Update tmp 0.2.1 to 0.2.3
-  - Update yauzl 3.1.0 to 3.1.2
+  - Update yauzl 3.1.0 to 3.1.3
   - Update monaco-editor 0.46.0 to 0.47.0
   - Update mathjs 12.4.0 to 12.4.1
   - Update markdown-it 14.0.0 to 14.1.0
