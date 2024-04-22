@@ -1,7 +1,7 @@
 //spell-checker:words submenu, pasteandmatchstyle, statusvisible, taskbar, colorpicker, mailto, forecolor, tinymce, unmaximize
 //spell-checker:ignore prefs, partyhealth, combathealth, commandinput, limbsmenu, limbhealth, selectall, editoronly, limbarmor, maximizable, minimizable
 //spell-checker:ignore limbsarmor, lagmeter, buttonsvisible, connectbutton, charactersbutton, Editorbutton, zoomin, zoomout, unmaximize, resizable
-const { app, BrowserWindow, BrowserView, shell, screen, Tray, dialog, Menu, MenuItem, ipcMain, systemPreferences, nativeImage } = require('electron');
+const { app, BrowserWindow, WebContentsView, shell, screen, Tray, dialog, Menu, MenuItem, ipcMain, systemPreferences, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const URL = require('url');
@@ -432,7 +432,7 @@ function createWindow(options) {
             //close any child windows linked to view
             closeClientWindows(id);
             if (!window.isDestroyed())
-                window.removeBrowserView(clients[id].view);
+                window.contentView.removeChildView(clients[id].view);
             idMap.delete(clients[id].view);
             if (clients[id].view.webContents)
                 clients[id].view.webContents.destroy();
@@ -1390,7 +1390,7 @@ ipcMain.on('get-app-sync', async (event, key, ...args) => {
 
 ipcMain.on('set-progress', (event, progress, mode) => {
     const window = BrowserWindow.fromWebContents(event.sender);
-    const clientId = getClientId(browserViewFromContents(event.sender));
+    const clientId = getClientId(viewFromContents(event.sender));
     const windowId = getWindowId(window);
     clients[clientId].progress = progress.value;
     clients[clientId].progressMode = progress.mode || mode;
@@ -1813,19 +1813,14 @@ ipcMain.on('switch-client', (event, id, offset) => {
             height: bounds.height - (offset || 0)
         });
         //closed or some other reason so do not switch
-        if (window.getBrowserViews().length === 0)
+        if (window.contentView.children.length === 0)
             return;
         if (windowId === focusedWindow)
             focusedClient = id;
-        //already active
-        //if (windows[windowId].current === id)
-        //return;
         if (windows[windowId].current && clients[windows[windowId].current])
             clients[windows[windowId].current].view.webContents.send('deactivated');
-        windows[windowId].current = id;
+        setVisibleClient(windowId, id);
         clients[id].view.webContents.send('activated');
-        //window.addBrowserView(clients[id].view);
-        window.setTopBrowserView(clients[id].view);
         focusWindow(window, true);
     }
 });
@@ -1896,20 +1891,22 @@ ipcMain.on('dock-client', (event, id, options) => {
     //tab from a different instant, can not transfer due to process structure
     if (options && 'pid' in options && options.pid !== process.pid) return;
     let window = BrowserWindow.fromWebContents(event.sender);
+    if (!window)
+        window = clientFromContents(event.sender).parent;
     let windowId = getWindowId(window);
     const oldWindow = clients[id].parent;
     const oldWindowId = getWindowId(oldWindow);
     //same window so trying to drag out so create new window
-    if (window === oldWindow) {
+    if (!window || window === oldWindow) {
         //if only one client no need for a new window so bail
-        if (windows[oldWindowId].clients.length === 1) {
+        if (window && windows[oldWindowId].clients.length === 1) {
             if (options) {
                 window.setPosition(options.x || 0, options.y || 0);
             }
             return;
         }
         //remove from old window
-        oldWindow.removeBrowserView(clients[id].view);
+        oldWindow.contentView.removeChildView(clients[id].view);
         const oldIdx = windows[oldWindowId].clients.indexOf(id);
         windows[oldWindowId].clients.splice(oldIdx, 1);
         oldWindow.webContents.send('removed-client', id);
@@ -1933,11 +1930,9 @@ ipcMain.on('dock-client', (event, id, options) => {
         focusedWindow = windowId;
         focusedClient = id;
         windows[windowId].clients.push(id);
-        windows[windowId].current = id;
+        window.contentView.addChildView(clients[id].view);
         clients[id].parent = window;
-        //window.setBrowserView(clients[id].view);
-        window.addBrowserView(clients[id].view);
-        window.setTopBrowserView(clients[id].view);
+        setVisibleClient(windowId, id);
         //clients[id].menu.window = window;
         //window.setMenu(clients[id].menu);
         onContentsLoaded(window.webContents).then(() => {
@@ -1950,7 +1945,7 @@ ipcMain.on('dock-client', (event, id, options) => {
         return;
     }
     //remove from old window
-    oldWindow.removeBrowserView(clients[id].view);
+    oldWindow.contentView.removeChildView(clients[id].view);
     const oldIdx = windows[oldWindowId].clients.indexOf(id);
     windows[oldWindowId].clients.splice(oldIdx, 1);
     oldWindow.webContents.send('removed-client', id);
@@ -1964,14 +1959,13 @@ ipcMain.on('dock-client', (event, id, options) => {
     else
         windows[windowId].clients.push(id);
     clients[id].parent = window;
-    clients[id].parent.addBrowserView(clients[id].view);
+    clients[id].parent.contentView.addChildView(clients[id].view);
     if (windowId === focusedWindow)
         focusedClient = id;
     if (windows[windowId].current && clients[windows[windowId].current])
         clients[windows[windowId].current].view.webContents.send('deactivated');
-    windows[windowId].current = id;
+    setVisibleClient(windowId, id);
     clients[id].view.webContents.send('activated', true);
-    window.setTopBrowserView(clients[id].view);
     if (options)
         window.webContents.send('new-client', { id: id, index: options.index });
     else
@@ -2134,7 +2128,7 @@ ipcMain.on('get-options', (event, isWindow) => {
         event.returnValue = { windows: windows[getWindowId(window)].windows.map(w => w.details) }
     }
     else {
-        const view = browserViewFromContents(event.sender);
+        const view = viewFromContents(event.sender);
         event.returnValue = clients[getClientId(view)].options;
     }
 });
@@ -2184,12 +2178,12 @@ ipcMain.on('get-client-id', (event, name) => {
     if (name)
         event.returnValue = names[name];
     else
-        event.returnValue = getClientId(browserViewFromContents(event.sender));
+        event.returnValue = getClientId(viewFromContents(event.sender));
 });
 
 ipcMain.on('get-client-name', (event, id) => {
     if (!id)
-        id = getClientId(browserViewFromContents(event.sender));
+        id = getClientId(viewFromContents(event.sender));
     if (clients[id])
         event.returnValue = clients[id].name;
     else
@@ -2198,7 +2192,7 @@ ipcMain.on('get-client-name', (event, id) => {
 
 ipcMain.on('clear-client-name', (event, id) => {
     if (!id)
-        id = getClientId(browserViewFromContents(event.sender));
+        id = getClientId(viewFromContents(event.sender));
     else if (typeof id === 'string')
         id = names[id];
     if (clients[id] && clients[id].name) {
@@ -2209,7 +2203,7 @@ ipcMain.on('clear-client-name', (event, id) => {
 
 ipcMain.on('set-client-name', (event, name, id) => {
     if (!id)
-        id = getClientId(browserViewFromContents(event.sender));
+        id = getClientId(viewFromContents(event.sender));
     if (clients[id]) {
         //if already named remove name from old window
         if (names[name] && clients[names[name]])
@@ -2318,7 +2312,7 @@ function createClient(options) {
     options = options || {};
     if (!options.file || options.file.length === 0)
         options.file = 'build/index.html';
-    const view = new BrowserView({
+    const view = new WebContentsView({
         webPreferences: {
             nodeIntegration: true,
             nodeIntegrationInWorker: true,
@@ -2332,6 +2326,7 @@ function createClient(options) {
             preload: path.join(__dirname, 'preload.js')
         }
     });
+    //view.setVisible(false);
     switch (path.basename(getSetting('theme'), path.extname(getSetting('theme')))) {
         case 'zen':
             view.setBackgroundColor(options.backgroundColor || '#dad2ba');
@@ -2510,9 +2505,6 @@ function createClient(options) {
         clients[options.id].name = options.name;
         names[options.name] = options.id;
     }
-    //win.setTopBrowserView(view)    
-    //addBrowserView
-    //setBrowserView  
     //addInputContext(view, getSetting('spellchecking'));
     return options.id;
 }
@@ -2547,7 +2539,7 @@ async function removeClient(id) {
     //close the view
     executeCloseHooks(client.view);
     //remove the view to avoid crashing window
-    window.removeBrowserView(client.view);
+    window.contentView.removeChildView(client.view);
     client.view.webContents.destroy();
     if (clients[id].name)
         delete names[clients[id].name];
@@ -3568,7 +3560,7 @@ function getClientId(client) {
     return idMap.get(client);
 }
 
-function browserViewFromContents(contents) {
+function viewFromContents(contents) {
     if (!contents) return null
     for (clientId in clients) {
         if (!Object.prototype.hasOwnProperty.call(clients, clientId))
@@ -3577,6 +3569,17 @@ function browserViewFromContents(contents) {
             return clients[clientId].view;
     }
     return null;
+}
+
+function setVisibleClient(windowId, clientId) {
+    if (!windows[windowId] || !clients[clientId]) return;
+    const view = clients[clientId].view;
+    const current = windows[windowId].current;
+    //if current is client skip hiding old to avoid flicker/cpu/gpu changes
+    if (clients[current] && current !== clientId)
+        clients[current].view.setVisible(false);
+    windows[windowId].current = clientId;
+    clients[clientId].view.setVisible(true);
 }
 
 function clientIdFromContents(contents) {
@@ -3733,11 +3736,10 @@ function newConnection(window, connection, data, name) {
     focusedWindow = windowId;
     focusedClient = id;
     windows[windowId].clients.push(id);
-    windows[windowId].current = id;
+    window.contentView.addChildView(clients[id].view);
+    setVisibleClient(windowId, id);
     //did-navigate //fires before dom-ready but view seems to still not be loaded and delayed
     //did-finish-load //slowest but ensures the view is in the window and visible before firing
-    window.addBrowserView(clients[id].view);
-    window.setTopBrowserView(clients[id].view);
     onContentsLoaded(clients[id].view.webContents).then(() => {
         window.webContents.send('new-client', { id: id, current: windows[windowId].current === id });
         if (connection)
@@ -3778,16 +3780,17 @@ async function newClientWindow(caller, connection, data, name) {
             id = createClient({ parent: window.window, name: d === 0 ? name : null, bounds: window.window.getContentBounds(), data: { data: data[d] } });
             window.clients.push(id);
         }
-        window.current = id;
         focusedClient = id;
         window.window.once('ready-to-show', () => {
             for (var c = 0, cl = window.clients.length; c < cl; c++) {
                 const clientId = window.clients[c];
-                window.window.addBrowserView(clients[clientId].view);
+                window.window.contentView.addChildView(clients[clientId].view);
                 onContentsLoaded(clients[clientId].view.webContents).then(() => {
                     if (connection)
                         clients[id].view.webContents.send('connection-settings', connection);
                     clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, window.clients.length);
+                    if (clientId !== window.current)
+                        clients[clientId].view.setVisible(false);
                 });
             }
             window.window.webContents.send('set-clients', window.clients.map(x => {
@@ -3797,7 +3800,7 @@ async function newClientWindow(caller, connection, data, name) {
                     noUpdate: true
                 };
             }), window.current);
-            window.window.setTopBrowserView(clients[window.current].view);
+            setVisibleClient(windowId, window.current);
             if (focusedWindow === windowId)
                 focusWindow(window.window, true);
         });
@@ -3807,11 +3810,10 @@ async function newClientWindow(caller, connection, data, name) {
             id = createClient({ parent: window.window, name: name, bounds: window.window.getContentBounds(), data: { data: data } });
         else
             id = createClient({ parent: window.window, name: name, bounds: window.window.getContentBounds() });
-        window.current = id;
         focusedClient = id;
         window.clients.push(id);
-        window.window.addBrowserView(clients[id].view);
-        window.window.setTopBrowserView(clients[id].view);
+        window.window.contentView.addChildView(clients[id].view);
+        setVisibleClient(windowId, id);
         onContentsLoaded(clients[id].view.webContents).then(() => {
             clientsChanged();
             if (connection)
@@ -4125,7 +4127,7 @@ function loadWindowLayout(file, charData) {
         onContentsLoaded(window.window.webContents).then(() => {
             for (var c = 0, cl = window.clients.length; c < cl; c++) {
                 const clientId = window.clients[c];
-                window.window.addBrowserView(clients[clientId].view);
+                window.window.contentView.addChildView(clients[clientId].view);
                 onContentsLoaded(clients[clientId].view.webContents).then(() => {
                     clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, window.clients.length);
                 });
@@ -4137,8 +4139,7 @@ function loadWindowLayout(file, charData) {
                     noUpdate: true
                 };
             }), current);
-
-            window.window.setTopBrowserView(clients[current].view);
+            setVisibleClient(getWindowId(window.window), current)
             if (data.focusedWindow === getWindowId(window.window))
                 focusWindow(window.window, true);
         });
@@ -6020,9 +6021,9 @@ ipcMain.on('EndDebugTimer', (event, label) => {
 
 function initializeIPCDebug(webContents, prefix) {
     if (!global.debug) return;
-    if(prefix)
+    if (prefix)
         prefix += ', ';
-    else 
+    else
         prefix = '';
     webContents.on('ipc-message', (event, channel, ...args) => {
         if (channel.startsWith('REMOTE_')) return;
