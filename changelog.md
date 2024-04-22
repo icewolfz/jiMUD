@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.x
+
+- **Changed:**
+  - Update electron 29.3.0 to 30.0.1
+
 ## 1.3.0 2024-04-22
 
 - **Fixed:**
