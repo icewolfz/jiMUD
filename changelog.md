@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.3.0
+## 1.3.0 2024-04-22
 
 - **Fixed:**
   - Preferences: Fix color changing erroring when colors have never been set

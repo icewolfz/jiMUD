@@ -68,10 +68,10 @@
     "electron": "^29.3.0",
     "electron-builder": "^24.13.3",
     "electron-rebuild": "^3.2.9",
-    "eslint": "^9.1.0",
-    "eslint-plugin-html": "^8.1.0",
+    "eslint": "^9.1.1",
+    "eslint-plugin-html": "^8.1.1",
     "sass": "^1.75.0",
-    "terser": "^5.30.3"
+    "terser": "^5.30.4"
   },
   "build": {
     "appId": "jiMUD",
