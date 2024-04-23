@@ -3573,11 +3573,11 @@ function setVisibleClient(windowId, clientId) {
     if (!windows[windowId] || !clients[clientId]) return;
     const view = clients[clientId].view;
     const current = windows[windowId].current;
+    clients[clientId].view.setVisible(true);
     //if current is client skip hiding old to avoid flicker/cpu/gpu changes
     if (clients[current] && current !== clientId)
         clients[current].view.setVisible(false);
     windows[windowId].current = clientId;
-    clients[clientId].view.setVisible(true);
 }
 
 function clientIdFromContents(contents) {
@@ -3788,18 +3788,19 @@ async function newClientWindow(caller, connection, data, name) {
         for (let d = 0, dl = data.length; d < dl; d++) {
             id = createClient({ parent: window.window, name: d === 0 ? name : null, bounds: window.window.getContentBounds(), data: { data: data[d] } });
             window.clients.push(id);
+            window.window.contentView.addChildView(clients[id].view);
+            clients[id].view.setVisible(id === window.current);
         }
         focusedClient = id;
         window.window.once('ready-to-show', () => {
             for (var c = 0, cl = window.clients.length; c < cl; c++) {
                 const clientId = window.clients[c];
-                window.window.contentView.addChildView(clients[clientId].view);
                 onContentsLoaded(clients[clientId].view.webContents).then(() => {
                     if (connection)
                         clients[id].view.webContents.send('connection-settings', connection);
                     clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, window.clients.length);
-                    if (clientId !== window.current)
-                        clients[clientId].view.setVisible(false);
+                    //if (clientId !== window.current)
+                    //clients[clientId].view.setVisible(false);
                 });
             }
             window.window.webContents.send('set-clients', window.clients.map(x => {
@@ -4137,6 +4138,7 @@ function loadWindowLayout(file, charData) {
             for (var c = 0, cl = window.clients.length; c < cl; c++) {
                 const clientId = window.clients[c];
                 window.window.contentView.addChildView(clients[clientId].view);
+                clients[clientId].view.setVisible(clientId === current);
                 onContentsLoaded(clients[clientId].view.webContents).then(() => {
                     clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, window.clients.length);
                 });
