@@ -1890,9 +1890,7 @@ ipcMain.on('dock-client', (event, id, options) => {
     if (!clients[id]) return;
     //tab from a different instant, can not transfer due to process structure
     if (options && 'pid' in options && options.pid !== process.pid) return;
-    let window = BrowserWindow.fromWebContents(event.sender);
-    if (!window)
-        window = clientFromContents(event.sender).parent;
+    let window = windowFromContents(event.sender);
     let windowId = getWindowId(window);
     const oldWindow = clients[id].parent;
     const oldWindowId = getWindowId(oldWindow);
@@ -3591,6 +3589,17 @@ function clientIdFromContents(contents) {
             return clientId;
     }
     return null;
+}
+
+function windowFromContents(contents) {
+    if (!contents) return null;
+    let window = BrowserWindow.fromWebContents(contents);
+    if (!window) {
+        const client = clientFromContents(contents)
+        if (client)
+            window = clientFromContents(contents).parent;
+    }
+    return window;
 }
 
 function clientFromContents(contents) {
