@@ -1,5 +1,8 @@
 # Changelog
 
+- **Changed:**
+  - Update monaco-editor 0.47.0 to 0.48.0
+
 ## 1.3.0 2024-04-22
 
 - **Fixed:**
