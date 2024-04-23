@@ -5,6 +5,10 @@
 - **Changed:**
   - Update electron 29.3.0 to 30.0.1
   - Convert BrowserView to WebContentsView
+  - Update monaco-editor 0.47.0 to 0.48.0
+  
+## 1.3.0 2024-04-22
+
 - **Fixed:**
   - Preferences: Fix color changing erroring when colors have never been set
   - Fix focus and resize issues with new KDE 6
