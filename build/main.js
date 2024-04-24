@@ -4138,9 +4138,10 @@ function loadWindowLayout(file, charData) {
             for (var c = 0, cl = window.clients.length; c < cl; c++) {
                 const clientId = window.clients[c];
                 window.window.contentView.addChildView(clients[clientId].view);
-                clients[clientId].view.setVisible(clientId === current);
+                //clients[clientId].view.setVisible(clientId === current);
                 onContentsLoaded(clients[clientId].view.webContents).then(() => {
                     clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, window.clients.length);
+                    clients[clientId].view.setVisible(clientId === current);
                 });
             }
             window.window.webContents.send('set-clients', window.clients.map(x => {
