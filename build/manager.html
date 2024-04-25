@@ -401,6 +401,11 @@
                     {
                         label: 'Windows...',
                         click: 'ipcRenderer.send("show-window", "windows")'
+                    },
+                    { type: 'separator' },
+                    {
+                        label: 'Characters...',
+                        click: `ipcRenderer.send('execute-client', ${getActiveClient()}, 'openWindow("characters")');`
                     }
                 ];
                 if (window.getGlobal('debug')) {

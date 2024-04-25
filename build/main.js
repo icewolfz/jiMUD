@@ -5810,6 +5810,13 @@ async function _updateTrayContext() {
             },
             { type: 'separator' },
             {
+                label: 'Ch&aracters...',
+                click: (item, mWindow) => {
+                    executeScriptClient('openWindow("characters")', active.window);
+                }
+            },           
+            { type: 'separator' },
+            {
                 label: 'E&xit',
                 //role: 'quit'
                 click: quitApp

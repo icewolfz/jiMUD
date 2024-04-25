@@ -2,6 +2,8 @@
 
 ## 1.4.0
 
+- **New:**
+  - Allow opening character manager from tray and tabstrip context menus
 - **Changed:**
   - Update electron 29.3.0 to 30.0.1
   - Convert BrowserView to WebContentsView
