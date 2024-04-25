@@ -2,6 +2,7 @@
 
 - **Changed:**
   - Update monaco-editor 0.47.0 to 0.48.0
+  - Update mathjs 12.4.1 to 12.4.2
 
 ## 1.3.0 2024-04-22
 
