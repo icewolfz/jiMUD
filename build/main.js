@@ -481,21 +481,25 @@ function createWindow(options) {
     });
 
     //close hack due to electron's dumb ability to not allow a simple sync call to return a true/false state
-    let _close = false;
+    let _close = 0;
     window.on('close', async (e) => {
-        if (_close)
+        if (_close == 2)
             return;
         e.preventDefault();
         //for what ever reason electron does not seem to work well with await, it sill continues to execute async instead of waiting when using IPCrenderer
-        _close = await canCloseAllClients(getWindowId(window)).catch(logError);
+        _close = await canCloseAllClients(getWindowId(window)).catch(logError) ? 1 : 0;
         if (_close) {
             states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
             stateMap.set(window, states[options.file]);
+            //hide window after state to prevent double close issues as save could cause a slow down
+            //window.hide();
             //if _loaded and not saved and the last window open save as its the final state
             if (_loaded && !_saved && Object.keys(windows).length === 1) {
                 await saveWindowLayout(null, getSetting('lockLayout'));
                 _saved = true;
             }
+            //prevent double close bugs
+            _close = 2;
             window.close();
         }
     });
@@ -2579,11 +2583,13 @@ function setClientWindowsParent(id, parent, oldParent) {
 }
 
 function clientsChanged() {
+    if(!clients) return;
     const windowLength = Object.keys(windows).length;
     for (clientId in clients) {
         if (!Object.prototype.hasOwnProperty.call(clients, clientId) || !clients[clientId].view.webContents || clients[clientId].view.webContents.isDestroyed())
             continue;
-        clients[clientId].view.webContents.send('clients-changed', windowLength, windows[getWindowId(clients[clientId].parent)].clients.length);
+        const windowId = getWindowId(clients[clientId].parent);
+        clients[clientId].view.webContents.send('clients-changed', windowLength, (windows[windowId] && windows[windowId].clients)? windows[windowId].clients.length : 0);
     }
     const windowsDialog = getWindowId('windows');
     if (windowsDialog)
@@ -3749,10 +3755,10 @@ function newConnection(window, connection, data, name) {
     setVisibleClient(windowId, id);
     //did-navigate //fires before dom-ready but view seems to still not be loaded and delayed
     //did-finish-load //slowest but ensures the view is in the window and visible before firing
-    onContentsLoaded(clients[id].view.webContents).then(() => {
-        window.webContents.send('new-client', { id: id, current: windows[windowId].current === id });
-        if (connection)
-            clients[id].view.webContents.send('connection-settings', connection);
+    window.webContents.send('new-client', { id: id, current: windows[windowId].current === id });
+    if (connection)
+        clients[id].view.webContents.send('connection-settings', connection);
+    onContentsLoaded(clients[id].view.webContents).then(() => {        
         if (focusedClient === id && focusedWindow === windowId)
             focusWindow(window, true);
         clientsChanged();
@@ -3792,17 +3798,17 @@ async function newClientWindow(caller, connection, data, name) {
             clients[id].view.setVisible(id === window.current);
         }
         focusedClient = id;
+        for (var c = 0, cl = window.clients.length; c < cl; c++) {
+            const clientId = window.clients[c];
+            //onContentsLoaded(clients[clientId].view.webContents).then(() => {
+                if (connection)
+                    clients[id].view.webContents.send('connection-settings', connection);
+                clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, window.clients.length);
+                //if (clientId !== window.current)
+                //clients[clientId].view.setVisible(false);
+            //});
+        }
         window.window.once('ready-to-show', () => {
-            for (var c = 0, cl = window.clients.length; c < cl; c++) {
-                const clientId = window.clients[c];
-                onContentsLoaded(clients[clientId].view.webContents).then(() => {
-                    if (connection)
-                        clients[id].view.webContents.send('connection-settings', connection);
-                    clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, window.clients.length);
-                    //if (clientId !== window.current)
-                    //clients[clientId].view.setVisible(false);
-                });
-            }
             window.window.webContents.send('set-clients', window.clients.map(x => {
                 return {
                     id: x,
@@ -3824,13 +3830,13 @@ async function newClientWindow(caller, connection, data, name) {
         window.clients.push(id);
         window.window.contentView.addChildView(clients[id].view);
         setVisibleClient(windowId, id);
-        onContentsLoaded(clients[id].view.webContents).then(() => {
+        //onContentsLoaded(clients[id].view.webContents).then(() => {
             clientsChanged();
             if (connection)
                 clients[id].view.webContents.send('connection-settings', connection);
-        });
-        onContentsLoaded(window.window.webContents).then(() => {
-            window.window.webContents.send('new-client', { id: id });
+        //});
+        window.window.webContents.send('new-client', { id: id });
+        onContentsLoaded(window.window.webContents).then(() => {            
             if (focusedClient === id && focusedWindow === windowId)
                 focusWindow(window.window, true);
         });
@@ -4134,16 +4140,17 @@ function loadWindowLayout(file, charData) {
         //current is wrong for what ever reason so fall back to first client
         if (!clients[current])
             current = window.clients[0];
+        for (var c = 0, cl = window.clients.length; c < cl; c++) {
+            const clientId = window.clients[c];
+            window.window.contentView.addChildView(clients[clientId].view);
+            clients[clientId].view.setVisible(true);
+            clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, window.clients.length);
+            onContentsLoaded(clients[clientId].view.webContents).then(() => {
+                clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, window.clients.length);
+                clients[clientId].view.setVisible(clientId === current);
+            });
+        }        
         onContentsLoaded(window.window.webContents).then(() => {
-            for (var c = 0, cl = window.clients.length; c < cl; c++) {
-                const clientId = window.clients[c];
-                window.window.contentView.addChildView(clients[clientId].view);
-                //clients[clientId].view.setVisible(clientId === current);
-                onContentsLoaded(clients[clientId].view.webContents).then(() => {
-                    clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, window.clients.length);
-                    clients[clientId].view.setVisible(clientId === current);
-                });
-            }
             window.window.webContents.send('set-clients', window.clients.map(x => {
                 return {
                     id: x,

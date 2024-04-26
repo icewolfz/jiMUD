@@ -567,10 +567,15 @@
                 if (_current)
                     switchToClient(_current);
             }
+            document.getElementById('loader').remove();
             _loading--;
         };
         init();
     </script>
+    <div id="loader" style="top:26px">
+        <div class="text">Loading... <div class="loader"></div>
+        </div>
+    </div>    
 </body>
 
 </html>
