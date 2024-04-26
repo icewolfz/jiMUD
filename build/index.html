@@ -499,7 +499,7 @@
             if (document.getElementById('disconnectDialog').open) {
                 if (event.which === 81) {
                     closeDisconnectDialog(true);
-                    window.close();
+                    ipcRenderer.send('quit');
                     event.preventDefault();
                     event.cancelBubble = true;
                 }

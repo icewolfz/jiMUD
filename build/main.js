@@ -1389,7 +1389,7 @@ ipcMain.on('get-app-sync', async (event, key, ...args) => {
 });
 
 ipcMain.on('set-progress', (event, progress, mode) => {
-    const window = BrowserWindow.fromWebContents(event.sender);
+    const window = windowFromContents(event.sender);
     const clientId = getClientId(viewFromContents(event.sender));
     const windowId = getWindowId(window);
     clients[clientId].progress = progress.value;
@@ -1545,7 +1545,7 @@ function getCharacterFromId(id) {
 
 //#region IPC dialogs
 ipcMain.on('show-dialog-sync', (event, type, ...args) => {
-    var sWindow = BrowserWindow.fromWebContents(event.sender);
+    var sWindow = windowFromContents(event.sender);
     if (type === 'showMessageBox')
         event.returnValue = dialog.showMessageBoxSync(sWindow, ...args);
     else if (type === 'showSaveDialog')
@@ -1559,7 +1559,7 @@ ipcMain.on('show-dialog-sync', (event, type, ...args) => {
 });
 
 ipcMain.handle('show-dialog', (event, type, ...args) => {
-    var sWindow = BrowserWindow.fromWebContents(event.sender);
+    var sWindow = windowFromContents(event.sender);
     if (type === 'showMessageBox')
         return dialog.showMessageBox(sWindow, ...args);
     else if (type === 'showSaveDialog')
@@ -1587,7 +1587,7 @@ function showContext(event, template, options, show, close) {
     if (!template)
         return;
     if (!options) options = {};
-    options.window = BrowserWindow.fromWebContents(event.sender);
+    options.window = windowFromContents(event.sender);
     if (options.callback) {
         var callback = options.callback;
         options.callback = () => event.sender.executeJavaScript(callback);
@@ -1625,7 +1625,7 @@ ipcMain.on('trash-item-sync', async (event, file) => {
 });
 
 ipcMain.handle('window', (event, action, ...args) => {
-    var current = BrowserWindow.fromWebContents(event.sender);
+    var current = windowFromContents(event.sender);
     if (!current || current.isDestroyed()) return;
     if (action === "focus")
         current.focus();
@@ -1672,7 +1672,7 @@ ipcMain.handle('window', (event, action, ...args) => {
 });
 
 ipcMain.handle('parent-window', (event, action, ...args) => {
-    var current = BrowserWindow.fromWebContents(event.sender);
+    var current = windowFromContents(event.sender);
     //get parent or default back to caller
     current = current.getParentWindow() || current;
     if (!current || current.isDestroyed()) return;
@@ -1759,19 +1759,19 @@ ipcMain.on('window-info', (event, info, id, ...args) => {
         }
     }
     else if (info === 'isVisible') {
-        var current = BrowserWindow.fromWebContents(event.sender);
+        var current = windowFromContents(event.sender);
         event.returnValue = current ? current.isVisible() : 0;
     }
     else if (info === 'isEnabled') {
-        var current = BrowserWindow.fromWebContents(event.sender);
+        var current = windowFromContents(event.sender);
         event.returnValue = current ? current.isEnabled() : 0;
     }
     else if (info === 'isDevToolsOpened') {
-        var current = BrowserWindow.fromWebContents(event.sender);
+        var current = windowFromContents(event.sender);
         event.returnValue = current ? current.isDevToolsOpened() : 0;
     }
     else if (info === 'isMinimized') {
-        var current = BrowserWindow.fromWebContents(event.sender);
+        var current = windowFromContents(event.sender);
         event.returnValue = current ? current.isMinimized() : 0;
     }
     else {
@@ -1790,16 +1790,16 @@ ipcMain.on('cancel-close', event => {
 
 //#region Client creation, docking, and related management
 ipcMain.on('new-client', (event, connection, data, name) => {
-    newConnection(BrowserWindow.fromWebContents(event.sender), connection, data, name);
+    newConnection(windowFromContents(event.sender), connection, data, name);
 });
 
 ipcMain.on('new-window', (event, connection, data, name) => {
-    newClientWindow(BrowserWindow.fromWebContents(event.sender), connection, data, name);
+    newClientWindow(windowFromContents(event.sender), connection, data, name);
 });
 
 ipcMain.on('switch-client', (event, id, offset) => {
     if (clients[id]) {
-        const window = BrowserWindow.fromWebContents(event.sender);
+        const window = windowFromContents(event.sender);
         const windowId = getWindowId(window);
         if (window != clients[id].parent) {
             //Probably wanting to dock from 1 window to another, so just ignore
@@ -1848,7 +1848,7 @@ ipcMain.on('goto-client', (event, id, action) => {
         window = clients[id].parent;
     }
     else
-        window = BrowserWindow.fromWebContents(event.sender);
+        window = windowFromContents(event.sender);
     const windowId = getWindowId(window);
     let idx;
     //if only 1 client or no clients ignore
@@ -1877,7 +1877,7 @@ ipcMain.on('goto-client', (event, id, action) => {
 })
 
 ipcMain.on('reorder-client', (event, id, index, oldIndex) => {
-    let window = BrowserWindow.fromWebContents(event.sender);
+    let window = windowFromContents(event.sender);
     let windowId = getWindowId(window);
     const currentIdx = windows[windowId].clients.indexOf(id);
     if (currentIdx === -1)
@@ -1976,7 +1976,7 @@ ipcMain.on('dock-client', (event, id, options) => {
 
 ipcMain.on('position-client', (event, id, options) => {
     if (!clients[id]) return;
-    let window = BrowserWindow.fromWebContents(event.sender);
+    let window = windowFromContents(event.sender);
     const oldWindow = clients[id].parent;
     const oldWindowId = getWindowId(oldWindow);
     if (options && window === oldWindow && windows[oldWindowId].clients.length === 1) {
@@ -2009,7 +2009,7 @@ ipcMain.on('close-window', (event, id) => {
     else if (window === 'global-preferences')
         window = getWindowId('prefs');
     else if (window === 'progress')
-        window = progressMap.get(BrowserWindow.fromWebContents(event.sender));
+        window = progressMap.get(windowFromContents(event.sender));
     else if (window === 'windows')
         window = getWindowId('windows');
     else if (windows[id])
@@ -2036,7 +2036,7 @@ ipcMain.on('execute-all-clients', (event, code) => {
 ipcMain.on('update-client', (event, id, offset) => {
     if (clients[id]) {
         offset = offset || 0;
-        var bounds = BrowserWindow.fromWebContents(event.sender).getContentBounds();
+        var bounds = windowFromContents(event.sender).getContentBounds();
         clients[id].view.setBounds({
             x: 0,
             y: offset,
@@ -2078,7 +2078,7 @@ ipcMain.on('can-close-client', async (event, id) => {
 });
 
 ipcMain.on('can-close-all-client', async (event) => {
-    const close = await canCloseAllClients(getWindowId(BrowserWindow.fromWebContents(event.sender)));
+    const close = await canCloseAllClients(getWindowId(windowFromContents(event.sender)));
     event.returnValue = close;
 });
 
@@ -2114,7 +2114,7 @@ ipcMain.on('update-title', (event, options) => {
 ipcMain.on('window-update-title', event => {
     const windowsDialog = getWindowId('windows');
     if (windowsDialog) {
-        const window = BrowserWindow.fromWebContents(event.sender);
+        const window = windowFromContents(event.sender);
         const windowId = getWindowId(window);
         windowsDialog.webContents.send('client-updated', null, { id: getWindowId(window), title: window.getTitle(), overlay: windows[windowId].overlay });
     }
@@ -2122,7 +2122,7 @@ ipcMain.on('window-update-title', event => {
 
 ipcMain.on('get-options', (event, isWindow) => {
     if (isWindow) {
-        const window = BrowserWindow.fromWebContents(event.sender);
+        const window = windowFromContents(event.sender);
         event.returnValue = { windows: windows[getWindowId(window)].windows.map(w => w.details) }
     }
     else {
@@ -2263,7 +2263,7 @@ ipcMain.on('get-windows-and-clients', event => {
 });
 
 ipcMain.on('get-window-client-count', (event) => {
-    const window = BrowserWindow.fromWebContents(event.sender);
+    const window = windowFromContents(event.sender);
     const windowId = getWindowId(window);
     event.returnValue = {
         windows: Object.keys(windows).length,
@@ -2301,7 +2301,7 @@ ipcMain.on('get-window-content-bounds', (event, id) => {
     if (windows[id])
         event.returnValue = windows[id].window.getContentBounds();
     else
-        event.returnValue = BrowserWindow.fromWebContents(event.sender).getContentBounds();
+        event.returnValue = windowFromContents(event.sender).getContentBounds();
 });
 
 
@@ -5197,11 +5197,11 @@ function profileToggle(menuItem, mWindow) {
 }
 
 ipcMain.on('update-menuitem', (event, menuitem, rebuild) => {
-    updateMenuItem(BrowserWindow.fromWebContents(event.sender), menuitem, rebuild);
+    updateMenuItem(windowFromContents(event.sender), menuitem, rebuild);
 });
 
 ipcMain.on('update-menuitems', (event, menuitems, rebuild) => {
-    updateMenuItems(BrowserWindow.fromWebContents(event.sender), menuitems, rebuild);
+    updateMenuItems(windowFromContents(event.sender), menuitems, rebuild);
 });
 
 ipcMain.on('update-menuitem-all', (event, menuitem, rebuild) => {
@@ -5213,20 +5213,20 @@ ipcMain.on('update-menuitems-all', (event, menuitems, rebuild) => {
 });
 
 ipcMain.on('reset-profiles-menu', (event) => {
-    resetProfilesMenu(BrowserWindow.fromWebContents(event.sender));
+    resetProfilesMenu(windowFromContents(event.sender));
 });
 
 ipcMain.on('show-window', (event, window, ...args) => {
     if (window === 'profile-manager')
-        openProfileManager(BrowserWindow.fromWebContents(event.sender));
+        openProfileManager(windowFromContents(event.sender));
     else if (window === 'about')
-        openAbout(BrowserWindow.fromWebContents(event.sender));
+        openAbout(windowFromContents(event.sender));
     else if (window === 'global-preferences')
-        openPreferences(BrowserWindow.fromWebContents(event.sender));
+        openPreferences(windowFromContents(event.sender));
     else if (window === 'progress')
-        openProgress(BrowserWindow.fromWebContents(event.sender), ...args)
+        openProgress(windowFromContents(event.sender), ...args)
     else if (window === 'windows')
-        openWindows(BrowserWindow.fromWebContents(event.sender));
+        openWindows(windowFromContents(event.sender));
 });
 
 ipcMain.on('reset-windows', (event, id) => {
@@ -5259,7 +5259,7 @@ ipcMain.on('reset-windows', (event, id) => {
 
 const progressMap = new Map();
 ipcMain.on('progress', (event, ...args) => {
-    window = BrowserWindow.fromWebContents(event.sender);
+    window = windowFromContents(event.sender);
     const parent = window.getParentWindow();
     //no parent means the main window wants to send to progress
     if (!parent || !window.getURL().endsWith('progress.html')) {
@@ -6085,7 +6085,7 @@ ipcMain.on('prompt', (event, options) => {
         height = 148;
     var promptWindow = createDialog({
         show: true,
-        parent: BrowserWindow.fromWebContents(event.sender),
+        parent: windowFromContents(event.sender),
         url: path.join(__dirname, 'prompt.html'),
         title: options.title || options.prompt,
         bounds: { width: options.width || 350, height: options.height || height },
@@ -6116,7 +6116,7 @@ ipcMain.on('file-exist-dialog', (event, source, target, options) => {
     var dialogResponseEvent = (event, arg) => dialogResponse = (arg === '' ? null : arg)
     var dialogWindow = createDialog({
         show: true,
-        parent: BrowserWindow.fromWebContents(event.sender),
+        parent: windowFromContents(event.sender),
         url: path.join(__dirname, 'file.exists.html'),
         title: 'File exist...',
         bounds: { width: 600, height: 393 },
