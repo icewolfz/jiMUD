@@ -3597,7 +3597,7 @@ function windowFromContents(contents) {
     if (!window) {
         const client = clientFromContents(contents)
         if (client)
-            window = clientFromContents(contents).parent;
+            return client.parent;
     }
     return window;
 }
