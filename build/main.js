@@ -2373,7 +2373,7 @@ function createClient(options) {
         }
         return {
             action: 'allow',
-            overrideBrowserWindowOptions: buildOptions(details, BrowserWindow.fromBrowserView(view), _settings)
+            overrideBrowserWindowOptions: buildOptions(details, windowFromContents(view.webContents), _settings)
         }
     });
 
