@@ -6,6 +6,7 @@
   - Allow opening character manager from tray and tabstrip context menus
 - **Fixed:**
   - Prevent double close issues if saving window layout takes time
+  - Fix issue with hidden windows and not correctly restoring bounds when maximized
 - **Changed:**
   - Update electron 29.3.0 to 30.0.1
   - Convert BrowserView to WebContentsView

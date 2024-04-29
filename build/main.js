@@ -547,7 +547,9 @@ function createWindow(options) {
         if (active)
             active.view.webContents.send('unmaximize');
         states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
-        states[options.file].maximized = false;
+        //linux has issues with correctly resetting maxmized as this event fires when the window is hidden so only store the state if not linux or visible
+        if (process.platform !== 'linux' || window.isVisible())
+            states[options.file].maximized = false;
         stateMap.set(window, states[options.file]);
     });
 
@@ -2583,13 +2585,13 @@ function setClientWindowsParent(id, parent, oldParent) {
 }
 
 function clientsChanged() {
-    if(!clients) return;
+    if (!clients) return;
     const windowLength = Object.keys(windows).length;
     for (clientId in clients) {
         if (!Object.prototype.hasOwnProperty.call(clients, clientId) || !clients[clientId].view.webContents || clients[clientId].view.webContents.isDestroyed())
             continue;
         const windowId = getWindowId(clients[clientId].parent);
-        clients[clientId].view.webContents.send('clients-changed', windowLength, (windows[windowId] && windows[windowId].clients)? windows[windowId].clients.length : 0);
+        clients[clientId].view.webContents.send('clients-changed', windowLength, (windows[windowId] && windows[windowId].clients) ? windows[windowId].clients.length : 0);
     }
     const windowsDialog = getWindowId('windows');
     if (windowsDialog)
@@ -3758,7 +3760,7 @@ function newConnection(window, connection, data, name) {
     window.webContents.send('new-client', { id: id, current: windows[windowId].current === id });
     if (connection)
         clients[id].view.webContents.send('connection-settings', connection);
-    onContentsLoaded(clients[id].view.webContents).then(() => {        
+    onContentsLoaded(clients[id].view.webContents).then(() => {
         if (focusedClient === id && focusedWindow === windowId)
             focusWindow(window, true);
         clientsChanged();
@@ -3801,11 +3803,11 @@ async function newClientWindow(caller, connection, data, name) {
         for (var c = 0, cl = window.clients.length; c < cl; c++) {
             const clientId = window.clients[c];
             //onContentsLoaded(clients[clientId].view.webContents).then(() => {
-                if (connection)
-                    clients[id].view.webContents.send('connection-settings', connection);
-                clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, window.clients.length);
-                //if (clientId !== window.current)
-                //clients[clientId].view.setVisible(false);
+            if (connection)
+                clients[id].view.webContents.send('connection-settings', connection);
+            clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, window.clients.length);
+            //if (clientId !== window.current)
+            //clients[clientId].view.setVisible(false);
             //});
         }
         window.window.once('ready-to-show', () => {
@@ -3831,12 +3833,12 @@ async function newClientWindow(caller, connection, data, name) {
         window.window.contentView.addChildView(clients[id].view);
         setVisibleClient(windowId, id);
         //onContentsLoaded(clients[id].view.webContents).then(() => {
-            clientsChanged();
-            if (connection)
-                clients[id].view.webContents.send('connection-settings', connection);
+        clientsChanged();
+        if (connection)
+            clients[id].view.webContents.send('connection-settings', connection);
         //});
         window.window.webContents.send('new-client', { id: id });
-        onContentsLoaded(window.window.webContents).then(() => {            
+        onContentsLoaded(window.window.webContents).then(() => {
             if (focusedClient === id && focusedWindow === windowId)
                 focusWindow(window.window, true);
         });
@@ -4149,7 +4151,7 @@ function loadWindowLayout(file, charData) {
                 clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, window.clients.length);
                 clients[clientId].view.setVisible(clientId === current);
             });
-        }        
+        }
         onContentsLoaded(window.window.webContents).then(() => {
             window.window.webContents.send('set-clients', window.clients.map(x => {
                 return {
@@ -4190,6 +4192,11 @@ function saveWindowState(window, previous) {
 
 function restoreWindowState(window, state, showType) {
     if (!window || !state) return;
+    //linux restore hack if a window was hidden it will use the maximized bounds instead of the saved normal bounds
+    //main issue is it will resize the window to the small bounds then restore it ot the max/fullscreen bounds
+    //only restore if the state was maxed
+    if (process.platform === 'linux' && state.maximized)
+        window.setBounds(state);
     //hack to improve visual loading
     if (showType !== 2)
         window.hide();
@@ -5821,7 +5828,7 @@ async function _updateTrayContext() {
                 click: (item, mWindow) => {
                     executeScriptClient('openWindow("characters")', active.window);
                 }
-            },           
+            },
             { type: 'separator' },
             {
                 label: 'E&xit',
