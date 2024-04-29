@@ -4196,7 +4196,7 @@ function restoreWindowState(window, state, showType) {
     //main issue is it will resize the window to the small bounds then restore it ot the max/fullscreen bounds
     //only restore if the state was maxed
     if (process.platform === 'linux' && state.maximized)
-        window.setBounds(state);
+        window.setBounds(state.bounds);
     //hack to improve visual loading
     if (showType !== 2)
         window.hide();
