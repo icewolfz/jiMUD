@@ -4172,6 +4172,19 @@ function saveWindowState(window, previous) {
     try {
         if (!window || window.isDestroyed())
             return previous;
+        //due to bugs getNormalBounds returns the full maxed size instead of the normalized bounds so hack and use the previous ones when possible
+        if (process.platform === 'linux' && state.maximized)
+            return {
+                bounds: previous && (previous.fullscreen || previous.maximized || window.isMaximized()) ? previous.bounds : window.getNormalBounds(),
+                fullscreen: previous ? previous.fullscreen : window.isFullScreen(),
+                maximized: previous ? previous.maximized : window.isMaximized(),
+                minimized: previous ? previous.minimized : window.isMinimized(),
+                devTools: global.debug ? false : window.webContents.isDevToolsOpened(),
+                visible: window.isVisible(),
+                normal: window.isNormal(),
+                enabled: window.isEnabled(),
+                alwaysOnTop: window.isAlwaysOnTop()
+            };
         return {
             bounds: previous && previous.fullscreen ? previous.bounds : window.getNormalBounds(),
             fullscreen: previous ? previous.fullscreen : window.isFullScreen(),
