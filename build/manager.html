@@ -23,7 +23,7 @@
     <div id="loader" style="top:26px">
         <div class="text">Loading... <div class="loader"></div>
         </div>
-    </div>    
+    </div>
     <script type="text/javascript">
         const { ipcRenderer } = require('electron');
         const { parseTemplate, isFileSync } = require('./js/library.js');
@@ -246,8 +246,7 @@
         }
 
         function setTitle(txt) {
-            if (!txt) return;
-            txt = '' + txt; //force to a string just to be safe
+            txt = txt ? ('' + txt) : ''; //force to a string just to be safe
             if (txt.trim().length !== 0)
                 document.title = 'jiMUD - ' + txt.trim();
             else
@@ -569,12 +568,12 @@
                 if (_current)
                     switchToClient(_current);
             }
-            if(document.getElementById('loader'))
+            if (document.getElementById('loader'))
                 document.getElementById('loader').remove();
             _loading--;
         };
         init();
-    </script>  
+    </script>
 </body>
 
 </html>
