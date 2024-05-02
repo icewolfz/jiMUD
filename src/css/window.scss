@@ -375,6 +375,19 @@ html, body {
     opacity: 1;
     color: black;
 }
+
+.cm-tabstrip li.disconnected.active {
+    box-shadow: inset 0px 2px 0px 0px lighten(rgb(242, 104, 94), 10%);
+}
+
+.cm-tabstrip li.connectednonactive.active {
+    box-shadow: inset 0px 2px 0px 0px lighten(rgb(119, 168, 69), 10%);
+}
+
+.cm-tabstrip li.connected.active {
+    box-shadow: inset 0px 2px 0px 0px lighten(rgb(94, 185, 242), 10%);
+}
+
 /*
 .focused .cm-tabstrip li.connectednonactive.active:hover {
     background-color: darken(rgb(218, 255, 181), 10%) !important;
@@ -403,6 +416,7 @@ html, body {
     border-color: rgb(195, 106, 247) !important;
     opacity: 1;
     color: black;
+    box-shadow: inset 0px 2px 0px 0px rgb(195, 106, 247);
 }
 
 .focused .cm-tabstrip li.active:hover {

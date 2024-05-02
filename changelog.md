@@ -4,6 +4,7 @@
 
 - **New:**
   - Allow opening character manager from tray and tabstrip context menus
+  - Active tab now has a larder top border to make it stand out and easier to know which tab is active
 - **Fixed:**
   - Prevent double close issues if saving window layout takes time
   - Fix issue with hidden windows and not correctly restoring bounds when maximized
