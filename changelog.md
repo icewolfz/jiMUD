@@ -9,6 +9,7 @@
   - Prevent double close issues if saving window layout takes time
   - Fix issue with hidden windows and not correctly restoring bounds when maximized
   - Clear window title bar text when tab text is empty
+  - Fix color dialog size in advanced editor in windows
 - **Changed:**
   - Update electron 29.3.0 to 30.0.2
   - Convert BrowserView to WebContentsView
