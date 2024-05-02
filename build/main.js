@@ -5494,6 +5494,11 @@ async function createTray() {
                 tray.popUpContextMenu();
                 break;
         }
+        for (clientId in clients) {
+            if (!Object.prototype.hasOwnProperty.call(clients, clientId))
+                continue;
+            clients[clientId].view.webContents.send('tray-click');
+        }
     });
 
     tray.on('double-click', () => {
@@ -5535,6 +5540,11 @@ async function createTray() {
             case TrayClick.menu:
                 tray.popUpContextMenu();
                 break;
+        }
+        for (clientId in clients) {
+            if (!Object.prototype.hasOwnProperty.call(clients, clientId))
+                continue;
+            clients[clientId].view.webContents.send('tray-double-click');
         }
     });
 }
@@ -6035,6 +6045,16 @@ async function updateTray() {
     tray.setToolTip(title);
     updateTrayContext();
 }
+//Windows only
+ipcMain.on('tray-display-balloon', (event, options) => {
+    if (!tray) return;
+    tray.displayBalloon(options);
+})
+
+ipcMain.on('tray-remove-balloon', event => {
+    if (!tray) return;
+    tray.removeBalloon();
+})
 //#endregion
 
 //#region Debug

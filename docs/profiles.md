@@ -99,6 +99,8 @@
         - 1 if url
         - 2 if mxp url
     - `context-closed` fired when the context menu is closed, argument 1 is menu object, argument 2 is 0 if not a url, is 1 if url, 2 if mxp url
+    - `tray-click` fired when tray icon is clicked
+    - `tray-double-click` fired when tray icon is doubled clicked, __Mac__, __Windows__
   - `Alarm` create repeating tick timers
     ```
     When using alarm type pattern is in the format of hours:minutes:seconds, where hours and minutes are optional. A asterisk (*) is a wildcard to match any value for that place, if minutes or hours are missing a * is assumed. If pattern is preceded with a minus (-) the connection time is used instead of current time.

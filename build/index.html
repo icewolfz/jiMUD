@@ -3333,6 +3333,16 @@
             //}, 100);
         });
 
+        ipcRenderer.on('tray-click', event => {
+            if (client)
+                client.raise('tray-click');
+        });
+
+        ipcRenderer.on('tray-double-click', event => {
+            if (client)
+                client.raise('tray-double-click');
+        });
+
         let _clients = ipcRenderer.sendSync('get-window-client-count') || { window: 1, clients: 1 };
         function clientsChanged(windows, clients) {
             _clients.windows = windows;
