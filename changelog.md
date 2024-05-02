@@ -10,7 +10,7 @@
   - Fix issue with hidden windows and not correctly restoring bounds when maximized
   - Clear window title bar text when tab text is empty
 - **Changed:**
-  - Update electron 29.3.0 to 30.0.1
+  - Update electron 29.3.0 to 30.0.2
   - Convert BrowserView to WebContentsView
   - Update monaco-editor 0.47.0 to 0.48.0
   - Update mathjs 12.4.1 to 12.4.2
