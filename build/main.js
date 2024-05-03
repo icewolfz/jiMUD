@@ -6045,9 +6045,11 @@ async function updateTray() {
     tray.setToolTip(title);
     updateTrayContext();
 }
-//Windows only
+//Windows only, pretty much the same as the notification system
+/*
 ipcMain.on('tray-display-balloon', (event, options) => {
-    if (!tray) return;
+    if (!tray || !options) return;
+    if (!options.icon) options.icon = path.join(__dirname, '../assets/icons/png/64x64.png');
     tray.displayBalloon(options);
 })
 
@@ -6055,6 +6057,7 @@ ipcMain.on('tray-remove-balloon', event => {
     if (!tray) return;
     tray.removeBalloon();
 })
+*/
 //#endregion
 
 //#region Debug
