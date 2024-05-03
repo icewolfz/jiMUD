@@ -11,6 +11,7 @@
   - Fix issue with hidden windows and not correctly restoring bounds when maximized
   - Clear window title bar text when tab text is empty
   - Fix color dialog size in advanced editor in windows
+  - Center color dialog contents in case OS makes window larger then contents
 - **Changed:**
   - Update electron 29.3.0 to 30.0.2
   - Convert BrowserView to WebContentsView
