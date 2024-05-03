@@ -493,6 +493,8 @@
         let _closeWindow = false;
         let _chat;
         let _resizeTimeout = 0;
+        let _skipMoreTimeout;
+        let _skipMoreEvent;
         //#endregion
         //#region window events
         window.addEventListener('keydown', (event) => {
@@ -1435,7 +1437,7 @@
                         }
                     }
                 }
-                if (client.getOption('autoTakeoverLogin') && data.line === 'Do you want to take over this login? (y/n)' && data.fragment)
+                if (data.fragment && client.getOption('autoTakeoverLogin') && data.line === 'Do you want to take over this login? (y/n)')
                     client.send('y\n');
                 /*
                 if (_captureComm) {
@@ -1444,7 +1446,22 @@
                   return;
                 }
                 */
-                if (_captures.length === 0 || data.fragment) return;
+                if (!_skipMoreTimeout && data.fragment && data.line.startsWith('--More--') && client.getOption('skipMore')) {
+                    _skipMoreEvent = data => {
+                        clearTimeout(_skipMoreTimeout || 0);
+                        _skipMoreTimeout = 0;
+                        _skipMoreEvent = 0;
+                    }
+                    //clear skip if anything has been sent to the mud from the client
+                    client.once('parse-command', _skipMoreEvent);
+                    _skipMoreTimeout = setTimeout(() => {
+                        client.removeListener('parse-command', _skipMoreEvent); //clear event to prevent multiple triggers and free memory
+                        _skipMoreTimeout = 0;
+                        _skipMoreEvent = 0;
+                        client.sendCommand('\n');
+                    }, client.getOption('skipMoreDelay') >= 0 ? client.getOption('skipMoreDelay') : 0);
+                }
+                if (data.fragment || _captures.length === 0) return;
                 //custom capture to ignore who list
                 res = /^(-*)\s*\[ (.*) matching (users|user) \]\s*(-*)$/.exec(data.line);
                 if (res && res.length > 0) {

@@ -6,13 +6,15 @@
   - Allow opening character manager from tray and tabstrip context menus
   - Active tab now has a larder top border to make it stand out and easier to know which tab is active
   - Add `tray-click` and `tray-double-click` trigger events to allow executing triggers when tray icon is clicked
+  - Optimize auto login and chat triggers for better performance
+  - Add `Skip more prompt` system to allow auto paging after a set amount of time
 - **Fixed:**
   - Prevent double close issues if saving window layout takes time
   - Fix issue with hidden windows and not correctly restoring bounds when maximized
   - Clear window title bar text when tab text is empty
   - Fix color dialog size in advanced editor in windows
   - Center color dialog contents in case OS makes window larger then contents
-- **Changed:**
+- **Changed:**  
   - Update electron 29.3.0 to 30.0.2
   - Convert BrowserView to WebContentsView
   - Update monaco-editor 0.47.0 to 0.48.0

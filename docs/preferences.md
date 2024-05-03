@@ -91,6 +91,8 @@ Reset - Resetting will revert all settings back to default values
   - `Shift + Enter` add newline on shift+enter
   - `(Ctrl | Shift) + Enter` add a new line on ctrl+enter or shift+enter
   - `Ctrl + Shift + Enter` add a newline on ctrl+shift+enter
+- `Skip more prompt` Attempt to skip the more prompt after a set period of time
+- `Skip more prompt delay` The amount of time in milliseconds to wait before skipping more prompt
 
 ## Command line > Tab completion
 
