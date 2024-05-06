@@ -5303,6 +5303,14 @@ ipcMain.handle('listWordsInSpellCheckerDictionary', async (event) => {
     return await event.sender.session.listWordsInSpellCheckerDictionary();
 });
 
+ipcMain.on('setSpellCheckerLanguages', (event, languages) => {
+    event.sender.session.setSpellCheckerLanguages(languages || []);
+});
+
+ipcMain.on('getSpellCheckerLanguages', (event) => {
+    event.returnValue = event.sender.session.getSpellCheckerLanguages();
+});
+
 function resetProfilesMenu(window) {
     if (!window || !windows[getWindowId(window)].menubar) return;
     const profiles = windows[getWindowId(window)].menubar.getItem('profiles', 2);
