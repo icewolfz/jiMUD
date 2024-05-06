@@ -3582,6 +3582,7 @@ function setVisibleClient(windowId, clientId) {
     const view = clients[clientId].view;
     const current = windows[windowId].current;
     clients[clientId].view.setVisible(true);
+    clients[clientId].view.webContents.invalidate();
     //if current is client skip hiding old to avoid flicker/cpu/gpu changes
     if (clients[current] && current !== clientId)
         clients[current].view.setVisible(false);
