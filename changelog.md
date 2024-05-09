@@ -15,7 +15,7 @@
   - Fix color dialog size in advanced editor in windows
   - Center color dialog contents in case OS makes window larger then contents
 - **Changed:**  
-  - Update electron 29.3.0 to 30.0.2
+  - Update electron 29.3.0 to 30.0.3
   - Convert BrowserView to WebContentsView
   - Update monaco-editor 0.47.0 to 0.48.0
   - Update mathjs 12.4.1 to 12.4.2
