@@ -3583,7 +3583,7 @@ function setVisibleClient(windowId, clientId) {
     const current = windows[windowId].current;
     clients[clientId].view.setVisible(true);
     //z-ordering to move view to top most
-    windows[windowId].window.addChildView(clients[clientId].view);
+    windows[windowId].window.contentView.addChildView(clients[clientId].view);
     //clients[clientId].view.webContents.invalidate();
     //if current is client skip hiding old to avoid flicker/cpu/gpu changes
     if (clients[current] && current !== clientId)
