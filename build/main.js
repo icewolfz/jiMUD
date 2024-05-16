@@ -3764,6 +3764,8 @@ function newConnection(window, connection, data, name) {
     if (connection)
         clients[id].view.webContents.send('connection-settings', connection);
     onContentsLoaded(clients[id].view.webContents).then(() => {
+        if (connection)
+            clients[id].view.webContents.send('connection-settings', connection);
         if (focusedClient === id && focusedWindow === windowId)
             focusWindow(window, true);
         clientsChanged();
@@ -3805,13 +3807,15 @@ async function newClientWindow(caller, connection, data, name) {
         focusedClient = id;
         for (var c = 0, cl = window.clients.length; c < cl; c++) {
             const clientId = window.clients[c];
-            //onContentsLoaded(clients[clientId].view.webContents).then(() => {
             if (connection)
                 clients[id].view.webContents.send('connection-settings', connection);
-            clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, window.clients.length);
-            //if (clientId !== window.current)
-            //clients[clientId].view.setVisible(false);
-            //});
+            onContentsLoaded(clients[clientId].view.webContents).then(() => {
+                if (connection)
+                    clients[id].view.webContents.send('connection-settings', connection);
+                clients[clientId].view.webContents.send('clients-changed', Object.keys(windows).length, window.clients.length);
+                //if (clientId !== window.current)
+                //clients[clientId].view.setVisible(false);
+            });
         }
         window.window.once('ready-to-show', () => {
             window.window.webContents.send('set-clients', window.clients.map(x => {
@@ -3835,11 +3839,13 @@ async function newClientWindow(caller, connection, data, name) {
         window.clients.push(id);
         window.window.contentView.addChildView(clients[id].view);
         setVisibleClient(windowId, id);
-        //onContentsLoaded(clients[id].view.webContents).then(() => {
-        clientsChanged();
         if (connection)
             clients[id].view.webContents.send('connection-settings', connection);
-        //});
+        onContentsLoaded(clients[id].view.webContents).then(() => {
+            clientsChanged();
+            if (connection)
+                clients[id].view.webContents.send('connection-settings', connection);
+        });
         window.window.webContents.send('new-client', { id: id });
         onContentsLoaded(window.window.webContents).then(() => {
             if (focusedClient === id && focusedWindow === windowId)
