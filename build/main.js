@@ -2134,6 +2134,11 @@ ipcMain.on('get-options', (event, isWindow) => {
     }
 });
 
+ipcMain.on('get-connection-settings', event => {
+    const view = viewFromContents(event.sender);
+    event.returnValue = clients[getClientId(view)].connection;
+});
+
 ipcMain.on('get-preference', (event, preference) => {
     event.returnValue = _settings[preference];
 });
@@ -3766,6 +3771,7 @@ function newConnection(window, connection, data, name) {
     window.webContents.send('new-client', { id: id, current: windows[windowId].current === id });
     //if (connection)
         //clients[id].view.webContents.send('connection-settings', connection);
+    clients[id].connection = connection;
     onContentsLoaded(clients[id].view.webContents).then(() => {
         if (connection)
             clients[id].view.webContents.send('connection-settings', connection);
@@ -3812,6 +3818,7 @@ async function newClientWindow(caller, connection, data, name) {
             const clientId = window.clients[c];
             //if (connection)
                 //clients[id].view.webContents.send('connection-settings', connection);
+            clients[id].connection = connection;
             onContentsLoaded(clients[clientId].view.webContents).then(() => {
                 if (connection)
                     clients[id].view.webContents.send('connection-settings', connection);
@@ -3844,6 +3851,7 @@ async function newClientWindow(caller, connection, data, name) {
         setVisibleClient(windowId, id);
         //if (connection)
             //clients[id].view.webContents.send('connection-settings', connection);
+        clients[id].connection = connection;
         onContentsLoaded(clients[id].view.webContents).then(() => {
             clientsChanged();
             if (connection)

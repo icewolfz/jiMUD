@@ -489,6 +489,7 @@
         var _skipDisconnect = 0;
         var _watcher = null;
         var _windowState = getWindowOptions();
+        //connectionSettings(ipcRenderer.sendSync('get-connection-settings'));
         var _windows = {};
         let _closeWindow = false;
         let _chat;
@@ -3290,23 +3291,33 @@
         });
 
         function connectionSettings(options) {
+            if (!options) return;
             if ('defaultConnect' in options) {
                 delete _windowState.data.port;
-                client.port = client.getOption('dev') ? 1035 : 1030;
-                updateTitle();
-                reloadIcon();
+                if (client) {
+                    client.port = client.getOption('dev') ? 1035 : 1030;
+                    updateTitle();
+                    reloadIcon();
+                }
+                else
+                    updateIcon(client.getOption('dev') ? 3 : 0);
             }
             else if ('port' in options) {
                 _windowState.data.port = options.port;
-                client.port = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.getOption('dev') ? 1035 : 1030);
-                updateTitle();
-                reloadIcon();
+                if (client) {
+                    client.port = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.getOption('dev') ? 1035 : 1030);
+                    updateTitle();
+                    reloadIcon();
+                }
+                else
+                    updateIcon((_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.getOption('dev') ? 1035 : 1030) === 1035 ? 3 : 0);
             }
             if ('host' in options) {
                 windowState.data.host = options.host;
-                client.host = (_windowState && 'host' in _windowState.data) ? (_windowState.data.host || 'www.shadowmud.com') : 'www.shadowmud.com';
+                if (client)
+                    client.host = (_windowState && 'host' in _windowState.data) ? (_windowState.data.host || 'www.shadowmud.com') : 'www.shadowmud.com';
             }
-            if ('characterId' in options)
+            if (client && 'characterId' in options)
                 loadCharacter(options.characterId);
         }
 
