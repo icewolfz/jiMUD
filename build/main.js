@@ -483,9 +483,12 @@ function createWindow(options) {
     //close hack due to electron's dumb ability to not allow a simple sync call to return a true/false state
     let _close = 0;
     window.on('close', async (e) => {
-        if (_close == 2)
+        if (_close === 2)
             return;
         e.preventDefault();
+        //Do not check again as already checked and do not want to get stuck in a save loop
+        if (_close === 1)
+            return;
         //for what ever reason electron does not seem to work well with await, it sill continues to execute async instead of waiting when using IPCrenderer
         _close = await canCloseAllClients(getWindowId(window)).catch(logError) ? 1 : 0;
         if (_close) {
@@ -3761,8 +3764,8 @@ function newConnection(window, connection, data, name) {
     //did-navigate //fires before dom-ready but view seems to still not be loaded and delayed
     //did-finish-load //slowest but ensures the view is in the window and visible before firing
     window.webContents.send('new-client', { id: id, current: windows[windowId].current === id });
-    if (connection)
-        clients[id].view.webContents.send('connection-settings', connection);
+    //if (connection)
+        //clients[id].view.webContents.send('connection-settings', connection);
     onContentsLoaded(clients[id].view.webContents).then(() => {
         if (connection)
             clients[id].view.webContents.send('connection-settings', connection);
@@ -3807,8 +3810,8 @@ async function newClientWindow(caller, connection, data, name) {
         focusedClient = id;
         for (var c = 0, cl = window.clients.length; c < cl; c++) {
             const clientId = window.clients[c];
-            if (connection)
-                clients[id].view.webContents.send('connection-settings', connection);
+            //if (connection)
+                //clients[id].view.webContents.send('connection-settings', connection);
             onContentsLoaded(clients[clientId].view.webContents).then(() => {
                 if (connection)
                     clients[id].view.webContents.send('connection-settings', connection);
@@ -3839,8 +3842,8 @@ async function newClientWindow(caller, connection, data, name) {
         window.clients.push(id);
         window.window.contentView.addChildView(clients[id].view);
         setVisibleClient(windowId, id);
-        if (connection)
-            clients[id].view.webContents.send('connection-settings', connection);
+        //if (connection)
+            //clients[id].view.webContents.send('connection-settings', connection);
         onContentsLoaded(clients[id].view.webContents).then(() => {
             clientsChanged();
             if (connection)
