@@ -480,31 +480,25 @@ function createWindow(options) {
             options.menubar.enabled = true;
     });
 
-    //close hack due to electron's dumb ability to not allow a simple sync call to return a true/false state
-    let _close = 0;
     window.on('close', async (e) => {
-        if (_close === 2)
-            return;
-        e.preventDefault();
-        //Do not check again as already checked and do not want to get stuck in a save loop
-        if (_close === 1)
-            return;
-        //for what ever reason electron does not seem to work well with await, it sill continues to execute async instead of waiting when using IPCrenderer
-        _close = await canCloseAllClients(getWindowId(window)).catch(logError) ? 1 : 0;
+        //for what ever reason electron does not seem to work well with await, it sill continues to execute async instead of waiting
+        //so we prevent default to cancel the event and later remove the events and close again
+        e.preventDefault();        
+        //check all open clients in the window if they can be closed
+        let _close = await canCloseAllClients(getWindowId(window)).catch(logError) ? 1 : 0;
         if (_close) {
+            //save window state
             states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
             stateMap.set(window, states[options.file]);
-            //hide window after state to prevent double close issues as save could cause a slow down
-            //window.hide();
             //if _loaded and not saved and the last window open save as its the final state
             if (_loaded && !_saved && Object.keys(windows).length === 1) {
                 await saveWindowLayout(null, getSetting('lockLayout'));
                 _saved = true;
             }
-            //prevent double close bugs
-            _close = 2;
+            //prevent double calling the events
+            window.removeAllListeners('close');
             window.close();
-        }
+        }            
     });
 
     window.on('resize', () => {
@@ -2439,26 +2433,32 @@ function createClient(options) {
             stateMap.delete(childWindow);
         });
 
-        let _close = false;
         childWindow.on('close', async e => {
-            if (_close) return;
+            //for what ever reason electron does not seem to work well with await, it sill continues to execute async instead of waiting
+            //so we prevent default to cancel the event and later remove the events and close again
             e.preventDefault();
-            _close = await executeScript(`if(typeof closeable === "function") closeable(); else (function() { return true; })();`, childWindow).catch(logError);
-            if (!_close) return;
+            //check if can close window
+            if (!await executeScript(`if(typeof closeable === "function") closeable(); else (function() { return true; })();`, childWindow).catch(logError)) return;
+            //get client window is for
             const id = getClientId(view);
             if (clients[id]) {
+                //find the index to access window options
                 const index = getChildWindowIndex(clients[id].windows, childWindow);
+                //save the window state
+                clients[id].states[file] = states[file];
+                //if window is persistent do not close it and instead use close Hidden hook to check if closeable
                 if (index !== -1 && clients[id].windows[index].details.options.persistent) {
-                    e.preventDefault();
-                    executeScript('if(typeof closeHidden !== "function" || closeHidden(true)) window.hide();', childWindow).catch(logError);
-                    clients[id].states[file] = states[file];
+                    executeScript('if(typeof closeHidden !== "function" || closeHidden(true)) window.hide();', childWindow).catch(logError);                    
                     return;
                 }
-                clients[id].states[file] = states[file];
             }
             executeCloseHooks(childWindow);
-            if (childWindow && !childWindow.isDestroyed())
+            //if window not destroyed close it for real
+            if (childWindow && !childWindow.isDestroyed()) {
+                //remove events to prevent double executing
+                childWindow.removeAllListeners('close');
                 childWindow.close();
+            }
             if (clients[id] && clients[id].parent)
                 clients[id].parent.focus();
         });

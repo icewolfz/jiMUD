@@ -14,7 +14,7 @@
   - Clear window title bar text when tab text is empty
   - Fix color dialog size in advanced editor in windows
   - Center color dialog contents in case OS makes window larger then contents
-- **Changed:**  
+- **Changed:**
   - Update electron 29.3.0 to 30.0.6
   - Convert BrowserView to WebContentsView
   - Update monaco-editor 0.47.0 to 0.48.0
