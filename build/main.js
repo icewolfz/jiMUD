@@ -422,7 +422,7 @@ function createWindow(options) {
     });
 
     // Emitted when the window is closed.
-    window.on('closed', () => {
+    window.on('closed', async () => {
         const windowId = getWindowId(window);
         idMap.delete(window);
         stateMap.delete(window);
@@ -486,6 +486,8 @@ function createWindow(options) {
         e.preventDefault();
         //check all open clients in the window if they can be closed
         if (await canCloseAllClients(getWindowId(window)).catch(logError)) {
+            //call close hooks
+            await executeCloseHooksClients(getWindowId(window));    
             //save window state
             states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
             stateMap.set(window, states[options.file]);
@@ -2456,7 +2458,8 @@ function createClient(options) {
                     return;
                 }
             }
-            executeCloseHooks(childWindow);
+            //wait until close hooks executed
+            await executeCloseHooks(childWindow);
             //if window not destroyed close it for real
             if (childWindow && !childWindow.isDestroyed()) {
                 //remove events to prevent double executing
@@ -2545,8 +2548,10 @@ async function removeClient(id) {
     client.parent = null;
     delete client.parent;
     idMap.delete(client.view);
-    //close the view
-    executeCloseHooks(client.view);
+    //close the view, not used in clients but leave in case added in future
+    //await executeCloseHooks(client.view);    
+    //due to a bug in electron it does not fire the unload event, so we fake it to ensure cleanup code is called
+    await executeScript('window.dispatchEvent(new Event("beforeunload"))', client.view).catch(logError);
     //remove the view to avoid crashing window
     window.contentView.removeChildView(client.view);
     client.view.webContents.destroy();
@@ -2822,11 +2827,21 @@ function getWindowClientId(window) {
     return null;
 }
 
-function executeCloseHooks(window) {
+async function executeCloseHooks(window) {
     if (!window) return;
-    executeScript('if(typeof closing === "function") closing();', window).catch(logError);
-    executeScript('if(typeof closed === "function") closed();', window).catch(logError);
-    executeScript('if(typeof closeHidden === "function") closeHidden();', window).catch(logError);
+    await executeScript('if(typeof closing === "function") closing();', window).catch(logError);
+    await executeScript('if(typeof closed === "function") closed();', window).catch(logError);
+    await executeScript('if(typeof closeHidden === "function") closeHidden();', window).catch(logError);
+}
+
+async function executeCloseHooksClients(windowId) {
+    const cl = windows[windowId].clients.length;
+    for (var idx = 0; idx < cl; idx++){
+        //main client never calls the close hooks so just ignore them
+        //await executeCloseHooks(clients[windows[windowId].clients[idx]].view);
+        //due to a bug in electron it does not fire the unload event, so we fake it to ensure cleanup code is called
+        await executeScript('window.dispatchEvent(new Event("beforeunload"))', client.view).catch(logError);
+    }
 }
 
 function updateIcon(window) {
