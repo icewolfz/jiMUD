@@ -464,10 +464,11 @@ function createWindow(options) {
         stateMap.set(window, saveWindowState(window));
     window.once('ready-to-show', () => {
         loadWindowScripts(window, options.script || path.basename(options.file, '.html'));
-        executeScript(`if(typeof setId === "function") setId(${getWindowId(window)});`, window);
-        executeScript('window.loadTheme();', window);
+        
         if (options.data && options.data.data)
-            executeScript('if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify(options.data.data) + ');', window);
+            executeScript(`if(typeof setId === "function") setId(${getWindowId(window)});window.loadTheme();if(typeof restoreWindow === "function") restoreWindow(${JSON.stringify(options.data.data)});`, window);
+        else
+            executeScript(`if(typeof setId === "function") setId(${getWindowId(window)});window.loadTheme();`, window);
         if (options.data && options.data.state) {
             //restoreWindowState(window, options.data.state);
         }
@@ -2359,8 +2360,7 @@ function createClient(options) {
 
     view.webContents.on('devtools-reload-page', () => {
         onContentsLoaded(view.webContents).then(() => {
-            executeScript(`if(typeof setId === "function") setId(${getClientId(view)});`, clients[getClientId(view)].view);
-            executeScript('window.loadTheme();', clients[options.id].view);
+            executeScript(`if(typeof setId === "function") setId(${getClientId(view)});window.loadTheme();`, clients[getClientId(view)].view);
             /*
             if (options.data)
                 executeScript('if(typeof restoreWindow === "function") restoreWindow(' + JSON.stringify({ data: options.data.data, windows: options.data.windows, states: options.data.states }) + ');', clients[options.id].view);
