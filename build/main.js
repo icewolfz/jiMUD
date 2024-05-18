@@ -2829,9 +2829,10 @@ function getWindowClientId(window) {
 
 async function executeCloseHooks(window) {
     if (!window) return;
-    await executeScript('if(typeof closing === "function") closing();', window).catch(logError);
-    await executeScript('if(typeof closed === "function") closed();', window).catch(logError);
-    await executeScript('if(typeof closeHidden === "function") closeHidden();', window).catch(logError);
+    await executeScript('if(typeof closing === "function") closing(); if(typeof closeHidden === "function") closeHidden();', window).catch(logError);
+    //await executeScript('if(typeof closing === "function") closing();', window).catch(logError);
+    //await executeScript('if(typeof closed === "function") closed();', window).catch(logError);
+    //await executeScript('if(typeof closeHidden === "function") closeHidden();', window).catch(logError);
 }
 
 async function executeCloseHooksClients(windowId) {
