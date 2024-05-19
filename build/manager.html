@@ -246,7 +246,14 @@
         }
 
         function setTitle(txt) {
-            txt = txt ? ('' + txt) : ''; //force to a string just to be safe
+            if(typeof txt === 'object') {
+                if(options.hasOwnProperty('title'))
+                    txt = txt.title || '';
+                else
+                    txt = '';
+            }
+            else
+                txt = txt ? ('' + txt) : ''; //force to a string just to be safe
             if (txt.trim().length !== 0)
                 document.title = 'jiMUD - ' + txt.trim();
             else

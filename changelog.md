@@ -16,6 +16,7 @@
   - Center color dialog contents in case OS makes window larger then contents
   - Fix closing clean up when tab closed
   - Fix layout loading when invalid parent window
+  - Fix broken tabs from being hidden in the background when loading saved layout
 - **Changed:**
   - Update electron 29.3.0 to 30.0.6
   - Convert BrowserView to WebContentsView

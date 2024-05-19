@@ -4154,10 +4154,16 @@ function loadWindowLayout(file, charData) {
             //windows[client.parent].current = id;
             //data.windows[0].current = id;
             //if (client.parent === focusedWindow)
-                //focusedClient = id;
+            //focusedClient = id;
         }
-        else
+        else {
             createClient({ parent: windows[client.parent].window, name: client.name, bounds: client.state.bounds, id: client.id, data: client, file: client.file });
+            //some error checking to prevent broken tabs from being hidden
+            if (windows[client.parent].clients.indexOf(client.id) === -1)
+                windows[client.parent].clients.push(client.id);
+            if (data.windows[0].clients.indexOf(client.id) === -1)
+                data.windows[0].clients.push(client.id);
+        }
     }
     //append any remaining new characters
     if (charData && charData.length) {
