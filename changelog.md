@@ -14,6 +14,8 @@
   - Clear window title bar text when tab text is empty
   - Fix color dialog size in advanced editor in windows
   - Center color dialog contents in case OS makes window larger then contents
+  - Fix closing clean up when tab closed
+  - Fix layout loading when invalid parent window
 - **Changed:**
   - Update electron 29.3.0 to 30.0.6
   - Convert BrowserView to WebContentsView

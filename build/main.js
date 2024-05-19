@@ -464,7 +464,7 @@ function createWindow(options) {
         stateMap.set(window, saveWindowState(window));
     window.once('ready-to-show', () => {
         loadWindowScripts(window, options.script || path.basename(options.file, '.html'));
-        
+
         if (options.data && options.data.data)
             executeScript(`if(typeof setId === "function") setId(${getWindowId(window)});window.loadTheme();if(typeof restoreWindow === "function") restoreWindow(${JSON.stringify(options.data.data)});`, window);
         else
@@ -488,7 +488,7 @@ function createWindow(options) {
         //check all open clients in the window if they can be closed
         if (await canCloseAllClients(getWindowId(window)).catch(logError)) {
             //call close hooks
-            await executeCloseHooksClients(getWindowId(window));    
+            await executeCloseHooksClients(getWindowId(window));
             //save window state
             states[options.file] = saveWindowState(window, stateMap.get(window) || states[options.file]);
             stateMap.set(window, states[options.file]);
@@ -2553,7 +2553,9 @@ async function removeClient(id) {
     //due to a bug in electron it does not fire the unload event, so we fake it to ensure cleanup code is called
     //await executeScript('window.dispatchEvent(new Event("beforeunload"))', client.view).catch(logError);
     //use a function in stead of beforeunload in case the bug is fixed to prevent double executing
-    await executeScript('closed();', clients[windows[windowId].clients[idx]].view).catch(logError);
+    await executeScript('closed();', client.view).catch(logError);
+    //close the client as if closed from browser to ensure any events are triggered
+    client.view.webContents.close();
     //remove the view to avoid crashing window
     window.contentView.removeChildView(client.view);
     client.view.webContents.destroy();
@@ -2839,7 +2841,7 @@ async function executeCloseHooks(window) {
 
 async function executeCloseHooksClients(windowId) {
     const cl = windows[windowId].clients.length;
-    for (var idx = 0; idx < cl; idx++){
+    for (var idx = 0; idx < cl; idx++) {
         //main client never calls the close hooks so just ignore them
         //await executeCloseHooks(clients[windows[windowId].clients[idx]].view);
         //due to a bug in electron it does not fire the unload event, so we fake it to ensure cleanup code is called
@@ -4139,7 +4141,23 @@ function loadWindowLayout(file, charData) {
                 client.windows[w].details.url = URL.pathToFileURL(parseTemplate(client.windows[w].details.url)).toString();
             }
         }
-        createClient({ parent: windows[client.parent].window, name: client.name, bounds: client.state.bounds, id: client.id, data: client, file: client.file });
+        //invalid parent something went wrong so attach to first window
+        if (!windows[client.parent]) {
+            logError(`Invalid parent window: ${client.parent}, client: ${client.id}.`, true);
+            client.parent = data.windows[0].id;
+            data.clients[i].parent = client.parent;
+            let id = createClient({ parent: windows[client.parent].window, name: client.name, bounds: client.state.bounds, id: client.id, data: client, file: client.file });
+            if (windows[client.parent].clients.indexOf(id) === -1)
+                windows[client.parent].clients.push(id);
+            if (data.windows[0].clients.indexOf(id) === -1)
+                data.windows[0].clients.push(id);
+            //windows[client.parent].current = id;
+            //data.windows[0].current = id;
+            //if (client.parent === focusedWindow)
+                //focusedClient = id;
+        }
+        else
+            createClient({ parent: windows[client.parent].window, name: client.name, bounds: client.state.bounds, id: client.id, data: client, file: client.file });
     }
     //append any remaining new characters
     if (charData && charData.length) {
@@ -4151,7 +4169,6 @@ function loadWindowLayout(file, charData) {
         }
         windows[focusedWindow].current = id;
         focusedClient = id;
-        data.windows[i].current = id;
     }
     //set current clients for each window after everything is created
     il = data.windows.length;
