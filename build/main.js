@@ -2551,7 +2551,9 @@ async function removeClient(id) {
     //close the view, not used in clients but leave in case added in future
     //await executeCloseHooks(client.view);    
     //due to a bug in electron it does not fire the unload event, so we fake it to ensure cleanup code is called
-    await executeScript('window.dispatchEvent(new Event("beforeunload"))', client.view).catch(logError);
+    //await executeScript('window.dispatchEvent(new Event("beforeunload"))', client.view).catch(logError);
+    //use a function in stead of beforeunload in case the bug is fixed to prevent double executing
+    await executeScript('closed();', clients[windows[windowId].clients[idx]].view).catch(logError);
     //remove the view to avoid crashing window
     window.contentView.removeChildView(client.view);
     client.view.webContents.destroy();
@@ -2841,7 +2843,9 @@ async function executeCloseHooksClients(windowId) {
         //main client never calls the close hooks so just ignore them
         //await executeCloseHooks(clients[windows[windowId].clients[idx]].view);
         //due to a bug in electron it does not fire the unload event, so we fake it to ensure cleanup code is called
-        await executeScript('window.dispatchEvent(new Event("beforeunload"))', clients[windows[windowId].clients[idx]].view).catch(logError);
+        //await executeScript('window.dispatchEvent(new Event("beforeunload"))', clients[windows[windowId].clients[idx]].view).catch(logError);
+        //use a function in stead of beforeunload in case the bug is fixed to prevent double executing
+        await executeScript('closed();', clients[windows[windowId].clients[idx]].view).catch(logError);
     }
 }
 

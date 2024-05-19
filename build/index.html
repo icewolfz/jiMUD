@@ -4320,7 +4320,9 @@
         //#endregion
 
         //#region Close hooks
-        window.onbeforeunload = () => {
+        //window.onbeforeunload = () => {
+        //use a function instead of event as bug in electron does not fire correctly
+        function closed() {
             if (client.connected)
                 client.close();
             client.raise('closed');
