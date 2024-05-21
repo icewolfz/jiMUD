@@ -8,6 +8,7 @@
   - Add `tray-click` and `tray-double-click` trigger events to allow executing triggers when tray icon is clicked
   - Optimize auto login and chat triggers for better performance
   - Add `Skip more prompt` system to allow auto paging after a set amount of time
+  - Preferences: Add a search to the advanced view for preference
 - **Fixed:**
   - Prevent double close issues if saving window layout takes time
   - Fix issue with hidden windows and not correctly restoring bounds when maximized

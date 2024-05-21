@@ -1,6 +1,11 @@
 # Preferences
 
+Show advanced view - switched preferences to advanced list view with search
+Sync - Clears matching values to global preferences to reduce file sizes
 Reset - Resetting will revert all settings back to default values
+Backup - Back up all settings, characters, and profiles to a zip file
+Reset client windows - Reset current client child windows to default sizes and screen locations and removed saved states
+Reset all windows - Reset all windows to default sizes and screen locations and remove saved states
 
 ## General
 
