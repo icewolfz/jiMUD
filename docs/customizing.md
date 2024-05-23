@@ -24,9 +24,25 @@ css.
 Allows for custom css to adjust or change the client interface, you may need to use !important rule modifier but all css should be loaded after main client css. Supports [Predefined variables for paths](faq.md#what-predefined-variables-can-be-use-for-paths),
 for example you can do `.class{ background-image: {assets}/icons/map.png}` to load the map icon.
 
+### Supported css class names
+
+`party-CLASS` - style using party's class, eg `party-rogue` would style rogues
+`party-RACE` - style using race
+`party-NAME` - style using player name
+`party-GENDER` - style using gender
+`party-GUILD` - style using player's guild name, spaces 
+
 ## monster.css
 
 Allows you to create monster css classes to set monster icons, can also be done in user.css but this allow for a cleaner separation, this code is loaded after user.css.
+
+## Supported css class names
+
+`monster-CLASS` - style using monster's class, eg `monster-rogue` would style rogues
+`monster-RACE` - style using race
+`monster-NAME` - style using monster name, all spaces are removed
+`monster-GENDER` - style using gender
+`monster-GUILD` - style using monster's guild name, spaces 
 
 ## user.js
 
