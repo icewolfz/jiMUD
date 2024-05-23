@@ -19,7 +19,7 @@
   - Fix layout loading when invalid parent window
   - Fix broken tabs from being hidden in the background when loading saved layout
 - **Changed:**
-  - Update electron 29.3.0 to 30.0.6
+  - Update electron 29.3.0 to 30.0.7
   - Convert BrowserView to WebContentsView
   - Update monaco-editor 0.47.0 to 0.48.0
   - Update mathjs 12.4.1 to 12.4.2
