@@ -8,6 +8,7 @@
   - Add `tray-click` and `tray-double-click` trigger events to allow executing triggers when tray icon is clicked
   - Optimize auto login and chat triggers for better performance
   - Add `Skip more prompt` system to allow auto paging after a set amount of time
+  - Add `Minimum number of lines` The minimum # of lines to display in command prompt, min of 1, max of 30 or 50% of the display screen
   - Preferences: Add a search to the advanced view for preference
 - **Fixed:**
   - Prevent double close issues if saving window layout takes time

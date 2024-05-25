@@ -873,7 +873,9 @@
             measure.style.width = document.getElementById('commandInput').offsetWidth + 'px';
             const oldMeasure = measure.innerHTML;
             measure.innerHTML = 'W';
+            let minHeight = client.getOption('commandMinLines');
             const height = measure.offsetHeight;
+            minHeight = height * (minHeight < 1 ? 1 : minHeight);
             let padding = parseFloat(cmdSize.borderTopWidth) || 0;
             padding += parseFloat(cmdSize.borderBottomWidth) || 0;
             padding += parseFloat(cmdSize.paddingTop) || 0;
@@ -882,12 +884,14 @@
             cmd.style.height = (height + padding) + 'px';
             document.getElementById('commandbox').style.height = height + 'px';
             document.getElementById('display').style.bottom = (height + padding) + 'px';
+
             commandInput = {
                 measure: measure,
                 cmd: cmd,
                 cmdSize: cmdSize,
                 height: height,
-                padding: padding
+                padding: padding,
+                minHeight: minHeight
             }
         }
 
@@ -909,7 +913,9 @@
             const measure = commandInput.measure;
             const cmd = commandInput.cmd;
             measure.innerHTML = client.commandInput.value + '\n';
-            const height = measure.offsetHeight;
+            let height = measure.offsetHeight;
+            if (height < commandInput.minHeight)
+                height = commandInput.minHeight;
             const padding = commandInput.padding;
             cmd.style.height = (height + padding) + 'px';
             document.getElementById('commandbox').style.height = height + 'px';

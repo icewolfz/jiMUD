@@ -98,6 +98,7 @@ Reset all windows - Reset all windows to default sizes and screen locations and 
   - `Ctrl + Shift + Enter` add a newline on ctrl+shift+enter
 - `Skip more prompt` Attempt to skip the more prompt after a set period of time
 - `Skip more prompt delay` The amount of time in milliseconds to wait before skipping more prompt
+- `Minimum number of lines` The minimum # of lines to display in command prompt, min of 1, max of 30 or 50% of the display screen
 
 ## Command line > Tab completion
 
