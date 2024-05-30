@@ -2422,6 +2422,7 @@
                     label: '&Replace with session...',
                     click: () => openSessionFile(true)
                 },
+                { type: 'separator' },
                 {
                     label: 'Reload &previous session',
                     click: () => openSession(options.session)
@@ -4818,9 +4819,9 @@
         let last;
         if (manager.active && manager.active.editor) {
             if (manager.active.editor.source)
-                last = 'remote:' + manager.active.editor.remote;
+                last = findEditor('remote:' + manager.active.editor.remote_);
             else
-                last = manager.active.editor.file;
+                last = findEditor(manager.active.editor.file);
         }
         if (replace) {
             closeAllFiles();
