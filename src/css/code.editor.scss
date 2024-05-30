@@ -26,6 +26,7 @@ body {
 
 .btn-toolbar .btn {
     outline: none !important;
+    margin-top: 1px;
 }
 
 .btn-toolbar button,
@@ -40,7 +41,7 @@ body {
 .btn-toolbar .label {
     float: left;
     color: black;
-    padding: 1px 5px;
+    padding: 0px 5px;
     font-size: 12px;
     line-height: 1.5;
     border-radius: 3px;
@@ -53,7 +54,11 @@ body {
     cursor: pointer;
     user-select: none;
     background-image: none;
-    border: 1px solid transparent;
+    border: 0px solid transparent;
+    padding-top: 1px;
+}
+.btn-toolbar .label input {
+    margin-left: 2px;
 }
 
 #btn-add-dropdown,
