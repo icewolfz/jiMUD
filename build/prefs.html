@@ -1587,6 +1587,8 @@
                 archive.addFile(path.join(data, 'settings.json'), 'settings.json');
             if (isFileSync(path.join(data, 'editor.json')))
                 archive.addFile(path.join(data, 'editor.json'), 'editor.json');
+            if (isFileSync(path.join(data, 'editor.sess')))
+                archive.addFile(path.join(data, 'editor.sess'), 'editor.sess');            
             var files;
             if (isDirSync(path.join(data, 'profiles'))) {
                 files = walkSync(path.join(data, 'profiles'));
