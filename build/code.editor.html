@@ -2429,7 +2429,7 @@
                 {
                     label: 'Replace with pre&vious session',
                     click: () => openSession(options.session, true)
-                },                
+                },
                 { type: 'separator' },
                 {
                     label: '&Save session',
@@ -3136,7 +3136,7 @@
         menubar.updateItem('view|problems', { checked: options.output && options.outputTab === 1 });
         menubar.updateItem('sessions|save session', { enabled: options.session && options.session.length });
         menubar.updateItem('sessions|reload previous session', { enabled: options.session && options.session.length });
-        menubar.updateItem('sessions|replace with previous session', { enabled: options.session && options.session.length });        
+        menubar.updateItem('sessions|replace with previous session', { enabled: options.session && options.session.length });
         if (_windows && _windows['help.html'] && _windows['help.html'].loadOptions)
             _windows['help.html'].loadOptions();
         doUpdate(4);
@@ -4815,9 +4815,16 @@
                 });
             return false;
         }
+        let last;
+        if (manager.active && manager.active.editor) {
+            if (manager.active.editor.source)
+                last = 'remote:' + manager.active.editor.remote;
+            else
+                last = manager.active.editor.file;
+        }
         if (replace) {
             closeAllFiles();
-            //if could not close files double check in cave some files got left open
+            //if could not close files double check in case some files got left open
             if (data.layout && manager.layout.length <= data.layout.length)
                 manager.layout = data.layout;
         }
@@ -4827,6 +4834,13 @@
         let l = data.opened.length;
         while (l--)
             openFiles(data.opened[l], false, manager.panes[l]);
+
+        if (replace || !last)
+            last = findEditor(data.lastActive);
+        if (last) {
+            manager.focusPane(last.dock);
+            last.dock.switchToPanel(last.id);
+        }
         return true;
     }
 
@@ -4848,7 +4862,7 @@
             else {
                 menubar.updateItem('sessions|save session', { enabled: true });
                 menubar.updateItem('sessions|reload previous session', { enabled: true });
-                menubar.updateItem('sessions|replace with previous session', { enabled: true });        
+                menubar.updateItem('sessions|replace with previous session', { enabled: true });
             }
         });
     }
