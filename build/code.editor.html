@@ -4772,7 +4772,7 @@
     function openSession(file, replace, silent) {
         if (!file || file.length === 0) return false;
         try {
-            if (!fs.statSync(result.filePaths[0]).isFile()) {
+            if (!fs.statSync(file).isFile()) {
                 if (!silent)
                     dialog.showMessageBox({
                         type: 'error',
