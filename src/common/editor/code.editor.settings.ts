@@ -21,6 +21,7 @@ export class EditorSettings {
     public enableBackgroundThrottling: boolean = true;
     public theme: number = 0;
     public dictionary = [];
+    public session = '';
 
     public window = {
         persistent: false,

@@ -10,6 +10,7 @@
   - Add `Skip more prompt` system to allow auto paging after a set amount of time
   - Add `Minimum number of lines` The minimum # of lines to display in command prompt, min of 1, max of 30 or 50% of the display screen
   - Preferences: Add a search to the advanced view for preference
+  - Code editor: add a basic session system to allow saving/opening a session for restoring groups of tabs
 - **Fixed:**
   - Prevent double close issues if saving window layout takes time
   - Fix issue with hidden windows and not correctly restoring bounds when maximized
@@ -19,6 +20,7 @@
   - Fix closing clean up when tab closed
   - Fix layout loading when invalid parent window
   - Fix broken tabs from being hidden in the background when loading saved layout
+  - Code editor: Fix issue when no tabs and ui trying to update
 - **Changed:**
   - Update electron 29.3.0 to 30.0.9
   - Convert BrowserView to WebContentsView
