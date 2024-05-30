@@ -2434,7 +2434,6 @@
                 { type: 'separator' },
                 {
                     label: '&Save session',
-                    enabled: false,
                     click: () => saveSession()
                 },
                 {
@@ -3135,7 +3134,6 @@
             showProblems();
         menubar.updateItem('view|output', { checked: options.output && options.outputTab === 0 });
         menubar.updateItem('view|problems', { checked: options.output && options.outputTab === 1 });
-        menubar.updateItem('sessions|save session', { enabled: options.session && options.session.length });
         menubar.updateItem('sessions|reload previous session', { enabled: options.session && options.session.length });
         menubar.updateItem('sessions|replace with previous session', { enabled: options.session && options.session.length });
         if (_windows && _windows['help.html'] && _windows['help.html'].loadOptions)
@@ -4741,7 +4739,9 @@
     }
 
     function saveSession() {
-        saveSessionAs(options.session);
+        let file = saveSessionAs(options.session, true);
+        if (file && file.length !== 0)
+            options.session = file;
     }
 
     function saveSessionAs(file) {
@@ -4755,7 +4755,7 @@
                 ]
             });
         if (file === undefined || file.length === 0)
-            return;
+            return file;
         let _session = {
             opened: getOpened(),
             lastActive: '',
@@ -4768,6 +4768,7 @@
                 _session.lastActive = manager.active.editor.file;
         }
         fs.writeFileSync(file, JSON.stringify(_session));
+        return file;
     }
 
     function openSession(file, replace, silent) {
@@ -4861,7 +4862,6 @@
             if (!openSession(options.session, replace))
                 options.session = '';
             else {
-                menubar.updateItem('sessions|save session', { enabled: true });
                 menubar.updateItem('sessions|reload previous session', { enabled: true });
                 menubar.updateItem('sessions|replace with previous session', { enabled: true });
             }
