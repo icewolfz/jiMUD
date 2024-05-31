@@ -2424,6 +2424,12 @@
                 },
                 { type: 'separator' },
                 {
+                    label: 'Open &Recent',
+                    id: 'openrecentsession',
+                    submenu: [],
+                },
+                { type: 'separator' },
+                {
                     label: 'Reload &previous session',
                     click: () => openSession(options.session)
                 },
@@ -3138,7 +3144,7 @@
         menubar.updateItem('sessions|replace with previous session', { enabled: options.session && options.session.length });
         if (_windows && _windows['help.html'] && _windows['help.html'].loadOptions)
             _windows['help.html'].loadOptions();
-        doUpdate(4);
+        doUpdate(260);
     }
 
     function saveOptions() {
@@ -4843,6 +4849,7 @@
             manager.focusPane(last.dock);
             last.dock.switchToPanel(last.id);
         }
+        addToRecentSessions(file);
         return true;
     }
 
@@ -4886,6 +4893,64 @@
         saveOptions();
         return true;
     }
+
+    function addToRecentSessions(file) {
+        if (!options) loadOptions();
+        if (!options.recentSessions) options.recentSessions = [];
+        var recent = [];
+        var r = options.recentSessions.length;
+        while (r--) {
+            if (options.recentSessions[r] !== file)
+                recent.unshift(options.recentSessions[r]);
+        }
+        recent.unshift(file);
+        if (recent.length > options.maxRecent)
+            options.recentSessions = recent.slice(0, options.maxRecent);
+        else
+            options.recentSessions = recent;
+        doUpdate(272);
+    }
+
+    //addToRecentSessions(_recent[r].file, _recent[r].remoteFile);
+    async function buildRecentSessions() {
+        var menu = [];
+        var r = 0;
+        if(options.recentSessions)
+            r = options.recentSessions.length;
+        while (r--) {
+            menu.unshift(
+                {
+                    label: options.recentSessions[r],
+                    idx: r,
+                    click: (item) => {
+                        if (!existsSync(options.recentSessions[item.idx])) {
+                            dialog.showMessageBox({
+                                type: 'info',
+                                title: 'Path does not exist',
+                                message: 'The path \'' + options.recentSessions[item.idx] + '\' does not seem to exist anymore on disk.'
+                            });
+                            options.recentSessions.splice(item.idx, 1);
+                            doUpdate(272);
+                        }
+                        else
+                            openSession(options.recentSessions[item.idx]);
+                    }
+                }
+            );
+        }
+        if (menu.length > 0) {
+            menu.push({ type: 'separator' });
+            menu.push({
+                label: 'Clear Recently Opened',
+                click: () => {
+                    options.recentSessions = [];
+                    doUpdate(272);
+                }
+            });
+        }
+        menubar.updateItem('sessions|open recent', { submenu: menu });
+    }
+
 
     // eslint-disable-next-line no-unused-vars
     function closeHidden(hidden) {
@@ -8532,6 +8597,8 @@
             );
             if (r < 10)
                 menu[0].accelerator = 'CmdOrCtrl+' + (r + 1);
+            if (r === 10)
+                menu[0].accelerator = 'CmdOrCtrl+0';
         }
         if (menu.length > 0) {
             menu.push({ type: 'separator' });
@@ -10048,6 +10115,10 @@
                 }
                 _updating &= ~128;
             }
+            if ((_updating & 256) === 256) {
+                buildRecentSessions();
+                _updating &= ~256;
+            }            
             _rTimeout = 0;
             doUpdate(_updating);
         });

@@ -22,6 +22,7 @@ export class EditorSettings {
     public theme: number = 0;
     public dictionary = [];
     public session = '';
+    public recentSessions = [];
 
     public window = {
         persistent: false,
