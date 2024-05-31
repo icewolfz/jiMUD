@@ -2415,35 +2415,38 @@
             label: '&Sessions',
             submenu: [
                 {
-                    label: '&Open session...',
+                    label: '&Open Session...',
                     click: () => openSessionFile()
                 },
                 {
-                    label: '&Replace with session...',
-                    click: () => openSessionFile(true)
-                },
-                { type: 'separator' },
-                {
-                    label: 'Open &Recent',
-                    id: 'openrecentsession',
+                    label: 'O&pen Recent Session',
                     submenu: [],
                 },
                 { type: 'separator' },
                 {
-                    label: 'Reload &previous session',
+                    label: '&Replace With Session...',
+                    click: () => openSessionFile(true)
+                },
+                {
+                    label: 'R&eplace With Recent Session',
+                    submenu: [],
+                },                
+                { type: 'separator' },
+                {
+                    label: 'Reload &Previous Session',
                     click: () => openSession(options.session)
                 },
                 {
-                    label: 'Replace with pre&vious session',
+                    label: 'Replace With Pre&vious Session',
                     click: () => openSession(options.session, true)
                 },
                 { type: 'separator' },
                 {
-                    label: '&Save session',
+                    label: '&Save Session',
                     click: () => saveSession()
                 },
                 {
-                    label: 'Save session &as...',
+                    label: 'Save Session &As...',
                     click: () => saveSessionAs()
                 }
             ]
@@ -4914,6 +4917,7 @@
     //addToRecentSessions(_recent[r].file, _recent[r].remoteFile);
     async function buildRecentSessions() {
         var menu = [];
+        var rmenu = [];
         var r = 0;
         if(options.recentSessions)
             r = options.recentSessions.length;
@@ -4937,6 +4941,25 @@
                     }
                 }
             );
+            rmenu.unshift(
+                {
+                    label: options.recentSessions[r],
+                    idx: r,
+                    click: (item) => {
+                        if (!existsSync(options.recentSessions[item.idx])) {
+                            dialog.showMessageBox({
+                                type: 'info',
+                                title: 'Path does not exist',
+                                message: 'The path \'' + options.recentSessions[item.idx] + '\' does not seem to exist anymore on disk.'
+                            });
+                            options.recentSessions.splice(item.idx, 1);
+                            doUpdate(272);
+                        }
+                        else
+                            openSession(options.recentSessions[item.idx], true);
+                    }
+                }
+            );            
         }
         if (menu.length > 0) {
             menu.push({ type: 'separator' });
@@ -4947,8 +4970,17 @@
                     doUpdate(272);
                 }
             });
+            rmenu.push({ type: 'separator' });
+            rmenu.push({
+                label: 'Clear Recently Opened',
+                click: () => {
+                    options.recentSessions = [];
+                    doUpdate(272);
+                }
+            });            
         }
-        menubar.updateItem('sessions|open recent', { submenu: menu });
+        menubar.updateItem('sessions|open recent session', { submenu: menu });
+        menubar.updateItem('sessions|replace with recent session', { submenu: rmenu });
     }
 
 
