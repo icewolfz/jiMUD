@@ -25,7 +25,7 @@
   - Update electron 29.3.0 to 30.0.9
   - Convert BrowserView to WebContentsView
   - Update monaco-editor 0.47.0 to 0.49.0
-  - Update mathjs 12.4.1 to 12.4.2
+  - Update mathjs 12.4.1 to 13.0.0
   - Update better-sqlite3 9.5.0 to 11.0.0
   - Update fswin 3.23.311 to 3.24.524
 
