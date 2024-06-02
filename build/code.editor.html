@@ -2412,6 +2412,46 @@
             submenu: subMenus['view']
         },
         {
+            label: '&Sessions',
+            submenu: [
+                {
+                    label: '&Open Session...',
+                    click: () => openSessionFile()
+                },
+                {
+                    label: 'O&pen Recent Session',
+                    submenu: [],
+                },
+                { type: 'separator' },
+                {
+                    label: '&Replace With Session...',
+                    click: () => openSessionFile(true)
+                },
+                {
+                    label: 'R&eplace With Recent Session',
+                    submenu: [],
+                },                
+                { type: 'separator' },
+                {
+                    label: 'Reload &Previous Session',
+                    click: () => openSession(options.session)
+                },
+                {
+                    label: 'Replace With Pre&vious Session',
+                    click: () => openSession(options.session, true)
+                },
+                { type: 'separator' },
+                {
+                    label: '&Save Session',
+                    click: () => saveSession()
+                },
+                {
+                    label: 'Save Session &As...',
+                    click: () => saveSessionAs()
+                }
+            ]
+        },
+        {
             label: '&Help',
             role: 'help',
             id: 'help',
@@ -2887,12 +2927,13 @@
         }
         else
             sbLocation.textContent = '';
-        if (enabled && manager.active.editor.updateUI) manager.active.editor.updateUI();
+        if (enabled && manager.active && manager.active.editor && manager.active.editor.updateUI) manager.active.editor.updateUI();
         var tbh = toolbar.outerHeight();
         dock.css('top', tbh + 'px');
         if (window.opener)
             $('.connected').prop('disabled', !(connected && enabled));
-        manager.active.editor.update('menu', menubar, connected);
+        if (manager.active && manager.active.editor)
+            manager.active.editor.update('menu', menubar, connected);
         doUpdate(2);
     }
 
@@ -3102,9 +3143,11 @@
             showProblems();
         menubar.updateItem('view|output', { checked: options.output && options.outputTab === 0 });
         menubar.updateItem('view|problems', { checked: options.output && options.outputTab === 1 });
+        menubar.updateItem('sessions|reload previous session', { enabled: options.session && options.session.length });
+        menubar.updateItem('sessions|replace with previous session', { enabled: options.session && options.session.length });
         if (_windows && _windows['help.html'] && _windows['help.html'].loadOptions)
             _windows['help.html'].loadOptions();
-        doUpdate(4);
+        doUpdate(260);
     }
 
     function saveOptions() {
@@ -4671,7 +4714,7 @@
         $('#btn-diff-nav-next').prop('disabled', !state);
     }
 
-    function savedOpened() {
+    function getOpened(skipUnSaved) {
         var opened = [];
 
         var panes = manager.panes;
@@ -4686,8 +4729,11 @@
                 if (p.editor.new)
                     p.editor.remote = null;
                 if (p.editor.new || p.editor.changed) {
-                    if (!confirmSave(p))
+                    if (skipUnSaved === 2) continue;
+                    if (!confirmSave(p)) {
+                        if (skipUnSaved) continue;
                         return false;
+                    }
                 }
                 //only save none new and local sourced
                 if (!p.editor.new && p.editor.source === 0)
@@ -4698,9 +4744,144 @@
                     });
             }
         }
+        return opened;
+    }
+
+    function saveSession() {
+        let file = saveSessionAs(options.session, true);
+        if (file && file.length !== 0)
+            options.session = file;
+    }
+
+    function saveSessionAs(file) {
+        if (!file || file.length === 0)
+            file = dialog.showSaveDialogSync({
+                title: 'Save session as...',
+                defaultPath: options.session ? options.session : parseTemplate(path.join('{data}', 'editor.sess')),
+                filters: [
+                    { name: 'Session files (*.sess)', extensions: ['sess'] },
+                    { name: 'All files (*.*)', extensions: ['*'] },
+                ]
+            });
+        if (file === undefined || file.length === 0)
+            return file;
+        let _session = {
+            opened: getOpened(),
+            lastActive: '',
+            layout: manager.layout
+        };
+        if (manager.active && manager.active.editor) {
+            if (manager.active.editor.source)
+                _session.lastActive = 'remote:' + manager.active.editor.remote;
+            else
+                _session.lastActive = manager.active.editor.file;
+        }
+        fs.writeFileSync(file, JSON.stringify(_session));
+        return file;
+    }
+
+    function openSession(file, replace, silent) {
+        if (!file || file.length === 0) return false;
+        try {
+            if (!fs.statSync(file).isFile()) {
+                if (!silent)
+                    dialog.showMessageBox({
+                        type: 'error',
+                        title: 'Invalid session file',
+                        message: `Invalid session file.`,
+                        defaultId: 1,
+                        noLink: true
+                    });
+                return false;
+            }
+        }
+        catch (err) {
+            if (!silent)
+                dialog.showMessageBox({
+                    type: 'error',
+                    title: 'Invalid session file',
+                    message: `Invalid session file.`,
+                    defaultId: 1,
+                    noLink: true
+                });
+            return false;
+        }
+        let data = fs.readFileSync(file, 'utf-8');
+        if (data.length === 0) {
+            if (replace)
+                closeAllFiles();
+            return true;
+        }
+        try {
+            data = JSON.parse(data);
+        }
+        catch (e) {
+            if (!silent)
+                dialog.showMessageBox({
+                    type: 'error',
+                    title: 'Error opening session file',
+                    message: `Error opening session file: ${file}.`,
+                    defaultId: 1,
+                    noLink: true
+                });
+            return false;
+        }
+        let last;
+        if (manager.active && manager.active.editor) {
+            if (manager.active.editor.source)
+                last = findEditor('remote:' + manager.active.editor.remote_);
+            else
+                last = findEditor(manager.active.editor.file);
+        }
+        if (replace) {
+            closeAllFiles();
+            //if could not close files double check in case some files got left open
+            if (data.layout && manager.layout.length <= data.layout.length)
+                manager.layout = data.layout;
+        }
+        else if (data.layout && data.layout.length > manager.layout.length)
+            manager.layout = data.layout;
+        if (!data.opened) return true;
+        let l = data.opened.length;
+        while (l--)
+            openFiles(data.opened[l], false, manager.panes[l]);
+
+        if (replace || !last)
+            last = findEditor(data.lastActive);
+        if (last) {
+            manager.focusPane(last.dock);
+            last.dock.switchToPanel(last.id);
+        }
+        addToRecentSessions(file);
+        return true;
+    }
+
+    function openSessionFile(replace) {
+        dialog.showOpenDialog({
+            filters: [
+                { name: 'Session files (*.sess)', extensions: ['sess'] },
+                { name: 'All files (*.*)', extensions: ['*'] },
+            ],
+            properties: ['openFile'],
+            defaultPath: options.session ? options.session : parseTemplate(path.join('{data}', 'editor.sess'))
+        }).then(result => {
+            if (result.filePaths === undefined || result.filePaths.length === 0) {
+                return;
+            }
+            options.session = result.filePaths[0];
+            if (!openSession(options.session, replace))
+                options.session = '';
+            else {
+                menubar.updateItem('sessions|reload previous session', { enabled: true });
+                menubar.updateItem('sessions|replace with previous session', { enabled: true });
+            }
+        });
+    }
+
+    function savedOpened() {
         if (!options) loadOptions();
         if (options.reopen)
-            options.opened = opened;
+            options.opened = getOpened();
         else
             options.opened = [];
         options.layout = manager.layout;
@@ -4715,6 +4896,93 @@
         saveOptions();
         return true;
     }
+
+    function addToRecentSessions(file) {
+        if (!options) loadOptions();
+        if (!options.recentSessions) options.recentSessions = [];
+        var recent = [];
+        var r = options.recentSessions.length;
+        while (r--) {
+            if (options.recentSessions[r] !== file)
+                recent.unshift(options.recentSessions[r]);
+        }
+        recent.unshift(file);
+        if (recent.length > options.maxRecent)
+            options.recentSessions = recent.slice(0, options.maxRecent);
+        else
+            options.recentSessions = recent;
+        doUpdate(272);
+    }
+
+    //addToRecentSessions(_recent[r].file, _recent[r].remoteFile);
+    async function buildRecentSessions() {
+        var menu = [];
+        var rmenu = [];
+        var r = 0;
+        if(options.recentSessions)
+            r = options.recentSessions.length;
+        while (r--) {
+            menu.unshift(
+                {
+                    label: options.recentSessions[r],
+                    idx: r,
+                    click: (item) => {
+                        if (!existsSync(options.recentSessions[item.idx])) {
+                            dialog.showMessageBox({
+                                type: 'info',
+                                title: 'Path does not exist',
+                                message: 'The path \'' + options.recentSessions[item.idx] + '\' does not seem to exist anymore on disk.'
+                            });
+                            options.recentSessions.splice(item.idx, 1);
+                            doUpdate(272);
+                        }
+                        else
+                            openSession(options.recentSessions[item.idx]);
+                    }
+                }
+            );
+            rmenu.unshift(
+                {
+                    label: options.recentSessions[r],
+                    idx: r,
+                    click: (item) => {
+                        if (!existsSync(options.recentSessions[item.idx])) {
+                            dialog.showMessageBox({
+                                type: 'info',
+                                title: 'Path does not exist',
+                                message: 'The path \'' + options.recentSessions[item.idx] + '\' does not seem to exist anymore on disk.'
+                            });
+                            options.recentSessions.splice(item.idx, 1);
+                            doUpdate(272);
+                        }
+                        else
+                            openSession(options.recentSessions[item.idx], true);
+                    }
+                }
+            );            
+        }
+        if (menu.length > 0) {
+            menu.push({ type: 'separator' });
+            menu.push({
+                label: 'Clear Recently Opened',
+                click: () => {
+                    options.recentSessions = [];
+                    doUpdate(272);
+                }
+            });
+            rmenu.push({ type: 'separator' });
+            rmenu.push({
+                label: 'Clear Recently Opened',
+                click: () => {
+                    options.recentSessions = [];
+                    doUpdate(272);
+                }
+            });            
+        }
+        menubar.updateItem('sessions|open recent session', { submenu: menu });
+        menubar.updateItem('sessions|replace with recent session', { submenu: rmenu });
+    }
+
 
     // eslint-disable-next-line no-unused-vars
     function closeHidden(hidden) {
@@ -6431,7 +6699,7 @@
                     if (data['room-wiz-water-quality'] !== 5)//default is 5
                         tmpl['create body'] += `   set_water_quality(${data['room-wiz-water-quality']});\n`;
                     if (data['room-wiz-water-poisoned'] != 0)//default is 5
-                        tmpl['create body'] += `   set_water_poisoned(${data['room-wiz-water-poisoned']});\n`;                        
+                        tmpl['create body'] += `   set_water_poisoned(${data['room-wiz-water-poisoned']});\n`;
                     if (data['room-wiz-water-germs'] && data['room-wiz-water-germs'].length)
                         data['create body'] += `   set_germs(${formatArgumentList(data['room-wiz-water-germs'].join(', '), 55, 0, 0, true)});\n`;
                     if (data['room-wiz-water-source'] !== 'the water')//default is the water
@@ -8361,6 +8629,8 @@
             );
             if (r < 10)
                 menu[0].accelerator = 'CmdOrCtrl+' + (r + 1);
+            if (r === 10)
+                menu[0].accelerator = 'CmdOrCtrl+0';
         }
         if (menu.length > 0) {
             menu.push({ type: 'separator' });
@@ -9877,6 +10147,10 @@
                 }
                 _updating &= ~128;
             }
+            if ((_updating & 256) === 256) {
+                buildRecentSessions();
+                _updating &= ~256;
+            }            
             _rTimeout = 0;
             doUpdate(_updating);
         });

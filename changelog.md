@@ -1,8 +1,33 @@
 # Changelog
 
+## 1.4.0
+
+- **New:**
+  - Allow opening character manager from tray and tabstrip context menus
+  - Active tab now has a larger top border to make it stand out and easier to know which tab is active
+  - Add `tray-click` and `tray-double-click` trigger events to allow executing triggers when tray icon is clicked
+  - Optimize auto login and chat triggers for better performance
+  - Add `Skip more prompt` system to allow auto paging after a set amount of time
+  - Add `Minimum number of lines` The minimum # of lines to display in command prompt, min of 1, max of 30 or 50% of the display screen
+  - Preferences: Add a search to the advanced view for preference
+  - Code editor: add a basic session system to allow saving/opening a session for restoring groups of tabs
+- **Fixed:**
+  - Prevent double close issues if saving window layout takes time
+  - Fix issue with hidden windows and not correctly restoring bounds when maximized
+  - Clear window title bar text when tab text is empty
+  - Fix color dialog size in advanced editor in windows
+  - Center color dialog contents in case OS makes window larger then contents
+  - Fix closing clean up when tab closed
+  - Fix layout loading when invalid parent window
+  - Fix broken tabs from being hidden in the background when loading saved layout
+  - Code editor: Fix issue when no tabs and ui trying to update
 - **Changed:**
-  - Update monaco-editor 0.47.0 to 0.48.0
-  - Update mathjs 12.4.1 to 12.4.2
+  - Update electron 29.3.0 to 30.0.9
+  - Convert BrowserView to WebContentsView
+  - Update monaco-editor 0.47.0 to 0.49.0
+  - Update mathjs 12.4.1 to 13.0.0
+  - Update better-sqlite3 9.5.0 to 11.0.0
+  - Update fswin 3.23.311 to 3.24.524
 
 ## 1.3.0 2024-04-22
 

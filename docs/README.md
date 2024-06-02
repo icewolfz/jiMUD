@@ -145,6 +145,8 @@ Usage: `jiMUD [arguments...]`
   - Auto updating is only supported by Appimage
   - Show in task bar is no longer supported because Electron removed support due to wayland
   - Immortal tools: may get permission denied errors when using snap when trying to build path navigation drop down, can be gotten around by rebuilding using classic confinement for more system access and using the --classic argument when installing
+- Windows:
+  - Spellchecker does not always work due to issues with how windows spell check systems work when using en-US language
 - Display:
   - Unicode RTL text selection display is not correct
   - MXP Image height is limited to line height

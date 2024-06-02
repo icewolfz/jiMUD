@@ -1,6 +1,11 @@
 # Preferences
 
+Show advanced view - switched preferences to advanced list view with search
+Sync - Clears matching values to global preferences to reduce file sizes
 Reset - Resetting will revert all settings back to default values
+Backup - Back up all settings, characters, and profiles to a zip file
+Reset client windows - Reset current client child windows to default sizes and screen locations and removed saved states
+Reset all windows - Reset all windows to default sizes and screen locations and remove saved states
 
 ## General
 
@@ -91,6 +96,9 @@ Reset - Resetting will revert all settings back to default values
   - `Shift + Enter` add newline on shift+enter
   - `(Ctrl | Shift) + Enter` add a new line on ctrl+enter or shift+enter
   - `Ctrl + Shift + Enter` add a newline on ctrl+shift+enter
+- `Skip more prompt` Attempt to skip the more prompt after a set period of time
+- `Skip more prompt delay` The amount of time in milliseconds to wait before skipping more prompt
+- `Minimum number of lines` The minimum # of lines to display in command prompt, min of 1, max of 30 or 50% of the display screen
 
 ## Command line > Tab completion
 

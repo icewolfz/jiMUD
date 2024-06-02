@@ -2202,7 +2202,7 @@ export function createProgressDialog(title) {
 }
 
 export function createColorDialog() {
-    return window.open('colorpicker.html', 'modal', 'title=Pick color,width=326,height=296,backgroundColor=#fff,icon=' + path.join(__dirname, '../../assets/icons/png/color.png'));
+    return window.open('colorpicker.html', 'modal', 'title=Pick color,width=336,height=308,backgroundColor=#fff,icon=' + path.join(__dirname, '../../assets/icons/png/color.png'));
 }
 
 export function boldUnicodeText(text) {

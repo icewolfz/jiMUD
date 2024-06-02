@@ -4,6 +4,11 @@ The code editor allows immortals or those wanting to code lpc files using a grap
 
 See [Area designer](codeeditor.designer.md) for area designer docs
 
+## Sessions
+
+The session system allows you to save current opened tabs as a session file to allow restoring them at a later time.
+You may open a session and merge it with current opened files or you may attempt to replace the current session with another. If the current session has open files it will attempt to save them, if you cancel them it will prevent them from closing as normal and they will be merged with the new session
+
 ## Basic Features
 
 - `New area` allows creation of a new area with standard folder layout and all standard files with basic info and set dates/creator name if possible

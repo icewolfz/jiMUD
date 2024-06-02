@@ -20,6 +20,10 @@
 </head>
 
 <body id="client-container">
+    <div id="loader" style="top:26px">
+        <div class="text">Loading... <div class="loader"></div>
+        </div>
+    </div>
     <script type="text/javascript">
         const { ipcRenderer } = require('electron');
         const { parseTemplate, isFileSync } = require('./js/library.js');
@@ -242,8 +246,14 @@
         }
 
         function setTitle(txt) {
-            if (!txt) return;
-            txt = '' + txt; //force to a string just to be safe
+            if(typeof txt === 'object') {
+                if(options.hasOwnProperty('title'))
+                    txt = txt.title || '';
+                else
+                    txt = '';
+            }
+            else
+                txt = txt ? ('' + txt) : ''; //force to a string just to be safe
             if (txt.trim().length !== 0)
                 document.title = 'jiMUD - ' + txt.trim();
             else
@@ -401,6 +411,11 @@
                     {
                         label: 'Windows...',
                         click: 'ipcRenderer.send("show-window", "windows")'
+                    },
+                    { type: 'separator' },
+                    {
+                        label: 'Characters...',
+                        click: `ipcRenderer.send('execute-client', ${getActiveClient()}, 'openWindow("characters")');`
                     }
                 ];
                 if (window.getGlobal('debug')) {
@@ -413,9 +428,7 @@
                 window.showContext(menu);
             });
             tabstrip.on('tab-contextmenu', (e) => {
-                console.log('tab-contextmenu!');
                 menu = [];
-                console.log(e.tab);
                 if (e.tab.iconCls === 'disconnected-code-icon')
                     menu.push({
                         label: 'Connect',
@@ -562,6 +575,8 @@
                 if (_current)
                     switchToClient(_current);
             }
+            if (document.getElementById('loader'))
+                document.getElementById('loader').remove();
             _loading--;
         };
         init();

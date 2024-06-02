@@ -104,6 +104,7 @@
         }
 
         .property-grid {
+            top: 27px;
             bottom: 0;
             right: 0;
             border: 0px solid #ccc;
@@ -116,6 +117,58 @@
         .property-grid-collapse,
         .property-grid-group-label {
             display: none;
+        }
+
+        .btn-toolbar {
+            background-color: rgb(245, 245, 245);
+            margin-left: 0px !important;
+            margin-right: 0px !important;
+            padding-top: 2px !important;
+            padding-bottom: 2px !important;
+            top: 0;
+            position: absolute;
+            left: 0;
+            right: 0;
+            border-bottom: 1px solid #ccc;
+            height: 27px;
+        }
+
+        .btn-toolbar .btn {
+            outline: none !important;
+        }
+
+        .btn-toolbar button,
+        .panel-heading button {
+            min-width: 26px;
+            float: clear;
+        }
+
+        .btn-toolbar label {
+            margin-bottom: 0 !important;
+        }
+
+        .btn-toolbar .label {
+            float: left;
+            color: black;
+            padding: 1px 5px;
+            font-size: 12px;
+            line-height: 1.5;
+            border-radius: 3px;
+            display: inline-block;
+            margin-bottom: 0;
+            font-weight: 400;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            cursor: pointer;
+            user-select: none;
+            background-image: none;
+            border: 1px solid transparent;
+        }
+
+        .btn-toolbar input {
+            width: auto;
+            display: inline-block;
         }
     </style>
     <script type="text/javascript">
@@ -724,7 +777,7 @@
                 var idx = parseInt($(this).attr('id').match(/\d+/)[0], 10);
                 var color = new RGBColor($(this).val());
                 if (color.ok) {
-                    if(!_settings.colors)
+                    if (!_settings.colors)
                         _settings.colors = getSettingValue('colors') || [];
                     _settings.colors[idx] = color.toRGB();
                 }
@@ -786,6 +839,18 @@
                     _settings.loadLayout = templatePath(result.filePaths[0]);
                     $('#loadLayout').val(_settings.loadLayout);
                 });
+            });
+            document.getElementById('filter').addEventListener('keyup', event => {
+                const items = document.getElementsByClassName('property-grid-item');
+                const il = items.length;
+                const val = document.getElementById('filter').value;
+                const regSearch = new RegExp(`.*${val}.*`, 'i');
+                for(let i = 0; i < il; i++) {
+                    if(!val || val.length === 0 || items[i].children[0].textContent.match(regSearch))
+                        items[i].style.display = '';
+                    else
+                        items[i].style.display = 'none';                    
+                }
             });
             loading--;
             if (window.getSetting('showAdvancedSettings'))
@@ -1121,7 +1186,7 @@
             if (dialog.showMessageBoxSync({
                 type: 'warning',
                 title: 'Reset windows',
-                message: 'Will rest all client child windows and window states, once reset can not be restored, reset?',
+                message: 'Will reset all client child windows and window states, once reset can not be restored, reset?',
                 buttons: ['Yes', 'No'],
                 defaultId: 1,
                 noLink: true
@@ -1522,6 +1587,8 @@
                 archive.addFile(path.join(data, 'settings.json'), 'settings.json');
             if (isFileSync(path.join(data, 'editor.json')))
                 archive.addFile(path.join(data, 'editor.json'), 'editor.json');
+            if (isFileSync(path.join(data, 'editor.sess')))
+                archive.addFile(path.join(data, 'editor.sess'), 'editor.sess');            
             var files;
             if (isDirSync(path.join(data, 'profiles'))) {
                 files = walkSync(path.join(data, 'profiles'));
@@ -1582,6 +1649,7 @@
                 _settings.showAdvancedSettings = false;
             loadSettings();
             document.getElementById('list-container').style.display = 'none';
+            document.getElementById('filter').value = '';
         }
 
         function showAdvancedView() {
@@ -1969,7 +2037,10 @@
 <body>
     <div class="dialog-body">
         <div id="list-container" class="panel panel-default datagrid-standard" style="display:none;z-index: 50;position: absolute;right:0px;left: 0px;top: 0px;bottom:55px;margin:0">
-            <button style="z-index: 51;position: absolute;right: 20px;top: 5px;" type="button" class="btn btn-default btn-xs" onclick="showStandardView()" title="Show standard view"><i class="fa fa-gears" aria-hidden="true"></i></button>
+            <div id="toolbar" class="btn-toolbar" role="toolbar">
+                <input id="filter" placeholder="Search for preference" class="input-xs form-control" style="left: 5px;right: 30px;position: absolute;" />
+                <button style="z-index: 51;position: absolute;right: 2px;" type="button" class="btn btn-default btn-xs" onclick="showStandardView()" title="Show standard view"><i class="fa fa-gears" aria-hidden="true"></i></button>
+            </div>
         </div>
         <div id="pref-tree" class="panel panel-default"></div>
         <div id="content" class="panel panel-default">
@@ -2561,6 +2632,26 @@
 
                         </div>
                     </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="skipMore" /> Skip more prompt
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            Skip more prompt delay
+                            <div class="input-group">
+                                <input type="number" id="skipMoreDelay" class="input-sm form-control" min="0" max="60000" />
+                                <div class="input-group-addon">ms</div>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            Minimum number of lines
+                            <input type="number" id="commandMinLines" class="input-sm form-control" min="1" max="30" />
+                        </label>
+                    </div>                    
                 </div>
                 <div role="tabpanel" class="pref-pane" id="tab-completion">
                     <div class="col-sm-6 form-group">
@@ -3367,7 +3458,7 @@
                         <label class="control-label">
                             <input type="checkbox" id="parseCommands" /> Parse commands
                         </label>
-                    </div>                    
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="backup">
                     <div class="col-sm-12 form-group" style="padding: 0px;">

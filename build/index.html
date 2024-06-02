@@ -489,17 +489,20 @@
         var _skipDisconnect = 0;
         var _watcher = null;
         var _windowState = getWindowOptions();
+        //connectionSettings(ipcRenderer.sendSync('get-connection-settings'));
         var _windows = {};
         let _closeWindow = false;
         let _chat;
         let _resizeTimeout = 0;
+        let _skipMoreTimeout;
+        let _skipMoreEvent;
         //#endregion
         //#region window events
         window.addEventListener('keydown', (event) => {
             if (document.getElementById('disconnectDialog').open) {
                 if (event.which === 81) {
                     closeDisconnectDialog(true);
-                    window.close();
+                    ipcRenderer.send('quit');
                     event.preventDefault();
                     event.cancelBubble = true;
                 }
@@ -870,7 +873,9 @@
             measure.style.width = document.getElementById('commandInput').offsetWidth + 'px';
             const oldMeasure = measure.innerHTML;
             measure.innerHTML = 'W';
+            let minHeight = client.getOption('commandMinLines');
             const height = measure.offsetHeight;
+            minHeight = height * (minHeight < 1 ? 1 : minHeight);
             let padding = parseFloat(cmdSize.borderTopWidth) || 0;
             padding += parseFloat(cmdSize.borderBottomWidth) || 0;
             padding += parseFloat(cmdSize.paddingTop) || 0;
@@ -879,12 +884,14 @@
             cmd.style.height = (height + padding) + 'px';
             document.getElementById('commandbox').style.height = height + 'px';
             document.getElementById('display').style.bottom = (height + padding) + 'px';
+
             commandInput = {
                 measure: measure,
                 cmd: cmd,
                 cmdSize: cmdSize,
                 height: height,
-                padding: padding
+                padding: padding,
+                minHeight: minHeight
             }
         }
 
@@ -906,7 +913,9 @@
             const measure = commandInput.measure;
             const cmd = commandInput.cmd;
             measure.innerHTML = client.commandInput.value + '\n';
-            const height = measure.offsetHeight;
+            let height = measure.offsetHeight;
+            if (height < commandInput.minHeight)
+                height = commandInput.minHeight;
             const padding = commandInput.padding;
             cmd.style.height = (height + padding) + 'px';
             document.getElementById('commandbox').style.height = height + 'px';
@@ -1435,7 +1444,7 @@
                         }
                     }
                 }
-                if (client.getOption('autoTakeoverLogin') && data.line === 'Do you want to take over this login? (y/n)' && data.fragment)
+                if (data.fragment && client.getOption('autoTakeoverLogin') && data.line === 'Do you want to take over this login? (y/n)')
                     client.send('y\n');
                 /*
                 if (_captureComm) {
@@ -1444,7 +1453,22 @@
                   return;
                 }
                 */
-                if (_captures.length === 0 || data.fragment) return;
+                if (!_skipMoreTimeout && data.fragment && data.line.startsWith('--More--') && client.getOption('skipMore')) {
+                    _skipMoreEvent = data => {
+                        clearTimeout(_skipMoreTimeout || 0);
+                        _skipMoreTimeout = 0;
+                        _skipMoreEvent = 0;
+                    }
+                    //clear skip if anything has been sent to the mud from the client
+                    client.once('parse-command', _skipMoreEvent);
+                    _skipMoreTimeout = setTimeout(() => {
+                        client.removeListener('parse-command', _skipMoreEvent); //clear event to prevent multiple triggers and free memory
+                        _skipMoreTimeout = 0;
+                        _skipMoreEvent = 0;
+                        client.sendCommand('\n');
+                    }, client.getOption('skipMoreDelay') >= 0 ? client.getOption('skipMoreDelay') : 0);
+                }
+                if (data.fragment || _captures.length === 0) return;
                 //custom capture to ignore who list
                 res = /^(-*)\s*\[ (.*) matching (users|user) \]\s*(-*)$/.exec(data.line);
                 if (res && res.length > 0) {
@@ -3273,23 +3297,33 @@
         });
 
         function connectionSettings(options) {
+            if (!options) return;
             if ('defaultConnect' in options) {
                 delete _windowState.data.port;
-                client.port = client.getOption('dev') ? 1035 : 1030;
-                updateTitle();
-                reloadIcon();
+                if (client) {
+                    client.port = client.getOption('dev') ? 1035 : 1030;
+                    updateTitle();
+                    reloadIcon();
+                }
+                else
+                    updateIcon(client.getOption('dev') ? 3 : 0);
             }
             else if ('port' in options) {
                 _windowState.data.port = options.port;
-                client.port = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.getOption('dev') ? 1035 : 1030);
-                updateTitle();
-                reloadIcon();
+                if (client) {
+                    client.port = (_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.getOption('dev') ? 1035 : 1030);
+                    updateTitle();
+                    reloadIcon();
+                }
+                else
+                    updateIcon((_windowState && 'port' in _windowState.data) ? (_windowState.data.port || 1030) : (client.getOption('dev') ? 1035 : 1030) === 1035 ? 3 : 0);
             }
             if ('host' in options) {
                 windowState.data.host = options.host;
-                client.host = (_windowState && 'host' in _windowState.data) ? (_windowState.data.host || 'www.shadowmud.com') : 'www.shadowmud.com';
+                if (client)
+                    client.host = (_windowState && 'host' in _windowState.data) ? (_windowState.data.host || 'www.shadowmud.com') : 'www.shadowmud.com';
             }
-            if ('characterId' in options)
+            if (client && 'characterId' in options)
                 loadCharacter(options.characterId);
         }
 
@@ -3331,6 +3365,16 @@
             updateTitle(title);
             ipcRenderer.send('update-title', { title: title });
             //}, 100);
+        });
+
+        ipcRenderer.on('tray-click', event => {
+            if (client)
+                client.raise('tray-click');
+        });
+
+        ipcRenderer.on('tray-double-click', event => {
+            if (client)
+                client.raise('tray-double-click');
         });
 
         let _clients = ipcRenderer.sendSync('get-window-client-count') || { window: 1, clients: 1 };
@@ -4125,7 +4169,7 @@
                 //safety checks to make sure some basic objects
                 if (!('windows' in data) || !data.windows)
                     data.windows = [];
-                if (!('states' in data) || !data.windows)
+                if (!('states' in data) || !data.states)
                     data.states = {};
                 //make sure we have a settings file, default to global file
                 if (!('data' in data) || !data.data)
@@ -4282,7 +4326,9 @@
         //#endregion
 
         //#region Close hooks
-        window.onbeforeunload = () => {
+        //window.onbeforeunload = () => {
+        //use a function instead of event as bug in electron does not fire correctly
+        function closed() {
             if (client.connected)
                 client.close();
             client.raise('closed');
