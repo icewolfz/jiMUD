@@ -28,6 +28,7 @@
   - Update mathjs 12.4.1 to 13.0.0
   - Update better-sqlite3 9.5.0 to 11.0.0
   - Update fswin 3.23.311 to 3.24.524
+  - Update electron-updater 6.1.8 to 6.2.1
 
 ## 1.3.0 2024-04-22
 
