@@ -22,7 +22,7 @@
   - Fix broken tabs from being hidden in the background when loading saved layout
   - Code editor: Fix issue when no tabs and ui trying to update
 - **Changed:**
-  - Update electron 29.3.0 to 30.0.9
+  - Update electron 29.3.0 to 30.1.0
   - Convert BrowserView to WebContentsView
   - Update monaco-editor 0.47.0 to 0.49.0
   - Update mathjs 12.4.1 to 13.0.0
