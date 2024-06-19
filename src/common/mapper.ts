@@ -5,7 +5,7 @@ import { parseTemplate, copy } from './library';
 const fs = require('fs');
 const path = require('path');
 const sqlite3 = require('better-sqlite3');
-const PF = require('./../../lib/pathfinding.js');
+const PF = require('./../../lib/pathfinding3D.js');
 declare let ipcRenderer;
 
 export enum RoomDetails {
@@ -82,6 +82,7 @@ export class Mapper extends EventEmitter {
     private vscroll: number = 0;
     private hscroll: number = 0;
     private markers = {};
+    private markedRooms;
     private _cancelImport: boolean = false;
     private _mapFile = path.join(parseTemplate('{data}'), 'map.sqlite');
     private _updating: UpdateType = UpdateType.none;
@@ -674,6 +675,7 @@ export class Mapper extends EventEmitter {
         if (!room || !room.ID) room = this.selected;
         this.current = this.sanitizeRoom(copy(room));
         this.markers = {};
+        this.markedRooms = 0;
         this.doUpdate(UpdateType.draw);
         this.emit('current-room-changed', this.current);
     }
@@ -2039,6 +2041,55 @@ export class Mapper extends EventEmitter {
         if (callback) callback(rooms);
     }
 
+    public getAllRooms(area, zone, callback) {
+        if (!this.ready) {
+            setTimeout(() => {
+                this.getAllRooms(area, zone, callback);
+            }, 10);
+            return;
+        }
+        let rows;
+        try {
+            if (this._splitArea)
+                rows = this._db.prepare('Select * FROM Rooms left join exits on Exits.ID = Rooms.ID WHERE Area = $area AND Zone = $zone').all({
+                    area: area,
+                    zone: zone
+                });
+            else
+                rows = this._db.prepare('Select * FROM Rooms left join exits on Exits.ID = Rooms.ID WHERE Zone = $zone').all({
+                    zone: zone
+                });
+        }
+        catch (err) {
+            this.emit('error', err);
+        }
+        const rooms = {};
+        if (rows) {
+            const rl = rows.length;
+            for (let r = 0; r < rl; r++) {
+                if (rooms[rows[r].ID]) {
+                    if (!rows[r].Exit) continue;
+                    rooms[rows[r].ID].exits[rows[r].Exit] = {
+                        num: rows[r].DestID,
+                        isdoor: rows[r].IsDoor,
+                        isclosed: rows[r].IsClosed
+                    };
+                }
+                else {
+                    rooms[rows[r].ID] = this.normalizeRoom(rows[r]);
+                    rooms[rows[r].ID].exits = {};
+                    if (!rows[r].Exit) continue;
+                    rooms[rows[r].ID].exits[rows[r].Exit] = {
+                        num: rows[r].DestID,
+                        isdoor: rows[r].IsDoor,
+                        isclosed: rows[r].IsClosed
+                    };
+                }
+            }
+        }
+        if (callback) callback(rooms);
+    }
+
     public showPath(destRoom?: Room) {
         if (!destRoom || !destRoom.ID)
             destRoom = this.selected;
@@ -2048,23 +2099,24 @@ export class Mapper extends EventEmitter {
             return;
         if (this.current.zone !== destRoom.zone)
             return;
-        //add 3d later
-        if (this.current.z !== destRoom.z)
-            return;
-        this.getRooms(this.current.area, this.current.z, this.current.zone, (rooms) => {
+        this.getAllRooms(this.current.area, this.current.zone, (rooms) => {
             let room;
             let id;
-            const roomsC: Room[][] = [];
+            const roomsC: Room[][][] = [];
             let ox = null;
             let oy = 0;
+            let oz = 0;
             let w = 0;
             let h = 0;
+            let d = 0;
             let r;
             let rl = rooms.length;
             let x;
             let y;
+            let z;
             let cx;
             let cy;
+            let cz;
             for (id in rooms) {
                 if (!rooms.hasOwnProperty(id)) continue;
                 room = rooms[id];
@@ -2073,10 +2125,13 @@ export class Mapper extends EventEmitter {
                     w = room.x + 1;
                     oy = room.y;
                     h = room.y + 1;
+                    oz = room.z;
+                    d = room.z + 1;
                     continue;
                 }
                 if (room.x < ox) ox = room.x; else if (room.x > w) w = room.x;
                 if (room.y < oy) oy = room.y; else if (room.y > h) h = room.y;
+                if (room.z < oz) oz = room.z; else if (room.z > d) d = room.z;
             }
 
             for (id in rooms) {
@@ -2084,66 +2139,75 @@ export class Mapper extends EventEmitter {
                 room = rooms[id];
                 if (room == null) continue;
                 if (!roomsC[room.y - oy]) roomsC[room.y - oy] = [];
-                roomsC[room.y - oy][room.x - ox] = room;
+                if (!roomsC[room.y - oy][room.x - ox]) roomsC[room.y - oy][room.x - ox] = [];
+                roomsC[room.y - oy][room.x - ox][room.z - oz] = room;
             }
 
             w = Math.sqrt(Math.pow(w - ox, 2)) + 1;
             h = Math.sqrt(Math.pow(oy - h, 2)) + 1;
+            d = Math.sqrt(Math.pow(oz - d, 2)) + 1;
             const matrix = [];
 
             for (y = 0; y < h; y++) {
                 matrix[y] = [];
-                for (x = 0; x < w; x++)
-                    matrix[y][x] = 0;
+                for (x = 0; x < w; x++) {
+                    matrix[y][x] = [];
+                    for (z = 0; z < d; z++)
+                        matrix[y][x][z] = 0;
+                }
             }
 
             for (id in rooms) {
                 if (!rooms.hasOwnProperty(id)) continue;
                 room = rooms[id];
-                room = rooms[id];
                 x = (room.x - ox);
                 y = (room.y - oy);
+                z = (room.z - oz);
                 if (room.exits.northwest)
-                    matrix[y][x] |= 1;
+                    matrix[y][x][z] |= 1;
                 if (room.exits.north)
-                    matrix[y][x] |= 128;
+                    matrix[y][x][z] |= 128;
                 if (room.exits.northeast)
-                    matrix[y][x] |= 64;
+                    matrix[y][x][z] |= 64;
                 if (room.exits.west)
-                    matrix[y][x] |= 2;
+                    matrix[y][x][z] |= 2;
                 if (room.exits.east)
-                    matrix[y][x] |= 32;
+                    matrix[y][x][z] |= 32;
                 if (room.exits.southwest)
-                    matrix[y][x] |= 4;
+                    matrix[y][x][z] |= 4;
                 if (room.exits.south)
-                    matrix[y][x] |= 8;
+                    matrix[y][x][z] |= 8;
                 if (room.exits.southeast)
-                    matrix[y][x] |= 16;
-                //if (room.exits.up)
-                //matrix[y][x] |= 512;
-                //if (room.exits.down)
-                //matrix[y][x] |= 256;
+                    matrix[y][x][z] |= 16;
+                if (room.exits.up)
+                    matrix[y][x][z] |= 512;
+                if (room.exits.down)
+                    matrix[y][x][z] |= 256;
             }
-            const grid = new PF.Grid(w, h, matrix);
+            const grid = new PF.Grid(w, h, d, matrix);
 
             const finder = new PF.AStarFinder({ allowDiagonal: true, dontCrossCorners: false });
             x = (this.current.x - ox);
             y = (this.current.y - oy);
+            z = (this.current.z - oz);
             cx = (destRoom.x - ox);
             cy = (destRoom.y - oy);
-            const fPath = finder.findPath(x, y, cx, cy, grid);
+            cz = (destRoom.z - oz);
+            const fPath = finder.findPath(x, y, z, cx, cy, cz, grid);
             rl = fPath.length;
             this.markers = {};
+            this.markedRooms = [this.current, destRoom];
             for (r = 0; r < rl; r++) {
                 x = Math.floor(fPath[r][0]);
                 y = Math.floor(fPath[r][1]);
-                if (roomsC[y] && roomsC[y][x]) {
-                    if (roomsC[y][x].ID === this.current.ID)
-                        this.markers[roomsC[y][x].ID] = 2;
-                    else if (roomsC[y][x].ID === destRoom.ID)
-                        this.markers[roomsC[y][x].ID] = 3;
+                z = Math.floor(fPath[r][2]);
+                if (roomsC[y] && roomsC[y][x] && roomsC[y][x][z]) {
+                    if (roomsC[y][x][z].ID === this.current.ID)
+                        this.markers[roomsC[y][x][z].ID] = 2;
+                    else if (roomsC[y][x][z].ID === destRoom.ID)
+                        this.markers[roomsC[y][x][z].ID] = 3;
                     else
-                        this.markers[roomsC[y][x].ID] = 1;
+                        this.markers[roomsC[y][x][z].ID] = 1;
                 }
             }
             this.emit('path-shown');
@@ -2154,130 +2218,189 @@ export class Mapper extends EventEmitter {
     public clearPath() {
         this.emit('path-cleared');
         this.markers = {};
+        this.markedRooms = 0;
         this.doUpdate(UpdateType.draw);
     }
 
-    public walkPath(destRoom?: Room) {
-        if (!destRoom || !destRoom.ID)
-            destRoom = this.selected;
-        if (this.current.ID == null || destRoom.ID == null)
-            return;
-        if (this._splitArea && this.current.area !== destRoom.area)
-            return;
-        if (this.current.zone !== destRoom.zone)
-            return;
-        //add 3d later
-        if (this.current.z !== destRoom.z)
-            return;
-        this.getRooms(this.current.area, this.current.z, this.current.zone, (rooms) => {
-            let room;
-            let id;
-            const roomsC: Room[][] = [];
-            let ox = null;
-            let oy = 0;
-            let w = 0;
-            let h = 0;
-            let r;
-            let rl = rooms.length;
-            let x;
-            let y;
-            let cx;
-            let cy;
-            let x2;
-            let y2;
-            for (id in rooms) {
-                if (!rooms.hasOwnProperty(id)) continue;
-                room = rooms[id];
-                if (ox == null) {
-                    ox = room.x;
-                    w = room.x + 1;
-                    oy = room.y;
-                    h = room.y + 1;
-                    continue;
+    public hasMarked() {
+        return this.markedRooms && this.markedRooms.length !== 0;
+    }
+
+    public getMarkedStart() {
+        if (!this.markedRooms) return 0;
+        return this.markedRooms[0];
+    }
+
+    public getMarkedEnd() {
+        if (!this.markedRooms) return 0;
+        return this.markedRooms[1];
+    }
+
+    public getMarkedPath() {
+        return new Promise((resolve, reject) => {
+            if (!this.markedRooms)
+                this.getPath().then(resolve).catch(reject);
+            else
+                this.getPath(this.markedRooms[1], this.markedRooms[0]).then(resolve).catch(reject);
+        });
+    }
+
+    public getPath(destRoom?: Room, startRoom?: Room) {
+        return new Promise((resolve, reject) => {
+            if (!destRoom || !destRoom.ID)
+                destRoom = this.selected;
+            if (!startRoom || !startRoom.ID)
+                startRoom = this.current;
+            if (startRoom.ID == null || destRoom.ID == null) {
+                reject();
+                return;
+            }
+            if (this._splitArea && startRoom.area !== destRoom.area) {
+                reject();
+                return;
+            }
+            if (startRoom.zone !== destRoom.zone) {
+                reject();
+                return;
+            }
+            this.getAllRooms(startRoom.area, startRoom.zone, (rooms) => {
+                let room;
+                let id;
+                let ox = null;
+                let oy = 0;
+                let oz = 0;
+                let w = 0;
+                let h = 0;
+                let d = 0;
+                let r;
+                let rl = rooms.length;
+                let x;
+                let y;
+                let z;
+                let cx;
+                let cy;
+                let cz;
+                let x2;
+                let y2;
+                let z2;
+                for (id in rooms) {
+                    if (!rooms.hasOwnProperty(id)) continue;
+                    room = rooms[id];
+                    if (ox == null) {
+                        ox = room.x;
+                        w = room.x + 1;
+                        oy = room.y;
+                        h = room.y + 1;
+                        oz = room.z;
+                        d = room.z + 1;
+                        continue;
+                    }
+                    if (room.x < ox) ox = room.x; else if (room.x > w) w = room.x;
+                    if (room.y < oy) oy = room.y; else if (room.y > h) h = room.y;
+                    if (room.z < oz) oz = room.z; else if (room.z > d) d = room.z;
                 }
-                if (room.x < ox) ox = room.x; else if (room.x > w) w = room.x;
-                if (room.y < oy) oy = room.y; else if (room.y > h) h = room.y;
-            }
 
-            for (id in rooms) {
-                if (!rooms.hasOwnProperty(id)) continue;
-                room = rooms[id];
-                if (room == null) continue;
-                if (!roomsC[room.y - oy]) roomsC[room.y - oy] = [];
-                roomsC[room.y - oy][room.y - ox] = room;
-            }
+                w = Math.sqrt(Math.pow(w - ox, 2)) + 1;
+                h = Math.sqrt(Math.pow(oy - h, 2)) + 1;
+                d = Math.sqrt(Math.pow(oz - d, 2)) + 1;
+                const matrix = [];
 
-            w = Math.sqrt(Math.pow(w - ox, 2)) + 1;
-            h = Math.sqrt(Math.pow(oy - h, 2)) + 1;
-            const matrix = [];
+                for (y = 0; y < h; y++) {
+                    matrix[y] = [];
+                    for (x = 0; x < w; x++) {
+                        matrix[y][x] = [];
+                        for (z = 0; z < d; z++)
+                            matrix[y][x][z] = 0;
+                    }
+                }
 
-            for (y = 0; y < h; y++) {
-                matrix[y] = [];
-                for (x = 0; x < w; x++)
-                    matrix[y][x] = 0;
-            }
+                for (id in rooms) {
+                    if (!rooms.hasOwnProperty(id)) continue;
+                    room = rooms[id];
+                    x = (room.x - ox);
+                    y = (room.y - oy);
+                    z = (room.z - oz);
+                    if (room.exits.northwest)
+                        matrix[y][x][z] |= 1;
+                    if (room.exits.north)
+                        matrix[y][x][z] |= 128;
+                    if (room.exits.northeast)
+                        matrix[y][x][z] |= 64;
+                    if (room.exits.west)
+                        matrix[y][x][z] |= 2;
+                    if (room.exits.east)
+                        matrix[y][x][z] |= 32;
+                    if (room.exits.southwest)
+                        matrix[y][x][z] |= 4;
+                    if (room.exits.south)
+                        matrix[y][x][z] |= 8;
+                    if (room.exits.southeast)
+                        matrix[y][x][z] |= 16;
+                    if (room.exits.up)
+                        matrix[y][x][z] |= 512;
+                    if (room.exits.down)
+                        matrix[y][x][z] |= 256;
+                }
+                const grid = new PF.Grid(w, h, d, matrix);
 
-            for (id in rooms) {
-                if (!rooms.hasOwnProperty(id)) continue;
-                room = rooms[id];
-                x = (room.x - ox);
-                y = (room.y - oy);
-                if (room.exits.northwest)
-                    matrix[y][x] |= 1;
-                if (room.exits.north)
-                    matrix[y][x] |= 128;
-                if (room.exits.northeast)
-                    matrix[y][x] |= 64;
-                if (room.exits.west)
-                    matrix[y][x] |= 2;
-                if (room.exits.east)
-                    matrix[y][x] |= 32;
-                if (room.exits.southwest)
-                    matrix[y][x] |= 4;
-                if (room.exits.south)
-                    matrix[y][x] |= 8;
-                if (room.exits.southeast)
-                    matrix[y][x] |= 16;
-                //if (room.exits.up)
-                //matrix[y][x] |= 512;
-                //if (room.exits.down)
-                //matrix[y][x] |= 256;
-            }
-            const grid = new PF.Grid(w, h, matrix);
+                const finder = new PF.AStarFinder({ allowDiagonal: true, dontCrossCorners: false });
+                x = (startRoom.x - ox);
+                y = (startRoom.y - oy);
+                z = (startRoom.z - oz);
+                cx = (destRoom.x - ox);
+                cy = (destRoom.y - oy);
+                cz = (destRoom.z - oz);
+                const fPath = finder.findPath(x, y, z, cx, cy, cz, grid);
+                rl = fPath.length;
+                const walk = [];
+                for (r = 0; r < rl - 1; r++) {
+                    x = Math.floor(fPath[r][0]);
+                    y = Math.floor(fPath[r][1]);
+                    z = Math.floor(fPath[r][2]);
+                    x2 = Math.floor(fPath[r + 1][0]);
+                    y2 = Math.floor(fPath[r + 1][1]);
+                    z2 = Math.floor(fPath[r + 1][2]);
 
-            const finder = new PF.AStarFinder({ allowDiagonal: true, dontCrossCorners: false });
-            x = (this.current.x - ox);
-            y = (this.current.y - oy);
-            cx = (destRoom.x - ox);
-            cy = (destRoom.y - oy);
-            const fPath = finder.findPath(x, y, cx, cy, grid);
-            rl = fPath.length;
-            const walk = [];
-            for (r = 0; r < rl - 1; r++) {
-                x = Math.floor(fPath[r][0]);
-                y = Math.floor(fPath[r][1]);
-                x2 = Math.floor(fPath[r + 1][0]);
-                y2 = Math.floor(fPath[r + 1][1]);
+                    if (z - 1 === z2)
+                        walk.push('down');
+                    else if (z + 1 === z2)
+                        walk.push('up');
+                    else if (x - 1 === x2 && y - 1 === y2)
+                        walk.push('northwest');
+                    else if (x === x2 && y - 1 === y2)
+                        walk.push('north');
+                    else if (x + 1 === x2 && y - 1 === y2)
+                        walk.push('northeast');
 
-                if (x - 1 === x2 && y - 1 === y2)
-                    walk.push('northwest');
-                else if (x === x2 && y - 1 === y2)
-                    walk.push('north');
-                else if (x + 1 === x2 && y - 1 === y2)
-                    walk.push('northeast');
+                    else if (x - 1 === x2 && y + 1 === y2)
+                        walk.push('southwest');
+                    else if (x === x2 && y + 1 === y2)
+                        walk.push('south');
+                    else if (x + 1 === x2 && y + 1 === y2)
+                        walk.push('southeast');
+                    else if (x - 1 === x2 && y === y2)
+                        walk.push('west');
+                    else
+                        walk.push('east');
+                }
+                resolve(walk);
+            });
+        });
+    }
 
-                else if (x - 1 === x2 && y + 1 === y2)
-                    walk.push('southwest');
-                else if (x === x2 && y + 1 === y2)
-                    walk.push('south');
-                else if (x + 1 === x2 && y + 1 === y2)
-                    walk.push('southeast');
-                else if (x - 1 === x2 && y === y2)
-                    walk.push('west');
-                else
-                    walk.push('east');
-            }
+    public walkPath(destRoom?: Room, startRoom?: Room) {
+        this.getPath(destRoom, startRoom).then(walk => {
             this.SendCommands(walk);
+        }).catch(() => { });
+    }
+
+    public walkMarkedPath() {
+        const destRoom = this.markedRooms ? this.markedRooms[1] : 0;
+        const startRoom = this.markedRooms ? this.markedRooms[0] : 0;
+        return new Promise((resolve, reject) => {
+            this.getPath(destRoom, startRoom).then(walk => {
+                this.SendCommands(walk);
+            }).catch(() => { });
         });
     }
 

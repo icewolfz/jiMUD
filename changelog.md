@@ -10,7 +10,11 @@
   - Add `Skip more prompt` system to allow auto paging after a set amount of time
   - Add `Minimum number of lines` The minimum # of lines to display in command prompt, min of 1, max of 30 or 50% of the display screen
   - Preferences: Add a search to the advanced view for preference
-  - Code editor: add a basic session system to allow saving/opening a session for restoring groups of tabs
+  - Code editor: Add a basic session system to allow saving/opening a session for restoring groups of tabs
+  - Mapper:
+    - Auto walk/highlight path now support up/down directions
+    - Add copy path systems to allow copying full path, as command stacked, or as a speedpath
+    - Add auto walk highlighted path
 - **Fixed:**
   - Prevent double close issues if saving window layout takes time
   - Fix issue with hidden windows and not correctly restoring bounds when maximized
@@ -21,6 +25,10 @@
   - Fix layout loading when invalid parent window
   - Fix broken tabs from being hidden in the background when loading saved layout
   - Code editor: Fix issue when no tabs and ui trying to update
+  - Mapper:
+    - Fix bug in mouse wheel zooming out
+    - Fix area drop down not updating when opening new map
+    - Fix invalid area selection if area no longer exist in map, defaults to first found area
 - **Changed:**
   - Update electron 29.3.0 to 30.1.0
   - Convert BrowserView to WebContentsView

@@ -1,5 +1,21 @@
 # Mapper
 
+## Room markers
+
+- `Red dot` The red dot is the current room where the player should be or where any paths will start from
+- `Yellow dot` A marker on a highlighted path
+- `Blue dot` The destination room for a highlighted path
+- `Green dot` The start room for highlighted path if current room has been changed
+- `Rounded transparent rectangle` A room that is inside a transparent rounded rectangle is the currently selected room
+
+## Menu
+
+### Edit
+
+- `Copy path` Copy the current highlighted path, if none highlighted copy from current room to selected room
+- `Copy path as stacked` Same as copy path but in command stack format
+- `Copy path as speedpath` Same as copy path but in speedpath compressed format
+
 ## Keyboard shortcuts
 
 - `Arrow keys` scroll the map north, south, east, or west
