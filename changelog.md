@@ -29,12 +29,13 @@
     - Fix bug in mouse wheel zooming out
     - Fix area drop down not updating when opening new map
     - Fix invalid area selection if area no longer exist in map, defaults to first found area
+  - Correctly focus on first found text as input is typed into find dialog
 - **Changed:**
-  - Update electron 29.3.0 to 30.1.0
+  - Update electron 29.3.0 to 31.1.0
   - Convert BrowserView to WebContentsView
-  - Update monaco-editor 0.47.0 to 0.49.0
+  - Update monaco-editor 0.47.0 to 0.50.0
   - Update mathjs 12.4.1 to 13.0.0
-  - Update better-sqlite3 9.5.0 to 11.0.0
+  - Update better-sqlite3 9.5.0 to 11.1.1
   - Update fswin 3.23.311 to 3.24.524
   - Update electron-updater 6.1.8 to 6.2.1
 
