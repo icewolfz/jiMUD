@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.4.0
+## 1.4.0 2024-06-29
 
 - **New:**
   - Allow opening character manager from tray and tabstrip context menus
