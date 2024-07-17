@@ -64,14 +64,14 @@
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.5.30",
-    "@types/node": "^20.14.10",
-    "electron": "^31.2.0",
+    "@types/node": "^20.14.11",
+    "electron": "^31.2.1",
     "electron-builder": "^24.13.3",
     "electron-rebuild": "^3.2.9",
-    "eslint": "^9.6.0",
+    "eslint": "^9.7.0",
     "eslint-plugin-html": "^8.1.1",
-    "sass": "^1.77.7",
-    "terser": "^5.31.1"
+    "sass": "^1.77.8",
+    "terser": "^5.31.3"
   },
   "build": {
     "appId": "jiMUD",
@@ -161,7 +161,7 @@
     "better-sqlite3": "^11.1.2",
     "buzz": "^1.2.1",
     "chokidar": "^3.6.0",
-    "electron-updater": "^6.2.1",
+    "electron-updater": "^6.3.0",
     "fs-extra": "^11.2.0",
     "fswin": "^3.24.524",
     "lz-string": "^1.5.0",

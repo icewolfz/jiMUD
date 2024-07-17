@@ -3,9 +3,10 @@
 ## 1.4.1
 
 - **Changed:**
-  - Update electron 31.1.0 to 31.2.0
+  - Update electron 31.1.0 to 31.2.1
   - Update better-sqlite3 11.1.1 to 11.1.2
   - Update mathjs 13.0.1 to 13.0.2
+  - Update electron-updater 6.2.1 to 6.3.0
 
 ## 1.4.0 2024-06-29
 
