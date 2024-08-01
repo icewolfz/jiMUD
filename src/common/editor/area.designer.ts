@@ -1,4 +1,4 @@
-//spell-checker:ignore MONTYPE ROOMTYPE datagrid propertygrid dropdown polyfill MODROOM, SUBCLASSER LOCKPICK selectall waterbreathing
+//spell-checker:ignore MONTYPE ROOMTYPE datagrid propertygrid dropdown polyfill MODROOM, SUBCLASSER LOCKPICK selectall waterbreathing scry waterdrink platemail maxencumbrance minencumbrance maxitems
 //spell-checker:ignore consolas lucida bitstream tabbable varargs crafter mgive blacksmithing glasssmithing stonemasonry doublewielding warhammer flamberge nodachi
 //spell-checker:ignore nonetrackable bandedmail splintmail chainmail ringmail scalemail overclothing polearm tekagi shuko tekko bardiche katana wakizashi pilum warstaff
 import { DebugTimer, EditorBase, EditorOptions, FileState } from './editor.base';
@@ -7313,7 +7313,7 @@ export class AreaDesigner extends EditorBase {
                                         </div>`,
                                             reset: (e) => {
                                                 e.page.querySelector('#obj-encumbrance').value = ed.value.encumbrance || '40000';
-                                                e.page.querySelector('#obj-minencumbrance').value = ed.value.minencumbranc || '500';
+                                                e.page.querySelector('#obj-minencumbrance').value = ed.value.minencumbrance || '500';
                                                 e.page.querySelector('#obj-maxitems').value = ed.value.maxitems || '0';
                                             }
                                         }));
@@ -7969,7 +7969,7 @@ export class AreaDesigner extends EditorBase {
                                     </div>`,
                                         reset: (e) => {
                                             e.page.querySelector('#obj-encumbrance').value = ed.value.encumbrance || '40000';
-                                            e.page.querySelector('#obj-minencumbrance').value = ed.value.minencumbranc || '500';
+                                            e.page.querySelector('#obj-minencumbrance').value = ed.value.minencumbrance || '500';
                                             e.page.querySelector('#obj-maxitems').value = ed.value.maxitems || '0';
                                         }
                                     }));
