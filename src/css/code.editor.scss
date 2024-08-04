@@ -1061,3 +1061,8 @@ cause test to be brighter but more bold looking
 .monaco-editor-hover-content .hover-row p:last-child {
     padding-bottom: 0;
 }
+
+/*TODO seems to be a bug in editor height, this forces 100%, check each update for monaco until fixed*/
+.monaco-diff-editor {
+    height: 100% !important;
+}

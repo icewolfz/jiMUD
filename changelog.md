@@ -3,7 +3,9 @@
 ## 1.4.1
 
 - **Fixed:**
-  - Code editor: Area Designer: Fix bug min encumbrance not being correctly set for armors when created or edited in wizard
+  - Code editor:
+    - Area Designer: Fix bug min encumbrance not being correctly set for armors when created or edited in wizard
+    - Fixed a bug in diff view not correctly setting the height
 - **Changed:**
   - Update electron 31.1.0 to 31.3.1
   - Update better-sqlite3 11.1.1 to 11.1.2
