@@ -2,7 +2,7 @@
 //spellchecker:ignore sefuns efuns efun sefun lfuns lfun nroff ormatting selectall
 import { EditorBase, EditorOptions, FileState, Source } from './editor.base';
 import { conf, language, loadCompletion, LPCIndenter, LPCFormatter } from './lpc';
-import { isFileSync, isDirSync, parseTemplate, stripPinkfish, copy, createColorDialog } from '../library';
+import { isFileSync, isDirSync, parseTemplate, stripPinkfish, copy, createColorDialog, capitalize } from '../library';
 const path = require('path');
 const fs = require('fs');
 
@@ -1191,6 +1191,23 @@ export class MonacoCodeEditor extends EditorBase {
                             });
                         }
                     },
+                    {
+                        label: '&Insert Comment Header',
+                        click: () => {
+                            const moment = require('moment');
+                            this.$editor.pushUndoStop();
+                            this.$editor.executeCommands('jiMUD.action.insert', [new ReplaceCommand(new monaco.Range(0, 0, 0, 0), `/**
+ * Name
+ * 
+ * Description
+ * 
+ * @author ${(window && window.opener) ? capitalize(window.opener.getCharacterName() || 'Unknown') : 'Unknown'}
+ * @created ${moment().format('YYYY-MM-DD')}
+ */
+`)]);
+                            this.$editor.pushUndoStop();
+                        }
+                    },
                     { type: 'separator' },
                     {
                         label: 'To &Upper Case',
@@ -1373,6 +1390,23 @@ export class MonacoCodeEditor extends EditorBase {
                                     //if(_colorDialog.getType() === this.file.replace(/[/|\\:]/g, ''))
                                     this.insert('%^' + e.detail.code.replace(/ /g, '%^%^') + '%^');
                                 });
+                            }
+                        },
+                        {
+                            label: '&Insert Comment Header...',
+                            click: () => {
+                                const moment = require('moment');
+                                this.$editor.pushUndoStop();
+                                this.$editor.executeCommands('jiMUD.action.insert', [new ReplaceCommand(new monaco.Range(0, 0, 0, 0), `/**
+* Name
+* 
+* Description
+* 
+* @author ${(window && window.opener) ? capitalize(window.opener.getCharacterName() || 'Unknown') : 'Unknown'}
+* @created ${moment().format('YYYY-MM-DD')}
+*/
+`)]);
+                                this.$editor.pushUndoStop();
                             }
                         },
                         { type: 'separator' },
