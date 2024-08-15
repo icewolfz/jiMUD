@@ -1613,6 +1613,8 @@ export class DataGrid extends EventEmitter {
 
             if (cols[c].tooltipFormatter)
                 cell.title = cols[c].tooltipFormatter({ row: data, cell: value, rowIndex: r, column: c, index: idx, field: cols[c].field, rows: this.$rows, parent: parent, child: child, dataIndex: dataIdx }) || '';
+            else if (cols[c].formatter)
+                cell.title = cols[c].formatter({ row: data, cell: value, rowIndex: r, column: c, index: idx, field: cols[c].field, rows: this.$rows, parent: parent, child: child, dataIndex: dataIdx });
             else
                 cell.title = value || '';
             if (cols[c].formatter)
@@ -2275,6 +2277,12 @@ export class DataGrid extends EventEmitter {
                 else {
                     editor.el.textContent = value || '';
                 }
+                if (col.tooltipFormatter)
+                    editor.el.title = col.tooltipFormatter(data) || '';
+                else if(col.formatter)
+                    editor.el.title = col.formatter(data) || '';
+                else
+                    editor.el.title = value || '';
             }
             if (editor.editor)
                 editor.editor.destroy();
