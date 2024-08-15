@@ -6,7 +6,9 @@
  - Code editor: Add Insert Comment Header to formatting menu to allow adding a comment header at the start of file with current date and logged in username
 - **Fixed:**
   - Code editor:
-    - Area Designer: Fix bug min encumbrance not being correctly set for armors when created or edited in wizard
+    - Area Designer:
+      - Fix bug min encumbrance not being correctly set for armors when created or edited in wizard
+      - Fix monster/object editor tooltips and display previews of data
     - Fixed a bug in diff view not correctly setting the height
     - Fixed datagrid tooltips not updating when value changed and fall back to value formatting when customized
 - **Changed:**

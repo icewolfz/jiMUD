@@ -5706,6 +5706,10 @@ export class AreaDesigner extends EditorBase {
                 label: '',
                 width: 32,
                 formatter: () => '',
+                tooltipFormatter: (data) => {
+                    if (!data || data.parent !== -1) return '';
+                    return this.monsterPreview(data.cell);
+                },
                 editor: {
                     type: EditorType.button,
                     options: {
@@ -6042,6 +6046,7 @@ export class AreaDesigner extends EditorBase {
                 field: 'type',
                 width: 125,
                 formatter: data => !data || !data.row ? '' : capitalize(Object.keys(StdObjectType).filter(key => !isNaN(Number(StdObjectType[key])))[data.row.type]),
+                tooltipFormatter: data => !data || !data.row ? '' : capitalize(Object.keys(StdObjectType).filter(key => !isNaN(Number(StdObjectType[key])))[data.row.type]),
                 editor: {
                     type: EditorType.select,
                     options: {
@@ -6055,6 +6060,7 @@ export class AreaDesigner extends EditorBase {
                 label: '',
                 width: 32,
                 formatter: () => '',
+                tooltipFormatter: data => !data || !data.row || !data.row.object ? '' : data.row.object.long || '',
                 editor: {
                     type: EditorType.button,
                     options: {
@@ -11025,6 +11031,36 @@ export class AreaDesigner extends EditorBase {
                 this.$roomPreview.objects.innerHTML = '';
             }
         }
+    }
+
+    private monsterPreview(monster, colors?) {
+        if (!monster) return '';
+        let sub = 'it', poss = 'its', obj = 'it';
+        if (monster.gender == 'female' || (monster.gender == 'random' && Math.floor(Math.random() * 2) == 1)) {
+            sub = 'she';
+            poss = 'her';
+            obj = 'her';
+        }
+        else if (monster.gender == 'male' || monster.gender == 'random') {
+            sub = 'he';
+            poss = 'his';
+            obj = 'him';
+        }
+        let description = `You look over the ${monster.gender} ${monster.race || 'UNKNOWN'}.\nYou are about the same size as ${obj}.\n${monster.long}\n${capitalize(sub)} is in top shape.\n${capitalize(sub)} is missing no limbs.\n`;
+        if (monster.objects.length > 0) {
+            description += `${capitalize(sub)} is carrying:\n`;
+            description += monster.objects.map(v => {
+                let short = this.$area.objects[v.id].short;
+                if((v.maxAmount || v.minAmount) > 1)
+                    short += `%^RESET%^ (%^RGB150%^${v.maxAmount || v.minAmount}%^RESET%^)`;
+                if (colors) 
+                    return pinkfishToHTML(short);                 
+                return stripPinkfish(short);
+            }).join('\n');
+        }
+        else
+            description += `${capitalize(sub)} is empty handed.\n`;
+        return description;
     }
 
     private BuildMap() {

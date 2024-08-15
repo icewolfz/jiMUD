@@ -2277,12 +2277,7 @@ export class DataGrid extends EventEmitter {
                 else {
                     editor.el.textContent = value || '';
                 }
-                if (col.tooltipFormatter)
-                    editor.el.title = col.tooltipFormatter(data) || '';
-                else if(col.formatter)
-                    editor.el.title = col.formatter(data) || '';
-                else
-                    editor.el.title = value || '';
+                editor.el.title = value || '';
             }
             if (editor.editor)
                 editor.editor.destroy();
@@ -2306,11 +2301,44 @@ export class DataGrid extends EventEmitter {
                 });
             }
         }
+
         if (changed && !canceled) {
             if (parent !== -1)
                 this.emit('value-changed', editor.data, oldObj, this.$editor.dataIndex);
             else
                 this.emit('value-changed', editor.data, oldObj, this.$editor.dataIndex);
+            //tooltip updates for dynamic types after all values checked as they may rely on other fields
+            for (e = 0; e < el; e++) {
+                editor = this.$editor.editors[e];
+                col = this.$cols[editor.column];
+                if (!col.tooltipFormatter || !col.formatter) continue;
+                dataIdx = +editor.el.dataset.dataIndex;
+                field = editor.el.dataset.field;
+                parent = +editor.el.dataset.parent;
+                child = +editor.el.dataset.child;
+                idx = +editor.el.dataset.idx;
+                data = { row: null, cell: null, index: idx, column: +editor.el.dataset.column, rowIndex: +editor.el.dataset.row, field: field, parent: parent, child: child, dataIndex: dataIdx }
+                if (dataIdx >= 0 && dataIdx < this.$rows.length) {
+                    if (parent === -1) {
+                        data.row = this.$rows[dataIdx];
+                        if (field)
+                            data.cell = data.row[field];
+                        else if (idx >= 0 && idx <= data.row.length)
+                            data.cell = data.row[idx];
+                    }
+                    else if (parent >= 0 && parent < this.$rows.length && child >= 0 && child < this.$rows[parent].children.length) {
+                        data.row = this.$rows[parent].children[child];
+                        if (field)
+                            data.cell = data.row[field];
+                        else if (idx >= 0 && idx <= data.row.length)
+                            data.cell = data.row[idx];
+                    }
+                }
+                if (col.tooltipFormatter)
+                    editor.el.title = col.tooltipFormatter(data) || '';
+                else if (col.formatter)
+                    editor.el.title = col.formatter(data) || '';
+            }            
         }
         this.$editor = null;
         if (next === true && this.enterMoveNext && this.enterMoveNew)
