@@ -3,7 +3,9 @@
 ## 1.4.1
 
 - **New:**
- - Code editor: Add Insert Comment Header to formatting menu to allow adding a comment header at the start of file with current date and logged in username
+ - Code editor: 
+  - Add Insert Comment Header to formatting menu to allow adding a comment header at the start of file with current date and logged in username
+  - Area Designer: Add monster preview pane to monster editor
 - **Fixed:**
   - Code editor:
     - Area Designer:

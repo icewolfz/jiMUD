@@ -686,6 +686,12 @@ cause test to be brighter but more bold looking
     outline: none;
 }
 
+.monster-preview {
+    white-space: pre-wrap;
+    width: 100%;
+    color: rgb(192, 192, 192);    
+}
+
 .room-item {
     text-decoration: underline;
     color: white;
@@ -751,6 +757,7 @@ cause test to be brighter but more bold looking
     border-top: 1px solid #ccc;
     border-bottom: 1px solid #ccc;
     padding-left: 5px;
+    z-index: 10;
 }
 
 .virtual-editor-label .btn-group {
@@ -773,6 +780,21 @@ cause test to be brighter but more bold looking
     margin: 0px;
     user-select: text;
 }
+
+.monster-preview {
+    position: absolute;
+    left: 0px;
+    bottom: 0;
+    right: 0;
+    top: 0px;
+    z-index: 20;
+    overflow: auto;
+    background-color: black;
+    padding: 0px;
+    margin: 0px;
+    user-select: text;
+}
+
 
 
 .panel-heading .control-label {

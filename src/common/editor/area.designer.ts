@@ -921,6 +921,7 @@ export class AreaDesigner extends EditorBase {
     private $label: HTMLElement;
     private $splitterPreview: Splitter;
     private $splitterEditor: Splitter;
+    private $splitterMonsterPreview: Splitter;
 
     private $monsterGrid;
     private $objectGrid;
@@ -990,6 +991,7 @@ export class AreaDesigner extends EditorBase {
     private $roomPreview;
     private $roomEditor;
     private $propertiesEditor;
+    private $monsterPreview;
 
     private $area: Area;
     private $startOptions;
@@ -1149,9 +1151,11 @@ export class AreaDesigner extends EditorBase {
                 previewFontFamily: 'Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace',
                 editorWidth: 300,
                 previewHeight: 200,
+                monsterPreviewHeight: 200,
                 live: true,
                 showRoomEditor: true,
                 showRoomPreview: true,
+                showMonsterPreview: true,
                 enterMoveNext: true,
                 enterMoveFirst: true,
                 enterMoveNew: true
@@ -5542,10 +5546,44 @@ export class AreaDesigner extends EditorBase {
         this.parent.appendChild(this.$propertiesEditor.container);
         //#endregion
         //#region create monster grid
+        this.$splitterMonsterPreview = new Splitter({ parent: this.parent  });
+        this.$splitterMonsterPreview.hide();
+        this.$splitterMonsterPreview.on('splitter-moved', (e) => {
+            this.emit('preview-splitter-moved', e);
+            this.emit('option-changed', 'monsterPreviewHeight', e);
+        });
+        this.$splitterMonsterPreview.on('collapsed', (panel) => {
+            this.emit('monster-splitter-collapsed', panel);
+            this.emit('option-changed', 'showMonsterPreview', panel !== 2);
+            this.emit('menu-update', 'view|monster preview', { checked: panel !== 2 });
+        });
+
+        this.$monsterPreview = {}
+        this.$monsterPreview.container = document.createElement('div');
+        this.$monsterPreview.container.id = this.parent.id + '-monster-preview';
+        this.$monsterPreview.container.classList.add('monster-preview');
+        this.$monsterPreview.container.addEventListener('contextmenu', e => {
+            e.preventDefault();
+            const sel = getSelection();
+            let inputMenu;
+            if (!sel.isCollapsed && sel.type === 'Range' && this.$monsterPreview.container.contains(sel.anchorNode)) {
+                inputMenu = [
+                    { role: 'copy' },
+                    { type: 'separator' },
+                    { role: 'selectAll' }
+                ];
+            }
+            else
+                inputMenu = [
+                    { role: 'selectAll' }
+                ];
+            window.showContext(inputMenu);
+        });
+        this.$splitterMonsterPreview.panel2.appendChild(this.$monsterPreview.container);
+
         el = document.createElement('div');
         el.classList.add('datagrid-standard');
-        el.style.display = 'none';
-        this.parent.appendChild(el);
+        this.$splitterMonsterPreview.panel1.appendChild(el);
         this.$monsterGrid = new DataGrid(el);
         this.$monsterGrid.enterMoveFirst = this.$enterMoveFirst;
         this.$monsterGrid.enterMoveNext = this.$enterMoveNext;
@@ -5991,6 +6029,11 @@ export class AreaDesigner extends EditorBase {
                 this.$label.children[0].children[2].setAttribute('disabled', 'true');
                 (<HTMLElement>this.$label.children[0].children[2]).title = 'Delete monster(s)';
             }
+            if (this.$monsterGrid.selected.length)
+                this.$monsterPreview.container.innerHTML = this.monsterPreview(this.$monsterGrid.selected[0].data.monster, true);
+            else
+                this.$monsterPreview.container.innerHTML = '';
+
             this.emit('selection-changed');
         });
         this.$monsterGrid.on('value-changed', (newValue, oldValue, dataIndex) => {
@@ -6006,6 +6049,10 @@ export class AreaDesigner extends EditorBase {
             this.$area.monsters[newValue.id] = newValue.monster;
             this.updateMonsters(true);
             this.changed = true;
+            if (this.$monsterGrid.selected.length)
+                this.$monsterPreview.container.innerHTML = this.monsterPreview(this.$monsterGrid.selected[0].data.monster, true);
+            else
+                this.$monsterPreview.container.innerHTML = '';
         });
         //#endregion
         //#region create object grid
@@ -8115,6 +8162,10 @@ export class AreaDesigner extends EditorBase {
             this.$area.objects[newValue.id] = newValue.object;
             this.updateObjects(true);
             this.changed = true;
+            if (this.$monsterGrid.selected.length)
+                this.$monsterPreview.container.innerHTML = this.monsterPreview(this.$monsterGrid.selected[0].data.monster, true);
+            else
+                this.$monsterPreview.container.innerHTML = '';            
         });
         //#endregion
     }
@@ -9552,6 +9603,14 @@ export class AreaDesigner extends EditorBase {
                     this.$splitterPreview.panel2Collapsed = !this.$splitterPreview.panel2Collapsed;
                 }
             });
+            m.push({
+                label: 'Monster preview',
+                type: 'checkbox',
+                checked: !this.$splitterMonsterPreview.panel2Collapsed,
+                click: () => {
+                    this.$splitterMonsterPreview.panel2Collapsed = !this.$splitterMonsterPreview.panel2Collapsed;
+                }
+            });
         }
         else if (menu === 'edit') {
             m = [
@@ -9701,12 +9760,18 @@ export class AreaDesigner extends EditorBase {
         this.AllowExitWalk = value.allowExitWalk;
         this.$roomPreview.container.style.fontSize = value.previewFontSize + 'px';
         this.$roomPreview.container.style.fontFamily = value.previewFontFamily;
+        this.$monsterPreview.container.style.fontSize = value.previewFontSize + 'px';
+        this.$monsterPreview.container.style.fontFamily = value.previewFontFamily;
         this.$splitterEditor.SplitterDistance = value.editorWidth;
         this.$splitterPreview.SplitterDistance = value.previewHeight;
         this.$splitterEditor.live = value.live;
         this.$splitterPreview.live = value.live;
         this.$splitterEditor.panel2Collapsed = !value.showRoomEditor;
         this.$splitterPreview.panel2Collapsed = !value.showRoomPreview;
+
+        this.$splitterMonsterPreview.SplitterDistance = value.monsterPreviewHeight;
+        this.$splitterMonsterPreview.live = value.live;
+        this.$splitterMonsterPreview.panel2Collapsed = !value.showMonsterPreview;
     }
 
     public get options() {
@@ -9748,7 +9813,7 @@ export class AreaDesigner extends EditorBase {
                 this.$propertiesEditor.container.style.display = 'none';
                 break;
             case View.monsters:
-                this.$monsterGrid.parent.style.display = 'none';
+                this.$splitterMonsterPreview.hide();
                 break;
             case View.objects:
                 this.$objectGrid.parent.style.display = 'none';
@@ -9817,8 +9882,8 @@ export class AreaDesigner extends EditorBase {
                 bGroup.style.display = 'none';
 
                 this.$label.appendChild(bGroup);
-
-                this.$monsterGrid.parent.style.display = '';
+                this.$monsterGrid.refresh();
+                this.$splitterMonsterPreview.show();
                 this.$monsterGrid.focus();
                 break;
             case View.objects:
@@ -9876,6 +9941,7 @@ export class AreaDesigner extends EditorBase {
         this.emit('menu-update', 'view|Items', { checked: view === View.objects });
         this.emit('menu-update', 'view|room editor', { enabled: view === View.map });
         this.emit('menu-update', 'view|room preview', { enabled: view === View.map });
+        this.emit('menu-update', 'view|monster preview', { enabled: view === View.monsters });
         this.emit('menu-update', 'edit|allow exit walk', { enabled: view === View.map });
         this.emit('menu-update', 'edit|allow resize walk', { enabled: view === View.map });
         this.emit('menu-update', 'edit|resize map', { enabled: view === View.map });
@@ -11051,10 +11117,10 @@ export class AreaDesigner extends EditorBase {
             description += `${capitalize(sub)} is carrying:\n`;
             description += monster.objects.map(v => {
                 let short = this.$area.objects[v.id].short;
-                if((v.maxAmount || v.minAmount) > 1)
+                if ((v.maxAmount || v.minAmount) > 1)
                     short += `%^RESET%^ (%^RGB150%^${v.maxAmount || v.minAmount}%^RESET%^)`;
-                if (colors) 
-                    return pinkfishToHTML(short);                 
+                if (colors)
+                    return pinkfishToHTML(short);
                 return stripPinkfish(short);
             }).join('\n');
         }

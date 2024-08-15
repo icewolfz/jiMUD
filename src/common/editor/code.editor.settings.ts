@@ -117,9 +117,11 @@ export class EditorSettings {
         previewFontFamily: 'Consolas, \'Courier New\', monospace',
         editorWidth: 300,
         previewHeight: 200,
+        monsterPreviewHeight: 200,
         live: true,
         showRoomEditor: true,
         showRoomPreview: true,
+        showMonsterPreview: true,
         enterMoveNext: true,
         enterMoveFirst: true,
         enterMoveNew: true
