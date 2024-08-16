@@ -5731,7 +5731,10 @@
         var f = width + ' ' + height;
         if (depth > 1) f += ' ' + depth;
         f += '\n';
-        if (width > 2) m += Array(width - 1).join(states + ' ');
+        if (!states)
+            states = '00';        
+        let m = '';
+        if (width > 2) m += Array(width - 1).join(states + ' '); 
         m += states;
         m += '\n';
         for (var y = 1; y < height - 1; y++) {

@@ -13,6 +13,7 @@
       - Fix monster/object editor tooltips and display previews of data
     - Fixed a bug in diff view not correctly setting the height
     - Fixed datagrid tooltips not updating when value changed and fall back to value formatting when customized
+    - Fixed virtual area creation wizard
 - **Changed:**
   - Update electron 31.1.0 to 31.3.1
   - Update better-sqlite3 11.1.1 to 11.1.2
