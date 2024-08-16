@@ -12,7 +12,7 @@
 #include <std.h>
 #include "../area.h"
 
-inherit BASEROOM;
+inherit STD_ROOM;
  
 /**
  * Create
@@ -22,9 +22,9 @@ inherit BASEROOM;
 varargs void create(int x, int y, int z, int terrainIdx, int itemIdx, int exits)
 {
    //save ids in case needed, this allows you to create dynamic coded based on the ids
-   set_property("terrain id", t); 
-   set_property("item id", i);
-   set_property("exit id", e);    
+   set_property("terrain id", terrainIdx); 
+   set_property("item id", itemIdx);
+   set_property("exit id", exits);    
    ::create();
 }
          
