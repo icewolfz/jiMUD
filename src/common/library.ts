@@ -1731,6 +1731,7 @@ export function pinkfishToHTML(text) {
     let t = 0;
     let tl = text.length;
     let bold = false;
+    let boldNest = false;
     let classes = [];
     for (; t < tl; t++) {
         switch (text[t]) {
@@ -1785,17 +1786,19 @@ export function pinkfishToHTML(text) {
                     if (bold && !_colorCodes['BOLD%^%^' + text[t]]) {
                         stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^WHITE'] + '">');
                         codes.push('</span>');
+                        boldNest = true;
                     }
                     else if (bold) {
                         stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^' + text[t]] + '">');
                         codes.push('</span>');
+                        boldNest = true;
                         continue;
                     }
                     stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes[text[t]] + '">');
                     codes.push('</span>');
                     continue;
                 }
-                else if (bold) {
+                else if (bold && !boldNest) {
                     stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^WHITE'] + '">');
                     codes.push('</span>');
                 }
@@ -1806,6 +1809,7 @@ export function pinkfishToHTML(text) {
                 }
                 stack.push(text[t]);
                 bold = false;
+                boldNest = false;
                 break;
         }
     }
@@ -1843,6 +1847,7 @@ function loadColors() {
     _colorCodes['BOLD%^%^MAGENTA'] = 'FF00FF';
     _colorCodes['BOLD%^%^CYAN'] = '00FFFF';
     _colorCodes['BOLD%^%^WHITE'] = 'FFFFFF';
+    _colorCodes['BOLD%^%^BLACK'] = '808080';
 
     for (r = 0; r < 6; r++) {
         for (g = 0; g < 6; g++) {
