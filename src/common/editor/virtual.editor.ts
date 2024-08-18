@@ -68,6 +68,7 @@ export enum RoomExit {
 }
 
 export enum RoomStates {
+    ExploredMarker = 1024,
     NoAttack = 512,
     NoMagic = 256,
     Council = 128,
@@ -8092,6 +8093,59 @@ export class VirtualEditor extends EditorBase {
                                 }
                                 idx = idx2;
                                 break;
+                            case 'set_enable_explored_marker':
+                                while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
+                                    idx++;
+                                if (code.charAt(idx) === '(')
+                                    idx++;
+                                for (idx2 = idx; idx2 < len; idx2++) {
+                                    c = code.charAt(idx2);
+                                    if (c === '"') {
+                                        if (idx2 > 0 && code.charAt(idx2 - 1) === '\\')
+                                            continue;
+                                        quote = !quote;
+                                    }
+                                    if (!quote && c === ';')
+                                        break;
+                                }
+                                if (this.parseString(code.substring(idx, idx2 - 1)).trim() !== '0')
+                                    r.state |= RoomStates.Council;
+                                else
+                                    r.state &= ~RoomStates.Council;
+
+                                idx = idx2;
+                                break;
+                            case 'set_temperature':
+                                while (idx < len && (code.charAt(idx) === ' ' || code.charAt(idx) === '\t'))
+                                    idx++;
+                                if (code.charAt(idx) === '(')
+                                    idx++;
+                                for (idx2 = idx; idx2 < len; idx2++) {
+                                    c = code.charAt(idx2);
+                                    if (c === '"') {
+                                        if (idx2 > 0 && code.charAt(idx2 - 1) === '\\')
+                                            continue;
+                                        quote = !quote;
+                                    }
+                                    if (!quote && c === ';')
+                                        break;
+                                }
+                                if (this.parseString(code.substring(idx, idx2 - 1)).trim() === '-200')
+                                    r.state |= RoomStates.Cold;
+                                else if (this.parseString(code.substring(idx, idx2 - 1)).trim() === '200')
+                                    r.state &= ~RoomStates.Hot;
+                                else {
+                                    r.state &= ~RoomStates.Hot;
+                                    r.state &= ~RoomStates.Cold;
+                                }
+                                idx = idx2;
+                                break;
+                            case 'set_up':
+                                r.state |= RoomStates.SinkingUp;
+                                break;
+                            case 'set_down':
+                                r.state |= RoomStates.SinkingDown;
+                                break;
                         }
                         ident = '';
                     }
@@ -9444,6 +9498,8 @@ export class VirtualEditor extends EditorBase {
             d += `   set_up(VIR+"${r.x},${r.y},${r.z + 1}");\n`;
         if ((r.state & RoomStates.SinkingDown) === RoomStates.SinkingDown && r.z > 0 && this.$mapSize.depth > 1)
             d += `   set_down(VIR+"${r.x},${r.y},${r.z - 1}");\n`;
+        if ((r.state & RoomStates.ExploredMarker) === RoomStates.ExploredMarker)
+            d += '   set_enable_explored_marker(1);\n';
         d += '}';
         return d;
     }
