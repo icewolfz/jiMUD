@@ -6,6 +6,7 @@
   - Code editor: 
     - Add Insert Comment Header to formatting menu to allow adding a comment header at the start of file with current date and logged in username
     - Area Designer: Add monster preview pane to monster editor
+  - Backup: Add option to back up character database and related setting files **Warning** this does not backup mapping data due to size of maps
 - **Fixed:**
   - Code editor:
     - Area Designer:

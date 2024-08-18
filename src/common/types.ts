@@ -46,6 +46,7 @@ export enum BackupSelection {
   Profiles = 4,
   Settings = 8,
   Windows = 16,
+  Characters = 32,
   All = 30
 }
 

@@ -1,7 +1,6 @@
 //spell-checker:ignore pathfinding, vscroll, hscroll, AUTOINCREMENT, Arial, isdoor, isclosed, prevroom, islocked, cmds
 //spell-checker:ignore watersource, dirtroad, sanddesert, icesheet, highmountain, pavedroad, rockdesert
 import { EventEmitter } from 'events';
-import { parseTemplate } from './library';
 const fs = require('fs');
 const path = require('path');
 const sqlite3 = require('better-sqlite3');

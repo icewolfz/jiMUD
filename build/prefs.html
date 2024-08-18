@@ -494,6 +494,7 @@
                     case 'backup-save-profiles':
                     case 'backup-save-map':
                     case 'backup-save-windows':
+                    case 'backup-save-characters':
                         _settings.backupSave = 0;
                         if ($('#backup-save-map').prop('checked'))
                             _settings.backupSave |= 2;
@@ -503,11 +504,14 @@
                             _settings.backupSave |= 8;
                         if ($('#backup-save-windows').prop('checked'))
                             _settings.backupSave |= 16;
+                        if ($('#backup-save-characters').prop('checked'))
+                            _settings.backupSave |= 32;
                         break;
                     case 'backup-load-settings':
                     case 'backup-load-profiles':
                     case 'backup-load-map':
                     case 'backup-load-windows':
+                    case 'backup-load-characters':
                         _settings.backupLoad = 0;
                         if ($('#backup-load-map').prop('checked'))
                             _settings.backupLoad |= 2;
@@ -517,6 +521,8 @@
                             _settings.backupLoad |= 8;
                         if ($('#backup-load-windows').prop('checked'))
                             _settings.backupLoad |= 16;
+                        if ($('#backup-load-characters').prop('checked'))
+                            _settings.backupLoad |= 32;
                         break;
                     case 'echo-8':
                     case 'echo-2':
@@ -845,11 +851,11 @@
                 const il = items.length;
                 const val = document.getElementById('filter').value;
                 const regSearch = new RegExp(`.*${val}.*`, 'i');
-                for(let i = 0; i < il; i++) {
-                    if(!val || val.length === 0 || items[i].children[0].textContent.match(regSearch))
+                for (let i = 0; i < il; i++) {
+                    if (!val || val.length === 0 || items[i].children[0].textContent.match(regSearch))
                         items[i].style.display = '';
                     else
-                        items[i].style.display = 'none';                    
+                        items[i].style.display = 'none';
                 }
             });
             loading--;
@@ -994,11 +1000,13 @@
             $('#backup-load-profiles').prop('checked', (getSettingValue('backupLoad') & 4) === 4);
             $('#backup-load-settings').prop('checked', (getSettingValue('backupLoad') & 8) === 8);
             $('#backup-load-windows').prop('checked', (getSettingValue('backupLoad') & 16) === 16);
+            $('#backup-load-characters').prop('checked', (getSettingValue('backupLoad') & 32) === 32);
 
             $('#backup-save-map').prop('checked', (getSettingValue('backupSave') & 2) === 2);
             $('#backup-save-profiles').prop('checked', (getSettingValue('backupSave') & 4) === 4);
             $('#backup-save-settings').prop('checked', (getSettingValue('backupSave') & 8) === 8);
             $('#backup-save-windows').prop('checked', (getSettingValue('backupSave') & 16) === 16);
+            $('#backup-save-characters').prop('checked', (getSettingValue('backupSave') & 32) === 32);
 
             $('#echo-8').prop('checked', (getSettingValue('echo') & 8) === 8);
             $('#echo-2').prop('checked', (getSettingValue('echo') & 2) === 2);
@@ -1588,7 +1596,7 @@
             if (isFileSync(path.join(data, 'editor.json')))
                 archive.addFile(path.join(data, 'editor.json'), 'editor.json');
             if (isFileSync(path.join(data, 'editor.sess')))
-                archive.addFile(path.join(data, 'editor.sess'), 'editor.sess');            
+                archive.addFile(path.join(data, 'editor.sess'), 'editor.sess');
             var files;
             if (isDirSync(path.join(data, 'profiles'))) {
                 files = walkSync(path.join(data, 'profiles'));
@@ -2651,7 +2659,7 @@
                             Minimum number of lines
                             <input type="number" id="commandMinLines" class="input-sm form-control" min="1" max="30" />
                         </label>
-                    </div>                    
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="tab-completion">
                     <div class="col-sm-6 form-group">
@@ -3461,40 +3469,47 @@
                     </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="backup">
-                    <div class="col-sm-12 form-group" style="padding: 0px;">
-                        <div class="col-sm-6 form-group">
-                            <label class="control-label">Backup save</label>
-                            <div class="btn-group" data-toggle="buttons">
+                    <div class="col-sm-12 form-group">
+                        <label class="control-label">Backup save</label><br/>
+                        <div class="btn-group" data-toggle="buttons">
+                            <label class="btn btn-default btn-xs">
+                                <input type="checkbox" id="backup-save-settings"> Settings
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="checkbox" id="backup-save-profiles"> Profiles
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="checkbox" id="backup-save-map"> Map
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="checkbox" id="backup-save-windows"> Windows
+                            </label>
                                 <label class="btn btn-default btn-xs">
-                                    <input type="checkbox" id="backup-save-settings"> Settings
-                                </label>
-                                <label class="btn btn-default btn-xs">
-                                    <input type="checkbox" id="backup-save-profiles"> Profiles
-                                </label>
-                                <label class="btn btn-default btn-xs">
-                                    <input type="checkbox" id="backup-save-map"> Map
-                                </label>
-                                <label class="btn btn-default btn-xs">
-                                    <input type="checkbox" id="backup-save-windows"> Windows
-                                </label>
-                            </div>
+                                <input type="checkbox" id="backup-save-characters"> Characters
+                            </label>
                         </div>
-                        <div class="col-sm-6 form-group">
-                            <label class="control-label">Backup load</label>
-                            <div class="btn-group" data-toggle="buttons">
+                    </div>
+                    <div class="col-sm-12 form-group">
+                        <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Character passwords are not backed up and will have to be set in the manager</span>
+                    </div>                    
+                    <div class="col-sm-12 form-group">
+                        <label class="control-label">Backup load</label><br/>
+                        <div class="btn-group" data-toggle="buttons">
+                            <label class="btn btn-default btn-xs">
+                                <input type="checkbox" id="backup-load-settings"> Settings
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="checkbox" id="backup-load-profiles"> Profiles
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="checkbox" id="backup-load-map"> Map
+                            </label>
+                            <label class="btn btn-default btn-xs">
+                                <input type="checkbox" id="backup-load-windows"> Windows
+                            </label>
                                 <label class="btn btn-default btn-xs">
-                                    <input type="checkbox" id="backup-load-settings"> Settings
-                                </label>
-                                <label class="btn btn-default btn-xs">
-                                    <input type="checkbox" id="backup-load-profiles"> Profiles
-                                </label>
-                                <label class="btn btn-default btn-xs">
-                                    <input type="checkbox" id="backup-load-map"> Map
-                                </label>
-                                <label class="btn btn-default btn-xs">
-                                    <input type="checkbox" id="backup-load-windows"> Windows
-                                </label>
-                            </div>
+                                <input type="checkbox" id="backup-load-characters"> Characters
+                            </label>
                         </div>
                     </div>
                     <div class="col-sm-6 form-group">
@@ -3502,6 +3517,11 @@
                             <input type="checkbox" id="backupAllProfiles" /> Backup all profiles
                         </label>
                     </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            <input type="checkbox" id="backupReplaceCharacters" /> Replace characters on load
+                        </label>
+                    </div>                    
                 </div>
                 <div role="tabpanel" class="pref-pane" id="connection">
                     <div class="col-sm-6 form-group">

@@ -1,7 +1,7 @@
 //spell-checker:words vscroll, hscroll, Commandon, cmdfont, isdoor, isclosed, triggernewline, triggerprompt
 import { EventEmitter } from 'events';
 import { Client } from './client';
-import { parseTemplate, existsSync, isArrayEqual } from './library';
+import { parseTemplate, templatePath, existsSync, isArrayEqual } from './library';
 import { BackupSelection, Log } from './types';
 import { ProfileCollection, Profile, Alias, Macro, Button, Trigger, Context } from './profile';
 const fs = require('fs');
@@ -9,6 +9,7 @@ const path = require('path');
 const sqlite3 = require('better-sqlite3');
 const LZString = require('lz-string');
 import { Settings, SettingProperties } from './settings';
+const { ipcRenderer } = require('electron');
 
 /**
  * Control loading and saving system for ShadowMUD remote storage protocols
@@ -148,17 +149,26 @@ export class Backup extends EventEmitter {
                 showErrorsExtended: this.client.options.showErrorsExtended
             },
             map: {},
-            inherited: {}
+            inherited: {},
+            characters: []
         };
 
-        if (this.client.options.backupAllProfiles) {
+        if (this.client.getOption('backupAllProfiles')) {
             const profiles = new ProfileCollection();
             profiles.loadPath(parseTemplate('{profiles}'));
             data.profiles = profiles.clone(2);
         }
         else
             data.profiles = this.client.profiles.clone(2);
-
+        if ((this.saveSelection & BackupSelection.Characters) === BackupSelection.Characters) {
+            data.characters = ipcRenderer.sendSync('get-characters', { sort: 'Title' });
+            let cl = data.characters.length;
+            for (let c = 0; c < cl; c++) {
+                delete data.characters[c].Password;
+                let s = parseTemplate(data.characters[c].Preferences);
+                if (existsSync(s)) data.characters[c].data = fs.readFileSync(s, 'utf-8');
+            };
+        }
         let prop;
         //make sure a value is set in case it inherits from global or default
         for (prop in data.settings) {
@@ -179,7 +189,7 @@ export class Backup extends EventEmitter {
         }
         let props = ['chat', 'mapper', 'profiles', 'codeEditor', 'buttons', 'find', 'display', 'extensions'];
         for (p = 0, pl = props.length; p < pl; p++) {
-            this.getProperty(this.client.options, data.settings,  props[p], '', data.inherited);
+            this.getProperty(this.client.options, data.settings, props[p], '', data.inherited);
         }
         const rooms = {};
         if (rows) {
@@ -589,6 +599,29 @@ export class Backup extends EventEmitter {
             }
             else if (data.settings && data.settings['windows'] && (this.loadSelection & BackupSelection.Windows) === BackupSelection.Windows)
                 this.client.options['windows'] = data.settings['windows'];
+
+            if (data.characters && (this.loadSelection & BackupSelection.Characters) === BackupSelection.Characters) {
+                let cl = data.characters.length;
+                for (let c = 0; c < cl; c++) {
+                    let s = parseTemplate(data.characters[c].Preferences);
+                    let sData;
+                    let nextID;
+                    if (Object.prototype.hasOwnProperty.call(data.characters[c], 'data')) {
+                        sData = data.characters[c].data;
+                        delete data.characters[c].data;
+                    }
+                    if (!this.client.getOption('backupReplaceCharacters')) {
+                        delete data.characters[c].ID;
+                        nextID = ipcRenderer.sendSync('get-character-next-id');
+                        s = path.dirname(s) + nextID + '.json';
+                        data.characters[c].Preferences = templatePath(s);
+                    }
+                    if (sData && sData.length)
+                        fs.writeFileSync(s, sData);
+                    ipcRenderer.sendSync('add-characters', data.characters[c]);
+                    ipcRenderer.send('reload-options', s);
+                };
+            }
         }
         this.emit('finish-load');
         this.close();
