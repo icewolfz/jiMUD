@@ -11113,12 +11113,18 @@ export class AreaDesigner extends EditorBase {
             obj = 'him';
         }
         let description = `You look over the ${monster.gender} ${monster.race || 'UNKNOWN'}.\nYou are about the same size as ${obj}.\n${monster.long}\n${capitalize(sub)} is in top shape.\n${capitalize(sub)} is missing no limbs.\n`;
-        if (monster.objects.length > 0) {
+        const objs = monster.objects.filter(v => v.maxAmount > 0 || v.minAmount > 0);
+        if (objs.length > 0) {
             description += `${capitalize(sub)} is carrying:\n`;
-            description += monster.objects.map(v => {
+            description += objs.map(v => {
                 let short = this.$area.objects[v.id].short;
                 if ((v.maxAmount || v.minAmount) > 1)
                     short += `%^RESET%^ (%^RGB150%^${v.maxAmount || v.minAmount}%^RESET%^)`;
+                if(v.action === 'wield')
+                    short += "%^RESET%^ (%^RGB540%^wielded in RANDOM LIMB%^RESET%^)";
+                if(v.action === 'wear')
+                    short += "%^RESET%^ (%^RGB210%^worn%^RESET%^)";
+
                 if (colors)
                     return pinkfishToHTML(short);
                 return stripPinkfish(short);
