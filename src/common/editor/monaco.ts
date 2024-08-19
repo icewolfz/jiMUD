@@ -1197,13 +1197,13 @@ export class MonacoCodeEditor extends EditorBase {
                             const moment = require('moment');
                             this.$editor.pushUndoStop();
                             this.$editor.executeCommands('jiMUD.action.insert', [new ReplaceCommand(new monaco.Range(0, 0, 0, 0), `/**
- * Name
- * 
- * Description
- * 
- * @author ${(window && window.opener) ? capitalize(window.opener.getCharacterName() || 'Unknown') : 'Unknown'}
- * @created ${moment().format('YYYY-MM-DD')}
- */
+  * Name
+  * 
+  * Description
+  * 
+  * @author ${(window && window.opener) ? capitalize(window.opener.getCharacterName() || 'Unknown') : 'Unknown'}
+  * @created ${moment().format('YYYY-MM-DD')}
+  */
 `)]);
                             this.$editor.pushUndoStop();
                         }
@@ -1398,13 +1398,13 @@ export class MonacoCodeEditor extends EditorBase {
                                 const moment = require('moment');
                                 this.$editor.pushUndoStop();
                                 this.$editor.executeCommands('jiMUD.action.insert', [new ReplaceCommand(new monaco.Range(0, 0, 0, 0), `/**
-* Name
-* 
-* Description
-* 
-* @author ${(window && window.opener) ? capitalize(window.opener.getCharacterName() || 'Unknown') : 'Unknown'}
-* @created ${moment().format('YYYY-MM-DD')}
-*/
+ * Name
+ * 
+ * Description
+ * 
+ * @author ${(window && window.opener) ? capitalize(window.opener.getCharacterName() || 'Unknown') : 'Unknown'}
+ * @created ${moment().format('YYYY-MM-DD')}
+ */
 `)]);
                                 this.$editor.pushUndoStop();
                             }
