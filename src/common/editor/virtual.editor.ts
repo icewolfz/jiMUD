@@ -643,6 +643,7 @@ export class VirtualEditor extends EditorBase {
         //#region Create raw editors
         this.$label = document.createElement('div');
         this.$label.classList.add('virtual-editor-label');
+        this.$label.style.display = 'none';
         frag.appendChild(this.$label);
         this.$mapRaw = this.createRawControl(View.mapRaw);
         frag.appendChild(this.$mapRaw);

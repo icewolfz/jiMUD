@@ -1231,6 +1231,7 @@ export class AreaDesigner extends EditorBase {
         const frag = document.createDocumentFragment();
         this.$label = document.createElement('div');
         this.$label.classList.add('virtual-editor-label');
+        this.$label.style.display = 'none';
         //let el: HTMLElement;
         frag.appendChild(this.$label);
         this.parent.appendChild(frag);
