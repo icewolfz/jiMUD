@@ -2430,7 +2430,7 @@
                 {
                     label: 'R&eplace With Recent Session',
                     submenu: [],
-                },                
+                },
                 { type: 'separator' },
                 {
                     label: 'Reload &Previous Session',
@@ -4919,7 +4919,7 @@
         var menu = [];
         var rmenu = [];
         var r = 0;
-        if(options.recentSessions)
+        if (options.recentSessions)
             r = options.recentSessions.length;
         while (r--) {
             menu.unshift(
@@ -4959,7 +4959,7 @@
                             openSession(options.recentSessions[item.idx], true);
                     }
                 }
-            );            
+            );
         }
         if (menu.length > 0) {
             menu.push({ type: 'separator' });
@@ -4977,7 +4977,7 @@
                     options.recentSessions = [];
                     doUpdate(272);
                 }
-            });            
+            });
         }
         menubar.updateItem('sessions|open recent session', { submenu: menu });
         menubar.updateItem('sessions|replace with recent session', { submenu: rmenu });
@@ -5707,23 +5707,31 @@
             states = ':0:0:' + states;
         else
             states = '';
-        var te = exits & ~128 & ~64 & ~1;
-        var be = exits & ~16 & ~8 & ~4;
-        var m = (te & ~4 & ~2) + states + ' ';
-        if (width > 2) m += Array(width - 1).join(te + states + ' ');
-        m += (te & ~32 & ~16) + states;
-        m += '\n';
-        for (var y = 1; y < height - 1; y++) {
-            m += (exits & ~4 & ~2 & ~1) + states + ' ';
-            if (width > 2) m += Array(width - 1).join(exits + states + ' ');
-            m += (exits & ~64 & ~32 & ~16) + states;
+        for (var z = 0; z < depth; z++) {
+            var lExits = exits;
+            if(z === 0)
+                lExits = lExits & ~256;
+            else if(z === depth - 1)
+                lExits = lExits & ~512;
+            var te = lExits & ~128 & ~64 & ~1;
+            var be = lExits & ~16 & ~8 & ~4;
+            var m = (te & ~4 & ~2) + states + ' ';
+            if (width > 2) m += Array(width - 1).join(te + states + ' ');
+            m += (te & ~32 & ~16) + states;
             m += '\n';
+            for (var y = 1; y < height - 1; y++) {
+                m += (lExits & ~4 & ~2 & ~1) + states + ' ';
+                if (width > 2) m += Array(width - 1).join(lExits + states + ' ');
+                m += (lExits & ~64 & ~32 & ~16) + states;
+                m += '\n';
+            }
+            m += (be & ~2 & ~1) + states + ' ';
+            if (width > 2) m += Array(width - 1).join(be + states + ' ');
+            m += (be & ~64 & ~32 & ~16) + states;
+            m += '\n';
+
+            f += m + '\n';
         }
-        m += (be & ~2 & ~1) + states + ' ';
-        if (width > 2) m += Array(width - 1).join(be + states + ' ');
-        m += (be & ~64 & ~32 & ~16) + states;
-        m += '\n';
-        for (var z = 0; z < depth; z++) f += m + '\n';
         return f;
     }
 
@@ -5732,9 +5740,9 @@
         if (depth > 1) f += ' ' + depth;
         f += '\n';
         if (!states)
-            states = '00';        
+            states = '00';
         var m = states + ' ';
-        if (width > 2) m += Array(width - 1).join(states + ' '); 
+        if (width > 2) m += Array(width - 1).join(states + ' ');
         m += states;
         m += '\n';
         for (var y = 1; y < height - 1; y++) {
@@ -10153,7 +10161,7 @@
             if ((_updating & 256) === 256) {
                 buildRecentSessions();
                 _updating &= ~256;
-            }            
+            }
             _rTimeout = 0;
             doUpdate(_updating);
         });
