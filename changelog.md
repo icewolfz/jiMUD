@@ -20,6 +20,7 @@
     - Fixed virtual area creation wizard
     - Fixed bold black and nested bold colors when generating color previews
     - Fixed virtual area 3d map adding invalid exits when created from wizard
+    - Fixed resize dialog when changing level anchor
 - **Changed:**
   - Update electron 31.1.0 to 31.4.0
   - Update better-sqlite3 11.1.1 to 11.1.2
