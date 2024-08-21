@@ -442,6 +442,9 @@ export const language = <ILanguage>{
         'trim',
         'ltrim',
         'rtrim',
+        'trimws',
+        'ltrimws',
+        'rtrimws',        
         'reverse_string',
         'starts_with',
         'ends_with',
@@ -605,7 +608,8 @@ export const language = <ILanguage>{
         'save_auto_load',
         'find_room',
         'compress_save_auto_load',
-        'uncompress_create_auto_load'
+        'uncompress_create_auto_load',
+        'pad_array'
     ],
 
     abbr: [
