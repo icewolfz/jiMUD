@@ -9479,7 +9479,7 @@ export class VirtualEditor extends EditorBase {
                 if (!this.$exits[ri].enabled || +this.$exits[ri].x !== r.x || +this.$exits[ri].y !== r.y || +this.$exits[ri].z !== r.z)
                     continue;
                 if (this.$exits[ri].hidden)
-                    eh.push('"' + this.$exits[ri].exit.trim() + '"');
+                    eh.push(this.$exits[ri].exit.trim());
                 d += '       "' + this.$exits[ri].exit.trim() + '":"' + this.$exits[ri].dest.trim() + '",\n';
             }
             d = d.substr(0, d.length - 2);
