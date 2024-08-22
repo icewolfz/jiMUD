@@ -244,7 +244,7 @@ export class VirtualEditor extends EditorBase {
     private $enterMoveNext;
     private $enterMoveFirst;
     private $enterMoveNew;
-    private $opened = {};
+    private $opened;
 
     private $startValues: any = {};
 
@@ -525,8 +525,9 @@ export class VirtualEditor extends EditorBase {
                 enterMoveFirst: true,
                 enterMoveNew: true
             };
-        this.$files = {};
         if (options && options.new) {
+            this.$files = {};
+            this.$opened = {};
             this.$startValues.map = options.value || '';
             this.$mapRaw.value = this.$startValues.map;
             if (this.options.hasOwnProperty('terrainValue')) {
@@ -562,6 +563,13 @@ export class VirtualEditor extends EditorBase {
             this.clearRawChanged();
             this.changed = false;
         }
+        else {
+            if (!this.$files)
+                this.$files = {};
+            if (!this.$opened)
+                this.$opened = {};
+        }
+
     }
 
     set changed(value: boolean) {
@@ -8448,7 +8456,8 @@ export class VirtualEditor extends EditorBase {
         else {
             if (!old || room.terrain !== old.terrain || room.item !== old.item)
                 c++;
-            nl = ':' + leadingZeros(room.item, 3, '0') + nl;
+            if (s || nl.length > 0 || room.item !== room.terrain)
+                nl = ':' + leadingZeros(room.item, 3, '0') + nl;
             nl = ':' + leadingZeros(room.terrain, 3, '0') + nl;
         }
 
@@ -8537,8 +8546,8 @@ export class VirtualEditor extends EditorBase {
                 mLine = mLines[yLine].split(' ');
                 while (mLine.length < xl)
                     mLine.push('');
-                line = '';
                 for (let x = 0; x < xl; x++) {
+                    line = '';
                     const room = this.$rooms[z][y][x];
                     s = false;
                     if (sLine)
@@ -8558,7 +8567,8 @@ export class VirtualEditor extends EditorBase {
                             tLine[x] += ':' + leadingZeros(room.item, 2, '0');
                     }
                     else {
-                        line = ':' + leadingZeros(room.item, 3, '0') + line;
+                        if (s || line.length > 0 || room.item !== room.terrain)
+                            line = ':' + leadingZeros(room.item, 3, '0') + line;
                         line = ':' + leadingZeros(room.terrain, 3, '0') + line;
                     }
                     mLine[x] = leadingZeros(room.exits, 3, '0');
@@ -8578,10 +8588,12 @@ export class VirtualEditor extends EditorBase {
         }
 
         if (sLines) {
+            sLines[0] = mLines[0];
             this.$stateRaw.value = sLines.join('\n');
             this.$stateRaw.dataset.changed = 'true';
         }
         if (tLines) {
+            tLines[0] = mLines[0];
             this.$terrainRaw.value = tLines.join('\n');
             this.$terrainRaw.dataset.changed = 'true';
         }

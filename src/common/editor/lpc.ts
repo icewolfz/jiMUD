@@ -607,6 +607,7 @@ export const language = <ILanguage>{
         'create_auto_load',
         'save_auto_load',
         'find_room',
+        'find_living_container',
         'compress_save_auto_load',
         'uncompress_create_auto_load',
         'pad_array'
