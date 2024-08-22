@@ -26,6 +26,7 @@
       - Fixed extra map codes being added to rooms when building raw map files
       - Fixed terrain/state files not having correct sizes when maps resized
       - Fixed issue when opening map it would lose sub file data
+      - Fixed drag and drop of text when dealing with raw text editors
 - **Changed:**
   - Update electron 31.1.0 to 31.4.0
   - Update better-sqlite3 11.1.1 to 11.2.1

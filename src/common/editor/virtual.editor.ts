@@ -4150,6 +4150,11 @@ export class VirtualEditor extends EditorBase {
                 this.$rawUndo.value = el.value;
         });
 
+        el.addEventListener('drop', e=> {
+            if (!this.$rawUndo.value)
+                this.$rawUndo.value = el.value;
+        });
+
         el.addEventListener('contextmenu', e => {
             e.preventDefault();
             let inputMenu;
