@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.4.1
+## 1.5.0
 
 - **New:**
   - Code editor: 
@@ -28,7 +28,7 @@
       - Fixed issue when opening map it would lose sub file data
       - Fixed drag and drop of text when dealing with raw text editors
 - **Changed:**
-  - Update electron 31.1.0 to 31.4.0
+  - Update electron 31.1.0 to 32.0.1
   - Update better-sqlite3 11.1.1 to 11.2.1
   - Update mathjs 13.0.1 to 13.0.3
   - Update electron-updater 6.2.1 to 6.3.4
