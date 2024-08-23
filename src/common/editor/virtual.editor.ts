@@ -1620,8 +1620,8 @@ export class VirtualEditor extends EditorBase {
         this.$exitGrid.on('add', e => {
             e.data = {
                 enabled: true,
-                x: 0,
-                y: 0,
+                x: -1,
+                y: -1,
                 z: 0,
                 exit: '',
                 dest: '',
@@ -1629,12 +1629,12 @@ export class VirtualEditor extends EditorBase {
             };
             this.startUndoGroup();
             this.pushUndo(undoAction.add, undoType.exits, { oldLength: this.$exits.length, exits: e.data, room: [0, 0, 0] });
-            let idx = this.$exits.length - 1;
+            let idx = this.$exits.length;
             if (idx < 0) idx = 0;
             if (this.$mapSize.depth > 1)
-                this.updateRaw(this.$externalRaw, idx, ['0,0,0::']);
+                this.updateRaw(this.$externalRaw, idx, ['-1,-1,0::']);
             else
-                this.updateRaw(this.$externalRaw, idx, ['0,0::']);
+                this.updateRaw(this.$externalRaw, idx, ['-1,-1::']);
             this.stopUndoGroup();
             resetCursor(this.$externalRaw);
         });
@@ -1670,7 +1670,7 @@ export class VirtualEditor extends EditorBase {
             let r;
             if (oldValue.enabled) {
                 r = this.getRoom(oldValue.x, oldValue.y, oldValue.z);
-                if (!r.ef) {
+                if (r && !r.ef) {
                     this.pushUndo(undoAction.edit, undoType.room, { property: 'ee', values: [r.ee], rooms: [r.x, r.y, r.z] });
                     r.ee &= ~RoomExits[oldValue.exit];
                     this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));
@@ -1682,8 +1682,8 @@ export class VirtualEditor extends EditorBase {
             }
             //Add new exits
             if (newValue.enabled) {
-                r = this.getRoom(oldValue.x, oldValue.y, oldValue.z);
-                if (!r.ef) {
+                r = this.getRoom(newValue.x, newValue.y, newValue.z);
+                if (r && !r.ef) {
                     this.pushUndo(undoAction.edit, undoType.room, { property: 'ee', values: [r.ee], rooms: [r.x, r.y, r.z] });
                     r.ee |= RoomExits[newValue.exit];
                     this.DrawRoom(this.$mapContext, r, true, r.at(mx, my));

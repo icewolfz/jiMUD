@@ -4880,8 +4880,10 @@
 
     function savedOpened() {
         if (!options) loadOptions();
+        let opened = getOpened();
+        if(!opened) return false;
         if (options.reopen)
-            options.opened = getOpened();
+            options.opened = opened;
         else
             options.opened = [];
         options.layout = manager.layout;
@@ -5058,7 +5060,7 @@
         window.onbeforeunload = (e) => {
             if (_close) return;
             setTimeout(() => {
-                if (!closeable()) return;
+                if (!closeable()) return 'no';
                 cleanUp();
                 _close = true;
                 window.close();
