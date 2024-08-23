@@ -6337,11 +6337,11 @@
                             if (data['room-wiz-no-mgive']) sum += '<div><span style="font-weight:bold">No mgive:</span> Yes</div>';
                             if (data['room-wiz-underwater']) sum += '<div><span style="font-weight:bold">Underwater:</span> Yes</div>';
                             if (data['room-wiz-waterdrink']) sum += '<div><span style="font-weight:bold">Water drink:</span> Yes</div>';
-                            if (data['room-wiz-water-quality'] != 5) sum += '<div><span style="font-weight:bold">Water quality:</span> ' + data['room-wiz-water-quality'] + '</div>';
-                            if (data['room-wiz-water-_poisoned'] != 0) sum += '<div><span style="font-weight:bold">Water poisoned:</span> ' + data['room-wiz-water-poisoned'] + '</div>';
-                            if (data['room-wiz-water-source'] != 'the water') sum += '<div><span style="font-weight:bold">Water source:</span> ' + data['room-wiz-water-source'] + '</div>';
-                            if (data['room-wiz-water-drink-message'].length > 0) sum += '<div><span style="font-weight:bold">Water drink message:</span> ' + data['room-wiz-water-drink-message'] + '</div>';
-                            if (data['room-wiz-water-wash-message'].length > 0) sum += '<div><span style="font-weight:bold">Water wash message:</span> ' + data['room-wiz-water-wash-message'] + '</div>';
+                            if (data.hasOwnProperty('room-wiz-water-quality') && data['room-wiz-water-quality'] != 5) sum += '<div><span style="font-weight:bold">Water quality:</span> ' + data['room-wiz-water-quality'] + '</div>';
+                            if (data.hasOwnProperty('room-wiz-water-poisoned') && data['room-wiz-water-poisoned'] != 0) sum += '<div><span style="font-weight:bold">Water poisoned:</span> ' + data['room-wiz-water-poisoned'] + '</div>';
+                            if (data['room-wiz-water-source'] && data['room-wiz-water-source'] != 'the water') sum += '<div><span style="font-weight:bold">Water source:</span> ' + data['room-wiz-water-source'] + '</div>';
+                            if (data['room-wiz-water-drink-message'] && data['room-wiz-water-drink-message'].length > 0) sum += '<div><span style="font-weight:bold">Water drink message:</span> ' + data['room-wiz-water-drink-message'] + '</div>';
+                            if (data['room-wiz-water-wash-message'] && data['room-wiz-water-wash-message'].length > 0) sum += '<div><span style="font-weight:bold">Water wash message:</span> ' + data['room-wiz-water-wash-message'] + '</div>';
                             if (data['room-wiz-water-germs'] && data['room-wiz-water-germs'].length) sum += '<div><span style="font-weight:bold">Water germs:</span> ' + data['room-wiz-water-germs'].length + '</div>';
                             if (data['room-wiz-max-forage'] > 0)
                                 sum += '<div><span style="font-weight:bold">Max forage:</span> ' + data['room-wiz-max-forage'] + '</div>';

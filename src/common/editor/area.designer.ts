@@ -370,6 +370,11 @@ export class Room {
             this.temperature = 0;
             this.notes = '';
             this.background = '';
+            this.waterQuality = 5;
+            this.waterPoisoned = 0;
+            this.waterSource = 'the water';
+            this.waterDrinkMessage= '';
+            this.waterWashMessage = '';            
         }
         this.type = type || 'base';
         this.sounds = [];
@@ -382,6 +387,7 @@ export class Room {
         this.monsters = [];
         this.reads = [];
         this.properties = [];
+        this.waterGerms = [];
     }
 
     public at(x, y, z?) {
@@ -5227,10 +5233,10 @@ export class AreaDesigner extends EditorBase {
                                     'room-wiz-waterdrink': (ed.value.flags & RoomFlags.WaterDrink) === RoomFlags.WaterDrink,
                                     'room-wiz-water-quality': ed.value.waterQuality,
                                     'room-wiz-water-poisoned': ed.value.waterPoisoned,
-                                    'room-wiz-water-source': ed.value.waterSource,
-                                    'room-wiz-water-drink-message': ed.value.waterDrinkMessage,
-                                    'room-wiz-water-wash-message': ed.value.waterWashMessage,
-                                    'room-wiz-water-germs': ed.value.waterGerms,
+                                    'room-wiz-water-source': ed.value.waterSource || '',
+                                    'room-wiz-water-drink-message': ed.value.waterDrinkMessage || '',
+                                    'room-wiz-water-wash-message': ed.value.waterWashMessage || '',
+                                    'room-wiz-water-germs': ed.value.waterGerms || [],
                                     'room-wiz-forage': '' + ed.value.forage,
                                     'room-wiz-max-forage': '' + ed.value.maxForage,
                                     'room-wiz-secret-exit': ed.value.secretExit,
@@ -5299,9 +5305,9 @@ export class AreaDesigner extends EditorBase {
                                         nRoom.flags |= RoomFlags.WaterDrink;
                                     nRoom.waterQuality = +e.data['room-wiz-water-quality'];
                                     nRoom.waterPoisoned = +e.data['room-wiz-water-poisoned'];
-                                    nRoom.waterSource = +e.data['room-wiz-water-source'];
-                                    nRoom.waterDrinkMessage = +e.data['room-wiz-water-drink-message'];
-                                    nRoom.waterWashMessage = +e.data['room-wiz-water-was-message'];
+                                    nRoom.waterSource = e.data['room-wiz-water-source'];
+                                    nRoom.waterDrinkMessage = e.data['room-wiz-water-drink-message'];
+                                    nRoom.waterWashMessage = e.data['room-wiz-water-was-message'];
                                     nRoom.waterGerms = e.data['room-wiz-water-germs'] || [];
                                     nRoom.forage = +e.data['room-wiz-forage'];
                                     nRoom.maxForage = +e.data['room-wiz-max-forage'];
