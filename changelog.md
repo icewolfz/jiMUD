@@ -11,6 +11,7 @@
       - Parse external room code better to capture more data
   - Backup: Add option to back up character database and related setting files **Warning** this does not backup mapping data due to size of maps
 - **Fixed:**
+  - Immortal tools: Fix bug in remote delete of deeply nested folders
   - Code editor:
     - Area Designer:
       - Fix bug min encumbrance not being correctly set for armors when created or edited in wizard
