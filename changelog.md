@@ -10,6 +10,7 @@
       - Added explored marker for room states
       - Parse external room code better to capture more data
   - Backup: Add option to back up character database and related setting files **Warning** this does not backup mapping data due to size of maps
+  - Added client.getVariable(name), client.setVariable(name, value), client.setVariables(Object), client.hasVariable(name), client.removeVariable(name), these should be used to access client.variables in case client.variables is ever changed to support more complex types
 - **Fixed:**
   - Immortal tools: Fix bug in remote delete of deeply nested folders
   - Code editor:

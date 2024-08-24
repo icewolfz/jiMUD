@@ -20,14 +20,22 @@ To use scripting you just have to select script as the type from the type dropdo
 
 ## User variables
 
-You can access them scripting using client.variables['NAME'], client.variables.NAME, this.variables['NAME'], or this.variables.NAME. Some variables may not be accessible to the parser: i and repeatnum are special variables and are used i loops and are not accessible in parse style, named arguments in parse style will be used instead of any user defined of the same name, **variables lost when client is closed**
+You can access them by doing client.getVariable('name') or this.getVariable('name'). Some variables may not be accessible to the parser: i and repeatnum are special variables and are used i loops and are not accessible in parse style, named arguments in parse style will be used instead of any user defined of the same name, **variables lost when client is closed**
+
+`client.getVariable('name')` - return value of variable name
+`client.setVariable('name', value)` - Set variable name to value
+`client.hasVariable('name')` - return if variable exists
+`client.removeVariable('name')` - return a variable
+`client.setVariables(Object)` - set a group of batch of variable at once in format of {'name':value,...}
+
+**Note** older access methods: client.variables['NAME'], client.variables.NAME, this.variables['NAME'], or this.variables.NAME should be avoid in case variable collection changes in the future to add saveable variables
 
 Example:
 ```javascript
-this.variables.test = 5;
-this.variables['test'] = 5;
-client.variables.test = 5;
-client.variables['test'] = 5;
+this.setVariable('test', 5);
+client.setVariable('test', 5);
+this.setVariables({'test':5, 'test2':5});
+let val = this.getVariable('test');//val would be 5
 ```
 
 Set or created variables can be access in the expression system by name eg ${test + 5} would be 10 based from example

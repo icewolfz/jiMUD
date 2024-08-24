@@ -351,6 +351,35 @@ export class Client extends EventEmitter {
         return this._itemCache.defaultContext;
     }
 
+    public getVariable(name: string) {
+        return this.variables[name];
+    }
+
+    public setVariable(name: string, value) {
+        this.variables[name] = value;
+    }
+
+    public setVariables(variables) {
+        const names = Object.keys(variables);
+        if (names.length === 0) return;
+        const nl = names.length;
+        let name;
+        for (let n = 0; n < nl; n++) {            
+            name = names[n];
+            this.variables[name] = variables[name];
+        }
+    }
+
+    public hasVariable(name: string) {
+        return this.variables.hasOwnProperty(name);
+    }
+
+    public removeVariable(name: string) {
+        if (!this.variables.hasOwnProperty(name))
+            return;
+        delete this.variables[name];
+    }
+
     get activeProfile(): Profile {
         const keys = this.profiles.keys;
         //search for first enabled profile
