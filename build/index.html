@@ -3283,6 +3283,10 @@
         });
         //#endregion
 
+        ipcRenderer.on('menu-changed', ()=> {
+            doUpdate(4);
+        })
+
         ipcRenderer.on('cancel-close', () => {
             _closeWindow = false;
         });

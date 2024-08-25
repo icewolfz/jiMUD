@@ -1421,6 +1421,12 @@ ipcMain.on('set-progress', (event, progress, mode) => {
 });
 
 ipcMain.on('reload-profiles', event => {
+    //rebuild menus as profiles may have changed
+    for (window in windows) {
+        if (!Object.prototype.hasOwnProperty.call(windows, window))
+            continue;
+        windows[window].menubar = createMenu(windows[window].window);
+    }
     for (clientId in clients) {
         if (!Object.prototype.hasOwnProperty.call(clients, clientId))
             continue;

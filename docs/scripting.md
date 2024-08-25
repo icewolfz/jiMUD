@@ -28,7 +28,7 @@ You can access them by doing client.getVariable('name') or this.getVariable('nam
 `client.removeVariable('name')` - return a variable
 `client.setVariables(Object)` - set a group of batch of variable at once in format of {'name':value,...}
 
-**Note** older access methods: client.variables['NAME'], client.variables.NAME, this.variables['NAME'], or this.variables.NAME should be avoid in case variable collection changes in the future to add saveable variables
+**Note** older access methods: client.variables['NAME'], client.variables.NAME, this.variables['NAME'], or this.variables.NAME should be avoided in case variable collection changes in the future to add saveable variables
 
 Example:
 ```javascript

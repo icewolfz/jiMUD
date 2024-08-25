@@ -4017,7 +4017,7 @@ function trashProfiles(p) {
         for (let r = 0; r < rl; r++) {
             const file = path.join(p, _remove[r].file.toLowerCase() + '.json');
             if (!isFileSync(file)) continue;
-            ipcRenderer.send('trash-item', file);
+            ipcRenderer.sendSync('trash-item-sync', file);
         }
     }
 }
