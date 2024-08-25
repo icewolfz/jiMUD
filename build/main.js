@@ -1425,7 +1425,7 @@ ipcMain.on('reload-profiles', event => {
     for (window in windows) {
         if (!Object.prototype.hasOwnProperty.call(windows, window))
             continue;
-        windows[window].menubar = createMenu(windows[window].window);
+        windows[window].menubar.updateItem('Profiles', {submenu: buildProfileMenu(windows[window].window)});
     }
     for (clientId in clients) {
         if (!Object.prototype.hasOwnProperty.call(clients, clientId))
@@ -5226,8 +5226,14 @@ function createMenu(window) {
             break;
         }
     }
-    profiles.submenu = [];
-    profiles.submenu.push(
+    profiles.submenu = buildProfileMenu(window);
+    return new Menubar(menuTemp, window);
+    //return Menu.buildFromTemplate(menuTemp);
+}
+
+function buildProfileMenu(window) {
+    let items = [];
+    items.push(
         {
             label: 'Default',
             type: 'checkbox',
@@ -5245,7 +5251,7 @@ function createMenu(window) {
             if (path.extname(files[i]) === '.json') {
                 if (files[i].toLowerCase() === 'default.json')
                     continue;
-                profiles.submenu.push(
+                items.push(
                     {
                         label: path.basename(files[i], '.json'),
                         type: 'checkbox',
@@ -5256,11 +5262,11 @@ function createMenu(window) {
             }
         }
     }
-    profiles.submenu.push(
+    items.push(
         {
             type: 'separator'
         });
-    profiles.submenu.push(
+    items.push(
         {
             label: '&Manage...',
             accelerator: 'CmdOrCtrl+P',
@@ -5268,8 +5274,7 @@ function createMenu(window) {
             click: (item, mWindow) => executeScriptClient('openWindow("profiles")', window || mWindow, true)
 
         });
-    return new Menubar(menuTemp, window);
-    //return Menu.buildFromTemplate(menuTemp);
+    return items;
 }
 
 function profileToggle(menuItem, mWindow) {
