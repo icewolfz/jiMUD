@@ -8,11 +8,11 @@ A mud client using electron for [ShadowMUD](http://www.shadowmud.com) based on i
   - Download the msi or exe of your choice to install, follow any on screen prompts
   - Portable: down load jiMUD._VERSION_windows_portable-ARCH.exe to a folder and run, all files will be contained in that folder
 - Linux
-  - Deb: sudo app install ./jimud_VERSION.amd64.deb
-  - Snap: sudo snap install ./jimud_VERSION.amd64.snap --dangerous
-  - Snap classic: sudo snap install ./jimud_VERSION.amd64_classic.snap --dangerous --classic
-  - Flatpak: sudo flatpak install ./jiMUD-VERSION.-x86_64.flatpak
-  - Rmp: rpm -i ./jimud0VERSION.x86_64.rpm
+  - Deb: sudo app install ./jimud_VERSION_amd64.deb
+  - Snap: sudo snap install ./jimud_VERSION_amd64.snap --dangerous
+  - Snap classic: sudo snap install ./jimud_VERSION_amd64_classic.snap --dangerous --classic
+  - Flatpak: sudo flatpak install ./jiMUD-VERSION-x86_64.flatpak
+  - Rmp: rpm -i ./jimud-VERSION.x86_64.rpm
   - AppImage: set to executable and run
     - Recommended: https://github.com/TheAssassin/AppImageLauncher
 
