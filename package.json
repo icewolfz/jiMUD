@@ -42,7 +42,7 @@
     "package:win": "electron-builder --win nsis portable msi --ia32 --x64",
     "package:winportable": "electron-builder --win portable --ia32 --x64",
     "package:mac": "electron-builder --mac pkg zip",
-    "package:linux": "npm run package:linux64 && npm run package:flatpak",
+    "package:linux": "npm run package:linux64 && npm run package:flatpak && npm run package:snap-classic",
     "package:linux32": "electron-builder --linux deb AppImage rpm tar.xz --ia32",
     "package:linux64": "electron-builder --linux deb AppImage rpm tar.xz snap --x64",
     "package:snap-classic": "electron-builder --linux snap --x64 --c.snap.confinement=classic --c.artifactName=$\\{name\\}_$\\{version\\}_$\\{arch\\}_classic.$\\{ext\\}",
