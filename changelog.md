@@ -38,6 +38,7 @@
   - Update better-sqlite3 11.1.1 to 11.2.1
   - Update mathjs 13.0.1 to 13.0.3
   - Update electron-updater 6.2.1 to 6.3.4
+  - Update monaco-editor 0.50.0 to 0.51.0
 
 ## 1.4.0 2024-06-29
 
