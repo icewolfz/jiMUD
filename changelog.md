@@ -27,6 +27,7 @@
     - Fixed virtual area 3d map adding invalid exits when created from wizard
     - Fixed resize dialog when changing level anchor
     - Fixed when closing cancel from save not preventing close
+    - Fixed room/monster property code generation place temp properties as permanent properties
     - Virtual area editor: 
       - Change code in generation of external room to use BASEROOM define
       - Fixed extra map codes being added to rooms when building raw map files

@@ -12887,7 +12887,7 @@ export class AreaDesigner extends EditorBase {
             props['no objects'] = 1;
 
         tempProps = Object.keys(tempProps).map(k => `"${k}" : ${tempProps[k]}`);
-        props = Object.keys(props).map(k => `"${k}" : ${tempProps[k]}`);
+        props = Object.keys(props).map(k => `"${k}" : ${props[k]}`);
 
         if (tempProps.length === 1)
             data['create body'] += `   set_temp_property(${tempProps[0].replace(' :', ',')});\n`;
@@ -13079,10 +13079,17 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += '\n     ]) );\n';
         }
         if (monster.resistences && monster.resistences.length) {
-            monster.resistences.forEach(r => {
-                data['create body'] += `   add_permanent_resistance(\"${r.type}\", ${r.amount});\n`;
-            });
+            if (monster.resistences.length.length === 1)
+                data['create body'] += `   add_permanent_resistance(\"${monster.resistences[0].type}\", ${monster.resistences[0].amount});\n`;
+            else {
+                data['create body'] += '   add_permanent_resistances( ([\n       ';
+                monster.resistences.forEach(r => {
+                    data['create body'] += `\"${r.type}\" : ${r.amount},\n       `;
+                });                
+                data['create body'] = data['create body'].substring(0, data['create body'].length - 9) + '\n     ]) );\n';
+            }
         }
+
         if (monster.reputationGroup !== base.reputationGroup)
             data['create body'] += `   set_reputation_area("${monster.reputationGroup.trim()}");\n`;
 

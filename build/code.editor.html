@@ -4881,7 +4881,7 @@
     function savedOpened() {
         if (!options) loadOptions();
         let opened = getOpened();
-        if(!opened) return false;
+        if (!opened) return false;
         if (options.reopen)
             options.opened = opened;
         else
@@ -5711,9 +5711,9 @@
             states = '';
         for (var z = 0; z < depth; z++) {
             var lExits = exits;
-            if(z === 0)
+            if (z === 0)
                 lExits = lExits & ~256;
-            else if(z === depth - 1)
+            else if (z === depth - 1)
                 lExits = lExits & ~512;
             var te = lExits & ~128 & ~64 & ~1;
             var be = lExits & ~16 & ~8 & ~4;
@@ -6682,7 +6682,7 @@
                 }
 
                 tempProps = Object.keys(tempProps).map(k => `"${k}" : ${tempProps[k]}`);
-                props = Object.keys(props).map(k => `"${k}" : ${tempProps[k]}`);
+                props = Object.keys(props).map(k => `"${k}" : ${props[k]}`);
 
                 if (tempProps.length === 1)
                     tmpl['create body'] += `   set_temp_property(${tempProps[0].replace(' :', ',')});\n`;
@@ -7406,7 +7406,7 @@
                             },
                             {
                                 label: 'Amount',
-                                field: 'amount',                                
+                                field: 'amount',
                                 width: 200,
                                 editor: {
                                     type: EditorType.number,
@@ -7423,7 +7423,7 @@
                                 amount: 0
                             };
                         }
-                    }),                    
+                    }),
                     new WizardPage({
                         title: 'Ask',
                         body: document.getElementById('mon-wizard-ask'),
@@ -8152,7 +8152,7 @@
                 }
 
                 tempProps = Object.keys(tempProps).map(k => `"${k}" : ${tempProps[k]}`);
-                props = Object.keys(props).map(k => `"${k}" : ${tempProps[k]}`);
+                props = Object.keys(props).map(k => `"${k}" : ${props[k]}`);
 
                 if (tempProps.length === 1)
                     tmpl['create body'] += `   set_temp_property(${tempProps[0].replace(' :', ',')});\n`;
@@ -8387,11 +8387,19 @@
                     tmpl['create body'] += `   set_speech(${data['mon-wiz-speech-chance-combat']}, "${k}", ({\n       ${tmp[k].join(',\n       ')}\n     }), 1);\n`;
                 });
                 //#endregion
+
                 if (data['mon-wiz-resistences'] && data['mon-wiz-resistences'].length) {
-                    data['mon-wiz-resistences'].forEach(r => {
-                        tmpl['create body'] += `   add_permanent_resistance(\"${r.type}\", ${r.amount});\n`;
-                    });
-                }                
+                    if (data['mon-wiz-resistences'].length.length === 1)
+                        tmpl['create body'] += `   add_permanent_resistance(\"${data['mon-wiz-resistences'][0].type}\", ${data['mon-wiz-resistences'][0].amount});\n`;
+                    else {
+                        tmpl['create body'] += '   add_permanent_resistances( ([\n       ';
+                        data['mon-wiz-resistences'].forEach(r => {
+                            tmpl['create body'] += `\"${r.type}\" : ${r.amount},\n       `;
+                        });                        
+                        tmpl['create body'] = tmpl['create body'].substring(0, tmpl['create body'].length - 9) + '\n     ]) );\n';
+                    }
+                }
+
                 data['mon-wiz-reputations'].forEach(r => {
                     if (!r.amount) return;
                     r.amount.trim();
