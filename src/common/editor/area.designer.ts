@@ -193,6 +193,11 @@ interface MonsterTopic {
     message: string;
 }
 
+interface MonsterResistance {
+    type: string;
+    amount: number;
+}
+
 enum MonsterResponseType {
     say = 0, tell = 1, speak = 2, whisper = 3, custom = 4
 }
@@ -373,8 +378,8 @@ export class Room {
             this.waterQuality = 5;
             this.waterPoisoned = 0;
             this.waterSource = 'the water';
-            this.waterDrinkMessage= '';
-            this.waterWashMessage = '';            
+            this.waterDrinkMessage = '';
+            this.waterWashMessage = '';
         }
         this.type = type || 'base';
         this.sounds = [];
@@ -526,6 +531,7 @@ class Monster {
     public askResponseType: MonsterResponseType = MonsterResponseType.say;
     public askTopics: MonsterTopic[] = [];
     public properties: Property[] = [];
+    public resistences: MonsterResistance[] = [];
 
     public reputationGroup: string = '';
     public reputations: MonsterReputation[] = [];
@@ -638,6 +644,7 @@ class Monster {
         this.objects = [];
         this.askTopics = [];
         this.reputations = [];
+        this.resistences = [];
         this.emotes = [];
         this.properties = [];
     }
@@ -4815,7 +4822,8 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-ask-topics': ed.value.askTopics,
                                     'mon-wiz-reputation-group': ed.value.reputationGroup,
                                     'mon-wiz-reputations': ed.value.reputations,
-                                    'mon-wiz-properties': ed.value.properties || []
+                                    'mon-wiz-properties': ed.value.properties || [],
+                                    'mon-wiz-resistences': ed.value.resistences || []
                                 },
                                 finish: e => {
                                     const nMonster = ed.value.clone();
@@ -4876,6 +4884,7 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.reactions = e.data['mon-wiz-reactions'] || [];
                                     nMonster.reputationGroup = e.data['mon-wiz-reputation-group'];
                                     nMonster.reputations = e.data['mon-wiz-reputations'] || [];
+                                    nMonster.resistences = e.data['mon-wiz-resistences'] || [];
                                     if (e.data['mon-wiz-auto-stand'])
                                         nMonster.flags |= MonsterFlags.Auto_Stand;
 
@@ -5553,7 +5562,7 @@ export class AreaDesigner extends EditorBase {
         this.parent.appendChild(this.$propertiesEditor.container);
         //#endregion
         //#region create monster grid
-        this.$splitterMonsterPreview = new Splitter({ parent: this.parent  });
+        this.$splitterMonsterPreview = new Splitter({ parent: this.parent });
         this.$splitterMonsterPreview.hide();
         this.$splitterMonsterPreview.on('splitter-moved', (e) => {
             this.emit('preview-splitter-moved', e);
@@ -5853,7 +5862,8 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-ask-topics': ed.value.askTopics,
                                     'mon-wiz-reputation-group': ed.value.reputationGroup,
                                     'mon-wiz-reputations': ed.value.reputations,
-                                    'mon-wiz-properties': ed.value.properties || []
+                                    'mon-wiz-properties': ed.value.properties || [],
+                                    'mon-wiz-resistences': ed.value.resistences || []
                                 },
                                 finish: e => {
                                     if (ed.editors) {
@@ -5916,6 +5926,10 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.wimpy = +e.data['mon-wiz-wimpy'];
                                     nMonster.actions = e.data['mon-wiz-actions'];
                                     nMonster.reactions = e.data['mon-wiz-reactions'] || [];
+                                    nMonster.reputationGroup = e.data['mon-wiz-reputation-group'];
+                                    nMonster.reputations = e.data['mon-wiz-reputations'] || [];
+                                    nMonster.resistences = e.data['mon-wiz-resistences'] || [];
+
                                     if (e.data['mon-wiz-auto-stand'])
                                         nMonster.flags |= MonsterFlags.Auto_Stand;
 
@@ -8172,7 +8186,7 @@ export class AreaDesigner extends EditorBase {
             if (this.$monsterGrid.selected.length)
                 this.$monsterPreview.container.innerHTML = this.monsterPreview(this.$monsterGrid.selected[0].data.monster, true);
             else
-                this.$monsterPreview.container.innerHTML = '';            
+                this.$monsterPreview.container.innerHTML = '';
         });
         //#endregion
     }
@@ -11127,9 +11141,9 @@ export class AreaDesigner extends EditorBase {
                 let short = this.$area.objects[v.id].short;
                 if ((v.maxAmount || v.minAmount) > 1)
                     short += `%^RESET%^ (%^RGB150%^${v.maxAmount || v.minAmount}%^RESET%^)`;
-                if(v.action === 'wield')
+                if (v.action === 'wield')
                     short += "%^RESET%^ (%^RGB540%^wielded in RANDOM LIMB%^RESET%^)";
-                if(v.action === 'wear')
+                if (v.action === 'wear')
                     short += "%^RESET%^ (%^RGB210%^worn%^RESET%^)";
 
                 if (colors)
@@ -13064,7 +13078,11 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += tmp.join(',\n       ');
             data['create body'] += '\n     ]) );\n';
         }
-
+        if (monster.resistences && monster.resistences.length) {
+            monster.resistences.forEach(r => {
+                data['create body'] += `   add_permanent_resistance(\"${r.type}\", ${r.amount});\n`;
+            });
+        }
         if (monster.reputationGroup !== base.reputationGroup)
             data['create body'] += `   set_reputation_area("${monster.reputationGroup.trim()}");\n`;
 

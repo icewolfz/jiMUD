@@ -7365,6 +7365,65 @@
                             e.page.querySelector('#mon-wiz-body').value = e.wizard.defaults['mon-wiz-body'] || '';
                         }
                     }),
+                    new WizardDataGridPage({
+                        title: 'Resistences',
+                        id: 'mon-wiz-resistences',
+                        clipboard: 'jiMUD/',
+                        columns: [
+                            {
+                                label: 'Type',
+                                field: 'type',
+                                width: 200,
+                                spring: true,
+                                editor: {
+                                    type: EditorType.dropdown,
+                                    options: {
+                                        container: '#monster-wizard',
+                                        data: [
+                                            'cutting',
+                                            'puncture',
+                                            'blunt',
+                                            'slicing',
+                                            'melee',
+                                            'magic',
+                                            'faith',
+                                            'fire',
+                                            'heat',
+                                            'cold',
+                                            'ice',
+                                            'frost',
+                                            'air',
+                                            'acid',
+                                            'lightning',
+                                            'shock',
+                                            'rock',
+                                            'water',
+                                            'poison',
+                                            'scry'
+                                        ]
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Amount',
+                                field: 'amount',                                
+                                width: 200,
+                                editor: {
+                                    type: EditorType.number,
+                                    options: {
+                                        min: -1000,
+                                        max: 1000
+                                    }
+                                }
+                            }
+                        ],
+                        add: (e) => {
+                            e.data = {
+                                type: '',
+                                amount: 0
+                            };
+                        }
+                    }),                    
                     new WizardPage({
                         title: 'Ask',
                         body: document.getElementById('mon-wizard-ask'),
@@ -7708,7 +7767,8 @@
                                 sum += '<div><span style="font-weight:bold">Gender:</span> ' + data['mon-wiz-gender'].value + '</div>';
                             if (data['mon-wiz-body'] && data['mon-wiz-body'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Body type:</span> ' + data['mon-wiz-body'] + '</div>';
-
+                            if (data['mon-wiz-resistences'] && data['mon-wiz-resistences'].length !== 0)
+                                sum += '<div><span style="font-weight:bold">Resistences:</span> ' + data['mon-wiz-resistences'].length + '</div>';
                             if (data['mon-wiz-ask'] || data['mon-wiz-ask-topics'].length !== 0)
                                 sum += '<div><span style="font-weight:bold">Can ask questions:</span> Yes</div>';
                             if (data['mon-wiz-ask-no-topic'] && data['mon-wiz-ask-no-topic'].length > 0)
@@ -8327,6 +8387,11 @@
                     tmpl['create body'] += `   set_speech(${data['mon-wiz-speech-chance-combat']}, "${k}", ({\n       ${tmp[k].join(',\n       ')}\n     }), 1);\n`;
                 });
                 //#endregion
+                if (data['mon-wiz-resistences'] && data['mon-wiz-resistences'].length) {
+                    data['mon-wiz-resistences'].forEach(r => {
+                        tmpl['create body'] += `   add_permanent_resistance(\"${r.type}\", ${r.amount});\n`;
+                    });
+                }                
                 data['mon-wiz-reputations'].forEach(r => {
                     if (!r.amount) return;
                     r.amount.trim();

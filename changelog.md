@@ -5,6 +5,7 @@
 - **New:**
   - Code editor: 
     - Add Insert Comment Header to formatting menu to allow adding a comment header at the start of file with current date and logged in username
+    - Add resistance page to monster wizard/editor
     - Area Designer: Add monster preview pane to monster editor
     - Virtual area editor:
       - Added explored marker for room states
@@ -18,6 +19,7 @@
     - Area Designer:
       - Fix bug min encumbrance not being correctly set for armors when created or edited in wizard
       - Fix monster/object editor tooltips and display previews of data
+      - Fix monster editor not saving reputation data
     - Fixed a bug in diff view not correctly setting the height
     - Fixed datagrid tooltips not updating when value changed and fall back to value formatting when customized
     - Fixed virtual area creation wizard
