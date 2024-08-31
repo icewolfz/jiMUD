@@ -10,6 +10,9 @@
     - Virtual area editor:
       - Added explored marker for room states
       - Parse external room code better to capture more data
+      - Alt + numpad when auto walking enabled will clone the previous room data into the destination room
+    - Area designer:
+      - Alt + numpad when auto walking enabled will clone the previous room data into the destination room
   - Backup: Add option to back up character database and related setting files **Warning** this does not backup mapping data due to size of maps
   - Added client.getVariable(name), client.setVariable(name, value), client.setVariables(Object), client.hasVariable(name), client.removeVariable(name), these should be used to access client.variables in case client.variables is ever changed to support more complex types
 - **Fixed:**
@@ -21,7 +24,8 @@
       - Fix monster/object editor tooltips and display previews of data
       - Fix monster editor not saving reputation data
       - Fix an issue when undoing a single room change
-      - Fixed paste
+      - Fixed paste for linux
+      - Fixed an issue with auto resize when auto walking and not grouping undo as one action
     - Fixed a bug in diff view not correctly setting the height
     - Fixed datagrid tooltips not updating when value changed and fall back to value formatting when customized
     - Fixed virtual area creation wizard
@@ -40,7 +44,7 @@
       - Fixed changing external exits not correctly updating visual map
       - Fixed adding new external exit breaking last added external exit
       - Fixed an issue when undoing a single room change
-      - Fixed paste
+      - Fixed paste for linux
 - **Changed:**
   - Update electron 31.1.0 to 32.0.1
   - Update better-sqlite3 11.1.1 to 11.2.1

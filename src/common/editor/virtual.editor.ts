@@ -182,6 +182,19 @@ export class Room {
         if (this.external) return true;
         return false;
     }
+
+    public merge(room, noExits?: boolean) {
+        this.terrain = room.terrain;
+        this.item = room.item;
+        this.state = room.state;
+        if (!noExits) {
+            this.exits = room.exits;
+            this.ee = room.ee;
+            this.ef = room.ef;
+            this.climbs = room.climbs;
+            this.external = room.external;
+        }
+    }
 }
 
 enum View {
@@ -207,7 +220,7 @@ export interface MousePosition {
 
 const Timer = new DebugTimer();
 
-enum undoType { room, description, item, resize, reduce, raw, rawText, exits, exit, revert, maxTerrain, flip }
+enum undoType { room, description, item, resize, reduce, raw, rawText, exits, exit, revert, maxTerrain, flip, roomMerge }
 enum undoAction { add, delete, edit }
 enum undoReduce { items = 1, descriptions = 2, all = items | descriptions }
 
@@ -2578,9 +2591,16 @@ export class VirtualEditor extends EditorBase {
                             o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
                                 this.selectedFocusedRoom.exits &= ~RoomExit.NorthEast;
-                            else
+                            else {
+                                if (e.altKey)
+                                    this.selectedFocusedRoom.merge(p, true);
                                 this.selectedFocusedRoom.exits |= RoomExit.NorthEast;
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            }
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
                             }
@@ -2610,8 +2630,14 @@ export class VirtualEditor extends EditorBase {
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
                             o = this.selectedFocusedRoom.exits;
+                            if (e.altKey)
+                                this.selectedFocusedRoom.merge(p, true);
                             this.selectedFocusedRoom.exits |= RoomExit.NorthEast;
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
                             }
@@ -2691,9 +2717,16 @@ export class VirtualEditor extends EditorBase {
                             o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
                                 this.selectedFocusedRoom.exits &= ~RoomExit.North;
-                            else
+                            else {
+                                if (e.altKey)
+                                    this.selectedFocusedRoom.merge(p, true);
                                 this.selectedFocusedRoom.exits |= RoomExit.North;
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            }
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
                             }
@@ -2716,8 +2749,14 @@ export class VirtualEditor extends EditorBase {
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
                             o = this.selectedFocusedRoom.exits;
+                            if (e.altKey)
+                                this.selectedFocusedRoom.merge(p, true);
                             this.selectedFocusedRoom.exits |= RoomExit.North;
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
                             }
@@ -2803,9 +2842,16 @@ export class VirtualEditor extends EditorBase {
                             o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
                                 this.selectedFocusedRoom.exits &= ~RoomExit.NorthWest;
-                            else
+                            else {
+                                if (e.altKey)
+                                    this.selectedFocusedRoom.merge(p, true);
                                 this.selectedFocusedRoom.exits |= RoomExit.NorthWest;
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            }
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
                             }
@@ -2834,8 +2880,14 @@ export class VirtualEditor extends EditorBase {
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
                             o = this.selectedFocusedRoom.exits;
+                            if (e.altKey)
+                                this.selectedFocusedRoom.merge(p, true);
                             this.selectedFocusedRoom.exits |= RoomExit.NorthWest;
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
                             }
@@ -2918,9 +2970,16 @@ export class VirtualEditor extends EditorBase {
                             o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
                                 this.selectedFocusedRoom.exits &= ~RoomExit.East;
-                            else
+                            else {
+                                if (e.altKey)
+                                    this.selectedFocusedRoom.merge(p, true);
                                 this.selectedFocusedRoom.exits |= RoomExit.East;
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            }
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
                             }
@@ -2943,8 +3002,14 @@ export class VirtualEditor extends EditorBase {
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
                             o = this.selectedFocusedRoom.exits;
+                            if (e.altKey)
+                                this.selectedFocusedRoom.merge(p, true);
                             this.selectedFocusedRoom.exits |= RoomExit.East;
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
                             }
@@ -3029,9 +3094,16 @@ export class VirtualEditor extends EditorBase {
                             o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
                                 this.selectedFocusedRoom.exits &= ~RoomExit.West;
-                            else
+                            else {
+                                if (e.altKey)
+                                    this.selectedFocusedRoom.merge(p, true);
                                 this.selectedFocusedRoom.exits |= RoomExit.West;
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            }
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
                             }
@@ -3054,8 +3126,14 @@ export class VirtualEditor extends EditorBase {
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
                             o = this.selectedFocusedRoom.exits;
+                            if (e.altKey)
+                                this.selectedFocusedRoom.merge(p, true);
                             this.selectedFocusedRoom.exits |= RoomExit.West;
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
                             }
@@ -3141,9 +3219,16 @@ export class VirtualEditor extends EditorBase {
                             o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
                                 this.selectedFocusedRoom.exits &= ~RoomExit.SouthEast;
-                            else
+                            else {
+                                if (e.altKey)
+                                    this.selectedFocusedRoom.merge(p, true);
                                 this.selectedFocusedRoom.exits |= RoomExit.SouthEast;
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            }
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
                             }
@@ -3172,8 +3257,14 @@ export class VirtualEditor extends EditorBase {
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
                             o = this.selectedFocusedRoom.exits;
+                            if (e.altKey)
+                                this.selectedFocusedRoom.merge(p, true);
                             this.selectedFocusedRoom.exits |= RoomExit.SouthEast;
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
                             }
@@ -3255,9 +3346,16 @@ export class VirtualEditor extends EditorBase {
                             o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
                                 this.selectedFocusedRoom.exits &= ~RoomExit.South;
-                            else
+                            else {
+                                if (e.altKey)
+                                    this.selectedFocusedRoom.merge(p, true);
                                 this.selectedFocusedRoom.exits |= RoomExit.South;
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            }
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
                             }
@@ -3280,8 +3378,14 @@ export class VirtualEditor extends EditorBase {
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
                             o = this.selectedFocusedRoom.exits;
+                            if (e.altKey)
+                                this.selectedFocusedRoom.merge(p, true);
                             this.selectedFocusedRoom.exits |= RoomExit.South;
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
                             }
@@ -3366,9 +3470,16 @@ export class VirtualEditor extends EditorBase {
                             o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
                                 this.selectedFocusedRoom.exits &= ~RoomExit.SouthWest;
-                            else
+                            else {
+                                if (e.altKey)
+                                    this.selectedFocusedRoom.merge(p, true);
                                 this.selectedFocusedRoom.exits |= RoomExit.SouthWest;
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            }
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
                             }
@@ -3397,8 +3508,14 @@ export class VirtualEditor extends EditorBase {
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
                             o = this.selectedFocusedRoom.exits;
+                            if (e.altKey)
+                                this.selectedFocusedRoom.merge(p, true);
                             this.selectedFocusedRoom.exits |= RoomExit.SouthWest;
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
                             }
@@ -3489,9 +3606,16 @@ export class VirtualEditor extends EditorBase {
                             o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
                                 this.selectedFocusedRoom.exits &= ~RoomExit.Down;
-                            else
+                            else {
+                                if (e.altKey)
+                                    this.selectedFocusedRoom.merge(p, true);
                                 this.selectedFocusedRoom.exits |= RoomExit.Down;
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            }
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
                             }
@@ -3513,8 +3637,14 @@ export class VirtualEditor extends EditorBase {
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
                             o = this.selectedFocusedRoom.exits;
+                            if (e.altKey)
+                                this.selectedFocusedRoom.merge(p, true);
                             this.selectedFocusedRoom.exits |= RoomExit.Down;
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
                             }
@@ -3550,9 +3680,16 @@ export class VirtualEditor extends EditorBase {
                             o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
                                 this.selectedFocusedRoom.exits &= ~RoomExit.Up;
-                            else
+                            else {
+                                if (e.altKey)
+                                    this.selectedFocusedRoom.merge(p, true);
                                 this.selectedFocusedRoom.exits |= RoomExit.Up;
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            }
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
                             }
@@ -3574,8 +3711,14 @@ export class VirtualEditor extends EditorBase {
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
                             o = this.selectedFocusedRoom.exits;
+                            if (e.altKey)
+                                this.selectedFocusedRoom.merge(p, true);
                             this.selectedFocusedRoom.exits |= RoomExit.Up;
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
                             }
@@ -4150,7 +4293,7 @@ export class VirtualEditor extends EditorBase {
                 this.$rawUndo.value = el.value;
         });
 
-        el.addEventListener('drop', e=> {
+        el.addEventListener('drop', e => {
             if (!this.$rawUndo.value)
                 this.$rawUndo.value = el.value;
         });
@@ -5357,6 +5500,21 @@ export class VirtualEditor extends EditorBase {
                         undo.data.values = values;
                         this.pushRedo(undo);
                         break;
+                    case undoType.roomMerge:
+                        //copy current room
+                        room = this.getRoom(undo.data.room.x, undo.data.room.y, undo.data.room.z);
+                        this.setRoom(undo.data.room);
+                        this.RoomChanged(room);
+                        if (undo.data.room.exits) this.$roomCount++;
+                        if (room.exits) this.$roomCount--;
+                        this.DrawRoom(this.$mapContext, undo.data.room, true, undo.data.room.at(this.$mouse.rx, this.$mouse.ry));
+
+                        this.doUpdate(UpdateType.status);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
+                        this.setFocusedRoom(undo.focused);
+                        undo.data.room = room;
+                        this.pushRedo(undo);
+                        break;
                     case undoType.exit:
                         //this.pushUndo(undoAction.edit, undoType.exit, { index: dataIndex, value: oldValue });
                         value = this.$exits[undo.data.index];
@@ -5626,6 +5784,21 @@ export class VirtualEditor extends EditorBase {
                         this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         undo.data.values = values;
+                        this.pushUndoObject(undo);
+                        break;
+                    case undoType.roomMerge:
+                        //copy current room
+                        room = this.getRoom(undo.data.room.x, undo.data.room.y, undo.data.room.z);
+                        this.setRoom(undo.data.room);
+                        this.RoomChanged(room);
+                        if (undo.data.room.exits) this.$roomCount++;
+                        if (room.exits) this.$roomCount--;
+                        this.DrawRoom(this.$mapContext, undo.data.room, true, undo.data.room.at(this.$mouse.rx, this.$mouse.ry));
+
+                        this.doUpdate(UpdateType.status);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
+                        this.setFocusedRoom(undo.focused);
+                        undo.data.room = room;
                         this.pushUndoObject(undo);
                         break;
                     case undoType.exit:

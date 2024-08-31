@@ -462,6 +462,15 @@ export class Room {
             this.addExit(exit1, e2);
         }
     }
+
+    public merge(room, noExits?: boolean) {
+        for (const prop in room) {
+            if (noExits && (prop === 'x' || prop === 'y' || prop === 'z'  || prop == 'exits' || prop === 'exitsDetails' || prop === 'climbs' || prop === 'external' || prop === 'hidden' || prop === 'secretExit'))
+                continue;
+            if (!room.hasOwnProperty(prop)) continue;
+            this[prop] = copy(room[prop]);
+        }
+    }
 }
 
 enum View {
@@ -471,7 +480,7 @@ enum View {
     properties
 }
 
-enum undoType { room, monster, object, settings, resize, area, properties, flip }
+enum undoType { room, monster, object, settings, resize, area, properties, flip, roomMerge }
 enum undoAction { add, delete, edit }
 
 const Timer = new DebugTimer();
@@ -2082,9 +2091,16 @@ export class AreaDesigner extends EditorBase {
                             o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
                                 this.selectedFocusedRoom.removeExit(RoomExit.NorthEast);
-                            else
+                            else {
+                                if (e.altKey)
+                                    this.selectedFocusedRoom.merge(p, true);
                                 this.selectedFocusedRoom.addExit(RoomExit.NorthEast);
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            }
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exitsDetails', values: [or.exitsDetails], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
@@ -2098,11 +2114,11 @@ export class AreaDesigner extends EditorBase {
                     }
                     else if (!e.ctrlKey && this.$allowResize) {
                         if (x === 0 && y === this.$area.size.height - 1)
-                            this.resizeMap(1, 1, 0, shiftType.top | shiftType.right);
+                            this._resizeMap(1, 1, 0, shiftType.top | shiftType.right);
                         else if (x === 0)
-                            this.resizeMap(1, 0, 0, shiftType.top | shiftType.right);
+                            this._resizeMap(1, 0, 0, shiftType.top | shiftType.right);
                         else
-                            this.resizeMap(0, 1, 0, shiftType.top | shiftType.right);
+                            this._resizeMap(0, 1, 0, shiftType.top | shiftType.right);
                         p = this.selectedFocusedRoom;
                         y = p.y + 1;
                         x = p.x - 1;
@@ -2116,8 +2132,14 @@ export class AreaDesigner extends EditorBase {
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
                             o = this.selectedFocusedRoom.exits;
+                            if (e.altKey)
+                                this.selectedFocusedRoom.merge(p, true);
                             this.selectedFocusedRoom.addExit(RoomExit.NorthEast);
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exitsDetails', values: [or.exitsDetails], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
@@ -2202,9 +2224,16 @@ export class AreaDesigner extends EditorBase {
                             o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
                                 this.selectedFocusedRoom.removeExit(RoomExit.North);
-                            else
+                            else {
+                                if (e.altKey)
+                                    this.selectedFocusedRoom.merge(p, true);
                                 this.selectedFocusedRoom.addExit(RoomExit.North);
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            }
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exitsDetails', values: [or.exitsDetails], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
@@ -2216,7 +2245,7 @@ export class AreaDesigner extends EditorBase {
                         this.$map.focus();
                     }
                     else if (!e.ctrlKey && this.$allowResize) {
-                        this.resizeMap(0, 1, 0, shiftType.top | shiftType.left);
+                        this._resizeMap(0, 1, 0, shiftType.top | shiftType.left);
                         p = this.selectedFocusedRoom;
                         y = p.y + 1;
                         this.selectedFocusedRoom.addExit(RoomExit.South);
@@ -2229,8 +2258,14 @@ export class AreaDesigner extends EditorBase {
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
                             o = this.selectedFocusedRoom.exits;
+                            if (e.altKey)
+                                this.selectedFocusedRoom.merge(p, true);
                             this.selectedFocusedRoom.addExit(RoomExit.North);
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exitsDetails', values: [or.exitsDetails], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
@@ -2318,9 +2353,16 @@ export class AreaDesigner extends EditorBase {
                             o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
                                 this.selectedFocusedRoom.removeExit(RoomExit.NorthWest);
-                            else
+                            else {
+                                if (e.altKey)
+                                    this.selectedFocusedRoom.merge(p, true);
                                 this.selectedFocusedRoom.addExit(RoomExit.NorthWest);
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            }
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exitsDetails', values: [or.exitsDetails], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
@@ -2333,11 +2375,11 @@ export class AreaDesigner extends EditorBase {
                     }
                     else if (!e.ctrlKey && this.$allowResize) {
                         if (y === this.$area.size.height - 1 && x === this.$area.size.width - 1)
-                            this.resizeMap(1, 1, 0, shiftType.top | shiftType.left);
+                            this._resizeMap(1, 1, 0, shiftType.top | shiftType.left);
                         else if (y === this.$area.size.height - 1)
-                            this.resizeMap(0, 1, 0, shiftType.top | shiftType.left);
+                            this._resizeMap(0, 1, 0, shiftType.top | shiftType.left);
                         else
-                            this.resizeMap(1, 0, 0, shiftType.top | shiftType.left);
+                            this._resizeMap(1, 0, 0, shiftType.top | shiftType.left);
                         p = this.selectedFocusedRoom;
                         y = p.y + 1;
                         x = p.x + 1;
@@ -2351,8 +2393,14 @@ export class AreaDesigner extends EditorBase {
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
                             o = this.selectedFocusedRoom.exits;
+                            if (e.altKey)
+                                this.selectedFocusedRoom.merge(p, true);
                             this.selectedFocusedRoom.addExit(RoomExit.NorthWest);
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exitsDetails', values: [or.exitsDetails], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
@@ -2451,7 +2499,7 @@ export class AreaDesigner extends EditorBase {
                         this.$map.focus();
                     }
                     else if (!e.ctrlKey && this.$allowResize) {
-                        this.resizeMap(1, 0, 0, shiftType.top | shiftType.right);
+                        this._resizeMap(1, 0, 0, shiftType.top | shiftType.right);
                         p = this.selectedFocusedRoom;
                         x = p.x - 1;
                         this.selectedFocusedRoom.addExit(RoomExit.West);
@@ -2464,8 +2512,14 @@ export class AreaDesigner extends EditorBase {
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
                             o = this.selectedFocusedRoom.exits;
+                            if (e.altKey)
+                                this.selectedFocusedRoom.merge(p, true);
                             this.selectedFocusedRoom.addExit(RoomExit.East);
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exitsDetails', values: [or.exitsDetails], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
@@ -2552,9 +2606,16 @@ export class AreaDesigner extends EditorBase {
                             o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
                                 this.selectedFocusedRoom.removeExit(RoomExit.West);
-                            else
+                            else {
+                                if (e.altKey)
+                                    this.selectedFocusedRoom.merge(p, true);
                                 this.selectedFocusedRoom.addExit(RoomExit.West);
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            }
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exitsDetails', values: [or.exitsDetails], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
@@ -2566,7 +2627,7 @@ export class AreaDesigner extends EditorBase {
                         this.$map.focus();
                     }
                     else if (!e.ctrlKey && this.$allowResize) {
-                        this.resizeMap(1, 0, 0, shiftType.top | shiftType.left);
+                        this._resizeMap(1, 0, 0, shiftType.top | shiftType.left);
                         p = this.selectedFocusedRoom;
                         x = p.x + 1;
                         this.selectedFocusedRoom.addExit(RoomExit.East);
@@ -2579,8 +2640,14 @@ export class AreaDesigner extends EditorBase {
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
                             o = this.selectedFocusedRoom.exits;
+                            if (e.altKey)
+                                this.selectedFocusedRoom.merge(p, true);
                             this.selectedFocusedRoom.addExit(RoomExit.West);
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exitsDetails', values: [or.exitsDetails], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
@@ -2668,9 +2735,16 @@ export class AreaDesigner extends EditorBase {
                             o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
                                 this.selectedFocusedRoom.removeExit(RoomExit.SouthEast);
-                            else
+                            else {
+                                if (e.altKey)
+                                    this.selectedFocusedRoom.merge(p, true);
                                 this.selectedFocusedRoom.addExit(RoomExit.SouthEast);
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            }
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exitsDetails', values: [or.exitsDetails], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
@@ -2683,11 +2757,11 @@ export class AreaDesigner extends EditorBase {
                     }
                     else if (!e.ctrlKey && this.$allowResize) {
                         if (x === 0 && y === 0)
-                            this.resizeMap(1, 1, 0, shiftType.bottom | shiftType.right);
+                            this._resizeMap(1, 1, 0, shiftType.bottom | shiftType.right);
                         else if (y === 0)
-                            this.resizeMap(0, 1, 0, shiftType.bottom | shiftType.right);
+                            this._resizeMap(0, 1, 0, shiftType.bottom | shiftType.right);
                         else
-                            this.resizeMap(1, 0, 0, shiftType.bottom | shiftType.right);
+                            this._resizeMap(1, 0, 0, shiftType.bottom | shiftType.right);
                         p = this.selectedFocusedRoom;
                         x = p.x - 1;
                         y = p.y - 1;
@@ -2701,8 +2775,14 @@ export class AreaDesigner extends EditorBase {
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
                             o = this.selectedFocusedRoom.exits;
+                            if (e.altKey)
+                                this.selectedFocusedRoom.merge(p, true);
                             this.selectedFocusedRoom.addExit(RoomExit.SouthEast);
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exitsDetails', values: [or.exitsDetails], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
@@ -2786,9 +2866,16 @@ export class AreaDesigner extends EditorBase {
                             o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
                                 this.selectedFocusedRoom.removeExit(RoomExit.South);
-                            else
+                            else {
+                                if (e.altKey)
+                                    this.selectedFocusedRoom.merge(p, true);
                                 this.selectedFocusedRoom.addExit(RoomExit.South);
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            }
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exitsDetails', values: [or.exitsDetails], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
@@ -2800,7 +2887,7 @@ export class AreaDesigner extends EditorBase {
                         this.$map.focus();
                     }
                     else if (!e.ctrlKey && this.$allowResize) {
-                        this.resizeMap(0, 1, 0, shiftType.bottom | shiftType.left);
+                        this._resizeMap(0, 1, 0, shiftType.bottom | shiftType.left);
                         p = this.selectedFocusedRoom;
                         y = p.y - 1;
                         this.selectedFocusedRoom.addExit(RoomExit.North);
@@ -2813,8 +2900,14 @@ export class AreaDesigner extends EditorBase {
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
                             o = this.selectedFocusedRoom.exits;
+                            if (e.altKey)
+                                this.selectedFocusedRoom.merge(p, true);
                             this.selectedFocusedRoom.addExit(RoomExit.South);
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exitsDetails', values: [or.exitsDetails], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
@@ -2901,9 +2994,16 @@ export class AreaDesigner extends EditorBase {
                             o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
                                 this.selectedFocusedRoom.removeExit(RoomExit.SouthWest);
-                            else
+                            else {
+                                if (e.altKey)
+                                    this.selectedFocusedRoom.merge(p, true);
                                 this.selectedFocusedRoom.addExit(RoomExit.SouthWest);
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            }
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exitsDetails', values: [or.exitsDetails], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
@@ -2916,11 +3016,11 @@ export class AreaDesigner extends EditorBase {
                     }
                     else if (!e.ctrlKey && this.$allowResize) {
                         if (x === this.$area.size.width - 1 && y === 0)
-                            this.resizeMap(1, 1, 0, shiftType.bottom | shiftType.left);
+                            this._resizeMap(1, 1, 0, shiftType.bottom | shiftType.left);
                         else if (y === 0)
-                            this.resizeMap(0, 1, 0, shiftType.bottom | shiftType.left);
+                            this._resizeMap(0, 1, 0, shiftType.bottom | shiftType.left);
                         else
-                            this.resizeMap(1, 0, 0, shiftType.bottom | shiftType.left);
+                            this._resizeMap(1, 0, 0, shiftType.bottom | shiftType.left);
                         p = this.selectedFocusedRoom;
                         x = p.x + 1;
                         y = p.y - 1;
@@ -2934,8 +3034,14 @@ export class AreaDesigner extends EditorBase {
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
                             o = this.selectedFocusedRoom.exits;
+                            if (e.altKey)
+                                this.selectedFocusedRoom.merge(p, true);
                             this.selectedFocusedRoom.addExit(RoomExit.SouthWest);
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exitsDetails', values: [or.exitsDetails], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
@@ -2977,9 +3083,16 @@ export class AreaDesigner extends EditorBase {
                             o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
                                 this.selectedFocusedRoom.removeExit(RoomExit.Down);
-                            else
+                            else {
+                                if (e.altKey)
+                                    this.selectedFocusedRoom.merge(p, true);
                                 this.selectedFocusedRoom.addExit(RoomExit.Down);
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            }
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exitsDetails', values: [or.exitsDetails], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
@@ -2991,7 +3104,8 @@ export class AreaDesigner extends EditorBase {
                         this.emit('rebuild-buttons');
                     }
                     else if (!e.ctrlKey && this.$allowResize) {
-                        this.resizeMap(0, 0, 1, shiftType.down);
+                        this._resizeMap(0, 0, 1, shiftType.down);
+                        p = this.selectedFocusedRoom;
                         this.$depth = this.selectedFocusedRoom.z + 1;
                         this.selectedFocusedRoom.addExit(RoomExit.Up);
                         if (o !== this.selectedFocusedRoom.exits) {
@@ -3003,8 +3117,14 @@ export class AreaDesigner extends EditorBase {
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
                             o = this.selectedFocusedRoom.exits;
+                            if (e.altKey)
+                                this.selectedFocusedRoom.merge(p, true);
                             this.selectedFocusedRoom.addExit(RoomExit.Down);
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exitsDetails', values: [or.exitsDetails], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
@@ -3042,9 +3162,16 @@ export class AreaDesigner extends EditorBase {
                             o = this.selectedFocusedRoom.exits;
                             if (e.ctrlKey)
                                 this.selectedFocusedRoom.removeExit(RoomExit.Up);
-                            else
+                            else {
+                                if (e.altKey)
+                                    this.selectedFocusedRoom.merge(p, true);
                                 this.selectedFocusedRoom.addExit(RoomExit.Up);
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            }
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exitsDetails', values: [or.exitsDetails], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
@@ -3056,7 +3183,8 @@ export class AreaDesigner extends EditorBase {
                         this.emit('rebuild-buttons');
                     }
                     else if (!e.ctrlKey && this.$allowResize) {
-                        this.resizeMap(0, 0, 1, shiftType.up);
+                        this._resizeMap(0, 0, 1, shiftType.up);
+                        p = this.selectedFocusedRoom;
                         this.$depth = this.selectedFocusedRoom.z - 1;
                         this.selectedFocusedRoom.addExit(RoomExit.Down);
                         if (o !== this.selectedFocusedRoom.exits) {
@@ -3068,8 +3196,14 @@ export class AreaDesigner extends EditorBase {
                         if (this.selectedFocusedRoom) {
                             or = this.selectedFocusedRoom.clone();
                             o = this.selectedFocusedRoom.exits;
+                            if (e.altKey)
+                                this.selectedFocusedRoom.merge(p, true);
                             this.selectedFocusedRoom.addExit(RoomExit.Up);
-                            if (o !== this.selectedFocusedRoom.exits) {
+                            if (e.altKey && !or.equals(this.selectedFocusedRoom)) {
+                                this.pushUndo(undoAction.edit, undoType.roomMerge, { room: or });
+                                this.RoomChanged(this.selectedFocusedRoom, or);
+                            }
+                            else if (o !== this.selectedFocusedRoom.exits) {
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exits', values: [o], rooms: [[or.x, or.y, or.z]] });
                                 this.pushUndo(undoAction.edit, undoType.room, { property: 'exitsDetails', values: [or.exitsDetails], rooms: [[or.x, or.y, or.z]] });
                                 this.RoomChanged(this.selectedFocusedRoom, or);
@@ -9135,7 +9269,7 @@ export class AreaDesigner extends EditorBase {
                         }
                         break;
                     case undoType.resize:
-                        this.resizeMap(-undo.data.width, -undo.data.height, -undo.data.depth, undo.data.shift, true);
+                        this._resizeMap(-undo.data.width, -undo.data.height, -undo.data.depth, undo.data.shift, true);
                         this.pushRedo(undo);
                         break;
                     case undoType.flip:
@@ -9162,6 +9296,21 @@ export class AreaDesigner extends EditorBase {
                         this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         undo.data.values = values;
+                        this.pushRedo(undo);
+                        break;
+                    case undoType.roomMerge:
+                        //copy current room
+                        room = this.getRoom(undo.data.room.x, undo.data.room.y, undo.data.room.z);
+                        this.setRoom(undo.data.room);
+                        this.RoomChanged(room);
+                        if (undo.data.room.exits) this.$roomCount++;
+                        if (room.exits) this.$roomCount--;
+                        this.DrawRoom(this.$mapContext, undo.data.room, true, undo.data.room.at(this.$mouse.rx, this.$mouse.ry));
+
+                        this.doUpdate(UpdateType.status);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
+                        this.setFocusedRoom(undo.focused);
+                        undo.data.room = room;
                         this.pushRedo(undo);
                         break;
                 }
@@ -9336,7 +9485,7 @@ export class AreaDesigner extends EditorBase {
                         }
                         break;
                     case undoType.resize:
-                        this.resizeMap(undo.data.width, undo.data.height, undo.data.depth, undo.data.shift, true);
+                        this._resizeMap(undo.data.width, undo.data.height, undo.data.depth, undo.data.shift, true);
                         this.pushUndoObject(undo);
                         break;
                     case undoType.flip:
@@ -9363,6 +9512,21 @@ export class AreaDesigner extends EditorBase {
                         this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
                         this.setFocusedRoom(undo.focused);
                         undo.data.values = values;
+                        this.pushUndoObject(undo);
+                        break;
+                    case undoType.roomMerge:
+                        //copy current room
+                        room = this.getRoom(undo.data.room.x, undo.data.room.y, undo.data.room.z);
+                        this.setRoom(undo.data.room);
+                        this.RoomChanged(room);
+                        if (undo.data.room.exits) this.$roomCount++;
+                        if (room.exits) this.$roomCount--;
+                        this.DrawRoom(this.$mapContext, undo.data.room, true, undo.data.room.at(this.$mouse.rx, this.$mouse.ry));
+
+                        this.doUpdate(UpdateType.status);
+                        this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
+                        this.setFocusedRoom(undo.focused);
+                        undo.data.room = room;
                         this.pushUndoObject(undo);
                         break;
                 }
@@ -13085,7 +13249,7 @@ export class AreaDesigner extends EditorBase {
                 data['create body'] += '   add_permanent_resistances( ([\n       ';
                 monster.resistences.forEach(r => {
                     data['create body'] += `\"${r.type}\" : ${r.amount},\n       `;
-                });                
+                });
                 data['create body'] = data['create body'].substring(0, data['create body'].length - 9) + '\n     ]) );\n';
             }
         }
@@ -14423,7 +14587,13 @@ export class AreaDesigner extends EditorBase {
         return `"${path}"`;
     }
 
-    public resizeMap(width, height, depth, shift: shiftType, noUndo?) {
+    public resizeMap(width, height, depth, shift: shiftType) {
+        this.startUndoGroup();
+        this._resizeMap(width, height, depth, shift);
+        this.stopUndoGroup();
+    }
+
+    public _resizeMap(width, height, depth, shift: shiftType, noUndo?) {
         Timer.start();
         width = width || 0;
         height = height || 0;
@@ -14489,10 +14659,8 @@ export class AreaDesigner extends EditorBase {
                 }
             }
         }
-        if (!noUndo) {
-            this.startUndoGroup();
+        if (!noUndo)
             this.pushUndo(undoAction.delete, undoType.room, dRooms);
-        }
         let dl = dRooms.length;
         while (dl--)
             if (dRooms[dl].exits)
@@ -14531,10 +14699,8 @@ export class AreaDesigner extends EditorBase {
         Timer.end('Resize time');
         this.doUpdate(UpdateType.drawMap);
         this.changed = true;
-        if (!noUndo) {
+        if (!noUndo)
             this.pushUndo(undoAction.edit, undoType.resize, { width: width, height: height, depth: depth, shift: shift });
-            this.stopUndoGroup();
-        }
     }
 
     public flipMap(type: flipType, noUndo?) {
