@@ -190,11 +190,9 @@ export function SetupEditor() {
                     if (word)
                         word = word.word;
                     const value = model.getValue();
-                    const root = path.dirname(resource.fsPath);
                     const def = /^#define ([_a-zA-Z0-9]+)[ |\(].*$/gm;
                     let dValue;
-                    if (isDirSync(root)) 
-                        defines = {...defines, ...findDefines(value,  /^#include "(.*)"$/gm, root)};
+                    //lets check current file first
                     dValue = value.split('\n');
                     dValue.forEach((l, i) => {
                         let results2 = def.exec(l);
@@ -211,6 +209,14 @@ export function SetupEditor() {
                     });
                     if (defines[word])
                         return defines[word];
+                    //if not found in current file lets check included relative files
+                    const root = path.dirname(resource.fsPath);
+                    if (isDirSync(root)) {
+                        defines = findDefines(value, /^#include "(.*)"$/gm, root);
+                        if (defines[word])
+                            return defines[word];
+                    }
+                    //@TODO if not found in relative check global include files
                     return undefined;
                 }
             });
