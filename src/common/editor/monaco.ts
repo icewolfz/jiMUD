@@ -1302,16 +1302,19 @@ export class MonacoCodeEditor extends EditorBase {
                     label: 'Go to Definition',
                     accelerator: 'F12',
                     click: () => {
-                        this.$editor.getAction('editor.action.revealDefinition').run().then(() => {
-                            this.$editor.revealPositionInCenterIfOutsideViewport(this.$editor.getPosition());
-                        });
+                        this.$editor.trigger('source', 'editor.action.revealDefinition', null); // runs Go to definition for the symbol at current cursor position
+                        let ev = this.$editor.onDidChangeCursorPosition((e) => {
+                            if(e.source !== 'api') return;
+                            this.$editor.revealPositionInCenterIfOutsideViewport(e.position);
+                            ev.dispose();
+                        });                        
                     }
                 },
                 {
                     label: 'Peek Definition',
                     accelerator: 'Alt+F12',
                     click: () => {
-                        this.$editor.getAction('editor.action.peekDefinition').run();
+                        this.$editor.trigger('source', 'editor.action.peekDefinition', null); // peeks symbol definition at current cursor position
                     },
                     position: 'after=goto',
                     id: 'peek'
@@ -1523,9 +1526,21 @@ export class MonacoCodeEditor extends EditorBase {
                         label: 'Go to Definition',
                         accelerator: 'F12',
                         click: () => {
+                            this.$editor.trigger('source', 'editor.action.revealDefinition', null); // runs Go to definition for the symbol at current cursor position
+                            let ev = this.$editor.onDidChangeCursorPosition((e) => {
+                                if(e.source !== 'api') return;
+                                this.$editor.revealPositionInCenterIfOutsideViewport(e.position);
+                                ev.dispose();
+                            }); 
+                            //editor.trigger('source', 'editor.action.peekDefinition'); // peeks symbol definition at current cursor position
+                            
+                            //editor.trigger('source', 'editor.action.goToReferences'); // runs Go to references... for the symbol at current cursor position
+                            //editor.trigger('source', 'editor.action.referenceSearch.trigger'); // peeks symbol references at current cursor position                            
+                            /*
                             this.$editor.getAction('editor.action.revealDefinition').run().then(() => {
                                 this.$editor.revealPositionInCenterIfOutsideViewport(this.$editor.getPosition());
                             });
+                            */
                         },
                         position: 'before=sep',
                         id: 'goto'
@@ -1534,7 +1549,8 @@ export class MonacoCodeEditor extends EditorBase {
                         label: 'Peek Definition',
                         accelerator: 'Alt+F12',
                         click: () => {
-                            this.$editor.getAction('editor.action.peekDefinition').run();
+                            //this.$editor.getAction('editor.action.peekDefinition').run();
+                            this.$editor.trigger('source', 'editor.action.peekDefinition', null); // peeks symbol definition at current cursor position
                         },
                         position: 'after=goto',
                         id: 'peek'
