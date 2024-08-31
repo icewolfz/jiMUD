@@ -5181,7 +5181,7 @@ export class VirtualEditor extends EditorBase {
                     case undoType.room:
                         room = this.getRoom(undo.data.x, undo.data.y, undo.data.z);
                         this.setRoom(undo.data);
-                        this.DrawRoom(this.$mapContext, room, true, undo.data[l].at(this.$mouse.rx, this.$mouse.ry));
+                        this.DrawRoom(this.$mapContext, room, true, undo.data.at(this.$mouse.rx, this.$mouse.ry));
                         undo.data = room;
                         this.pushRedo(undo);
                         this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
@@ -5455,7 +5455,7 @@ export class VirtualEditor extends EditorBase {
                     case undoType.room:
                         room = this.getRoom(undo.data.x, undo.data.y, undo.data.z);
                         this.setRoom(undo.data);
-                        this.DrawRoom(this.$mapContext, room, true, undo.data[l].at(this.$mouse.rx, this.$mouse.ry));
+                        this.DrawRoom(this.$mapContext, room, true, undo.data.at(this.$mouse.rx, this.$mouse.ry));
                         undo.data = room;
                         this.pushUndoObject(undo);
                         this.setSelectedRooms(undo.selection.map(v => this.getRoom(v[0], v[1], v[2])));
