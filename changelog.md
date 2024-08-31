@@ -20,6 +20,7 @@
       - Fix bug min encumbrance not being correctly set for armors when created or edited in wizard
       - Fix monster/object editor tooltips and display previews of data
       - Fix monster editor not saving reputation data
+      - Fix an issue when undoing a single room change
     - Fixed a bug in diff view not correctly setting the height
     - Fixed datagrid tooltips not updating when value changed and fall back to value formatting when customized
     - Fixed virtual area creation wizard
