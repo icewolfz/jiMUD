@@ -848,7 +848,7 @@ export class DataGrid extends EventEmitter {
 
     get canPaste() {
         if (!clipboard.has(this.clipboardPrefix + 'DataGrid')) return false;
-        const data = JSON.parse(clipboard.readBuffer(this.clipboardPrefix + 'DataGrid').toString());
+        const data = JSON.parse(Buffer.from(clipboard.readBuffer(this.clipboardPrefix + 'DataGrid')).toString());
         const format = this.columns.map(c => c.label).join(':');
         return format === data.format;
     }

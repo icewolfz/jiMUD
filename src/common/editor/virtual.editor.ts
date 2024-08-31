@@ -5019,7 +5019,7 @@ export class VirtualEditor extends EditorBase {
                     or = this.$focusedRoom.clone();
                 else
                     or = this.selectedFocusedRoom.clone();
-                const data = JSON.parse(clipboard.readBuffer('jiMUD/VirtualArea').toString());
+                const data = JSON.parse(Buffer.from(clipboard.readBuffer('jiMUD/VirtualArea')).toString());
                 const osX = data.rooms[0].x - or.x;
                 const osY = data.rooms[0].y - or.y;
                 const osZ = data.rooms[0].z - or.z;

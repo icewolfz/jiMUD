@@ -8866,7 +8866,7 @@ export class AreaDesigner extends EditorBase {
                     or = this.$focusedRoom.clone();
                 else
                     or = this.selectedFocusedRoom.clone();
-                const data = JSON.parse(clipboard.readBuffer('jiMUD/Area').toString());
+                const data = JSON.parse(Buffer.from(clipboard.readBuffer('jiMUD/Area')).toString());
                 const osX = data.rooms[0].x - or.x;
                 const osY = data.rooms[0].y - or.y;
                 const osZ = data.rooms[0].z - or.z;

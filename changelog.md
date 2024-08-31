@@ -21,6 +21,7 @@
       - Fix monster/object editor tooltips and display previews of data
       - Fix monster editor not saving reputation data
       - Fix an issue when undoing a single room change
+      - Fixed paste
     - Fixed a bug in diff view not correctly setting the height
     - Fixed datagrid tooltips not updating when value changed and fall back to value formatting when customized
     - Fixed virtual area creation wizard
@@ -39,6 +40,7 @@
       - Fixed changing external exits not correctly updating visual map
       - Fixed adding new external exit breaking last added external exit
       - Fixed an issue when undoing a single room change
+      - Fixed paste
 - **Changed:**
   - Update electron 31.1.0 to 32.0.1
   - Update better-sqlite3 11.1.1 to 11.2.1
