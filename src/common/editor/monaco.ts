@@ -45,6 +45,29 @@ let $lpcCompletionCache;
 let $lpcIndenter;
 let $lpcFormatter;
 let $lpcDefineCache;
+let $includePaths;
+
+export function removeDefineCache(file) {
+    if (!$lpcDefineCache) return;
+    delete $lpcDefineCache[file];
+}
+
+export function addIncludePath(p) {
+    if (!$includePaths)
+        $includePaths = [];
+    let idx = $includePaths.indexOf(p);
+    if (idx === -1)
+        $includePaths.push(p);
+}
+
+export function removeIncludePath(p) {
+    if (!$includePaths) return;
+    let idx = $includePaths.indexOf(p);
+    if (idx === -1) return;
+    $includePaths.splice(idx, 1);
+    if ($includePaths.length === 0)
+        $includePaths = 0;
+}
 
 export function SetupEditor() {
     return new Promise((resolve, reject) => {
@@ -183,7 +206,6 @@ export function SetupEditor() {
                 async provideDefinition(model: monaco.editor.ITextModel, position: monaco.Position, token: monaco.CancellationToken): Promise<monaco.languages.LocationLink[] | monaco.languages.Location | undefined> {
                     if (!model) return undefined;
                     if (!$lpcDefineCache) $lpcDefineCache = {};
-                    let defines = [];
                     //monaco.Uri.file()
                     const resource = model.uri;
                     let word: any = model.getWordAtPosition(position);
@@ -194,29 +216,39 @@ export function SetupEditor() {
                     let dValue;
                     //lets check current file first
                     dValue = value.split('\n');
-                    dValue.forEach((l, i) => {
+                    let dl = dValue.length;
+                    let i;
+                    for (i = 0; i < dl; i++) {
+                        let l = dValue[i];
                         let results2 = def.exec(l);
                         while (results2 !== null) {
                             if (results2.index === def.lastIndex) {
                                 def.lastIndex++;
                             }
-                            defines[results2[1]] = {
-                                uri: model.uri,
-                                range: new monaco.Range(i + 1, results2.index + 9, i + 1, results2.index + 9)
-                            };
+                            if (results2[1] === word)
+                                return {
+                                    uri: model.uri,
+                                    range: new monaco.Range(i + 1, results2.index + 9, i + 1, results2.index + 9)
+                                };
                             results2 = def.exec(l);
                         }
-                    });
-                    if (defines[word])
-                        return defines[word];
+                    };
                     //if not found in current file lets check included relative files
                     const root = path.dirname(resource.fsPath);
                     if (isDirSync(root)) {
-                        defines = findDefines(value, /^#include "(.*)"$/gm, root);
-                        if (defines[word])
-                            return defines[word];
+                        let define = findDefine(word, value, /^#include "(.*)"$/gm, root)
+                        if (define)
+                            return define;
                     }
-                    //@TODO if not found in relative check global include files
+                    if ($includePaths && $includePaths.length) {
+                        dl = $includePaths.length;
+                        const reg = /^#include <(.*)>$/gm;
+                        for (i = 0; i < dl; i++) {
+                            let define = findDefine(word, value, reg, $includePaths[i])
+                            if (define)
+                                return define;
+                        }
+                    }
                     return undefined;
                 }
             });
@@ -690,6 +722,45 @@ function findDefines(value, reg, root) {
         result = reg.exec(value);
     }
     return defines;
+}
+
+function findDefine(define, value, reg, root) {
+    reg.lastIndex=0;
+    //const p = path.dirname((<any>model).file);
+    let result = reg.exec(value);
+    let dValue;
+    const def = /^#define ([_a-zA-Z0-9]+)[ |\(].*$/gm;
+    while (result !== null) {
+        if (result.index === reg.lastIndex) {
+            reg.lastIndex++;
+        }
+        const f = path.join(root, result[1]);
+        if (isFileSync(f)) {
+            if (!$lpcDefineCache[f]) {
+                $lpcDefineCache[f] = {};
+                dValue = fs.readFileSync(f, 'utf8').split('\n');
+                let dl = dValue.length;
+                for (let i = 0; i < dl; i++) {
+                    let l = dValue[i];
+                    let results2 = def.exec(l);
+                    while (results2 !== null) {
+                        if (results2.index === def.lastIndex) {
+                            def.lastIndex++;
+                        }
+                        $lpcDefineCache[f][results2[1]] = {
+                            uri: monaco.Uri.file(f),
+                            range: new monaco.Range(i + 1, 9, i + 1, 9 + results2[1].length)
+                        };
+                        results2 = def.exec(l);
+                    }
+                };
+            }
+            if ($lpcDefineCache[f][define])
+                return $lpcDefineCache[f][define];
+        }
+        result = reg.exec(value);
+    }
+    return null;
 }
 
 /*
@@ -1316,8 +1387,13 @@ export class MonacoCodeEditor extends EditorBase {
                     click: () => {
                         this.$editor.trigger('source', 'editor.action.revealDefinition', null); // runs Go to definition for the symbol at current cursor position
                         let ev = this.$editor.onDidChangeCursorPosition((e) => {
+                            if(e.source === 'mouse') {
+                                ev.dispose();
+                                return;
+                            }
                             if (e.source !== 'api') return;
-                            this.$editor.revealPositionInCenterIfOutsideViewport(e.position);
+                            if(this.$editor)
+                                this.$editor.revealPositionInCenterIfOutsideViewport(e.position);
                             ev.dispose();
                         });
                     }
@@ -1540,8 +1616,13 @@ export class MonacoCodeEditor extends EditorBase {
                         click: () => {
                             this.$editor.trigger('source', 'editor.action.revealDefinition', null); // runs Go to definition for the symbol at current cursor position
                             let ev = this.$editor.onDidChangeCursorPosition((e) => {
+                                if(e.source === 'mouse') {
+                                    ev.dispose();
+                                    return;
+                                }                                
                                 if (e.source !== 'api') return;
-                                this.$editor.revealPositionInCenterIfOutsideViewport(e.position);
+                                if(this.$editor)
+                                    this.$editor.revealPositionInCenterIfOutsideViewport(e.position);
                                 ev.dispose();
                             });
                             //editor.trigger('source', 'editor.action.peekDefinition'); // peeks symbol definition at current cursor position

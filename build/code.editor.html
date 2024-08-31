@@ -149,6 +149,7 @@
                                 else
                                     ed = window.$editors[idx];
                                 ed.setPosition({ column: input.options.selection.startColumn, lineNumber: input.options.selection.startLineNumber });
+                                ed.revealPositionInCenterIfOutsideViewport({ column: input.options.selection.startColumn, lineNumber: input.options.selection.startLineNumber });
                             }
                         }
                         return Promise.resolve();
