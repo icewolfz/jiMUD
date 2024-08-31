@@ -238,7 +238,7 @@ export function SetupEditor() {
                             }
                             defines[results2[1]] = {
                                 uri: model.uri,
-                                range: new monaco.Range(i + 1, results2.index + 1, i + 1, results2.index + 1)
+                                range: new monaco.Range(i + 1, results2.index + 9, i + 1, results2.index + 9)
                             };
                             results2 = def.exec(l);
                         }
