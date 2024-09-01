@@ -12246,7 +12246,7 @@ export class AreaDesigner extends EditorBase {
             props['maxforage'] = room.maxForage;
 
         tempProps = Object.keys(tempProps).map(k => `"${k}" : ${tempProps[k]}`);
-        props = Object.keys(props).map(k => `"${k}" : ${tempProps[k]}`);
+        props = Object.keys(props).map(k => `"${k}" : ${props[k]}`);
 
         if (tempProps.length === 1)
             data['create body'] += `   set_temp_property(${tempProps[0].replace(' :', ',')});\n`;
@@ -14230,7 +14230,7 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += `   set_value("${obj.value}");\n`;
 
         tempProps = Object.keys(tempProps).map(k => `"${k}" : ${tempProps[k]}`);
-        props = Object.keys(props).map(k => `"${k}" : ${tempProps[k]}`);
+        props = Object.keys(props).map(k => `"${k}" : ${props[k]}`);
 
         if (tempProps.length === 1)
             data['create body'] += `   set_temp_property(${tempProps[0].replace(' :', ',')});\n`;
