@@ -10983,7 +10983,7 @@ export class AreaDesigner extends EditorBase {
             const base = this.$area.baseRooms[room.type] || this.$area.baseRooms[this.$area.defaultRoom];
             const baseOld = this.$area.baseRooms[old.type] || this.$area.baseRooms[this.$area.defaultRoom];
             if (!old.empty && !old.equals(baseOld, true)) this.$roomCount--;
-            if (!room.empty && !old.equals(base, true)) this.$roomCount++;
+            if (!room.empty && !room.equals(base, true)) this.$roomCount++;
             this.doUpdate(UpdateType.status);
         }
         this.changed = true;
@@ -11745,7 +11745,7 @@ export class AreaDesigner extends EditorBase {
                         if (r.empty || r.equals(base, true)) continue;
                         this.write(this.generateRoomCode(r.clone(), files, copy(data)), path.join(p, files[`${r.x},${r.y},${r.z}`] + '.c'));
                         count++;
-                        this.emit('progress', { type: 'designer', percent: 50 + Math.round(50 * count / this.$roomCount) });
+                        this.emit('progress', { type: 'designer', percent: 50 + Math.round(50 * count / (this.$roomCount || 1)) });
                     }
                 }
             }

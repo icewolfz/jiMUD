@@ -305,7 +305,7 @@
                 theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme') : 'lpcTheme'),
                 model: null,
             }, {
-
+                /*
                 codeEditorService: {
                         addCodeEditor: (editor) => {
                             console.log('addCodeEditor');
@@ -322,6 +322,7 @@
                             return Promise.resolve({});
                         }
                     },
+                    */
                 textModelService: {
                     createModelReference: resource => {
                         var model = monaco.editor.getModel(resource);
@@ -5108,6 +5109,11 @@
     }
 
     ipcRenderer.on('progress', (event, ...args) => {
+        //already done so just close it
+        if (!_windows['progress.html']) {
+            ipcRenderer.send('progress', 'close');
+            window.setProgressBar(-1);
+        }
         if (args[0] === 'canceled' || args[0] === 'closed') {
             delete _windows['progress.html'];
             if (manager.active && manager.active.editor && manager.active.editor.cancel)
@@ -10115,6 +10121,7 @@
                 else if (type === 'designer') {
                     ipcRenderer.send('progress', 'close');
                     window.setProgressBar(-1);
+                    delete _windows['progress.html'];
                 }
             });
             p.editor.on('output', (msg) => {

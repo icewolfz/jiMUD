@@ -29,6 +29,7 @@
       - Fix an issue when undoing a single room change
       - Fixed paste for linux
       - Fixed an issue with auto resize when auto walking and not grouping undo as one action
+      - Fix room counting
     - Fixed a bug in diff view not correctly setting the height
     - Fixed datagrid tooltips not updating when value changed and fall back to value formatting when customized
     - Fixed virtual area creation wizard
@@ -39,6 +40,7 @@
     - Fixed room/monster property code generation place temp properties as permanent properties
     - Fixed Go to Definition and Peek Definition
     - Fixed editor font list not allowing selection of system fonts
+    - Fixed issue with progress dialog if completed before shown
     - Virtual area editor: 
       - Change code in generation of external room to use BASEROOM define
       - Fixed extra map codes being added to rooms when building raw map files
