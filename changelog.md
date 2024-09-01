@@ -18,6 +18,7 @@
 - **Fixed:**
   - Profile manager: Fixed not updating the menu bar after profile added or removed
   - Immortal tools: Fix bug in remote delete of deeply nested folders
+  - Mapper: properly encode ' when used in an area name
   - Code editor:
     - Area Designer:
       - Fix bug min encumbrance not being correctly set for armors when created or edited in wizard

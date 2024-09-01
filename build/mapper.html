@@ -733,7 +733,7 @@
                     if (!room.area || room.area.length === 0)
                         $('#select-area').val($('#select-area option:first').val());
                     else {
-                        if (!($('#select-area option[value="' + room.area + '"]').length > 0)) {
+                        if (!($('#select-area option[value="' + room.area.replace(/'/g, '\\\'') + '"]').length > 0)) {
                             $('#select-area').append($('<option></option>').val(room.area).html(room.area));
                             $('#reArea').append($('<option></option>').val(room.area).html(room.area));
                         }
@@ -831,7 +831,7 @@
                 });
 
                 mapper.on('clear-area-done', (area) => {
-                    $('#select-area option[value="' + area + '"]').remove();
+                    $('#select-area option[value="' + area.replace(/'/g, '\\\'') + '"]').remove();
                     $('#select-area').change();
                 });
 
@@ -1216,7 +1216,7 @@
                     $('#select-area').append($('<option></option>').val(rows[a].Area).html(rows[a].Area));
                     data.push(rows[a].Area);
                 }
-                if (mapper.active.area && $(`#select-area option[value='${mapper.active.area}']`).length > 0)
+                if (mapper.active.area && $(`#select-area option[value='${mapper.active.area.replace(/'/g, '\\\'')}']`).length > 0)
                     $('#select-area').val(mapper.active.area);
                 else
                     mapper.active.area = $('#select-area option:first').val();
