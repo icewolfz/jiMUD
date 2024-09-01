@@ -416,7 +416,6 @@ function createWindow(options) {
                 }
             }
         });
-
         windows[getWindowId(window)].windows.push({ window: childWindow, details: details });
         idMap.set(childWindow, getWindowId(window));
     });
@@ -1425,7 +1424,7 @@ ipcMain.on('reload-profiles', event => {
     for (window in windows) {
         if (!Object.prototype.hasOwnProperty.call(windows, window))
             continue;
-        windows[window].menubar.updateItem('Profiles', {submenu: buildProfileMenu(windows[window].window)});
+        windows[window].menubar.updateItem('Profiles', { submenu: buildProfileMenu(windows[window].window) });
     }
     for (clientId in clients) {
         if (!Object.prototype.hasOwnProperty.call(clients, clientId))
@@ -1921,9 +1920,6 @@ ipcMain.on('dock-client', (event, id, options) => {
         windows[oldWindowId].clients.splice(oldIdx, 1);
         oldWindow.webContents.send('removed-client', id);
         states['manager.html'] = saveWindowState(oldWindow, stateMap.get(oldWindow) || states['manager.html']);
-        //all views removed so close the window
-        if (windows[oldWindowId].clients.length === 0)
-            oldWindow.close();
         //options and we have a state use the new x/y
         if (options && states['manager.html']) {
             states['manager.html'].bounds.x = options.x || states['manager.html'].bounds.x;
@@ -1933,6 +1929,10 @@ ipcMain.on('dock-client', (event, id, options) => {
         windows[windowId].menubar = createMenu(windows[windowId].window);
         //windows[windowId].menubar.enabled = false;
         window = windows[windowId].window;
+        setClientWindowsParent(id, window, oldWindow);
+        //all views removed so close the window
+        if (windows[oldWindowId].clients.length === 0)
+            oldWindow.close();
         //no state so manually set the position
         if (options && !states['manager.html']) {
             window.setPosition(options.x || 0, options.y || 0);
@@ -2477,6 +2477,8 @@ function createClient(options) {
         });
         clients[getClientId(view)].windows.push({ window: childWindow, details: details });
         idMap.set(childWindow, getClientId(view));
+        if (details.options.alwaysOnTopClient)
+            childWindow.setParentWindow(clients[getClientId(view)].parent);
     });
 
     initializeIPCDebug(view.webContents, `Client Id: ${getClientId(view)}`);
@@ -2588,17 +2590,17 @@ function closeClientWindows(id) {
 }
 
 function setClientWindowsParent(id, parent, oldParent) {
-    return;
     //no windows so just bail
     if (clients[id].windows.length === 0) return;
+    //if (parent === oldParent) return;
     const wl = clients[id].windows.length;
     for (var idx = 0; idx < wl; idx++) {
         const window = clients[id].windows[idx].window;
         //call any code hooks in the child windows
         if (window && !window.isDestroyed()) {
-            if (oldParent && window.getParentWindow() === oldParent)
+            if (window.getParentWindow())
                 window.setParentWindow(parent);
-            else if (!oldParent && window.getParentWindow())
+            else if (clients[id].windows[idx].details.options.alwaysOnTopClient)
                 window.setParentWindow(parent);
         }
     }
@@ -3496,8 +3498,8 @@ function buildOptions(details, window, settings) {
         //if passed but showInTaskBar is passed set skipTaskbar based on that setting
         if (!('skipTaskbar' in options) && 'showInTaskBar' in options)
             options.skipTaskbar = (!options.showInTaskBar && (options.alwaysOnTopClient || options.alwaysOnTop)) ? true : false;
-        if (options.alwaysOnTopClient)
-            options.parent = window;
+        //if (options.alwaysOnTopClient)
+        //options.parent = window;
     }
     //not passed so see if any previous openings to use them as defaults
     if (states[file]) {
