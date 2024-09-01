@@ -758,10 +758,20 @@ function findDefine(define, value, reg, root) {
                         results2 = def.exec(l);
                     }
                 };
-                monaco.editor.createModel(dValue.join('\n'), 'lpc', monaco.Uri.file(f));
+                if ($lpcDefineCache[f][define]) {
+                    monaco.editor.createModel(dValue.join('\n'), 'lpc', monaco.Uri.file(f));
+                    return $lpcDefineCache[f][define];
+                }
             }
-            if ($lpcDefineCache[f][define])
+            if ($lpcDefineCache[f][define]) {
+                if (!monaco.editor.getModel(monaco.Uri.file(f))) {
+                    fs.readFileSync(f, 'utf8', (data, err) => {
+                        if (err) return;
+                        monaco.editor.createModel(data, 'lpc', monaco.Uri.file(f));
+                    })
+                }
                 return $lpcDefineCache[f][define];
+            }
         }
         result = reg.exec(value);
     }
