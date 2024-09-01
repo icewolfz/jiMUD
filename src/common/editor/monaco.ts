@@ -729,7 +729,7 @@ function findDefines(value, reg, root) {
 }
 
 function findDefine(define, value, reg, root) {
-    reg.lastIndex=0;
+    reg.lastIndex = 0;
     //const p = path.dirname((<any>model).file);
     let result = reg.exec(value);
     let dValue;
@@ -758,6 +758,7 @@ function findDefine(define, value, reg, root) {
                         results2 = def.exec(l);
                     }
                 };
+                monaco.editor.createModel(dValue.join('\n'), 'lpc', monaco.Uri.file(f));
             }
             if ($lpcDefineCache[f][define])
                 return $lpcDefineCache[f][define];
@@ -1391,12 +1392,12 @@ export class MonacoCodeEditor extends EditorBase {
                     click: () => {
                         this.$editor.trigger('source', 'editor.action.revealDefinition', null); // runs Go to definition for the symbol at current cursor position
                         let ev = this.$editor.onDidChangeCursorPosition((e) => {
-                            if(e.source === 'mouse') {
+                            if (e.source === 'mouse') {
                                 ev.dispose();
                                 return;
                             }
                             if (e.source !== 'api') return;
-                            if(this.$editor)
+                            if (this.$editor)
                                 this.$editor.revealPositionInCenterIfOutsideViewport(e.position);
                             ev.dispose();
                         });
@@ -1620,12 +1621,12 @@ export class MonacoCodeEditor extends EditorBase {
                         click: () => {
                             this.$editor.trigger('source', 'editor.action.revealDefinition', null); // runs Go to definition for the symbol at current cursor position
                             let ev = this.$editor.onDidChangeCursorPosition((e) => {
-                                if(e.source === 'mouse') {
+                                if (e.source === 'mouse') {
                                     ev.dispose();
                                     return;
-                                }                                
+                                }
                                 if (e.source !== 'api') return;
-                                if(this.$editor)
+                                if (this.$editor)
                                     this.$editor.revealPositionInCenterIfOutsideViewport(e.position);
                                 ev.dispose();
                             });

@@ -305,7 +305,7 @@
                 theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme') : 'lpcTheme'),
                 model: null,
             }, {
-                /*
+
                 codeEditorService: {
                         addCodeEditor: (editor) => {
                             console.log('addCodeEditor');
@@ -322,7 +322,6 @@
                             return Promise.resolve({});
                         }
                     },
-                    */
                 textModelService: {
                     createModelReference: resource => {
                         var model = monaco.editor.getModel(resource);
@@ -8397,7 +8396,7 @@
                         tmpl['create body'] += '   add_permanent_resistances( ([\n       ';
                         data['mon-wiz-resistences'].forEach(r => {
                             tmpl['create body'] += `\"${r.type}\" : ${r.amount},\n       `;
-                        });                        
+                        });
                         tmpl['create body'] = tmpl['create body'].substring(0, tmpl['create body'].length - 9) + '\n     ]) );\n';
                     }
                 }
