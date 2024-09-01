@@ -216,7 +216,7 @@ export function SetupEditor() {
                     if (word)
                         word = word.word;
                     const value = model.getValue();
-                    const def = /^#define ([_a-zA-Z0-9]+)[ |\(].*$/gm;
+                    const def = /^#define ([_a-zA-Z0-9]+)[ |\(|\n].*$/gm;
                     let dValue;
                     //lets check current file first
                     dValue = value.split('\n');
@@ -229,11 +229,14 @@ export function SetupEditor() {
                             if (results2.index === def.lastIndex) {
                                 def.lastIndex++;
                             }
-                            if (results2[1] === word)
+                            if (results2[1] === word) {
+                                //the line is a #define line and can not define self
+                                if(position.lineNumber === i + 1) return null;
                                 return {
                                     uri: model.uri,
                                     range: new monaco.Range(i + 1, results2.index + 9, i + 1, results2.index + 9)
                                 };
+                            }
                             results2 = def.exec(l);
                         }
                     };
@@ -692,7 +695,7 @@ function findDefines(value, reg, root) {
     //const p = path.dirname((<any>model).file);
     let result = reg.exec(value);
     let dValue;
-    const def = /^#define ([_a-zA-Z0-9]+)[ |\(].*$/gm;
+    const def = /^#define ([_a-zA-Z0-9]+)[ |\(|\n].*$/gm;
     const defines = [];
     while (result !== null) {
         if (result.index === reg.lastIndex) {
@@ -733,7 +736,8 @@ function findDefine(define, value, reg, root) {
     //const p = path.dirname((<any>model).file);
     let result = reg.exec(value);
     let dValue;
-    const def = /^#define ([_a-zA-Z0-9]+)[ |\(].*$/gm;
+    let r;
+    const def = /^#define ([_a-zA-Z0-9]+)[ |\(|\n].*$/gm;
     while (result !== null) {
         if (result.index === reg.lastIndex) {
             reg.lastIndex++;
@@ -757,6 +761,10 @@ function findDefine(define, value, reg, root) {
                         };
                         results2 = def.exec(l);
                     }
+                    //check if line has any includes for nested defines
+                    r = findDefine(define, l, reg, path.dirname(f));
+                    if (r)
+                        return r;
                 };
                 if ($lpcDefineCache[f][define]) {
                     monaco.editor.createModel(dValue.join('\n'), 'lpc', monaco.Uri.file(f));
