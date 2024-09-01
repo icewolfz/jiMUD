@@ -69,6 +69,10 @@ export function removeIncludePath(p) {
         $includePaths = 0;
 }
 
+export function setIncludePaths(a) {
+    $includePaths = a;
+}
+
 export function SetupEditor() {
     return new Promise((resolve, reject) => {
         loadMonaco().then(() => {

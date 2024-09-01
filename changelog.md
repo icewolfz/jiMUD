@@ -4,6 +4,7 @@
 
 - **New:**
   - Code editor: 
+    - Add include path support for Go To/Peek Definition
     - Add Insert Comment Header to formatting menu to allow adding a comment header at the start of file with current date and logged in username
     - Add resistance page to monster wizard/editor
     - Area Designer: Add monster preview pane to monster editor
@@ -36,6 +37,7 @@
     - Fixed when closing cancel from save not preventing close
     - Fixed room/monster property code generation place temp properties as permanent properties
     - Fixed Go to Definition and Peek Definition
+    - Fixed editor font list not allowing selection of system fonts
     - Virtual area editor: 
       - Change code in generation of external room to use BASEROOM define
       - Fixed extra map codes being added to rooms when building raw map files

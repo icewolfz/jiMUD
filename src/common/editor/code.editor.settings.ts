@@ -23,6 +23,7 @@ export class EditorSettings {
     public dictionary = [];
     public session = '';
     public recentSessions = [];
+    public includePaths = [];
 
     public window = {
         persistent: false,

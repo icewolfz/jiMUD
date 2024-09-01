@@ -23,7 +23,7 @@
         var _loading = 1;
         var manager;
         const { SetupEditor } = require('./js/editor/code.editor');
-        const { ReplaceCommandThatPreservesSelection } = require('./js/editor/monaco');
+        const { ReplaceCommandThatPreservesSelection, setIncludePaths } = require('./js/editor/monaco');
 
         function windowType() { return 'codeEditor'; }
 
@@ -3142,6 +3142,7 @@
             showOutput();
         else
             showProblems();
+        setIncludePaths(options.includePaths);
         menubar.updateItem('view|output', { checked: options.output && options.outputTab === 0 });
         menubar.updateItem('view|problems', { checked: options.output && options.outputTab === 1 });
         menubar.updateItem('sessions|reload previous session', { enabled: options.session && options.session.length });

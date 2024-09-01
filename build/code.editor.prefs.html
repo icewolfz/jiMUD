@@ -68,6 +68,16 @@
             padding-right: 0px;
             padding-left: 0px;
         }
+
+        #includePaths {
+            top: 0;
+            right: 0;
+            left: 0;
+            bottom: 0;
+            height: 270px;
+            width: 100%;
+            padding: 0;
+        }
     </style>
     <script type="text/javascript">
         if (typeof module === 'object') { window.module = module; module = undefined; }
@@ -116,6 +126,7 @@
                     ops.push('<option style="font-family: ', el, '" value="', el, '">', el, '</option>');
                     fams[font.family] = 1;
                 });
+                ops = ops.join('');
                 $('#font-system').append(ops);
                 $('#raw-font-system').append(ops);
                 $('#preview-font-system').append(ops);
@@ -370,6 +381,13 @@
 
             $('.btn-group input').parent().removeClass('active');
             $('.btn-group input:checked').parent().addClass('active');
+
+            $('#includePaths').empty();
+            var ops = [];
+            _settings.includePaths.map(p => {
+                ops.push('<option value="', p, '">', p, '</option>');
+            });
+            $('#includePaths').append(ops.join(''));
         }
 
         function clearButton(id) {
@@ -473,6 +491,28 @@
                 }
             }
         }
+
+        function addPath() {
+            dialog.showOpenDialog({
+                //defaultPath: $dialogs.area.path.value,
+                properties: ['openDirectory', 'createDirectory']
+            }).then(result => {
+                if (result.filePaths === undefined || result.filePaths.length === 0) {
+                    return;
+                }
+                if (_settings.includePaths.indexOf(result.filePaths[0]) !== -1) return;
+                $('#includePaths').append(`<option value="${result.filePaths[0]}">${result.filePaths[0]}</option>`);
+                _settings.includePaths.push(result.filePaths[0]);
+            });
+        }
+
+        function removePath() {
+            $('#includePaths :selected').each((e, v) => {
+                let idx = _settings.includePaths.indexOf($(v).val())
+                _settings.includePaths.splice(idx, 1);
+                $(v).remove();
+            });
+        }
     </script>
 </head>
 
@@ -487,6 +527,9 @@
             </li>
             <li role="presentation">
                 <a href="#editorFont" aria-controls="editorFont" role="tab" data-toggle="tab">Editor Font</a>
+            </li>
+            <li role="presentation">
+                <a href="#includes" aria-controls="includes" role="tab" data-toggle="tab">Include paths</a>
             </li>
             <li role="presentation">
                 <a href="#virtualEditor" aria-controls="virtualEditor" role="tab" data-toggle="tab">Virtual Area Editor</a>
@@ -694,6 +737,18 @@
                         <div id="editorOptions-font-sample" style="margin: 0px; padding: 2px;height:1.5em;width:100%;overflow:hidden;">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
                     </label>
                 </div>
+            </div>
+            <div role="tabpanel" class="container tab-pane fade" id="includes" style="height: 100%;">
+                <div id="toolbar" class="btn-toolbar" role="toolbar" style="padding-bottom: 5px">
+                    <button type="button" class="btn btn-default" title="New File" onclick="addPath()">
+                        <i class="fa fa-plus"></i> Add...
+                    </button>
+                    <button type="button" class="btn btn-danger" title="New File" onclick="removePath()">
+                        <i class="fa fa-remove"></i> Remove
+                    </button>
+                </div>
+
+                <select id="includePaths" multiple="multiple" class="form-control"></select>
             </div>
             <div role="tabpanel" class="container tab-pane fade" id="virtualEditor">
                 <div class="col-sm-6 form-group">
