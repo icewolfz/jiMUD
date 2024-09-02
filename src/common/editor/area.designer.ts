@@ -12414,9 +12414,9 @@ export class AreaDesigner extends EditorBase {
                             return t;
                         else if (t.startsWith('(:')) {
                             t = formatFunctionPointer(t);
-                            if (!stubs[formatFunctionPointer(t)]) {
+                            if (!stubs[t]) {
                                 data['create pre'] += createFunction(t);
-                                stubs[formatFunctionPointer(t)] = 1;
+                                stubs[t] = 1;
                             }
                             return t;
                         }
@@ -12447,9 +12447,9 @@ export class AreaDesigner extends EditorBase {
             if (room.secretExit === 'false') { /**/ }
             else if (room.secretExit.startsWith('(:')) {
                 props['secret exit'] = formatFunctionPointer(room.secretExit, true);
-                if (!stubs[formatFunctionPointer(room.secretExit)]) {
+                if (!stubs[props['secret exit']]) {
                     data['create pre'] += createFunction(room.secretExit, 'string', 'object room, object player');
-                    stubs[formatFunctionPointer(room.secretExit)] = 1;
+                    stubs[props['secret exit']] = 1;
                 }
             }
             else if (room.secretExit === 'true')
@@ -12614,9 +12614,9 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.description.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3, true);
-                if (!stubs[formatFunctionPointer(tmp3)]) {
+                if (!stubs[tmp]) {
                     data['create pre'] += createFunction(tmp3, 'string');
-                    stubs[formatFunctionPointer(tmp3)] = 1;
+                    stubs[tmp] = 1;
                 }
             }
             else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
@@ -12764,9 +12764,9 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.description.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3, true);
-                if (!stubs[formatFunctionPointer(tmp3)]) {
+                if (!stubs[tmp3]) {
                     data['create pre'] += createFunction(tmp3, 'string', 'string smell, object room, object player');
-                    stubs[formatFunctionPointer(tmp3)] = 1;
+                    stubs[tmp3] = 1;
                 }
             }
             else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
@@ -12811,9 +12811,9 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.description.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3, true);
-                if (!stubs[formatFunctionPointer(tmp3)]) {
+                if (!stubs[tmp3]) {
                     data['create pre'] += createFunction(tmp3, 'string', 'string sound, object room, object player');
-                    stubs[formatFunctionPointer(tmp3)] = 1;
+                    stubs[tmp3] = 1;
                 }
             }
             else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
@@ -12855,9 +12855,9 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.message.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3, true);
-                if (!stubs[formatFunctionPointer(tmp3)]) {
+                if (!stubs[tmp3]) {
                     data['create pre'] += createFunction(tmp3, 'int');
-                    stubs[formatFunctionPointer(tmp3)] = 1;
+                    stubs[tmp3] = 1;
                 }
             }
             else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
@@ -12900,9 +12900,9 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.description.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3, true);
-                if (!stubs[formatFunctionPointer(tmp3)]) {
+                if (!stubs[tmp3]) {
                     data['create pre'] += createFunction(tmp3, 'string', 'string id');
-                    stubs[formatFunctionPointer(tmp3)] = 1;
+                    stubs[tmp3] = 1;
                 }
             }
             else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
@@ -13277,9 +13277,9 @@ export class AreaDesigner extends EditorBase {
                             return t;
                         else if (t.startsWith('(:')) {
                             t = formatFunctionPointer(t);
-                            if (!stubs[formatFunctionPointer(t)]) {
+                            if (!stubs[t]) {
                                 data['create pre'] += createFunction(t);
-                                stubs[formatFunctionPointer(t)] = 1;
+                                stubs[t] = 1;
                             }
                             return t;
                         }
@@ -13469,9 +13469,9 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.message.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3, true);
-                if (!stubs[formatFunctionPointer(tmp3)]) {
+                if (!stubs[tmp]) {
                     data['create pre'] += createFunction(tmp3, 'string', 'object player, string topic');
-                    stubs[formatFunctionPointer(tmp3)] = 1;
+                    stubs[tmp3] = 1;
                 }
             }
             else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
@@ -13488,9 +13488,9 @@ export class AreaDesigner extends EditorBase {
             if (monster.askTopics[0].message.trim().startsWith('(:')) {
                 tmp3 = formatFunctionPointer(monster.askTopics[0].message);
                 data['create body'] += `   set_topic(${tmp}, ${tmp3});\n`;
-                if (!stubs[formatFunctionPointer(tmp3)]) {
+                if (!stubs[tmp3]) {
                     data['create pre'] += createFunction(tmp3, 'string', 'object player, string topic');
-                    stubs[formatFunctionPointer(tmp3)] = 1;
+                    stubs[tmp3] = 1;
                 }
             }
             else if (!monster.askTopics[0].message.startsWith('"') && !monster.askTopics[0].message.endsWith('"'))
@@ -13540,9 +13540,9 @@ export class AreaDesigner extends EditorBase {
                 else if (r.amount.startsWith('(:')) {
                     tmp3 = formatFunctionPointer(r.amount);
                     data['create body'] += `   set_reputation_${fun}(${r.group}${tmp3});\n`;
-                    if (!stubs[formatFunctionPointer(tmp3)]) {
+                    if (!stubs[tmp3]) {
                         data['create pre'] += createFunction(tmp3, 'string', 'object monster, object killer');
-                        stubs[formatFunctionPointer(tmp3)] = 1;
+                        stubs[tmp3] = 1;
                     }
                 }
                 else if (!r.amount.startsWith('"') && !r.amount.endsWith('"'))
@@ -13557,9 +13557,9 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.message.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3, true);
-                if (!stubs[formatFunctionPointer(tmp3)]) {
+                if (!stubs[tmp3]) {
                     data['create pre'] += createFunction(tmp3, 'mixed', 'object monster');
-                    stubs[formatFunctionPointer(tmp3)] = 1;
+                    stubs[tmp3] = 1;
                 }
             }
             else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
@@ -13572,9 +13572,9 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.message.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3, true);
-                if (!stubs[formatFunctionPointer(tmp3)]) {
+                if (!stubs[tmp3]) {
                     data['create pre'] += createFunction(tmp3, 'mixed', 'object monster');
-                    stubs[formatFunctionPointer(tmp3)] = 1;
+                    stubs[tmp3] = 1;
                 }
             }
             else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
@@ -13590,9 +13590,9 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.message.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3, true);
-                if (!stubs[formatFunctionPointer(tmp3)]) {
+                if (!stubs[tmp3]) {
                     data['create pre'] += createFunction(tmp3, 'mixed', 'object monster, string language');
-                    stubs[formatFunctionPointer(tmp3)] = 1;
+                    stubs[tmp3] = 1;
                 }
             }
             else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
@@ -13610,9 +13610,9 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.message.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3, true);
-                if (!stubs[formatFunctionPointer(tmp3)]) {
+                if (!stubs[tmp3]) {
                     data['create pre'] += createFunction(tmp3, 'mixed', 'object monster, string language');
-                    stubs[formatFunctionPointer(tmp3)] = 1;
+                    stubs[tmp3] = 1;
                 }
             }
             else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
@@ -14389,9 +14389,9 @@ export class AreaDesigner extends EditorBase {
         obj.short = (obj.short || '').trim();
         if (obj.short.startsWith('(:')) {
             data.short = formatFunctionPointer(obj.short);
-            if (!stubs[formatFunctionPointer(tmp3)]) {
+            if (!stubs[data.short]) {
                 data['create pre'] += createFunction(obj.short, 'string');
-                stubs[formatFunctionPointer(tmp3)] = 1;
+                stubs[data.short] = 1;
             }
         }
         else if (obj.short.startsWith('"') && obj.short.endsWith('"'))
@@ -14401,9 +14401,9 @@ export class AreaDesigner extends EditorBase {
         obj.long = (obj.long || '').trim();
         if (obj.long.startsWith('(:')) {
             data.long = formatFunctionPointer(obj.long);
-            if (!stubs[formatFunctionPointer(obj.long)]) {
+            if (!stubs[obj.long]) {
                 data['create pre'] += createFunction(obj.long, 'string');
-                stubs[formatFunctionPointer(obj.long)] = 1;
+                stubs[obj.long] = 1;
             }
             data.description = obj.long.substr(2);
             if (data.description.endsWith(':)'))
@@ -14483,9 +14483,9 @@ export class AreaDesigner extends EditorBase {
                             return t;
                         else if (t.startsWith('(:')) {
                             t = formatFunctionPointer(t);
-                            if (!stubs[formatFunctionPointer(t)]) {
+                            if (!stubs[t]) {
                                 data['create pre'] += createFunction(t);
-                                stubs[formatFunctionPointer(t)] = 1;
+                                stubs[t] = 1;
                             }
                             return t;
                         }
@@ -14779,9 +14779,9 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.description.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3, true);
-                if (!stubs[formatFunctionPointer(tmp3)]) {
+                if (!stubs[tmp3]) {
                     data['create pre'] += createFunction(tmp3, 'string', 'string id');
-                    stubs[formatFunctionPointer(tmp3)] = 1;
+                    stubs[tmp3] = 1;
                 }
             }
             else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
