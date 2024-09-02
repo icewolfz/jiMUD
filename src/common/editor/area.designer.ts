@@ -10956,17 +10956,15 @@ export class AreaDesigner extends EditorBase {
         while (ol--)
             this.DrawRoom(this.$mapContext, old[ol], true);
         if (region && region.type === RegionType.Ellipse) {
-            /*
             for (let rY = y; rY < height; rY++) {
                 const r = this.$area.rooms[this.$depth][rY];
                 for (let rX = x; rX < width; rX++) {
-                    if (!ellipseBox(region.x, region.y, region.width, region.height, rX * 32, rY * 32, 32, 32))
+                    if (!rectEllipse(rX * 32, rY * 32, 32, 32, region.x, region.y, region.width, region.height, this.$mapContext))
                         continue;
                     this.$selectedRooms.push(r[rX]);
                     this.DrawRoom(this.$mapContext, r[rX], true, r[rX].at(this.$mouse.rx, this.$mouse.ry));
                 }
             }
-            */
         }
         else if (y === height) {
             const r = this.$area.rooms[this.$depth][y];
@@ -10998,17 +10996,15 @@ export class AreaDesigner extends EditorBase {
         if (width > this.$area.size.width) width = this.$area.size.width;
         if (height > this.$area.size.height) height = this.$area.size.height;
         if (region && region.type === RegionType.Ellipse) {
-            /*
             for (let rY = y; rY < height; rY++) {
                 const r = this.$area.rooms[this.$depth][rY];
                 for (let rX = x; rX < width; rX++) {
-                    if (this.$selectedRooms.indexOf(r[rX]) !== -1 || !isInEllipse(rX * 32, rY * 32, x * 32 + width * 16, y * 32 + height * 16, width * 32, height * 32))
+                    if (this.$selectedRooms.indexOf(r[rX]) !== -1 || !rectEllipse(rX * 32, rY * 32, 32, 32, region.x, region.y, region.width, region.height, this.$mapContext))
                         continue;
                     this.$selectedRooms.push(r[rX]);
                     this.DrawRoom(this.$mapContext, r[rX], true, r[rX].at(this.$mouse.rx, this.$mouse.ry));
                 }
             }
-            */
         }
         else if (y === height) {
             const r = this.$area.rooms[this.$depth][y];
@@ -11047,11 +11043,10 @@ export class AreaDesigner extends EditorBase {
         if (width > this.$area.size.width) width = this.$area.size.width;
         if (height > this.$area.size.height) height = this.$area.size.height;
         if (region && region.type === RegionType.Ellipse) {
-            /*
             for (let rY = y; rY < height; rY++) {
                 const r = this.$area.rooms[this.$depth][rY];
                 for (let rX = x; rX < width; rX++) {
-                    if (!isInEllipse(rX * 32, rY * 32, x * 32 + width * 16, y * 32 + height * 16, width * 32, height * 32))
+                    if (!rectEllipse(rX * 32, rY * 32, 32, 32, region.x, region.y, region.width, region.height, this.$mapContext))
                         continue;
                     idx = this.$selectedRooms.indexOf(r[x]);
                     if (idx === -1)
@@ -11061,7 +11056,6 @@ export class AreaDesigner extends EditorBase {
                     this.DrawRoom(this.$mapContext, r[rX], true, r[rX].at(this.$mouse.rx, this.$mouse.ry));
                 }
             }
-            */
         }
         else if (y === height) {
             const r = this.$area.rooms[this.$depth][y];
@@ -11112,11 +11106,10 @@ export class AreaDesigner extends EditorBase {
         if (width > this.$area.size.width) width = this.$area.size.width;
         if (height > this.$area.size.height) height = this.$area.size.height;
         if (region && region.type === RegionType.Ellipse) {
-            /*z=
             for (let rY = y; rY < height; rY++) {
                 const r = this.$area.rooms[this.$depth][rY];
                 for (let rX = x; rX < width; rX++) {
-                    if (!isInEllipse(rX * 32, rY * 32, x * 32 + width * 16, y * 32 + height * 16, width * 32, height * 32))
+                    if (!rectEllipse(rX * 32, rY * 32, 32, 32, region.x, region.y, region.width, region.height, this.$mapContext))
                         continue;
                     idx = this.$selectedRooms.indexOf(r[x]);
                     if (idx !== -1)
@@ -11124,7 +11117,6 @@ export class AreaDesigner extends EditorBase {
                     this.DrawRoom(this.$mapContext, r[rX], true, r[rX].at(this.$mouse.rx, this.$mouse.ry));
                 }
             }
-            */
         }
         else if (y === height) {
             const r = this.$area.rooms[this.$depth][y];
@@ -15119,59 +15111,32 @@ function ellipse(text, len?) {
     return text.substr(0, len) + '&hellip;';
 }
 
-/*
+
 function isInEllipse(x, y, cx, cy, a, b) {
     var dx = x - cx;
     var dy = y - cy;
     return ((dx * dx) / (a * a) + (dy * dy) / (b * b) <= 1);
 }
 
-function pointInEllipse(x, y, ex, ey, ew, eh, ctx) {
+function rectEllipse(x, y, w, h, ex, ey, ew, eh, ctx) {
+    const nx = Math.min(ex, ex + ew);
+    const ny = Math.min(ey, ey + eh);
+    const nwidth = Math.max(ex, ex + ew) - nx;
+    const nheight = Math.max(ey, ey + eh) - ny;    
     const ellipse = new Path2D();
-    ellipse.ellipse(ex + ew / 2.0, ey + eh / 2.0, ew * 0.5, eh * 0.5, 0, 0, Math.PI * 2);
+    ellipse.ellipse(nx + nwidth / 2.0, ny + nheight / 2.0, nwidth * 0.5, nheight * 0.5, 0, 0, Math.PI * 2);
+    return ctx.isPointInPath(ellipse, x, y) || 
+    ctx.isPointInPath(ellipse, x + w, y) ||
+    ctx.isPointInPath(ellipse, x + w, y + h) ||
+    ctx.isPointInPath(ellipse, x, y + h);
+}
+
+function pointInEllipse(x, y, ex, ey, ew, eh, ctx) {
+    const nx = Math.min(ex, ex + ew);
+    const ny = Math.min(ey, ey + eh);
+    const nwidth = Math.max(ex, ex + ew) - nx;
+    const nheight = Math.max(ey, ey + eh) - ny;    
+    const ellipse = new Path2D();
+    ellipse.ellipse(nx + nwidth / 2.0, ny + nheight / 2.0, nwidth * 0.5, nheight * 0.5, 0, 0, Math.PI * 2);
     return ctx.isPointInPath(ellipse, x, y);
 }
-
-function ellipseLine(xe, ye, rex, rey, x1, y1, x2, y2) {
-    x1 -= xe
-    x2 -= xe
-    y1 -= ye
-    y2 -= ye
-
-    var A = Math.pow(x2 - x1, 2) / rex / rex + Math.pow(y2 - y1, 2) / rey / rey
-    var B = 2 * x1 * (x2 - x1) / rex / rex + 2 * y1 * (y2 - y1) / rey / rey
-    var C = x1 * x1 / rex / rex + y1 * y1 / rey / rey - 1
-    var D = B * B - 4 * A * C
-    if (D === 0) {
-        var t = -B / 2 / A
-        return t >= 0 && t <= 1
-    }
-    else if (D > 0) {
-        var sqrt = Math.sqrt(D)
-        var t1 = (-B + sqrt) / 2 / A
-        var t2 = (-B - sqrt) / 2 / A
-        return (t1 >= 0 && t1 <= 1) || (t2 >= 0 && t2 <= 1)
-    }
-    else {
-        return false
-    }
-}
-
-function ellipsePoint(xe, ye, rex, rey, x1, y1) {
-    var x = Math.pow(x1 - xe, 2) / (rex * rex)
-    var y = Math.pow(y1 - ye, 2) / (rey * rey)
-    return x + y <= 1
-}
-
-function ellipseBox(xe, ye, rex, rey, xb, yb, wb, hb) {
-    return boxPoint(xb, yb, wb, hb, xe, ye) ||
-        ellipseLine(xe, ye, rex, rey, xb, yb, xb + wb, yb) ||
-        ellipseLine(xe, ye, rex, rey, xb, yb + hb, xb + wb, yb + hb) ||
-        ellipseLine(xe, ye, rex, rey, xb, yb, xb, yb + hb) ||
-        ellipseLine(xe, ye, rex, rey, xb + wb, yb, xb + wb, yb + hb)
-}
-
-function boxPoint(x1, y1, w1, h1, x2, y2) {
-    return x2 >= x1 && x2 <= x1 + w1 && y2 >= y1 && y2 <= y1 + h1
-}
-*/
