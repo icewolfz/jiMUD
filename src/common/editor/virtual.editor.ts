@@ -1862,7 +1862,16 @@ export class VirtualEditor extends EditorBase {
                 const y = Math.min(this.$mouseDown.ry, this.$mouse.ry);
                 const width = Math.ceil(Math.max(this.$mouseDown.x, this.$mouse.x) / 32);
                 const height = Math.ceil(Math.max(this.$mouseDown.y, this.$mouse.y) / 32);
-                this.setSelection(x, y, width, height);
+                if (e.ctrlKey) {
+                    const room = this.getRoom(this.$mouseDown.rx, this.$mouseDown.ry);
+                    const idx = this.$selectedRooms.indexOf(room);
+                    if (idx === -1)
+                        this.addSelection(x, y, width, height);
+                    else
+                        this.removeSelection(x, y, width, height);
+                }
+                else                
+                    this.setSelection(x, y, width, height);
                 if (this.$selectedRooms.length !== 0)
                     this.setFocusedRoom(this.$selectedRooms[this.$selectedRooms.length - 1]);
                 else
@@ -7686,6 +7695,130 @@ export class VirtualEditor extends EditorBase {
                 else
                     for (let rX = x; rX < width; rX++) {
                         this.$selectedRooms.push(r[rX]);
+                        this.DrawRoom(this.$mapContext, r[rX], true, r[rX].at(this.$mouse.rx, this.$mouse.ry));
+                    }
+            }
+        this.ChangeSelection();
+    }
+
+    private addSelection(x, y, width, height) {
+        if (x < 0) x = 0;
+        if (y < 0) y = 0;
+        if (width > this.$mapSize.width) width = this.$mapSize.width;
+        if (height > this.$mapSize.height) height = this.$mapSize.height;
+        if (y === height) {
+            const r = this.$rooms[this.$depth][y];
+            if (x === width) {
+                if(this.$selectedRooms.indexOf(r[x]) === -1)
+                    this.$selectedRooms.push(r[x]);
+            }
+            else
+                for (let rX = x; rX < width; rX++) {
+                    if(this.$selectedRooms.indexOf(r[rX]) !== -1) continue;
+                    this.$selectedRooms.push(r[rX]);
+                    this.DrawRoom(this.$mapContext, r[rX], true, r[rX].at(this.$mouse.rx, this.$mouse.ry));
+                }
+        }
+        else
+            for (let rY = y; rY < height; rY++) {
+                const r = this.$rooms[this.$depth][rY];
+                if (x === width) {
+                    if(this.$selectedRooms.indexOf(r[x]) === -1)
+                        this.$selectedRooms.push(r[x]);
+                }
+                else
+                    for (let rX = x; rX < width; rX++) {
+                        if(this.$selectedRooms.indexOf(r[rX]) !== -1) continue;
+                        this.$selectedRooms.push(r[rX]);
+                        this.DrawRoom(this.$mapContext, r[rX], true, r[rX].at(this.$mouse.rx, this.$mouse.ry));
+                    }
+            }
+        this.ChangeSelection();
+    }
+
+    private toggleSelection(x, y, width, height) {
+        let idx;
+        if (x < 0) x = 0;
+        if (y < 0) y = 0;
+        if (width > this.$mapSize.width) width = this.$mapSize.width;
+        if (height > this.$mapSize.height) height = this.$mapSize.height;
+        if (y === height) {
+            const r = this.$rooms[this.$depth][y];
+            if (x === width) {
+                idx = this.$selectedRooms.indexOf(r[x]);
+                if (idx === -1)
+                    this.$selectedRooms.push(r[x]);
+                else
+                    this.$selectedRooms.splice(idx, 1);
+
+            }
+            else
+                for (let rX = x; rX < width; rX++) {
+                    idx = this.$selectedRooms.indexOf(r[rX]);
+                    if (idx === -1)
+                        this.$selectedRooms.push(r[rX]);
+                    else
+                        this.$selectedRooms.splice(idx, 1);
+                    this.DrawRoom(this.$mapContext, r[rX], true, r[rX].at(this.$mouse.rx, this.$mouse.ry));
+                }
+        }
+        else
+            for (let rY = y; rY < height; rY++) {
+                const r = this.$rooms[this.$depth][rY];
+                if (x === width) {
+                    idx = this.$selectedRooms.indexOf(r[x]);
+                    if (idx === -1)
+                        this.$selectedRooms.push(r[x]);
+                    else
+                        this.$selectedRooms.splice(idx, 1);
+                }
+                else
+                    for (let rX = x; rX < width; rX++) {
+                        idx = this.$selectedRooms.indexOf(r[rX]);
+                        if (idx === -1)
+                            this.$selectedRooms.push(r[rX]);
+                        else
+                            this.$selectedRooms.splice(idx, 1);
+                        this.DrawRoom(this.$mapContext, r[rX], true, r[rX].at(this.$mouse.rx, this.$mouse.ry));
+                    }
+            }
+        this.ChangeSelection();
+    }
+
+    private removeSelection(x, y, width, height) {
+        let idx;
+        if (x < 0) x = 0;
+        if (y < 0) y = 0;
+        if (width > this.$mapSize.width) width = this.$mapSize.width;
+        if (height > this.$mapSize.height) height = this.$mapSize.height;
+        if (y === height) {
+            const r = this.$rooms[this.$depth][y];
+            if (x === width) {
+                idx = this.$selectedRooms.indexOf(r[x]);
+                if (idx !== -1)
+                    this.$selectedRooms.splice(idx, 1);
+            }
+            else
+                for (let rX = x; rX < width; rX++) {
+                    idx = this.$selectedRooms.indexOf(r[rX]);
+                    if (idx !== -1)
+                        this.$selectedRooms.splice(idx, 1);
+                    this.DrawRoom(this.$mapContext, r[rX], true, r[rX].at(this.$mouse.rx, this.$mouse.ry));
+                }
+        }
+        else
+            for (let rY = y; rY < height; rY++) {
+                const r = this.$rooms[this.$depth][rY];
+                if (x === width) {
+                    idx = this.$selectedRooms.indexOf(r[x]);
+                    if (idx !== -1)
+                        this.$selectedRooms.splice(idx, 1);
+                }
+                else
+                    for (let rX = x; rX < width; rX++) {
+                        idx = this.$selectedRooms.indexOf(r[rX]);
+                        if (idx !== -1)
+                            this.$selectedRooms.splice(idx, 1);
                         this.DrawRoom(this.$mapContext, r[rX], true, r[rX].at(this.$mouse.rx, this.$mouse.ry));
                     }
             }

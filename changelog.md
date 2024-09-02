@@ -2,6 +2,10 @@
 
 ## 1.5.1
 
+- **New:**
+  - Code editor: 
+    - Area Designer: Add ctrl+click selection system
+    - Virtual area editor: Add ctrl+click selection system
 - **Fixed:**
   - Increase progress dialog height
 
