@@ -1,7 +1,7 @@
 //spellchecker:ignore sefun sefuns lfuns lfun efuns efun precompiler ltrim rtrim
 //spellchecker:ignore lbracket rbracket loperator roperator rhook lhook xeot
 import { EventEmitter } from 'events';
-import { parseTemplate, walkSync } from '../library';
+import { parseTemplate, walkSync, isValidIdentifier } from '../library';
 const fs = require('fs-extra');
 const path = require('path');
 
@@ -444,7 +444,7 @@ export const language = <ILanguage>{
         'rtrim',
         'trimws',
         'ltrimws',
-        'rtrimws',        
+        'rtrimws',
         'reverse_string',
         'starts_with',
         'ends_with',
@@ -2457,6 +2457,7 @@ export function createFunction(name, type?, args?) {
         name = name.substr(0, name.length - 2);
     args = args || '';
     name = name.trim();
+    if (!validFunctionPointer(name)) return '';
     if (!type || type === 'void')
         return `void ${name}(${args})\n{\n}\n\n`;
     switch (type) {
@@ -2538,6 +2539,17 @@ export function formatMapping(str, indent?, sub?) {
     else
         out += '\n' + indent + '])';
     return out;
+}
+
+export function validFunctionPointer(name, trim?) {
+    if (!name || name.length === 0) return 0;
+    name = name.trim();
+    if (name.startsWith('(:'))
+        name = name.substr(2);
+    if (name.endsWith(':)'))
+        name = name.substr(0, name.length - 2);
+    name = name.trim();
+    return isValidIdentifier(name);
 }
 
 function parseString(str, format?) {

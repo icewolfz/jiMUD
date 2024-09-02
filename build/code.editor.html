@@ -6417,6 +6417,7 @@
                 var climbs = data['room-wiz-exits'].filter(r => r.exit.length > 0 && (!r.door || r.door.length === 0) && r.climb);
                 var props = {};
                 var tempProps = {};
+                var stubs = {};
                 tmpl.doc = [];
                 tmpl.includes = '';
                 tmpl['create pre'] = '';
@@ -6540,7 +6541,10 @@
                 data['room-wiz-short'] = data['room-wiz-short'].trim();
                 if (data['room-wiz-short'].startsWith('(:')) {
                     tmpl['short'] = formatFunctionPointer(data['room-wiz-short']);
-                    tmpl['create pre'] += createFunction(data['room-wiz-short'], 'string');
+                    if (!stubs[data['room-wiz-short']]) {
+                        tmpl['create pre'] += createFunction(data['room-wiz-short'], 'string');
+                        stubs[data['room-wiz-short']] = 1;
+                    }
                     tmpl['name'] = data['room-wiz-short'].substr(2);
                     if (tmpl['name'].endsWith(':)'))
                         tmpl['name'] = tmpl['name'].substr(0, tmpl['name'].length - 2);
@@ -6557,7 +6561,10 @@
                 data['room-wiz-long'] = data['room-wiz-long'].trim();
                 if (data['room-wiz-long'].startsWith('(:')) {
                     tmpl['long'] = formatFunctionPointer(data['room-wiz-long']);
-                    tmpl['create pre'] += createFunction(data['room-wiz-long'], 'string');
+                    if (!stubs[data['room-wiz-long']]) {
+                        tmpl['create pre'] += createFunction(data['room-wiz-long'], 'string');
+                        stubs[data['room-wiz-long']] = 1
+                    }
                     tmpl['description'] = data['room-wiz-long'].substr(2);
                     if (tmpl['description'].endsWith(':)'))
                         tmpl['description'] = tmpl['description'].substr(0, tmpl['description'].length - 2);
@@ -6630,7 +6637,10 @@
                 if (data['room-wiz-secret-exit'] === 'false') { /**/ }
                 else if (data['room-wiz-secret-exit'].startsWith('(:')) {
                     props['secret exit'] = formatFunctionPointer(data['room-wiz-secret-exit'], true);
-                    tmpl['create pre'] += createFunction(data['room-wiz-secret-exit'], 'string', 'object room, object player');
+                    if (!stubs[data['room-wiz-secret-exit']]) {
+                        tmpl['create pre'] += createFunction(data['room-wiz-secret-exit'], 'string', 'object room, object player');
+                        stubs[data['room-wiz-secret-exit']] = 1;
+                    }
                 }
                 else if (data['room-wiz-secret-exit'] === 'true')
                     props['secret exit'] = 1;
@@ -6650,7 +6660,10 @@
                                 tempProps[b.name] = formatFunctionPointer(b.value);
                             else
                                 props[b.name] = formatFunctionPointer(b.value);
-                            tmpl['create pre'] += createFunction(b.value);
+                            if (!stubs[b.value]) {
+                                tmpl['create pre'] += createFunction(b.value);
+                                stubs[b.value] = 1;
+                            }
                         }
                         else if (b.value.startsWith('({')) {
                             tmp2 = b.value.substring(2);
@@ -6663,7 +6676,10 @@
                                     return t;
                                 else if (t.startsWith('(:')) {
                                     t = formatFunctionPointer(t);
-                                    tmpl['create pre'] += createFunction(t);
+                                    if (!stubs[t]) {
+                                        tmpl['create pre'] += createFunction(t);
+                                        stubs[t] = 1;
+                                    }
                                     return t;
                                 }
                                 return `"${t}"`;
@@ -6752,7 +6768,10 @@
                 if (data['room-wiz-prevent-peer'] === 'false') { /**/ }
                 else if (data['room-wiz-prevent-peer'].startsWith('(:')) {
                     tmpl['create body'] += `   set_prevent_peer(${formatFunctionPointer(data['room-wiz-prevent-peer'])});\n`;
-                    tmpl['create pre'] += createFunction(data['room-wiz-prevent-peer'], 'string', 'string dir, object player');
+                    if (!stubs[data['room-wiz-prevent-peer']]) {
+                        tmpl['create pre'] += createFunction(data['room-wiz-prevent-peer'], 'string', 'string dir, object player');
+                        stubs[data['room-wiz-prevent-peer']] = 1;
+                    }
                 }
                 else if (data['room-wiz-prevent-peer'] === 'true')
                     tmpl['create body'] += '   set_prevent_peer(1);\n';
@@ -6765,7 +6784,10 @@
                     if (p.peer === 'false') { /**/ }
                     if (p.peer.startsWith('(:')) {
                         tmpl['create body'] += `   set_prevent_peer("${p.exit}", ${formatFunctionPointer(p.peer)});\n`;
-                        tmpl['create pre'] += createFunction(p, 'string', 'string dir, object player');
+                        if (!stubs[p.peer]) {
+                            tmpl['create pre'] += createFunction(p.peer, 'string', 'string dir, object player');
+                            stubs[p.peer] = 1;
+                        }
                     }
                     else if (p.peer === 'true')
                         tmpl['create body'] += `   set_prevent_peer("${p.exit}", 1);\n`;
@@ -6789,7 +6811,10 @@
                     tmp3 = i.description.trim();
                     if (tmp3.startsWith('(:')) {
                         tmp3 = formatFunctionPointer(tmp3, true);
-                        tmpl['create pre'] += createFunction(tmp3, 'string');
+                        if (!stubs[tmp3]) {
+                            tmpl['create pre'] += createFunction(tmp3, 'string');
+                            stubs[tmp3] = 1;
+                        }
                     }
                     else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                         tmp3 = '"' + tmp3 + '"';
@@ -6885,7 +6910,10 @@
                     tmp3 = i.description.trim();
                     if (tmp3.startsWith('(:')) {
                         tmp3 = formatFunctionPointer(tmp3, true);
-                        tmpl['create pre'] += createFunction(tmp3, 'string', 'string smell, object room, object player');
+                        if (!stubs[tmp3]) {
+                            tmpl['create pre'] += createFunction(tmp3, 'string', 'string smell, object room, object player');
+                            stubs[tmp3] = 1;
+                        }
                     }
                     else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                         tmp3 = '"' + tmp3 + '"';
@@ -6921,7 +6949,10 @@
                     tmp3 = i.description.trim();
                     if (tmp3.startsWith('(:')) {
                         tmp3 = formatFunctionPointer(tmp3, true);
-                        tmpl['create pre'] += createFunction(tmp3, 'string', 'string sound, object room, object player');
+                        if (!stubs[tmp3]) {
+                            tmpl['create pre'] += createFunction(tmp3, 'string', 'string sound, object room, object player');
+                            stubs[tmp3] = 1;
+                        }
                     }
                     else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                         tmp3 = '"' + tmp3 + '"';
@@ -6957,7 +6988,10 @@
                     tmp3 = i.message.trim();
                     if (tmp3.startsWith('(:')) {
                         tmp3 = formatFunctionPointer(tmp3, true);
-                        tmpl['create pre'] += createFunction(tmp3, 'string', 'string search');
+                        if (!stubs[tmp3]) {
+                            tmpl['create pre'] += createFunction(tmp3, 'string', 'string search');
+                            stubs[tmp3] = 1;
+                        }
                     }
                     else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                         tmp3 = '"' + tmp3 + '"';
@@ -7007,7 +7041,10 @@
                     tmp3 = i.description.trim();
                     if (tmp3.startsWith('(:')) {
                         tmp3 = formatFunctionPointer(tmp3, true);
-                        tmpl['create pre'] += createFunction(tmp3, 'string', 'string id');
+                        if (!stubs[tmp3]) {
+                            tmpl['create pre'] += createFunction(tmp3, 'string', 'string id');
+                            stubs[tmp3] = 1;
+                        }
                     }
                     else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                         tmp3 = '"' + tmp3 + '"';
@@ -7915,6 +7952,7 @@
                 var tmp;
                 var props = [];
                 var tempProps = [];
+                var stubs = {};
                 tmpl.inherit = data['mon-wiz-type'].value;
                 tmpl.includes = data['mon-wiz-type'].display === 'Base' ? '\n#include "../area.h"' : '';
                 tmpl['doc'] = [];
@@ -8000,7 +8038,10 @@
                 data['mon-wiz-short'] = data['mon-wiz-short'].trim();
                 if (data['mon-wiz-short'].startsWith('(:')) {
                     tmpl['short'] = formatFunctionPointer(data['mon-wiz-short']);
-                    tmpl['create pre'] += createFunction(data['mon-wiz-short'], 'string');
+                    if (!stubs[data['mon-wiz-short']]) {
+                        tmpl['create pre'] += createFunction(data['mon-wiz-short'], 'string');
+                        stubs[data['mon-wiz-short']] = 1;
+                    }
                 }
                 else if (data['mon-wiz-short'].startsWith('"') && data['mon-wiz-short'].endsWith('"'))
                     tmpl['short'] = `${data['mon-wiz-short']}`;
@@ -8009,7 +8050,10 @@
                 data['mon-wiz-long'] = data['mon-wiz-long'].trim();
                 if (data['mon-wiz-long'].startsWith('(:')) {
                     tmpl['long'] = formatFunctionPointer(data['mon-wiz-long']);
-                    tmpl['create pre'] += createFunction(data['mon-wiz-long'], 'string');
+                    if (!stubs[data['mon-wiz-long']]) {
+                        tmpl['create pre'] += createFunction(data['mon-wiz-long'], 'string');
+                        stubs[data['mon-wiz-long']] = 1
+                    }
                     tmpl['description'] = data['mon-wiz-long'].substr(2);
                     if (tmpl['description'].endsWith(':)'))
                         tmpl['description'] = tmpl['description'].substr(0, tmpl['description'].length - 2);
@@ -8096,7 +8140,10 @@
                 data['mon-wiz-no-corpse'] = data['mon-wiz-no-corpse'].trim();
                 if (data['mon-wiz-no-corpse'].startsWith('(:')) {
                     props['no corpse'] = formatFunctionPointer(data['mon-wiz-no-corpse'], true);
-                    tmpl['create pre'] += createFunction(data['mon-wiz-no-corpse'], 'string');
+                    if (!stubs[data['mon-wiz-no-corpse']]) {
+                        tmpl['create pre'] += createFunction(data['mon-wiz-no-corpse'], 'string');
+                        stubs[data['mon-wiz-no-corpse']] = 1;
+                    }
                 }
                 else if (data['mon-wiz-no-corpse'].startsWith('"') && data['mon-wiz-no-corpse'].endsWith('"'))
                     props['no corpse'] = data['mon-wiz-no-corpse'];
@@ -8105,7 +8152,10 @@
                 data['mon-wiz-no-limbs'] = data['mon-wiz-no-limbs'].trim();
                 if (data['mon-wiz-no-limbs'].startsWith('(:')) {
                     props['no limbs'] = formatFunctionPointer(data['mon-wiz-no-limbs'], true);
-                    tmpl['create pre'] += createFunction(data['mon-wiz-no-limbs'], 'string');
+                    if (!stubs[data['mon-wiz-no-limbs']]) {
+                        tmpl['create pre'] += createFunction(data['mon-wiz-no-limbs'], 'string');
+                        stubs[data['mon-wiz-no-limbs']] = 1;
+                    }
                 }
                 else if (data['mon-wiz-no-limbs'].startsWith('"') && data['mon-wiz-no-limbs'].endsWith('"'))
                     props['no limbs'] = data['mon-wiz-no-limbs'];
@@ -8120,7 +8170,10 @@
                                 tempProps[b.name] = formatFunctionPointer(b.value);
                             else
                                 props[b.name] = formatFunctionPointer(b.value);
-                            tmpl['create pre'] += createFunction(b.value);
+                            if (!stubs[data[b.value]]) {
+                                tmpl['create pre'] += createFunction(b.value);
+                                stubs[data[b.value]] = 1;
+                            }
                         }
                         else if (b.value.startsWith('({')) {
                             tmp2 = b.value.substring(2);
@@ -8133,7 +8186,10 @@
                                     return t;
                                 else if (t.startsWith('(:')) {
                                     t = formatFunctionPointer(t);
-                                    tmpl['create pre'] += createFunction(t);
+                                    if (!stubs[data[t]]) {
+                                        tmpl['create pre'] += createFunction(t);
+                                        stubs[data[t]] = 1;
+                                    }
                                     return t;
                                 }
                                 return `"${t}"`;
@@ -8303,7 +8359,10 @@
                     tmp3 = i.message.trim();
                     if (tmp3.startsWith('(:')) {
                         tmp3 = formatFunctionPointer(tmp3, true);
-                        tmpl['create pre'] += createFunction(tmp3, 'string', 'object player, string topic');
+                        if (!stubs[data[tmp3]]) {
+                            tmpl['create pre'] += createFunction(tmp3, 'string', 'object player, string topic');
+                            stubs[data[tmp3]] = 1;
+                        }
                     }
                     else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                         tmp3 = '"' + tmp3 + '"';
@@ -8317,7 +8376,10 @@
                     if (data['mon-wiz-ask-topics'][0].message.startsWith('(:')) {
                         tmp3 = formatFunctionPointer(data['mon-wiz-ask-topics'][0].message);
                         tmpl['create body'] += `   set_topic(${data['mon-wiz-ask-topics'][0].topic}, ${tmp3});\n`;
-                        tmpl['create pre'] += createFunction(tmp3, 'string', 'object player, string topic');
+                        if (!stubs[data[tmp3]]) {
+                            tmpl['create pre'] += createFunction(tmp3, 'string', 'object player, string topic');
+                            stubs[data[tmp3]] = 1;
+                        }
                     }
                     else if (!data['mon-wiz-ask-topics'][0].message.startsWith('"') && !data['mon-wiz-ask-topics'][0].message.endsWith('"'))
                         tmpl['create body'] += `   set_topic(${data['mon-wiz-ask-topics'][0].topic}, "${data['mon-wiz-ask-topics'][0].message}");\n`;
@@ -8337,7 +8399,10 @@
                     tmp3 = i.message.trim();
                     if (tmp3.startsWith('(:')) {
                         tmp3 = formatFunctionPointer(tmp3, true);
-                        tmpl['create pre'] += createFunction(tmp3, 'mixed', 'object monster');
+                        if (!stubs[data[tmp3]]) {
+                            tmpl['create pre'] += createFunction(tmp3, 'mixed', 'object monster');
+                            stubs[data[tmp3]] = 1;
+                        }
                     }
                     else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                         tmp3 = '"' + tmp3 + '"';
@@ -8349,7 +8414,10 @@
                     tmp3 = i.message.trim();
                     if (tmp3.startsWith('(:')) {
                         tmp3 = formatFunctionPointer(tmp3, true);
-                        tmpl['create pre'] += createFunction(tmp3, 'mixed', 'object monster');
+                        if (!stubs[data[tmp3]]) {
+                            tmpl['create pre'] += createFunction(tmp3, 'mixed', 'object monster');
+                            stubs[data[tmp3]] = 1;
+                        }
                     }
                     else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                         tmp3 = '"' + tmp3 + '"';
@@ -8364,7 +8432,10 @@
                     tmp3 = i.message.trim();
                     if (tmp3.startsWith('(:')) {
                         tmp3 = formatFunctionPointer(tmp3, true);
-                        tmpl['create pre'] += createFunction(tmp3, 'mixed', 'object monster, string language');
+                        if (!stubs[data[tmp3]]) {
+                            tmpl['create pre'] += createFunction(tmp3, 'mixed', 'object monster, string language');
+                            stubs[data[tmp3]] = 1;
+                        }
                     }
                     else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                         tmp3 = '"' + tmp3 + '"';
@@ -8381,7 +8452,10 @@
                     tmp3 = i.message.trim();
                     if (tmp3.startsWith('(:')) {
                         tmp3 = formatFunctionPointer(tmp3, true);
-                        tmpl['create pre'] += createFunction(tmp3, 'mixed', 'object monster, string language');
+                        if (!stubs[data[tmp3]]) {
+                            tmpl['create pre'] += createFunction(tmp3, 'mixed', 'object monster, string language');
+                            stubs[data[tmp3]] = 1;
+                        }
                     }
                     else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                         tmp3 = '"' + tmp3 + '"';
@@ -8423,7 +8497,10 @@
                     else if (r.amount.startsWith('(:')) {
                         tmp3 = formatFunctionPointer(r.amount);
                         tmpl['create body'] += `   set_reputation_${fun}(${r.group}${tmp3});\n`;
-                        tmpl['create pre'] += createFunction(tmp3, 'string', 'object monster, object killer');
+                        if (!stubs[data[tmp3]]) {
+                            tmpl['create pre'] += createFunction(tmp3, 'string', 'object monster, object killer');
+                            stubs[data[tmp3]] = 1;
+                        }
                     }
                     else if (!r.amount.startsWith('"') && !r.amount.endsWith('"'))
                         tmpl['create body'] += `   set_reputation_${fun}(${r.group}"${r.amount}");\n`;

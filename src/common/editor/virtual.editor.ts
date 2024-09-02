@@ -4806,9 +4806,10 @@ export class VirtualEditor extends EditorBase {
         }
     }
 
-    private addRoom(room) {
+    private addRoom(room, leaveExits?) {
         this.pushUndo(undoAction.add, undoType.room, this.getRoom(room.x, room.y, room.z));
         this.setRoom(room);
+        if(leaveExits) return;
         const o = room.exits;
         let nx;
         let ny;

@@ -8,6 +8,9 @@
     - Virtual area editor: Add ctrl+click selection system
 - **Fixed:**
   - Increase progress dialog height
+  - Code editor: 
+    - No longer generate function stubs if invalid function names in (: :) values
+    - Fix creating duplicate function stubs in generated code
 
 ## 1.5.0 2024-09-01
 

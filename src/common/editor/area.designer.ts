@@ -70,6 +70,12 @@ enum MonsterBaseFlags {
     No_Objects = 1 << 1
 }
 
+enum RegionType {
+    Rectangle = 0,
+    Ellipse = 1,
+    Polygon = 2
+}
+
 export enum MonsterFlags {
     None = 0,
     Ridable = 1 << 0,
@@ -1018,6 +1024,8 @@ export class AreaDesigner extends EditorBase {
     private $area: Area;
     private $startOptions;
 
+    public SelectionRegionType: RegionType = RegionType.Rectangle;
+
     private pushUndo(action: undoAction, type: undoType, data) {
         const u = { type: type, action: action, view: this.$view, data: data, selection: this.$selectedRooms.map(m => [m.x, m.y, m.z]), focused: this.$focusedRoom ? [this.$focusedRoom.x, this.$focusedRoom.y, this.$focusedRoom.z] : [] };
         if (this.$undoGroup)
@@ -1397,7 +1405,7 @@ export class AreaDesigner extends EditorBase {
                 }
                 this.drawRegion(this.$mouseDown.x, this.$mouseDown.y, this.$mousePrevious.x - this.$mouseDown.x, this.$mousePrevious.y - this.$mouseDown.y);
                 this.drawRegion(this.$mouseDown.x, this.$mouseDown.y, this.$mouse.x - this.$mouseDown.x, this.$mouse.y - this.$mouseDown.y);
-                this.setSelection(x, y, width, height);
+                this.setSelection(x, y, width, height, { type: this.SelectionRegionType, x: this.$mouseDown.x, y: this.$mouseDown.y, width: this.$mouse.x - this.$mouseDown.x, height: this.$mouse.y - this.$mouseDown.y });
                 this.$mouseSelect = false;
             }
             else if (this.$mouseSelect) {
@@ -1412,12 +1420,12 @@ export class AreaDesigner extends EditorBase {
                     const room = this.getRoom(this.$mouseDown.rx, this.$mouseDown.ry);
                     const idx = this.$selectedRooms.indexOf(room);
                     if (idx === -1)
-                        this.addSelection(x, y, width, height);
+                        this.addSelection(x, y, width, height, { type: this.SelectionRegionType, x: this.$mouseDown.x, y: this.$mouseDown.y, width: this.$mouse.x - this.$mouseDown.x, height: this.$mouse.y - this.$mouseDown.y });
                     else
-                        this.removeSelection(x, y, width, height);
+                        this.removeSelection(x, y, width, height, { type: this.SelectionRegionType, x: this.$mouseDown.x, y: this.$mouseDown.y, width: this.$mouse.x - this.$mouseDown.x, height: this.$mouse.y - this.$mouseDown.y });
                 }
                 else
-                    this.setSelection(x, y, width, height);
+                    this.setSelection(x, y, width, height, { type: this.SelectionRegionType, x: this.$mouseDown.x, y: this.$mouseDown.y, width: this.$mouse.x - this.$mouseDown.x, height: this.$mouse.y - this.$mouseDown.y });
                 if (this.$selectedRooms.length !== 0)
                     this.setFocusedRoom(this.$selectedRooms[this.$selectedRooms.length - 1]);
                 else
@@ -8691,9 +8699,10 @@ export class AreaDesigner extends EditorBase {
         }
     }
 
-    private addRoom(room) {
+    private addRoom(room, leaveExits?) {
         this.pushUndo(undoAction.add, undoType.room, this.getRoom(room.x, room.y, room.z));
         this.setRoom(room);
+        if (leaveExits) return;
         const o = room.exits;
         let nx;
         let ny;
@@ -10822,7 +10831,7 @@ export class AreaDesigner extends EditorBase {
         ctx.putImageData(imgData, x, y);
     }
 
-    private drawRegion(sX, sY, sWidth, sHeight, selection?) {
+    private drawRegion(sX, sY, sWidth, sHeight, selection?, type?: RegionType) {
         let r;
         let x = (Math.min(sX, sX + sWidth) / 32) >> 0;
         x--;
@@ -10846,7 +10855,7 @@ export class AreaDesigner extends EditorBase {
             return;
         }
         if (!window.$roomImgLoaded) {
-            setTimeout(() => { this.drawRegion(sX, sY, sWidth, sHeight); }, 10);
+            setTimeout(() => { this.drawRegion(sX, sY, sWidth, sHeight, selection, type); }, 10);
             return;
         }
         this.$mapContext.strokeStyle = 'black';
@@ -10860,7 +10869,16 @@ export class AreaDesigner extends EditorBase {
             this.$mapContext.beginPath();
             this.$mapContext.fillStyle = 'rgba(135, 206, 250, 0.50)';
             this.$mapContext.strokeStyle = 'rgba(135, 206, 250, 0.50)';
-            this.$mapContext.rect(sX, sY, sWidth, sHeight);
+            x = Math.min(sX, sX + sWidth);
+            y = Math.min(sY, sY + sHeight);
+            width = Math.max(sX, sX + sWidth) - x;
+            height = Math.max(sY, sY + sHeight) - y;
+            if (this.SelectionRegionType === RegionType.Ellipse)
+                this.$mapContext.ellipse(x + width / 2, y + height / 2, width * 0.5, height * 0.5, 0, 0, Math.PI * 2);
+            //else if(type === RegionType.Polygon)
+            //
+            else
+                this.$mapContext.rect(sX, sY, sWidth, sHeight);
             this.$mapContext.stroke();
             this.$mapContext.fill();
             this.$mapContext.closePath();
@@ -10927,7 +10945,7 @@ export class AreaDesigner extends EditorBase {
         this.ChangeSelection();
     }
 
-    private setSelection(x, y, width, height) {
+    private setSelection(x, y, width, height, region?) {
         if (x < 0) x = 0;
         if (y < 0) y = 0;
         if (width > this.$area.size.width) width = this.$area.size.width;
@@ -10937,7 +10955,20 @@ export class AreaDesigner extends EditorBase {
         let ol = old.length;
         while (ol--)
             this.DrawRoom(this.$mapContext, old[ol], true);
-        if (y === height) {
+        if (region && region.type === RegionType.Ellipse) {
+            /*
+            for (let rY = y; rY < height; rY++) {
+                const r = this.$area.rooms[this.$depth][rY];
+                for (let rX = x; rX < width; rX++) {
+                    if (!ellipseBox(region.x, region.y, region.width, region.height, rX * 32, rY * 32, 32, 32))
+                        continue;
+                    this.$selectedRooms.push(r[rX]);
+                    this.DrawRoom(this.$mapContext, r[rX], true, r[rX].at(this.$mouse.rx, this.$mouse.ry));
+                }
+            }
+            */
+        }
+        else if (y === height) {
             const r = this.$area.rooms[this.$depth][y];
             if (x === width)
                 this.$selectedRooms.push(r[x]);
@@ -10961,21 +10992,33 @@ export class AreaDesigner extends EditorBase {
         this.ChangeSelection();
     }
 
-
-    private addSelection(x, y, width, height) {
+    private addSelection(x, y, width, height, region?) {
         if (x < 0) x = 0;
         if (y < 0) y = 0;
         if (width > this.$area.size.width) width = this.$area.size.width;
         if (height > this.$area.size.height) height = this.$area.size.height;
-        if (y === height) {
+        if (region && region.type === RegionType.Ellipse) {
+            /*
+            for (let rY = y; rY < height; rY++) {
+                const r = this.$area.rooms[this.$depth][rY];
+                for (let rX = x; rX < width; rX++) {
+                    if (this.$selectedRooms.indexOf(r[rX]) !== -1 || !isInEllipse(rX * 32, rY * 32, x * 32 + width * 16, y * 32 + height * 16, width * 32, height * 32))
+                        continue;
+                    this.$selectedRooms.push(r[rX]);
+                    this.DrawRoom(this.$mapContext, r[rX], true, r[rX].at(this.$mouse.rx, this.$mouse.ry));
+                }
+            }
+            */
+        }
+        else if (y === height) {
             const r = this.$area.rooms[this.$depth][y];
             if (x === width) {
-                if(this.$selectedRooms.indexOf(r[x]) === -1)
+                if (this.$selectedRooms.indexOf(r[x]) === -1)
                     this.$selectedRooms.push(r[x]);
             }
             else
                 for (let rX = x; rX < width; rX++) {
-                    if(this.$selectedRooms.indexOf(r[rX]) !== -1) continue;
+                    if (this.$selectedRooms.indexOf(r[rX]) !== -1) continue;
                     this.$selectedRooms.push(r[rX]);
                     this.DrawRoom(this.$mapContext, r[rX], true, r[rX].at(this.$mouse.rx, this.$mouse.ry));
                 }
@@ -10984,12 +11027,12 @@ export class AreaDesigner extends EditorBase {
             for (let rY = y; rY < height; rY++) {
                 const r = this.$area.rooms[this.$depth][rY];
                 if (x === width) {
-                    if(this.$selectedRooms.indexOf(r[x]) === -1)
+                    if (this.$selectedRooms.indexOf(r[x]) === -1)
                         this.$selectedRooms.push(r[x]);
                 }
                 else
                     for (let rX = x; rX < width; rX++) {
-                        if(this.$selectedRooms.indexOf(r[rX]) !== -1) continue;
+                        if (this.$selectedRooms.indexOf(r[rX]) !== -1) continue;
                         this.$selectedRooms.push(r[rX]);
                         this.DrawRoom(this.$mapContext, r[rX], true, r[rX].at(this.$mouse.rx, this.$mouse.ry));
                     }
@@ -10997,13 +11040,30 @@ export class AreaDesigner extends EditorBase {
         this.ChangeSelection();
     }
 
-    private toggleSelection(x, y, width, height) {
+    private toggleSelection(x, y, width, height, region?) {
         let idx;
         if (x < 0) x = 0;
         if (y < 0) y = 0;
         if (width > this.$area.size.width) width = this.$area.size.width;
         if (height > this.$area.size.height) height = this.$area.size.height;
-        if (y === height) {
+        if (region && region.type === RegionType.Ellipse) {
+            /*
+            for (let rY = y; rY < height; rY++) {
+                const r = this.$area.rooms[this.$depth][rY];
+                for (let rX = x; rX < width; rX++) {
+                    if (!isInEllipse(rX * 32, rY * 32, x * 32 + width * 16, y * 32 + height * 16, width * 32, height * 32))
+                        continue;
+                    idx = this.$selectedRooms.indexOf(r[x]);
+                    if (idx === -1)
+                        this.$selectedRooms.push(r[rX]);
+                    else
+                        this.$selectedRooms.splice(idx, 1);
+                    this.DrawRoom(this.$mapContext, r[rX], true, r[rX].at(this.$mouse.rx, this.$mouse.ry));
+                }
+            }
+            */
+        }
+        else if (y === height) {
             const r = this.$area.rooms[this.$depth][y];
             if (x === width) {
                 idx = this.$selectedRooms.indexOf(r[x]);
@@ -11011,7 +11071,6 @@ export class AreaDesigner extends EditorBase {
                     this.$selectedRooms.push(r[x]);
                 else
                     this.$selectedRooms.splice(idx, 1);
-
             }
             else
                 for (let rX = x; rX < width; rX++) {
@@ -11046,13 +11105,28 @@ export class AreaDesigner extends EditorBase {
         this.ChangeSelection();
     }
 
-    private removeSelection(x, y, width, height) {
+    private removeSelection(x, y, width, height, region?) {
         let idx;
         if (x < 0) x = 0;
         if (y < 0) y = 0;
         if (width > this.$area.size.width) width = this.$area.size.width;
         if (height > this.$area.size.height) height = this.$area.size.height;
-        if (y === height) {
+        if (region && region.type === RegionType.Ellipse) {
+            /*z=
+            for (let rY = y; rY < height; rY++) {
+                const r = this.$area.rooms[this.$depth][rY];
+                for (let rX = x; rX < width; rX++) {
+                    if (!isInEllipse(rX * 32, rY * 32, x * 32 + width * 16, y * 32 + height * 16, width * 32, height * 32))
+                        continue;
+                    idx = this.$selectedRooms.indexOf(r[x]);
+                    if (idx !== -1)
+                        this.$selectedRooms.splice(idx, 1);
+                    this.DrawRoom(this.$mapContext, r[rX], true, r[rX].at(this.$mouse.rx, this.$mouse.ry));
+                }
+            }
+            */
+        }
+        else if (y === height) {
             const r = this.$area.rooms[this.$depth][y];
             if (x === width) {
                 idx = this.$selectedRooms.indexOf(r[x]);
@@ -11912,6 +11986,7 @@ export class AreaDesigner extends EditorBase {
         const climbs = eArray.filter(r => r.exit.length > 0 && (!r.door || r.door.length === 0) && r.climb);
         let props: any = {};
         let tempProps: any = {};
+        let stubs: any = {};
         data.doc = [];
         data.includes = '';
         data.description = '';
@@ -12195,7 +12270,10 @@ export class AreaDesigner extends EditorBase {
             room.short = (room.short || '').trim();
             if (room.short.startsWith('(:')) {
                 data['create body'] += `   set_short(${formatFunctionPointer(room.short)});\n`;
-                data['create pre'] += createFunction(room.short, 'string');
+                if (!stubs[room.short]) {
+                    data['create pre'] += createFunction(room.short, 'string');
+                    stubs[room.short] = 1;
+                }
                 data.name = room.short.substr(2);
                 if (data.name.endsWith(':)'))
                     data.name = data.name.substr(0, data.name.length - 1);
@@ -12227,7 +12305,10 @@ export class AreaDesigner extends EditorBase {
             room.long = (room.long || '').trim();
             if (room.long.startsWith('(:')) {
                 data['create body'] += `   set_long(${formatFunctionPointer(room.long)});\n`;
-                data['create pre'] += createFunction(room.long, 'string');
+                if (!stubs[room.long]) {
+                    data['create pre'] += createFunction(room.long, 'string');
+                    stubs[room.long] = 1;
+                }
                 data.description = room.long.substr(2);
                 if (data.description.endsWith(':)'))
                     data.description = data.description.substr(0, data.description.length - 2);
@@ -12325,7 +12406,10 @@ export class AreaDesigner extends EditorBase {
                         tempProps[b.name] = formatFunctionPointer(b.value);
                     else
                         props[b.name] = formatFunctionPointer(b.value);
-                    data['create pre'] += createFunction(b.value);
+                    if (!stubs[b.value]) {
+                        data['create pre'] += createFunction(b.value);
+                        stubs[b.value] = 1;
+                    }
                 }
                 else if (b.value.startsWith('({')) {
                     tmp2 = b.value.substring(2);
@@ -12338,7 +12422,10 @@ export class AreaDesigner extends EditorBase {
                             return t;
                         else if (t.startsWith('(:')) {
                             t = formatFunctionPointer(t);
-                            data['create pre'] += createFunction(t);
+                            if (!stubs[t]) {
+                                data['create pre'] += createFunction(t);
+                                stubs[t] = 1;
+                            }
                             return t;
                         }
                         return `"${t}"`;
@@ -12368,7 +12455,10 @@ export class AreaDesigner extends EditorBase {
             if (room.secretExit === 'false') { /**/ }
             else if (room.secretExit.startsWith('(:')) {
                 props['secret exit'] = formatFunctionPointer(room.secretExit, true);
-                data['create pre'] += createFunction(room.secretExit, 'string', 'object room, object player');
+                if (!stubs[room.secretExit]) {
+                    data['create pre'] += createFunction(room.secretExit, 'string', 'object room, object player');
+                    stubs[room.secretExit] = 1;
+                }
             }
             else if (room.secretExit === 'true')
                 props['secret exit'] = 1;
@@ -12488,7 +12578,10 @@ export class AreaDesigner extends EditorBase {
             if (room.preventPeer === 'false') { /**/ }
             else if (room.preventPeer.startsWith('(:')) {
                 data['create body'] += `   set_prevent_peer(${formatFunctionPointer(room.preventPeer)});\n`;
-                data['create pre'] += createFunction(room.preventPeer, 'string', 'string dir, object player');
+                if (!stubs[room.preventPeer]) {
+                    data['create pre'] += createFunction(room.preventPeer, 'string', 'string dir, object player');
+                    stubs[room.preventPeer] = 1;
+                }
             }
             else if (room.preventPeer === 'true')
                 data['create body'] += `   set_prevent_peer(1);\n`;
@@ -12502,7 +12595,10 @@ export class AreaDesigner extends EditorBase {
             if (p.peer === 'false') { /**/ }
             if (p.peer.startsWith('(:')) {
                 data['create body'] += `   set_prevent_peer("${p.exit}", ${formatFunctionPointer(p.peer)});\n`;
-                data['create pre'] += createFunction(p, 'string', 'string dir, object player');
+                if (!stubs[p.peer]) {
+                    data['create pre'] += createFunction(p.peer, 'string', 'string dir, object player');
+                    stubs[p.peer] = 1;
+                }
             }
             else if (p.peer === 'true')
                 data['create body'] += `   set_prevent_peer("${p.exit}", 1);\n`;
@@ -12526,7 +12622,10 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.description.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3, true);
-                data['create pre'] += createFunction(tmp3, 'string');
+                if (!stubs[tmp3]) {
+                    data['create pre'] += createFunction(tmp3, 'string');
+                    stubs[tmp3] = 1;
+                }
             }
             else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                 tmp3 = '"' + tmp3 + '"';
@@ -12673,7 +12772,10 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.description.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3, true);
-                data['create pre'] += createFunction(tmp3, 'string', 'string smell, object room, object player');
+                if (!stubs[tmp3]) {
+                    data['create pre'] += createFunction(tmp3, 'string', 'string smell, object room, object player');
+                    stubs[tmp3] = 1;
+                }
             }
             else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                 tmp3 = '"' + tmp3 + '"';
@@ -12717,7 +12819,10 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.description.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3, true);
-                data['create pre'] += createFunction(tmp3, 'string', 'string sound, object room, object player');
+                if (!stubs[tmp3]) {
+                    data['create pre'] += createFunction(tmp3, 'string', 'string sound, object room, object player');
+                    stubs[tmp3] = 1;
+                }
             }
             else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                 tmp3 = '"' + tmp3 + '"';
@@ -12758,7 +12863,10 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.message.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3, true);
-                data['create pre'] += createFunction(tmp3, 'int');
+                if (!stubs[tmp3]) {
+                    data['create pre'] += createFunction(tmp3, 'int');
+                    stubs[tmp3] = 1;
+                }
             }
             else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                 tmp3 = '"' + tmp3 + '"';
@@ -12800,7 +12908,10 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.description.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3, true);
-                data['create pre'] += createFunction(tmp3, 'string', 'string id');
+                if (!stubs[tmp3]) {
+                    data['create pre'] += createFunction(tmp3, 'string', 'string id');
+                    stubs[tmp3] = 1;
+                }
             }
             else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                 tmp3 = '"' + tmp3 + '"';
@@ -12895,6 +13006,7 @@ export class AreaDesigner extends EditorBase {
         const base: Monster = this.$area.monsters[monster.type] || this.$area.baseMonsters[monster.type] || new Monster();
         let props: any = {};
         let tempProps: any = {};
+        let stubs: any = {};
         if (files[monster.type])
             data.inherit = `(MON + "${files[monster.type]}")`;
         else
@@ -13019,7 +13131,10 @@ export class AreaDesigner extends EditorBase {
             monster.short = (monster.short || '').trim();
             if (monster.short.startsWith('(:')) {
                 data['create body'] += `   set_short(${formatFunctionPointer(monster.short)});\n`;
-                data['create pre'] += createFunction(monster.short, 'string');
+                if (!stubs[monster.short]) {
+                    data['create pre'] += createFunction(monster.short, 'string');
+                    stubs[monster.short] = 1;
+                }
             }
             else if (monster.short.startsWith('"') && monster.short.endsWith('"'))
                 data['create body'] += `   set_short(${monster.short});\n`;
@@ -13030,7 +13145,10 @@ export class AreaDesigner extends EditorBase {
             monster.long = (monster.long || '').trim();
             if (monster.long.startsWith('(:')) {
                 data['create body'] += `   set_long(${formatFunctionPointer(monster.long)});\n`;
-                data['create pre'] += createFunction(monster.long, 'string');
+                if (!stubs[monster.long]) {
+                    data['create pre'] += createFunction(monster.long, 'string');
+                    stubs[monster.long] = 1;
+                }
                 data.description = monster.long.substr(2);
                 if (data.description.endsWith(':)'))
                     data.description = data.description.substr(0, data.description.length - 2);
@@ -13118,7 +13236,10 @@ export class AreaDesigner extends EditorBase {
             monster.noCorpse = (monster.noCorpse || '').trim();
             if (monster.noCorpse.startsWith('(:')) {
                 props['no corpse'] = formatFunctionPointer(monster.noCorpse, true);
-                data['create pre'] += createFunction(monster.noCorpse, 'string');
+                if (!stubs[monster.noCorpse]) {
+                    data['create pre'] += createFunction(monster.noCorpse, 'string');
+                    stubs[monster.noCorpse] = 1;
+                }
             }
             else if (monster.noCorpse.startsWith('"') && monster.noCorpse.endsWith('"'))
                 props['no corpse'] = monster.noCorpse;
@@ -13129,7 +13250,10 @@ export class AreaDesigner extends EditorBase {
             monster.noLimbs = (monster.noLimbs || '').trim();
             if (monster.noLimbs.startsWith('(:')) {
                 props['no limbs'] = formatFunctionPointer(monster.noLimbs, true);
-                data['create pre'] += createFunction(monster.noLimbs, 'string');
+                if (!stubs[monster.noLimbs]) {
+                    data['create pre'] += createFunction(monster.noLimbs, 'string');
+                    stubs[monster.noLimbs] = 1;
+                }
             }
             else if (monster.noLimbs.startsWith('"') && monster.noLimbs.endsWith('"'))
                 props['no limbs'] = monster.noLimbs;
@@ -13145,7 +13269,10 @@ export class AreaDesigner extends EditorBase {
                         tempProps[b.name] = formatFunctionPointer(b.value);
                     else
                         props[b.name] = formatFunctionPointer(b.value);
-                    data['create pre'] += createFunction(b.value);
+                    if (!stubs[b.value]) {
+                        data['create pre'] += createFunction(b.value);
+                        stubs[b.value] = 1;
+                    }
                 }
                 else if (b.value.startsWith('({')) {
                     tmp2 = b.value.substring(2);
@@ -13158,7 +13285,10 @@ export class AreaDesigner extends EditorBase {
                             return t;
                         else if (t.startsWith('(:')) {
                             t = formatFunctionPointer(t);
-                            data['create pre'] += createFunction(t);
+                            if (!stubs[t]) {
+                                data['create pre'] += createFunction(t);
+                                stubs[t] = 1;
+                            }
                             return t;
                         }
                         return `"${t}"`;
@@ -13347,7 +13477,10 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.message.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3, true);
-                data['create pre'] += createFunction(tmp3, 'string', 'object player, string topic');
+                if (!stubs[tmp3]) {
+                    data['create pre'] += createFunction(tmp3, 'string', 'object player, string topic');
+                    stubs[tmp3] = 1;
+                }
             }
             else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                 tmp3 = '"' + tmp3 + '"';
@@ -13363,7 +13496,10 @@ export class AreaDesigner extends EditorBase {
             if (monster.askTopics[0].message.trim().startsWith('(:')) {
                 tmp3 = formatFunctionPointer(monster.askTopics[0].message);
                 data['create body'] += `   set_topic(${tmp}, ${tmp3});\n`;
-                data['create pre'] += createFunction(tmp3, 'string', 'object player, string topic');
+                if (!stubs[tmp3]) {
+                    data['create pre'] += createFunction(tmp3, 'string', 'object player, string topic');
+                    stubs[tmp3] = 1;
+                }
             }
             else if (!monster.askTopics[0].message.startsWith('"') && !monster.askTopics[0].message.endsWith('"'))
                 data['create body'] += `   set_topic(${tmp}, "${monster.askTopics[0].message}");\n`;
@@ -13412,7 +13548,10 @@ export class AreaDesigner extends EditorBase {
                 else if (r.amount.startsWith('(:')) {
                     tmp3 = formatFunctionPointer(r.amount);
                     data['create body'] += `   set_reputation_${fun}(${r.group}${tmp3});\n`;
-                    data['create pre'] += createFunction(tmp3, 'string', 'object monster, object killer');
+                    if (!stubs[tmp3]) {
+                        data['create pre'] += createFunction(tmp3, 'string', 'object monster, object killer');
+                        stubs[tmp3] = 1;
+                    }
                 }
                 else if (!r.amount.startsWith('"') && !r.amount.endsWith('"'))
                     data['create body'] += `   set_reputation_${fun}(${r.group}"${r.amount}");\n`;
@@ -13426,7 +13565,10 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.message.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3, true);
-                data['create pre'] += createFunction(tmp3, 'mixed', 'object monster');
+                if (!stubs[tmp3]) {
+                    data['create pre'] += createFunction(tmp3, 'mixed', 'object monster');
+                    stubs[tmp3] = 1;
+                }
             }
             else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                 tmp3 = '"' + tmp3 + '"';
@@ -13438,7 +13580,10 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.message.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3, true);
-                data['create pre'] += createFunction(tmp3, 'mixed', 'object monster');
+                if (!stubs[tmp3]) {
+                    data['create pre'] += createFunction(tmp3, 'mixed', 'object monster');
+                    stubs[tmp3] = 1;
+                }
             }
             else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                 tmp3 = '"' + tmp3 + '"';
@@ -13453,7 +13598,10 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.message.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3, true);
-                data['create pre'] += createFunction(tmp3, 'mixed', 'object monster, string language');
+                if (!stubs[tmp3]) {
+                    data['create pre'] += createFunction(tmp3, 'mixed', 'object monster, string language');
+                    stubs[tmp3] = 1;
+                }
             }
             else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                 tmp3 = '"' + tmp3 + '"';
@@ -13470,7 +13618,10 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.message.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3, true);
-                data['create pre'] += createFunction(tmp3, 'mixed', 'object monster, string language');
+                if (!stubs[tmp3]) {
+                    data['create pre'] += createFunction(tmp3, 'mixed', 'object monster, string language');
+                    stubs[tmp3] = 1;
+                }
             }
             else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                 tmp3 = '"' + tmp3 + '"';
@@ -13566,6 +13717,7 @@ export class AreaDesigner extends EditorBase {
         let skills = false;
         let props: any = {};
         let tempProps: any = {};
+        let stubs: any = {};
         const limbsDamaged = {};
         limbsDamaged['both arms and legs'] = 'ARMSLEGS_DAM';
         limbsDamaged['both arms'] = 'ARMS_DAM';
@@ -14245,7 +14397,10 @@ export class AreaDesigner extends EditorBase {
         obj.short = (obj.short || '').trim();
         if (obj.short.startsWith('(:')) {
             data.short = formatFunctionPointer(obj.short);
-            data['create pre'] += createFunction(obj.short, 'string');
+            if (!stubs[tmp3]) {
+                data['create pre'] += createFunction(obj.short, 'string');
+                stubs[tmp3] = 1;
+            }
         }
         else if (obj.short.startsWith('"') && obj.short.endsWith('"'))
             data.short = `${obj.short}`;
@@ -14254,7 +14409,10 @@ export class AreaDesigner extends EditorBase {
         obj.long = (obj.long || '').trim();
         if (obj.long.startsWith('(:')) {
             data.long = formatFunctionPointer(obj.long);
-            data['create pre'] += createFunction(obj.long, 'string');
+            if (!stubs[obj.long]) {
+                data['create pre'] += createFunction(obj.long, 'string');
+                stubs[obj.long] = 1;
+            }
             data.description = obj.long.substr(2);
             if (data.description.endsWith(':)'))
                 data.description = data.description.substr(0, data.description.length - 2);
@@ -14317,7 +14475,10 @@ export class AreaDesigner extends EditorBase {
                         tempProps[b.name] = formatFunctionPointer(b.value);
                     else
                         props[b.name] = formatFunctionPointer(b.value);
-                    data['create pre'] += createFunction(b.value);
+                    if (!stubs[b.value]) {
+                        data['create pre'] += createFunction(b.value);
+                        stubs[b.value] = 1;
+                    }
                 }
                 else if (b.value.startsWith('({')) {
                     tmp2 = b.value.substring(2);
@@ -14330,7 +14491,10 @@ export class AreaDesigner extends EditorBase {
                             return t;
                         else if (t.startsWith('(:')) {
                             t = formatFunctionPointer(t);
-                            data['create pre'] += createFunction(t);
+                            if (!stubs[t]) {
+                                data['create pre'] += createFunction(t);
+                                stubs[t] = 1;
+                            }
                             return t;
                         }
                         return `"${t}"`;
@@ -14393,7 +14557,10 @@ export class AreaDesigner extends EditorBase {
         obj.preventOffer = (obj.preventOffer || '').trim();
         if (obj.preventOffer.startsWith('(:')) {
             data['create body'] += `   set_prevent_offer(${formatFunctionPointer(obj.preventOffer)});\n`;
-            data['create pre'] += createFunction(obj.preventOffer, 'string');
+            if (!stubs[obj.preventOffer]) {
+                data['create pre'] += createFunction(obj.preventOffer, 'string');
+                stubs[obj.preventOffer] = 1;
+            }
         }
         else if (obj.preventOffer.startsWith('"') && obj.preventOffer.endsWith('"'))
             data['create body'] += `   set_prevent_offer(${obj.preventOffer});\n`;
@@ -14405,7 +14572,10 @@ export class AreaDesigner extends EditorBase {
         obj.preventGet = (obj.preventGet || '').trim();
         if (obj.preventGet.startsWith('(:')) {
             data['create body'] += `   set_prevent_get(${formatFunctionPointer(obj.preventGet)});\n`;
-            data['create pre'] += createFunction(obj.preventGet, 'string');
+            if (!stubs[obj.preventGet]) {
+                data['create pre'] += createFunction(obj.preventGet, 'string');
+                stubs[obj.preventGet] = 1;
+            }
         }
         else if (obj.preventGet.startsWith('"') && obj.preventGet.endsWith('"'))
             data['create body'] += `   set_prevent_get(${obj.preventGet});\n`;
@@ -14417,7 +14587,10 @@ export class AreaDesigner extends EditorBase {
         obj.preventDrop = (obj.preventDrop || '').trim();
         if (obj.preventDrop.startsWith('(:')) {
             data['create body'] += `   set_prevent_drop(${formatFunctionPointer(obj.preventDrop)});\n`;
-            data['create pre'] += createFunction(obj.preventDrop, 'string');
+            if (!stubs[obj.preventDrop]) {
+                data['create pre'] += createFunction(obj.preventDrop, 'string');
+                stubs[obj.preventDrop] = 1;
+            }
         }
         else if (obj.preventDrop.startsWith('"') && obj.preventDrop.endsWith('"'))
             data['create body'] += `   set_prevent_drop(${obj.preventDrop});\n`;
@@ -14429,7 +14602,10 @@ export class AreaDesigner extends EditorBase {
         obj.preventPut = (obj.preventPut || '').trim();
         if (obj.preventPut.startsWith('(:')) {
             data['create body'] += `   set_prevent_put(${formatFunctionPointer(obj.preventPut)});\n`;
-            data['create pre'] += createFunction(obj.preventPut, 'string');
+            if (!stubs[obj.preventPut]) {
+                data['create pre'] += createFunction(obj.preventPut, 'string');
+                stubs[obj.preventPut] = 1;
+            }
         }
         else if (obj.preventPut.startsWith('"') && obj.preventPut.endsWith('"'))
             data['create body'] += `   set_prevent_put(${obj.preventPut});\n`;
@@ -14441,7 +14617,10 @@ export class AreaDesigner extends EditorBase {
         obj.preventSteal = (obj.preventSteal || '').trim();
         if (obj.preventSteal.startsWith('(:')) {
             data['create body'] += `   set_prevent_steal(${formatFunctionPointer(obj.preventSteal)});\n`;
-            data['create pre'] += createFunction(obj.preventSteal, 'string');
+            if (!stubs[obj.preventSteal]) {
+                data['create pre'] += createFunction(obj.preventSteal, 'string');
+                stubs[obj.preventSteal] = 1;
+            }
         }
         else if (obj.preventSteal.startsWith('"') && obj.preventSteal.endsWith('"'))
             data['create body'] += `   set_prevent_steal(${obj.preventSteal});\n`;
@@ -14608,7 +14787,10 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.description.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3, true);
-                data['create pre'] += createFunction(tmp3, 'string', 'string id');
+                if (!stubs[tmp3]) {
+                    data['create pre'] += createFunction(tmp3, 'string', 'string id');
+                    stubs[tmp3] = 1;
+                }
             }
             else if (!tmp3.startsWith('"') && !tmp3.endsWith('"'))
                 tmp3 = '"' + tmp3 + '"';
@@ -14936,3 +15118,60 @@ function ellipse(text, len?) {
     if (!text || text.lengt <= len) return text || '';
     return text.substr(0, len) + '&hellip;';
 }
+
+/*
+function isInEllipse(x, y, cx, cy, a, b) {
+    var dx = x - cx;
+    var dy = y - cy;
+    return ((dx * dx) / (a * a) + (dy * dy) / (b * b) <= 1);
+}
+
+function pointInEllipse(x, y, ex, ey, ew, eh, ctx) {
+    const ellipse = new Path2D();
+    ellipse.ellipse(ex + ew / 2.0, ey + eh / 2.0, ew * 0.5, eh * 0.5, 0, 0, Math.PI * 2);
+    return ctx.isPointInPath(ellipse, x, y);
+}
+
+function ellipseLine(xe, ye, rex, rey, x1, y1, x2, y2) {
+    x1 -= xe
+    x2 -= xe
+    y1 -= ye
+    y2 -= ye
+
+    var A = Math.pow(x2 - x1, 2) / rex / rex + Math.pow(y2 - y1, 2) / rey / rey
+    var B = 2 * x1 * (x2 - x1) / rex / rex + 2 * y1 * (y2 - y1) / rey / rey
+    var C = x1 * x1 / rex / rex + y1 * y1 / rey / rey - 1
+    var D = B * B - 4 * A * C
+    if (D === 0) {
+        var t = -B / 2 / A
+        return t >= 0 && t <= 1
+    }
+    else if (D > 0) {
+        var sqrt = Math.sqrt(D)
+        var t1 = (-B + sqrt) / 2 / A
+        var t2 = (-B - sqrt) / 2 / A
+        return (t1 >= 0 && t1 <= 1) || (t2 >= 0 && t2 <= 1)
+    }
+    else {
+        return false
+    }
+}
+
+function ellipsePoint(xe, ye, rex, rey, x1, y1) {
+    var x = Math.pow(x1 - xe, 2) / (rex * rex)
+    var y = Math.pow(y1 - ye, 2) / (rey * rey)
+    return x + y <= 1
+}
+
+function ellipseBox(xe, ye, rex, rey, xb, yb, wb, hb) {
+    return boxPoint(xb, yb, wb, hb, xe, ye) ||
+        ellipseLine(xe, ye, rex, rey, xb, yb, xb + wb, yb) ||
+        ellipseLine(xe, ye, rex, rey, xb, yb + hb, xb + wb, yb + hb) ||
+        ellipseLine(xe, ye, rex, rey, xb, yb, xb, yb + hb) ||
+        ellipseLine(xe, ye, rex, rey, xb + wb, yb, xb + wb, yb + hb)
+}
+
+function boxPoint(x1, y1, w1, h1, x2, y2) {
+    return x2 >= x1 && x2 <= x1 + w1 && y2 >= y1 && y2 <= y1 + h1
+}
+*/
