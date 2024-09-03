@@ -7,6 +7,7 @@
     - Area Designer:
       - Add ctrl+click selection system
       - Fix code generation of room sounds and smells
+      - Update the area and virtual area wizards to better explain paths
     - Virtual area editor: Add ctrl+click selection system
 - **Fixed:**
   - Increase progress dialog height

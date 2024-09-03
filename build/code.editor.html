@@ -676,7 +676,7 @@
                             </button>
                         </span>
                     </div>
-                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Remote path for area, if blank will default to /realms/character/area</span>
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Remote path for area, if blank will default to <span id="help-new-area-remote-path">/realms/{character}/{area name}</span></span>
                 </label>
             </div>
             <div class="form-group">
@@ -684,7 +684,7 @@
                     Name
                     <input class="form-control" style="width:100%" type="text" id="new-area-name" style="width:100%">
                     <span class="fa fa-remove form-control-feedback" aria-hidden="true"></span>
-                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Area name, used as folder name</span>
+                    <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Area name, appended to local path, remote if remote blank</span>
                     <div class="form-error"></div>
                 </label>
             </div>
@@ -736,7 +736,7 @@
                                     </button>
                                 </span>
                             </div>
-                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Remote path for area, if blank will default to /realms/character/area</span>
+                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Remote path for area, if blank will default to <span id="help-new-virtual-area-remote-path">/realms/{character}/{area name}</span></span>
                         </label>
                     </div>
                     <div class="form-group">
@@ -750,7 +750,7 @@
                                     </label>
                                 </div>
                             </div>
-                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Area name, used as folder name</span>
+                            <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Area name, appended to local path, remote if remote blank</span>
                             <div class="form-error"></div>
                         </label>
                     </div>
@@ -5313,9 +5313,19 @@
                     $dialogs.area.remote.value = files[0];
                 });
             });
+            $('#new-area-name').on('change', () => {
+                var data = baseParseData();
+                $('#help-new-area-remote-path').text(`/realms/${data.name.toLowerCase()}/${$('#new-area-name').val().toLowerCase() || '{area name}'}` || '/realms/{character}/{area name}');
+            });
+            $('#new-area-name').on('keyup', () => {
+                var data = baseParseData();
+                $('#help-new-area-remote-path').text(`/realms/${data.name.toLowerCase()}/${$('#new-area-name').val().toLowerCase() || '{area name}'}` || '/realms/{character}/{area name}');
+            })
         }
         $dialogs.area.ok = ok;
         $dialogs.area.dialog.dataset.title = title || 'Create new area...';
+        var data = baseParseData();
+        $('#help-new-area-remote-path').text(`/realms/${data.name.toLowerCase()}/${name.toLowerCase() || '{area name}'}` || '/realms/{character}/{area name}');
         $('#new-area-title').text(title || 'Create new area...');
         $('#new-area *').attr('disabled', false);
         $('#btn-new-area-remote-path').attr('disabled', !connected);
@@ -5524,7 +5534,17 @@
                     $('#dsSinkingDown').parent().removeClass('disabled');
                 }
             });
+            $('#new-virtual-area-area').on('change', () => {
+                var data = baseParseData();
+                $('#help-new-virtual-area-remote-path').text(`/realms/${data.name.toLowerCase()}/${$('new-virtual-area-area').val().toLowerCase() || '{area name}'}` || '/realms/{character}/{area name}');
+            });
+            $('#new-virtual-area-area').on('keyup', () => {
+                var data = baseParseData();
+                $('#help-new-virtual-area-remote-path').text(`/realms/${data.name.toLowerCase()}/${$('#new-virtual-area-area').val().toLowerCase() || '{area name}'}` || '/realms/{character}/{area name}');
+            })            
         }
+        var data = baseParseData();
+        $('#help-new-virtual-area-remote-path').text(`/realms/${data.name.toLowerCase()}/${name.toLowerCase() || '{area name}'}` || '/realms/{character}/{area name}');        
         $('#new-virtual-area *').attr('disabled', false);
         $('#new-virtual-area .nav-tabs a[href="#general"]').tab('show');
         $('#btn-new-virtual-area-remote-path').attr('disabled', !connected);
