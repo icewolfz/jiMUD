@@ -1346,7 +1346,8 @@ export class CollectionValueEditor extends ValueEditor {
                     return c;
                 });
             }
-            dg.addRows(this.$value.map(a => ({ ...a })));
+            if (this.$value)
+                dg.addRows(this.$value.map(a => ({ ...a })));
             dg.on('selection-changed', () => {
                 if (this.options && this.options.noControls) return;
                 if (dg.selectedCount) {

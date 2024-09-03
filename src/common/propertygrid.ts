@@ -1,6 +1,6 @@
 //spellchecker:ignore dropdown
 import { EventEmitter } from 'events';
-import { capitalize, enumToString } from './library';
+import { capitalize, enumToString, isArrayEqual } from './library';
 import { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropDownEditValueEditor, CollectionValueEditor, SelectValueEditor, ButtonValueEditor } from './value.editors';
 
 export interface PropertyGridOptions {
@@ -333,7 +333,11 @@ export class PropertyGrid extends EventEmitter {
     private sameValue(prop) {
         const obs = this.$objects;
         const obj = this.$objects[0];
-        return obs.filter(o => o[prop] === obj[prop]).length === obs.length;
+        return obs.filter(o => {
+            if(Array.isArray(o[prop]) && Array.isArray(obj[prop]))
+                return isArrayEqual(o[prop], obj[prop]);
+            return o[prop] === obj[prop];
+        }).length === obs.length;
     }
 
     private buildProperties() {

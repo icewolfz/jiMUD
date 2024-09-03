@@ -3285,7 +3285,7 @@ export class AreaDesigner extends EditorBase {
                 let climbs = 0;
                 let hidden = 0;
 
-                sl = newValue.length;
+                sl = newValue ? newValue.length : 0;
                 while (sl--) {
                     ed[newValue[sl].exit] = newValue[sl];
                     if (newValue[sl].climb)
@@ -8435,7 +8435,7 @@ export class AreaDesigner extends EditorBase {
             value = prop.cell;
             prop = prop.field;
         }
-        if (!value || value.length === 0) return '';
+        if (!value || value.length === 0 || !Array.isArray(value)) return '';
         switch (prop) {
             case 'forageObjects':
             case 'objects':
@@ -11209,7 +11209,7 @@ export class AreaDesigner extends EditorBase {
                 const o = rooms[rl].clone();
                 o.exitsDetails = Object.values(o.exitsDetails);
                 ['items', 'exitsDetails', 'sounds', 'smells', 'objects', 'monsters', 'searches', 'forageObjects'].forEach(v => {
-                    if (o[v].length === 0)
+                    if (!o[v] || o[v].length === 0)
                         o[v] = ri;
                 });
                 o.waterGerms = o['waterGerms'].map(i => { return { 'germ': i } });

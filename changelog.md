@@ -4,11 +4,12 @@
 
 - **New:**
   - Code editor: 
+    - Update the area and virtual area wizards to better explain paths
     - Area Designer:
       - Add ctrl+click selection system
       - Fix code generation of room sounds and smells
-      - Update the area and virtual area wizards to better explain paths
     - Virtual area editor: Add ctrl+click selection system
+    - Fix collection dialog editor not comparing arrays correctly
 - **Fixed:**
   - Increase progress dialog height
   - Code editor: 
