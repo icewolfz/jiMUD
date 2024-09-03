@@ -12747,7 +12747,7 @@ export class AreaDesigner extends EditorBase {
         tmp4 = base.smells.map(s => s.smell);
         if (room.smell && room.smell.length !== 0 && room.smell !== base.smell)
             tmp.unshift({ smell: 'default', description: room.smell });
-        tmp.map(i => {
+        tmp = tmp.map(i => {
             const idx = tmp4.indexOf(i.smell);
             if (idx !== -1 && base.smells[idx].description === i.description)
                 return '';
@@ -12794,7 +12794,7 @@ export class AreaDesigner extends EditorBase {
         tmp4 = base.sounds.map(s => s.sound);
         if (room.sound && room.sound.length !== 0 && room.sound !== base.sound)
             tmp.unshift({ sound: 'default', description: room.sound });
-        tmp.map(i => {
+        tmp = tmp.map(i => {
             const idx = tmp4.indexOf(i.sound);
             if (idx !== -1 && base.sounds[idx].description === i.description)
                 return '';

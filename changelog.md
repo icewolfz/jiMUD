@@ -4,7 +4,9 @@
 
 - **New:**
   - Code editor: 
-    - Area Designer: Add ctrl+click selection system
+    - Area Designer:
+      - Add ctrl+click selection system
+      - Fix code generation of room sounds and smells
     - Virtual area editor: Add ctrl+click selection system
 - **Fixed:**
   - Increase progress dialog height
