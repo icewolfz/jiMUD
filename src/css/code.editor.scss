@@ -732,6 +732,10 @@ cause test to be brighter but more bold looking
     color: rgb(255, 0, 255);
 }
 
+.preview-room-monster:hover, .preview-room-item:hover {
+    text-decoration: underline;
+}
+
 .raw {
     left: 0;
     right: 0;

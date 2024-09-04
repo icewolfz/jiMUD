@@ -6204,7 +6204,7 @@ export class AreaDesigner extends EditorBase {
                 (<HTMLElement>this.$label.children[0].children[2]).title = 'Delete monster(s)';
             }
             if (this.$monsterGrid.selected.length)
-                this.$monsterPreview.container.innerHTML = this.monsterPreview(this.$monsterGrid.selected[0].data.monster, true);
+                this.$monsterPreview.container.innerHTML = this.monsterPreview(this.$monsterGrid.selected[0].data.monster, true, true);
             else
                 this.$monsterPreview.container.innerHTML = '';
 
@@ -6224,7 +6224,7 @@ export class AreaDesigner extends EditorBase {
             this.updateMonsters(true);
             this.changed = true;
             if (this.$monsterGrid.selected.length)
-                this.$monsterPreview.container.innerHTML = this.monsterPreview(this.$monsterGrid.selected[0].data.monster, true);
+                this.$monsterPreview.container.innerHTML = this.monsterPreview(this.$monsterGrid.selected[0].data.monster, true, true);
             else
                 this.$monsterPreview.container.innerHTML = '';
         });
@@ -8337,7 +8337,7 @@ export class AreaDesigner extends EditorBase {
             this.updateObjects(true);
             this.changed = true;
             if (this.$monsterGrid.selected.length)
-                this.$monsterPreview.container.innerHTML = this.monsterPreview(this.$monsterGrid.selected[0].data.monster, true);
+                this.$monsterPreview.container.innerHTML = this.monsterPreview(this.$monsterGrid.selected[0].data.monster, true, true);
             else
                 this.$monsterPreview.container.innerHTML = '';
         });
@@ -11402,6 +11402,7 @@ export class AreaDesigner extends EditorBase {
                 }
             }
             let counts = {};
+            let preview = {};
             room.monsters.forEach(i => {
                 let short;
                 if (this.$area.monsters[i.id].flags & MonsterFlags.Flying)
@@ -11415,6 +11416,8 @@ export class AreaDesigner extends EditorBase {
                     counts[short] += i.minAmount;
                 else if (i.unique)
                     counts[short]++;
+                if (!preview[short])
+                    preview[short] = this.monsterPreview(this.$area.monsters[i.id]);                
             });
             if ((room.baseFlags & RoomBaseFlags.No_Monsters) !== RoomBaseFlags.No_Monsters)
                 base.monsters.forEach(i => {
@@ -11425,15 +11428,17 @@ export class AreaDesigner extends EditorBase {
                         short = this.$area.monsters[i.id].short;
                     if (!counts[short])
                         counts[short] = 0;
-                    if (i.minAmount > 0)
-                        counts[short] += i.minAmount;
+                    if (i.minAmount > 0 || i.maxAmount > 0)
+                        counts[short] += i.minAmount || i.maxAmount;
                     else if (i.unique)
                         counts[short]++;
+                    if (!preview[short])
+                        preview[short] = this.monsterPreview(this.$area.monsters[i.id]);
                 });
             items = Object.keys(counts);
             if (items.length > 0) {
                 this.$roomPreview.living.style.display = '';
-                this.$roomPreview.living.innerHTML = '<br>' + stripPinkfish(items.map(v => capitalize(consolidate(counts[v], v), true)).join('<br>'));
+                this.$roomPreview.living.innerHTML = '<br>' + stripPinkfish(items.map(v => `<span class="preview-room-monster" title="${preview[v].replace(/\"/g, '&quot;')}">${capitalize(consolidate(counts[v], v), true)}</span>`).join('<br>'));
             }
             else {
                 this.$roomPreview.living.style.display = 'none';
@@ -11441,6 +11446,7 @@ export class AreaDesigner extends EditorBase {
             }
 
             counts = {};
+            preview = {}
             room.objects.forEach(i => {
                 const short = this.$area.objects[i.id].getShort();
                 if (!counts[short])
@@ -11449,6 +11455,8 @@ export class AreaDesigner extends EditorBase {
                     counts[short] += i.minAmount;
                 else if (i.unique)
                     counts[short]++;
+                if(!preview[short])
+                    preview[short] = this.$area.objects[i.id].long;
             });
             if ((room.baseFlags & RoomBaseFlags.No_Objects) !== RoomBaseFlags.No_Objects)
                 base.objects.forEach(i => {
@@ -11459,14 +11467,16 @@ export class AreaDesigner extends EditorBase {
                         counts[short] += i.minAmount;
                     else if (i.unique)
                         counts[short]++;
+                    if(!preview[short])
+                        preview[short] = this.$area.objects[i.id].long;
                 });
             items = Object.keys(counts);
             if (items.length === 1) {
                 this.$roomPreview.objects.style.display = '';
                 if (counts[items[0]] === 1)
-                    this.$roomPreview.objects.innerHTML = '<br>' + pinkfishToHTML(capitalizePinkfish(items[0])) + ' is here.';
+                    this.$roomPreview.objects.innerHTML = `<br><span class="preview-room-item" title="${preview[items[0]].replace(/\"/g, '&quot;')}">` + pinkfishToHTML(capitalizePinkfish(items[0])) + '</span> is here.';
                 else if (counts[items[0]] > 1)
-                    this.$roomPreview.objects.innerHTML = '<br>' + pinkfishToHTML(capitalizePinkfish(consolidate(counts[items[0]], items[0]))) + ' are here.';
+                    this.$roomPreview.objects.innerHTML = `<br><span class="preview-room-item" title="${preview[items[0]].replace(/\"/g, '&quot;')}">` + pinkfishToHTML(capitalizePinkfish(consolidate(counts[items[0]], items[0]))) + '</span> are here.';
                 else {
                     this.$roomPreview.objects.style.display = 'none';
                     this.$roomPreview.objects.innerHTML = '';
@@ -11474,10 +11484,10 @@ export class AreaDesigner extends EditorBase {
             }
             else if (items.length > 0) {
                 this.$roomPreview.objects.style.display = '';
-                items = items.map(v => consolidate(counts[v], v));
+                items = items.map((v, i) => `<span class="preview-room-item" title="${preview[v].replace(/\"/g, '&quot;')}">` + (i === 0 ? capitalizePinkfish(counts[v]) : consolidate(counts[v], v)) + '</span>');
                 str = items.slice(0, -1).join(', ');
                 str += ' and ' + items.pop();
-                this.$roomPreview.objects.innerHTML = '<br>' + pinkfishToHTML(capitalizePinkfish(str)) + ' are here.';
+                this.$roomPreview.objects.innerHTML = '<br>' + pinkfishToHTML(str) + ' are here.';
             }
             else {
                 this.$roomPreview.objects.style.display = 'none';
@@ -11486,7 +11496,7 @@ export class AreaDesigner extends EditorBase {
         }
     }
 
-    private monsterPreview(monster, colors?) {
+    private monsterPreview(monster, colors?, itemTooltips?) {
         if (!monster) return '';
         let sub = 'it', poss = 'its', obj = 'it';
         if (monster.gender == 'female' || (monster.gender == 'random' && Math.floor(Math.random() * 2) == 1)) {
@@ -11511,7 +11521,12 @@ export class AreaDesigner extends EditorBase {
                     short += "%^RESET%^ (%^RGB540%^wielded in RANDOM LIMB%^RESET%^)";
                 if (v.action === 'wear')
                     short += "%^RESET%^ (%^RGB210%^worn%^RESET%^)";
-
+                if(itemTooltips)
+                {
+                    if (colors)
+                        return `<span class="preview-room-item" title="${this.$area.objects[v.id].long.replace(/\"/g, '&quot;')}">${pinkfishToHTML(short)}</span>`;
+                    return `<span class="preview-room-item" title="${this.$area.objects[v.id].long.replace(/\"/g, '&quot;')}">${stripPinkfish(short)}</span>`;    
+                }
                 if (colors)
                     return pinkfishToHTML(short);
                 return stripPinkfish(short);
@@ -15122,20 +15137,20 @@ function rectEllipse(x, y, w, h, ex, ey, ew, eh, ctx) {
     const nx = Math.min(ex, ex + ew);
     const ny = Math.min(ey, ey + eh);
     const nwidth = Math.max(ex, ex + ew) - nx;
-    const nheight = Math.max(ey, ey + eh) - ny;    
+    const nheight = Math.max(ey, ey + eh) - ny;
     const ellipse = new Path2D();
     ellipse.ellipse(nx + nwidth / 2.0, ny + nheight / 2.0, nwidth * 0.5, nheight * 0.5, 0, 0, Math.PI * 2);
-    return ctx.isPointInPath(ellipse, x, y) || 
-    ctx.isPointInPath(ellipse, x + w, y) ||
-    ctx.isPointInPath(ellipse, x + w, y + h) ||
-    ctx.isPointInPath(ellipse, x, y + h);
+    return ctx.isPointInPath(ellipse, x, y) ||
+        ctx.isPointInPath(ellipse, x + w, y) ||
+        ctx.isPointInPath(ellipse, x + w, y + h) ||
+        ctx.isPointInPath(ellipse, x, y + h);
 }
 
 function pointInEllipse(x, y, ex, ey, ew, eh, ctx) {
     const nx = Math.min(ex, ex + ew);
     const ny = Math.min(ey, ey + eh);
     const nwidth = Math.max(ex, ex + ew) - nx;
-    const nheight = Math.max(ey, ey + eh) - ny;    
+    const nheight = Math.max(ey, ey + eh) - ny;
     const ellipse = new Path2D();
     ellipse.ellipse(nx + nwidth / 2.0, ny + nheight / 2.0, nwidth * 0.5, nheight * 0.5, 0, 0, Math.PI * 2);
     return ctx.isPointInPath(ellipse, x, y);

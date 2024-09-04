@@ -3,23 +3,24 @@
 ## 1.5.1
 
 - **New:**
-  - Code editor: 
+  - Code editor:
     - Update the area and virtual area wizards to better explain paths
     - Area Designer:
       - Add ctrl+click selection system
       - Fix code generation of room sounds and smells
+      - Add hover previews to display monster look/item longs for room preview and monster preview panels
     - Virtual area editor: Add ctrl+click selection system
     - Fix collection dialog editor not comparing arrays correctly
 - **Fixed:**
   - Increase progress dialog height
-  - Code editor: 
+  - Code editor:
     - No longer generate function stubs if invalid function names in (: :) values
     - Fix creating duplicate function stubs in generated code
 
 ## 1.5.0 2024-09-01
 
 - **New:**
-  - Code editor: 
+  - Code editor:
     - Add include path support for Go To/Peek Definition
     - Add Insert Comment Header to formatting menu to allow adding a comment header at the start of file with current date and logged in username
     - Add resistance page to monster wizard/editor
@@ -29,7 +30,7 @@
     - Virtual area editor:
       - Added explored marker for room states
       - Parse external room code better to capture more data
-      - Alt + numpad when auto walking enabled will clone the previous room data into the destination room     
+      - Alt + numpad when auto walking enabled will clone the previous room data into the destination room
   - Backup: Add option to back up character database and related setting files **Warning** this does not backup mapping data due to size of maps
   - Added client.getVariable(name), client.setVariable(name, value), client.setVariables(Object), client.hasVariable(name), client.removeVariable(name), these should be used to access client.variables in case client.variables is ever changed to support more complex types
 - **Fixed:**
@@ -57,7 +58,7 @@
     - Fixed Go to Definition and Peek Definition
     - Fixed editor font list not allowing selection of system fonts
     - Fixed issue with progress dialog if completed before shown
-    - Virtual area editor: 
+    - Virtual area editor:
       - Change code in generation of external room to use BASEROOM define
       - Fixed extra map codes being added to rooms when building raw map files
       - Fixed terrain/state files not having correct sizes when maps resized
@@ -206,10 +207,10 @@
 
 - **New:**
   - Add a working javascript prompt() function
-  - Add [%prompt(*prompt*, *defaultValue*, *mask*)](docs/functions.md#miscellaneous) Display input prompt
+  - Add [%prompt(_prompt_, _defaultValue_, _mask_)](docs/functions.md#miscellaneous) Display input prompt
   - Add [#PROMPT](docs/commands/PROMPT.md) Displays a prompt dialog to enter text and store results in variable
   - Add [#SETMAP](docs/commands/SETMAP.md) Set the map file for the current connection and open mapper with optional flag to set to character if using character manager
-  - Add [%fileprompt(*filters*, *defaultPath*)](docs/functions.md#miscellaneous) Display open file dialog, returns first file path or empty string
+  - Add [%fileprompt(_filters_, _defaultPath_)](docs/functions.md#miscellaneous) Display open file dialog, returns first file path or empty string
   - Preferences:
     - `Parse commands` Enable parsing of commands from command line or sendBackground/sendCommand scripting functions
   - Advanced editor:
@@ -225,7 +226,7 @@
   - Mapper: Allow opening of maps directly with options to set them for connection/loaded character
 - **Fixed:**
   - Fix auto update progress dialog not updating title or progress state
-  - Datagrid: 
+  - Datagrid:
     - Fix datagrid edit context item
     - Make edit context item edit item clicked on instead of first selected item
   - Fix skill window drop down filter not correctly including all item on first load
@@ -252,7 +253,7 @@
   - About: Fix open theme folder
   - Fix connection if dns lookup fails by correctly closing it
   - Fix on some reconnects not resetting logs, button states, and icons/titles
-  - Character manger: Fix mapper not resetting to default map when loading global as current tab 
+  - Character manger: Fix mapper not resetting to default map when loading global as current tab
   - Mapper:
     - Only update the loaded map once when options loaded
     - Save current room changes before switching maps
@@ -301,7 +302,7 @@
     - `Tab completion replace casing` The casing to use for the tab completion
       - `Original` Use the words original casing
       - `Lower case` Convert to all lower case
-      - `Upper case` Convert to all upper case      
+      - `Upper case` Convert to all upper case
     - `Enable Notifications` Enable notifications, effects [#notify](commands.md#Miscellaneous) and [client.notify](scripting.md)
     - `Echo` Determine what echos to the screen
       - `Triggers` Echo trigger pattern to screen if fired, **Warning** this may cause infinite looping if pattern is exact matching
@@ -362,7 +363,7 @@
   - Help:
     - Search correctly goes to first found result when text changed
     - Fix search scrolling offsetting main help window
-  - Backup: 
+  - Backup:
     - Fix importing of paths when not defined
     - Fix importing settings
   - Progress: Fix progress dialogs
@@ -415,11 +416,11 @@
   - Preferences:
     - Preferences now uses an inherit system of Default < Global < Client, where it will drill down to default depending if the client or global values are not set, this system allows you to set the global value and all clients will use that setting unless they have already set it
     - Add an advanced view for editing
-    - `Show add new button next to tabs` add a button to allow creation of new connections from tab strip, *Global preference* 
-    - `Lock layout` saving only the last known global window states and preserve the previous saved windows and clients opened, *Global preference*
-    - `Load layout on open` set a layout file to use when loading client, *Global preference*
-    - `Use only single instance` Allow only one instance of the application to open, *Global preference*
-    - `On second instance` What to do whe na second instance is opened when `Use only single instance` is enabled and no command line arguments passed, *Global preference*
+    - `Show add new button next to tabs` add a button to allow creation of new connections from tab strip, _Global preference_
+    - `Lock layout` saving only the last known global window states and preserve the previous saved windows and clients opened, _Global preference_
+    - `Load layout on open` set a layout file to use when loading client, _Global preference_
+    - `Use only single instance` Allow only one instance of the application to open, _Global preference_
+    - `On second instance` What to do whe na second instance is opened when `Use only single instance` is enabled and no command line arguments passed, _Global preference_
     - `Display control codes` Display unreadable characters, code < 32 || 127 as visual characters
     - `Emulate terminal extended characters` Enable/disable Terminal IBM/OEM (code page 437) extended characters, will convert them to the correct unicode character in an attempt to display like classic terminal
     - `Emulate control codes` Emulate control codes: bell, tab, backspace, escape
@@ -458,13 +459,13 @@
   - Add [client.sendTo](docs/scripting.md) for scripting to send text to mud for all client windows
   - Add [client.sendToRaw](docs/scripting.md) for scripting to send raw text to mud for all client windows
   - Add [client.sendToCommand](docs/scripting.md) for scripting to send command to all client windows
-  - Add [client.sendToBackground](docs/scripting.md) for scripting to send command to all client windows  
+  - Add [client.sendToBackground](docs/scripting.md) for scripting to send command to all client windows
   - Add [client.closeWindow](docs/scripting.md) for scripting to close an open window/tab
   - Add [${clientid}](docs/functions#predefined-variables) return current client id
   - Add [${clientname}](docs/functions#predefined-variables) return current client name
-  - Add [%clientname(*name*, *id*)](docs/functions.md#miscellaneous) Return or set the client name
+  - Add [%clientname(_name_, _id_)](docs/functions.md#miscellaneous) Return or set the client name
   - Add [$action](docs/functions#predefined-variables) Last triggered action executed
-  - Add [$trigger](docs/functions#predefined-variables) Last text, event, or pattern that caused last trigger to fire  
+  - Add [$trigger](docs/functions#predefined-variables) Last text, event, or pattern that caused last trigger to fire
   - Add [$caption](docs/functions#predefined-variables) returns the executing item's caption, only set for buttons and context menu items
   - Add [$characterid](docs/functions#predefined-variables) returns current character id for client
   - Mapper:
@@ -508,7 +509,7 @@
     - Fixed finder current overlay to display correctly when highlight all enabled
     - Fixed finder regular expression button being set to active in correctly
     - Fixed toggle split view button/scroll corner losing text selection when clicked
-    - Fixed link not styling overline, strike-though, and related combinations  
+    - Fixed link not styling overline, strike-though, and related combinations
   - Logging:
     - Fixed logger not enabling/disabling when changed from settings dialog
     - Fixed logger not enabling/disabling on load
@@ -535,7 +536,7 @@
     - Changed -m/--map to set working global map file for generic new connections
     - Changed -c/--character to support # ids
     - Removed -mf argument to keep argument name scheme flowing
-    - Removed -pf/--profiles as no longer supported, use character manager with per user settings  
+    - Removed -pf/--profiles as no longer supported, use character manager with per user settings
   - Mapper: Switch room editor to property grid control
   - Update electron 19.1.1 to 19.1.5
   - Update electron-updater 5.2.1 to 5.3.0
@@ -593,7 +594,7 @@
   - [Preferences](docs/preferences.md):
     - Add `MSP: max retries on error`, Amount of retries to attempt play a file before stopping
 - **Fixed:**
-  - Fixed alarm wildcard patterns that have no # eg *:*:30 would fire every 30 seconds but errors as it fails to parse the *:*: right, *:*:30 should be the same as just 30
+  - Fixed alarm wildcard patterns that have no # eg _:_:30 would fire every 30 seconds but errors as it fails to parse the _:_: right, _:_:30 should be the same as just 30
   - Fixed alarm error invalid formats to use disableTriggerOnError when enabled
   - Profile manager: Fix trigger tester failing on multi group optional triggers
   - Fixed %x# variables when multi group optional trigger pattern used
@@ -612,13 +613,13 @@
 ## 0.19.2 2022-08-17
 
 - **New:**
-  - Code editor: 
+  - Code editor:
     - Line count is now displayed in the status bar after file length
     - Area designer: Add \${rms}, \${mon}, \${std}, \${obj}, \${cmds} variables for exit destinations
     - New code overlay icon for editor only when used on windows
 - **Fixed:**
   - Code editor:
-    - Fixed text color for select dropdowns for selected items being hard to read 
+    - Fixed text color for select dropdowns for selected items being hard to read
     - Monster wizard: Fixed not correctly clearing out monster type list
     - Datagrid: Fix some editor width issues being cut off by buttons
     - Fixed issue when closing resize dialog caused focus to be lost
@@ -679,7 +680,7 @@
 
 - **Fixed:**
   - Code editor: Virtual area editor:
-      - Fixed infinite loop when building terrain and state data
+    - Fixed infinite loop when building terrain and state data
 - **Changed:**
   - Linux 32bit is no longer supported
   - Update electron 17.3.1 to 19.0.7
@@ -713,9 +714,9 @@
     - Speedpaths:
       - [Echo](docs/preferences.md#scripting-characters) echo each command to the screen as they are sent
       - Parsing of speed paths now allows you to use ( ) or { } to group a command, eg !2(n;w) would send n;w twice
-  - Character manager: Notes field has been added to allow you to add notes that can be edited, they are saved directly to a file in character folder named character.notes, by saving directly to file it avoids keeping large amounts of text loaded into memory 
+  - Character manager: Notes field has been added to allow you to add notes that can be edited, they are saved directly to a file in character folder named character.notes, by saving directly to file it avoids keeping large amounts of text loaded into memory
   - Add [%charcomment(text)](docs/functions.md#miscellaneous) to allow appending comments to character notes or getting notes field
-  - Add [%charnotes(*string*)](docs/functions.md#miscellaneous) to allow setting notes or getting notes field
+  - Add [%charnotes(_string_)](docs/functions.md#miscellaneous) to allow setting notes or getting notes field
   - Profile manager: double clicking an item in treeview will now toggle expand or collapse state
 - **Fixed:**
   - Try to make sure window size is sent to the mud more accurately
@@ -727,7 +728,7 @@
 - **Changed:**
   - Profile manager: sort profiles by priority sort if set, then alpha always, ignore index as profiles are stored by name
   - Update electron 16.0.8 to 17.0.1
-  - Update monaco-editor 0.31.1 to 0.32.1  
+  - Update monaco-editor 0.31.1 to 0.32.1
   - Update fswin 2.21.1015 to 3.22.106
   - Update electron-updater 4.6.1 to 4.6.5
 
@@ -745,7 +746,7 @@
     - Add [Inline Comment String](docs/preferences.md#scripting--special-characters) The 1 or 2 character string for inline comments
     - Add [Enable Inline Comment](docs/preferences.md#scripting--special-characters) disable inline comment support
     - Add [Block Comment String](docs/preferences.md#scripting--special-characters) The 1 or 2 character string for block comments, ending block comment is string reversed
-    - Add [Block Inline Comment](docs/preferences.md#scripting--special-characters) disable block comment support    
+    - Add [Block Inline Comment](docs/preferences.md#scripting--special-characters) disable block comment support
     - Add [Save Trigger State Changes](docs/preferences.md#advanced--profiles) Add option to control if state changes are saved every time they change
     - New Advanced sub page for all profile related preferences.
     - Add [Group profile saves](docs/preferences.md#advanced--profiles) and [Group profile save delay](docs/preferences.md#advanced--profiles) to allow grouping of profile saves
@@ -817,7 +818,7 @@
   - Fixed temporary triggers and [#UNTRIGGER](docs/commands.md#triggers) some times removing trigger from wrong profile
   - Fixed issue with client.echo, client.sendCommand, and client.sendBackground when used in script type and passing non string values
   - Fixed Trigger alarms to be more accurate and not double fire some times
-  - Fixed Trigger alarms always being stuck in wildcard mode, should require * explicit to execute wildcards
+  - Fixed Trigger alarms always being stuck in wildcard mode, should require \* explicit to execute wildcards
   - Fixed auto connect when loading same character again
   - Fix profile loading issues for [#TRIGGER](docs/commands.md#triggers), [#UNTRIGGER](docs/commands.md#triggers), [#EVENT](docs/commands.md#triggers), [#UNEVENT](docs/commands.md#triggers), [#BUTTON](docs/commands.md#createmodify-profile-or-items), [#UNBUTTON](docs/commands.md#createmodify-profile-or-items), [#ALARM](docs/commands.md#riggers), [#ALIAS](docs/commands.md#createmodify-profile-or-items), [#UNALIAS](docs/commands.md#createmodify-profile-or-items)
   - Fix parsing of some arguments for [#TRIGGER](docs/commands.md#triggers), [#UNTRIGGER](docs/commands.md#triggers), [#EVENT](docs/commands.md#triggers), [#BUTTON](docs/commands.md#createmodify-profile-or-items)
@@ -836,7 +837,7 @@
 ## v0.17.5 2022-01-10
 
 - **New:**
-  - Add [%escape(string)](docs/functions.md#string)  escape all characters in string if escaping is allowed and if those characters need escaping
+  - Add [%escape(string)](docs/functions.md#string) escape all characters in string if escaping is allowed and if those characters need escaping
   - Add [%unescape(string)](docs/functions.md#string) strip escape characters from string if escaping is allowed and those characters are enabled
   - Add $selectedword, $selword, $selectedurl, $selurl, $selectedline, $selline, $selected, $character, $copied for direct access in expressions
   - Add versions of most predefined functions to the expression system to allow for inline usage using [%eval](docs/functions.md#math) or in math, note this is not always the same as full expanded form of ${function(args)} as that will process in the command parsing system while when used with eval or math expressions it will be parsed with the expression engine instead
@@ -864,29 +865,29 @@
   - Update markdown-it 12.3.1 to 12.3.2
 
 ## v0.17.4 2022-01-07
- 
+
 - **New:**
   - Add [#FREEZE](docs/commands.md#display) Scroll lock the display, if state is omitted it will toggle the scroll lock, if state is 0 or false it will disable scroll lock, if state is anything else it will lock the scroll back
   - Add [#CLR](docs/commands.md#display) Add blank lines to clear the screen ignoring any current trailing blank lines
   - Add [%begins(string1,string2](docs/functions.md#string) return true if string 1 starts with string 2
   - Add [%ends(string1, string2)](docs/functions.md#string) returns true if string 1 ends with string 2
   - Add [%len(string)](docs/functions.md#string) returns the length of string
-  - Add [%pos(pattern,string)](docs/functions.md#string) returns the position of pattern in string on 1 index scale, 0 if not found  
+  - Add [%pos(pattern,string)](docs/functions.md#string) returns the position of pattern in string on 1 index scale, 0 if not found
   - Add [%ipos(pattern,string)](docs/functions.md#string) returns the position of pattern in string on 1 index scale, 0 if not found ignoring case
   - Add [%regex(string,regex,var1,...,varN,varN+1)](docs/functions.md#string) test if string matches the regex pattern, if found returns the position of the match, starting at 1 else returns 0, var1 ... varN are optional variable names to store any sub pattern matches, varN+1 is the length of matched string]
   - Add [%trim(string)](docs/functions.md#string) Returns the string without any spaces at the beginning or end
   - Add [%trimleft(string)](docs/functions.md#string)` Returns the string without any spaces at the beginning
   - Add [%trimright(string)](docs/functions.md#string) Returns the string without any spaces at the end
-  - Add [%bitand(number1,number2)](docs/functions.md#math) returns the bitwise AND of the two numbers. 
+  - Add [%bitand(number1,number2)](docs/functions.md#math) returns the bitwise AND of the two numbers.
   - Add [%bitnot(number)](docs/functions.md#math) returns the bitwise inverse of the given number.
-  - Add [%bitor(number1,number2)](docs/functions.md#math) returns the bitwise OR of the two numbers. 
-  - Add [%bitset(i,bitnum,value)](docs/functions.md#math) Set or reset a bit within a numeric value and return the new numeric value. If value is omitted, 1 (true) is used to set the bit. To reset a bit, the value must be zero. 
-  - Add [%bitshift(value,number)](docs/functions.md#math) shifts the value the num bits to the left. If num is negative, then the value is shifted to the right. 
-  - Add [%bittest(i,bitnum)](docs/functions.md#math) Test a bit within a numeric value and return true if it is set, false if it is not set. bitnum starts at 1. 
-  - Add [%bitxor(number1,number2)](docs/functions.md#math) returns the bitwise XOR of the two numbers.  
-  - Add [%number(s))](docs/functions.md#math) convert a numeric string to a number. 
+  - Add [%bitor(number1,number2)](docs/functions.md#math) returns the bitwise OR of the two numbers.
+  - Add [%bitset(i,bitnum,value)](docs/functions.md#math) Set or reset a bit within a numeric value and return the new numeric value. If value is omitted, 1 (true) is used to set the bit. To reset a bit, the value must be zero.
+  - Add [%bitshift(value,number)](docs/functions.md#math) shifts the value the num bits to the left. If num is negative, then the value is shifted to the right.
+  - Add [%bittest(i,bitnum)](docs/functions.md#math) Test a bit within a numeric value and return true if it is set, false if it is not set. bitnum starts at 1.
+  - Add [%bitxor(number1,number2)](docs/functions.md#math) returns the bitwise XOR of the two numbers.
+  - Add [%number(s))](docs/functions.md#math) convert a numeric string to a number.
   - Add [%isfloat(value))](docs/functions.md#math) Returns true if value is a valid floating point number
-  - Add [%isnumber(s))](docs/functions.md#math) true if s represents a valid number. 
+  - Add [%isnumber(s))](docs/functions.md#math) true if s represents a valid number.
   - Add [%string(value))](docs/functions.md#math) converts value to a string. Quotes are added around the value.
   - Add [%float(value))](docs/functions.md#math) Returns value as a floating point number.
   - Add [%isdefined(name)](docs/functions.md#miscellaneous) Returns 1 if a variable is defined, 0 if undefined
@@ -965,7 +966,7 @@
   - Add [#CW](docs/commands.md#display) colors all words matching current trigger pattern
   - Add [#PCOL](docs/commands.md#display) color text based on start and end positions
   - Add [#HIGHLIGHT](docs/commands.md#display) make text bold or brighter color if already bold
-  - Add [#COLOR {pattern} fore,back,bold profile](docs/commands.md#display) pattern and profile arguments to allow for quick trigger creation 
+  - Add [#COLOR {pattern} fore,back,bold profile](docs/commands.md#display) pattern and profile arguments to allow for quick trigger creation
   - Add [%x1..%x99](docs/functions.md) predefined variable support, this variable will be replaced the matching groups start and end indexes, use this.indices or client.indices in script type to access
   - Add [%ansi(style,fore,back)](docs/functions.md) function to return ansi formatted string
   - Add [%i](docs/functions.md) predefined variable
@@ -995,7 +996,7 @@
   - Add [#EVALUATE](docs/commands.md#miscellaneous) Evaluate expression and display to screen like show
   - Add [#PRINT](docs/commands.md#display) Display text to the screen and append newline, and the display text will not fire triggers
   - Add [#PRINTPROMPT](docs/commands.md#display) Display text to the screen, and the display text will not fire triggers
-  - Input parser:  
+  - Input parser:
     - Add support to expression system for string comparison
     - Add support to expression system for string concat using + not just concat function
     - Add user variable support to expression system, can access in scripting using client.variables['NAME'] or client.variables.NAME
@@ -1020,7 +1021,7 @@
   - Fixed bug in [#COLOR](docs/commands.md#display) and [#CW](docs/commands.md#display) not correctly parsing profile argument
   - Input parser:
     - Fixed - being lost after %
-    - Fixed # being lose if %# had a -, * or % following it
+    - Fixed # being lose if %# had a -, \* or % following it
     - Fixed corrupted stack after trigger errors
     - Fixed issue with $named argument format
     - Fixed named arguments not working
@@ -1035,7 +1036,7 @@
     - Fixed crashing issue when opening external links
     - Fixed changelog links not working
   - Fixed issue with modal child windows not being set to correct parent window
-  - Immortal tools: 
+  - Immortal tools:
     - Fixed rename editor to close when right clicking outside of editor
     - Fixed rename editor context menu to show standard edit menu
 - **Changed:**
@@ -1043,7 +1044,7 @@
   - [#nnn](docs/commands.md#repeating-and-loops) counter is now 1 based when using %i..%z instead of 0 based
   - Allow group by ( and ) in command argument parsing
   - Update markdown-it 12.2.0 to 12.3.0
-  - Update monaco-editor 0.30.1 to 0.31.1  
+  - Update monaco-editor 0.30.1 to 0.31.1
   - Update bootstrap 3.3.7 to 3.4.1
   - Update datatables from 1.10.18 to 1.11.3
   - Update bootstrap select 1.13.17 to 1.13.18
@@ -1244,7 +1245,6 @@
   - Update monaco-editor 0.21.3 to 0.24.0
   - Replace mathjs-expression-parser with mathjs 9.4.0 due to mathjs-expression-parser not being updated
   - Update electron-updater 4.3.5 to 4.3.9
-  
 
 ## v0.15.0 2021-03-15
 
@@ -1670,8 +1670,8 @@
     - Fixed horizontal scrolling when split view visible
     - Refresh scroll bars when window restored from a minimized state.
   - Command parsing:
-    - Fixed %* parameter of append %*
-    - Fixed ${*} not correctly marking arguments as used thus appending them if append was turned on
+    - Fixed %_ parameter of append %_
+    - Fixed ${\*} not correctly marking arguments as used thus appending them if append was turned on
     - Fixed %%
     - Fixed $STRING parameters
     - Fixed appending unused variables to inner blocks of parsed lines
@@ -1788,7 +1788,7 @@
       - Fixed saving monster gender
       - Fixed code generation cancel not resetting task bar progress
       - Fixed object bonus code generation
-      - Do not generate set_prevent_* functions of empty string for objects
+      - Do not generate set*prevent*\* functions of empty string for objects
       - Cancel on error when generating code
       - Remove buckler as an accessory for armors
       - Fixed set_long string wrapping
@@ -1837,7 +1837,7 @@
   - Input: Performance tweaks when executing triggers
   - Status:
     - Performance tweaks by grouping updates when possible
-    - Removed jQuery where possible to remove overhead and improve performance  
+    - Removed jQuery where possible to remove overhead and improve performance
   - Process all GMCP in async to try and improve performance
   - Immortal tools:
     - Bump max file size to 307,200 bytes using 1024 bytes as base
@@ -1904,7 +1904,7 @@
     - Correctly factor in current theme display padding into available character width and height
     - Fixed vertical scroll bar when split button shown
     - Fixed show split button being shown after turning off split scroll
-    - Re-add -(minus) and _(underscore) as selectable characters for double click and context menu word selection
+    - Re-add -(minus) and \_(underscore) as selectable characters for double click and context menu word selection
     - Fixed selection when dragging below display window
     - Fixed split scroll window bottom padding spacing for all themes
     - Fixed MXP image align=right
@@ -2139,7 +2139,7 @@
 - **New:**
   - Mapper:
     - Custom zooming to better draw the map
-    - Keyboard support, Use numpad or arrow keys to scroll, delete key to remove a room, + or - to change level, / or * to change zone
+    - Keyboard support, Use numpad or arrow keys to scroll, delete key to remove a room, + or - to change level, / or \* to change zone
     - Mouse scroll lock, double clicking will lock scroll mode until click or escape ends it.
   - Code editor:
     - Add hover help for efuns, sefuns, and other supported functions that have supplied help data
@@ -2184,7 +2184,7 @@
   - Basic jiMUD help viewer, lets you read the jiMUD help docs with out having to load a website, help > jiMUD
   - Added jiMUD website to help drop down as jiMUD now opens new jiMUD help viewer
   - Code editor:
-    - Add basic rules to add * for block comments when adding new lines
+    - Add basic rules to add \* for block comments when adding new lines
     - Area designer:
       - Add visible doors to up/down exits on map
   - Mapper: Can scroll with mouse wheel when hovering a scroll icon.
@@ -2277,7 +2277,7 @@
     - All armor and weapon objects can now have custom skill requirements set for all or per different classes
     - Food and generic objects can be turned into fishing bait
     - Add room and object read support
-    - Merge all the No base * in to single property field to make grids cleaner
+    - Merge all the No base \* in to single property field to make grids cleaner
   - Add [#setsetting](docs/commands.md) options for chat, see [faq](docs/faq.md) for list of all supported settings
   - Add [#chat](docs/commands.md) command to send test to chat window and append newline
   - Add [#chatprompt](docs/commands.md) command to send test to chat window with no newline
@@ -2396,7 +2396,7 @@
     - Fixed drag and drop of tabs between two tab groups
     - Add line/column #s to errors when formatting
   - Immortal tools:
-    - Fixed windows file name sanitize system, replaces invalid characters with _
+    - Fixed windows file name sanitize system, replaces invalid characters with \_
     - Fixed issue with compressed dir decoding, if it fails attempt to re-get data
 
 ## v0.4.58 2018-07-07
@@ -2640,7 +2640,7 @@
     - Fixed tab context menu
     - Formatting :: operator when following keywords and constants stripping spaces
     - Do not add a space between -- or ++ and text
-    - Remove all spaces after * when in a variable declaration statement  
+    - Remove all spaces after \* when in a variable declaration statement
 
 ## v0.4.47 2018-06-03
 
@@ -3137,13 +3137,13 @@
   - Add proper escape system with parser changes, characters: $%"'{\ and command stack character, to escape a character simply just do \CHARACTER
   - Expressions now allow the function dice to be used as if normal math function, eg: `${5 + dice(2d6) * 5}` is the same as `${5 + ${dice(2d6)} * 5}`
   - Functions:
-    - ${dice(**x**d**y**__+n__)}, roll a dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
+    - ${dice(**x**d**y****+n**)}, roll a dice, x is the # of dice, y is the # of sides, with optional +,-,\*,/ modifier
       - example: ${dice(2d6+5)}, rolls 2, 6 sided dice and returns the sum + 5
-    - ${diceavg(**x**d**y**__+n__)} the avg roll of dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
-    - ${dicemin(**x**d**y**__+n__)} the minimum roll of dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
-    - ${dicemax(**x**d**y**__+n__)} the maximum roll of dice, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
-    - ${dicedev(**x**d**y**__+n__)} return standard deviation of dice `sqrt((y^2-1)/12 * x)`, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
-    - ${zdicedev(**x**d**y**__+n__)} return zMUD/cMUD standard deviation of dice `sqrt(((y-1)^2-1)/12 * x)`, x is the # of dice, y is the # of sides, with optional +,-,*,/ modifier
+    - ${diceavg(**x**d**y****+n**)} the avg roll of dice, x is the # of dice, y is the # of sides, with optional +,-,\*,/ modifier
+    - ${dicemin(**x**d**y****+n**)} the minimum roll of dice, x is the # of dice, y is the # of sides, with optional +,-,\*,/ modifier
+    - ${dicemax(**x**d**y****+n**)} the maximum roll of dice, x is the # of dice, y is the # of sides, with optional +,-,\*,/ modifier
+    - ${dicedev(**x**d**y****+n**)} return standard deviation of dice `sqrt((y^2-1)/12 * x)`, x is the # of dice, y is the # of sides, with optional +,-,\*,/ modifier
+    - ${zdicedev(**x**d**y****+n**)} return zMUD/cMUD standard deviation of dice `sqrt(((y-1)^2-1)/12 * x)`, x is the # of dice, y is the # of sides, with optional +,-,\*,/ modifier
   - Verbatim system, you can now start a line of text with a ` and all text after that to a newline will be sent as is to the mud with no parsing or manipulation
   - Preferences:
     - Escape character, allows changing which character is used for escaping
@@ -3168,7 +3168,7 @@
   - %/${name} where not being processed
   - #show was converting text into binary
   - #show was trying to decompress string when MCCP was enabled
-  - Parsing was re-coded to properly handled ${}, %{}, %*, and %# variables with proper stack tracking
+  - Parsing was re-coded to properly handled ${}, %{}, %\*, and %# variables with proper stack tracking
   - #wait would have broken %# values, fixed with new proper parsing and stack
   - selected, selectedword, selword, selectedline, selline, selectedurl, selurl, and copied now return the correct values when used outside of context menus
   - Mapper persistance setting was not correctly restored always
@@ -3224,7 +3224,7 @@
   - Add [client.show()](docs/scripting.md#Basic-function-list) function to show the window
   - Add [client.hide()](docs/scripting.md#Basic-function-list) function to hide the window
   - Add [client.toggle()](docs/scripting.md#Basic-function-list) to toggle hide and show
-  - Added ${#}, %{#}, %{*}, ${*} formats to match {} variable format
+  - Added ${#}, %{#}, %{_}, ${_} formats to match {} variable format
   - Added proper %\{, $\{ escape system
   - New scripting setting scripting for allow expression/evaluate and moved parse double/single quote options there value returned
 - **Change:**
@@ -3459,7 +3459,7 @@
 ## v0.3.0 - 2017-05-30
 
 - **New:**
-  - Split scroll, **Experimental**  this will allow you to scroll while displaying the most recent lines at the bottom with option live update or post update
+  - Split scroll, **Experimental** this will allow you to scroll while displaying the most recent lines at the bottom with option live update or post update
   - Basic error logging to appdata/jiMUD/jimud.error.log when enabled from preferences > advanced > log errors
   - Auto create character, will auto create a new settings file/map file based on GMCP character name
   - Newline shortcut, allows you to pick a shortcut for adding newlines to command input
@@ -3608,7 +3608,7 @@
     - drop down menus and context menus are now created on demand in stead of made when loaded
   - Mapper
     - Changed how drop down menus where created, now creates on demand instead of staying loaded in memory
-    - Area navigator is now  fixed with in the toolbar, should keep it from jumping around or being cut off with long area names
+    - Area navigator is now fixed with in the toolbar, should keep it from jumping around or being cut off with long area names
   - Converted from custom bell to system bell sound
   - View > Status > Limbs was expanded to a new sub menu for visible, health and armor toggling
   - Upgrade electron to 1.7.0
