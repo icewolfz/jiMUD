@@ -24,6 +24,7 @@ export class EditorSettings {
     public session = '';
     public recentSessions = [];
     public includePaths = [];
+    public hideOpenRecent: boolean = true;
 
     public window = {
         persistent: false,

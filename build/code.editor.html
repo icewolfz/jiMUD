@@ -2572,7 +2572,7 @@
             window.$editors[pane].getContainerDomNode().style.display = '';
             toggleDiffNav(false);
         }
-        doUpdate(1);
+        doUpdate(5);
     });
     manager.on('dock-changed', (e, pane, oPane) => {
         if (manager.panes[oPane].panels.length === 0) {
@@ -8661,7 +8661,7 @@
                 _recent.unshift({ file: file, remote: remoteFile });
             createEditor({ file: file, open: true, remote: remoteFile, source: remoteEdit ? 1 : 0 }, true, dock, tmpObj);
             doUpdate(17);
-            flushRecent()
+            flushRecent();
             delete _opening[file];
         }
     }
@@ -8771,8 +8771,9 @@
         if (!options.recent) options.recent = [];
         var recent = [];
         var r = options.recent.length;
+        var f = getFilePath(file);
         while (r--) {
-            if (options.recent[r].file !== file)
+            if (getFilePath(options.recent[r].file) !== f)
                 recent.unshift(options.recent[r]);
         }
         recent.unshift({ file: file, remote: remoteFile });
@@ -8798,6 +8799,8 @@
         var menu = [];
         var r = options.recent.length;
         while (r--) {
+            if(options.hideOpenRecent && findEditor(options.recent[r].file))
+                continue;
             menu.unshift(
                 {
                     label: options.recent[r].file,
@@ -8816,13 +8819,13 @@
                             openFile(options.recent[item.idx].file, options.recent[item.idx].remote);
                     }
                 }
-            );
-            if (r < 10)
-                menu[0].accelerator = 'CmdOrCtrl+' + (r + 1);
-            if (r === 10)
-                menu[0].accelerator = 'CmdOrCtrl+0';
+            );                
         }
         if (menu.length > 0) {
+            for(let acc = 0; acc < 9 && acc < menu.length; acc++) 
+                menu[acc].accelerator = 'CmdOrCtrl+' + (acc + 1);
+            if(menu.length > 9)
+                menu[9].accelerator = 'CmdOrCtrl+0';
             menu.push({ type: 'separator' });
             menu.push({
                 label: 'Clear Recently Opened',
@@ -9037,6 +9040,7 @@
         }
         if (panel.diffFile)
             stopWatchFile(panel.diffFile);
+        addToRecent(panel.editor.file, panel.editor.remote);
         if (panel.editor.source)
             delete _editors['remote:' + panel.editor.remote];
         else
@@ -10460,6 +10464,8 @@
 
     //Hack to fix window/mac casing issues
     function getFilePath(file) {
+        if(file.startsWith('remote:'))
+            return file;
         if (file && process.platform !== 'linux')
             return file.toLowerCase();
         return file;

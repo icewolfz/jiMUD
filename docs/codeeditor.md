@@ -336,6 +336,7 @@ Editor preferences are stored in their own file independent of client or charact
 ### General
 
 - `Max recent items` max number of items to store in recent list
+- `Hide open files on recent menu` Do not display the open files on the open recent menu
 - `Remember opened files on reload` remember opened files when editor was last closed and reopen them
 - `Use native icons in tabs` use the native icon associated with file type set in OS
 - `Enable spellchecking when possible` detect spelling errors when possible **Requires restart**

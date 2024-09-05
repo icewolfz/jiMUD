@@ -5,6 +5,7 @@
 - **New:**
   - Code editor:
     - Update the area and virtual area wizards to better explain paths
+    - Add option to hide open files on recent menu
     - Area Designer:
       - Add ctrl+click selection system
       - Fix code generation of room sounds and smells
