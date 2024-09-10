@@ -8628,7 +8628,7 @@
         }
     }
 
-    function openFile(file, remoteFile, dock, remoteEdit, tmpObj) {
+    async function openFile(file, remoteFile, dock, remoteEdit, tmpObj) {
         if (!file || file.length === 0) {
             if (remoteEdit)
                 openRemote(remoteFile);
