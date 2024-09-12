@@ -11,12 +11,12 @@
       - Fix code generation of room sounds and smells
       - Add hover previews to display monster look/item longs for room preview and monster preview panels
     - Virtual area editor: Add ctrl+click selection system
-    - Fix collection dialog editor not comparing arrays correctly
 - **Fixed:**
   - Increase progress dialog height
   - Code editor:
     - No longer generate function stubs if invalid function names in (: :) values
     - Fix creating duplicate function stubs in generated code
+    - Fix collection dialog editor not comparing arrays correctly
 - **Changed:**
   - Update electron 31.1.0 to 32.1.0
   - Update better-sqlite3 11.2.1 to 11.3.0
