@@ -59,7 +59,7 @@
     "clean:css-linux": "rm ./build/css/*.css",
     "clean:dist": "rm -rf ./dist",
     "list": "asar l .\\dist\\win-unpacked\\resources\\app.asar > .\\dist\\files%npm_package_version%.txt",
-    "list-linux": "asar l ./dist/linux-unpacked/resources/app.asar > ./dist/files%npm_package_version%.txt",
+    "list-linux": "asar l ./dist/linux-unpacked/resources/app.asar > ./dist/files$npm_package_version.txt",
     "rebuild": "electron-rebuild -p"
   },
   "devDependencies": {
