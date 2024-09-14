@@ -13,6 +13,7 @@
     - Virtual area editor: Add ctrl+click selection system
 - **Fixed:**
   - Increase progress dialog height
+  - Fix issue when using non default theme and button bar hidden
   - Code editor:
     - No longer generate function stubs if invalid function names in (: :) values
     - Fix creating duplicate function stubs in generated code

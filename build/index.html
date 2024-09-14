@@ -799,9 +799,9 @@
                 var w = parseInt(buttonBar.style.left, 10);
                 if (isNaN(w)) w = 0;
                 w += buttonBar.offsetWidth;
-                display.style.left = offset(display).left - w;
+                display.style.left = (offset(display).left - w) + 'px';
                 buttonBar.style.display = 'none';
-                document.getElementById('command').style.left = offset(document.getElementById('command')).left - w;
+                document.getElementById('command').style.left = (offset(document.getElementById('command')).left - w) + 'px';
             }
             const lock = document.getElementById('lock');
             if (client.getOption('scrollLocked')) {
@@ -3187,6 +3187,7 @@
                 window.loadTheme();
                 client.emit('load-theme');
                 client.clearOptionCache();
+                setTimeout(()=> doUpdate(1), 50);
             }
             if (settings !== _windowState.data.settings) {
                 if (global) {

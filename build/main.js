@@ -4503,6 +4503,9 @@ function createMenu(window) {
                     role: 'delete'
                 },
                 {
+                    type: 'separator'
+                },                
+                {
                     label: 'Select All',
                     accelerator: 'CmdOrCtrl+A',
                     click: (item, mWindow) => {
