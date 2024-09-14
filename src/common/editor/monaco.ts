@@ -773,7 +773,7 @@ function findDefine(define, value, reg, root) {
             }
             if ($lpcDefineCache[f][define]) {
                 if (!monaco.editor.getModel(monaco.Uri.file(f))) {
-                    fs.readFileSync(f, 'utf8', (data, err) => {
+                    fs.readFile(f, 'utf8', (data, err) => {
                         if (err) return;
                         monaco.editor.createModel(data, 'lpc', monaco.Uri.file(f));
                     })
