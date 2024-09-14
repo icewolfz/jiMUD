@@ -160,7 +160,7 @@
     "@electron/remote": "^2.1.2",
     "better-sqlite3": "^11.3.0",
     "buzz": "^1.2.1",
-    "chokidar": "^3.6.0",
+    "chokidar": "^4.0.0",
     "electron-updater": "^6.3.4",
     "fs-extra": "^11.2.0",
     "fswin": "^3.24.829",

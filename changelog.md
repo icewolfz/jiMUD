@@ -21,6 +21,7 @@
 - **Changed:**
   - Update electron 31.1.0 to 32.1.0
   - Update better-sqlite3 11.2.1 to 11.3.0
+  - Update chokidar 3.6.0 to 4.0.0
   
 ## 1.5.0 2024-09-01
 
