@@ -1,4 +1,4 @@
-//spellchecker:ignore sefun sefuns lfuns lfun efuns efun precompiler ltrim rtrim
+//spellchecker:ignore sefun sefuns lfuns lfun efuns efun precompiler ltrim rtrim varargs
 //spellchecker:ignore lbracket rbracket loperator roperator rhook lhook xeot
 import { EventEmitter } from 'events';
 import { parseTemplate, walkSync, isValidIdentifier } from '../library';
@@ -2449,37 +2449,52 @@ export class LPCFormatter extends EventEmitter {
     }
 }
 
-export function createFunction(name, type?, args?) {
+export function getFunctionName(name: string) {
+    if (!name) return name;
     name = name.trim();
     if (name.startsWith('(:'))
         name = name.substr(2);
     if (name.endsWith(':)'))
         name = name.substr(0, name.length - 2);
-    args = args || '';
     name = name.trim();
-    if (!validFunctionPointer(name)) return '';
-    if (!type || type === 'void')
-        return `void ${name}(${args})\n{\n}\n\n`;
-    switch (type) {
-        case 'string':
-            return `${type} ${name}(${args})\n{\n   return "";\n}\n\n`;
-        case 'array':
-            return `${type} ${name}(${args})\n{\n   return ({ });\n}\n\n`;
-        case 'mapping':
-            return `${type} ${name}(${args})\n{\n   return ([ ]);\n}\n\n`;
-    }
-    return `${type} ${name}(${args})\n{\n   return 0;\n}\n\n`;
+    return name;
 }
 
-export function formatFunctionPointer(pointer, trim?) {
-    //remove spaces
-    pointer = pointer.trim();
-    //remove (::)
-    pointer = pointer.substr(2);
-    pointer = pointer.substr(0, pointer.length - 2);
-    if (trim)
-        return `(: ${pointer.trim()} :)`;
-    return ` (: ${pointer.trim()} :) `;
+export function createFunction(name: string, type?: any, args?: string, code?: string, varArgs?: boolean) {
+    name = getFunctionName(name);
+    if (!validFunctionPointer(name)) return '';
+    if (typeof type === 'object') {
+        if (typeof type.arguments === 'object') {
+            args = Object.keys(type.arguments).map(
+                arg => `${type.arguments[arg].type || 'mixed'}${type.arguments[arg].array ? ' *' : ' '}${type.arguments[arg].name}${type.arguments[arg].expand ? '...' : ''}`
+            ).join(', ');
+        }
+        else
+            args = type.arguments || '';
+        code = type.code;
+        varArgs = type.variableArguments;
+        type = type.type;
+    }
+    else
+        args = args || '';
+    if (code && code.length)
+        return `${varArgs ? 'varargs ' : ''}${type || 'void'} ${name}(${args})\n{\n${code}\n}\n\n`;
+    if (!type || type === 'void')
+        return `${varArgs ? 'varargs ' : ''}void ${name}(${args})\n{\n}\n\n`;
+    switch (type) {
+        case 'string':
+            return `${varArgs ? 'varargs ' : ''}${type} ${name}(${args})\n{\n   return "";\n}\n\n`;
+        case 'array':
+            return `${varArgs ? 'varargs ' : ''}${type} ${name}(${args})\n{\n   return ({ });\n}\n\n`;
+        case 'mapping':
+            return `${varArgs ? 'varargs ' : ''}${type} ${name}(${args})\n{\n   return ([ ]);\n}\n\n`;
+    }
+    return `${varArgs ? 'varargs ' : ''}${type} ${name}(${args})\n{\n   return 0;\n}\n\n`;
+}
+
+export function formatFunctionPointer(pointer: string) {
+    pointer = getFunctionName(pointer);
+    return ` (: ${pointer} :) `;
 }
 
 export function formatArgumentList(str, first, second?, indent?, quotes?) {
@@ -2541,14 +2556,10 @@ export function formatMapping(str, indent?, sub?) {
     return out;
 }
 
-export function validFunctionPointer(name, trim?) {
+export function validFunctionPointer(name, clean?) {
     if (!name || name.length === 0) return 0;
-    name = name.trim();
-    if (name.startsWith('(:'))
-        name = name.substr(2);
-    if (name.endsWith(':)'))
-        name = name.substr(0, name.length - 2);
-    name = name.trim();
+    if (clean)
+        name = formatFunctionPointer(name);
     return isValidIdentifier(name);
 }
 

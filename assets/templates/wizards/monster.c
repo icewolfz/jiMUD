@@ -10,7 +10,7 @@
 {doc} */
 #include <std.h>{includes}
 
-inherit {inherit};
+inherit {inherit};{inherits}
 
 {create pre}void create()
 {

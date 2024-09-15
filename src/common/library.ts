@@ -15,6 +15,7 @@ declare global {
         trimLeft(): string;
         trimRight(): string;
         rtrim(): string;
+        addSlashes(): string;
     }
 }
 
@@ -685,6 +686,28 @@ if (typeof String.prototype.padEnd !== 'function') {
         if (paddingValue.length <= this.length) return this;
         return this + paddingValue.slice(-this.length);
     };
+}
+
+export function addSlashes(string, all?) {
+    if (!string || !string.length) return string;
+    if (all)
+        return string.replace(/\\/g, '\\\\').
+            replace(/\u0008/g, '\\b').
+            replace(/\t/g, '\\t').
+            replace(/\n/g, '\\n').
+            replace(/\f/g, '\\f').
+            replace(/\r/g, '\\r').
+            replace(/'/g, '\\\'').
+            replace(/"/g, '\\"').
+            replace(/\u0000/g, '\\0');
+    return string.replace(/\\/g, '\\\\').
+        replace(/'/g, '\\\'').
+        replace(/"/g, '\\"');
+}
+
+String.prototype.addSlashes = function (this: string) {
+    //no need to do (str+'') anymore because 'this' can only be a string
+    return addSlashes(this);
 }
 
 String.prototype.rtrim = function (this: string) {
@@ -2227,12 +2250,12 @@ export function escapeRegExp(string) {
 }
 
 export function insertValue(input, value) {
-    if(!input) return;
+    if (!input) return;
     const active = <HTMLElement>document.activeElement;
-    if(!active || active != input)
+    if (!active || active != input)
         input.focus();
     document.execCommand("insertText", false, value);
-    if(active && active != input)
+    if (active && active != input)
         active.focus();
     /*
     var startPos = input.selectionStart;
@@ -2244,3 +2267,4 @@ export function insertValue(input, value) {
     input.selectionEnd = startPos + value.length;
     */
 }
+

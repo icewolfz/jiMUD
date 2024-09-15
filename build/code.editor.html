@@ -124,7 +124,7 @@
 
         function editorOverrides(editor) {
             var ld = editor.getContribution('editor.linkDetector');
-            //have to search as newer monaco editors minifiy property names
+            //have to search as newer monaco editors minify property names
             //find openerService to support custom url opening
             var found = Object.keys(ld).filter(i => ld[i] && ld[i].open);
             if (found.length)
@@ -645,7 +645,7 @@
         </div>
     </dialog>
 
-    <dialog id="new-area" data-title="Create new area" style="width:400px;height:348px;padding:5px;" onclose="menubar.enabled = true;" oncancel="menubar.enabled = true;">
+    <dialog id="new-area" data-title="Create new area" style="width:400px;height:368px;padding:5px;" onclose="menubar.enabled = true;" oncancel="menubar.enabled = true;">
         <div class="dialog-header" style="font-weight: bold">
             <button type="button" class="close" data-dismiss="modal" onclick="document.getElementById('new-area').close();">&times;</button>
             <div style="padding-top: 2px;" id="new-area-title">Create new area...</div>
@@ -1963,7 +1963,7 @@
     const { Wizard, WizardPage, WizardDataGridPage } = require('./js/wizard');
 
     // eslint-disable-next-line no-unused-vars
-    const { formatString, inverse, parseTemplate, capitalize, existsSync, isDirSync, walkSync, formatSize, updateEditDropdown, initEditDropdown, stripPinkfish } = require('./js/library');
+    const { formatString, inverse, parseTemplate, capitalize, existsSync, isDirSync, walkSync, formatSize, updateEditDropdown, initEditDropdown, stripPinkfish, addSlashes } = require('./js/library');
     const { IEDError } = require('./js/types');
 
     const { IED } = require('./js/ied');
@@ -5541,10 +5541,10 @@
             $('#new-virtual-area-area').on('keyup', () => {
                 var data = baseParseData();
                 $('#help-new-virtual-area-remote-path').text(`/realms/${data.name.toLowerCase()}/${$('#new-virtual-area-area').val().toLowerCase() || '{area name}'}` || '/realms/{character}/{area name}');
-            })            
+            })
         }
         var data = baseParseData();
-        $('#help-new-virtual-area-remote-path').text(`/realms/${data.name.toLowerCase()}/${name.toLowerCase() || '{area name}'}` || '/realms/{character}/{area name}');        
+        $('#help-new-virtual-area-remote-path').text(`/realms/${data.name.toLowerCase()}/${name.toLowerCase() || '{area name}'}` || '/realms/{character}/{area name}');
         $('#new-virtual-area *').attr('disabled', false);
         $('#new-virtual-area .nav-tabs a[href="#general"]').tab('show');
         $('#btn-new-virtual-area-remote-path').attr('disabled', !connected);
@@ -6397,6 +6397,17 @@
                             if (data['room-wiz-searches'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Searches:</span> ' + data['room-wiz-searches'].length + '</div>';
 
+                            if (data['room-wiz-includes'] && data['room-wiz-includes'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Includes:</span> ' + data['room-wiz-includes'].length + '</div>';
+                            if (data['room-wiz-defines'] && Object.keys(data['room-wiz-defines']).length > 0)
+                                sum += '<div><span style="font-weight:bold">Defines:</span> ' + Object.keys(data['mon-wiz-defines']).length + '</div>';
+                            if (data['room-wiz-inherits'] && data['room-wiz-inherits'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Inherits:</span> ' + data['room-wiz-inherits'].length + '</div>';
+                            if (data['room-wiz-variables'] && Object.keys(data['room-wiz-variables']).length > 0)
+                                sum += '<div><span style="font-weight:bold">Variables:</span> ' + Object.keys(data['mon-wiz-variables']).length + '</div>';
+                            if (data['room-wiz-functions'] && Object.keys(data['room-wiz-functions']).length > 0)
+                                sum += '<div><span style="font-weight:bold">Functions:</span> ' + Object.keys(data['room-wiz-functions']).length + '</div>';
+
                             summary.innerHTML = sum;
                         }
                     })
@@ -6443,6 +6454,43 @@
                 tmpl['create pre'] = '';
                 tmpl['create body'] = '';
                 tmpl['create post'] = '';
+                tmpl.inherits = '';
+
+                if (data['room-wiz-includes'] && tmpl['room-wiz-includes'].length) {
+                    tmpl.includes += data['room-wiz-includes'].map(i => {
+                        if (i.relative)
+                            return `\n#include "${i.path}"`;
+                        return `\n#include <${i.path}>`;
+                    }).join('');
+                }
+                if (data['room-wiz-inherits'] && data['room-wiz-inherits'].length)
+                    tmpl.inherits += data['room-wiz-inherits'].map(i => `\ninherit ${i};`).join('');
+
+                if (data['room-wiz-defines']) {
+                    Object.keys(data['room-wiz-defines']).forEach(r => tmpl['create pre'] += `#define ${r}${data['room-wiz-defines'][r] && data['room-wiz-defines'][r].trim().length ? ' ' + data['room-wiz-defines'][r].trim() : ''}\n`);
+                    if (Object.keys(data['room-wiz-defines']).length)
+                        tmpl['create pre'] += '\n';
+                }
+                if (data['room-wiz-variables']) {
+                    tmp = Object.keys(data['room-wiz-variables']);
+                    tmpl['create pre'] += Object.keys(data['room-wiz-variables']).map(
+                        arg => `${data['room-wiz-variables'][arg].type || 'mixed'}${data['room-wiz-variables'][arg].array ? ' *' : ' '}${arg} = ${data['room-wiz-variables'][arg].type === 'string' ? `"${addSlashes(data['room-wiz-variables'][arg].value)}"` : data['room-wiz-variables'][arg].value};\n`
+                    ).join('');
+                    tmpl['reset body'] += Object.keys(data['room-wiz-variables']).filter(v => data['room-wiz-variables'][v].reset).map(
+                        arg => `${arg} = ${data['room-wiz-variables'][arg].type === 'string' ? `"${addSlashes(data['room-wiz-variables'][arg].value)}"` : data['room-wiz-variables'][arg].value};\n`
+                    ).join('');
+                    if (tmp.length)
+                        tmpl['create pre'] += '\n';
+                }
+
+                if (data['room-wiz-functions']) {
+                    tmp = Object.keys(data['room-wiz-functions']);
+                    for (const func in data['room-wiz-functions']) {
+                        if (!data['room-wiz-functions'].hasOwnProperty(func)) continue;
+                        tmpl['create pre'] += createFunction(func, data['room-wiz-functions'][func]);
+                        stubs[formatFunctionPointer(func)] = 1;
+                    }
+                }
 
                 if (data['room-wiz-forage'] !== -1 || doors.length > 0) {
                     tmpl['create post'] += '\n\nvoid reset()\n{\n   ::reset();\n';
@@ -6467,7 +6515,7 @@
                     data['room-wiz-type'] = { display: 'Vault', value: 'ROOMTYPE_VAULT' };
 
                 tmpl.inherit = data['room-wiz-type'].value;
-                tmpl.inherits = '';
+
                 if (climbs.length > 0 && data['room-wiz-type'].display !== 'Climb') {
                     tmpl.inherits += '\ninherit STD_CLIMBING;';
                     tmpl.doc.push('/doc/build/etc/climbing');
@@ -6656,7 +6704,7 @@
                 data['room-wiz-secret-exit'] = data['room-wiz-secret-exit'].trim();
                 if (data['room-wiz-secret-exit'] === 'false') { /**/ }
                 else if (data['room-wiz-secret-exit'].startsWith('(:')) {
-                    props['secret exit'] = formatFunctionPointer(data['room-wiz-secret-exit'], true);
+                    props['secret exit'] = formatFunctionPointer(data['room-wiz-secret-exit']);
                     if (!stubs[props['secret exit']]) {
                         tmpl['create pre'] += createFunction(data['room-wiz-secret-exit'], 'string', 'object room, object player');
                         stubs[props['secret exit']] = 1;
@@ -6830,7 +6878,7 @@
                         tmp2 = `({ ${tmp2.join(', ')} })`;
                     tmp3 = i.description.trim();
                     if (tmp3.startsWith('(:')) {
-                        tmp3 = formatFunctionPointer(tmp3, true);
+                        tmp3 = formatFunctionPointer(tmp3);
                         if (!stubs[tmp3]) {
                             tmpl['create pre'] += createFunction(tmp3, 'string');
                             stubs[tmp3] = 1;
@@ -6929,7 +6977,7 @@
                         tmp2 = `({ ${tmp2.join(', ')} })`;
                     tmp3 = i.description.trim();
                     if (tmp3.startsWith('(:')) {
-                        tmp3 = formatFunctionPointer(tmp3, true);
+                        tmp3 = formatFunctionPointer(tmp3);
                         if (!stubs[ftmp3]) {
                             tmpl['create pre'] += createFunction(tmp3, 'string', 'string smell, object room, object player');
                             stubs[tmp3] = 1;
@@ -6968,7 +7016,7 @@
                         tmp2 = `({ ${tmp2.join(', ')} })`;
                     tmp3 = i.description.trim();
                     if (tmp3.startsWith('(:')) {
-                        tmp3 = formatFunctionPointer(tmp3, true);
+                        tmp3 = formatFunctionPointer(tmp3);
                         if (!stubs[tmp3]) {
                             tmpl['create pre'] += createFunction(tmp3, 'string', 'string sound, object room, object player');
                             stubs[tmp3] = 1;
@@ -7007,7 +7055,7 @@
                         tmp2 = `({ ${tmp2.join(', ')} })`;
                     tmp3 = i.message.trim();
                     if (tmp3.startsWith('(:')) {
-                        tmp3 = formatFunctionPointer(tmp3, true);
+                        tmp3 = formatFunctionPointer(tmp3);
                         if (!stubs[tmp3]) {
                             tmpl['create pre'] += createFunction(tmp3, 'string', 'string search');
                             stubs[tmp3] = 1;
@@ -7060,7 +7108,7 @@
                         tmp2 = `({ ${tmp2.join(', ')} })`;
                     tmp3 = i.description.trim();
                     if (tmp3.startsWith('(:')) {
-                        tmp3 = formatFunctionPointer(tmp3, true);
+                        tmp3 = formatFunctionPointer(tmp3);
                         if (!stubs[tmp3]) {
                             tmpl['create pre'] += createFunction(tmp3, 'string', 'string id');
                             stubs[tmp3] = 1;
@@ -7430,8 +7478,8 @@
                         }
                     }),
                     new WizardDataGridPage({
-                        title: 'Resistences',
-                        id: 'mon-wiz-resistences',
+                        title: 'resistances',
+                        id: 'mon-wiz-resistances',
                         clipboard: 'jiMUD/',
                         columns: [
                             {
@@ -7831,8 +7879,8 @@
                                 sum += '<div><span style="font-weight:bold">Gender:</span> ' + data['mon-wiz-gender'].value + '</div>';
                             if (data['mon-wiz-body'] && data['mon-wiz-body'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Body type:</span> ' + data['mon-wiz-body'] + '</div>';
-                            if (data['mon-wiz-resistences'] && data['mon-wiz-resistences'].length !== 0)
-                                sum += '<div><span style="font-weight:bold">Resistences:</span> ' + data['mon-wiz-resistences'].length + '</div>';
+                            if (data['mon-wiz-resistances'] && data['mon-wiz-resistances'].length !== 0)
+                                sum += '<div><span style="font-weight:bold">Resistances:</span> ' + data['mon-wiz-resistances'].length + '</div>';
                             if (data['mon-wiz-ask'] || data['mon-wiz-ask-topics'].length !== 0)
                                 sum += '<div><span style="font-weight:bold">Can ask questions:</span> Yes</div>';
                             if (data['mon-wiz-ask-no-topic'] && data['mon-wiz-ask-no-topic'].length > 0)
@@ -7908,6 +7956,18 @@
                                 sum += '<div><span style="font-weight:bold">Auto stand:</span> Yes</div>';
                             if (data['mon-wiz-properties'] || data['mon-wiz-properties'].length !== 0)
                                 sum += '<div><span style="font-weight:bold">Custom properties:</span> ' + data['mon-wiz-properties'].length + '</div>';
+
+
+                            if (data['mon-wiz-includes'] && data['mon-wiz-includes'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Includes:</span> ' + data['mon-wiz-includes'].length + '</div>';
+                            if (data['mon-wiz-defines'] && Object.keys(data['mon-wiz-defines']).length > 0)
+                                sum += '<div><span style="font-weight:bold">Defines:</span> ' + Object.keys(data['mon-wiz-defines']).length + '</div>';
+                            if (data['mon-wiz-inherits'] && data['mon-wiz-inherits'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Inherits:</span> ' + data['mon-wiz-inherits'].length + '</div>';
+                            if (data['mon-wiz-variables'] && Object.keys(data['mon-wiz-variables']).length > 0)
+                                sum += '<div><span style="font-weight:bold">Variables:</span> ' + Object.keys(data['mon-wiz-functions']).length + '</div>';
+                            if (data['mon-wiz-functions'] && Object.keys(data['mon-wiz-functions']).length > 0)
+                                sum += '<div><span style="font-weight:bold">Functions:</span> ' + Object.keys(data['mon-wiz-functions']).length + '</div>';
                             summary.innerHTML = sum;
                         }
                     })
@@ -7975,6 +8035,7 @@
                 var stubs = {};
                 tmpl.inherit = data['mon-wiz-type'].value;
                 tmpl.includes = data['mon-wiz-type'].display === 'Base' ? '\n#include "../area.h"' : '';
+                tmpl.inherits = '';
                 tmpl['doc'] = [];
                 tmpl['create pre'] = '';
                 tmpl['create post'] = '';
@@ -8050,6 +8111,42 @@
                         tmpl.doc.push('/doc/build/monster/types/vendor');
                         break;
                 }
+                if (data['mon-wiz-includes'] && tmpl['mon-wiz-includes'].length) {
+                    tmpl.includes += data['mon-wiz-includes'].map(i => {
+                        if (i.relative)
+                            return `\n#include "${i.path}"`;
+                        return `\n#include <${i.path}>`;
+                    }).join('');
+                }
+                if (data['mon-wiz-inherits'] && data['mon-wiz-inherits'].length)
+                    tmpl.inherits += data['mon-wiz-inherits'].map(i => `\ninherit ${i};`).join('');
+
+                if (data['mon-wiz-defines']) {
+                    Object.keys(data['mon-wiz-defines']).forEach(r => tmpl['create pre'] += `#define ${r}${data['mon-wiz-defines'][r] && data['mon-wiz-defines'][r].trim().length ? ' ' + data['mon-wiz-defines'][r].trim() : ''}\n`);
+                    if (Object.keys(data['mon-wiz-defines']).length)
+                        tmpl['create pre'] += '\n';
+                }
+                if (data['mon-wiz-variables']) {
+                    tmp = Object.keys(data['mon-wiz-variables']);
+                    tmpl['create pre'] += Object.keys(data['mon-wiz-variables']).map(
+                        arg => `${data['mon-wiz-variables'][arg].type || 'mixed'}${data['mon-wiz-variables'][arg].array ? ' *' : ' '}${arg} = ${data['mon-wiz-variables'][arg].type === 'string' ? `"${addSlashes(data['mon-wiz-variables'][arg].value)}"` : data['mon-wiz-variables'][arg].value};\n`
+                    ).join('');
+                    tmpl['reset body'] += Object.keys(data['mon-wiz-variables']).filter(v => data['mon-wiz-variables'][v].reset).map(
+                        arg => `${arg} = ${data['mon-wiz-variables'][arg].type === 'string' ? `"${addSlashes(data['mon-wiz-variables'][arg].value)}"` : data['mon-wiz-variables'][arg].value};\n`
+                    ).join('');
+                    if (tmp.length)
+                        tmpl['create pre'] += '\n';
+                }
+
+                if (data['mon-wiz-functions']) {
+                    tmp = Object.keys(data['mon-wiz-functions']);
+                    for (const func in data['mon-wiz-functions']) {
+                        if (!data['mon-wiz-functions'].hasOwnProperty(func)) continue;
+                        tmpl['create pre'] += createFunction(func, data['mon-wiz-functions'][func]);
+                        stubs[formatFunctionPointer(func)] = 1;
+                    }
+                }
+
                 if (data['mon-wiz-name'].startsWith('"') && data['mon-wiz-name'].endsWith('"')) {
                     tmpl['name'] = data['mon-wiz-name'].substr(1, data['mon-wiz-name'].length - 2).replace(/"/g, '\\"');
                 }
@@ -8159,7 +8256,7 @@
                     props['no bleed'] = 1;
                 data['mon-wiz-no-corpse'] = data['mon-wiz-no-corpse'].trim();
                 if (data['mon-wiz-no-corpse'].startsWith('(:')) {
-                    props['no corpse'] = formatFunctionPointer(data['mon-wiz-no-corpse'], true);
+                    props['no corpse'] = formatFunctionPointer(data['mon-wiz-no-corpse']);
                     if (!stubs[props['no corpse']]) {
                         tmpl['create pre'] += createFunction(data['mon-wiz-no-corpse'], 'string');
                         stubs[props['no corpse']] = 1;
@@ -8171,7 +8268,7 @@
                     props['no corpse'] = `"${data['mon-wiz-no-corpse'].replace(/"/g, '\\"')}"`;
                 data['mon-wiz-no-limbs'] = data['mon-wiz-no-limbs'].trim();
                 if (data['mon-wiz-no-limbs'].startsWith('(:')) {
-                    props['no limbs'] = formatFunctionPointer(data['mon-wiz-no-limbs'], true);
+                    props['no limbs'] = formatFunctionPointer(data['mon-wiz-no-limbs']);
                     if (!stubs[props['no limbs']]) {
                         tmpl['create pre'] += createFunction(data['mon-wiz-no-limbs'], 'string');
                         stubs[props['no limbs']] = 1;
@@ -8378,7 +8475,7 @@
                         tmp2 = `({ ${tmp2.join(', ')} })`;
                     tmp3 = i.message.trim();
                     if (tmp3.startsWith('(:')) {
-                        tmp3 = formatFunctionPointer(tmp3, true);
+                        tmp3 = formatFunctionPointer(tmp3);
                         if (!stubs[tmp3]) {
                             tmpl['create pre'] += createFunction(tmp3, 'string', 'object player, string topic');
                             stubs[tmp3] = 1;
@@ -8418,7 +8515,7 @@
                 tmp = data['mon-wiz-emotes'].filter(s => s.type === 0).map(i => {
                     tmp3 = i.message.trim();
                     if (tmp3.startsWith('(:')) {
-                        tmp3 = formatFunctionPointer(tmp3, true);
+                        tmp3 = formatFunctionPointer(tmp3);
                         if (!stubs[tmp3]) {
                             tmpl['create pre'] += createFunction(tmp3, 'mixed', 'object monster');
                             stubs[tmp3] = 1;
@@ -8433,7 +8530,7 @@
                 tmp = data['mon-wiz-emotes'].filter(s => s.type === 1).map(i => {
                     tmp3 = i.message.trim();
                     if (tmp3.startsWith('(:')) {
-                        tmp3 = formatFunctionPointer(tmp3, true);
+                        tmp3 = formatFunctionPointer(tmp3);
                         if (!stubs[tmp3]) {
                             tmpl['create pre'] += createFunction(tmp3, 'mixed', 'object monster');
                             stubs[tmp3] = 1;
@@ -8451,7 +8548,7 @@
                 data['mon-wiz-emotes'].filter(s => s.type === 2 && s.language.length !== 0).forEach(i => {
                     tmp3 = i.message.trim();
                     if (tmp3.startsWith('(:')) {
-                        tmp3 = formatFunctionPointer(tmp3, true);
+                        tmp3 = formatFunctionPointer(tmp3);
                         if (!stubs[tmp3]) {
                             tmpl['create pre'] += createFunction(tmp3, 'mixed', 'object monster, string language');
                             stubs[tmp3] = 1;
@@ -8471,7 +8568,7 @@
                 data['mon-wiz-emotes'].filter(s => s.type === 3 && s.language.length !== 0).forEach(i => {
                     tmp3 = i.message.trim();
                     if (tmp3.startsWith('(:')) {
-                        tmp3 = formatFunctionPointer(tmp3, true);
+                        tmp3 = formatFunctionPointer(tmp3);
                         if (!stubs[tmp3]) {
                             tmpl['create pre'] += createFunction(tmp3, 'mixed', 'object monster, string language');
                             stubs[tmp3] = 1;
@@ -8489,12 +8586,12 @@
                 });
                 //#endregion
 
-                if (data['mon-wiz-resistences'] && data['mon-wiz-resistences'].length) {
-                    if (data['mon-wiz-resistences'].length.length === 1)
-                        tmpl['create body'] += `   add_permanent_resistance(\"${data['mon-wiz-resistences'][0].type}\", ${data['mon-wiz-resistences'][0].amount});\n`;
+                if (data['mon-wiz-resistances'] && data['mon-wiz-resistances'].length) {
+                    if (data['mon-wiz-resistances'].length.length === 1)
+                        tmpl['create body'] += `   add_permanent_resistance(\"${data['mon-wiz-resistances'][0].type}\", ${data['mon-wiz-resistances'][0].amount});\n`;
                     else {
                         tmpl['create body'] += '   add_permanent_resistances( ([\n       ';
-                        data['mon-wiz-resistences'].forEach(r => {
+                        data['mon-wiz-resistances'].forEach(r => {
                             tmpl['create body'] += `\"${r.type}\" : ${r.amount},\n       `;
                         });
                         tmpl['create body'] = tmpl['create body'].substring(0, tmpl['create body'].length - 9) + '\n     ]) );\n';
@@ -8799,7 +8896,7 @@
         var menu = [];
         var r = options.recent.length;
         while (r--) {
-            if(options.hideOpenRecent && findEditor(options.recent[r].file))
+            if (options.hideOpenRecent && findEditor(options.recent[r].file))
                 continue;
             menu.unshift(
                 {
@@ -8819,12 +8916,12 @@
                             openFile(options.recent[item.idx].file, options.recent[item.idx].remote);
                     }
                 }
-            );                
+            );
         }
         if (menu.length > 0) {
-            for(let acc = 0; acc < 9 && acc < menu.length; acc++) 
+            for (let acc = 0; acc < 9 && acc < menu.length; acc++)
                 menu[acc].accelerator = 'CmdOrCtrl+' + (acc + 1);
-            if(menu.length > 9)
+            if (menu.length > 9)
                 menu[9].accelerator = 'CmdOrCtrl+0';
             menu.push({ type: 'separator' });
             menu.push({
@@ -10367,7 +10464,7 @@
         switch (name) {
             case 'progress':
                 //fake a window for easy close detection
-                _windows['progress.html'] = { document: { title: 'progress', focus: function () { ipcRender.send('progess', 'focus'); } } };
+                _windows['progress.html'] = { document: { title: 'progress', show: function () { ipcRenderer.send('show-window', 'progress', data ? data.title || '' : '', true); }, focus: function () { ipcRender.send('progess', 'focus'); } } };
                 ipcRenderer.send('show-window', 'progress', data ? data.title || '' : '', true);
                 break;
             case 'editor':
@@ -10464,7 +10561,7 @@
 
     //Hack to fix window/mac casing issues
     function getFilePath(file) {
-        if(file.startsWith('remote:'))
+        if (file.startsWith('remote:'))
             return file;
         if (file && process.platform !== 'linux')
             return file.toLowerCase();

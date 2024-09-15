@@ -7,7 +7,7 @@ import { Splitter, Orientation } from '../splitter';
 import { PropertyGrid } from '../propertygrid';
 import { EditorType } from '../value.editors';
 import { DataGrid } from '../datagrid';
-import { copy, formatString, isFileSync, capitalize, Cardinal, pinkfishToHTML, stripPinkfish, consolidate, parseTemplate, initEditDropdown, capitalizePinkfish, stripQuotes } from '../library';
+import { copy, formatString, isFileSync, capitalize, Cardinal, pinkfishToHTML, stripPinkfish, consolidate, parseTemplate, initEditDropdown, capitalizePinkfish, isObjectEqual, addSlashes } from '../library';
 const { clipboard } = require('electron');
 const path = require('path');
 const fs = require('fs-extra');
@@ -220,6 +220,25 @@ interface Read {
     language: string;
 }
 
+interface Include {
+    path: string;
+    relative: boolean;
+}
+
+class Variable {
+    public type: string = '';
+    public reset: boolean = true;
+    public value: string = '';
+    public array: boolean = false;
+}
+
+class CodeBlock {
+    public type: string = '';
+    public code: string = '';
+    public variableArguments: boolean = false;
+    public arguments = {};
+}
+
 export class Room {
     //readonly
     public x = 0;
@@ -271,6 +290,11 @@ export class Room {
     public waterSource: string = 'the water';
     public waterDrinkMessage: string = '';
     public waterWashMessage: string = '';
+    public includes: Include[] = [];
+    public defines = {};
+    public inherits: string[] = [];
+    public variables = {};
+    public functions = {};
 
     constructor(x, y, z, data?, type?) {
         if (data)
@@ -317,6 +341,7 @@ export class Room {
                 case 'smells':
                 case 'searches':
                 case 'properties':
+                case 'inherits':
                     if (this[prop].length !== room[prop].length)
                         return false;
                     if (this[prop].filter((v, i) => room[prop][i] !== v).length !== 0)
@@ -342,6 +367,24 @@ export class Room {
                         if (this.exitsDetails[k[l]] !== room.exitsDetails[k[l]])
                             return false;
                     }
+                    break;
+                case 'includes':
+                    if (this[prop].length !== room[prop].length)
+                        return false;
+                    if (this.includes.filter((v, i) => room.includes[i].path !== v.path && room.includes[i].relative !== v.relative).length !== 0)
+                        return false;
+                    break;
+                case 'defines':
+                    if (!isObjectEqual(this.defines, room.defines))
+                        return false;
+                    break;
+                case 'variables':
+                    if (!isObjectEqual(this.variables, room.variables))
+                        return false;
+                    break;
+                case 'functions':
+                    if (!isObjectEqual(this.functions, room.functions))
+                        return false;
                     break;
                 default:
                     if (this[prop] !== room[prop])
@@ -415,8 +458,13 @@ export class Room {
         if (this.forage !== -1) return false;
         if (this.flags !== RoomFlags.None) return false;
         if (this.baseFlags !== RoomBaseFlags.Default) return false;
+        if (this.includes && this.includes.length) return false;
+        if (this.inherits && this.inherits.length) return false;
+        if (this.defines && Object.keys(this.defines).length) return false;
+        if (this.variables && Object.keys(this.variables).length) return false;
+        if (this.functions && Object.keys(this.functions).length) return false;
         for (const prop in this) {
-            if (prop === 'baseFlags' || prop === 'x' || prop === 'y' || prop === 'z' || prop === 'type' || prop === 'forage' || prop === 'flags' || !this.hasOwnProperty(prop)) continue;
+            if (prop === 'includes' || prop === 'defines' || prop === 'inherits' || prop === 'variables' || prop === 'functions' || prop === 'baseFlags' || prop === 'x' || prop === 'y' || prop === 'z' || prop === 'type' || prop === 'forage' || prop === 'flags' || !this.hasOwnProperty(prop)) continue;
             const tp = typeof this[prop];
             const value = <any>this[prop];
             if (Array.isArray(this[prop]) && (<any>this[prop]).length !== 0)
@@ -546,7 +594,7 @@ class Monster {
     public askResponseType: MonsterResponseType = MonsterResponseType.say;
     public askTopics: MonsterTopic[] = [];
     public properties: Property[] = [];
-    public resistences: MonsterResistance[] = [];
+    public resistances: MonsterResistance[] = [];
 
     public reputationGroup: string = '';
     public reputations: MonsterReputation[] = [];
@@ -555,6 +603,11 @@ class Monster {
     public speechChance = 0;
     public emotesChanceCombat = 0;
     public speechChanceCombat = 0;
+    public includes: Include[] = [];
+    public defines = {};
+    public inherits: string[] = [];
+    public variables = {};
+    public functions = {};
 
     constructor(id?, data?, type?) {
         if (typeof id === 'string') {
@@ -569,7 +622,12 @@ class Monster {
         if (data) {
             for (const prop in data) {
                 if (!data.hasOwnProperty(prop)) continue;
-                this[prop] = copy(data[prop]);
+                //spellchecker:disable
+                if (prop === 'resistences')
+                    data['resistances'] = data[prop];
+                else
+                    this[prop] = copy(data[prop]);
+                //spellchecker:enable
             }
             this.type = type || data.type;
             this.id = id || data.id || new Date().getTime();
@@ -659,7 +717,7 @@ class Monster {
         this.objects = [];
         this.askTopics = [];
         this.reputations = [];
-        this.resistences = [];
+        this.resistances = [];
         this.emotes = [];
         this.properties = [];
     }
@@ -689,6 +747,11 @@ class StdObject {
     public notes: string = '';
     public reads: Read[] = [];
     public properties: Property[] = [];
+    public includes: Include[] = [];
+    public defines = {};
+    public inherits: string[] = [];
+    public variables = {};
+    public functions = {};
     /*
     weapon - type, quality, enchantment
     armor - type, quality, limbs, enchantment
@@ -796,6 +859,8 @@ class Area {
     public baseMonsters;
     public defaultRoom = 'base';
     public defaultMonster = 'base';
+    public includes: Include[];
+    public defines;
 
     constructor(width, height?, depth?, rooms?) {
         if (Array.isArray(width)) {
@@ -827,6 +892,8 @@ class Area {
                 ));
         this.monsters = {};
         this.objects = {};
+        this.includes = [];
+        this.defines = {};
         this.baseRooms = {
             base: new Room(0, 0, 0, null, 'STD_ROOM')
         };
@@ -4976,7 +5043,12 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-reputation-group': ed.value.reputationGroup,
                                     'mon-wiz-reputations': ed.value.reputations,
                                     'mon-wiz-properties': ed.value.properties || [],
-                                    'mon-wiz-resistences': ed.value.resistences || []
+                                    'mon-wiz-resistances': ed.value.resistances || [],
+                                    'mon-wiz-includes': ed.value.includes,
+                                    'mon-wiz-defines': ed.value.defines,
+                                    'mon-wiz-inherits': ed.value.inherits,
+                                    'mon-wiz-variables': ed.value.variables,
+                                    'mon-wiz-functions': ed.value.functions
                                 },
                                 finish: e => {
                                     const nMonster = ed.value.clone();
@@ -5037,7 +5109,7 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.reactions = e.data['mon-wiz-reactions'] || [];
                                     nMonster.reputationGroup = e.data['mon-wiz-reputation-group'];
                                     nMonster.reputations = e.data['mon-wiz-reputations'] || [];
-                                    nMonster.resistences = e.data['mon-wiz-resistences'] || [];
+                                    nMonster.resistances = e.data['mon-wiz-resistances'] || [];
                                     if (e.data['mon-wiz-auto-stand'])
                                         nMonster.flags |= MonsterFlags.Auto_Stand;
 
@@ -5057,6 +5129,11 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.emotesChanceCombat = +e.data['mon-wiz-emotes-chance-combat'];
                                     nMonster.speechChanceCombat = +e.data['mon-wiz-speech-chance-combat'];
                                     nMonster.properties = e.data['mon-wiz-properties'] || [];
+                                    nMonster.includes = e.data['mon-wiz-includes'];
+                                    nMonster.defines = e.data['mon-wiz-defines'];
+                                    nMonster.inherits = e.data['mon-wiz-inherits'];
+                                    nMonster.variables = e.data['mon-wiz-variables'];
+                                    nMonster.functions = e.data['mon-wiz-functions'];
 
                                     if (!nMonster.equals(ed.data.monster))
                                         ed.value = nMonster;
@@ -5418,7 +5495,12 @@ export class AreaDesigner extends EditorBase {
                                     'room-wiz-forage-objects': ed.value.forageObjects,
                                     'room-wiz-rummage-objects': ed.value.rummage,
                                     'room-wiz-reads': ed.value.reads,
-                                    'room-wiz-properties': ed.value.properties
+                                    'room-wiz-properties': ed.value.properties,
+                                    'room-wiz-includes': ed.value.includes,
+                                    'room-wiz-defines': ed.value.defines,
+                                    'room-wiz-inherits': ed.value.inherits,
+                                    'room-wiz-variables': ed.value.variables,
+                                    'room-wiz-functions': ed.value.functions
                                 },
                                 finish: e => {
                                     const nRoom = ed.value.clone();
@@ -5478,6 +5560,11 @@ export class AreaDesigner extends EditorBase {
                                     nRoom.temperature = +e.data['room-wiz-temperature'];
                                     nRoom.forageObjects = e.data['room-wiz-forage-objects'];
                                     nRoom.rummageObjects = e.data['room-wiz-rummage-objects'];
+                                    nRoom.includes = e.data['room-wiz-includes'];
+                                    nRoom.defines = e.data['room-wiz-defines'];
+                                    nRoom.inherits = e.data['room-wiz-inherits'];
+                                    nRoom.variables = e.data['room-wiz-variables'];
+                                    nRoom.functions = e.data['room-wiz-functions'];
                                     nRoom.exitsDetails = {};
                                     e.data['room-wiz-exits'].forEach(x => {
                                         nRoom.exitsDetails[x.exit] = x;
@@ -6016,7 +6103,12 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-reputation-group': ed.value.reputationGroup,
                                     'mon-wiz-reputations': ed.value.reputations,
                                     'mon-wiz-properties': ed.value.properties || [],
-                                    'mon-wiz-resistences': ed.value.resistences || []
+                                    'mon-wiz-resistances': ed.value.resistances || [],
+                                    'mon-wiz-includes': ed.value.includes,
+                                    'mon-wiz-defines': ed.value.defines,
+                                    'mon-wiz-inherits': ed.value.inherits,
+                                    'mon-wiz-variables': ed.value.variables,
+                                    'mon-wiz-functions': ed.value.functions
                                 },
                                 finish: e => {
                                     if (ed.editors) {
@@ -6081,7 +6173,7 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.reactions = e.data['mon-wiz-reactions'] || [];
                                     nMonster.reputationGroup = e.data['mon-wiz-reputation-group'];
                                     nMonster.reputations = e.data['mon-wiz-reputations'] || [];
-                                    nMonster.resistences = e.data['mon-wiz-resistences'] || [];
+                                    nMonster.resistances = e.data['mon-wiz-resistances'] || [];
 
                                     if (e.data['mon-wiz-auto-stand'])
                                         nMonster.flags |= MonsterFlags.Auto_Stand;
@@ -6102,6 +6194,11 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.emotesChanceCombat = e.data['mon-wiz-emotes-chance-combat'];
                                     nMonster.speechChanceCombat = e.data['mon-wiz-speech-chance-combat'];
                                     nMonster.properties = e.data['mon-wiz-properties'] || [];
+                                    nMonster.includes = e.data['mon-wiz-includes'];
+                                    nMonster.defines = e.data['mon-wiz-defines'];
+                                    nMonster.inherits = e.data['mon-wiz-inherits'];
+                                    nMonster.variables = e.data['mon-wiz-variables'];
+                                    nMonster.functions = e.data['mon-wiz-functions'];
 
                                     if (!nMonster.equals(ed.data.monster))
                                         ed.value = nMonster;
@@ -11417,7 +11514,7 @@ export class AreaDesigner extends EditorBase {
                 else if (i.unique)
                     counts[short]++;
                 if (!preview[short])
-                    preview[short] = this.monsterPreview(this.$area.monsters[i.id]);                
+                    preview[short] = this.monsterPreview(this.$area.monsters[i.id]);
             });
             if ((room.baseFlags & RoomBaseFlags.No_Monsters) !== RoomBaseFlags.No_Monsters)
                 base.monsters.forEach(i => {
@@ -11455,7 +11552,7 @@ export class AreaDesigner extends EditorBase {
                     counts[short] += i.minAmount;
                 else if (i.unique)
                     counts[short]++;
-                if(!preview[short])
+                if (!preview[short])
                     preview[short] = this.$area.objects[i.id].long;
             });
             if ((room.baseFlags & RoomBaseFlags.No_Objects) !== RoomBaseFlags.No_Objects)
@@ -11467,7 +11564,7 @@ export class AreaDesigner extends EditorBase {
                         counts[short] += i.minAmount;
                     else if (i.unique)
                         counts[short]++;
-                    if(!preview[short])
+                    if (!preview[short])
                         preview[short] = this.$area.objects[i.id].long;
                 });
             items = Object.keys(counts);
@@ -11521,11 +11618,10 @@ export class AreaDesigner extends EditorBase {
                     short += "%^RESET%^ (%^RGB540%^wielded in RANDOM LIMB%^RESET%^)";
                 if (v.action === 'wear')
                     short += "%^RESET%^ (%^RGB210%^worn%^RESET%^)";
-                if(itemTooltips)
-                {
+                if (itemTooltips) {
                     if (colors)
                         return `<span class="preview-room-item" title="${this.$area.objects[v.id].long.replace(/\"/g, '&quot;')}">${pinkfishToHTML(short)}</span>`;
-                    return `<span class="preview-room-item" title="${this.$area.objects[v.id].long.replace(/\"/g, '&quot;')}">${stripPinkfish(short)}</span>`;    
+                    return `<span class="preview-room-item" title="${this.$area.objects[v.id].long.replace(/\"/g, '&quot;')}">${stripPinkfish(short)}</span>`;
                 }
                 if (colors)
                     return pinkfishToHTML(short);
@@ -11928,6 +12024,19 @@ export class AreaDesigner extends EditorBase {
                 Object.keys(externs).forEach(r => template['area post'] += `#define ${r} ("${externs[r]}")\n`);
             }
 
+            if (this.$area.includes && this.$area.includes.length) {
+                template['area post'] += this.$area.includes.map(i => {
+                    if (i.relative)
+                        return `\n#include "${i.path}"`;
+                    return `\n#include <${i.path}>`;
+                }).join('');
+            }
+            if (this.$area.defines) {
+                Object.keys(this.$area.defines).forEach(r => template['area post'] += `#define ${r}${this.$area.defines[r] && this.$area.defines[r].trim().length ? ' ' + this.$area.defines[r].trim() : ''}\n`);
+                if (Object.keys(this.$area.defines).length)
+                    template['area post'] += '\n';
+            }
+
             this.write(this.parseFileTemplate(fs.readFileSync(path.join(templePath, 'area.h'), 'utf8'), template), path.join(p, 'area.h'));
             //Generate base rooms
             if (this.$cancel)
@@ -12178,6 +12287,42 @@ export class AreaDesigner extends EditorBase {
                 data['create post'] += '   return 0;\n';
             data['create post'] += '}\n';
         }
+        data.inherits = '';
+        if (room.includes && room.includes.length) {
+            data.includes += room.includes.map(i => {
+                if (i.relative)
+                    return `\n#include "${i.path}"`;
+                return `\n#include <${i.path}>`;
+            }).join('');
+        }
+        if (room.inherits && room.inherits.length)
+            data.inherits += room.inherits.map(i => `\ninherit ${i};`).join('');
+
+        if (room.defines) {
+            Object.keys(room.defines).forEach(r => data['create pre'] += `#define ${r}${room.defines[r] && room.defines[r].trim().length ? ' ' + room.defines[r].trim() : ''}\n`);
+            if (Object.keys(room.defines).length)
+                data['create pre'] += '\n';
+        }
+        if (room.variables) {
+            tmp = Object.keys(room.variables);
+            data['create pre'] += Object.keys(room.variables).map(
+                arg => `${room.variables[arg].type || 'mixed'}${room.variables[arg].array ? ' *' : ' '}${arg} = ${room.variables[arg].type === 'string' ? `"${addSlashes(room.variables[arg].value)}"` : room.variables[arg].value};\n`
+            ).join('');
+            data['reset body'] += Object.keys(room.variables).filter(v => room.variables[v].reset).map(
+                arg => `${arg} = ${room.variables[arg].type === 'string' ? `"${addSlashes(room.variables[arg].value)}"` : room.variables[arg].value};\n`
+            ).join('');
+            if (tmp.length)
+                data['create pre'] += '\n';
+        }
+
+        if (room.functions) {
+            tmp = Object.keys(room.functions);
+            for (const func in room.functions) {
+                if (!room.functions.hasOwnProperty(func)) continue;
+                data['create pre'] += createFunction(func, room.functions[func]);
+                stubs[formatFunctionPointer(func)] = 1;
+            }
+        }
 
         if (!room.type)
             room.type = 'STD_ROOM';
@@ -12187,7 +12332,6 @@ export class AreaDesigner extends EditorBase {
             room.type = 'ROOMTYPE_VAULT';
 
         data.inherit = files[room.type + 'room'] || room.type.toUpperCase();
-        data.inherits = '';
         if (climbs.length !== 0 && room.type !== 'ROOMTYPE_CLIMB' && base.type !== 'ROOMTYPE_CLIMB') {
             data.inherits += '\ninherit STD_CLIMBING;';
             data.doc.push('/doc/build/etc/climbing');
@@ -12461,7 +12605,7 @@ export class AreaDesigner extends EditorBase {
         if (room.secretExit !== base.secretExit.trim()) {
             if (room.secretExit === 'false') { /**/ }
             else if (room.secretExit.startsWith('(:')) {
-                props['secret exit'] = formatFunctionPointer(room.secretExit, true);
+                props['secret exit'] = formatFunctionPointer(room.secretExit);
                 if (!stubs[props['secret exit']]) {
                     data['create pre'] += createFunction(room.secretExit, 'string', 'object room, object player');
                     stubs[props['secret exit']] = 1;
@@ -12628,7 +12772,7 @@ export class AreaDesigner extends EditorBase {
                 tmp2 = `({ ${tmp2.join(', ')} })`;
             tmp3 = i.description.trim();
             if (tmp3.startsWith('(:')) {
-                tmp3 = formatFunctionPointer(tmp3, true);
+                tmp3 = formatFunctionPointer(tmp3);
                 if (!stubs[tmp]) {
                     data['create pre'] += createFunction(tmp3, 'string');
                     stubs[tmp] = 1;
@@ -12778,7 +12922,7 @@ export class AreaDesigner extends EditorBase {
                 tmp2 = `({ ${tmp2.join(', ')} })`;
             tmp3 = i.description.trim();
             if (tmp3.startsWith('(:')) {
-                tmp3 = formatFunctionPointer(tmp3, true);
+                tmp3 = formatFunctionPointer(tmp3);
                 if (!stubs[tmp3]) {
                     data['create pre'] += createFunction(tmp3, 'string', 'string smell, object room, object player');
                     stubs[tmp3] = 1;
@@ -12825,7 +12969,7 @@ export class AreaDesigner extends EditorBase {
                 tmp2 = `({ ${tmp2.join(', ')} })`;
             tmp3 = i.description.trim();
             if (tmp3.startsWith('(:')) {
-                tmp3 = formatFunctionPointer(tmp3, true);
+                tmp3 = formatFunctionPointer(tmp3);
                 if (!stubs[tmp3]) {
                     data['create pre'] += createFunction(tmp3, 'string', 'string sound, object room, object player');
                     stubs[tmp3] = 1;
@@ -12869,7 +13013,7 @@ export class AreaDesigner extends EditorBase {
                 tmp2 = `({ ${tmp2.join(', ')} })`;
             tmp3 = i.message.trim();
             if (tmp3.startsWith('(:')) {
-                tmp3 = formatFunctionPointer(tmp3, true);
+                tmp3 = formatFunctionPointer(tmp3);
                 if (!stubs[tmp3]) {
                     data['create pre'] += createFunction(tmp3, 'int');
                     stubs[tmp3] = 1;
@@ -12914,7 +13058,7 @@ export class AreaDesigner extends EditorBase {
                 tmp2 = `({ ${tmp2.join(', ')} })`;
             tmp3 = i.description.trim();
             if (tmp3.startsWith('(:')) {
-                tmp3 = formatFunctionPointer(tmp3, true);
+                tmp3 = formatFunctionPointer(tmp3);
                 if (!stubs[tmp3]) {
                     data['create pre'] += createFunction(tmp3, 'string', 'string id');
                     stubs[tmp3] = 1;
@@ -13021,6 +13165,42 @@ export class AreaDesigner extends EditorBase {
         data.inherits = '';
 
         data.doc.push('/doc/build/areas/tutorial');
+
+        if (monster.includes && monster.includes.length) {
+            data.includes += monster.includes.map(i => {
+                if (i.relative)
+                    return `\n#include "${i.path}"`;
+                return `\n#include <${i.path}>`;
+            }).join('');
+        }
+        if (monster.inherits && monster.inherits.length)
+            data.inherits += monster.inherits.map(i => `\ninherit ${i};`).join('');
+
+        if (monster.defines) {
+            Object.keys(monster.defines).forEach(r => data['create pre'] += `#define ${r}${monster.defines[r] && monster.defines[r].trim().length ? ' ' + monster.defines[r].trim() : ''}\n`);
+            if (Object.keys(monster.defines).length)
+                data['create pre'] += '\n';
+        }
+        if (monster.variables) {
+            tmp = Object.keys(monster.variables);
+            data['create pre'] += Object.keys(monster.variables).map(
+                arg => `${monster.variables[arg].type || 'mixed'}${monster.variables[arg].array ? ' *' : ' '}${arg} = ${monster.variables[arg].type === 'string' ? `"${addSlashes(monster.variables[arg].value)}"` : monster.variables[arg].value};\n`
+            ).join('');
+            data['reset body'] += Object.keys(monster.variables).filter(v => monster.variables[v].reset).map(
+                arg => `${arg} = ${monster.variables[arg].type === 'string' ? `"${addSlashes(monster.variables[arg].value)}"` : monster.variables[arg].value};\n`
+            ).join('');
+            if (tmp.length)
+                data['create pre'] += '\n';
+        }
+
+        if (monster.functions) {
+            tmp = Object.keys(monster.functions);
+            for (const func in monster.functions) {
+                if (!monster.functions.hasOwnProperty(func)) continue;
+                data['create pre'] += createFunction(func, monster.functions[func]);
+                stubs[formatFunctionPointer(func)] = 1;
+            }
+        }
 
         switch (monster.type) {
             case 'MONTYPE_ARMOR_REPAIR':
@@ -13242,7 +13422,7 @@ export class AreaDesigner extends EditorBase {
         if (monster.noCorpse !== base.noCorpse) {
             monster.noCorpse = (monster.noCorpse || '').trim();
             if (monster.noCorpse.startsWith('(:')) {
-                props['no corpse'] = formatFunctionPointer(monster.noCorpse, true);
+                props['no corpse'] = formatFunctionPointer(monster.noCorpse);
                 if (!stubs[formatFunctionPointer(monster.noCorpse)]) {
                     data['create pre'] += createFunction(monster.noCorpse, 'string');
                     stubs[formatFunctionPointer(monster.noCorpse)] = 1;
@@ -13256,7 +13436,7 @@ export class AreaDesigner extends EditorBase {
         if (monster.noLimbs !== base.noLimbs) {
             monster.noLimbs = (monster.noLimbs || '').trim();
             if (monster.noLimbs.startsWith('(:')) {
-                props['no limbs'] = formatFunctionPointer(monster.noLimbs, true);
+                props['no limbs'] = formatFunctionPointer(monster.noLimbs);
                 if (!stubs[formatFunctionPointer(monster.noLimbs)]) {
                     data['create pre'] += createFunction(monster.noLimbs, 'string');
                     stubs[formatFunctionPointer(monster.noLimbs)] = 1;
@@ -13483,7 +13663,7 @@ export class AreaDesigner extends EditorBase {
                 tmp2 = `({ ${tmp2.join(', ')} })`;
             tmp3 = i.message.trim();
             if (tmp3.startsWith('(:')) {
-                tmp3 = formatFunctionPointer(tmp3, true);
+                tmp3 = formatFunctionPointer(tmp3);
                 if (!stubs[tmp]) {
                     data['create pre'] += createFunction(tmp3, 'string', 'object player, string topic');
                     stubs[tmp3] = 1;
@@ -13521,12 +13701,12 @@ export class AreaDesigner extends EditorBase {
             data['create body'] += tmp.join(',\n       ');
             data['create body'] += '\n     ]) );\n';
         }
-        if (monster.resistences && monster.resistences.length) {
-            if (monster.resistences.length.length === 1)
-                data['create body'] += `   add_permanent_resistance(\"${monster.resistences[0].type}\", ${monster.resistences[0].amount});\n`;
+        if (monster.resistances && monster.resistances.length) {
+            if (monster.resistances.length.length === 1)
+                data['create body'] += `   add_permanent_resistance(\"${monster.resistances[0].type}\", ${monster.resistances[0].amount});\n`;
             else {
                 data['create body'] += '   add_permanent_resistances( ([\n       ';
-                monster.resistences.forEach(r => {
+                monster.resistances.forEach(r => {
                     data['create body'] += `\"${r.type}\" : ${r.amount},\n       `;
                 });
                 data['create body'] = data['create body'].substring(0, data['create body'].length - 9) + '\n     ]) );\n';
@@ -13571,7 +13751,7 @@ export class AreaDesigner extends EditorBase {
         tmp = monster.emotes.filter(s => s.type === 0).map(i => {
             tmp3 = i.message.trim();
             if (tmp3.startsWith('(:')) {
-                tmp3 = formatFunctionPointer(tmp3, true);
+                tmp3 = formatFunctionPointer(tmp3);
                 if (!stubs[tmp3]) {
                     data['create pre'] += createFunction(tmp3, 'mixed', 'object monster');
                     stubs[tmp3] = 1;
@@ -13586,7 +13766,7 @@ export class AreaDesigner extends EditorBase {
         tmp = monster.emotes.filter(s => s.type === 1).map(i => {
             tmp3 = i.message.trim();
             if (tmp3.startsWith('(:')) {
-                tmp3 = formatFunctionPointer(tmp3, true);
+                tmp3 = formatFunctionPointer(tmp3);
                 if (!stubs[tmp3]) {
                     data['create pre'] += createFunction(tmp3, 'mixed', 'object monster');
                     stubs[tmp3] = 1;
@@ -13604,7 +13784,7 @@ export class AreaDesigner extends EditorBase {
         monster.emotes.filter(s => s.type === 2 && s.language.length !== 0).forEach(i => {
             tmp3 = i.message.trim();
             if (tmp3.startsWith('(:')) {
-                tmp3 = formatFunctionPointer(tmp3, true);
+                tmp3 = formatFunctionPointer(tmp3);
                 if (!stubs[tmp3]) {
                     data['create pre'] += createFunction(tmp3, 'mixed', 'object monster, string language');
                     stubs[tmp3] = 1;
@@ -13624,7 +13804,7 @@ export class AreaDesigner extends EditorBase {
         monster.emotes.filter(s => s.type === 3 && s.language.length !== 0).forEach(i => {
             tmp3 = i.message.trim();
             if (tmp3.startsWith('(:')) {
-                tmp3 = formatFunctionPointer(tmp3, true);
+                tmp3 = formatFunctionPointer(tmp3);
                 if (!stubs[tmp3]) {
                     data['create pre'] += createFunction(tmp3, 'mixed', 'object monster, string language');
                     stubs[tmp3] = 1;
@@ -14397,6 +14577,42 @@ export class AreaDesigner extends EditorBase {
                 break;
         }
 
+        if (obj.includes && obj.includes.length) {
+            data.includes += obj.includes.map(i => {
+                if (i.relative)
+                    return `\n#include "${i.path}"`;
+                return `\n#include <${i.path}>`;
+            }).join('');
+        }
+        if (obj.inherits && obj.inherits.length)
+            data.inherits += obj.inherits.map(i => `\ninherit ${i};`).join('');
+
+        if (obj.defines) {
+            Object.keys(obj.defines).forEach(r => data['create pre'] += `#define ${r}${obj.defines[r] && obj.defines[r].trim().length ? ' ' + obj.defines[r].trim() : ''}\n`);
+            if (Object.keys(obj.defines).length)
+                data['create pre'] += '\n';
+        }
+        if (obj.variables) {
+            tmp = Object.keys(obj.variables);
+            data['create pre'] += Object.keys(obj.variables).map(
+                arg => `${obj.variables[arg].type || 'mixed'}${obj.variables[arg].array ? ' *' : ' '}${arg} = ${obj.variables[arg].type === 'string' ? `"${addSlashes(obj.variables[arg].value)}"` : obj.variables[arg].value};\n`
+            ).join('');
+            data['reset body'] += Object.keys(obj.variables).filter(v => obj.variables[v].reset).map(
+                arg => `${arg} = ${obj.variables[arg].type === 'string' ? `"${addSlashes(obj.variables[arg].value)}"` : obj.variables[arg].value};\n`
+            ).join('');
+            if (tmp.length)
+                data['create pre'] += '\n';
+        }
+
+        if (obj.functions) {
+            tmp = Object.keys(obj.functions);
+            for (const func in obj.functions) {
+                if (!obj.functions.hasOwnProperty(func)) continue;
+                data['create pre'] += createFunction(func, obj.functions[func]);
+                stubs[formatFunctionPointer(func)] = 1;
+            }
+        }
+
         if (obj.name.startsWith('"') && obj.name.endsWith('"'))
             data.name = stripPinkfish(obj.name.substr(1, obj.name.length - 2).replace(/"/g, '\\"'));
         else
@@ -14793,7 +15009,7 @@ export class AreaDesigner extends EditorBase {
                 tmp2 = `({ ${tmp2.join(', ')} })`;
             tmp3 = i.description.trim();
             if (tmp3.startsWith('(:')) {
-                tmp3 = formatFunctionPointer(tmp3, true);
+                tmp3 = formatFunctionPointer(tmp3);
                 if (!stubs[tmp3]) {
                     data['create pre'] += createFunction(tmp3, 'string', 'string id');
                     stubs[tmp3] = 1;
