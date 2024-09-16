@@ -6483,7 +6483,16 @@
                 if (data['room-wiz-variables']) {
                     tmp = Object.keys(data['room-wiz-variables']);
                     tmpl['create pre'] += Object.keys(data['room-wiz-variables']).map(
-                        arg => `${data['room-wiz-variables'][arg].type || 'mixed'}${data['room-wiz-variables'][arg].array ? ' *' : ' '}${arg} = ${formatVariableValue(data['room-wiz-variables'][arg].type, data['room-wiz-variables'][arg].value)};\n`
+                        arg => {
+                            if (data['room-wiz-variables'][arg].type == 'function' || (data['room-wiz-variables'][arg].type === 'mixed' && data['room-wiz-variables'][arg].value.trim().startsWith('(:'))) {
+                                tmp3 = formatFunctionPointer(data['room-wiz-variables'][arg].value);
+                                if (!stubs[tmp]) {
+                                    data['create pre'] += createFunction(tmp3);
+                                    stubs[tmp3] = 1;
+                                }
+                            }
+                            return `${data['room-wiz-variables'][arg].type || 'mixed'}${data['room-wiz-variables'][arg].array ? ' *' : ' '}${arg} = ${formatVariableValue(data['room-wiz-variables'][arg].type, data['room-wiz-variables'][arg].value)};\n`;
+                        }
                     ).join('');
                     tmpl['reset body'] += Object.keys(data['room-wiz-variables']).filter(v => data['room-wiz-variables'][v].reset).map(
                         arg => `${arg} = ${formatVariableValue(data['room-wiz-variables'][arg].type, data['room-wiz-variables'][arg].value)};\n`
@@ -8138,7 +8147,16 @@
                 if (data['mon-wiz-variables']) {
                     tmp = Object.keys(data['mon-wiz-variables']);
                     tmpl['create pre'] += Object.keys(data['mon-wiz-variables']).map(
-                        arg => `${data['mon-wiz-variables'][arg].type || 'mixed'}${data['mon-wiz-variables'][arg].array ? ' *' : ' '}${arg} = ${formatVariableValue(data['mon-wiz-variables'][arg].type, data['mon-wiz-variables'][arg].value)};\n`
+                        arg => {
+                            if (data['mon-wiz-variables'][arg].type == 'function' || (data['mon-wiz-variables'][arg].type === 'mixed' && data['mon-wiz-variables'][arg].value.trim().startsWith('(:'))) {
+                                tmp3 = formatFunctionPointer(data['mon-wiz-variables'][arg].value);
+                                if (!stubs[tmp]) {
+                                    data['create pre'] += createFunction(tmp3);
+                                    stubs[tmp3] = 1;
+                                }
+                            }
+                            return `${data['mon-wiz-variables'][arg].type || 'mixed'}${data['mon-wiz-variables'][arg].array ? ' *' : ' '}${arg} = ${formatVariableValue(data['mon-wiz-variables'][arg].type, data['room-wiz-variables'][arg].value)};\n`;
+                        }
                     ).join('');
                     tmpl['reset body'] += Object.keys(data['mon-wiz-variables']).filter(v => data['mon-wiz-variables'][v].reset).map(
                         arg => `${arg} = ${formatVariableValue(data['mon-wiz-variables'][arg].type, data['mon-wiz-variables'][arg].value)};\n`
