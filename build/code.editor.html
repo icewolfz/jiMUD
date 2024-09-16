@@ -6486,7 +6486,7 @@
                         arg => {
                             if (data['room-wiz-variables'][arg].type == 'function' || (data['room-wiz-variables'][arg].type === 'mixed' && data['room-wiz-variables'][arg].value.trim().startsWith('(:'))) {
                                 tmp3 = formatFunctionPointer(data['room-wiz-variables'][arg].value);
-                                if (!stubs[tmp]) {
+                                if (!stubs[tmp3]) {
                                     data['create pre'] += createFunction(tmp3);
                                     stubs[tmp3] = 1;
                                 }
@@ -8150,7 +8150,7 @@
                         arg => {
                             if (data['mon-wiz-variables'][arg].type == 'function' || (data['mon-wiz-variables'][arg].type === 'mixed' && data['mon-wiz-variables'][arg].value.trim().startsWith('(:'))) {
                                 tmp3 = formatFunctionPointer(data['mon-wiz-variables'][arg].value);
-                                if (!stubs[tmp]) {
+                                if (!stubs[tmp3]) {
                                     data['create pre'] += createFunction(tmp3);
                                     stubs[tmp3] = 1;
                                 }

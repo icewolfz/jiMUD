@@ -12341,7 +12341,7 @@ export class AreaDesigner extends EditorBase {
                 arg => {
                     if (room.variables[arg].type == 'function' || (room.variables[arg].type === 'mixed' && room.variables[arg].value.trim().startsWith('(:'))) {
                         tmp3 = formatFunctionPointer(room.variables[arg].value);
-                        if (!stubs[tmp]) {
+                        if (!stubs[tmp3]) {
                             data['create pre'] += createFunction(tmp3);
                             stubs[tmp3] = 1;
                         }
@@ -13228,7 +13228,7 @@ export class AreaDesigner extends EditorBase {
                 arg => {
                     if (monster.variables[arg].type == 'function' || (monster.variables[arg].type === 'mixed' && monster.variables[arg].value.trim().startsWith('(:'))) {
                         tmp3 = formatFunctionPointer(monster.variables[arg].value);
-                        if (!stubs[tmp]) {
+                        if (!stubs[tmp3]) {
                             data['create pre'] += createFunction(tmp3);
                             stubs[tmp3] = 1;
                         }
@@ -13714,7 +13714,7 @@ export class AreaDesigner extends EditorBase {
             tmp3 = i.message.trim();
             if (tmp3.startsWith('(:')) {
                 tmp3 = formatFunctionPointer(tmp3);
-                if (!stubs[tmp]) {
+                if (!stubs[tmp3]) {
                     data['create pre'] += createFunction(tmp3, 'string', 'object player, string topic');
                     stubs[tmp3] = 1;
                 }
@@ -14648,7 +14648,7 @@ export class AreaDesigner extends EditorBase {
                 arg => {
                     if (obj.variables[arg].type == 'function' || (obj.variables[arg].type === 'mixed' && obj.variables[arg].value.trim().startsWith('(:'))) {
                         tmp3 = formatFunctionPointer(obj.variables[arg].value);
-                        if (!stubs[tmp]) {
+                        if (!stubs[tmp3]) {
                             data['create pre'] += createFunction(tmp3);
                             stubs[tmp3] = 1;
                         }
