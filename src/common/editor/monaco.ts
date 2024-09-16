@@ -149,7 +149,7 @@ export function SetupEditor() {
             monaco.languages.registerDocumentFormattingEditProvider('lpc', {
                 provideDocumentFormattingEdits(model, options, token): Promise<monaco.languages.TextEdit[]> {
                     return new Promise<monaco.languages.TextEdit[]>((resolve2, reject2) => {
-                        formatCode(model.getValue()).then((lines: string[]) => {
+                        formatCode(model.getValue()).then((text: string) => {
                             resolve2([{
                                 range: {
                                     startLineNumber: 1,
@@ -157,7 +157,7 @@ export function SetupEditor() {
                                     endColumn: model.getLineMaxColumn(model.getLineCount()),
                                     endLineNumber: model.getLineCount()
                                 },
-                                text: lines.join('\n')
+                                text: text
                             }]);
                         }).catch(e => {
                             model.pushStackElement();
@@ -1931,7 +1931,7 @@ export class MonacoCodeEditor extends EditorBase {
     }
 }
 
-export async function formatCode(code) {
+export async function formatCode(code, split?) {
     return new Promise((resolve, reject) => {
         const $formatter = $lpcFormatter || ($lpcFormatter = new LPCFormatter());
         code = $formatter.format(code);
@@ -1942,7 +1942,7 @@ export async function formatCode(code) {
             $indenter.removeListener('complete', complete);
         };
         const complete = (lines) => {
-            resolve(lines);
+            resolve(split ? lines : lines.join('\n'));
             $indenter.removeListener('error', err);
             $indenter.removeListener('complete', complete);
         };

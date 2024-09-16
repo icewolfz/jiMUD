@@ -23,7 +23,7 @@
         var _loading = 1;
         var manager;
         const { SetupEditor } = require('./js/editor/code.editor');
-        const { ReplaceCommandThatPreservesSelection, setIncludePaths } = require('./js/editor/monaco');
+        const { ReplaceCommandThatPreservesSelection, setIncludePaths, formatCode } = require('./js/editor/monaco');
 
         function windowType() { return 'codeEditor'; }
 
@@ -6443,7 +6443,7 @@
                 if ($dialogs.room.options && $dialogs.room.options.closed)
                     $dialogs.room.options.closed();
             });
-            $dialogs.room.on('finished', (e) => {
+            $dialogs.room.on('finished', async (e) => {
                 if ($dialogs.room.options && $dialogs.room.options.pages)
                     $dialogs.room.removePages($dialogs.room.options.pages);
                 if ($dialogs.room.options && $dialogs.room.options.finish) {
@@ -7240,7 +7240,7 @@
                     newCounter++;
                 f += '.c';
                 f.toLowerCase();
-                newFromValue(parseFileTemplate(value, tmpl), this.$dialogs.room.defaults['room-wiz-file'] || f);
+                newFromValue(await formatCode(parseFileTemplate(value, tmpl)), this.$dialogs.room.defaults['room-wiz-file'] || f);
             });
             $('#room-wiz-type').on('change', (e) => {
                 if ($dialogs.room.options && $dialogs.monster.room.typeChange)
@@ -8078,7 +8078,7 @@
                 if ($dialogs.monster.options && $dialogs.monster.options.closed)
                     $dialogs.monster.options.closed();
             });
-            $dialogs.monster.on('finished', (e) => {
+            $dialogs.monster.on('finished', async (e) => {
                 if ($dialogs.monster.options && $dialogs.monster.options.groups) {
                     var groups = Object.keys($dialogs.monster.options.groups);
                     groups.forEach(g => {
@@ -8750,7 +8750,7 @@
                 }
                 f += '.c';
                 f.toLowerCase();
-                newFromValue(parseFileTemplate(value, tmpl), f);
+                newFromValue(await formatCode(parseFileTemplate(value, tmpl)), f);
                 newCounter++;
             });
         }
