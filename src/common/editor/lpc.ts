@@ -2545,14 +2545,18 @@ export function formatMapping(str, indent?, sub?) {
     indent = ' '.repeat(indent || 0);
     let out = indent + '([\n';
     out += Object.keys(map).map(k => {
+        if (map[k].startsWith('(:') && map[k].endsWith(':)'))
+            return `${indent}  "${k}" : ${formatFunctionPointer(map[k]).trim()}`;
+        if (map[k].startsWith('([') && map[k].endsWith('])'))
+            return `${indent}  "${k}" : ${formatArray(map[k], indent.length + 2).trim()}`;
         if (map[k].startsWith('([') && map[k].endsWith('])'))
             return `${indent}  "${k}" : ${formatMapping(map[k], indent.length + 2, true).trim()}`;
         return `${indent}  "${k}" : ${map[k]}`;
     }).join(',\n');
     //if (sub && indent.length !== 0)
-        //out += '\n' + indent.substring(0, indent.length - 2) + '])';
+    //out += '\n' + indent.substring(0, indent.length - 2) + '])';
     //else
-        out += '\n' + indent + '])';
+    out += '\n' + indent + '])';
     return out;
 }
 
@@ -2563,23 +2567,31 @@ export function validFunctionPointer(name, clean?) {
     return isValidIdentifier(name);
 }
 
-export function formatVariableValue(type, value, indent?, sub?) {
+export function formatVariableValue(type, value, indent?, array?) {
     switch (type) {
         case 'string':
+            if (array)
+                return formatArray(value, indent);
             if (value.trim().startsWith('"') && value.trim().endsWith('"'))
                 return `"${value.trim().substr(1, value.trim().length - 2).addSlashes()}"`;
             return `"${value.addSlashes()}"`;
         case 'function':
+            if (array)
+                return formatArray(value, indent);
             return formatFunctionPointer(value);
         case 'mapping':
-            return formatMapping(value, indent, sub);
+            if (array)
+                return formatArray(value, indent);
+            return formatMapping(value, indent);
         case 'mixed':
             if (value.trim().startsWith('"') && value.trim().endsWith('"'))
                 return `"${value.substr(1, value.length - 2).addSlashes()}"`;
             if (value.trim().startsWith('(:'))
                 return formatFunctionPointer(value);
             if (value.trim().startsWith('(['))
-                return formatMapping(value, indent, sub);
+                return formatMapping(value, indent);
+            if (value.trim().startsWith('({'))
+                return formatArray(value, indent);
             break;
     }
     return value;
@@ -2752,4 +2764,35 @@ function parseKeyPair(str, format?) {
     }
     pair[0] = str;
     return pair;
+}
+
+function parseArray(str) {
+    if (!str || str.length === 0)
+        return [];
+    if (!str.startsWith('({'))
+        return [];
+    if (!str.endsWith('})'))
+        return [];
+    return str = str.splitQuote(',');
+}
+
+export function formatArray(str, indent?) {
+    if (!str) return;
+    str = str.trim();
+    if (!str.startsWith('({') && !str.ends_with('})'))
+        return str;
+    const arr = parseArray(str);
+    indent = ' '.repeat(indent || 0);
+    let out = indent + '({\n';
+    out += arr.map(k => {
+        if (arr[k].startsWith('(:') && arr[k].endsWith(':)'))
+            return `${indent}  ${formatFunctionPointer(arr[k]).trim()}`;
+        if (arr[k].startsWith('({') && arr[k].endsWith('})'))
+            return `${indent}  ${formatArray(arr[k], indent.length + 2).trim()}`;
+        if (arr[k].startsWith('([') && arr[k].endsWith('])'))
+            return `${indent} ${formatMapping(arr[k], indent.length + 2, true).trim()}`;
+        return `${indent}  ${arr[k]}`;
+    }).join(',\n');
+    out += '\n' + indent + '})';
+    return out;
 }

@@ -12351,11 +12351,11 @@ export class AreaDesigner extends EditorBase {
                             stubs[tmp3] = 1;
                         }
                     }
-                    return `${room.variables[arg].type || 'mixed'}${room.variables[arg].array ? ' *' : ' '}${arg} = ${formatVariableValue(room.variables[arg].type, room.variables[arg].value)};\n`;
+                    return `${room.variables[arg].type || 'mixed'}${room.variables[arg].array ? ' *' : ' '}${arg} = ${formatVariableValue(room.variables[arg].type, room.variables[arg].value, 0, room.variables[arg].array)};\n`;
                 }
             ).join('');
             data['reset body'] += Object.keys(room.variables).filter(v => room.variables[v].reset).map(
-                arg => `${arg} = ${formatVariableValue(room.variables[arg].type, room.variables[arg].value)};\n`
+                arg => `${arg} = ${formatVariableValue(room.variables[arg].type, room.variables[arg].value, 0, room.variables[arg].array)};\n`
             ).join('');
             if (tmp.length)
                 data['create pre'] += '\n';
@@ -12704,7 +12704,7 @@ export class AreaDesigner extends EditorBase {
                     tmp = room.commands[r];
                     if (cmds.length > 1) {
                         if (!tmp || !tmp.length)
-                            tmp = 'cmd_' + cmds[0]
+                            tmp = 'cmd_' + cmds[0];
                         data['create post'] += `    add_action("${tmp}", ({ "${cmds.join('", "')}" }) );\n`;
                     }
                     else {
@@ -12760,7 +12760,7 @@ export class AreaDesigner extends EditorBase {
                     tmp = room.commands[r];
                     if (cmds.length > 1) {
                         if (!tmp || !tmp.length)
-                            tmp = 'cmd_' + cmds[0]
+                            tmp = 'cmd_' + cmds[0];
                         data['create post'] += `    add_action("${tmp}", ({ "${cmds.join('", "')}" }) );\n`;
                     }
                     else {
@@ -12821,7 +12821,7 @@ export class AreaDesigner extends EditorBase {
                 tmp = room.commands[r];
                 if (cmds.length > 1) {
                     if (!tmp || !tmp.length)
-                        tmp = 'cmd_' + cmds[0]
+                        tmp = 'cmd_' + cmds[0];
                     data['create post'] += `    add_action("${tmp}", ({ "${cmds.join('", "')}" }) );\n`;
                 }
                 else {
@@ -13305,11 +13305,11 @@ export class AreaDesigner extends EditorBase {
                             stubs[tmp3] = 1;
                         }
                     }
-                    return `${monster.variables[arg].type || 'mixed'}${monster.variables[arg].array ? ' *' : ' '}${arg} = ${formatVariableValue(monster.variables[arg].type, monster.variables[arg].value)};\n`;
+                    return `${monster.variables[arg].type || 'mixed'}${monster.variables[arg].array ? ' *' : ' '}${arg} = ${formatVariableValue(monster.variables[arg].type, monster.variables[arg].value, 0, monster.variables[arg].array)};\n`;
                 }
             ).join('');
             data['reset body'] += Object.keys(monster.variables).filter(v => monster.variables[v].reset).map(
-                arg => `${arg} = ${formatVariableValue(monster.variables[arg].type, monster.variables[arg].value)};\n`
+                arg => `${arg} = ${formatVariableValue(monster.variables[arg].type, monster.variables[arg].value, 0, monster.variables[arg].array)};\n`
             ).join('');
             if (tmp.length)
                 data['create pre'] += '\n';
@@ -13331,7 +13331,7 @@ export class AreaDesigner extends EditorBase {
                 tmp = monster.commands[r];
                 if (cmds.length > 1) {
                     if (!tmp || !tmp.length)
-                        tmp = 'cmd_' + cmds[0]
+                        tmp = 'cmd_' + cmds[0];
                     data['create post'] += `    add_action("${tmp}", ({ "${cmds.join('", "')}" }) );\n`;
                 }
                 else {
@@ -14748,11 +14748,11 @@ export class AreaDesigner extends EditorBase {
                             stubs[tmp3] = 1;
                         }
                     }
-                    return `${obj.variables[arg].type || 'mixed'}${obj.variables[arg].array ? ' *' : ' '}${arg} = ${formatVariableValue(obj.variables[arg].type, obj.variables[arg].value)};\n`;
+                    return `${obj.variables[arg].type || 'mixed'}${obj.variables[arg].array ? ' *' : ' '}${arg} = ${formatVariableValue(obj.variables[arg].type, obj.variables[arg].value, 0, obj.variables[arg].array)};\n`;
                 }
             ).join('');
             data['reset body'] += Object.keys(obj.variables).filter(v => obj.variables[v].reset).map(
-                arg => `${arg} = ${formatVariableValue(obj.variables[arg].type, obj.variables[arg].value)};\n`
+                arg => `${arg} = ${formatVariableValue(obj.variables[arg].type, obj.variables[arg].value, 0, obj.variables[arg].array)};\n`
             ).join('');
             if (tmp.length)
                 data['create pre'] += '\n';
@@ -14774,7 +14774,7 @@ export class AreaDesigner extends EditorBase {
                 tmp = obj.commands[r];
                 if (cmds.length > 1) {
                     if (!tmp || !tmp.length)
-                        tmp = 'cmd_' + cmds[0]
+                        tmp = 'cmd_' + cmds[0];
                     data['create post'] += `    add_action("${tmp}", ({ "${cmds.join('", "')}" }) );\n`;
                 }
                 else {

@@ -6493,11 +6493,11 @@
                                     stubs[tmp3] = 1;
                                 }
                             }
-                            return `${data['room-wiz-variables'][arg].type || 'mixed'}${data['room-wiz-variables'][arg].array ? ' *' : ' '}${arg} = ${formatVariableValue(data['room-wiz-variables'][arg].type, data['room-wiz-variables'][arg].value)};\n`;
+                            return `${data['room-wiz-variables'][arg].type || 'mixed'}${data['room-wiz-variables'][arg].array ? ' *' : ' '}${arg} = ${formatVariableValue(data['room-wiz-variables'][arg].type, data['room-wiz-variables'][arg].value, 0, data['room-wiz-variables'][arg].array)};\n`;
                         }
                     ).join('');
                     tmpl['reset body'] += Object.keys(data['room-wiz-variables']).filter(v => data['room-wiz-variables'][v].reset).map(
-                        arg => `${arg} = ${formatVariableValue(data['room-wiz-variables'][arg].type, data['room-wiz-variables'][arg].value)};\n`
+                        arg => `${arg} = ${formatVariableValue(data['room-wiz-variables'][arg].type, data['room-wiz-variables'][arg].value, 0, data['room-wiz-variables'][arg].array)};\n`
                     ).join('');
                     if (tmp.length)
                         tmpl['create pre'] += '\n';
@@ -6826,7 +6826,7 @@
                             tmp = data['room-wiz-commands'][r];
                             if (cmds.length > 1) {
                                 if (!tmp || !tmp.length)
-                                    tmp = 'cmd_' + cmds[0]
+                                    tmp = 'cmd_' + cmds[0];
                                 tmpl['create post'] += `    add_action("${tmp}", ({ "${cmds.join('", "')}" }) );\n`;
                             }
                             else {
@@ -6882,7 +6882,7 @@
                         tmp = data['room-wiz-commands'][r];
                         if (cmds.length > 1) {
                             if (!tmp || !tmp.length)
-                                tmp = 'cmd_' + cmds[0]
+                                tmp = 'cmd_' + cmds[0];
                             tmpl['create post'] += `    add_action("${tmp}", ({ "${cmds.join('", "')}" }) );\n`;
                         }
                         else {
@@ -8204,11 +8204,11 @@
                                     stubs[tmp3] = 1;
                                 }
                             }
-                            return `${data['mon-wiz-variables'][arg].type || 'mixed'}${data['mon-wiz-variables'][arg].array ? ' *' : ' '}${arg} = ${formatVariableValue(data['mon-wiz-variables'][arg].type, data['room-wiz-variables'][arg].value)};\n`;
+                            return `${data['mon-wiz-variables'][arg].type || 'mixed'}${data['mon-wiz-variables'][arg].array ? ' *' : ' '}${arg} = ${formatVariableValue(data['mon-wiz-variables'][arg].type, data['mon-wiz-variables'][arg].value, 0, data['mon-wiz-variables'][arg].array)};\n`;
                         }
                     ).join('');
                     tmpl['reset body'] += Object.keys(data['mon-wiz-variables']).filter(v => data['mon-wiz-variables'][v].reset).map(
-                        arg => `${arg} = ${formatVariableValue(data['mon-wiz-variables'][arg].type, data['mon-wiz-variables'][arg].value)};\n`
+                        arg => `${arg} = ${formatVariableValue(data['mon-wiz-variables'][arg].type, data['mon-wiz-variables'][arg].value, 0, data['mon-wiz-variables'][arg].array)};\n`
                     ).join('');
                     if (tmp.length)
                         tmpl['create pre'] += '\n';
@@ -8230,7 +8230,7 @@
                         tmp = data['mon-wiz-commands'][r];
                         if (cmds.length > 1) {
                             if (!tmp || !tmp.length)
-                                tmp = 'cmd_' + cmds[0]
+                                tmp = 'cmd_' + cmds[0];
                             tmpl['create post'] += `    add_action("${tmp}", ({ "${cmds.join('", "')}" }) );\n`;
                         }
                         else {
