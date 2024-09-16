@@ -13273,6 +13273,9 @@ export class AreaDesigner extends EditorBase {
         data['create arguments comment'] = '';
 
         let tmp;
+        let tmp2;
+        let tmp3;
+        let tmp4;
         const base: Monster = this.$area.monsters[monster.type] || this.$area.baseMonsters[monster.type] || new Monster();
         let props: any = {};
         let tempProps: any = {};
@@ -13799,10 +13802,7 @@ export class AreaDesigner extends EditorBase {
                     data['create body'] += `   set_response_type("custom");\n`;
                     break;
             }
-
-        let tmp2;
-        let tmp3;
-        let tmp4 = base.askTopics.map(s => s.topic);
+        tmp4 = base.askTopics.map(s => s.topic);
         tmp = monster.askTopics.map(i => {
             const idx = tmp4.indexOf(i.topic);
             if (idx !== -1 && base.askTopics[idx].message === i.message)
