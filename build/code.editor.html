@@ -10403,7 +10403,7 @@
             });
             p.editor.on('error', e => {
                 if (p.editor.type === 3)
-                    logOutput(`Message: ${e.message}\nFile: ${p.editor.filename}\nLine: ${e.line + 1}\nColumn: ${e.col + 1}`);
+                    logOutput(`Message: ${e.message}\nFile: ${e.file || p.editor.filename}\nLine: ${e.line + 1}\nColumn: ${e.col + 1}`);
             });
             p.editor.on('progress-start', async (type) => {
                 if (type === 'indent')

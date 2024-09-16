@@ -2,6 +2,7 @@
 //spell-checker:ignore consolas lucida bitstream tabbable varargs crafter mgive blacksmithing glasssmithing stonemasonry doublewielding warhammer flamberge nodachi
 //spell-checker:ignore nonetrackable bandedmail splintmail chainmail ringmail scalemail overclothing polearm tekagi shuko tekko bardiche katana wakizashi pilum warstaff
 import { DebugTimer, EditorBase, EditorOptions, FileState } from './editor.base';
+import { formatCode } from './monaco';
 import { createFunction, formatFunctionPointer, formatArgumentList, formatMapping, formatVariableValue } from './lpc';
 import { Splitter, Orientation } from '../splitter';
 import { PropertyGrid } from '../propertygrid';
@@ -12073,28 +12074,27 @@ export class AreaDesigner extends EditorBase {
                 if (Object.keys(this.$area.defines).length)
                     template['area post'] += '\n';
             }
-
-            this.write(this.parseFileTemplate(fs.readFileSync(path.join(templePath, 'area.h'), 'utf8'), template), path.join(p, 'area.h'));
+            this.writeFormatted(this.parseFileTemplate(fs.readFileSync(path.join(templePath, 'area.h'), 'utf8'), template), path.join(p, 'area.h'));
             //Generate base rooms
             if (this.$cancel)
                 throw new Error('Canceled');
             this.emit('progress', { type: 'designer', percent: 24, title: 'Creating base generateRoomCodefiles&hellip;' });
-            Object.keys(this.$area.baseRooms).forEach(r => this.write(this.generateRoomCode(this.$area.baseRooms[r].clone(), files, copy(data), true), path.join(p, 'std', files[r + 'room'].toLowerCase() + '.c')));
+            Object.keys(this.$area.baseRooms).forEach(r => this.writeFormatted(this.generateRoomCode(this.$area.baseRooms[r].clone(), files, copy(data), true), path.join(p, 'std', files[r + 'room'].toLowerCase() + '.c')));
             //generate base monsters
             if (this.$cancel)
                 throw new Error('Canceled');
             this.emit('progress', { type: 'designer', percent: 28, title: 'Creating base files&hellip;' });
-            Object.keys(this.$area.baseMonsters).forEach(r => this.write(this.generateMonsterCode(this.$area.baseMonsters[r].clone(), files, copy(data), true), path.join(p, 'std', files[r + 'monster'].toLowerCase() + '.c')));
+            Object.keys(this.$area.baseMonsters).forEach(r => this.writeFormatted(this.generateMonsterCode(this.$area.baseMonsters[r].clone(), files, copy(data), true), path.join(p, 'std', files[r + 'monster'].toLowerCase() + '.c')));
             //generate monsters
             if (this.$cancel)
                 throw new Error('Canceled');
             this.emit('progress', { type: 'designer', percent: 30, title: 'Creating monster files&hellip;' });
-            Object.keys(this.$area.monsters).forEach(r => this.write(this.generateMonsterCode(this.$area.monsters[r].clone(), files, copy(data)), path.join(p, 'mon', files[r] + '.c')));
+            Object.keys(this.$area.monsters).forEach(r => this.writeFormatted(this.generateMonsterCode(this.$area.monsters[r].clone(), files, copy(data)), path.join(p, 'mon', files[r] + '.c')));
             //generate objects
             if (this.$cancel)
                 throw new Error('Canceled');
             this.emit('progress', { type: 'designer', percent: 40, title: 'Creating object files&hellip;' });
-            Object.keys(this.$area.objects).forEach(r => this.write(this.generateObjectCode(this.$area.objects[r].clone(), files, copy(data)), path.join(p, 'obj', files[r] + '.c')));
+            Object.keys(this.$area.objects).forEach(r => this.writeFormatted(this.generateObjectCode(this.$area.objects[r].clone(), files, copy(data)), path.join(p, 'obj', files[r] + '.c')));
             this.emit('progress', { type: 'designer', percent: 50, title: 'Creating room files&hellip;' });
             //generate rooms
             let count = 0;
@@ -12106,7 +12106,7 @@ export class AreaDesigner extends EditorBase {
                         const r = this.$area.rooms[z][y][x];
                         const base: Room = this.$area.baseRooms[r.type] || this.$area.baseRooms[this.$area.defaultRoom];
                         if (r.empty || r.equals(base, true)) continue;
-                        this.write(this.generateRoomCode(r.clone(), files, copy(data)), path.join(p, files[`${r.x},${r.y},${r.z}`] + '.c'));
+                        this.writeFormatted(this.generateRoomCode(r.clone(), files, copy(data)), path.join(p, files[`${r.x},${r.y},${r.z}`] + '.c'));
                         count++;
                         this.emit('progress', { type: 'designer', percent: 50 + Math.round(50 * count / (this.$roomCount || 1)) });
                     }
@@ -15509,6 +15509,20 @@ export class AreaDesigner extends EditorBase {
                 MonsterTypes.map(r => `<option value="${r.value}">${r.display}</option>`).join('') + '</optgroup>');
             this.$propertiesEditor.defaultMonster.selectpicker('refresh').val(this.$area.defaultMonster).selectpicker('render');
         }
+    }
+
+    public async writeFormatted(data, file?: string) {
+        if (!file || file.length === 0)
+            file = this.file;
+        if (!file || file.length === 0) {
+            throw new Error('Invalid file');
+        }
+        try { data = await formatCode(data); }
+        catch (e) {
+            e.file = file;
+            this.emit('error', e);
+        }
+        this.write(data, file);
     }
 
 }
