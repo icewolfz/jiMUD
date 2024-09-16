@@ -9993,21 +9993,21 @@
                         if (p.editor.new || p.editor.changed) {
                             var t = tmp.tmpNameSync(tmpOptions);
                             p.editor.write(p.editor.value, t);
-                            _ied.uploadTo(t, remoteFile, false, 'editor-upload:debug:' + (manager.active ? manager.active.id : 0), false);
+                            _ied.uploadTo(t, remoteFile, false, 'editor-upload:debug:' + (p ? p.id : 0), false);
                             showProgressDialog({
                                 file: remoteFile,
-                                tag: 'editor-upload:debug:' + (manager.active ? manager.active.id : 0),
+                                tag: 'editor-upload:debug:' + (p ? p.id : 0),
                                 title: 'Uploading&hellip;',
                                 tmp: t
                             });
                         }
                         else {
                             setRemoteCache(file, p.editor.remote);
-                            _ied.uploadTo(file, remoteFile, false, 'editor-upload:debug:' + (manager.active ? manager.active.id : 0), false);
+                            _ied.uploadTo(file, remoteFile, false, 'editor-upload:debug:' + (p ? p.id : 0), false);
                             showProgressDialog({
                                 file: remoteFile,
                                 title: 'Uploading&hellip;',
-                                tag: 'editor-upload:debug:' + (manager.active ? manager.active.id : 0),
+                                tag: 'editor-upload:debug:' + (p ? p.id : 0),
                             });
                         }
                     });
@@ -10016,20 +10016,20 @@
                     if (p.editor.new || p.editor.changed) {
                         var t = tmp.tmpNameSync(tmpOptions);
                         p.editor.write(p.editor.value, t);
-                        _ied.uploadTo(t, remoteFile, false, 'editor-upload:debug:' + (manager.active ? manager.active.id : 0), false);
+                        _ied.uploadTo(t, remoteFile, false, 'editor-upload:debug:' + (p ? p.id : 0), false);
                         showProgressDialog({
                             file: remoteFile,
-                            tag: 'editor-upload:debug:' + (manager.active ? manager.active.id : 0),
+                            tag: 'editor-upload:debug:' + (p ? p.id : 0),
                             title: 'Uploading&hellip;',
                             tmp: t
                         });
                     }
                     else {
-                        _ied.uploadTo(file, remoteFile, false, 'editor-upload:debug:' + (manager.active ? manager.active.id : 0), false);
+                        _ied.uploadTo(file, remoteFile, false, 'editor-upload:debug:' + (p ? p.id : 0), false);
                         showProgressDialog({
                             file: remoteFile,
                             title: 'Uploading&hellip;',
-                            tag: 'editor-upload:debug:' + (manager.active ? manager.active.id : 0),
+                            tag: 'editor-upload:debug:' + (p ? p.id : 0),
                         });
                     }
                 }
@@ -10093,11 +10093,11 @@
                 var t = [];
                 for (let f = 0; f < fl; f++) {
                     if (files[f].local)
-                        _ied.uploadTo(files[f].local, files[f].remote, false, 'editor-upload:' + (manager.active ? manager.active.id : 0) + ':' + f);
+                        _ied.uploadTo(files[f].local, files[f].remote, false, 'editor-upload:' + (p ? p.id : 0) + ':' + f);
                     else if (Object.prototype.hasOwnProperty.call(files[f], 'value')) {
                         var t2 = tmp.tmpNameSync(tmpOptions);
                         p.editor.write(files[f].value || '', t2);
-                        _ied.uploadTo(t2.name, files[f].remote, false, 'editor-upload:' + (manager.active ? manager.active.id : 0) + ':' + f);
+                        _ied.uploadTo(t2.name, files[f].remote, false, 'editor-upload:' + (p ? p.id : 0) + ':' + f);
                         t.push(t2);
                     }
                 }
@@ -10105,7 +10105,7 @@
                     files: files,
                     title: 'Uploading&hellip;',
                     tmp: t,
-                    tag: 'editor-upload:' + (manager.active ? manager.active.id : 0) + ':'
+                    tag: 'editor-upload:' + (p ? p.id : 0) + ':'
                 });
             });
             p.editor.on('reverted', () => {
@@ -10401,14 +10401,15 @@
                 let inputMenu = Menu.buildFromTemplate(temp);
                 inputMenu.popup({ window: remote.getCurrentWindow() });
             });
-            p.editor.on('error', () => {
-                //logOutput(manager.active.editor.filename+': Indenting complete');
+            p.editor.on('error', e => {
+                if (p.editor.type === 3)
+                    logOutput(`Message: ${e.message}\nFile: ${p.editor.filename}\nLine: ${e.line + 1}\nColumn: ${e.col + 1}`);
             });
             p.editor.on('progress-start', async (type) => {
                 if (type === 'indent')
-                    logOutput(manager.active.editor.filename + ': Indenting started');
+                    logOutput(p.editor.filename + ': Indenting started');
                 else if (type === 'format')
-                    logOutput(manager.active.editor.filename + ': Formatting started');
+                    logOutput(p.editor.filename + ': Formatting started');
                 else if (type === 'designer')
                     openWindow('progress', { title: 'Generating area...' });
             });
@@ -10435,9 +10436,9 @@
             });
             p.editor.on('progress-complete', (type) => {
                 if (type === 'indent')
-                    logOutput(manager.active.editor.filename + ': Indenting finished');
+                    logOutput(p.editor.filename + ': Indenting finished');
                 else if (type === 'format')
-                    logOutput(manager.active.editor.filename + ': Formatting finished');
+                    logOutput(p.editor.filename + ': Formatting finished');
                 else if (type === 'designer') {
                     ipcRenderer.send('progress', 'close');
                     window.setProgressBar(-1);
