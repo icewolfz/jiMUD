@@ -3143,6 +3143,15 @@
         else
             showProblems();
         setIncludePaths(options.includePaths);
+
+        var keys = Object.keys(_editors);
+        var k = keys.length;
+        var p;
+        while (k--) {
+            p = keys[k];
+            if (!_editors[p] || _editors[p].editor.type !== 3) continue;
+            _editors[p].editor.includePaths = options.includePaths;
+        }
         menubar.updateItem('view|output', { checked: options.output && options.outputTab === 0 });
         menubar.updateItem('view|problems', { checked: options.output && options.outputTab === 1 });
         menubar.updateItem('sessions|reload previous session', { enabled: options.session && options.session.length });
@@ -9345,6 +9354,7 @@
                 data.options = options.designOptions;
                 try {
                     p.editor = new AreaDesigner(data);
+                    p.editor.includePaths = options.includePaths;
                 }
                 catch (err) {
                     dialog.showMessageBox({

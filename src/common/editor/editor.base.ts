@@ -29,6 +29,12 @@ export enum Source {
     remote = 1
 }
 
+export enum CodeEditorType {
+    Code = 1,
+    VirtualArea = 2,
+    AreaDesigner = 3
+}
+
 export abstract class EditorBase extends EventEmitter {
 
     private $parent: HTMLElement;

@@ -7,7 +7,7 @@ import { Splitter, Orientation } from '../splitter';
 import { PropertyGrid } from '../propertygrid';
 import { EditorType } from '../value.editors';
 import { DataGrid } from '../datagrid';
-import { copy, formatString, isFileSync, capitalize, Cardinal, pinkfishToHTML, stripPinkfish, consolidate, parseTemplate, initEditDropdown, capitalizePinkfish, isObjectEqual, addSlashes } from '../library';
+import { copy, formatString, isFileSync, capitalize, Cardinal, pinkfishToHTML, stripPinkfish, consolidate, parseTemplate, initEditDropdown, capitalizePinkfish, isObjectEqual, addSlashes, isDirSync, isArrayEqual } from '../library';
 const { clipboard } = require('electron');
 const path = require('path');
 const fs = require('fs-extra');
@@ -1092,6 +1092,19 @@ export class AreaDesigner extends EditorBase {
     private $startOptions;
 
     public SelectionRegionType: RegionType = RegionType.Rectangle;
+    private $includePaths: string[] = [];
+    private $includeCache;
+
+    public get includePaths(): string[] {
+        return this.$includePaths;
+    }
+
+    public set includePaths(value) {
+        if (isArrayEqual(value, this.$includePaths)) return;
+        this.$includePaths = value;
+        this.$includeCache = null;
+    }
+
 
     private pushUndo(action: undoAction, type: undoType, data) {
         const u = { type: type, action: action, view: this.$view, data: data, selection: this.$selectedRooms.map(m => [m.x, m.y, m.z]), focused: this.$focusedRoom ? [this.$focusedRoom.x, this.$focusedRoom.y, this.$focusedRoom.z] : [] };
@@ -1101,6 +1114,25 @@ export class AreaDesigner extends EditorBase {
             this.$undo.push(u);
         this.$redo = [];
         this.emit('supports-changed');
+    }
+
+    public getIncludeList() {
+        if (this.$includeCache) return this.$includeCache;
+        if (!this.$includePaths || !this.$includePaths.length) return [];
+        const names = []
+        const il = this.$includePaths.length;
+        const includes = this.$includePaths;
+        for (let i = 0; i < il; i++) {
+            if (!isDirSync(includes[i])) continue;
+            const files = fs.readdirSync(includes[i]);
+            const fl = files.length;
+            for (let f = 0; f < fl; f++) {
+                if (!isFileSync(path.join(includes[i], files[f]))) continue;
+                names.push(files[f]);
+            }
+        }
+        this.$includeCache = names.sort();
+        return this.$includeCache;
     }
 
     private pushUndoObject(data) {
