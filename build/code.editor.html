@@ -1434,7 +1434,7 @@
         <div id="mon-wizard-combat">
             <div class="col-sm-12 form-group">
                 <label class="control-label" style="width: 100%">Attack commands
-                    <textarea class="input-sm form-control" id="mon-wiz-commands" style="width: 100%;height: 78px;"></textarea>
+                    <textarea class="input-sm form-control" id="mon-wiz-attack-commands" style="width: 100%;height: 78px;"></textarea>
                     <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">A comma delimited list of commands, defaults based on class</span>
                 </label>
             </div>
@@ -6416,6 +6416,8 @@
                                 sum += '<div><span style="font-weight:bold">Variables:</span> ' + Object.keys(data['mon-wiz-variables']).length + '</div>';
                             if (data['room-wiz-functions'] && Object.keys(data['room-wiz-functions']).length > 0)
                                 sum += '<div><span style="font-weight:bold">Functions:</span> ' + Object.keys(data['room-wiz-functions']).length + '</div>';
+                            if (data['room-wiz-commands'] && Object.keys(data['room-wiz-commands']).length > 0)
+                                sum += '<div><span style="font-weight:bold">Commands:</span> ' + Object.keys(data['room-wiz-commands']).length + '</div>';
 
                             summary.innerHTML = sum;
                         }
@@ -6817,7 +6819,30 @@
                 if (data['room-wiz-waterdrink']) {
                     tmpl.inherits += '\ninherit STD_WATERDRINK;';
                     tmpl.doc.push('/doc/build/room/waterdrink');
-                    tmpl['create post'] += '\n\nvoid init()\n{\n   room::init();\n\n    waterdrink::init();\n}';
+                    if (data['room-wiz-commands'] && Object.keys(data['room-wiz-commands']).length) {
+                        data['create post'] += '\n\nvoid init()\n{\n   room::init();\n   waterdrink::init();\n';
+                        Object.keys(data['room-wiz-commands']).forEach(r => {
+                            const cmds = r.split(',').map(c => c.trim());
+                            tmp = data['room-wiz-commands'][r];
+                            if (cmds.length > 1) {
+                                if (!tmp || !tmp.length)
+                                    tmp = 'cmd_' + cmds[0]
+                                tmpl['create post'] += `    add_action("${tmp}", ({ "${cmds.join('", "')}" }) );\n`;
+                            }
+                            else {
+                                if (!tmp || !tmp.length)
+                                    tmp = 'cmd_' + r;
+                                tmpl['create post'] += `    add_action("${tmp}", "${r}");\n`;
+                            }
+                            if (!stubs[formatFunctionPointer(tmp)]) {
+                                tmpl['create pre'] += createFunction(tmp, 'int', 'string args', '   return 1;');
+                                stubs[formatFunctionPointer(tmp)] = 1;
+                            }
+                        });
+                        tmpl['create post'] += '}';
+                    }
+                    else
+                        tmpl['create post'] += '\n\nvoid init()\n{\n   room::init();\n   waterdrink::init();\n}';
                     if (data['room-wiz-water-quality'] !== 5)//default is 5
                         tmpl['create body'] += `   set_water_quality(${data['room-wiz-water-quality']});\n`;
                     if (data['room-wiz-water-poisoned'] != 0)//default is 5
@@ -6849,6 +6874,28 @@
                         else
                             tmpl['create body'] += `   set_water_wash(${data['room-wiz-water-wash-message']});\n`;
                     }
+                }
+                else if (data['room-wiz-commands'] && Object.keys(data['room-wiz-commands']).length) {
+                    data['create post'] += '\n\nvoid init()\n{\n';
+                    Object.keys(data['room-wiz-commands']).forEach(r => {
+                        const cmds = r.split(',').map(c => c.trim());
+                        tmp = data['room-wiz-commands'][r];
+                        if (cmds.length > 1) {
+                            if (!tmp || !tmp.length)
+                                tmp = 'cmd_' + cmds[0]
+                            tmpl['create post'] += `    add_action("${tmp}", ({ "${cmds.join('", "')}" }) );\n`;
+                        }
+                        else {
+                            if (!tmp || !tmp.length)
+                                tmp = 'cmd_' + r;
+                            tmpl['create post'] += `    add_action("${tmp}", "${r}");\n`;
+                        }
+                        if (!stubs[formatFunctionPointer(tmp)]) {
+                            tmpl['create pre'] += createFunction(tmp, 'int', 'string args', '   return 1;');
+                            stubs[formatFunctionPointer(tmp)] = 1;
+                        }
+                    });
+                    tmpl['create post'] += '}';
                 }
                 data['room-wiz-prevent-peer'] = data['room-wiz-prevent-peer'].trim();
                 if (data['room-wiz-prevent-peer'] === 'false') { /**/ }
@@ -7721,7 +7768,7 @@
                         body: document.getElementById('mon-wizard-combat'),
                         reset: (e) => {
                             e.page.querySelector('#mon-wiz-chance').value = e.wizard.defaults['mon-wiz-chance'] || '33';
-                            e.page.querySelector('#mon-wiz-commands').value = e.wizard.defaults['mon-wiz-commands'] || '';
+                            e.page.querySelector('#mon-wiz-attack-commands').value = e.wizard.defaults['mon-wiz-attack-commands'] || '';
                             e.page.querySelector('#mon-wiz-initiators').value = e.wizard.defaults['mon-wiz-initiators'] || '';
                         }
                     }),
@@ -7925,8 +7972,8 @@
                                 sum += '<div><span style="font-weight:bold">Patrol route:</span> ' + ellipse(data['mon-wiz-patrol'].replace(/\n/g, '')) + '</div>';
                             if (data['mon-wiz-no-walk'] && data['mon-wiz-no-walk'].length > 0)
                                 sum += '<div><span style="font-weight:bold">No walk:</span> ' + ellipse(data['mon-wiz-no-walk'].replace(/\n/g, '')) + '</div>';
-                            if (data['mon-wiz-commands'] && data['mon-wiz-commands'].length > 0)
-                                sum += '<div><span style="font-weight:bold">Attack commands:</span> ' + ellipse(data['mon-wiz-commands'].replace(/\n/g, '')) + '</div>';
+                            if (data['mon-wiz-attack-commands'] && data['mon-wiz-attack-commands'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Attack commands:</span> ' + ellipse(data['mon-wiz-attack-commands'].replace(/\n/g, '')) + '</div>';
                             if (data['mon-wiz-chance'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Attack commands chance:</span> ' + data['mon-wiz-chance'] + '%</div>';
                             if (data['mon-wiz-initiators'] && data['mon-wiz-initiators'].length > 0)
@@ -7986,6 +8033,8 @@
                                 sum += '<div><span style="font-weight:bold">Variables:</span> ' + Object.keys(data['mon-wiz-functions']).length + '</div>';
                             if (data['mon-wiz-functions'] && Object.keys(data['mon-wiz-functions']).length > 0)
                                 sum += '<div><span style="font-weight:bold">Functions:</span> ' + Object.keys(data['mon-wiz-functions']).length + '</div>';
+                            if (data['mon-wiz-commands'] && Object.keys(data['mon-wiz-commands']).length > 0)
+                                sum += '<div><span style="font-weight:bold">Commands:</span> ' + Object.keys(data['mon-wiz-commands']).length + '</div>';
                             summary.innerHTML = sum;
                         }
                     })
@@ -8172,6 +8221,29 @@
                         tmpl['create pre'] += createFunction(func, data['mon-wiz-functions'][func]);
                         stubs[formatFunctionPointer(func)] = 1;
                     }
+                }
+
+                if (data['mon-wiz-commands'] && Object.keys(data['mon-wiz-commands']).length) {
+                    data['create post'] += '\n\nvoid init()\n{\n';
+                    Object.keys(data['mon-wiz-commands']).forEach(r => {
+                        const cmds = r.split(',').map(c => c.trim());
+                        tmp = data['mon-wiz-commands'][r];
+                        if (cmds.length > 1) {
+                            if (!tmp || !tmp.length)
+                                tmp = 'cmd_' + cmds[0]
+                            tmpl['create post'] += `    add_action("${tmp}", ({ "${cmds.join('", "')}" }) );\n`;
+                        }
+                        else {
+                            if (!tmp || !tmp.length)
+                                tmp = 'cmd_' + r;
+                            tmpl['create post'] += `    add_action("${tmp}", "${r}");\n`;
+                        }
+                        if (!stubs[formatFunctionPointer(tmp)]) {
+                            tmpl['create pre'] += createFunction(tmp, 'int', 'string args', '   return 1;');
+                            stubs[formatFunctionPointer(tmp)] = 1;
+                        }
+                    });
+                    tmpl['create post'] += '}';
                 }
 
                 if (data['mon-wiz-name'].startsWith('"') && data['mon-wiz-name'].endsWith('"')) {
@@ -8413,8 +8485,8 @@
                     tmpl['create body'] += `   set_no_walk(${formatArgumentList(data['mon-wiz-no-walk'], 63, 0, 0, true)}); //Set no walk rooms\n`;
                 if (data['mon-wiz-chance'] !== 0)
                     tmpl['create body'] += `   set_spell_chance(${data['mon-wiz-chance']}); //Set the chance an attack command will be used\n`;
-                if (data['mon-wiz-commands'].length > 0)
-                    tmpl['create body'] += `   set_spells(${formatArgumentList(data['mon-wiz-commands'], 64)}); //Set attack commands\n`;
+                if (data['mon-wiz-attack-commands'].length > 0)
+                    tmpl['create body'] += `   set_spells(${formatArgumentList(data['mon-wiz-attack-commands'], 64)}); //Set attack commands\n`;
                 if (data['mon-wiz-initiators'].length > 0)
                     tmpl['create body'] += `   set_combat_initiator(${formatArgumentList(data['mon-wiz-initiators'], 56)}); //Set attack initiators\n`;
                 if (data['mon-wiz-aggressive'].length > 0) {

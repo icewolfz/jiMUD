@@ -295,6 +295,7 @@ export class Room {
     public inherits: string[] = [];
     public variables = {};
     public functions = {};
+    public commands = {};
 
     constructor(x, y, z, data?, type?) {
         if (data)
@@ -375,15 +376,10 @@ export class Room {
                         return false;
                     break;
                 case 'defines':
-                    if (!isObjectEqual(this.defines, room.defines))
-                        return false;
-                    break;
                 case 'variables':
-                    if (!isObjectEqual(this.variables, room.variables))
-                        return false;
-                    break;
                 case 'functions':
-                    if (!isObjectEqual(this.functions, room.functions))
+                case 'commands':
+                    if (!isObjectEqual(this[prop], room[prop]))
                         return false;
                     break;
                 default:
@@ -463,8 +459,9 @@ export class Room {
         if (this.defines && Object.keys(this.defines).length) return false;
         if (this.variables && Object.keys(this.variables).length) return false;
         if (this.functions && Object.keys(this.functions).length) return false;
+        if (this.commands && Object.keys(this.commands).length) return false;
         for (const prop in this) {
-            if (prop === 'includes' || prop === 'defines' || prop === 'inherits' || prop === 'variables' || prop === 'functions' || prop === 'baseFlags' || prop === 'x' || prop === 'y' || prop === 'z' || prop === 'type' || prop === 'forage' || prop === 'flags' || !this.hasOwnProperty(prop)) continue;
+            if (prop === 'commands' || prop === 'includes' || prop === 'defines' || prop === 'inherits' || prop === 'variables' || prop === 'functions' || prop === 'baseFlags' || prop === 'x' || prop === 'y' || prop === 'z' || prop === 'type' || prop === 'forage' || prop === 'flags' || !this.hasOwnProperty(prop)) continue;
             const tp = typeof this[prop];
             const value = <any>this[prop];
             if (Array.isArray(this[prop]) && (<any>this[prop]).length !== 0)
@@ -608,6 +605,7 @@ class Monster {
     public inherits: string[] = [];
     public variables = {};
     public functions = {};
+    public commands = {};
 
     constructor(id?, data?, type?) {
         if (typeof id === 'string') {
@@ -752,6 +750,7 @@ class StdObject {
     public inherits: string[] = [];
     public variables = {};
     public functions = {};
+    public commands = {};
     /*
     weapon - type, quality, enchantment
     armor - type, quality, limbs, enchantment
@@ -5042,7 +5041,7 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-body': ed.value.bodyType,
                                     'mon-wiz-no-corpse': ed.value.noCorpse,
                                     'mon-wiz-no-limbs': ed.value.noLimbs,
-                                    'mon-wiz-commands': ed.value.attackCommands,
+                                    'mon-wiz-attack-commands': ed.value.attackCommands,
                                     'mon-wiz-chance': '' + ed.value.attackCommandChance,
                                     'mon-wiz-initiators': ed.value.attackInitiators,
                                     'mon-wiz-aggressive': ed.value.aggressive,
@@ -5080,7 +5079,8 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-defines': ed.value.defines,
                                     'mon-wiz-inherits': ed.value.inherits,
                                     'mon-wiz-variables': ed.value.variables,
-                                    'mon-wiz-functions': ed.value.functions
+                                    'mon-wiz-functions': ed.value.functions,
+                                    'mon-wiz-commands': ed.value.commands
                                 },
                                 finish: e => {
                                     const nMonster = ed.value.clone();
@@ -5119,7 +5119,7 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.bodyType = e.data['mon-wiz-body'];
                                     nMonster.noCorpse = e.data['mon-wiz-no-corpse'];
                                     nMonster.noLimbs = e.data['mon-wiz-no-limbs'];
-                                    nMonster.attackCommands = e.data['mon-wiz-commands'];
+                                    nMonster.attackCommands = e.data['mon-wiz-attack-commands'];
                                     nMonster.attackCommandChance = +e.data['mon-wiz-chance'];
                                     nMonster.attackInitiators = e.data['mon-wiz-initiators'];
                                     nMonster.aggressive = e.data['mon-wiz-aggressive'];
@@ -5166,6 +5166,7 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.inherits = e.data['mon-wiz-inherits'];
                                     nMonster.variables = e.data['mon-wiz-variables'];
                                     nMonster.functions = e.data['mon-wiz-functions'];
+                                    nMonster.commands = e.data['mon-wiz-commands'];
 
                                     if (!nMonster.equals(ed.data.monster))
                                         ed.value = nMonster;
@@ -5532,7 +5533,8 @@ export class AreaDesigner extends EditorBase {
                                     'room-wiz-defines': ed.value.defines,
                                     'room-wiz-inherits': ed.value.inherits,
                                     'room-wiz-variables': ed.value.variables,
-                                    'room-wiz-functions': ed.value.functions
+                                    'room-wiz-functions': ed.value.functions,
+                                    'room-wiz-commands': ed.value.commands
                                 },
                                 finish: e => {
                                     const nRoom = ed.value.clone();
@@ -5597,6 +5599,7 @@ export class AreaDesigner extends EditorBase {
                                     nRoom.inherits = e.data['room-wiz-inherits'];
                                     nRoom.variables = e.data['room-wiz-variables'];
                                     nRoom.functions = e.data['room-wiz-functions'];
+                                    nRoom.commands = e.data['room-wiz-commands'];
                                     nRoom.exitsDetails = {};
                                     e.data['room-wiz-exits'].forEach(x => {
                                         nRoom.exitsDetails[x.exit] = x;
@@ -6102,7 +6105,7 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-body': ed.value.bodyType,
                                     'mon-wiz-no-corpse': ed.value.noCorpse,
                                     'mon-wiz-no-limbs': ed.value.noLimbs,
-                                    'mon-wiz-commands': ed.value.attackCommands,
+                                    'mon-wiz-attack-commands': ed.value.attackCommands,
                                     'mon-wiz-chance': '' + ed.value.attackCommandChance,
                                     'mon-wiz-initiators': ed.value.attackInitiators,
                                     'mon-wiz-aggressive': ed.value.aggressive,
@@ -6140,7 +6143,8 @@ export class AreaDesigner extends EditorBase {
                                     'mon-wiz-defines': ed.value.defines,
                                     'mon-wiz-inherits': ed.value.inherits,
                                     'mon-wiz-variables': ed.value.variables,
-                                    'mon-wiz-functions': ed.value.functions
+                                    'mon-wiz-functions': ed.value.functions,
+                                    'mon-wiz-commands': ed.value.commands
                                 },
                                 finish: e => {
                                     if (ed.editors) {
@@ -6183,7 +6187,7 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.bodyType = e.data['mon-wiz-body'];
                                     nMonster.noCorpse = e.data['mon-wiz-no-corpse'];
                                     nMonster.noLimbs = e.data['mon-wiz-no-limbs'];
-                                    nMonster.attackCommands = e.data['mon-wiz-commands'];
+                                    nMonster.attackCommands = e.data['mon-wiz-attack-commands'];
                                     nMonster.attackCommandChance = +e.data['mon-wiz-chance'];
                                     nMonster.attackInitiators = e.data['mon-wiz-initiators'];
                                     nMonster.aggressive = e.data['mon-wiz-aggressive'];
@@ -6231,6 +6235,7 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.inherits = e.data['mon-wiz-inherits'];
                                     nMonster.variables = e.data['mon-wiz-variables'];
                                     nMonster.functions = e.data['mon-wiz-functions'];
+                                    nMonster.commands = e.data['mon-wiz-commands'];
 
                                     if (!nMonster.equals(ed.data.monster))
                                         ed.value = nMonster;
@@ -12692,7 +12697,30 @@ export class AreaDesigner extends EditorBase {
         if ((room.flags & RoomFlags.WaterDrink) === RoomFlags.WaterDrink && (base.flags & RoomFlags.WaterDrink) !== RoomFlags.WaterDrink) {
             data.inherits += '\ninherit STD_WATERDRINK;';
             data.doc.push('/doc/build/etc/waterdrink');
-            data['create post'] += '\n\nvoid init()\n{\n   room::init();\n\n    waterdrink::init();\n}';
+            if (room.commands && Object.keys(room.commands).length) {
+                data['create post'] += '\n\nvoid init()\n{\n   room::init();\n   waterdrink::init();\n';
+                Object.keys(room.commands).forEach(r => {
+                    const cmds = r.split(',').map(c => c.trim());
+                    tmp = room.commands[r];
+                    if (cmds.length > 1) {
+                        if (!tmp || !tmp.length)
+                            tmp = 'cmd_' + cmds[0]
+                        data['create post'] += `    add_action("${tmp}", ({ "${cmds.join('", "')}" }) );\n`;
+                    }
+                    else {
+                        if (!tmp || !tmp.length)
+                            tmp = 'cmd_' + r;
+                        data['create post'] += `    add_action("${tmp}", "${r}");\n`;
+                    }
+                    if (!stubs[formatFunctionPointer(tmp)]) {
+                        data['create pre'] += createFunction(tmp, 'int', 'string args', '   return 1;');
+                        stubs[formatFunctionPointer(tmp)] = 1;
+                    }
+                });
+                data['create post'] += '}';
+            }
+            else
+                data['create post'] += '\n\nvoid init()\n{\n   room::init();\n   waterdrink::init();\n}';
             if (room.waterQuality !== 5)//default is 5
                 data['create body'] += `   set_water_quality(${room.waterQuality});\n`;
             if (room.waterPoisoned !== 0)//default is 0
@@ -12725,6 +12753,28 @@ export class AreaDesigner extends EditorBase {
             }
         }//if base room is water drink setup anyting that is set
         else if ((base.flags & RoomFlags.WaterDrink) === RoomFlags.WaterDrink) {
+            if (room.commands && Object.keys(room.commands).length) {
+                data['create post'] += '\n\nvoid init()\n{\n';
+                Object.keys(room.commands).forEach(r => {
+                    const cmds = r.split(',').map(c => c.trim());
+                    tmp = room.commands[r];
+                    if (cmds.length > 1) {
+                        if (!tmp || !tmp.length)
+                            tmp = 'cmd_' + cmds[0]
+                        data['create post'] += `    add_action("${tmp}", ({ "${cmds.join('", "')}" }) );\n`;
+                    }
+                    else {
+                        if (!tmp || !tmp.length)
+                            tmp = 'cmd_' + r;
+                        data['create post'] += `    add_action("${tmp}", "${r}");\n`;
+                    }
+                    if (!stubs[formatFunctionPointer(tmp)]) {
+                        data['create pre'] += createFunction(tmp, 'int', 'string args', '   return 1;');
+                        stubs[formatFunctionPointer(tmp)] = 1;
+                    }
+                });
+                data['create post'] += '}';
+            }
             //not default 5 and not the same as base room set
             if (room.waterQuality !== 5 && base.waterQuality != room.waterQuality)
                 data['create body'] += `   set_water_quality(${room.waterQuality});\n`;
@@ -12763,6 +12813,28 @@ export class AreaDesigner extends EditorBase {
                 else
                     data['create body'] += `   set_water_wash(${room.waterWashMessage});\n`;
             }
+        }
+        else if (room.commands && Object.keys(room.commands).length) {
+            data['create post'] += '\n\nvoid init()\n{\n';
+            Object.keys(room.commands).forEach(r => {
+                const cmds = r.split(',').map(c => c.trim());
+                tmp = room.commands[r];
+                if (cmds.length > 1) {
+                    if (!tmp || !tmp.length)
+                        tmp = 'cmd_' + cmds[0]
+                    data['create post'] += `    add_action("${tmp}", ({ "${cmds.join('", "')}" }) );\n`;
+                }
+                else {
+                    if (!tmp || !tmp.length)
+                        tmp = 'cmd_' + r;
+                    data['create post'] += `    add_action("${tmp}", "${r}");\n`;
+                }
+                if (!stubs[formatFunctionPointer(tmp)]) {
+                    data['create pre'] += createFunction(tmp, 'int', 'string args', '   return 1;');
+                    stubs[formatFunctionPointer(tmp)] = 1;
+                }
+            });
+            data['create post'] += '}';
         }
 
         room.preventPeer = (room.preventPeer || '').trim();
@@ -13250,6 +13322,29 @@ export class AreaDesigner extends EditorBase {
                 data['create pre'] += createFunction(func, monster.functions[func]);
                 stubs[formatFunctionPointer(func)] = 1;
             }
+        }
+
+        if (monster.commands && Object.keys(monster.commands).length) {
+            data['create post'] += '\n\nvoid init()\n{\n';
+            Object.keys(monster.commands).forEach(r => {
+                const cmds = r.split(',').map(c => c.trim());
+                tmp = monster.commands[r];
+                if (cmds.length > 1) {
+                    if (!tmp || !tmp.length)
+                        tmp = 'cmd_' + cmds[0]
+                    data['create post'] += `    add_action("${tmp}", ({ "${cmds.join('", "')}" }) );\n`;
+                }
+                else {
+                    if (!tmp || !tmp.length)
+                        tmp = 'cmd_' + r;
+                    data['create post'] += `    add_action("${tmp}", "${r}");\n`;
+                }
+                if (!stubs[formatFunctionPointer(tmp)]) {
+                    data['create pre'] += createFunction(tmp, 'int', 'string args', '   return 1;');
+                    stubs[formatFunctionPointer(tmp)] = 1;
+                }
+            });
+            data['create post'] += '}';
         }
 
         switch (monster.type) {
@@ -14670,6 +14765,29 @@ export class AreaDesigner extends EditorBase {
                 data['create pre'] += createFunction(func, obj.functions[func]);
                 stubs[formatFunctionPointer(func)] = 1;
             }
+        }
+
+        if (obj.commands && Object.keys(obj.commands).length) {
+            data['create post'] += '\n\nvoid init()\n{\n';
+            Object.keys(obj.commands).forEach(r => {
+                const cmds = r.split(',').map(c => c.trim());
+                tmp = obj.commands[r];
+                if (cmds.length > 1) {
+                    if (!tmp || !tmp.length)
+                        tmp = 'cmd_' + cmds[0]
+                    data['create post'] += `    add_action("${tmp}", ({ "${cmds.join('", "')}" }) );\n`;
+                }
+                else {
+                    if (!tmp || !tmp.length)
+                        tmp = 'cmd_' + r;
+                    data['create post'] += `    add_action("${tmp}", "${r}");\n`;
+                }
+                if (!stubs[formatFunctionPointer(tmp)]) {
+                    data['create pre'] += createFunction(tmp, 'int', 'string args', '   return 1;');
+                    stubs[formatFunctionPointer(tmp)] = 1;
+                }
+            });
+            data['create post'] += '}';
         }
 
         if (obj.name.startsWith('"') && obj.name.endsWith('"'))
