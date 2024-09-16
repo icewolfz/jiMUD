@@ -2,7 +2,7 @@
 //spell-checker:ignore consolas lucida bitstream tabbable varargs crafter mgive blacksmithing glasssmithing stonemasonry doublewielding warhammer flamberge nodachi
 //spell-checker:ignore nonetrackable bandedmail splintmail chainmail ringmail scalemail overclothing polearm tekagi shuko tekko bardiche katana wakizashi pilum warstaff
 import { DebugTimer, EditorBase, EditorOptions, FileState } from './editor.base';
-import { createFunction, formatFunctionPointer, formatArgumentList, formatMapping } from './lpc';
+import { createFunction, formatFunctionPointer, formatArgumentList, formatMapping, formatVariableValue } from './lpc';
 import { Splitter, Orientation } from '../splitter';
 import { PropertyGrid } from '../propertygrid';
 import { EditorType } from '../value.editors';
@@ -12338,10 +12338,10 @@ export class AreaDesigner extends EditorBase {
         if (room.variables) {
             tmp = Object.keys(room.variables);
             data['create pre'] += Object.keys(room.variables).map(
-                arg => `${room.variables[arg].type || 'mixed'}${room.variables[arg].array ? ' *' : ' '}${arg} = ${room.variables[arg].type === 'string' ? `"${addSlashes(room.variables[arg].value)}"` : room.variables[arg].value};\n`
+                arg => `${room.variables[arg].type || 'mixed'}${room.variables[arg].array ? ' *' : ' '}${arg} = ${formatVariableValue(room.variables[arg].type, room.variables[arg].value)};\n`
             ).join('');
             data['reset body'] += Object.keys(room.variables).filter(v => room.variables[v].reset).map(
-                arg => `${arg} = ${room.variables[arg].type === 'string' ? `"${addSlashes(room.variables[arg].value)}"` : room.variables[arg].value};\n`
+                arg => `${arg} = ${formatVariableValue(room.variables[arg].type, room.variables[arg].value)};\n`
             ).join('');
             if (tmp.length)
                 data['create pre'] += '\n';
@@ -13216,10 +13216,10 @@ export class AreaDesigner extends EditorBase {
         if (monster.variables) {
             tmp = Object.keys(monster.variables);
             data['create pre'] += Object.keys(monster.variables).map(
-                arg => `${monster.variables[arg].type || 'mixed'}${monster.variables[arg].array ? ' *' : ' '}${arg} = ${monster.variables[arg].type === 'string' ? `"${addSlashes(monster.variables[arg].value)}"` : monster.variables[arg].value};\n`
+                arg => `${monster.variables[arg].type || 'mixed'}${monster.variables[arg].array ? ' *' : ' '}${arg} = ${formatVariableValue(monster.variables[arg].type, monster.variables[arg].value)};\n`
             ).join('');
             data['reset body'] += Object.keys(monster.variables).filter(v => monster.variables[v].reset).map(
-                arg => `${arg} = ${monster.variables[arg].type === 'string' ? `"${addSlashes(monster.variables[arg].value)}"` : monster.variables[arg].value};\n`
+                arg => `${arg} = ${formatVariableValue(monster.variables[arg].type, monster.variables[arg].value)};\n`
             ).join('');
             if (tmp.length)
                 data['create pre'] += '\n';
@@ -14627,10 +14627,10 @@ export class AreaDesigner extends EditorBase {
         if (obj.variables) {
             tmp = Object.keys(obj.variables);
             data['create pre'] += Object.keys(obj.variables).map(
-                arg => `${obj.variables[arg].type || 'mixed'}${obj.variables[arg].array ? ' *' : ' '}${arg} = ${obj.variables[arg].type === 'string' ? `"${addSlashes(obj.variables[arg].value)}"` : obj.variables[arg].value};\n`
+                arg => `${obj.variables[arg].type || 'mixed'}${obj.variables[arg].array ? ' *' : ' '}${arg} = ${formatVariableValue(obj.variables[arg].type, obj.variables[arg].value)};\n`
             ).join('');
             data['reset body'] += Object.keys(obj.variables).filter(v => obj.variables[v].reset).map(
-                arg => `${arg} = ${obj.variables[arg].type === 'string' ? `"${addSlashes(obj.variables[arg].value)}"` : obj.variables[arg].value};\n`
+                arg => `${arg} = ${formatVariableValue(obj.variables[arg].type, obj.variables[arg].value)};\n`
             ).join('');
             if (tmp.length)
                 data['create pre'] += '\n';

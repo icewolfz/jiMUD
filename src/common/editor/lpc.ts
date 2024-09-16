@@ -2546,12 +2546,12 @@ export function formatMapping(str, indent?, sub?) {
     let out = indent + '([\n';
     out += Object.keys(map).map(k => {
         if (map[k].startsWith('([') && map[k].endsWith('])'))
-            return `${indent}  "${k}" : ${formatMapping(map[k], indent.length + 3, true).trim()}`;
-        return `${indent} "${k}" : ${map[k]}`;
+            return `${indent}  "${k}" : ${formatMapping(map[k], indent.length + 2, true).trim()}`;
+        return `${indent}  "${k}" : ${map[k]}`;
     }).join(',\n');
-    if (sub && indent.length !== 0)
-        out += '\n' + indent.substring(0, indent.length - 1) + '])';
-    else
+    //if (sub && indent.length !== 0)
+        //out += '\n' + indent.substring(0, indent.length - 2) + '])';
+    //else
         out += '\n' + indent + '])';
     return out;
 }
@@ -2561,6 +2561,28 @@ export function validFunctionPointer(name, clean?) {
     if (clean)
         name = formatFunctionPointer(name);
     return isValidIdentifier(name);
+}
+
+export function formatVariableValue(type, value, indent?, sub?) {
+    switch (type) {
+        case 'string':
+            if (value.trim().startsWith('"') && value.trim().endsWith('"'))
+                return `"${value.trim().substr(1, value.trim().length - 2).addSlashes()}"`;
+            return `"${value.addSlashes()}"`;
+        case 'function':
+            return formatFunctionPointer(value);
+        case 'mapping':
+            return formatMapping(value, indent, sub);
+        case 'mixed':
+            if (value.trim().startsWith('"') && value.trim().endsWith('"'))
+                return `"${value.substr(1, value.length - 2).addSlashes()}"`;
+            if (value.trim().startsWith('(:'))
+                return formatFunctionPointer(value);
+            if (value.trim().startsWith('(['))
+                return formatMapping(value, indent, sub);
+            break;
+    }
+    return value;
 }
 
 function parseString(str, format?) {

@@ -1954,7 +1954,7 @@
     const { DockManager } = require('./js/dockmanager');
     const { EditorType } = require('./js/value.editors');
     const { DataGrid } = require('./js/datagrid');
-    const { createFunction, formatFunctionPointer, formatArgumentList, formatMapping, MonacoCodeEditor, VirtualEditor, AreaDesigner, Source, FileBrowseValueEditor, RoomExit, RoomStates } = require('./js/editor/code.editor');
+    const { createFunction, formatFunctionPointer, formatArgumentList, formatMapping, MonacoCodeEditor, VirtualEditor, AreaDesigner, Source, FileBrowseValueEditor, RoomExit, RoomStates, formatVariableValue } = require('./js/editor/code.editor');
     const { EditorSettings } = require('./js/editor/code.editor.settings');
     const { language } = require('./js/editor/lpc');
 
@@ -6483,10 +6483,10 @@
                 if (data['room-wiz-variables']) {
                     tmp = Object.keys(data['room-wiz-variables']);
                     tmpl['create pre'] += Object.keys(data['room-wiz-variables']).map(
-                        arg => `${data['room-wiz-variables'][arg].type || 'mixed'}${data['room-wiz-variables'][arg].array ? ' *' : ' '}${arg} = ${data['room-wiz-variables'][arg].type === 'string' ? `"${addSlashes(data['room-wiz-variables'][arg].value)}"` : data['room-wiz-variables'][arg].value};\n`
+                        arg => `${data['room-wiz-variables'][arg].type || 'mixed'}${data['room-wiz-variables'][arg].array ? ' *' : ' '}${arg} = ${formatVariableValue(data['room-wiz-variables'][arg].type, data['room-wiz-variables'][arg].value)};\n`
                     ).join('');
                     tmpl['reset body'] += Object.keys(data['room-wiz-variables']).filter(v => data['room-wiz-variables'][v].reset).map(
-                        arg => `${arg} = ${data['room-wiz-variables'][arg].type === 'string' ? `"${addSlashes(data['room-wiz-variables'][arg].value)}"` : data['room-wiz-variables'][arg].value};\n`
+                        arg => `${arg} = ${formatVariableValue(data['room-wiz-variables'][arg].type, data['room-wiz-variables'][arg].value)};\n`
                     ).join('');
                     if (tmp.length)
                         tmpl['create pre'] += '\n';
@@ -8138,10 +8138,10 @@
                 if (data['mon-wiz-variables']) {
                     tmp = Object.keys(data['mon-wiz-variables']);
                     tmpl['create pre'] += Object.keys(data['mon-wiz-variables']).map(
-                        arg => `${data['mon-wiz-variables'][arg].type || 'mixed'}${data['mon-wiz-variables'][arg].array ? ' *' : ' '}${arg} = ${data['mon-wiz-variables'][arg].type === 'string' ? `"${addSlashes(data['mon-wiz-variables'][arg].value)}"` : data['mon-wiz-variables'][arg].value};\n`
+                        arg => `${data['mon-wiz-variables'][arg].type || 'mixed'}${data['mon-wiz-variables'][arg].array ? ' *' : ' '}${arg} = ${formatVariableValue(data['mon-wiz-variables'][arg].type, data['mon-wiz-variables'][arg].value)};\n`
                     ).join('');
                     tmpl['reset body'] += Object.keys(data['mon-wiz-variables']).filter(v => data['mon-wiz-variables'][v].reset).map(
-                        arg => `${arg} = ${data['mon-wiz-variables'][arg].type === 'string' ? `"${addSlashes(data['mon-wiz-variables'][arg].value)}"` : data['mon-wiz-variables'][arg].value};\n`
+                        arg => `${arg} = ${formatVariableValue(data['mon-wiz-variables'][arg].type, data['mon-wiz-variables'][arg].value)};\n`
                     ).join('');
                     if (tmp.length)
                         tmpl['create pre'] += '\n';
@@ -8401,7 +8401,7 @@
                     tmpl['create body'] += `   set_combat_initiator(${formatArgumentList(data['mon-wiz-initiators'], 56)}); //Set attack initiators\n`;
                 if (data['mon-wiz-aggressive'].length > 0) {
                     if (data['mon-wiz-aggressive'].trim().startsWith('(['))
-                        tmpl['create body'] += `   set_aggressive(${formatMapping(data['mon-wiz-aggressive'], 4).trim()}); //Set monster aggressiveness\n`;
+                        tmpl['create body'] += `   set_aggressive( ${formatMapping(data['mon-wiz-aggressive'], 5).trim()} ); //Set monster aggressiveness\n`;
                     else
                         tmpl['create body'] += `   set_aggressive(${data['mon-wiz-aggressive'].trim()}); //Set monster aggressiveness\n`;
                     tmpl['doc'].push('/doc/build/monster/haggle');
