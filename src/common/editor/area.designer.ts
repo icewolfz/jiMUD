@@ -12598,7 +12598,13 @@ export class AreaDesigner extends EditorBase {
         if (room.properties.length > 0) {
             room.properties.forEach(b => {
                 b.value = b.value.trim();
-                if (b.value.startsWith('(:')) {
+                if (b.value.startsWith('([')) {
+                    if (b.type === 1)
+                        tempProps[b.name] = formatMapping(b.value, 5);
+                    else
+                        props[b.name] = formatMapping(b.value, 5);
+                }
+                else if (b.value.startsWith('(:')) {
                     if (b.type === 1)
                         tempProps[b.name] = formatFunctionPointer(b.value);
                     else
@@ -13596,7 +13602,13 @@ export class AreaDesigner extends EditorBase {
         if (monster.properties.length > 0) {
             monster.properties.forEach(b => {
                 b.value = b.value.trim();
-                if (b.value.startsWith('(:')) {
+                if (b.value.startsWith('([')) {
+                    if (b.type === 1)
+                        tempProps[b.name] = formatMapping(b.value, 5);
+                    else
+                        props[b.name] = formatMapping(b.value, 5);
+                }
+                else if (b.value.startsWith('(:')) {
                     if (b.type === 1)
                         tempProps[b.name] = formatFunctionPointer(b.value);
                     else
@@ -14870,7 +14882,13 @@ export class AreaDesigner extends EditorBase {
         if (obj.properties.length > 0) {
             obj.properties.forEach(b => {
                 b.value = b.value.trim();
-                if (b.value.startsWith('(:')) {
+                if (b.value.startsWith('([')) {
+                    if (b.type === 1)
+                        tempProps[b.name] = formatMapping(b.value, 5);
+                    else
+                        props[b.name] = formatMapping(b.value, 5);
+                }
+                else if (b.value.startsWith('(:')) {
                     if (b.type === 1)
                         tempProps[b.name] = formatFunctionPointer(b.value);
                     else

@@ -5267,6 +5267,16 @@
         updatePanel(manager.active);
     }
 
+    async function newFromValueFormatted(value, file, remoteFile) {
+        try {
+            value = await formatCode(value);
+        }
+        catch (e) {
+            logOutput(`Message: ${e.message}\nFile: ${file}\nLine: ${e.line + 1}\nColumn: ${e.col + 1}`);
+        }
+        newFromValue(value, file, remoteFile);
+    }
+
     function parseFileTemplate(template, data) {
         if (!template || template.length === 0) return template;
         if (!data) data = baseParseData();
@@ -6743,7 +6753,13 @@
                 if (data['room-wiz-properties'].length > 0) {
                     data['room-wiz-properties'].forEach(b => {
                         b.value = b.value.trim();
-                        if (b.value.startsWith('(:')) {
+                        if (b.value.startsWith('([')) {
+                            if (b.type === 1)
+                                tempProps[b.name] = formatMapping(b.value, 5);
+                            else
+                                props[b.name] = formatMapping(b.value, 5);
+                        }
+                        else if (b.value.startsWith('(:')) {
                             if (b.type === 1)
                                 tempProps[b.name] = formatFunctionPointer(b.value);
                             else
@@ -7240,14 +7256,7 @@
                     newCounter++;
                 f += '.c';
                 f.toLowerCase();
-                let code = parseFileTemplate(value, tmpl);
-                try {
-                    code = await formatCode(code);
-                }
-                catch (e) {
-                    logOutput(`Message: ${e.message}\nFile: ${f}\nLine: ${e.line + 1}\nColumn: ${e.col + 1}`);
-                }
-                newFromValuecode(code, this.$dialogs.room.defaults['room-wiz-file'] || f);
+                newFromValueFormatted(parseFileTemplate(value, tmpl), this.$dialogs.room.defaults['room-wiz-file'] || f);
             });
             $('#room-wiz-type').on('change', (e) => {
                 if ($dialogs.room.options && $dialogs.monster.room.typeChange)
@@ -8388,7 +8397,13 @@
                 if (data['mon-wiz-properties'].length > 0) {
                     data['mon-wiz-properties'].forEach(b => {
                         b.value = b.value.trim();
-                        if (b.value.startsWith('(:')) {
+                        if (b.value.startsWith('([')) {
+                            if (b.type === 1)
+                                tempProps[b.name] = formatMapping(b.value, 5);
+                            else
+                                props[b.name] = formatMapping(b.value, 5);
+                        }
+                        else if (b.value.startsWith('(:')) {
                             if (b.type === 1)
                                 tempProps[b.name] = formatFunctionPointer(b.value);
                             else
@@ -8757,14 +8772,7 @@
                 }
                 f += '.c';
                 f.toLowerCase();
-                let code = parseFileTemplate(value, tmpl);
-                try {
-                    code = await formatCode(code);
-                }
-                catch (e) {
-                    logOutput(`Message: ${e.message}\nFile: ${f}\nLine: ${e.line + 1}\nColumn: ${e.col + 1}`);
-                }
-                newFromValue(code, f);
+                newFromValueFormatted(parseFileTemplate(value, tmpl), f);
                 newCounter++;
             });
         }
@@ -9597,17 +9605,10 @@
                         defaultId: 1,
                         noLink: true
                     }) === 0) {
-                        let code = p.editor.externalCode(room);
-                        try {
-                            code = await formatCode(code);
-                        }
-                        catch (e) {
-                            logOutput(`Message: ${e.message}\nFile: ${f}\nLine: ${e.line + 1}\nColumn: ${e.col + 1}`);
-                        }
                         if (p.editor.remote)
-                            newFromValue(code, f, path.dirname(p.editor.remote) + '/' + path.basename(f));
+                            newFromValueFormatted(p.editor.externalCode(room), f, path.dirname(p.editor.remote) + '/' + path.basename(f));
                         else
-                            newFromValue(code, f);
+                            newFromValueFormatted(p.editor.externalCode(room), f);
                     }
                 });
                 p.editor.on('map-context-menu', (e) => {
@@ -9675,7 +9676,7 @@
                             remote: p.editor.remote ? (path.dirname(p.editor.remote) + '/' + path.basename(f)) : null,
                             coords: [e.room.x, e.room.y, e.room.z],
                             click: (item) => {
-                                newFromValue(p.editor.externalCode(...item.coords), item.file, item.remote);
+                                newFromValueFormatted(p.editor.externalCode(...item.coords), item.file, item.remote);
                             }
                         });
                         temp.push({

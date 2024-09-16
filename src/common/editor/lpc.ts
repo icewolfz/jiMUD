@@ -2568,6 +2568,8 @@ export function validFunctionPointer(name, clean?) {
 }
 
 export function formatVariableValue(type, value, indent?, array?) {
+    //convert to string to format
+    value = value ? '' + value : value;
     switch (type) {
         case 'string':
             if (array)
