@@ -9236,7 +9236,8 @@
         }
         if (panel.diffFile)
             stopWatchFile(panel.diffFile);
-        addToRecent(panel.editor.file, panel.editor.remote);
+        if (!panel.editor.source && existsSync(panel.editor.file))
+            addToRecent(panel.editor.file, panel.editor.remote);
         if (panel.editor.source)
             delete _editors['remote:' + panel.editor.remote];
         else

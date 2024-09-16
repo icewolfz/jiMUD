@@ -149,15 +149,21 @@ export function SetupEditor() {
             monaco.languages.registerDocumentFormattingEditProvider('lpc', {
                 provideDocumentFormattingEdits(model, options, token): Promise<monaco.languages.TextEdit[]> {
                     return new Promise<monaco.languages.TextEdit[]>((resolve2, reject2) => {
-                        const $formatter = $lpcFormatter || ($lpcFormatter = new LPCFormatter());
-                        const code = $formatter.format(model.getValue());
-                        const $indenter = $lpcIndenter || ($lpcIndenter = new LPCIndenter());
-                        const err = (e) => {
-                            //reject2(e);
+                        formatCode(model.getValue()).then((lines: string[]) => {
+                            resolve2([{
+                                range: {
+                                    startLineNumber: 1,
+                                    startColumn: 1,
+                                    endColumn: model.getLineMaxColumn(model.getLineCount()),
+                                    endLineNumber: model.getLineCount()
+                                },
+                                text: lines.join('\n')
+                            }]);
+                        }).catch(e => {
                             model.pushStackElement();
                             model.pushEditOperations([], [{
                                 range: new monaco.Range(1, 1, model.getLineCount(), model.getLineMaxColumn(model.getLineCount())),
-                                text: code
+                                text: model.getValue()
                             }], () => []);
                             model.pushStackElement();
                             model.deltaDecorations(model.getAllDecorations(null, true).filter(f => f.options.marginClassName === 'line-error-margin' || f.options.marginClassName === 'line-warning-margin').map(f => f.id), [{
@@ -165,9 +171,6 @@ export function SetupEditor() {
                                 options: {
                                     stickiness: 1,
                                     isWholeLine: true,
-                                    //className: 'line-error-content',
-                                    //glyphMarginHoverMessage: { value: e.message },
-                                    //glyphMarginClassName: 'line-error-glyph',
                                     marginClassName: 'line-error-margin',
                                     zIndex: 1
                                 }
@@ -182,25 +185,7 @@ export function SetupEditor() {
                                     severity: 8
                                 }
                             ]);
-                            $indenter.removeListener('error', err);
-                            $indenter.removeListener('complete', complete);
-                        };
-                        const complete = (lines) => {
-                            resolve2([{
-                                range: {
-                                    startLineNumber: 1,
-                                    startColumn: 1,
-                                    endColumn: model.getLineMaxColumn(model.getLineCount()),
-                                    endLineNumber: model.getLineCount()
-                                },
-                                text: lines.join('\n')
-                            }]);
-                            $indenter.removeListener('error', err);
-                            $indenter.removeListener('complete', complete);
-                        };
-                        $indenter.on('error', err);
-                        $indenter.on('complete', complete);
-                        $indenter.indent(code);
+                        });
                     });
                 }
             });
@@ -231,7 +216,7 @@ export function SetupEditor() {
                             }
                             if (results2[1] === word) {
                                 //the line is a #define line and can not define self
-                                if(position.lineNumber === i + 1) return null;
+                                if (position.lineNumber === i + 1) return null;
                                 return {
                                     uri: model.uri,
                                     range: new monaco.Range(i + 1, results2.index + 9, i + 1, results2.index + 9)
@@ -1944,4 +1929,25 @@ export class MonacoCodeEditor extends EditorBase {
         }
         monaco.editor.setModelMarkers(this.$model, 'spelling', markers);
     }
+}
+
+export async function formatCode(code) {
+    return new Promise((resolve, reject) => {
+        const $formatter = $lpcFormatter || ($lpcFormatter = new LPCFormatter());
+        code = $formatter.format(code);
+        const $indenter = $lpcIndenter || ($lpcIndenter = new LPCIndenter());
+        const err = (e) => {
+            reject(e);
+            $indenter.removeListener('error', err);
+            $indenter.removeListener('complete', complete);
+        };
+        const complete = (lines) => {
+            resolve(lines);
+            $indenter.removeListener('error', err);
+            $indenter.removeListener('complete', complete);
+        };
+        $indenter.on('error', err);
+        $indenter.on('complete', complete);
+        $indenter.indent(code);
+    });
 }
