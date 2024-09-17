@@ -5901,9 +5901,11 @@ export class AreaDesigner extends EditorBase {
                     options: {
                         open: true,
                         click: ed => {
-                            const arg = { file: ed.editors[0].editor.$editor.value, property: 'path', editor: ed, callback: (files) => {
-                                ed.editors[0].editor.$editor.value = files[0];
-                            } };
+                            const arg = {
+                                file: ed.editors[0].editor.$editor.value, property: 'path', editor: ed, callback: (files) => {
+                                    ed.editors[0].editor.$editor.value = files[0];
+                                }
+                            };
                             this.emit('browse-file', arg);
                         }
                     }
@@ -12276,8 +12278,17 @@ export class AreaDesigner extends EditorBase {
 
             if (this.$area.includes && this.$area.includes.length) {
                 template['area post'] += this.$area.includes.map(i => {
-                    if (i.relative)
-                        return `\n#include "${i.path}"`;
+                    if (i.relative) {
+                        //absolute path so lets try and convert
+                        let p = i.path;
+                        if (i.path.startsWith('/')) {
+                            p = path.posix.relative(data.path, i.path);
+                            //failed for what ever reason
+                            if (!p || !p.length)
+                                p = i.path;
+                        }
+                        return `\n#include "${p}"`;
+                    }
                     return `\n#include <${i.path}>`;
                 }).join('');
             }
@@ -12291,22 +12302,22 @@ export class AreaDesigner extends EditorBase {
             if (this.$cancel)
                 throw new Error('Canceled');
             this.emit('progress', { type: 'designer', percent: 24, title: 'Creating base generateRoomCodefiles&hellip;' });
-            Object.keys(this.$area.baseRooms).forEach(r => this.writeFormatted(this.generateRoomCode(this.$area.baseRooms[r].clone(), files, copy(data), true), path.join(p, 'std', files[r + 'room'].toLowerCase() + '.c')));
+            Object.keys(this.$area.baseRooms).forEach(r => this.writeFormatted(this.generateRoomCode(this.$area.baseRooms[r].clone(), files, copy(data), true, path.posix.join(data.path, 'std')), path.join(p, 'std', files[r + 'room'].toLowerCase() + '.c')));
             //generate base monsters
             if (this.$cancel)
                 throw new Error('Canceled');
             this.emit('progress', { type: 'designer', percent: 28, title: 'Creating base files&hellip;' });
-            Object.keys(this.$area.baseMonsters).forEach(r => this.writeFormatted(this.generateMonsterCode(this.$area.baseMonsters[r].clone(), files, copy(data), true), path.join(p, 'std', files[r + 'monster'].toLowerCase() + '.c')));
+            Object.keys(this.$area.baseMonsters).forEach(r => this.writeFormatted(this.generateMonsterCode(this.$area.baseMonsters[r].clone(), files, copy(data), true, path.posix.join(data.path, 'std')), path.join(p, 'std', files[r + 'monster'].toLowerCase() + '.c')));
             //generate monsters
             if (this.$cancel)
                 throw new Error('Canceled');
             this.emit('progress', { type: 'designer', percent: 30, title: 'Creating monster files&hellip;' });
-            Object.keys(this.$area.monsters).forEach(r => this.writeFormatted(this.generateMonsterCode(this.$area.monsters[r].clone(), files, copy(data)), path.join(p, 'mon', files[r] + '.c')));
+            Object.keys(this.$area.monsters).forEach(r => this.writeFormatted(this.generateMonsterCode(this.$area.monsters[r].clone(), files, copy(data), false, path.posix.join(data.path, 'mon')), path.join(p, 'mon', files[r] + '.c')));
             //generate objects
             if (this.$cancel)
                 throw new Error('Canceled');
             this.emit('progress', { type: 'designer', percent: 40, title: 'Creating object files&hellip;' });
-            Object.keys(this.$area.objects).forEach(r => this.writeFormatted(this.generateObjectCode(this.$area.objects[r].clone(), files, copy(data)), path.join(p, 'obj', files[r] + '.c')));
+            Object.keys(this.$area.objects).forEach(r => this.writeFormatted(this.generateObjectCode(this.$area.objects[r].clone(), files, copy(data), path.posix.join(data.path, 'obj')), path.join(p, 'obj', files[r] + '.c')));
             this.emit('progress', { type: 'designer', percent: 50, title: 'Creating room files&hellip;' });
             //generate rooms
             let count = 0;
@@ -12318,7 +12329,7 @@ export class AreaDesigner extends EditorBase {
                         const r = this.$area.rooms[z][y][x];
                         const base: Room = this.$area.baseRooms[r.type] || this.$area.baseRooms[this.$area.defaultRoom];
                         if (r.empty || r.equals(base, true)) continue;
-                        this.writeFormatted(this.generateRoomCode(r.clone(), files, copy(data)), path.join(p, files[`${r.x},${r.y},${r.z}`] + '.c'));
+                        this.writeFormatted(this.generateRoomCode(r.clone(), files, copy(data), null, data.path), path.join(p, files[`${r.x},${r.y},${r.z}`] + '.c'));
                         count++;
                         this.emit('progress', { type: 'designer', percent: 50 + Math.round(50 * count / (this.$roomCount || 1)) });
                     }
@@ -12336,7 +12347,7 @@ export class AreaDesigner extends EditorBase {
         }
     }
 
-    public generateRoomCode(room: Room, files, data, baseRoom?) {
+    public generateRoomCode(room: Room, files, data, baseRoom?, remotePath?) {
         if (!room) return '';
         if (this.$cancel)
             throw new Error('Canceled');
@@ -12539,8 +12550,17 @@ export class AreaDesigner extends EditorBase {
         data.inherits = '';
         if (room.includes && room.includes.length) {
             data.includes += room.includes.map(i => {
-                if (i.relative)
-                    return `\n#include "${i.path}"`;
+                if (i.relative) {
+                    //absolute path so lets try and convert
+                    let p = i.path;
+                    if (remotePath && i.path.startsWith('/')) {
+                        p = path.posix.relative(remotePath, i.path);
+                        //failed for what ever reason
+                        if (!p || !p.length)
+                            p = i.path;
+                    }
+                    return `\n#include "${p}"`;
+                }
                 return `\n#include <${i.path}>`;
             }).join('');
         }
@@ -13451,7 +13471,7 @@ export class AreaDesigner extends EditorBase {
         return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'room.c'))), data);
     }
 
-    public generateMonsterCode(monster, files, data, baseMonster?) {
+    public generateMonsterCode(monster, files, data, baseMonster?, remotePath?) {
         if (!monster) return '';
         if (this.$cancel)
             throw new Error('Canceled');
@@ -13484,8 +13504,17 @@ export class AreaDesigner extends EditorBase {
 
         if (monster.includes && monster.includes.length) {
             data.includes += monster.includes.map(i => {
-                if (i.relative)
-                    return `\n#include "${i.path}"`;
+                if (i.relative) {
+                    //absolute path so lets try and convert
+                    let p = i.path;
+                    if (remotePath && i.path.startsWith('/')) {
+                        p = path.posix.relative(remotePath, i.path);
+                        //failed for what ever reason
+                        if (!p || !p.length)
+                            p = i.path;
+                    }
+                    return `\n#include "${p}"`;
+                }
                 return `\n#include <${i.path}>`;
             }).join('');
         }
@@ -14226,7 +14255,7 @@ export class AreaDesigner extends EditorBase {
         return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'monster.c'))), data);
     }
 
-    public generateObjectCode(obj, files, data) {
+    public generateObjectCode(obj, files, data, remotePath?) {
         if (!obj) return '';
         if (this.$cancel)
             throw new Error('Canceled');
@@ -14912,8 +14941,17 @@ export class AreaDesigner extends EditorBase {
 
         if (obj.includes && obj.includes.length) {
             data.includes += obj.includes.map(i => {
-                if (i.relative)
-                    return `\n#include "${i.path}"`;
+                if (i.relative) {
+                    //absolute path so lets try and convert
+                    let p = i.path;
+                    if (remotePath && i.path.startsWith('/')) {
+                        p = path.posix.relative(remotePath, i.path);
+                        //failed for what ever reason
+                        if (!p || !p.length)
+                            p = i.path;
+                    }
+                    return `\n#include "${p}"`;
+                }
                 return `\n#include <${i.path}>`;
             }).join('');
         }
