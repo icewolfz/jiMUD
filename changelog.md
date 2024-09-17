@@ -20,6 +20,7 @@
     - Fix collection dialog editor not comparing arrays correctly
     - Fix issue when trying to read include files for peek/goto define
     - Fix formatting of mappings in generated code
+    - Do not autocomplete pairs when in a string
     - Area Designer: Fix type in monster resistances code
 - **Changed:**
   - Update electron 31.1.0 to 32.1.0
