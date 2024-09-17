@@ -1954,7 +1954,7 @@
     const { DockManager } = require('./js/dockmanager');
     const { EditorType } = require('./js/value.editors');
     const { DataGrid } = require('./js/datagrid');
-    const { createFunction, formatFunctionPointer, formatArgumentList, formatMapping, MonacoCodeEditor, VirtualEditor, AreaDesigner, Source, FileBrowseValueEditor, RoomExit, RoomStates, formatVariableValue } = require('./js/editor/code.editor');
+    const { createFunction, formatFunctionPointer, formatArgumentList, formatMapping, MonacoCodeEditor, VirtualEditor, AreaDesigner, Source, FileBrowseValueEditor, RoomExit, RoomStates, formatVariableValue, formatArray } = require('./js/editor/code.editor');
     const { EditorSettings } = require('./js/editor/code.editor.settings');
     const { language } = require('./js/editor/lpc');
 
@@ -6770,28 +6770,10 @@
                             }
                         }
                         else if (b.value.startsWith('({')) {
-                            tmp2 = b.value.substring(2);
-                            if (tmp2.endsWith('})'))
-                                tmp2 = tmp2.substr(0, tmp2.length - 2);
-                            tmp2 = tmp2.split(',');
-                            tmp2 = tmp2.map(t => {
-                                t = t.trim();
-                                if ((t.startsWith('"') && t.endsWith('"')) || t.match(/^\d+$/))
-                                    return t;
-                                else if (t.startsWith('(:')) {
-                                    t = formatFunctionPointer(t);
-                                    if (!stubs[t]) {
-                                        tmpl['create pre'] += createFunction(t);
-                                        stubs[t] = 1;
-                                    }
-                                    return t;
-                                }
-                                return `"${t}"`;
-                            });
                             if (b.type === 1)
-                                tempProps[b.name] = `({ ${tmp2.join(', ')} })`;
+                                tempProps[b.name] = formatArray(b.value);
                             else
-                                props[b.name] = `({ ${tmp2.join(', ')} })`;
+                                props[b.name] = formatArray(b.value);
                         }
                         else if ((b.value.startsWith('"') && b.value.endsWith('"')) || b.value.match(/^\d+$/)) {
                             if (b.type === 1)
@@ -8414,28 +8396,10 @@
                             }
                         }
                         else if (b.value.startsWith('({')) {
-                            tmp2 = b.value.substring(2);
-                            if (tmp2.endsWith('})'))
-                                tmp2 = tmp2.substr(0, tmp2.length - 2);
-                            tmp2 = tmp2.split(',');
-                            tmp2 = tmp2.map(t => {
-                                t = t.trim();
-                                if ((t.startsWith('"') && t.endsWith('"')) || t.match(/^\d+$/))
-                                    return t;
-                                else if (t.startsWith('(:')) {
-                                    t = formatFunctionPointer(t);
-                                    if (!stubs[t]) {
-                                        tmpl['create pre'] += createFunction(t);
-                                        stubs[t] = 1;
-                                    }
-                                    return t;
-                                }
-                                return `"${t}"`;
-                            });
                             if (b.type === 1)
-                                tempProps[b.name] = `({ ${tmp2.join(', ')} })`;
+                                tempProps[b.name] = formatArray(b.value);
                             else
-                                props[b.name] = `({ ${tmp2.join(', ')} })`;
+                                props[b.name] = formatArray(b.value);
                         }
                         else if ((b.value.startsWith('"') && b.value.endsWith('"')) || b.value.match(/^\d+$/)) {
                             if (b.type === 1)

@@ -3,7 +3,7 @@
 //spell-checker:ignore nonetrackable bandedmail splintmail chainmail ringmail scalemail overclothing polearm tekagi shuko tekko bardiche katana wakizashi pilum warstaff
 import { DebugTimer, EditorBase, EditorOptions, FileState } from './editor.base';
 import { formatCode } from './monaco';
-import { createFunction, formatFunctionPointer, formatArgumentList, formatMapping, formatVariableValue } from './lpc';
+import { createFunction, formatFunctionPointer, formatArgumentList, formatMapping, formatVariableValue, formatArray } from './lpc';
 import { Splitter, Orientation } from '../splitter';
 import { PropertyGrid } from '../propertygrid';
 import { EditorType } from '../value.editors';
@@ -12615,28 +12615,10 @@ export class AreaDesigner extends EditorBase {
                     }
                 }
                 else if (b.value.startsWith('({')) {
-                    tmp2 = b.value.substring(2);
-                    if (tmp2.endsWith('})'))
-                        tmp2 = tmp2.substr(0, tmp2.length - 2);
-                    tmp2 = tmp2.split(',');
-                    tmp2 = tmp2.map(t => {
-                        t = t.trim();
-                        if ((t.startsWith('"') && t.endsWith('"')) || t.match(/^\d+$/))
-                            return t;
-                        else if (t.startsWith('(:')) {
-                            t = formatFunctionPointer(t);
-                            if (!stubs[t]) {
-                                data['create pre'] += createFunction(t);
-                                stubs[t] = 1;
-                            }
-                            return t;
-                        }
-                        return `"${t}"`;
-                    });
                     if (b.type === 1)
-                        tempProps[b.name] = `({ ${tmp2.join(', ')} })`;
+                        tempProps[b.name] = formatArray(b.value);
                     else
-                        props[b.name] = `({ ${tmp2.join(', ')} })`;
+                        props[b.name] = formatArray(b.value);
                 }
                 else if ((b.value.startsWith('"') && b.value.endsWith('"')) || b.value.match(/^\d+$/)) {
                     if (b.type === 1)
@@ -13622,28 +13604,10 @@ export class AreaDesigner extends EditorBase {
                     }
                 }
                 else if (b.value.startsWith('({')) {
-                    tmp2 = b.value.substring(2);
-                    if (tmp2.endsWith('})'))
-                        tmp2 = tmp2.substr(0, tmp2.length - 2);
-                    tmp2 = tmp2.split(',');
-                    tmp2 = tmp2.map(t => {
-                        t = t.trim();
-                        if ((t.startsWith('"') && t.endsWith('"')) || t.match(/^\d+$/))
-                            return t;
-                        else if (t.startsWith('(:')) {
-                            t = formatFunctionPointer(t);
-                            if (!stubs[t]) {
-                                data['create pre'] += createFunction(t);
-                                stubs[t] = 1;
-                            }
-                            return t;
-                        }
-                        return `"${t}"`;
-                    });
                     if (b.type === 1)
-                        tempProps[b.name] = `({ ${tmp2.join(', ')} })`;
+                        tempProps[b.name] = formatArray(b.value);
                     else
-                        props[b.name] = `({ ${tmp2.join(', ')} })`;
+                        props[b.name] = formatArray(b.value);
                 }
                 else if ((b.value.startsWith('"') && b.value.endsWith('"')) || b.value.match(/^\d+$/)) {
                     if (b.type === 1)
@@ -14899,28 +14863,10 @@ export class AreaDesigner extends EditorBase {
                     }
                 }
                 else if (b.value.startsWith('({')) {
-                    tmp2 = b.value.substring(2);
-                    if (tmp2.endsWith('})'))
-                        tmp2 = tmp2.substr(0, tmp2.length - 2);
-                    tmp2 = tmp2.split(',');
-                    tmp2 = tmp2.map(t => {
-                        t = t.trim();
-                        if ((t.startsWith('"') && t.endsWith('"')) || t.match(/^\d+$/))
-                            return t;
-                        else if (t.startsWith('(:')) {
-                            t = formatFunctionPointer(t);
-                            if (!stubs[t]) {
-                                data['create pre'] += createFunction(t);
-                                stubs[t] = 1;
-                            }
-                            return t;
-                        }
-                        return `"${t}"`;
-                    });
                     if (b.type === 1)
-                        tempProps[b.name] = `({ ${tmp2.join(', ')} })`;
+                        tempProps[b.name] = formatArray(b.value);
                     else
-                        props[b.name] = `({ ${tmp2.join(', ')} })`;
+                        props[b.name] = formatArray(b.value);
                 }
                 else if ((b.value.startsWith('"') && b.value.endsWith('"')) || b.value.match(/^\d+$/)) {
                     if (b.type === 1)
