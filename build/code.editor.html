@@ -10454,6 +10454,8 @@
                     arguments: e
                 }, (files) => {
                     if (!files || files.length === 0) return;
+                    if ($dialog.options.arguments.callback)
+                        $dialog.options.arguments.callback(files);
                     $dialog.options.arguments.editor.value = files[0];
                     $dialog.options.arguments.editor.focus();
                 });

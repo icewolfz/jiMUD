@@ -176,6 +176,14 @@ Allows you to create base monsters for monsters to inherit
   - see [Monster wizard](codeeditor.md#newmonster) for details
   - `Notes` optional notes about the monster, included in the header comments when code generated
 
+### Includes
+
+Allows you to add includes to the area.h
+
+- `Path` The path to include, either a global include file name or a path to include file
+- `Relative` Is include relative to the file e.g. use "" instead of <> when including file
+- `...` Browse remotely for file to include, **Note** Must be used while connected to the mud
+
 ## Monster editor
 
 Create monsters for your area

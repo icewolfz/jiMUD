@@ -1057,7 +1057,11 @@ export class DropDownEditValueEditor extends ValueEditor {
             this.$dropdown.style.zIndex = '100';
             this.$dropdown.style.position = 'absolute';
             this.$dropdown.addEventListener('blur', this.$dropdownEvent, { once: true });
-            const data = this.options ? this.options.data || [] : [];
+            let data;
+            if(this.options && typeof this.options.data === 'function')
+                data = this.options.data();
+            else
+                data = this.options ? this.options.data || [] : [];
             let tl = data.length;
             const height = tl * 20;
             while (tl--) {

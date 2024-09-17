@@ -4747,19 +4747,26 @@ export class AreaDesigner extends EditorBase {
             generalTab: document.createElement('div'),
             monstersTab: document.createElement('div'),
             roomsTab: document.createElement('div'),
+            includesTab: document.createElement('div'),
+            definesTab: document.createElement('div'),
             tabs: document.createElement('ul'),
             tabsContents: document.createElement('div')
         };
         this.$propertiesEditor.container.classList.add('tabbable', 'tabs-left', 'area-editor-properties');
         this.$propertiesEditor.tabs.classList.add('nav', 'nav-tabs');
         this.$propertiesEditor.tabs.style.height = '100%';
-        this.$propertiesEditor.tabs.innerHTML = '<li class="active"><a href="#' + this.parent.id + 'general" data-toggle="tab">General</a></li><li><a href="#' + this.parent.id + 'rooms" data-toggle="tab">Base rooms</a></li><li><a href="#' + this.parent.id + 'monsters" data-toggle="tab">Base monsters</a></li>';
+        this.$propertiesEditor.tabs.innerHTML = '<li class="active"><a href="#' + this.parent.id + 'general" data-toggle="tab">General</a></li><li><a href="#' + this.parent.id + 'rooms" data-toggle="tab">Base rooms</a></li><li><a href="#' + this.parent.id + 'monsters" data-toggle="tab">Base monsters</a></li><li><a href="#' + this.parent.id + 'includes" data-toggle="tab">Area includes</a></li>';
         this.$propertiesEditor.container.appendChild(this.$propertiesEditor.tabs);
         this.$propertiesEditor.tabsContents.classList.add('tab-content');
         this.$propertiesEditor.container.appendChild(this.$propertiesEditor.tabsContents);
+        //#region Add tabs
         this.$propertiesEditor.tabsContents.appendChild(this.$propertiesEditor.generalTab);
         this.$propertiesEditor.tabsContents.appendChild(this.$propertiesEditor.monstersTab);
         this.$propertiesEditor.tabsContents.appendChild(this.$propertiesEditor.roomsTab);
+        this.$propertiesEditor.tabsContents.appendChild(this.$propertiesEditor.includesTab);
+        this.$propertiesEditor.tabsContents.appendChild(this.$propertiesEditor.definesTab);
+        //#endregion
+        //#region General Tab
         this.$propertiesEditor.generalTab.id = this.parent.id + 'general';
         this.$propertiesEditor.generalTab.classList.add('tab-pane', 'active');
         this.$propertiesEditor.generalTab.innerHTML = `
@@ -4782,6 +4789,10 @@ export class AreaDesigner extends EditorBase {
                 this.$propertiesEditor.roomGrid.refresh();
             else if (e.target.textContent === 'Base monsters')
                 this.$propertiesEditor.monsterGrid.refresh();
+            else if (e.target.textContent === 'Includes')
+                this.$propertiesEditor.includesGrid.refresh();
+            else if (e.target.textContent === 'Defines')
+                this.$propertiesEditor.definesGrid.refresh();
         });
 
         //this.$propertiesEditor.tabs
@@ -4837,11 +4848,19 @@ export class AreaDesigner extends EditorBase {
             this.$area.defaultMonster = this.$propertiesEditor.defaultMonster.val();
             this.changed = true;
         });
+        //#endregion
+        //#region Tabs ini
         this.$propertiesEditor.roomsTab.id = this.parent.id + 'rooms';
         this.$propertiesEditor.roomsTab.classList.add('tab-pane');
         this.$propertiesEditor.monstersTab.id = this.parent.id + 'monsters';
         this.$propertiesEditor.monstersTab.classList.add('tab-pane');
+        this.$propertiesEditor.includesTab.id = this.parent.id + 'includes';
+        this.$propertiesEditor.includesTab.classList.add('tab-pane');
+        this.$propertiesEditor.definesTab.id = this.parent.id + 'defines';
+        this.$propertiesEditor.definesTab.classList.add('tab-pane');
         this.$propertiesEditor.container.style.display = 'none';
+        //#endregion
+        //#region Base Monster tab
         el = document.createElement('div');
         el.classList.add('datagrid-standard');
         this.$propertiesEditor.monsterGrid = new DataGrid(el);
@@ -4858,6 +4877,7 @@ export class AreaDesigner extends EditorBase {
                 editor: {
                     options: {
                         singleLine: true,
+                        container: document.body,
                         validate: (oldValue, newValue) => {
                             if (oldValue !== newValue && this.$area.baseMonsters[newValue])
                                 return `Base monster named ${newValue} already exist!`;
@@ -5273,6 +5293,8 @@ export class AreaDesigner extends EditorBase {
         });
         this.$propertiesEditor.monstersTab.appendChild(this.createButtonGroup(this.$propertiesEditor.monsterGrid, 'base monster'));
         this.$propertiesEditor.monstersTab.appendChild(el);
+        //#endregion
+        //#region Base rooms Tab
         el = document.createElement('div');
         el.classList.add('datagrid-standard');
         this.$propertiesEditor.roomGrid = new DataGrid(el);
@@ -5289,6 +5311,7 @@ export class AreaDesigner extends EditorBase {
                 editor: {
                     options: {
                         singleLine: true,
+                        container: document.body,
                         validate: (oldValue, newValue) => {
                             if (oldValue !== newValue && this.$area.baseRooms[newValue])
                                 return `Base room named ${newValue} already exist!`;
@@ -5835,6 +5858,149 @@ export class AreaDesigner extends EditorBase {
         });
         this.$propertiesEditor.roomsTab.appendChild(this.createButtonGroup(this.$propertiesEditor.roomGrid, 'base room'));
         this.$propertiesEditor.roomsTab.appendChild(el);
+        //#endregion
+        //#region Includes tab
+        el = document.createElement('div');
+        el.classList.add('datagrid-standard');
+        this.$propertiesEditor.includesGrid = new DataGrid(el);
+        this.$propertiesEditor.includesGrid.clipboardPrefix = 'jiMUD/';
+        this.$propertiesEditor.includesGrid.enterMoveFirst = this.$enterMoveFirst;
+        this.$propertiesEditor.includesGrid.enterMoveNext = this.$enterMoveNext;
+        this.$propertiesEditor.includesGrid.enterMoveNew = this.$enterMoveNew;
+        this.$propertiesEditor.includesGrid.columns = [
+            {
+                label: 'Include',
+                field: 'path',
+                width: 150,
+                spring: true,
+                editor: {
+                    type: EditorType.dropdown,
+                    options: {
+                        data: () => this.getIncludeList(),
+                        container: document.body,
+                        validate: (oldValue, newValue, data: Include) => {
+                            if (oldValue !== newValue && this.$area.includes.findIndex((element: Include) => element.path === newValue && element.relative === data.relative) !== -1)
+                                return `Include ${newValue} already added!`;
+                            return true;
+                        }
+                    }
+                }
+            },
+            {
+                label: 'Relative',
+                field: 'relative',
+            },
+            {
+                field: 'browse',
+                sortable: false,
+                label: '',
+                width: 32,
+                formatter: () => '',
+                editor: {
+                    type: EditorType.button,
+                    options: {
+                        open: true,
+                        click: ed => {
+                            const arg = { file: ed.editors[0].editor.$editor.value, property: 'path', editor: ed, callback: (files) => {
+                                ed.editors[0].editor.$editor.value = files[0];
+                            } };
+                            this.emit('browse-file', arg);
+                        }
+                    }
+                }
+            },
+        ];
+        this.$propertiesEditor.includesGrid.on('value-changed', (newValue, oldValue, dataIndex) => {
+            this.pushUndo(undoAction.edit, undoType.properties, { property: 'includes', old: oldValue, new: copy(newValue), index: dataIndex });
+            this.$area.includes[dataIndex].path = newValue.path;
+            this.$area.includes[dataIndex].relative = newValue.relative;
+            this.changed = true;
+        });
+        this.$propertiesEditor.includesGrid.on('add', e => {
+            e.data = {
+                path: '',
+                relative: false,
+            };
+            this.pushUndo(undoAction.add, undoType.properties, { property: 'includes', index: this.$area.includes.length - 1, value: e.data });
+            this.changed = true;
+        });
+        this.$propertiesEditor.includesGrid.on('cut', (e) => {
+            this.pushUndo(undoAction.delete, undoType.properties, {
+                property: 'includes', values: e.data.map(r => {
+                    let idx = this.$area.includes.indexOf(r.data);
+                    return { value: this.$area.includes[idx], index: idx };
+                }).sort((a, b) => {
+                    if (a.index < b.index) return 1;
+                    if (a.index > b.index) return -1;
+                    return 0;
+                })
+            });
+            this.emit('supports-changed');
+            this.changed = true;
+        });
+        this.$propertiesEditor.includesGrid.on('copy', () => {
+            this.emit('supports-changed');
+        });
+        this.$propertiesEditor.includesGrid.on('paste', (e) => {
+            this.startUndoGroup();
+            e.data.forEach(d => {
+                if (this.$area.includes.findIndex((element: Include) => element.path === d.data.path && element.relative === d.data.relative) === -1) {
+                    d.data = copy(d.data);
+                    //this.$area.includes.push(d.data);
+                    this.pushUndo(undoAction.add, undoType.properties, { property: 'includes', index: this.$area.includes.length, value: d.data });
+                }
+                else
+                    e.preventDefault = true;
+            });
+            this.stopUndoGroup();
+            this.changed = true;
+        });
+        this.$propertiesEditor.includesGrid.on('delete', (e) => {
+            if (dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Delete',
+                message: 'Delete selected include' + (this.$propertiesEditor.includesGrid.selectedCount > 1 ? 's' : '') + '?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+                noLink: true
+            })
+                === 1)
+                e.preventDefault = true;
+            else {
+                this.pushUndo(undoAction.delete, undoType.properties, {
+                    property: 'includes', values: e.data.map(r => {
+                        let idx = this.$area.includes.indexOf(r.data);
+                        return { value: this.$area.includes[idx], index: idx };
+                    }).sort((a, b) => {
+                        if (a.index < b.index) return 1;
+                        if (a.index > b.index) return -1;
+                        return 0;
+                    })
+                });
+                this.changed = true;
+            }
+        });
+        this.$propertiesEditor.includesGrid.on('selection-changed', () => {
+            if (this.$view !== View.properties) return;
+            const group = this.$propertiesEditor.includesTab.firstChild;
+            if (this.$propertiesEditor.includesGrid.selectedCount) {
+                group.children[1].removeAttribute('disabled');
+                group.children[2].removeAttribute('disabled');
+                if (this.$propertiesEditor.includesGrid.selectedCount > 1)
+                    (<HTMLElement>group.children[2]).title = 'Delete includes';
+                else
+                    (<HTMLElement>group.children[2]).title = 'Delete include';
+            }
+            else {
+                group.children[1].setAttribute('disabled', 'true');
+                group.children[2].setAttribute('disabled', 'true');
+                (<HTMLElement>group.children[2]).title = 'Delete include(s)';
+            }
+            this.emit('selection-changed');
+        });
+        this.$propertiesEditor.includesTab.appendChild(this.createButtonGroup(this.$propertiesEditor.includesGrid, 'include'));
+        this.$propertiesEditor.includesTab.appendChild(el);
+        //#endregion
         this.parent.appendChild(this.$propertiesEditor.container);
         //#endregion
         //#region create monster grid
@@ -9290,6 +9456,14 @@ export class AreaDesigner extends EditorBase {
                                 this.updateBaseMonsters();
                                 this.changed = true;
                                 break;
+                            case 'includes':
+                                undo.data.index = this.$area.includes.indexOf(undo.data.value);
+                                if (undo.data.index !== -1)
+                                    this.$area.includes.splice(undo.data.index, 1);
+                                this.$propertiesEditor.includesGrid.rows = this.$area.includes;
+                                this.pushRedo(undo);
+                                this.changed = true;
+                                break;
                         }
                         break;
                     case undoType.room:
@@ -9345,6 +9519,14 @@ export class AreaDesigner extends EditorBase {
                                 });
                                 this.pushRedo(undo);
                                 this.updateBaseMonsters();
+                                this.changed = true;
+                                break;
+                            case 'includes':
+                                undo.data.values.forEach(r => {
+                                    this.$area.includes.splice(r.index, 0, r.value);
+                                });
+                                this.pushRedo(undo);
+                                this.$propertiesEditor.includesGrid.rows = this.$area.includes;
                                 this.changed = true;
                                 break;
                         }
@@ -9412,6 +9594,13 @@ export class AreaDesigner extends EditorBase {
                                 this.$area.baseMonsters[undo.data.old.name] = undo.data.old.monster;
                                 this.pushRedo(undo);
                                 this.updateBaseMonsters();
+                                this.changed = true;
+                                break;
+                            case 'includes':
+                                this.$area.includes[undo.data.index].path = undo.data.old.path;
+                                this.$area.includes[undo.data.index].relative = undo.data.old.relative;
+                                this.pushRedo(undo);
+                                this.$propertiesEditor.includesGrid.rows = this.$area.includes;
                                 this.changed = true;
                                 break;
                             case 'defaultRoom':
@@ -9526,6 +9715,12 @@ export class AreaDesigner extends EditorBase {
                                 this.updateBaseMonsters();
                                 this.changed = true;
                                 break;
+                            case 'includes':
+                                this.$area.includes.splice(undo.data.index, 0, undo.data.value);
+                                this.pushUndoObject(undo);
+                                this.$propertiesEditor.includesGrid.rows = this.$area.includes;
+                                this.changed = true;
+                                break;
                         }
                         break;
                     case undoType.room:
@@ -9574,6 +9769,15 @@ export class AreaDesigner extends EditorBase {
                                     })
                                 });
                                 */
+                                break;
+                            case 'includes':
+                                undo.data.values.forEach(r => {
+                                    this.$area.includes.splice(r.index, 1);
+                                });
+                                this.pushRedo(undo);
+                                this.$propertiesEditor.includesGrid.rows = this.$area.includes;
+                                this.changed = true;
+                                break;
                                 break;
                         }
                         break;
@@ -9628,6 +9832,13 @@ export class AreaDesigner extends EditorBase {
                                 this.$area.baseMonsters[undo.data.new.name] = undo.data.new;
                                 this.pushUndoObject(undo);
                                 this.updateBaseMonsters();
+                                this.changed = true;
+                                break;
+                            case 'includes':
+                                this.$area.includes[undo.data.index].path = undo.data.new.path;
+                                this.$area.includes[undo.data.index].relative = undo.data.new.relative;
+                                this.pushUndoObject(undo);
+                                this.$propertiesEditor.includesGrid.rows = this.$area.includes;
                                 this.changed = true;
                                 break;
                             case 'defaultRoom':
@@ -11727,6 +11938,7 @@ export class AreaDesigner extends EditorBase {
         this.updateBaseMonsters();
         this.updateMonsters();
         this.updateObjects();
+        this.$propertiesEditor.includesGrid.rows = this.$area.includes;
         this.emit('rebuild-buttons');
         Timer.end('BuildMap time');
     }

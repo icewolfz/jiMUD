@@ -121,6 +121,8 @@ select.property-grid-editor {
 .datagrid .property-grid-editor-dropdown input,
 .datagrid .property-grid-editor-flag input {
     padding-right: 20px !important;
+    padding-top: 1px;
+    padding-left: 3px !important;
 }
 
 .datagrid .property-grid-editor-collection input {
