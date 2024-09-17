@@ -12620,7 +12620,7 @@ export class AreaDesigner extends EditorBase {
                     else
                         props[b.name] = formatArray(b.value);
                 }
-                else if ((b.value.startsWith('"') && b.value.endsWith('"')) || b.value.match(/^\d+$/)) {
+                else if ((b.value.startsWith('"') && b.value.endsWith('"')) || b.value.match(/^\d+$/) || b.value.match(/^-?([0-9]+\.[0-9]+)$/)) {
                     if (b.type === 1)
                         tempProps[b.name] = b.value;
                     else
@@ -13609,7 +13609,7 @@ export class AreaDesigner extends EditorBase {
                     else
                         props[b.name] = formatArray(b.value);
                 }
-                else if ((b.value.startsWith('"') && b.value.endsWith('"')) || b.value.match(/^\d+$/)) {
+                else if ((b.value.startsWith('"') && b.value.endsWith('"')) || b.value.match(/^\d+$/) || b.value.match(/^-?([0-9]+\.[0-9]+)$/)) {
                     if (b.type === 1)
                         tempProps[b.name] = b.value;
                     else
@@ -14868,7 +14868,7 @@ export class AreaDesigner extends EditorBase {
                     else
                         props[b.name] = formatArray(b.value);
                 }
-                else if ((b.value.startsWith('"') && b.value.endsWith('"')) || b.value.match(/^\d+$/)) {
+                else if ((b.value.startsWith('"') && b.value.endsWith('"')) || b.value.match(/^\d+$/) || b.value.match(/^-?([0-9]+\.[0-9]+)$/)) {
                     if (b.type === 1)
                         tempProps[b.name] = b.value;
                     else
