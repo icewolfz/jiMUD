@@ -180,7 +180,7 @@ Allows you to create base monsters for monsters to inherit
 
 Allows you to add includes to the area.h
 
-- `Path` The path to include, either a global include file name or a path to include file
+- `Include` The path or name of include file, either a global include file name or a path to an include file
 - `Relative` Is include relative to the file e.g. use "" instead of <> when including file
 - `...` Browse remotely for file to include, **Note** Must be used while connected to the mud
 
