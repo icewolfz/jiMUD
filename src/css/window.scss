@@ -1,3 +1,4 @@
+@use 'sass:color';
 $images: "./../../assets";
 $borderColor: rgb(204, 204, 204);
 $color: #333;
@@ -335,8 +336,8 @@ html, body {
 }
 
 .cm-tabstrip li.connected {
-    background-color: lighten(rgb(178, 226, 255), 10%) !important;
-    border-color: lighten(rgb(94, 185, 242), 10%) !important;
+    background-color: color.adjust(rgb(178, 226, 255), $lightness: 10%) !important;
+    border-color: color.adjust(rgb(94, 185, 242), $lightness: 10%) !important;
     opacity: 1;
     color: black;
 }
@@ -349,8 +350,8 @@ html, body {
 }
 
 .cm-tabstrip li.connectednonactive {
-    background-color: lighten(rgb(218, 255, 181), 10%) !important;
-    border-color: lighten(rgb(119, 168, 69), 10%) !important;
+    background-color: color.adjust(rgb(218, 255, 181), $lightness: 10%) !important;
+    border-color: color.adjust(rgb(119, 168, 69), $lightness: 10%) !important;
     opacity: 1;
     color: black;
 }
@@ -363,8 +364,8 @@ html, body {
 }
 
 .cm-tabstrip li.disconnected {
-    background-color:lighten(rgb(255, 187, 178), 10%) !important;
-    border-color: lighten(rgb(242, 104, 94), 10%) !important;    
+    background-color:color.adjust(rgb(255, 187, 178), $lightness: 10%) !important;
+    border-color: color.adjust(rgb(242, 104, 94), $lightness: 10%) !important;    
     opacity: 1;
     color: black;
 }
@@ -377,35 +378,35 @@ html, body {
 }
 
 .cm-tabstrip li.disconnected.active {
-    box-shadow: inset 0px 2px 0px 0px lighten(rgb(242, 104, 94), 10%);
+    box-shadow: inset 0px 2px 0px 0px color.adjust(rgb(242, 104, 94), $lightness: 10%);
 }
 
 .cm-tabstrip li.connectednonactive.active {
-    box-shadow: inset 0px 2px 0px 0px lighten(rgb(119, 168, 69), 10%);
+    box-shadow: inset 0px 2px 0px 0px color.adjust(rgb(119, 168, 69), $lightness: 10%);
 }
 
 .cm-tabstrip li.connected.active {
-    box-shadow: inset 0px 2px 0px 0px lighten(rgb(94, 185, 242), 10%);
+    box-shadow: inset 0px 2px 0px 0px color.adjust(rgb(94, 185, 242), $lightness: 10%);
 }
 
 /*
 .focused .cm-tabstrip li.connectednonactive.active:hover {
-    background-color: darken(rgb(218, 255, 181), 10%) !important;
-    border-color: darken(rgb(119, 168, 69), 10%) !important;
+    background-color: color.adjust(rgb(218, 255, 181), $lightness: -10%) !important;
+    border-color: color.adjust(rgb(119, 168, 69), $lightness: -10%) !important;
     opacity: 1;
     color: black;
 }
 
 .focused .cm-tabstrip li.connected.active:hover {
-    background-color: darken(rgb(178, 226, 255), 10%) !important;
-    border-color: darken(rgb(94, 185, 242), 10%) !important;
+    background-color: color.adjust(rgb(178, 226, 255), $lightness: -10%) !important;
+    border-color: color.adjust(rgb(94, 185, 242), $lightness: -10%) !important;
     opacity: 1;
     color: black;
 }
 
 .focused .cm-tabstrip li.disconnected.active:hover {
-    background-color: darken(rgb(255, 187, 178), 10%) !important;
-    border-color: darken(rgb(242, 104, 94), 10%) !important;
+    background-color: color.adjust(rgb(255, 187, 178), $lightness: -10%) !important;
+    border-color: color.adjust(rgb(242, 104, 94), $lightness: -10%) !important;
     opacity: 1;
     color: black;
 }
@@ -420,8 +421,8 @@ html, body {
 }
 
 .focused .cm-tabstrip li.active:hover {
-    background-color: darken(rgb(239, 217, 249), 10%) !important;
-    border-color: darken(rgb(214, 106, 247), 10%) !important;
+    background-color: color.adjust(rgb(239, 217, 249), $lightness: -10%) !important;
+    border-color: color.adjust(rgb(214, 106, 247), $lightness: -10%) !important;
     opacity: 1;
     color: black;
 }
@@ -463,7 +464,7 @@ html, body {
 
 #cm-add-tab a:active {
     border: 1px solid $color !important;
-    background-color: darken($borderColor, 10%) !important;
+    background-color: color.adjust($borderColor, $lightness: -10%) !important;
     border-radius: 4px;
     color: white;
     text-shadow: 0 1px black;    

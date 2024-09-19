@@ -1,3 +1,4 @@
+@use 'sass:color';
 html,
 body {
     overflow: hidden;
@@ -315,8 +316,8 @@ body {
 }
 
 .cm-tabstrip li.changed {
-    background-color: lighten(rgb(218, 255, 181), 10%) !important;
-    border-color: lighten(rgb(119, 168, 69), 10%) !important;
+    background-color: color.adjust(rgb(218, 255, 181), $lightness: 10%) !important;
+    border-color: color.adjust(rgb(119, 168, 69), $lightness: 10%) !important;
     opacity: 1;
     color: black;
 }
@@ -329,8 +330,8 @@ body {
 }
 
 .cm-tabstrip li.new {
-    background-color: lighten(rgb(178, 226, 255), 10%) !important;
-    border-color: lighten(rgb(94, 185, 242), 10%) !important;
+    background-color: color.adjust(rgb(178, 226, 255), $lightness: 10%) !important;
+    border-color: color.adjust(rgb(94, 185, 242), $lightness: 10%) !important;
     opacity: 1;
     color: black;
 }
@@ -364,22 +365,22 @@ body {
 }
 
 .focused .cm-tabstrip li.changed.active:hover {
-    background-color: darken(rgb(218, 255, 181), 10%) !important;
-    border-color: darken(rgb(119, 168, 69), 10%) !important;
+    background-color: color.adjust(rgb(218, 255, 181), $lightness: -10%) !important;
+    border-color: color.adjust(rgb(119, 168, 69), $lightness: -10%) !important;
     opacity: 1;
     color: black;
 }
 
 .focused .cm-tabstrip li.new.active:hover {
-    background-color: darken(rgb(178, 226, 255), 10%) !important;
-    border-color: darken(rgb(94, 185, 242), 10%) !important;
+    background-color: color.adjust(rgb(178, 226, 255), $lightness: -10%) !important;
+    border-color: color.adjust(rgb(94, 185, 242), $lightness: -10%) !important;
     opacity: 1;
     color: black;
 }
 
 .focused .cm-tabstrip li.active:hover {
-    background-color: darken(rgb(249, 242, 217), 10%);
-    border-color: darken(rgb(247, 216, 106), 10%);
+    background-color: color.adjust(rgb(249, 242, 217), $lightness: -10%);
+    border-color: color.adjust(rgb(247, 216, 106), $lightness: -10%);
     opacity: 1;
     color: black;
 }

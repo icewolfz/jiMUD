@@ -1,3 +1,4 @@
+@use 'sass:color';
 $images: "./../../assets";
 $borderColor: "rgb(204, 204, 204)";
 $color: "#333";
@@ -270,15 +271,15 @@ body {
 }
 
 .cm-tabstrip li.changed {
-    background-color: lighten(rgb(218, 255, 181), 10%) !important;
-    border-color: lighten(rgb(119, 168, 69), 10%) !important;
+    background-color: color.adjust(rgb(218, 255, 181), $lightness: 10%) !important;
+    border-color: color.adjust(rgb(119, 168, 69), $lightness: 10%) !important;
     opacity: 1;
     color: black;
 }
 
 .cm-tabstrip li.new {
-    background-color: lighten(rgb(178, 226, 255), 10%) !important;
-    border-color: lighten(rgb(94, 185, 242), 10%) !important;
+    background-color: color.adjust(rgb(178, 226, 255), $lightness: 10%) !important;
+    border-color: color.adjust(rgb(94, 185, 242), $lightness: 10%) !important;
     opacity: 1;
     color: black;
 }
