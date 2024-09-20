@@ -2857,8 +2857,9 @@
     }
 
 
-    function openAdvancedEditor(text) {
+    function openAdvancedEditor(text, callBack) {
         if (_windows['editor.html'] && !_windows['editor.html'].closed) {
+            _windows['editor.html'].callBack = callBack;
             _windows['editor.html'].show();
             _windows['editor.html'].focus();
             _windows['editor.html'].insertFormatted(text);
@@ -2881,12 +2882,14 @@
         */
         else {
             openWindow('editor');
+            _windows['editor.html'].callBack = callBack;
             _windows['editor.html'].addEventListener('editor-init', () => {
                 _windows['editor.html'].show();
                 _windows['editor.html'].focus();
                 _windows['editor.html'].insertFormatted(text);
             }, { once: true });
         }
+        return _windows['editor.html'];
     }
 
     function updatePanel(panel) {
@@ -5178,8 +5181,12 @@
             openFile(file, remoteFile, null, remoteEdit);
     }
 
-    function updateValue(text) {
-        if (($dialogs.monster && $dialogs.monster.open) || ($dialogs.room && $dialogs.room.open)) {
+    function updateValue(text) {    
+        if(_windows['editor.html'] && _windows['editor.html'].callBack) {
+            if(!_windows['editor.html'].closed)
+                _windows['editor.html'].callBack(text);
+        }
+        else if (($dialogs.monster && $dialogs.monster.open) || ($dialogs.room && $dialogs.room.open)) {
             if ((document.activeElement.tagName === 'INPUT' && document.activeElement.type === 'text') || document.activeElement.tagName === 'TEXTAREA')
                 document.activeElement.value = text;
             else {

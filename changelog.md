@@ -15,6 +15,8 @@
 - **Fixed:**
   - Increase progress dialog height
   - Fix issue when using non default theme and button bar hidden
+  - Fix always on top for child windows opened outside of client
+  - Advanced editor/Mail composer: Fix inserted text defaulting to bold white
   - Code editor:
     - No longer generate function stubs if invalid function names in (: :) values
     - Fix creating duplicate function stubs in generated code
@@ -23,6 +25,7 @@
     - Fix formatting of mappings in generated code
     - Do not autocomplete pairs when in a string
     - Area Designer: Fix type in monster resistances code
+    - Fix usage of advanced editor in text edit dialogs
 - **Changed:**
   - Update electron 31.1.0 to 32.1.2
   - Update better-sqlite3 11.2.1 to 11.3.0

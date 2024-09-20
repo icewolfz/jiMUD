@@ -1,8 +1,8 @@
 //spellchecker:ignore datagrid dropdown
 import { EventEmitter } from 'events';
 import { capitalize, clone } from './library';
-import { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropDownEditValueEditor, SelectValueEditor, CollectionValueEditor, ButtonValueEditor } from './value.editors';
-export { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropDownEditValueEditor, SelectValueEditor, CollectionValueEditor, ButtonValueEditor } from './value.editors';
+import { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropDownEditValueEditor, SelectValueEditor, CollectionValueEditor, ButtonValueEditor, CodeValueEditor } from './value.editors';
+export { EditorType, TextValueEditor, BooleanValueEditor, NumberValueEditor, FlagValueEditor, DropDownEditValueEditor, SelectValueEditor, CollectionValueEditor, ButtonValueEditor, CodeValueEditor } from './value.editors';
 const { clipboard } = require('electron');
 const remote = require('@electron/remote');
 const { Menu } = remote;
@@ -2433,6 +2433,9 @@ export class DataGrid extends EventEmitter {
             }
             editor.data = data;
             switch (type) {
+                case EditorType.code:
+                    editor.editor = new CodeValueEditor(this, cell, prop, editorOptions);
+                    break;
                 case EditorType.flag:
                     editor.editor = new FlagValueEditor(this, cell, prop, editorOptions);
                     break;
