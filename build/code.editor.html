@@ -56,7 +56,7 @@
             if (editor.getEditorType() === 'vs.editor.ICodeEditor') {
                 editor.onContextMenu((e) => {
                     let idx = window.$editors.indexOf(editor);
-                    if (manager.activePane === manager.panes[idx])
+                    if (idx !== -1 && manager.activePane === manager.panes[idx])
                         manager.active.editor.emit('contextmenu', e, editor);
                 });
                 editor.onDidChangeCursorSelection(() => {
@@ -283,21 +283,8 @@
 
         }
 
-        SetupEditor().then(SetupEditorFinish);
-
-        function SetupEditorFinish(monaco) {
-            //var pane = document.getElementById('cm-tabpane');
-            if (!manager || !manager.activePane || !manager.activePane.pane) {
-                setTimeout(() => {
-                    SetupEditorFinish(monaco);
-                }, 500);
-                return;
-            }
-            var pane = manager.activePane.pane;
-            var el = document.createElement('div');
-            el.classList.add('editor-container');
-            pane.appendChild(el);
-            window.$editors = [monaco.editor.create(el, {
+        function createCodeEditor(el) {
+            var editor = monaco.editor.create(el, {
                 language: 'lpc',
                 autoIndent: true,
                 rulers: [80],
@@ -362,11 +349,43 @@
                     },
                     registerTextModelContentProvider: () => ({ dispose: () => { } })
                 }
-            })];
+            });
+            return editor;
+        }
+
+        function createDiffEditor(el) {
+            var editor = monaco.editor.createDiffEditor(el, {
+                language: 'lpc',
+                autoIndent: true,
+                rulers: [80],
+                contextmenu: false,
+                theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme') : 'lpcTheme'),
+                model: null
+            });
+            return editor;
+        }
+
+        SetupEditor().then(SetupEditorFinish);
+
+        function SetupEditorFinish(monaco) {
+            //var pane = document.getElementById('cm-tabpane');
+            if (!manager || !manager.activePane || !manager.activePane.pane) {
+                setTimeout(() => {
+                    SetupEditorFinish(monaco);
+                }, 500);
+                return;
+            }
+            var pane = manager.activePane.pane;
+            var el = document.createElement('div');
+            el.classList.add('editor-container');
+            pane.appendChild(el);
+            window.$editors = [createCodeEditor(el)];
             initEditor(window.$editors[0]);
             el = document.createElement('div');
             el.classList.add('diff-container');
             pane.appendChild(el);
+            window.$dEditors = [createDiffEditor(el)];
+            initEditor(window.$dEditors[0], 1);
             monaco.editor.addCommand({
                 id: "jimud.addDictionary",
                 run: (...args) => {
@@ -419,15 +438,6 @@
                     }
                 }
             });
-            window.$dEditors = [monaco.editor.createDiffEditor(el, {
-                language: 'lpc',
-                autoIndent: true,
-                rulers: [80],
-                contextmenu: false,
-                theme: (options ? (options.theme ? 'lpcThemeDark' : 'lpcTheme') : 'lpcTheme'),
-                model: null
-            })];
-            initEditor(window.$dEditors[0], 1);
             monaco.editor.onDidChangeMarkers(buildProblems);
             _ready = true;
         }
@@ -8934,6 +8944,9 @@
 
     // eslint-disable-next-line no-unused-vars
     function setViewState(editor, codeEditor) {
+        var file;
+        if (typeof editor === 'string')
+            editor = { file: editor };
         if (!editor || editor.new || _loading) return;
         var file = editor.file;
         var state = codeEditor.saveViewState();

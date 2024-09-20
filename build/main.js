@@ -393,7 +393,8 @@ function createWindow(options) {
         if (file.startsWith(URL.pathToFileURL(__dirname).href))
             file = file.substring(URL.pathToFileURL(__dirname).href.length + 1);
         initializeChildWindow(childWindow, url, details);
-
+        if (details.options.alwaysOnTopClient)
+            childWindow.setParentWindow(window);
         childWindow.on('closed', e => {
             if (window && !window.isDestroyed())
                 executeScriptClient(`if(typeof childClosed === "function") childClosed('${file}', '${url}', '${frameName}');`, window, true).catch(logError);
@@ -2399,7 +2400,6 @@ function createClient(options) {
         if (file.startsWith(URL.pathToFileURL(__dirname).href))
             file = file.substring(URL.pathToFileURL(__dirname).href.length + 1);
         initializeChildWindow(childWindow, url, details, false);
-
         childWindow.on('resize', () => {
             clients[getClientId(view)].states[file] = states[file];
         });
@@ -2764,6 +2764,8 @@ function initializeChildWindow(window, link, details, noClose) {
 
     window.webContents.on('did-create-window', (childWindow, childDetails) => {
         initializeChildWindow(childWindow, childDetails.url, childDetails);
+        if (details.options.alwaysOnTopClient)
+            childWindow.setParentWindow(window);
     });
 
     window.webContents.on('context-menu', (e, params) => {
