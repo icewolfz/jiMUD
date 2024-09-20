@@ -230,6 +230,129 @@
                 }
             });
 
+            editor.addAction({
+                id: "jimud.addDictionary",
+                label: 'Add to Dictionary',
+                run: (editor) => {
+                    let word = editor.getModel().getWordAtPosition(e.target.position);
+                    if (!word || !word.word.length) return;
+                    if (!isWordMisspelled(word, editor)) return;
+                    //let words = word.word.split('_');
+                    let words = word.word.split(/(_)|(?=[A-Z])|(\d+)/g);
+                    ///_|(?=[A-Z])|(?<=[a-z])(?=\d)/g
+                    let sCol = word.startColumn;
+                    for (let w = 0, wl = words.length; w < wl; w++) {
+                        if (!words[w]) continue;
+                        if (sCol + words[w].length >= e.target.position.column) {
+                            word = words[w];
+                            break;
+                        }
+                        //sCol += words[w].length + 1;
+                        sCol += words[w].length;
+                    }
+                    if (!options.dictionary)
+                        options.dictionary = [];
+                    options.dictionary.push(word.toLowerCase());
+                    saveOptions();
+                    var keys = Object.keys(_editors);
+                    var k = keys.length;
+                    while (k--) {
+                        ((p) => {
+                            if (_editors[p].editor.type === 1)
+                                setTimeout(() => _editors[p].editor.spellcheckDocument(), 0);
+                        })(keys[k]);
+                    }
+                }
+            });
+            editor.addAction({
+                id: "jimud.addSystemDictionary",
+                label: 'Add to System Dictionary',
+                run: (editor) => {
+                    let word = editor.getModel().getWordAtPosition(e.target.position);
+                    if (!word || !word.word.length) return;
+                    if (!isWordMisspelled(word, editor)) return;
+                    //let words = word.word.split('_');
+                    let words = word.word.split(/(_)|(?=[A-Z])|(\d+)/g);
+                    ///_|(?=[A-Z])|(?<=[a-z])(?=\d)/g
+                    let sCol = word.startColumn;
+                    for (let w = 0, wl = words.length; w < wl; w++) {
+                        if (!words[w]) continue;
+                        if (sCol + words[w].length >= e.target.position.column) {
+                            word = words[w];
+                            break;
+                        }
+                        //sCol += words[w].length + 1;
+                        sCol += words[w].length;
+                    }
+                    ipcRenderer.send('addWordToSpellCheckerDictionary', word.toLowerCase());
+                    var keys = Object.keys(_editors);
+                    var k = keys.length;
+                    while (k--) {
+                        ((p) => {
+                            if (_editors[p].editor.type === 1)
+                                setTimeout(() => _editors[p].editor.spellcheckDocument(), 0);
+                        })(keys[k]);
+                    }
+                }
+            });
+            /*
+            editor.addAction({
+                id: "jimud.ignoreWord",
+                label: ' Ignore word',
+                run: (editor) => {
+                    let word = editor.getModel().getWordAtPosition(e.target.position);
+                    if (!word || !word.word.length) return;
+                    if (!isWordMisspelled(word, editor)) return;
+                    //let words = word.word.split('_');
+                    let words = word.word.split(/(_)|(?=[A-Z])|(\d+)/g);
+                    ///_|(?=[A-Z])|(?<=[a-z])(?=\d)/g
+                    let sCol = word.startColumn;
+                    for (let w = 0, wl = words.length; w < wl; w++) {
+                        if (!words[w]) continue;
+                        if (sCol + words[w].length >= e.target.position.column) {
+                            word = words[w];
+                            break;
+                        }
+                        //sCol += words[w].length + 1;
+                        sCol += words[w].length;
+                    }
+                    //TODO make work have to lookup and find the jimud editor object that is inked to editor
+                    //p.editor.addIgnoredWord(item.word);
+                    //p.editor.spellcheckDocument();
+                }
+            });
+            */
+            editor.addAction({
+                id: "jimud.ignoreWordAll",
+                label: ' Ignore word',
+                run: (editor) => {
+                    let word = editor.getModel().getWordAtPosition(e.target.position);
+                    if (!word || !word.word.length) return;
+                    if (!isWordMisspelled(word, editor)) return;
+                    //let words = word.word.split('_');
+                    let words = word.word.split(/(_)|(?=[A-Z])|(\d+)/g);
+                    ///_|(?=[A-Z])|(?<=[a-z])(?=\d)/g
+                    let sCol = word.startColumn;
+                    for (let w = 0, wl = words.length; w < wl; w++) {
+                        if (!words[w]) continue;
+                        if (sCol + words[w].length >= e.target.position.column) {
+                            word = words[w];
+                            break;
+                        }
+                        //sCol += words[w].length + 1;
+                        sCol += words[w].length;
+                    }
+                    dictionaryIgnore.push(item.word.toLowerCase());
+                    var keys = Object.keys(_editors);
+                    var k = keys.length;
+                    while (k--) {
+                        ((p) => {
+                            if (_editors[p].editor.type === 1)
+                                setTimeout(() => _editors[p].editor.spellcheckDocument(), 0);
+                        })(keys[k]);
+                    }
+                }
+            });
             //if actions do not exist create custom replacements
             if (!editor.getAction('undo'))
                 editor.addAction({
@@ -5181,9 +5304,9 @@
             openFile(file, remoteFile, null, remoteEdit);
     }
 
-    function updateValue(text) {    
-        if(_windows['editor.html'] && _windows['editor.html'].callBack) {
-            if(!_windows['editor.html'].closed)
+    function updateValue(text) {
+        if (_windows['editor.html'] && _windows['editor.html'].callBack) {
+            if (!_windows['editor.html'].closed)
                 _windows['editor.html'].callBack(text);
         }
         else if (($dialogs.monster && $dialogs.monster.open) || ($dialogs.room && $dialogs.room.open)) {
@@ -10214,7 +10337,7 @@
                                     position: e.target.position,
                                     click: (item) => {
                                         editor.pushUndoStop();
-                                        editor.executeCommands(this.id, [
+                                        editor.executeCommands(null, [
                                             new ReplaceCommandThatPreservesSelection(
                                                 new monaco.Range(item.position.lineNumber, item.column, item.position.lineNumber, item.column + item.word.length),
                                                 item.label,
