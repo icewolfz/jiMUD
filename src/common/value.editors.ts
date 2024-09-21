@@ -2265,6 +2265,71 @@ export class CodeValueEditor extends ValueEditor {
                             let inputMenu = Menu.buildFromTemplate(temp);
                             inputMenu.popup({ window: remote.getCurrentWindow() });
                         });
+                        this.$codeEditor.addAction({
+                            id: "jimud.wordWrap",
+                            label: 'Wordwrap',
+                            keybindings: [monaco.KeyMod.Alt | monaco.KeyCode.KeyZ],
+                            run: (editor) => {
+                                let wrap = editor.getRawOptions().wordWrap === 'on';
+                                editor.updateOptions({ wordWrap: (wrap ? 'off' : 'on') });
+                                editor.updateOptions({ wordWrapOverride2: (wrap ? 'off' : 'on') });
+                            }
+                        });
+                        this.$codeEditor.addAction({
+                            id: "jimud.find",
+                            label: 'Find',
+                            keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyF],
+                            run: (editor) => {
+                                if (this.selected.length > 0)
+                                    editor.getAction('actions.findWithSelection').run();
+                                editor.getAction('actions.find').run();
+                            }
+                        });
+                        this.$codeEditor.addAction({
+                            id: "jimud.replace",
+                            label: 'Replace',
+                            keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyH],
+                            run: (editor) => {
+                                if (this.selected.length > 0)
+                                    editor.getAction('actions.findWithSelection').run();
+                                editor.getAction('editor.action.startFindReplaceAction').run();
+                            }
+                        });
+                        this.$codeEditor.addAction({
+                            id: "jimud.blockComment",
+                            label: 'Block Comment',
+                            keybindings: [monaco.KeyMod.Alt | monaco.KeyMod.Shift | monaco.KeyCode.KeyA],
+                            run: (editor) => {
+                                editor.getAction('editor.action.blockComment').run();
+                            }
+                        });
+                        this.$codeEditor.addAction({
+                            id: "jimud.format",
+                            label: 'Format Document',
+                            keybindings: [monaco.KeyMod.Alt | monaco.KeyMod.Shift | monaco.KeyCode.KeyF],
+                            run: (editor) => {
+                                monaco.editor.setModelMarkers(this.$model, '', []);
+                                editor.getAction('editor.action.formatDocument').run().then(() => {
+                                    setTimeout(() => this.spellcheckDocument(), 50);
+                                });
+                            }
+                        });
+                        this.$codeEditor.addAction({
+                            id: "jimud.expand",
+                            label: 'Expand All',
+                            keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Period],
+                            run: (editor) => {
+                                editor.getAction('editor.unfoldAll').run();
+                            }
+                        });
+                        this.$codeEditor.addAction({
+                            id: "jimud.collapse",
+                            label: 'Collapse All',
+                            keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Comma],
+                            run: (editor) => {
+                                editor.getAction('editor.foldAll').run();
+                            }
+                        });
                     }
                     if (this.$model)
                         this.$model.dispose();
