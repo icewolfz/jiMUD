@@ -1923,6 +1923,11 @@ export class CodeValueEditor extends ValueEditor {
                         if (notes.open)
                             notes.close();
                         if (this.$codeEditor) {
+                            setViewState({ file: 'codeValueEditor' }, this.$codeEditor);
+                            if (!this.options && !this.options.editorOptions && options && saveOptions) {
+                                options.editorOptions = this.$codeEditor.getRawOptions();
+                                saveOptions();
+                            }                            
                             this.$codeEditor.dispose();
                             this.$codeEditor = null;
                         }
@@ -1935,6 +1940,11 @@ export class CodeValueEditor extends ValueEditor {
                         if (notes.open)
                             notes.close();
                         if (this.$codeEditor) {
+                            setViewState({ file: 'codeValueEditor' }, this.$codeEditor);
+                            if (!this.options && !this.options.editorOptions && options && saveOptions) {
+                                options.editorOptions = this.$codeEditor.getRawOptions();
+                                saveOptions();
+                            }                            
                             this.$codeEditor.dispose();
                             this.$codeEditor = null;
                         }
@@ -1953,9 +1963,8 @@ export class CodeValueEditor extends ValueEditor {
                     <button id="${notes.id}-advanced" title="Open advanced editor..." type="button" class="close" style="font-size: 16px;padding-top: 3px;padding-right: 4px;"><i class="fa fa-edit"></i></button>
                     <div style="padding-top: 2px;">${this.options ? this.options.title || 'Edit&hellip;' : 'Edit&hellip;'}</div>
                 </div>
-                <div class="dialog-body" style="padding-top:33px">
-                    <div class="form-group"><label class="control-label" style="padding: 10px;width: 100%">
-                    <div class="input-sm form-control" id="${notes.id}-value" style="padding: 0px;overflow:hidden;width: 100%;height: 338px;"></div></label></div>
+                <div class="dialog-body" style="position: absolute;top: 43px;left: 10px;right: 10px;bottom: 65px;">
+                    <div class="input-sm form-control" id="${notes.id}-value" style="padding: 0px;overflow:hidden;width: 100%;left:0;right:0;bottom:0;top: 0;position:absolute;height: 100%;"></div>
                 </div>
                 <div class="dialog-footer">
                     <button style="float: right" type="button" class="btn btn-default" onclick="document.getElementById('${notes.id}').close();">Cancel</button>
@@ -2337,6 +2346,8 @@ export class CodeValueEditor extends ValueEditor {
                         this.$codeEditor.restoreViewState(getViewState('codeValueEditor'));
                         if (this.options && this.options.editorOptions)
                             this.$codeEditor.updateOptions(this.options.editorOptions);
+                        else if (options && saveOptions)
+                            this.$codeEditor.updateOptions(options.editorOptions);
                     }
                     if (this.$model)
                         this.$model.dispose();
@@ -2405,8 +2416,7 @@ export class CodeValueEditor extends ValueEditor {
                     this.$codeEditor.setValue(this.value);
                     notes.lastElementChild.lastElementChild.addEventListener('click', () => {
                         setViewState({ file: 'codeValueEditor' }, this.$codeEditor);
-
-                        if (options && saveOptions) {
+                        if (!this.options && !this.options.editorOptions && options && saveOptions) {
                             options.editorOptions = this.$codeEditor.getRawOptions();
                             saveOptions();
                         }
