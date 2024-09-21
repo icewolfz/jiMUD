@@ -11,6 +11,10 @@ declare global {
     let createCodeEditor;
     let editorOverrides;
     let editorAddActions;
+    let setViewState;
+    let getViewState;
+    let saveOptions;
+    let options;
 }
 
 export enum EditorType {
@@ -2330,6 +2334,9 @@ export class CodeValueEditor extends ValueEditor {
                                 editor.getAction('editor.foldAll').run();
                             }
                         });
+                        this.$codeEditor.restoreViewState(getViewState('codeValueEditor'));
+                        if (this.options && this.options.editorOptions)
+                            this.$codeEditor.updateOptions(this.options.editorOptions);
                     }
                     if (this.$model)
                         this.$model.dispose();
@@ -2397,6 +2404,12 @@ export class CodeValueEditor extends ValueEditor {
                     this.$codeEditor.setModel(this.$model);
                     this.$codeEditor.setValue(this.value);
                     notes.lastElementChild.lastElementChild.addEventListener('click', () => {
+                        setViewState({ file: 'codeValueEditor' }, this.$codeEditor);
+
+                        if (options && saveOptions) {
+                            options.editorOptions = this.$codeEditor.getRawOptions();
+                            saveOptions();
+                        }
                         if (aWindow && !aWindow.closed)
                             aWindow.close();
                         this.value = this.$codeEditor.getValue();
