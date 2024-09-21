@@ -1451,6 +1451,7 @@ export class AreaDesigner extends EditorBase {
 
         this._wMove = (e) => {
             if (this.$view !== View.map) return;
+            if(e.target  && e.target.tagName === 'DIALOG') return;
             this.$mousePrevious = this.$mouse;
             this._lastMouse = e;
             this.$mouse = this.getMousePosFromWindow(e);
@@ -1482,6 +1483,7 @@ export class AreaDesigner extends EditorBase {
         };
 
         this._wUp = (e) => {
+            if(e.target  && e.target.tagName === 'DIALOG') return;
             this._lastMouse = e;
             this.$mouse = this.getMousePosFromWindow(e);
             if (this.$focused && (this.$focusedRoom || this.$selectedRooms.length > 0) && e.shiftKey) {
@@ -11966,6 +11968,41 @@ export class AreaDesigner extends EditorBase {
                 baseFlags: this.$area.baseMonsters[r].baseFlags,
                 objects: this.$area.baseMonsters[r].objects,
                 monster: this.$area.baseMonsters[r]
+            };
+        });
+    }
+
+    private updateVariblesGridRows(grid, object) {
+        grid.rows = Object.keys(object).map(r => {
+            return {
+                name: r,
+                type: object[r].type,
+                reset: object[r].reset,
+                value: object[r].value,
+                array: object[r].array,
+                variable: object[r]
+            };
+        });
+    }
+
+    private updateFunctionGridRows(grid, object) {
+        grid.rows = Object.keys(object).map(r => {
+            return {
+                name: r,
+                type: object[r].type,
+                code: object[r].code,
+                variableArguments: object[r].variableArguments,
+                arguments: object[r].arguments,
+                function: object[r]
+            };
+        });
+    }
+
+    private updateKeyValueGrid(grid, object) {
+        grid.rows = Object.keys(object).map(r => {
+            return {
+                key: r,
+                value: object[r]
             };
         });
     }

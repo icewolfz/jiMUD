@@ -1798,6 +1798,7 @@ export class VirtualEditor extends EditorBase {
 
         this._wMove = (e) => {
             if (this.$view !== View.map) return;
+            if (e.target && e.target.tagName === 'DIALOG') return;
             this.$mousePrevious = this.$mouse;
             this._lastMouse = e;
             this.$mouse = this.getMousePosFromWindow(e);
@@ -1829,6 +1830,7 @@ export class VirtualEditor extends EditorBase {
         };
 
         this._wUp = (e) => {
+            if (e.target && e.target.tagName === 'DIALOG') return;
             this._lastMouse = e;
             this.$mouse = this.getMousePosFromWindow(e);
             if (this.$focused && (this.$focusedRoom || this.$selectedRooms.length > 0) && e.shiftKey) {
@@ -1870,7 +1872,7 @@ export class VirtualEditor extends EditorBase {
                     else
                         this.removeSelection(x, y, width, height);
                 }
-                else                
+                else
                     this.setSelection(x, y, width, height);
                 if (this.$selectedRooms.length !== 0)
                     this.setFocusedRoom(this.$selectedRooms[this.$selectedRooms.length - 1]);
@@ -4809,7 +4811,7 @@ export class VirtualEditor extends EditorBase {
     private addRoom(room, leaveExits?) {
         this.pushUndo(undoAction.add, undoType.room, this.getRoom(room.x, room.y, room.z));
         this.setRoom(room);
-        if(leaveExits) return;
+        if (leaveExits) return;
         const o = room.exits;
         let nx;
         let ny;
@@ -7710,12 +7712,12 @@ export class VirtualEditor extends EditorBase {
         if (y === height) {
             const r = this.$rooms[this.$depth][y];
             if (x === width) {
-                if(this.$selectedRooms.indexOf(r[x]) === -1)
+                if (this.$selectedRooms.indexOf(r[x]) === -1)
                     this.$selectedRooms.push(r[x]);
             }
             else
                 for (let rX = x; rX < width; rX++) {
-                    if(this.$selectedRooms.indexOf(r[rX]) !== -1) continue;
+                    if (this.$selectedRooms.indexOf(r[rX]) !== -1) continue;
                     this.$selectedRooms.push(r[rX]);
                     this.DrawRoom(this.$mapContext, r[rX], true, r[rX].at(this.$mouse.rx, this.$mouse.ry));
                 }
@@ -7724,12 +7726,12 @@ export class VirtualEditor extends EditorBase {
             for (let rY = y; rY < height; rY++) {
                 const r = this.$rooms[this.$depth][rY];
                 if (x === width) {
-                    if(this.$selectedRooms.indexOf(r[x]) === -1)
+                    if (this.$selectedRooms.indexOf(r[x]) === -1)
                         this.$selectedRooms.push(r[x]);
                 }
                 else
                     for (let rX = x; rX < width; rX++) {
-                        if(this.$selectedRooms.indexOf(r[rX]) !== -1) continue;
+                        if (this.$selectedRooms.indexOf(r[rX]) !== -1) continue;
                         this.$selectedRooms.push(r[rX]);
                         this.DrawRoom(this.$mapContext, r[rX], true, r[rX].at(this.$mouse.rx, this.$mouse.ry));
                     }

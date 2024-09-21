@@ -2490,6 +2490,9 @@ export function createFunction(name: string, type?: any, args?: string, code?: s
         case 'mapping':
             return `${varArgs ? 'varargs ' : ''}${type} ${name}(${args})\n{\n   return ([ ]);\n}\n\n`;
     }
+    //array type so return an empty array as stub value
+    if (type.trim().endsWith('*'))
+        return `${varArgs ? 'varargs ' : ''}${type} ${name}(${args})\n{\n   return ({ });\n}\n\n`;
     return `${varArgs ? 'varargs ' : ''}${type} ${name}(${args})\n{\n   return 0;\n}\n\n`;
 }
 
