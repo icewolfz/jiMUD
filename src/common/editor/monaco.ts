@@ -1508,35 +1508,6 @@ export class MonacoCodeEditor extends EditorBase {
                                 this.$editor.pushUndoStop();
                             }
                         },
-                        { type: 'separator' },
-                        {
-                            label: 'To &Upper Case',
-                            enabled: selected,
-                            click: () => {
-                                this.$editor.getAction('editor.action.transformToUppercase').run();
-                            }
-                        },
-                        {
-                            label: 'To &Lower Case',
-                            enabled: selected,
-                            click: () => {
-                                this.$editor.getAction('editor.action.transformToLowercase').run();
-                            }
-                        },
-                        {
-                            label: '&Capitalize',
-                            enabled: selected,
-                            click: () => {
-                                this.$editor.getAction('jimud.action.transformToCapitalize').run();
-                            }
-                        },
-                        {
-                            label: 'In&verse Case',
-                            enabled: selected,
-                            click: () => {
-                                this.$editor.getAction('jimud.action.transformToInverse').run();
-                            }
-                        }
                     ]
                 }, {
                     label: 'Folding',
@@ -1558,6 +1529,36 @@ export class MonacoCodeEditor extends EditorBase {
                     ]
                 }
             ];
+            if (selected)
+                m[0].submenu.push(...[{ type: 'separator' },
+                {
+                    label: 'To &Upper Case',
+                    enabled: selected,
+                    click: () => {
+                        this.$editor.getAction('editor.action.transformToUppercase').run();
+                    }
+                },
+                {
+                    label: 'To &Lower Case',
+                    enabled: selected,
+                    click: () => {
+                        this.$editor.getAction('editor.action.transformToLowercase').run();
+                    }
+                },
+                {
+                    label: '&Capitalize',
+                    enabled: selected,
+                    click: () => {
+                        this.$editor.getAction('jimud.action.transformToCapitalize').run();
+                    }
+                },
+                {
+                    label: 'In&verse Case',
+                    enabled: selected,
+                    click: () => {
+                        this.$editor.getAction('jimud.action.transformToInverse').run();
+                    }
+                }]);
 
             if (path.extname(this.file) === '.c' || path.extname(this.file) === '.h') {
                 m[0].submenu.push(...[{ type: 'separator' },

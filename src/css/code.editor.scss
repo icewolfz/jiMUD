@@ -546,6 +546,7 @@ dialog .close {
 
 .monaco-editor {
     border-top: 1px solid #ccc;
+    outline: none !important;
 }
 
 .monaco-editor .margin-view-overlays .current-line {

@@ -1,7 +1,11 @@
 //spellchecker:ignore datagrid dropdown
 import { EventEmitter } from 'events';
-import { capitalize, resetCursor, stringToEnum, enumToString } from './library';
+import { capitalize, resetCursor, stringToEnum, enumToString, createColorDialog } from './library';
 import { DataGrid } from './datagrid';
+import { ReplaceCommandThatPreservesSelection, ReplaceCommand } from './editor/monaco'
+import { language } from './editor/lpc';
+const remote = require('@electron/remote');
+const { Menu } = remote;
 
 declare global {
     let createCodeEditor;
@@ -1914,10 +1918,10 @@ export class CodeValueEditor extends ValueEditor {
                     notes.addEventListener('close', () => {
                         if (notes.open)
                             notes.close();
-                        if(this.$codeEditor) {
+                        if (this.$codeEditor) {
                             this.$codeEditor.dispose();
                             this.$codeEditor = null;
-                        }                         
+                        }
                         notes.remove();
                         this.control.emit('dialog-close');
                         if (aWindow && !aWindow.closed)
@@ -1926,14 +1930,14 @@ export class CodeValueEditor extends ValueEditor {
                     notes.addEventListener('cancel', () => {
                         if (notes.open)
                             notes.close();
-                        if(this.$codeEditor) {
+                        if (this.$codeEditor) {
                             this.$codeEditor.dispose();
                             this.$codeEditor = null;
-                        }                         
+                        }
                         notes.remove();
                         this.control.emit('dialog-cancel');
                         if (aWindow && !aWindow.closed)
-                            aWindow.close();                    
+                            aWindow.close();
                     });
 
                     notes.style.width = '640px';
@@ -1965,10 +1969,305 @@ export class CodeValueEditor extends ValueEditor {
                         this.$codeEditor = createCodeEditor(document.getElementById(notes.id + '-value'));
                         editorOverrides(this.$codeEditor);
                         editorAddActions(this.$codeEditor);
-                        
+                        this.$codeEditor.onContextMenu((e) => {
+                            var temp = [];
+                            //Broken on windows, seems spell checker always returns false try again once fixed to add spell checker
+                            //This seems to work if the application uses a built exe, and only broken when running from electron
+                            //seems if you change the lang to en-GB it will work, seems en-US is broken
+                            //const curr = remote.getCurrentWindow().webContents.session.getSpellCheckerLanguages() || [];
+                            //remote.getCurrentWindow().webContents.session.setSpellCheckerLanguages(['en-GB'])
+                            let word = this.$codeEditor.getModel().getWordAtPosition(e.target.position);
+                            const selected = this.$codeEditor.hasTextFocus() ? false : this.selected.length > 0;
+                            if (word && word.word.length !== 0) {
+                                //let words = word.word.split('_');
+                                let words = word.word.split(/(_)|(?=[A-Z])|(\d+)/g);
+                                ///_|(?=[A-Z])|(?<=[a-z])(?=\d)/g
+                                let sCol = word.startColumn;
+                                for (let w = 0, wl = words.length; w < wl; w++) {
+                                    if (!words[w]) continue;
+                                    if (sCol + words[w].length >= e.target.position.column) {
+                                        word = words[w];
+                                        break;
+                                    }
+                                    //sCol += words[w].length + 1;
+                                    sCol += words[w].length;
+                                }
+                                if (isWordMisspelled(word)) {
+                                    words = webFrame.getWordSuggestions(word);
+                                    if (words.length) {
+                                        for (let w = 0, wl = words.length; w < wl; w++)
+                                            temp.push({
+                                                label: words[w],
+                                                word: word,
+                                                column: sCol,
+                                                position: e.target.position,
+                                                click: (item) => {
+                                                    this.$codeEditor.pushUndoStop();
+                                                    this.$codeEditor.executeCommands(null, [
+                                                        new ReplaceCommandThatPreservesSelection(
+                                                            new monaco.Range(item.position.lineNumber, item.column, item.position.lineNumber, item.column + item.word.length),
+                                                            item.label,
+                                                            new monaco.Selection(item.position.lineNumber, item.position.column, item.position.lineNumber, item.position.column)
+                                                        )
+                                                    ]);
+                                                    this.$codeEditor.pushUndoStop();
+                                                }
+                                            });
+                                        temp.push({ type: 'separator' });
+                                    }
+                                    /*
+                                    temp.push(...[{
+                                        label: `Add "${word}" to editor dictionary`,
+                                        word: word,
+                                        click: item => {
+                                            this.$codeEditor.getAction('jimud.addDictionary').run();
+                                        }
+                                    },
+                                    {
+                                        label: `Add "${word}" to operating system dictionary`,
+                                        word: word,
+                                        click: item => {
+                                            this.$codeEditor.getAction('jimud.addSystemDictionary').run();
+                                        }
+                                    },
+                                    */
+                                    /*
+                                    {
+                                        label: `Ignore "${word}" in this document`,
+                                        word: word,
+                                        click: item => {
+                                            this.$codeEditor.getAction('jimud.ignoreWord').run(0, 0, item.word);
+                                        }
+                                    },
+                                    */
+                                    /*
+                                     {
+                                         label: `Ignore "${word}" in all documents`,
+                                         word: word,
+                                         click: item => {
+                                             this.$codeEditor.getAction('jimud.ignoreWordAll').run();
+                                         }
+                                     },
+                                     */
+                                    //{ type: 'separator' }]);
+                                }
+                            }
+                            temp.push({
+                                label: 'Undo',
+                                click: () => {
+                                    this.$codeEditor.trigger('', 'undo', null);
+                                },
+                                accelerator: 'CmdOrCtrl+Z'
+                            });
+
+                            temp.push({
+                                label: 'Redo',
+                                click: () => {
+                                    this.$codeEditor.trigger('', 'redo', null);
+                                },
+                                accelerator: 'CmdOrCtrl+Y'
+                            });
+                            temp.push({ type: 'separator' });
+                            temp.push({
+                                label: 'Cut',
+                                click: () => {
+                                    this.$codeEditor.getAction('editor.action.clipboardCutAction').run();
+                                },
+                                accelerator: 'CmdOrCtrl+C'
+                            });
+
+                            temp.push({
+                                label: 'Copy',
+                                click: () => {
+                                    this.$codeEditor.getAction('editor.action.clipboardCopyAction').run();
+                                },
+                                accelerator: 'CmdOrCtrl+X'
+                            });
+
+                            temp.push({
+                                label: 'Paste',
+                                click: () => {
+                                    this.$codeEditor.getAction('editor.action.clipboardPasteAction').run();
+                                },
+                                accelerator: 'CmdOrCtrl+V'
+                            });
+                            temp.push({ type: 'separator' });
+                            temp.push({
+                                label: 'Select all',
+                                click: () => {
+                                    this.$codeEditor.setSelection({
+                                        startLineNumber: 1,
+                                        startColumn: 1,
+                                        endColumn: this.$model.getLineMaxColumn(this.$model.getLineCount()),
+                                        endLineNumber: this.$model.getLineCount()
+                                    });
+                                },
+                                accelerator: 'CmdOrCtrl+A'
+                            });
+                            temp.push({ type: 'separator' });
+                            temp.push({
+                                label: 'Find',
+                                click: () => {
+                                    if (this.selected.length > 0)
+                                        this.$codeEditor.getAction('actions.findWithSelection').run();
+                                    this.$codeEditor.getAction('actions.find').run();
+                                },
+                                accelerator: 'CmdOrCtrl+F'
+                            });
+                            temp.push({
+                                label: 'Replace',
+                                click: () => {
+                                    if (this.selected.length > 0)
+                                        this.$codeEditor.getAction('actions.findWithSelection').run();
+                                    this.$codeEditor.getAction('editor.action.startFindReplaceAction').run();
+                                },
+                                accelerator: 'CmdOrCtrl+H'
+                            });
+
+                            temp.push({ type: 'separator' });
+                            temp.push(...[
+                                {
+                                    label: 'F&ormatting',
+                                    submenu: [
+                                        {
+                                            label: '&Insert Color...',
+                                            click: () => {
+                                                const _colorDialog: any = createColorDialog();
+                                                /*
+                                                _colorDialog.addEventListener('DOMContentLoaded', () => {
+                                                    _colorDialog.setType(this.file.replace(/[/|\\:]/g, ''));
+                                                }, { once: true });
+                                                */
+                                                _colorDialog.addEventListener('setColor', e => {
+                                                    //if(_colorDialog.getType() === this.file.replace(/[/|\\:]/g, ''))
+                                                    this.insert('%^' + e.detail.code.replace(/ /g, '%^%^') + '%^');
+                                                });
+                                            }
+                                        },
+                                        {
+                                            label: '&Insert Comment Header...',
+                                            click: () => {
+                                                const moment = require('moment');
+                                                this.$codeEditor.pushUndoStop();
+                                                this.$codeEditor.executeCommands('jiMUD.action.insert', [new ReplaceCommand(new monaco.Range(0, 0, 0, 0), `/**
+  * Name
+  * 
+  * Description
+  * 
+  * @author ${(window && window.opener) ? capitalize(window.opener.getCharacterName() || 'Unknown') : 'Unknown'}
+  * @created ${moment().format('YYYY-MM-DD')}
+  */
+`)]);
+                                                this.$codeEditor.pushUndoStop();
+                                            }
+                                        },
+                                        { type: 'separator' },
+                                        {
+                                            label: '&Line Comment',
+                                            accelerator: 'CmdOrCtrl+/',
+                                            click: () => {
+                                                this.$codeEditor.getAction('editor.action.commentLine').run();
+                                            }
+                                        },
+                                        {
+                                            label: '&Block Comment',
+                                            accelerator: 'Alt+Shift+A',
+                                            click: () => {
+                                                this.$codeEditor.getAction('editor.action.blockComment').run();
+                                            }
+                                        },
+                                        { type: 'separator' },
+                                        {
+                                            label: '&Format Document',
+                                            accelerator: 'Alt+Shift+F',
+                                            click: () => {
+                                                monaco.editor.setModelMarkers(this.$model, '', []);
+                                                this.$codeEditor.getAction('editor.action.formatDocument').run().then(() => {
+                                                    setTimeout(() => this.spellcheckDocument(), 50);
+                                                });
+                                            }
+                                        }
+                                    ]
+                                }, {
+                                    label: 'Folding',
+                                    submenu: [
+                                        {
+                                            label: 'Expand All',
+                                            accelerator: 'CmdOrCtrl+>',
+                                            click: () => {
+                                                this.$codeEditor.getAction('editor.unfoldAll').run();
+                                            }
+                                        },
+                                        {
+                                            label: 'Collapse All',
+                                            accelerator: 'CmdOrCtrl+<',
+                                            click: () => {
+                                                this.$codeEditor.getAction('editor.foldAll').run();
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]);
+                            if (selected)
+                                temp[temp.length - 2].submenu.splice(2, 0, ...[
+                                    { type: 'separator' },
+                                    {
+                                        label: 'To &Upper Case',
+                                        enabled: selected,
+                                        click: () => {
+                                            this.$codeEditor.getAction('editor.action.transformToUppercase').run();
+                                        }
+                                    },
+                                    {
+                                        label: 'To &Lower Case',
+                                        enabled: selected,
+                                        click: () => {
+                                            this.$codeEditor.getAction('editor.action.transformToLowercase').run();
+                                        }
+                                    },
+                                    {
+                                        label: '&Capitalize',
+                                        enabled: selected,
+                                        click: () => {
+                                            this.$codeEditor.getAction('jimud.action.transformToCapitalize').run();
+                                        }
+                                    },
+                                    {
+                                        label: 'In&verse Case',
+                                        enabled: selected,
+                                        click: () => {
+                                            this.$codeEditor.getAction('jimud.action.transformToInverse').run();
+                                        }
+                                    },
+                                ]);
+                            temp.push(...[
+                                { type: 'separator' },
+                                {
+                                    label: '&Spellcheck Document',
+                                    click: () => {
+                                        this.spellcheckDocument();
+                                    }
+                                },
+                                { type: 'separator' },
+                                {
+                                    label: '&Word Wrap',
+                                    accelerator: 'Alt+Z',
+                                    type: 'checkbox',
+                                    checked: this.$codeEditor && this.$codeEditor.getRawOptions().wordWrap === 'on' ? true : false,
+                                    click: () => {
+                                        let wrap = this.$codeEditor.getRawOptions().wordWrap === 'on';
+                                        this.$codeEditor.updateOptions({ wordWrap: (wrap ? 'off' : 'on') });
+                                        this.$codeEditor.updateOptions({ wordWrapOverride2: (wrap ? 'off' : 'on') });
+                                    }
+                                }
+                            ]);
+
+                            let inputMenu = Menu.buildFromTemplate(temp);
+                            inputMenu.popup({ window: remote.getCurrentWindow() });
+                        });
                     }
                     if (this.$model)
-                        this.$model.dispose();    
+                        this.$model.dispose();
                     this.$model = monaco.editor.createModel(this.value, 'lpc', null);
                     this.$model.updateOptions({
                         tabSize: 3,
@@ -1979,10 +2278,61 @@ export class CodeValueEditor extends ValueEditor {
                             independentColorPoolPerBracketType: false
                         }
                     });
-                    this.$codeEditor.setModel(this.$model);            
+                    this.$model.onDidChangeContent((e) => {
+                        monaco.editor.setModelMarkers(this.$model, 'errors', []);
+                        if (e.isFlush)
+                            this.spellcheckDocument();
+                        else if (e.changes.length) {
+                            let lineAdjust = 0;
+                            for (var c = 0, cl = e.changes.length; c < cl; c++) {
+                                if (e.changes[c].rangeLength !== 0 && e.changes[c].text === '')
+                                    lineAdjust -= e.changes[c].range.endLineNumber - e.changes[c].range.startLineNumber;
+                                else if (e.changes[c].text.indexOf('\n') !== -1)
+                                    lineAdjust += e.changes[c].text.split('\n').length - 1;
+                                else if (e.isUndoing)
+                                    lineAdjust -= e.changes[c].range.endLineNumber - e.changes[c].range.startLineNumber;
+                                else
+                                    lineAdjust += e.changes[c].range.endLineNumber - e.changes[c].range.startLineNumber;
+                            }
+                            monaco.editor.setModelMarkers(this.$model, 'spelling', monaco.editor.getModelMarkers({ owner: 'spelling', resource: this.$model.uri }).filter(m => {
+                                if (m.startLineNumber >= e.changes[0].range.startLineNumber && m.startLineNumber <= e.changes[0].range.endLineNumber)
+                                    return false;
+                                if (m.endLineNumber >= e.changes[0].range.startLineNumber && m.endLineNumber <= e.changes[0].range.endLineNumber)
+                                    return false;
+                                return true;
+                            }).map(m => {
+                                delete m.owner;
+                                delete m.resource;
+                                //adjust lines to reflect new lines added
+                                if (m.startLineNumber >= e.changes[0].range.startLineNumber || m.startLineNumber >= e.changes[0].range.endLineNumber)
+                                    m.startLineNumber += lineAdjust;
+                                if (m.endLineNumber >= e.changes[0].range.startLineNumber || m.endLineNumber >= e.changes[0].range.endLineNumber)
+                                    m.endLineNumber += lineAdjust;
+                                return m;
+                            }) || []);
+                            let start = e.changes[0].range.startLineNumber;
+                            let end = e.changes[0].range.endLineNumber
+                            //if a new line spell check before and after in case in the middle of a word
+                            if (e.changes[0].rangeLength === 0 && (e.changes[0].text === '\r\n' || e.changes[0].text === '\n')) {
+                                //only adjust if not first line
+                                start--;
+                                end++;
+                            }
+                            //adjust end in case pasted multiple new lines
+                            const startPosition = this.$model.getPositionAt(e.changes[0].rangeOffset);
+                            const endPosition = this.$model.getPositionAt(e.changes[0].rangeOffset + e.changes[0].text.length);
+                            end += endPosition.lineNumber - startPosition.lineNumber;
+                            if (start < 1)
+                                start = 1;
+                            if (end > this.$model.getLineCount())
+                                end = this.$model.getLineCount();
+                            this.spellCheckLines(start, end);
+                        }
+                    });
+                    this.$codeEditor.setModel(this.$model);
                     this.$codeEditor.setValue(this.value);
                     notes.lastElementChild.lastElementChild.addEventListener('click', () => {
-                        if (aWindow && !aWindow.closed) 
+                        if (aWindow && !aWindow.closed)
                             aWindow.close();
                         this.value = this.$codeEditor.getValue();
                         if (notes.open)
@@ -2212,5 +2562,90 @@ export class CodeValueEditor extends ValueEditor {
     set value(value: any) {
         this.$editor.value = value;
         resetCursor(this.$editor);
+    }
+
+    public spellcheckDocument() {
+        monaco.editor.setModelMarkers(this.$model, 'spelling', []);
+        if (this.$spellcheckTimer)
+            clearTimeout(this.$spellcheckTimer);
+        this.spellCheckLines(1, this.$model.getLineCount());
+    }
+
+    private $spellcheckTimer;
+    public spellCheckLines(start, end) {
+        const markers: any[] = monaco.editor.getModelMarkers({ owner: 'spelling', resource: this.$model.uri }) || [];
+        if (markers.length >= 101) return;
+        if (end - start > 25) {
+            const oldEnd = end;
+            this.$spellcheckTimer = setTimeout(() => {
+                this.$spellcheckTimer = 0;
+                this.spellCheckLines(start + 25, oldEnd);
+            }, 250);
+            end = start + 24;
+        }
+        for (let l = start; l <= end; l++) {
+            const textLength = this.$model.getLineLength(l);
+            if (textLength > 1000) continue;
+            for (let c = 0; c <= textLength; c++) {
+                const word = this.$model.getWordAtPosition({ column: c, lineNumber: l });
+                if (!word) continue;
+                if (language.keywords.indexOf(word.word) !== -1 ||
+                    language.const.indexOf(word.word) !== -1 ||
+                    language.efuns.indexOf(word.word) !== -1 ||
+                    language.abbr.indexOf(word.word) !== -1 ||
+                    language.sefuns.indexOf(word.word) !== -1 ||
+                    language.applies.indexOf(word.word) !== -1
+                ) continue;
+                //monaco.editor.tokenize('string', 'lpc');
+                let words = word.word.split(/(_)|(?=[A-Z])|(\d+)/g);
+                let sCol = word.startColumn;
+                for (let w = 0, wl = words.length; w < wl; w++) {
+                    if (!words[w]) continue;
+                    if (isWordMisspelled(words[w])) {
+                        markers.push({
+                            message: `"${words[w]}": Unknown word.`,
+                            severity: monaco.MarkerSeverity.Info,
+                            startLineNumber: l,
+                            startColumn: sCol,
+                            endLineNumber: l,
+                            endColumn: sCol + words[w].length,
+                            source: null
+                        });
+                    }
+                    sCol += words[w].length;
+                }
+                //skip remaining word length
+                c += word.word.length;
+                if (markers.length === 101) break;
+            }
+            if (markers.length === 101) break;
+        }
+        monaco.editor.setModelMarkers(this.$model, 'spelling', markers);
+    }
+
+    public get selected() {
+        let s;
+        if (!this.$codeEditor) return '';
+        s = this.$codeEditor.getSelection();
+        if (!s) return '';
+        return this.$model.getValueInRange(s) || '';
+    }
+
+    public insert(text) {
+        const selections = this.$codeEditor.getSelections();
+        const commands: monaco.editor.ICommand[] = [];
+        const len = selections.length;
+        for (let i = 0; i < len; i++) {
+            const selection = selections[i];
+            if (selection.isEmpty()) {
+                const cursor = selection.getStartPosition();
+                commands.push(new ReplaceCommand(new monaco.Range(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column), text));
+            } else {
+                commands.push(new ReplaceCommand(selection, text));
+            }
+        }
+        this.$codeEditor.pushUndoStop();
+        this.$codeEditor.executeCommands('jiMUD.action.insert', commands);
+        this.$codeEditor.pushUndoStop();
     }
 }

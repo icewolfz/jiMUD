@@ -27,6 +27,7 @@
     - Area Designer: Fix type in monster resistances code
     - Fix usage of advanced editor in text edit dialogs
 - **Changed:**
+  - Code editor: Hide items that only should appear when text is selected in context menu
   - Update electron 31.1.0 to 32.1.2
   - Update better-sqlite3 11.2.1 to 11.3.0
   - Update chokidar 3.6.0 to 4.0.0
