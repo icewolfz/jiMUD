@@ -141,8 +141,8 @@ input[type=checkbox].property-grid-editor {
     width: auto;
 }
 
-.property-grid-editor-dropdown textarea,
-.property-grid-editor-dropdown-fill textarea {
+.datagrid .property-grid-editor-dropdown textarea,
+.datagrid .property-grid-editor-dropdown-fill textarea {
     border: 0px;
     outline: none;
     padding: 0;
@@ -152,10 +152,23 @@ input[type=checkbox].property-grid-editor {
     height: 100%;
     overflow: hidden;
     white-space: nowrap;
+    padding-top: 2px;
     text-overflow: ellipsis;
 }
 
-
+.property-grid-editor-dropdown textarea,
+.property-grid-editor-dropdown-fill textarea {
+    border: 0px;
+    outline: none;
+    padding: 0;
+    padding-left: 1px !important;
+    padding-right: 1px;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
 
 .property-grid-editor-collection input,
 .property-grid-editor-dropdown input,
