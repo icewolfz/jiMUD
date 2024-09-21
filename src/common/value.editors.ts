@@ -511,6 +511,8 @@ export class TextValueEditor extends ValueEditor {
         }
         if (left < -c.left)
             left = -c.left;
+        else if (left < 0 && this.options && this.options.limitBounds)
+            left = 0;
         if (width > c.width)
             width = c.width;
         if (Math.abs(left) + width > c.width)
@@ -1927,7 +1929,7 @@ export class CodeValueEditor extends ValueEditor {
                             if (!this.options && !this.options.editorOptions && options && saveOptions) {
                                 options.editorOptions = this.$codeEditor.getRawOptions();
                                 saveOptions();
-                            }                            
+                            }
                             this.$codeEditor.dispose();
                             this.$codeEditor = null;
                         }
@@ -1944,7 +1946,7 @@ export class CodeValueEditor extends ValueEditor {
                             if (!this.options && !this.options.editorOptions && options && saveOptions) {
                                 options.editorOptions = this.$codeEditor.getRawOptions();
                                 saveOptions();
-                            }                            
+                            }
                             this.$codeEditor.dispose();
                             this.$codeEditor = null;
                         }
@@ -2602,6 +2604,8 @@ export class CodeValueEditor extends ValueEditor {
         }
         if (left < -c.left)
             left = -c.left;
+        else if (left < 0 && this.options && this.options.limitBounds)
+            left = 0;
         if (width > c.width)
             width = c.width;
         if (Math.abs(left) + width > c.width)
