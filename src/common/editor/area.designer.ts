@@ -471,6 +471,8 @@ export class Room {
                 return false;
             if (tp === 'number' && value !== 0)
                 return false;
+            if (tp === 'object' && Object.keys.length)
+                return false;
         }
         return true;
     }
@@ -1451,7 +1453,7 @@ export class AreaDesigner extends EditorBase {
 
         this._wMove = (e) => {
             if (this.$view !== View.map) return;
-            if(e.target  && e.target.tagName === 'DIALOG') return;
+            if (e.target && e.target.tagName === 'DIALOG') return;
             this.$mousePrevious = this.$mouse;
             this._lastMouse = e;
             this.$mouse = this.getMousePosFromWindow(e);
@@ -1483,7 +1485,7 @@ export class AreaDesigner extends EditorBase {
         };
 
         this._wUp = (e) => {
-            if(e.target  && e.target.tagName === 'DIALOG') return;
+            if (e.target && e.target.tagName === 'DIALOG') return;
             this._lastMouse = e;
             this.$mouse = this.getMousePosFromWindow(e);
             if (this.$focused && (this.$focusedRoom || this.$selectedRooms.length > 0) && e.shiftKey) {

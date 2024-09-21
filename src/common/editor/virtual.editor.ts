@@ -173,10 +173,7 @@ export class Room {
 
     get empty() {
         if (this.exits !== 0) return true;
-        if (this.exits !== 0) return true;
-        if (this.exits !== 0) return true;
-        if (this.exits !== 0) return true;
-        if (this.exits !== 0) return true;
+        if (this.state !== 0) return true;
         if (this.ef) return true;
         if (this.climbs !== 0) return true;
         if (this.external) return true;
