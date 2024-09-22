@@ -471,7 +471,7 @@ export class Room {
                 return false;
             if (tp === 'number' && value !== 0)
                 return false;
-            if (tp === 'object' && Object.keys.length)
+            if (tp === 'object' && Object.keys(value).length)
                 return false;
         }
         return true;
