@@ -435,10 +435,12 @@ export class TextValueEditor extends ValueEditor {
                     this.$dropdown = null;
                     if (ec)
                         this.control.createEditor(ec);
-                    else if (e2 && e2.relatedTarget && (<any>e2.relatedTarget).tagNAME === 'BUTTON' && e2.relatedTarget !== e2.currentTarget) {
+                    /*
+                    else if (e2 && e2.relatedTarget && (<any>e2.relatedTarget).tagName === 'BUTTON' && e2.relatedTarget !== e2.currentTarget) {
                         (<HTMLButtonElement>e2.relatedTarget).click();
                         this.$editor.dataset.aOpen = null;
                     }
+                    */
                     else if (e2 && e.relatedTarget && this.control.parent.contains(e2.relatedTarget) && !this.$el.contains(<HTMLElement>e2.relatedTarget)) {
                         this.$editor.dataset.aOpen = null;
                     }
@@ -956,10 +958,12 @@ export class FlagValueEditor extends ValueEditor {
         this.$dropdown = null;
         if (ec)
             this.control.createEditor(ec);
-        else if (e && e.relatedTarget && (<any>e.relatedTarget).tagNAME === 'BUTTON' && e.relatedTarget !== e.currentTarget) {
+        /*
+        else if (e && e.relatedTarget && (<any>e.relatedTarget).tagName === 'BUTTON' && e.relatedTarget !== e.currentTarget) {
             (<HTMLButtonElement>e.relatedTarget).click();
             this.$editor.dataset.aOpen = null;
         }
+        */
         else if (e && e.relatedTarget && this.control.parent.contains(e.relatedTarget) && !this.$el.contains(<HTMLElement>e.relatedTarget)) {
             this.$editor.dataset.aOpen = null;
         }
@@ -1227,10 +1231,12 @@ export class DropDownEditValueEditor extends ValueEditor {
         this.$dropdown = null;
         if (ec)
             this.control.createEditor(ec);
-        else if (e && e.relatedTarget && (<any>e.relatedTarget).tagNAME === 'BUTTON' && e.relatedTarget !== e.currentTarget) {
+        /*
+        else if (e && e.relatedTarget && (<any>e.relatedTarget).tagName === 'BUTTON' && e.relatedTarget !== e.currentTarget) {
             (<HTMLButtonElement>e.relatedTarget).click();
             this.$editor.dataset.aOpen = null;
         }
+        */
         else if (e && e.relatedTarget && this.control.parent.contains(e.relatedTarget) && !this.$el.contains(<HTMLElement>e.relatedTarget)) {
             this.$editor.dataset.aOpen = null;
         }
@@ -2528,10 +2534,12 @@ export class CodeValueEditor extends ValueEditor {
                     this.$dropdown = null;
                     if (ec)
                         this.control.createEditor(ec);
-                    else if (e2 && e2.relatedTarget && (<any>e2.relatedTarget).tagNAME === 'BUTTON' && e2.relatedTarget !== e2.currentTarget) {
+                    /*
+                    else if (e2 && e2.relatedTarget && (<any>e2.relatedTarget).tagName === 'BUTTON' && e2.relatedTarget !== e2.currentTarget) {
                         (<HTMLButtonElement>e2.relatedTarget).click();
                         this.$editor.dataset.aOpen = null;
                     }
+                    */
                     else if (e2 && e.relatedTarget && this.control.parent.contains(e2.relatedTarget) && !this.$el.contains(<HTMLElement>e2.relatedTarget)) {
                         this.$editor.dataset.aOpen = null;
                     }
