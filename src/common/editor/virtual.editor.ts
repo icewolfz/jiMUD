@@ -4352,6 +4352,7 @@ export class VirtualEditor extends EditorBase {
     public refresh() {
         switch (this.$view) {
             case View.map:
+                this.$drawCache = null;
                 this.doUpdate(UpdateType.drawMap);
                 break;
             case View.terrains:
