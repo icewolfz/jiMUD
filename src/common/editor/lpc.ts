@@ -2466,8 +2466,13 @@ export function createFunction(name: string, type?: any, args?: string, code?: s
     if (!validFunctionPointer(name)) return '';
     if (typeof type === 'object') {
         if (typeof type.arguments === 'object') {
-            args = Object.keys(type.arguments).map(
-                arg => `${type.arguments[arg].type || 'mixed'}${type.arguments[arg].array ? ' *' : ' '}${type.arguments[arg].name}${type.arguments[arg].expand ? '...' : ''}`
+            const aKeys = Object.keys(type.arguments).sort((a, b) => {
+                if (type.arguments[a].expand) return 1;
+                if (type.arguments[b].expand) return -1;
+                return 0;
+            })
+            args = aKeys.map(
+                arg => `${type.arguments[arg].type || 'mixed'} ${type.arguments[arg].name || arg}${type.arguments[arg].expand ? '...' : ''}`
             ).join(', ');
         }
         else
@@ -2571,23 +2576,17 @@ export function validFunctionPointer(name, clean?) {
     return isValidIdentifier(name);
 }
 
-export function formatVariableValue(type, value, indent?, array?) {
+export function formatVariableValue(type, value, indent?) {
     //convert to string to format
     value = value ? '' + value : value;
     switch (type) {
         case 'string':
-            if (array)
-                return formatArray(value, indent);
             if (value.trim().startsWith('"') && value.trim().endsWith('"'))
                 return `"${value.trim().substr(1, value.trim().length - 2).addSlashes()}"`;
             return `"${value.addSlashes()}"`;
         case 'function':
-            if (array)
-                return formatArray(value, indent);
             return formatFunctionPointer(value);
         case 'mapping':
-            if (array)
-                return formatArray(value, indent);
             return formatMapping(value, indent);
         case 'mixed':
             if (value.trim().startsWith('"') && value.trim().endsWith('"'))
@@ -2600,6 +2599,8 @@ export function formatVariableValue(type, value, indent?, array?) {
                 return formatArray(value, indent);
             break;
     }
+    if (type && type.trim().endsWith('*'))
+        return formatArray(value, indent);
     return value;
 }
 

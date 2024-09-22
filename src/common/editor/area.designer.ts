@@ -15,6 +15,8 @@ const fs = require('fs-extra');
 const { deflateSync, unzipSync } = require('zlib');
 import { Wizard, WizardPage, WizardDataGridPage } from '../wizard';
 import { MousePosition, RoomExits, shiftType, FileBrowseValueEditor, RoomExit, flipType } from './virtual.editor';
+import { isValidIdentifier } from '../library';
+
 
 declare global {
     interface Window {
@@ -226,18 +228,35 @@ interface Include {
     relative: boolean;
 }
 
-class Variable {
-    public type: string = '';
-    public reset: boolean = true;
-    public value: string = '';
-    public array: boolean = false;
+interface Variable {
+    name: string;
+    type: string;
+    reset: boolean;
+    value: string;
 }
 
-class CodeBlock {
-    public type: string = '';
-    public code: string = '';
-    public variableArguments: boolean = false;
-    public arguments = {};
+interface lpcFunction {
+    name: string;
+    type: string;
+    code: string;
+    variableArguments: boolean;
+    arguments: lpcFuntionArgument[];
+}
+
+interface lpcFuntionArgument {
+    name: string;
+    type: string;
+    expand: boolean;
+}
+
+interface Command {
+    name: string;
+    function?: string;
+}
+
+interface KeyValue {
+    key: string;
+    value: string;
 }
 
 export class Room {
@@ -292,17 +311,38 @@ export class Room {
     public waterDrinkMessage: string = '';
     public waterWashMessage: string = '';
     public includes: Include[] = [];
-    public defines = {};
+    public defines: KeyValue[] = [];
     public inherits: string[] = [];
-    public variables = {};
-    public functions = {};
-    public commands = {};
+    public variables: Variable[] = [];
+    public functions: lpcFunction[] = [];
+    public commands: Command[] = [];
 
     constructor(x, y, z, data?, type?) {
         if (data)
             for (const prop in data) {
                 if (!data.hasOwnProperty(prop)) continue;
-                this[prop] = copy(data[prop]);
+                if (prop === 'variables' || prop === 'functions' || prop == 'commands') {
+                    if (Array.isArray(data[prop]))
+                        this[prop] = copy(data[prop]);
+                    else
+                        this[prop] = Object.keys(data[prop]).map(d => {
+                            data[prop][d].name = d;
+                            return copy(data[prop][d]);
+                        });
+                }
+                else if (prop === 'defines') {
+                    if (Array.isArray(data[prop]))
+                        this[prop] = data[prop];
+                    else
+                        this.defines = Object.keys(data['defines']).map(d => {
+                            return {
+                                key: d,
+                                value: data[prop][d]
+                            };
+                        });
+                }
+                else
+                    this[prop] = copy(data[prop]);
             }
         this.type = type;
         this.x = x;
@@ -380,7 +420,7 @@ export class Room {
                 case 'variables':
                 case 'functions':
                 case 'commands':
-                    if (!isObjectEqual(this[prop], room[prop]))
+                    if (!isArrayEqual(this[prop], room[prop]))
                         return false;
                     break;
                 default:
@@ -455,14 +495,8 @@ export class Room {
         if (this.forage !== -1) return false;
         if (this.flags !== RoomFlags.None) return false;
         if (this.baseFlags !== RoomBaseFlags.Default) return false;
-        if (this.includes && this.includes.length) return false;
-        if (this.inherits && this.inherits.length) return false;
-        if (this.defines && Object.keys(this.defines).length) return false;
-        if (this.variables && Object.keys(this.variables).length) return false;
-        if (this.functions && Object.keys(this.functions).length) return false;
-        if (this.commands && Object.keys(this.commands).length) return false;
         for (const prop in this) {
-            if (prop === 'commands' || prop === 'includes' || prop === 'defines' || prop === 'inherits' || prop === 'variables' || prop === 'functions' || prop === 'baseFlags' || prop === 'x' || prop === 'y' || prop === 'z' || prop === 'type' || prop === 'forage' || prop === 'flags' || !this.hasOwnProperty(prop)) continue;
+            if (prop === 'baseFlags' || prop === 'x' || prop === 'y' || prop === 'z' || prop === 'type' || prop === 'forage' || prop === 'flags' || !this.hasOwnProperty(prop)) continue;
             const tp = typeof this[prop];
             const value = <any>this[prop];
             if (Array.isArray(this[prop]) && (<any>this[prop]).length !== 0)
@@ -604,11 +638,11 @@ class Monster {
     public emotesChanceCombat = 0;
     public speechChanceCombat = 0;
     public includes: Include[] = [];
-    public defines = {};
+    public defines: KeyValue[] = [];
     public inherits: string[] = [];
-    public variables = {};
-    public functions = {};
-    public commands = {};
+    public variables: Variable[] = [];
+    public functions: lpcFunction[] = [];
+    public commands: Command[] = [];
 
     constructor(id?, data?, type?) {
         if (typeof id === 'string') {
@@ -624,8 +658,29 @@ class Monster {
             for (const prop in data) {
                 if (!data.hasOwnProperty(prop)) continue;
                 //spellchecker:disable
-                if (prop === 'resistences')
-                    data['resistances'] = data[prop];
+                //functions, commands
+                if (prop === 'variables' || prop === 'functions' || prop == 'commands') {
+                    if (Array.isArray(data[prop]))
+                        this[prop] = copy(data[prop]);
+                    else
+                        this[prop] = Object.keys(data[prop]).map(d => {
+                            data[prop][d].name = d;
+                            return copy(data[prop][d]);
+                        });
+                }
+                else if (prop === 'defines') {
+                    if (Array.isArray(data[prop]))
+                        this[prop] = data[prop];
+                    else
+                        this.defines = Object.keys(data['defines']).map(d => {
+                            return {
+                                key: d,
+                                value: data[prop][d]
+                            };
+                        });
+                }
+                else if (prop === 'resistences')
+                    data['resistances'] = copy(data[prop]);
                 else
                     this[prop] = copy(data[prop]);
                 //spellchecker:enable
@@ -749,11 +804,11 @@ class StdObject {
     public reads: Read[] = [];
     public properties: Property[] = [];
     public includes: Include[] = [];
-    public defines = {};
+    public defines: KeyValue[] = [];
     public inherits: string[] = [];
-    public variables = {};
-    public functions = {};
-    public commands = {};
+    public variables: Variable[] = [];
+    public functions: lpcFunction[] = [];
+    public commands: Command[] = [];
     /*
     weapon - type, quality, enchantment
     armor - type, quality, limbs, enchantment
@@ -771,7 +826,28 @@ class StdObject {
         if (data) {
             for (const prop in data) {
                 if (!data.hasOwnProperty(prop)) continue;
-                this[prop] = copy(data[prop]);
+                if (prop === 'variables' || prop === 'functions' || prop == 'commands') {
+                    if (Array.isArray(data[prop]))
+                        this[prop] = copy(data[prop]);
+                    else
+                        this[prop] = Object.keys(data[prop]).map(d => {
+                            data[prop][d].name = d;
+                            return copy(data[prop][d]);
+                        });
+                }
+                else if (prop === 'defines') {
+                    if (Array.isArray(data[prop]))
+                        this[prop] = data[prop];
+                    else
+                        this.defines = Object.keys(data['defines']).map(d => {
+                            return {
+                                key: d,
+                                value: data[prop][d]
+                            };
+                        });
+                }
+                else
+                    this[prop] = copy(data[prop]);
             }
             this.id = id || data.id || new Date().getTime();
         }
@@ -862,7 +938,7 @@ class Area {
     public defaultRoom = 'base';
     public defaultMonster = 'base';
     public includes: Include[];
-    public defines;
+    public defines: KeyValue[];
 
     constructor(width, height?, depth?, rooms?) {
         if (Array.isArray(width)) {
@@ -895,7 +971,7 @@ class Area {
         this.monsters = {};
         this.objects = {};
         this.includes = [];
-        this.defines = {};
+        this.defines = [];
         this.baseRooms = {
             base: new Room(0, 0, 0, null, 'STD_ROOM')
         };
@@ -947,7 +1023,28 @@ class Area {
                     for (let x = 0; x < xl; x++) {
                         for (prop in data.rooms[z][y][x]) {
                             if (!data.rooms[z][y][x].hasOwnProperty(prop)) continue;
-                            area.rooms[z][y][x][prop] = data.rooms[z][y][x][prop];
+                            if (prop === 'variables' || prop === 'functions' || prop == 'commands') {
+                                if (Array.isArray(data.rooms[z][y][x][prop]))
+                                    area.rooms[z][y][x][prop] = data.rooms[z][y][x][prop];
+                                else
+                                    area.rooms[z][y][x][prop] = Object.keys(data.rooms[z][y][x][prop]).map(d => {
+                                        data.rooms[z][y][x][prop][d].name = d;
+                                        return data.rooms[z][y][x][prop][d];
+                                    });
+                            }
+                            else if (prop === 'defines') {
+                                if (Array.isArray(data.rooms[z][y][x][prop]))
+                                    area.rooms[z][y][x][prop] = data.rooms[z][y][x][prop];
+                                else
+                                    area.rooms[z][y][x][prop] = Object.keys(data.rooms[z][y][x][prop]).map(d => {
+                                        return {
+                                            key: d,
+                                            value: data.rooms[z][y][x][prop][d]
+                                        };
+                                    });
+                            }
+                            else
+                                area.rooms[z][y][x][prop] = data.rooms[z][y][x][prop];
                         }
                         if (data.version === 1) {
                             let hidden = 0;
@@ -1027,6 +1124,7 @@ export class AreaDesigner extends EditorBase {
     private $enterMoveNext;
     private $enterMoveFirst;
     private $enterMoveNew;
+    private $roomEditorStates;
 
     private $xAxis: HTMLElement;
     private $xAxisHighlight: HTMLElement;
@@ -3419,7 +3517,7 @@ export class AreaDesigner extends EditorBase {
 
                     this.RoomChanged(curr, old, true);
 
-                    old['exitsDetails'] = ed;
+                    old['exitsDetails'] = copy(ed);
                     old['external'] = ee;
                     old['climbs'] = climbs;
                     old['hidden'] = hidden;
@@ -3433,7 +3531,6 @@ export class AreaDesigner extends EditorBase {
                 this.pushUndo(undoAction.edit, undoType.room, { property: 'climbs', values: oldClimb, rooms: rooms });
                 this.pushUndo(undoAction.edit, undoType.room, { property: 'hidden', values: oldHidden, rooms: rooms });
                 this.stopUndoGroup();
-
             }
             else if (prop === 'type') {
                 const nDefault = this.$area.baseRooms[newValue] || this.$area.baseRooms[this.$area.defaultRoom] || new Room(0, 0, 0);
@@ -3475,6 +3572,11 @@ export class AreaDesigner extends EditorBase {
                         case 'searches':
                         case 'items':
                         case 'properties':
+                        case 'functions':
+                        case 'commands':
+                        case 'inherits':
+                        case 'defines':
+                        case 'variables':
                             oldValues[sl] = copy(old[prop]);
                             curr[prop] = copy(newValue);
                             this.RoomChanged(curr, old, true);
@@ -3674,9 +3776,9 @@ export class AreaDesigner extends EditorBase {
                             e.data = new Exit();
                         },
                         type: 'exit',
-                        enterMoveFirst: this.$enterMoveFirst,
-                        enterMoveNext: this.$enterMoveNext,
-                        enterMoveNew: this.$enterMoveNew
+                        enterMoveFirst: this.enterMoveFirst,
+                        enterMoveNext: this.enterMoveNext,
+                        enterMoveNew: this.enterMoveNew
                     }
                 },
                 sort: 1
@@ -3743,9 +3845,9 @@ export class AreaDesigner extends EditorBase {
                             };
                         },
                         type: 'item',
-                        enterMoveFirst: this.$enterMoveFirst,
-                        enterMoveNext: this.$enterMoveNext,
-                        enterMoveNew: this.$enterMoveNew
+                        enterMoveFirst: this.enterMoveFirst,
+                        enterMoveNext: this.enterMoveNext,
+                        enterMoveNew: this.enterMoveNew
                     }
                 },
                 sort: 2
@@ -3915,9 +4017,9 @@ export class AreaDesigner extends EditorBase {
                             };
                         },
                         type: 'object',
-                        enterMoveFirst: this.$enterMoveFirst,
-                        enterMoveNext: this.$enterMoveNext,
-                        enterMoveNew: this.$enterMoveNew
+                        enterMoveFirst: this.enterMoveFirst,
+                        enterMoveNext: this.enterMoveNext,
+                        enterMoveNew: this.enterMoveNew
                     }
                 },
                 sort: 2
@@ -3991,9 +4093,9 @@ export class AreaDesigner extends EditorBase {
                             };
                         },
                         type: 'object',
-                        enterMoveFirst: this.$enterMoveFirst,
-                        enterMoveNext: this.$enterMoveNext,
-                        enterMoveNew: this.$enterMoveNew
+                        enterMoveFirst: this.enterMoveFirst,
+                        enterMoveNext: this.enterMoveNext,
+                        enterMoveNew: this.enterMoveNew
                     }
                 },
                 sort: 2
@@ -4043,9 +4145,9 @@ export class AreaDesigner extends EditorBase {
                             };
                         },
                         type: 'sound',
-                        enterMoveFirst: this.$enterMoveFirst,
-                        enterMoveNext: this.$enterMoveNext,
-                        enterMoveNew: this.$enterMoveNew
+                        enterMoveFirst: this.enterMoveFirst,
+                        enterMoveNext: this.enterMoveNext,
+                        enterMoveNew: this.enterMoveNew
                     }
                 }
             },
@@ -4084,9 +4186,9 @@ export class AreaDesigner extends EditorBase {
                             };
                         },
                         type: 'smell',
-                        enterMoveFirst: this.$enterMoveFirst,
-                        enterMoveNext: this.$enterMoveNext,
-                        enterMoveNew: this.$enterMoveNew
+                        enterMoveFirst: this.enterMoveFirst,
+                        enterMoveNext: this.enterMoveNext,
+                        enterMoveNew: this.enterMoveNew
                     }
                 }
             },
@@ -4125,9 +4227,9 @@ export class AreaDesigner extends EditorBase {
                             };
                         },
                         type: 'search',
-                        enterMoveFirst: this.$enterMoveFirst,
-                        enterMoveNext: this.$enterMoveNext,
-                        enterMoveNew: this.$enterMoveNew
+                        enterMoveFirst: this.enterMoveFirst,
+                        enterMoveNext: this.enterMoveNext,
+                        enterMoveNew: this.enterMoveNew
                     }
                 }
             },
@@ -4185,9 +4287,9 @@ export class AreaDesigner extends EditorBase {
                             };
                         },
                         type: 'read',
-                        enterMoveFirst: this.$enterMoveFirst,
-                        enterMoveNext: this.$enterMoveNext,
-                        enterMoveNew: this.$enterMoveNew
+                        enterMoveFirst: this.enterMoveFirst,
+                        enterMoveNext: this.enterMoveNext,
+                        enterMoveNew: this.enterMoveNew
                     }
                 }
             },
@@ -4280,9 +4382,9 @@ export class AreaDesigner extends EditorBase {
                             };
                         },
                         type: 'object',
-                        enterMoveFirst: this.$enterMoveFirst,
-                        enterMoveNext: this.$enterMoveNext,
-                        enterMoveNew: this.$enterMoveNew
+                        enterMoveFirst: this.enterMoveFirst,
+                        enterMoveNext: this.enterMoveNext,
+                        enterMoveNew: this.enterMoveNew
                     }
                 },
                 sort: 6
@@ -4339,9 +4441,9 @@ export class AreaDesigner extends EditorBase {
                             };
                         },
                         type: 'object',
-                        enterMoveFirst: this.$enterMoveFirst,
-                        enterMoveNext: this.$enterMoveNext,
-                        enterMoveNew: this.$enterMoveNew
+                        enterMoveFirst: this.enterMoveFirst,
+                        enterMoveNext: this.enterMoveNext,
+                        enterMoveNew: this.enterMoveNew
                     }
                 },
                 sort: 6
@@ -4444,9 +4546,9 @@ export class AreaDesigner extends EditorBase {
                             };
                         },
                         type: 'waterGerms',
-                        enterMoveFirst: this.$enterMoveFirst,
-                        enterMoveNext: this.$enterMoveNext,
-                        enterMoveNew: this.$enterMoveNew
+                        enterMoveFirst: this.enterMoveFirst,
+                        enterMoveNext: this.enterMoveNext,
+                        enterMoveNew: this.enterMoveNew
                     }
                 }
             },
@@ -4608,9 +4710,9 @@ export class AreaDesigner extends EditorBase {
                             };
                         },
                         type: 'property',
-                        enterMoveFirst: this.$enterMoveFirst,
-                        enterMoveNext: this.$enterMoveNext,
-                        enterMoveNew: this.$enterMoveNew
+                        enterMoveFirst: this.enterMoveFirst,
+                        enterMoveNext: this.enterMoveNext,
+                        enterMoveNew: this.enterMoveNew
                     }
                 }
             },
@@ -4720,8 +4822,202 @@ export class AreaDesigner extends EditorBase {
                         max: 1000
                     }
                 }
-            }
+            },
+            {
+                property: 'functions',
+                label: 'Functions',
+                group: 'Expert',
+                formatter: this.formatCollection.bind(this),
+                tooltipFormatter: this.formatCollection.bind(this),
+                sort: 9,
+                editor: {
+                    type: EditorType.collection,
+                    options: {
+                        open: true,
+                        columns: [
+                            {
+                                label: 'Name',
+                                field: 'name',
+                                spring: true,
+                                width: 150,
+                                editor: {
+                                    options: {
+                                        singleLine: true,
+                                        validate: (oldValue, newValue, object, editor) => {
+                                            const rows = editor?.control?.rows || [];
+                                            if (!isValidIdentifier(newValue))
+                                                return 'Invalid function name';
+                                            if (oldValue !== newValue && rows.findIndex(element => element.name === newValue) !== -1)
+                                                return `Function ${newValue} already exist!`;
+                                            return true;
+                                        }
+                                    }
+                                },
+                            },
+                            {
+                                label: 'Type',
+                                field: 'type',
+                                width: 150,
+                                editor: {
+                                    type: EditorType.select,
+                                    options: {
+                                        data: [
+                                            'void',
+                                            'int',
+                                            'int *',
+                                            'string',
+                                            'string *',
+                                            'object',
+                                            'object *',
+                                            'mapping',
+                                            'mapping *',
+                                            'float',
+                                            'float *',
+                                            'function',
+                                            'function *',
+                                            'mixed',
+                                            'mixed *',
+                                        ]
+                                    }
+                                },
+                            },
+                            {
+                                label: 'Code',
+                                field: 'code',
+                                width: 150,
+                                editor: {
+                                    type: EditorType.code,
+                                    options: {
+                                        dialog: true,
+                                        title: 'Edit function body&hellip;',
+                                        container: document.body
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Variable Arguments',
+                                field: 'variableArguments',
+                                width: 150
+                            },
+                            {
+                                field: 'arguments',
+                                label: 'Arguments',
+                                width: 100,
+                                sortable: false,
+                                formatter: this.formatCollection.bind(this),
+                                tooltipFormatter: this.formatCollection.bind(this),
+                                editor: {
+                                    type: EditorType.collection,
+                                    options: {
+                                        open: true,
+                                        columns: [
+                                            {
+                                                label: 'Name',
+                                                width: 200,
+                                                field: 'name',
+                                                spring: true,
+                                                editor: {
+                                                    options: {
+                                                        singleLine: true,
+                                                        validate: (oldValue, newValue, object, editor) => {
+                                                            const rows = editor?.control?.rows || [];
+                                                            if (!isValidIdentifier(newValue))
+                                                                return 'Invalid argument name';
+                                                            if (oldValue !== newValue && rows.findIndex(element => element.name === newValue) !== -1)
+                                                                return `Argument ${newValue} already exist!`;
+                                                            return true;
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                label: 'Type',
+                                                field: 'type',
+                                                width: 150,
+                                                editor: {
+                                                    type: EditorType.select,
+                                                    options: {
+                                                        data: [
+                                                            'int',
+                                                            'int *',
+                                                            'string',
+                                                            'string *',
+                                                            'object',
+                                                            'object *',
+                                                            'mapping',
+                                                            'mapping *',
+                                                            'float',
+                                                            'float *',
+                                                            'function',
+                                                            'function *',
+                                                            'mixed',
+                                                            'mixed *',
+                                                        ]
+                                                    }
+                                                },
+                                            },
+                                            {
+                                                label: 'Expand',
+                                                field: 'expand',
+                                                width: 100,
+                                                editor: {
+                                                    options: {
+                                                        singleLine: true,
+                                                        validate: (oldValue, newValue, object, editor) => {
+                                                            const rows = editor?.control?.rows || [];
+                                                            if (oldValue !== newValue && newValue && rows.findIndex(element => element.expand) !== -1)
+                                                                return `Only one expanding variable allowed!`;
+                                                            return true;
+                                                        }
+                                                    }
+                                                },
+                                            },
+                                        ],
+                                        onAdd: (e) => {
+                                            e.data = {
+                                                name: 'argument' + e.index,
+                                                type: '',
+                                                expand: false
+                                            };
+                                        },
+                                        type: 'object',
+                                        enterMoveFirst: this.enterMoveFirst,
+                                        enterMoveNext: this.enterMoveNext,
+                                        enterMoveNew: this.enterMoveNew
+                                    }
+                                },
+                                sort: 2
+                            },
+                        ],
+                        onAdd: (e) => {
+                            e.data = {
+                                name: 'function' + e.index,
+                                type: '',
+                                code: '',
+                                variableArguments: false,
+                                arguments: []
+                            };
+                        },
+                        type: 'object',
+                        enterMoveFirst: this.enterMoveFirst,
+                        enterMoveNext: this.enterMoveNext,
+                        enterMoveNew: this.enterMoveNew
+                    }
+                }
+            },
         ]);
+        this.$roomEditor.on('group-expanded', group => {
+            this.emit('option-changed', 'roomEditorStates', Object.keys(this.$roomEditor.groupStates).filter(e => this.$roomEditor.groupStates[e]));
+        });
+        this.$roomEditor.on('group-collapsed', group => {
+            this.emit('option-changed', 'roomEditorStates', Object.keys(this.$roomEditor.groupStates).filter(e => this.$roomEditor.groupStates[e]));
+        });
+        if (this.$roomEditorStates) {
+            this.$roomEditorStates.forEach(g => {
+                this.$roomEditor.collapseGroup(g);
+            });
+        }
+
         this.doUpdate(UpdateType.resize);
         this.$reSizer = new ResizeObserver((entries, observer) => {
             if (entries.length === 0) return;
@@ -4869,9 +5165,9 @@ export class AreaDesigner extends EditorBase {
         el.classList.add('datagrid-standard');
         this.$propertiesEditor.monsterGrid = new DataGrid(el);
         this.$propertiesEditor.monsterGrid.clipboardPrefix = 'jiMUD/';
-        this.$propertiesEditor.monsterGrid.enterMoveFirst = this.$enterMoveFirst;
-        this.$propertiesEditor.monsterGrid.enterMoveNext = this.$enterMoveNext;
-        this.$propertiesEditor.monsterGrid.enterMoveNew = this.$enterMoveNew;
+        this.$propertiesEditor.monsterGrid.enterMoveFirst = this.enterMoveFirst;
+        this.$propertiesEditor.monsterGrid.enterMoveNext = this.enterMoveNext;
+        this.$propertiesEditor.monsterGrid.enterMoveNew = this.enterMoveNew;
         this.$propertiesEditor.monsterGrid.columns = [
             {
                 label: 'Name',
@@ -4996,9 +5292,9 @@ export class AreaDesigner extends EditorBase {
                             };
                         },
                         type: 'object',
-                        enterMoveFirst: this.$enterMoveFirst,
-                        enterMoveNext: this.$enterMoveNext,
-                        enterMoveNew: this.$enterMoveNew
+                        enterMoveFirst: this.enterMoveFirst,
+                        enterMoveNext: this.enterMoveNext,
+                        enterMoveNew: this.enterMoveNew
                     }
                 },
                 sort: 2
@@ -5303,9 +5599,9 @@ export class AreaDesigner extends EditorBase {
         el.classList.add('datagrid-standard');
         this.$propertiesEditor.roomGrid = new DataGrid(el);
         this.$propertiesEditor.roomGrid.clipboardPrefix = 'jiMUD/';
-        this.$propertiesEditor.roomGrid.enterMoveFirst = this.$enterMoveFirst;
-        this.$propertiesEditor.roomGrid.enterMoveNext = this.$enterMoveNext;
-        this.$propertiesEditor.roomGrid.enterMoveNew = this.$enterMoveNew;
+        this.$propertiesEditor.roomGrid.enterMoveFirst = this.enterMoveFirst;
+        this.$propertiesEditor.roomGrid.enterMoveNext = this.enterMoveNext;
+        this.$propertiesEditor.roomGrid.enterMoveNew = this.enterMoveNew;
         this.$propertiesEditor.roomGrid.columns = [
             {
                 label: 'Name',
@@ -5408,9 +5704,9 @@ export class AreaDesigner extends EditorBase {
                             };
                         },
                         type: 'object',
-                        enterMoveFirst: this.$enterMoveFirst,
-                        enterMoveNext: this.$enterMoveNext,
-                        enterMoveNew: this.$enterMoveNew
+                        enterMoveFirst: this.enterMoveFirst,
+                        enterMoveNext: this.enterMoveNext,
+                        enterMoveNew: this.enterMoveNew
                     }
                 },
                 sort: 2
@@ -5485,9 +5781,9 @@ export class AreaDesigner extends EditorBase {
                             };
                         },
                         type: 'object',
-                        enterMoveFirst: this.$enterMoveFirst,
-                        enterMoveNext: this.$enterMoveNext,
-                        enterMoveNew: this.$enterMoveNew
+                        enterMoveFirst: this.enterMoveFirst,
+                        enterMoveNext: this.enterMoveNext,
+                        enterMoveNew: this.enterMoveNew
                     },
                     sort: 2
                 }
@@ -5699,9 +5995,9 @@ export class AreaDesigner extends EditorBase {
                                                 random: 0
                                             };
                                         },
-                                        enterMoveFirst: this.$enterMoveFirst,
-                                        enterMoveNext: this.$enterMoveNext,
-                                        enterMoveNew: this.$enterMoveNew
+                                        enterMoveFirst: this.enterMoveFirst,
+                                        enterMoveNext: this.enterMoveNext,
+                                        enterMoveNew: this.enterMoveNew
                                     }),
                                     new WizardDataGridPage({
                                         title: 'Rummage objects',
@@ -5748,9 +6044,9 @@ export class AreaDesigner extends EditorBase {
                                                 random: 0
                                             };
                                         },
-                                        enterMoveFirst: this.$enterMoveFirst,
-                                        enterMoveNext: this.$enterMoveNext,
-                                        enterMoveNew: this.$enterMoveNew
+                                        enterMoveFirst: this.enterMoveFirst,
+                                        enterMoveNext: this.enterMoveNext,
+                                        enterMoveNew: this.enterMoveNew
                                     }),
                                     new WizardPage({
                                         id: 'room-wiz-notes',
@@ -5868,9 +6164,9 @@ export class AreaDesigner extends EditorBase {
         el.classList.add('datagrid-standard');
         this.$propertiesEditor.includesGrid = new DataGrid(el);
         this.$propertiesEditor.includesGrid.clipboardPrefix = 'jiMUD/';
-        this.$propertiesEditor.includesGrid.enterMoveFirst = this.$enterMoveFirst;
-        this.$propertiesEditor.includesGrid.enterMoveNext = this.$enterMoveNext;
-        this.$propertiesEditor.includesGrid.enterMoveNew = this.$enterMoveNew;
+        this.$propertiesEditor.includesGrid.enterMoveFirst = this.enterMoveFirst;
+        this.$propertiesEditor.includesGrid.enterMoveNext = this.enterMoveNext;
+        this.$propertiesEditor.includesGrid.enterMoveNew = this.enterMoveNew;
         this.$propertiesEditor.includesGrid.columns = [
             {
                 label: 'Include',
@@ -6049,9 +6345,9 @@ export class AreaDesigner extends EditorBase {
         el.classList.add('datagrid-standard');
         this.$splitterMonsterPreview.panel1.appendChild(el);
         this.$monsterGrid = new DataGrid(el);
-        this.$monsterGrid.enterMoveFirst = this.$enterMoveFirst;
-        this.$monsterGrid.enterMoveNext = this.$enterMoveNext;
-        this.$monsterGrid.enterMoveNew = this.$enterMoveNew;
+        this.$monsterGrid.enterMoveFirst = this.enterMoveFirst;
+        this.$monsterGrid.enterMoveNext = this.enterMoveNext;
+        this.$monsterGrid.enterMoveNew = this.enterMoveNew;
         this.$monsterGrid.clipboardPrefix = 'jiMUD/';
         this.$monsterGrid.columns = [
             {
@@ -6195,9 +6491,9 @@ export class AreaDesigner extends EditorBase {
                             };
                         },
                         type: 'object',
-                        enterMoveFirst: this.$enterMoveFirst,
-                        enterMoveNext: this.$enterMoveNext,
-                        enterMoveNew: this.$enterMoveNew
+                        enterMoveFirst: this.enterMoveFirst,
+                        enterMoveNext: this.enterMoveNext,
+                        enterMoveNew: this.enterMoveNew
                     }
                 },
                 sort: 2
@@ -6542,9 +6838,9 @@ export class AreaDesigner extends EditorBase {
         el.style.display = 'none';
         this.parent.appendChild(el);
         this.$objectGrid = new DataGrid(el);
-        this.$objectGrid.enterMoveFirst = this.$enterMoveFirst;
-        this.$objectGrid.enterMoveNext = this.$enterMoveNext;
-        this.$objectGrid.enterMoveNew = this.$enterMoveNew;
+        this.$objectGrid.enterMoveFirst = this.enterMoveFirst;
+        this.$objectGrid.enterMoveNext = this.enterMoveNext;
+        this.$objectGrid.enterMoveNew = this.enterMoveNew;
         this.$objectGrid.clipboardPrefix = 'jiMUD/';
         this.$objectGrid.columns = [
             {
@@ -6972,9 +7268,9 @@ export class AreaDesigner extends EditorBase {
                                     });
                                     */
                                 },
-                                enterMoveFirst: this.$enterMoveFirst,
-                                enterMoveNext: this.$enterMoveNext,
-                                enterMoveNew: this.$enterMoveNew
+                                enterMoveFirst: this.enterMoveFirst,
+                                enterMoveNext: this.enterMoveNext,
+                                enterMoveNew: this.enterMoveNew
                             });
                             const wizSkills = new WizardDataGridPage({
                                 title: 'Skill requirements',
@@ -7094,9 +7390,9 @@ export class AreaDesigner extends EditorBase {
                                         message: ''
                                     };
                                 },
-                                enterMoveFirst: this.$enterMoveFirst,
-                                enterMoveNext: this.$enterMoveNext,
-                                enterMoveNew: this.$enterMoveNew
+                                enterMoveFirst: this.enterMoveFirst,
+                                enterMoveNext: this.enterMoveNext,
+                                enterMoveNew: this.enterMoveNew
                             });
                             const wiz = new Wizard({
                                 id: 'object-wizard',
@@ -7644,9 +7940,9 @@ export class AreaDesigner extends EditorBase {
                                                 description: ''
                                             };
                                         },
-                                        enterMoveFirst: this.$enterMoveFirst,
-                                        enterMoveNext: this.$enterMoveNext,
-                                        enterMoveNew: this.$enterMoveNew
+                                        enterMoveFirst: this.enterMoveFirst,
+                                        enterMoveNext: this.enterMoveNext,
+                                        enterMoveNew: this.enterMoveNew
                                     }), wizSkills, wizBonuses]);
                                     break;
                                 case StdObjectType.armor:
@@ -7819,9 +8115,9 @@ export class AreaDesigner extends EditorBase {
                                                 description: ''
                                             };
                                         },
-                                        enterMoveFirst: this.$enterMoveFirst,
-                                        enterMoveNext: this.$enterMoveNext,
-                                        enterMoveNew: this.$enterMoveNew
+                                        enterMoveFirst: this.enterMoveFirst,
+                                        enterMoveNext: this.enterMoveNext,
+                                        enterMoveNew: this.enterMoveNew
                                     }), wizSkills, wizBonuses]);
                                     if (StdObjectType.armor_of_holding == ty) {
                                         wiz.insertPages(8, new WizardPage({
@@ -8007,9 +8303,9 @@ export class AreaDesigner extends EditorBase {
                                                 random: 0
                                             };
                                         },
-                                        enterMoveFirst: this.$enterMoveFirst,
-                                        enterMoveNext: this.$enterMoveNext,
-                                        enterMoveNew: this.$enterMoveNew
+                                        enterMoveFirst: this.enterMoveFirst,
+                                        enterMoveNext: this.enterMoveNext,
+                                        enterMoveNew: this.enterMoveNew
                                     })]);
                                     break;
                                 case StdObjectType.material:
@@ -8759,12 +9055,21 @@ export class AreaDesigner extends EditorBase {
                 return value.map(i => i.search).join(':');
             case 'exitsDetails':
                 return value.map(v => v.exit).join(', ');
+            case 'includes':
+                return value.map(v => v.path);
+            case 'defines':
+                return value.map(v => v.key).join(', ');
+            case 'arguments':
+            case 'functions':
+            case 'commands':
+            case 'variables':
+                return value.map(v => v.name).join(', ');
             case 'reads':
                 return value.map(v => v.read).join(', ');
             case 'waterGerms':
                 return value.map(v => v.germ).join(', ');
         }
-        return value;
+        return value.join(', ');
     }
 
     public refresh() {
@@ -10268,51 +10573,23 @@ export class AreaDesigner extends EditorBase {
         this.$yAxis.style.top = (32 - this.$mapContainer.scrollTop) + 'px';
     }
 
+    private enterMoveFirst() {
+        return this.$enterMoveFirst;
+    }
+
+    private enterMoveNext() {
+        return this.$enterMoveNext;
+    }
+
+    private enterMoveNew() {
+        return this.$enterMoveNew;
+    }
+
     public set options(value: any) {
         if (!value) return;
         this.$enterMoveFirst = value.enterMoveFirst;
         this.$enterMoveNext = value.enterMoveNext;
         this.$enterMoveNew = value.enterMoveNew;
-
-        if (this.$roomEditor) {
-            const props = ['items', 'exitsDetails', 'sounds', 'smells', 'objects', 'monsters', 'searches', 'forageObjects', 'waterGerms'];
-            let pl = props.length;
-            while (pl--) {
-                const ops = this.$roomEditor.getPropertyOptions(props[pl]);
-                if (!ops) continue;
-                ops.editor.options.enterMoveFirst = this.$enterMoveFirst;
-                ops.editor.options.enterMoveNext = this.$enterMoveNext;
-                ops.editor.options.enterMoveNew = this.$enterMoveNew;
-                this.$roomEditor.setPropertyOptions(props[pl], ops);
-            }
-        }
-
-        let cols = this.$propertiesEditor.roomGrid.columns;
-        cols[2].editor.options.enterMoveFirst = this.$enterMoveFirst;
-        cols[2].editor.options.enterMoveNext = this.$enterMoveNext;
-        cols[2].editor.options.enterMoveNew = this.$enterMoveNew;
-        cols[3].editor.options.enterMoveFirst = this.$enterMoveFirst;
-        cols[3].editor.options.enterMoveNext = this.$enterMoveNext;
-        cols[3].editor.options.enterMoveNew = this.$enterMoveNew;
-        this.$propertiesEditor.roomGrid.columns = cols;
-
-        cols = this.$propertiesEditor.monsterGrid.columns;
-        cols[3].editor.options.enterMoveFirst = this.$enterMoveFirst;
-        cols[3].editor.options.enterMoveNext = this.$enterMoveNext;
-        cols[3].editor.options.enterMoveNew = this.$enterMoveNew;
-        this.$propertiesEditor.monsterGrid.columns = cols;
-
-        cols = this.$monsterGrid.columns;
-        cols[5].editor.options.enterMoveFirst = this.$enterMoveFirst;
-        cols[5].editor.options.enterMoveNext = this.$enterMoveNext;
-        cols[5].editor.options.enterMoveNew = this.$enterMoveNew;
-        this.$monsterGrid.columns = cols;
-
-        cols = this.$objectGrid.columns;
-        cols[3].editor.options.enterMoveFirst = this.$enterMoveFirst;
-        cols[3].editor.options.enterMoveNext = this.$enterMoveNext;
-        cols[3].editor.options.enterMoveNew = this.$enterMoveNew;
-        this.$objectGrid.columns = cols;
 
         this.AllowResize = value.allowResize;
         this.AllowExitWalk = value.allowExitWalk;
@@ -10330,6 +10607,11 @@ export class AreaDesigner extends EditorBase {
         this.$splitterMonsterPreview.SplitterDistance = value.monsterPreviewHeight;
         this.$splitterMonsterPreview.live = value.live;
         this.$splitterMonsterPreview.panel2Collapsed = !value.showMonsterPreview;
+        this.$roomEditorStates = value.roomEditorStates || [];
+        if (this.$roomEditor)
+            this.$roomEditorStates.forEach(g => {
+                this.$roomEditor.collapseGroup(g);
+            });
     }
 
     public get options() {
@@ -10338,7 +10620,8 @@ export class AreaDesigner extends EditorBase {
             allowExitWalk: this.$allowExitWalk,
             live: this.$splitterEditor.live,
             showRoomEditor: !this.$splitterEditor.panel2Collapsed,
-            showRoomPreview: !this.$splitterPreview.panel2Collapsed
+            showRoomPreview: !this.$splitterPreview.panel2Collapsed,
+            roomEditorStates: this.$roomEditorStates || []
         };
     }
 
@@ -11116,7 +11399,7 @@ export class AreaDesigner extends EditorBase {
                 this.DrawRoom(this.$mapContext, r[x], false);
         }
         this.$mapContext.strokeStyle = 'black';
-        Timer.end('Draw time');
+        Timer.end('Area Draw time');
         this.$mapContext.restore();
     }
 
@@ -11561,7 +11844,7 @@ export class AreaDesigner extends EditorBase {
             while (rl--) {
                 const o = rooms[rl].clone();
                 o.exitsDetails = Object.values(o.exitsDetails);
-                ['items', 'exitsDetails', 'sounds', 'smells', 'objects', 'monsters', 'searches', 'forageObjects'].forEach(v => {
+                ['items', 'exitsDetails', 'sounds', 'smells', 'objects', 'monsters', 'searches', 'forageObjects', "functions", 'defines', 'variables', 'commands'].forEach(v => {
                     if (!o[v] || o[v].length === 0)
                         o[v] = ri;
                 });
@@ -11916,6 +12199,7 @@ export class AreaDesigner extends EditorBase {
             this.$map.height = this.$area.size.bottom;
             this.BuildAxises();
             setTimeout(() => {
+                this.$drawCache = null;
                 this.DrawMap();
             }, 500);
         }
@@ -11947,7 +12231,7 @@ export class AreaDesigner extends EditorBase {
         this.updateObjects();
         this.$propertiesEditor.includesGrid.rows = this.$area.includes;
         this.emit('rebuild-buttons');
-        Timer.end('BuildMap time');
+        Timer.end('Area BuildMap time');
     }
 
     private updateBaseRooms() {
@@ -11971,41 +12255,6 @@ export class AreaDesigner extends EditorBase {
                 baseFlags: this.$area.baseMonsters[r].baseFlags,
                 objects: this.$area.baseMonsters[r].objects,
                 monster: this.$area.baseMonsters[r]
-            };
-        });
-    }
-
-    private updateVariblesGridRows(grid, object) {
-        grid.rows = Object.keys(object).map(r => {
-            return {
-                name: r,
-                type: object[r].type,
-                reset: object[r].reset,
-                value: object[r].value,
-                array: object[r].array,
-                variable: object[r]
-            };
-        });
-    }
-
-    private updateFunctionGridRows(grid, object) {
-        grid.rows = Object.keys(object).map(r => {
-            return {
-                name: r,
-                type: object[r].type,
-                code: object[r].code,
-                variableArguments: object[r].variableArguments,
-                arguments: object[r].arguments,
-                function: object[r]
-            };
-        });
-    }
-
-    private updateKeyValueGrid(grid, object) {
-        grid.rows = Object.keys(object).map(r => {
-            return {
-                key: r,
-                value: object[r]
             };
         });
     }
@@ -12333,8 +12582,8 @@ export class AreaDesigner extends EditorBase {
                 }).join('');
             }
             if (this.$area.defines) {
-                Object.keys(this.$area.defines).forEach(r => template['area post'] += `#define ${r}${this.$area.defines[r] && this.$area.defines[r].trim().length ? ' ' + this.$area.defines[r].trim() : ''}\n`);
-                if (Object.keys(this.$area.defines).length)
+                this.$area.defines.forEach(r => template['area post'] += `#define ${r.key}${r.value && r.value.trim().length ? ' ' + r.value.trim() : ''}\n`);
+                if (this.$area.defines.length)
                     template['area post'] += '\n';
             }
             this.writeFormatted(this.parseFileTemplate(fs.readFileSync(path.join(templePath, 'area.h'), 'utf8'), template), path.join(p, 'area.h'));
@@ -12608,38 +12857,35 @@ export class AreaDesigner extends EditorBase {
             data.inherits += room.inherits.map(i => `\ninherit ${i};`).join('');
 
         if (room.defines) {
-            Object.keys(room.defines).forEach(r => data['create pre'] += `#define ${r}${room.defines[r] && room.defines[r].trim().length ? ' ' + room.defines[r].trim() : ''}\n`);
-            if (Object.keys(room.defines).length)
+            room.defines.forEach(r => data['create pre'] += `#define ${r.key}${r.value && r.value.trim().length ? ' ' + r.value.trim() : ''}\n`);
+            if (room.defines.length)
                 data['create pre'] += '\n';
         }
         if (room.variables) {
-            tmp = Object.keys(room.variables);
-            data['create pre'] += Object.keys(room.variables).map(
-                arg => {
-                    if (room.variables[arg].type == 'function' || (room.variables[arg].type === 'mixed' && room.variables[arg].value.trim().startsWith('(:'))) {
-                        tmp3 = formatFunctionPointer(room.variables[arg].value);
+            data['create pre'] += room.variables.map(
+                variable => {
+                    if (variable.type == 'function' || (variable.type === 'mixed' && variable.value.trim().startsWith('(:'))) {
+                        tmp3 = formatFunctionPointer(variable.value);
                         if (!stubs[tmp3]) {
                             data['create pre'] += createFunction(tmp3);
                             stubs[tmp3] = 1;
                         }
                     }
-                    return `${room.variables[arg].type || 'mixed'}${room.variables[arg].array ? ' *' : ' '}${arg} = ${formatVariableValue(room.variables[arg].type, room.variables[arg].value, 0, room.variables[arg].array)};\n`;
+                    return `${variable.type || 'mixed'}${variable.name} = ${formatVariableValue(variable.type, variable.value, 0)};\n`;
                 }
             ).join('');
-            data['reset body'] += Object.keys(room.variables).filter(v => room.variables[v].reset).map(
-                arg => `${arg} = ${formatVariableValue(room.variables[arg].type, room.variables[arg].value, 0, room.variables[arg].array)};\n`
+            data['reset body'] += room.variables.filter(v => v.reset).map(
+                variable => `${variable.name} = ${formatVariableValue(variable.type, variable.value, 0)};\n`
             ).join('');
             if (tmp.length)
                 data['create pre'] += '\n';
         }
 
         if (room.functions) {
-            tmp = Object.keys(room.functions);
-            for (const func in room.functions) {
-                if (!room.functions.hasOwnProperty(func)) continue;
-                data['create pre'] += createFunction(func, room.functions[func]);
-                stubs[formatFunctionPointer(func)] = 1;
-            }
+            room.functions.forEach(func => {
+                data['create pre'] += createFunction(func.name, func);
+                stubs[formatFunctionPointer(func.name)] = 1;
+            });
         }
 
         if (!room.type)
@@ -12957,11 +13203,11 @@ export class AreaDesigner extends EditorBase {
         if ((room.flags & RoomFlags.WaterDrink) === RoomFlags.WaterDrink && (base.flags & RoomFlags.WaterDrink) !== RoomFlags.WaterDrink) {
             data.inherits += '\ninherit STD_WATERDRINK;';
             data.doc.push('/doc/build/etc/waterdrink');
-            if (room.commands && Object.keys(room.commands).length) {
+            if (room.commands && room.commands.length) {
                 data['create post'] += '\n\nvoid init()\n{\n   room::init();\n   waterdrink::init();\n';
-                Object.keys(room.commands).forEach(r => {
-                    const cmds = r.split(',').map(c => c.trim());
-                    tmp = room.commands[r];
+                room.commands.forEach(r => {
+                    const cmds = r.name.split(',').map(c => c.trim());
+                    tmp = r.function;
                     if (cmds.length > 1) {
                         if (!tmp || !tmp.length)
                             tmp = 'cmd_' + cmds[0];
@@ -12969,8 +13215,8 @@ export class AreaDesigner extends EditorBase {
                     }
                     else {
                         if (!tmp || !tmp.length)
-                            tmp = 'cmd_' + r;
-                        data['create post'] += `    add_action("${tmp}", "${r}");\n`;
+                            tmp = 'cmd_' + r.name.trim();
+                        data['create post'] += `    add_action("${tmp}", "${r.name.trim()}");\n`;
                     }
                     if (!stubs[formatFunctionPointer(tmp)]) {
                         data['create pre'] += createFunction(tmp, 'int', 'string args', '   return 1;');
@@ -13013,11 +13259,11 @@ export class AreaDesigner extends EditorBase {
             }
         }//if base room is water drink setup anyting that is set
         else if ((base.flags & RoomFlags.WaterDrink) === RoomFlags.WaterDrink) {
-            if (room.commands && Object.keys(room.commands).length) {
+            if (room.commands && room.commands.length) {
                 data['create post'] += '\n\nvoid init()\n{\n';
-                Object.keys(room.commands).forEach(r => {
-                    const cmds = r.split(',').map(c => c.trim());
-                    tmp = room.commands[r];
+                room.commands.forEach(r => {
+                    const cmds = r.name.split(',').map(c => c.trim());
+                    tmp = r.function;
                     if (cmds.length > 1) {
                         if (!tmp || !tmp.length)
                             tmp = 'cmd_' + cmds[0];
@@ -13025,8 +13271,8 @@ export class AreaDesigner extends EditorBase {
                     }
                     else {
                         if (!tmp || !tmp.length)
-                            tmp = 'cmd_' + r;
-                        data['create post'] += `    add_action("${tmp}", "${r}");\n`;
+                            tmp = 'cmd_' + r.name.trim();
+                        data['create post'] += `    add_action("${tmp}", "${r.name.trim()}");\n`;
                     }
                     if (!stubs[formatFunctionPointer(tmp)]) {
                         data['create pre'] += createFunction(tmp, 'int', 'string args', '   return 1;');
@@ -13074,11 +13320,11 @@ export class AreaDesigner extends EditorBase {
                     data['create body'] += `   set_water_wash(${room.waterWashMessage});\n`;
             }
         }
-        else if (room.commands && Object.keys(room.commands).length) {
+        else if (room.commands && room.commands.length) {
             data['create post'] += '\n\nvoid init()\n{\n';
-            Object.keys(room.commands).forEach(r => {
-                const cmds = r.split(',').map(c => c.trim());
-                tmp = room.commands[r];
+            room.commands.forEach(r => {
+                const cmds = r.name.split(',').map(c => c.trim());
+                tmp = r.function;
                 if (cmds.length > 1) {
                     if (!tmp || !tmp.length)
                         tmp = 'cmd_' + cmds[0];
@@ -13086,8 +13332,8 @@ export class AreaDesigner extends EditorBase {
                 }
                 else {
                     if (!tmp || !tmp.length)
-                        tmp = 'cmd_' + r;
-                    data['create post'] += `    add_action("${tmp}", "${r}");\n`;
+                        tmp = 'cmd_' + r.name.trim();
+                    data['create post'] += `    add_action("${tmp}", "${r.name.trim()}");\n`;
                 }
                 if (!stubs[formatFunctionPointer(tmp)]) {
                     data['create pre'] += createFunction(tmp, 'int', 'string args', '   return 1;');
@@ -13562,45 +13808,42 @@ export class AreaDesigner extends EditorBase {
             data.inherits += monster.inherits.map(i => `\ninherit ${i};`).join('');
 
         if (monster.defines) {
-            Object.keys(monster.defines).forEach(r => data['create pre'] += `#define ${r}${monster.defines[r] && monster.defines[r].trim().length ? ' ' + monster.defines[r].trim() : ''}\n`);
-            if (Object.keys(monster.defines).length)
+            monster.defines.forEach(r => data['create pre'] += `#define ${r.key}${r.value && r.value.trim().length ? ' ' + r.value.trim() : ''}\n`);
+            if (monster.defines.length)
                 data['create pre'] += '\n';
         }
         if (monster.variables) {
-            tmp = Object.keys(monster.variables);
-            data['create pre'] += Object.keys(monster.variables).map(
-                arg => {
-                    if (monster.variables[arg].type == 'function' || (monster.variables[arg].type === 'mixed' && monster.variables[arg].value.trim().startsWith('(:'))) {
-                        tmp3 = formatFunctionPointer(monster.variables[arg].value);
+            data['create pre'] += monster.variables.map(
+                variable => {
+                    if (variable.type == 'function' || (variable.type === 'mixed' && variable.value.trim().startsWith('(:'))) {
+                        tmp3 = formatFunctionPointer(variable.value);
                         if (!stubs[tmp3]) {
                             data['create pre'] += createFunction(tmp3);
                             stubs[tmp3] = 1;
                         }
                     }
-                    return `${monster.variables[arg].type || 'mixed'}${monster.variables[arg].array ? ' *' : ' '}${arg} = ${formatVariableValue(monster.variables[arg].type, monster.variables[arg].value, 0, monster.variables[arg].array)};\n`;
+                    return `${variable.type || 'mixed'}${variable.name} = ${formatVariableValue(variable.type, variable.value, 0)};\n`;
                 }
             ).join('');
-            data['reset body'] += Object.keys(monster.variables).filter(v => monster.variables[v].reset).map(
-                arg => `${arg} = ${formatVariableValue(monster.variables[arg].type, monster.variables[arg].value, 0, monster.variables[arg].array)};\n`
+            data['reset body'] += monster.variables.filter(v => v.reset).map(
+                variable => `${variable.name} = ${formatVariableValue(variable.type, variable.value, 0)};\n`
             ).join('');
             if (tmp.length)
                 data['create pre'] += '\n';
         }
 
         if (monster.functions) {
-            tmp = Object.keys(monster.functions);
-            for (const func in monster.functions) {
-                if (!monster.functions.hasOwnProperty(func)) continue;
-                data['create pre'] += createFunction(func, monster.functions[func]);
-                stubs[formatFunctionPointer(func)] = 1;
-            }
+            monster.functions.forEach(func => {
+                data['create pre'] += createFunction(func.name, func);
+                stubs[formatFunctionPointer(func.name)] = 1;
+            });
         }
 
         if (monster.commands && Object.keys(monster.commands).length) {
             data['create post'] += '\n\nvoid init()\n{\n';
-            Object.keys(monster.commands).forEach(r => {
-                const cmds = r.split(',').map(c => c.trim());
-                tmp = monster.commands[r];
+            monster.commands.forEach(r => {
+                const cmds = r.name.split(',').map(c => c.trim());
+                tmp = r.function;
                 if (cmds.length > 1) {
                     if (!tmp || !tmp.length)
                         tmp = 'cmd_' + cmds[0];
@@ -13608,8 +13851,8 @@ export class AreaDesigner extends EditorBase {
                 }
                 else {
                     if (!tmp || !tmp.length)
-                        tmp = 'cmd_' + r;
-                    data['create post'] += `    add_action("${tmp}", "${r}");\n`;
+                        tmp = 'cmd_' + r.name.trim();
+                    data['create post'] += `    add_action("${tmp}", "${r.name.trim()}");\n`;
                 }
                 if (!stubs[formatFunctionPointer(tmp)]) {
                     data['create pre'] += createFunction(tmp, 'int', 'string args', '   return 1;');
@@ -14999,45 +15242,42 @@ export class AreaDesigner extends EditorBase {
             data.inherits += obj.inherits.map(i => `\ninherit ${i};`).join('');
 
         if (obj.defines) {
-            Object.keys(obj.defines).forEach(r => data['create pre'] += `#define ${r}${obj.defines[r] && obj.defines[r].trim().length ? ' ' + obj.defines[r].trim() : ''}\n`);
-            if (Object.keys(obj.defines).length)
+            obj.defines.forEach(r => data['create pre'] += `#define ${r.key}${r.value && r.value.trim().length ? ' ' + r.value.trim() : ''}\n`);
+            if (obj.defines.length)
                 data['create pre'] += '\n';
         }
         if (obj.variables) {
-            tmp = Object.keys(obj.variables);
-            data['create pre'] += Object.keys(obj.variables).map(
-                arg => {
-                    if (obj.variables[arg].type == 'function' || (obj.variables[arg].type === 'mixed' && obj.variables[arg].value.trim().startsWith('(:'))) {
-                        tmp3 = formatFunctionPointer(obj.variables[arg].value);
+            data['create pre'] += obj.variables.map(
+                variable => {
+                    if (variable.type == 'function' || (variable.type === 'mixed' && variable.value.trim().startsWith('(:'))) {
+                        tmp3 = formatFunctionPointer(variable.value);
                         if (!stubs[tmp3]) {
                             data['create pre'] += createFunction(tmp3);
                             stubs[tmp3] = 1;
                         }
                     }
-                    return `${obj.variables[arg].type || 'mixed'}${obj.variables[arg].array ? ' *' : ' '}${arg} = ${formatVariableValue(obj.variables[arg].type, obj.variables[arg].value, 0, obj.variables[arg].array)};\n`;
+                    return `${variable.type || 'mixed'}${variable.name} = ${formatVariableValue(variable.type, variable.value, 0)};\n`;
                 }
             ).join('');
-            data['reset body'] += Object.keys(obj.variables).filter(v => obj.variables[v].reset).map(
-                arg => `${arg} = ${formatVariableValue(obj.variables[arg].type, obj.variables[arg].value, 0, obj.variables[arg].array)};\n`
+            data['reset body'] += obj.variables.filter(v => v.reset).map(
+                variable => `${variable.name} = ${formatVariableValue(variable.type, variable.value, 0)};\n`
             ).join('');
             if (tmp.length)
                 data['create pre'] += '\n';
         }
 
         if (obj.functions) {
-            tmp = Object.keys(obj.functions);
-            for (const func in obj.functions) {
-                if (!obj.functions.hasOwnProperty(func)) continue;
-                data['create pre'] += createFunction(func, obj.functions[func]);
-                stubs[formatFunctionPointer(func)] = 1;
-            }
+            obj.functions.forEach(func => {
+                data['create pre'] += createFunction(func.name, func);
+                stubs[formatFunctionPointer(func.name)] = 1;
+            });
         }
 
         if (obj.commands && Object.keys(obj.commands).length) {
             data['create post'] += '\n\nvoid init()\n{\n';
-            Object.keys(obj.commands).forEach(r => {
-                const cmds = r.split(',').map(c => c.trim());
-                tmp = obj.commands[r];
+            obj.commands.forEach(r => {
+                const cmds = r.name.split(',').map(c => c.trim());
+                tmp = r.function;
                 if (cmds.length > 1) {
                     if (!tmp || !tmp.length)
                         tmp = 'cmd_' + cmds[0];
@@ -15045,8 +15285,8 @@ export class AreaDesigner extends EditorBase {
                 }
                 else {
                     if (!tmp || !tmp.length)
-                        tmp = 'cmd_' + r;
-                    data['create post'] += `    add_action("${tmp}", "${r}");\n`;
+                        tmp = 'cmd_' + r.name.trim();
+                    data['create post'] += `    add_action("${tmp}", "${r.name.trim()}");\n`;
                 }
                 if (!stubs[formatFunctionPointer(tmp)]) {
                     data['create pre'] += createFunction(tmp, 'int', 'string args', '   return 1;');
@@ -15668,7 +15908,7 @@ export class AreaDesigner extends EditorBase {
         this.emit('rebuild-buttons');
         this.emit('rebuild-menu', 'edit');
         this.emit('resize-map');
-        Timer.end('Resize time');
+        Timer.end('Area Resize time');
         this.doUpdate(UpdateType.drawMap);
         this.changed = true;
         if (!noUndo)
@@ -15725,7 +15965,7 @@ export class AreaDesigner extends EditorBase {
         this.UpdatePreview(this.selectedFocusedRoom);
         this.BuildAxises();
         this.emit('flip-map');
-        Timer.end('Flip time');
+        Timer.end('Area Flip time');
         this.doUpdate(UpdateType.drawMap);
         this.changed = true;
         if (!noUndo)

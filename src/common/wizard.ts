@@ -23,9 +23,9 @@ export interface DataGridPageOptions extends PageOptions {
     add?(...args: any[]): void;
     edit?(...args: any[]): void;
     delete?(...args: any[]): void;
-    enterMoveFirst?: boolean;
-    enterMoveNext?: boolean;
-    enterMoveNew?: boolean;
+    enterMoveFirst?: boolean | Function;
+    enterMoveNext?: boolean | Function;
+    enterMoveNew?: boolean | Function;
     clipboard?: string;
 }
 

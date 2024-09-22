@@ -244,6 +244,10 @@ export class PropertyGrid extends EventEmitter {
         }
     }
 
+    get groupStates() {
+        return this.$state;
+    }
+
     public expandGroup(group) {
         const c2 = document.querySelector(`[data-group="${group}"]`);
         if (!c2)

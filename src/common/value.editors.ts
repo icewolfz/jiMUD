@@ -40,6 +40,7 @@ export abstract class ValueEditor extends EventEmitter {
     public editorClick: any;
     public property;
     public editors: any[];
+    public error: Error;
 
     constructor(control, parent, property?, options?) {
         super();
@@ -115,20 +116,26 @@ export abstract class ValueEditor extends EventEmitter {
     public valid() {
         if (this.options && this.options.validate) {
             this.$parent.title = '';
-            const r = this.options.validate(this.data[this.property], this.value, this.data);
+            const r = this.options.validate(this.data[this.property], this.value, this.data, this);
             if (typeof r === 'string') {
                 this.$parent.title = r;
-                $(this.$parent).tooltip({ container: 'body', delay: { show: 100, hide: 250 } });
+                $(this.$parent).tooltip({ container: this.container, delay: { show: 100, hide: 250 } });
                 $(this.$parent).tooltip('show');
                 this.focus();
+                this.control.error = r;
                 return false;
             }
             else if (!r) {
                 this.$parent.title = 'Invalid value';
-                $(this.$parent).tooltip({ container: 'body', delay: { show: 100, hide: 250 } });
+                $(this.$parent).tooltip({ container: this.container.id ? '#' + this.container.id : null, delay: { show: 100, hide: 250 } });
                 $(this.$parent).tooltip('show');
+                this.control.error = 'Invalid value';
                 this.focus();
                 return false;
+            }
+            else {
+                this.control.error = null;
+                delete this.control.error;
             }
         }
         return true;
@@ -1462,6 +1469,7 @@ export class CollectionValueEditor extends ValueEditor {
             button.type = 'button';
             button.classList.add('btn', 'btn-primary');
             button.addEventListener('click', () => {
+                if (this.error || (<any>dg).error) return;
                 this.value = dg.rows;
                 this.$dialog.close();
                 this.$dialog.cleanUp();

@@ -24,9 +24,13 @@
     - Fix issue when trying to read include files for peek/goto define
     - Fix formatting of mappings in generated code
     - Do not autocomplete pairs when in a string
-    - Area Designer: Fix type in monster resistances code
+    - Area Designer:
+      - Fix type in monster resistances code
+      - Room editor now remembers collapsed state
     - Fix usage of advanced editor in text edit dialogs
     - Fix advanced edit text drop downs being cut off when used in a dialog window
+    - Fix error tooltips not displaying correctly
+    - Dialogs that validate data will no longer close until error is corrected
 - **Changed:**
   - Code editor: Hide items that only should appear when text is selected in context menu
   - Update electron 31.1.0 to 32.1.2

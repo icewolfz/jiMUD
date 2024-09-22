@@ -113,9 +113,39 @@ export class DataGrid extends EventEmitter {
 
     public selectionSearchField;
     public clipboardPrefix = '';
-    public enterMoveNext = true;
-    public enterMoveFirst = true;
-    public enterMoveNew = true;
+    private $enterMoveNext: boolean | Function = true;
+    private $enterMoveFirst: boolean | Function = true;
+    private $enterMoveNew: boolean | Function = true;
+
+    get enterMoveNext() {
+        if (typeof this.$enterMoveNext === 'function')
+            return this.$enterMoveNext() || false;
+        return this.$enterMoveNext;
+    }
+    set enterMoveNext(value) {
+        if (value === this.$enterMoveNext) return;
+        this.$enterMoveNext = value;
+    }
+
+    get enterMoveFirst() {
+        if (typeof this.$enterMoveFirst === 'function')
+            return this.$enterMoveFirst() || false;
+        return this.$enterMoveFirst;
+    }
+    set enterMoveFirst(value) {
+        if (value === this.$enterMoveFirst) return;
+        this.$enterMoveFirst = value;
+    }
+
+    get enterMoveNew() {
+        if (typeof this.$enterMoveNew === 'function')
+            return this.$enterMoveNew() || false;
+        return this.$enterMoveNew;
+    }
+    set enterMoveNew(value) {
+        if (value === this.$enterMoveNew) return;
+        this.$enterMoveNew = value;
+    }
 
     get showChildren() {
         return this.$children;
@@ -868,7 +898,7 @@ export class DataGrid extends EventEmitter {
 
     public addNewRow() {
         const data = {};
-        const e = { data: data, preventDefault: false };
+        const e = { data: data, preventDefault: false, index: this.$rows.length };
 
         const cols = this.$cols;
         let cl = cols.length;
@@ -2338,7 +2368,7 @@ export class DataGrid extends EventEmitter {
                     editor.el.title = col.tooltipFormatter(data) || '';
                 else if (col.formatter)
                     editor.el.title = col.formatter(data) || '';
-            }            
+            }
         }
         this.$editor = null;
         if (next === true && this.enterMoveNext && this.enterMoveNew)

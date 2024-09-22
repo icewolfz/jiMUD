@@ -126,7 +126,8 @@ export class EditorSettings {
         showMonsterPreview: true,
         enterMoveNext: true,
         enterMoveFirst: true,
-        enterMoveNew: true
+        enterMoveNew: true,
+        roomEditorStates: [],
     };
 
     public static load(file) {

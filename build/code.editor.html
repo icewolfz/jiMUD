@@ -6558,16 +6558,16 @@
 
                             if (data['room-wiz-includes'] && data['room-wiz-includes'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Includes:</span> ' + data['room-wiz-includes'].length + '</div>';
-                            if (data['room-wiz-defines'] && Object.keys(data['room-wiz-defines']).length > 0)
-                                sum += '<div><span style="font-weight:bold">Defines:</span> ' + Object.keys(data['mon-wiz-defines']).length + '</div>';
+                            if (data['room-wiz-defines'] && data['room-wiz-defines'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Defines:</span> ' + data['mon-wiz-defines'].length + '</div>';
                             if (data['room-wiz-inherits'] && data['room-wiz-inherits'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Inherits:</span> ' + data['room-wiz-inherits'].length + '</div>';
-                            if (data['room-wiz-variables'] && Object.keys(data['room-wiz-variables']).length > 0)
-                                sum += '<div><span style="font-weight:bold">Variables:</span> ' + Object.keys(data['mon-wiz-variables']).length + '</div>';
-                            if (data['room-wiz-functions'] && Object.keys(data['room-wiz-functions']).length > 0)
-                                sum += '<div><span style="font-weight:bold">Functions:</span> ' + Object.keys(data['room-wiz-functions']).length + '</div>';
-                            if (data['room-wiz-commands'] && Object.keys(data['room-wiz-commands']).length > 0)
-                                sum += '<div><span style="font-weight:bold">Commands:</span> ' + Object.keys(data['room-wiz-commands']).length + '</div>';
+                            if (data['room-wiz-variables'] && data['room-wiz-variables'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Variables:</span> ' + data['mon-wiz-variables'].length + '</div>';
+                            if (data['room-wiz-functions'] && data['room-wiz-functions'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Functions:</span> ' + data['room-wiz-functions'].length + '</div>';
+                            if (data['room-wiz-commands'] && data['room-wiz-commands'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Commands:</span> ' + data['room-wiz-commands'].length + '</div>';
 
                             summary.innerHTML = sum;
                         }
@@ -6628,38 +6628,36 @@
                     tmpl.inherits += data['room-wiz-inherits'].map(i => `\ninherit ${i};`).join('');
 
                 if (data['room-wiz-defines']) {
-                    Object.keys(data['room-wiz-defines']).forEach(r => tmpl['create pre'] += `#define ${r}${data['room-wiz-defines'][r] && data['room-wiz-defines'][r].trim().length ? ' ' + data['room-wiz-defines'][r].trim() : ''}\n`);
-                    if (Object.keys(data['room-wiz-defines']).length)
+                    data['room-wiz-defines'].forEach(r => tmpl['create pre'] += `#define ${r.key}${r.value && r.value.trim().length ? ' ' + r.value.trim() : ''}\n`);
+                    if (data['room-wiz-defines'].length)
                         tmpl['create pre'] += '\n';
                 }
                 if (data['room-wiz-variables']) {
-                    tmp = Object.keys(data['room-wiz-variables']);
-                    tmpl['create pre'] += Object.keys(data['room-wiz-variables']).map(
-                        arg => {
-                            if (data['room-wiz-variables'][arg].type == 'function' || (data['room-wiz-variables'][arg].type === 'mixed' && data['room-wiz-variables'][arg].value.trim().startsWith('(:'))) {
-                                tmp3 = formatFunctionPointer(data['room-wiz-variables'][arg].value);
+                    tmpl['create pre'] += data['room-wiz-variables'].map(
+                        variable => {
+                            if (variable.type == 'function' || (variable.type === 'mixed' && variable.value.trim().startsWith('(:'))) {
+                                tmp3 = formatFunctionPointer(variable.value);
                                 if (!stubs[tmp3]) {
-                                    data['create pre'] += createFunction(tmp3);
+                                    tmpl['create pre'] += createFunction(tmp3);
                                     stubs[tmp3] = 1;
                                 }
                             }
-                            return `${data['room-wiz-variables'][arg].type || 'mixed'}${data['room-wiz-variables'][arg].array ? ' *' : ' '}${arg} = ${formatVariableValue(data['room-wiz-variables'][arg].type, data['room-wiz-variables'][arg].value, 0, data['room-wiz-variables'][arg].array)};\n`;
+                            return `${variable.type || 'mixed'}${variable.name} = ${formatVariableValue(variable.type, variable.value, 0)};\n`;
                         }
                     ).join('');
-                    tmpl['reset body'] += Object.keys(data['room-wiz-variables']).filter(v => data['room-wiz-variables'][v].reset).map(
-                        arg => `${arg} = ${formatVariableValue(data['room-wiz-variables'][arg].type, data['room-wiz-variables'][arg].value, 0, data['room-wiz-variables'][arg].array)};\n`
+                    tmpl['reset body'] += data['room-wiz-variables'].filter(v => v.reset).map(
+                        variable => `${variable.name} = ${formatVariableValue(variable.type, variable.value, 0)};\n`
                     ).join('');
+
                     if (tmp.length)
                         tmpl['create pre'] += '\n';
                 }
 
                 if (data['room-wiz-functions']) {
-                    tmp = Object.keys(data['room-wiz-functions']);
-                    for (const func in data['room-wiz-functions']) {
-                        if (!data['room-wiz-functions'].hasOwnProperty(func)) continue;
-                        tmpl['create pre'] += createFunction(func, data['room-wiz-functions'][func]);
-                        stubs[formatFunctionPointer(func)] = 1;
-                    }
+                    data['room-wiz-functions'].forEach(func => {
+                        tmpl['create pre'] += createFunction(func.name, func);
+                        stubs[formatFunctionPointer(func.name)] = 1;
+                    });
                 }
 
                 if (data['room-wiz-forage'] !== -1 || doors.length > 0) {
@@ -6957,11 +6955,11 @@
                 if (data['room-wiz-waterdrink']) {
                     tmpl.inherits += '\ninherit STD_WATERDRINK;';
                     tmpl.doc.push('/doc/build/room/waterdrink');
-                    if (data['room-wiz-commands'] && Object.keys(data['room-wiz-commands']).length) {
+                    if (data['room-wiz-commands'] && data['room-wiz-commands'].length) {
                         data['create post'] += '\n\nvoid init()\n{\n   room::init();\n   waterdrink::init();\n';
-                        Object.keys(data['room-wiz-commands']).forEach(r => {
-                            const cmds = r.split(',').map(c => c.trim());
-                            tmp = data['room-wiz-commands'][r];
+                        data['room-wiz-commands'].forEach(r => {
+                            const cmds = r.name.split(',').map(c => c.trim());
+                            tmp = r.function;
                             if (cmds.length > 1) {
                                 if (!tmp || !tmp.length)
                                     tmp = 'cmd_' + cmds[0];
@@ -6969,8 +6967,8 @@
                             }
                             else {
                                 if (!tmp || !tmp.length)
-                                    tmp = 'cmd_' + r;
-                                tmpl['create post'] += `    add_action("${tmp}", "${r}");\n`;
+                                    tmp = 'cmd_' + r.name.trim();
+                                tmpl['create post'] += `    add_action("${tmp}", "${r.name.trim()}");\n`;
                             }
                             if (!stubs[formatFunctionPointer(tmp)]) {
                                 tmpl['create pre'] += createFunction(tmp, 'int', 'string args', '   return 1;');
@@ -7013,11 +7011,11 @@
                             tmpl['create body'] += `   set_water_wash(${data['room-wiz-water-wash-message']});\n`;
                     }
                 }
-                else if (data['room-wiz-commands'] && Object.keys(data['room-wiz-commands']).length) {
+                else if (data['room-wiz-commands'] && data['room-wiz-commands'].length) {
                     data['create post'] += '\n\nvoid init()\n{\n';
-                    Object.keys(data['room-wiz-commands']).forEach(r => {
-                        const cmds = r.split(',').map(c => c.trim());
-                        tmp = data['room-wiz-commands'][r];
+                    data['room-wiz-commands'].forEach(r => {
+                        const cmds = r.name.split(',').map(c => c.trim());
+                        tmp = r.function;
                         if (cmds.length > 1) {
                             if (!tmp || !tmp.length)
                                 tmp = 'cmd_' + cmds[0];
@@ -7025,8 +7023,8 @@
                         }
                         else {
                             if (!tmp || !tmp.length)
-                                tmp = 'cmd_' + r;
-                            tmpl['create post'] += `    add_action("${tmp}", "${r}");\n`;
+                                tmp = 'cmd_' + r.name.trim();
+                            tmpl['create post'] += `    add_action("${tmp}", "${r.name.trim()}");\n`;
                         }
                         if (!stubs[formatFunctionPointer(tmp)]) {
                             tmpl['create pre'] += createFunction(tmp, 'int', 'string args', '   return 1;');
@@ -8163,16 +8161,16 @@
 
                             if (data['mon-wiz-includes'] && data['mon-wiz-includes'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Includes:</span> ' + data['mon-wiz-includes'].length + '</div>';
-                            if (data['mon-wiz-defines'] && Object.keys(data['mon-wiz-defines']).length > 0)
-                                sum += '<div><span style="font-weight:bold">Defines:</span> ' + Object.keys(data['mon-wiz-defines']).length + '</div>';
+                            if (data['mon-wiz-defines'] && data['mon-wiz-defines'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Defines:</span> ' + data['mon-wiz-defines'].length + '</div>';
                             if (data['mon-wiz-inherits'] && data['mon-wiz-inherits'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Inherits:</span> ' + data['mon-wiz-inherits'].length + '</div>';
-                            if (data['mon-wiz-variables'] && Object.keys(data['mon-wiz-variables']).length > 0)
-                                sum += '<div><span style="font-weight:bold">Variables:</span> ' + Object.keys(data['mon-wiz-functions']).length + '</div>';
-                            if (data['mon-wiz-functions'] && Object.keys(data['mon-wiz-functions']).length > 0)
-                                sum += '<div><span style="font-weight:bold">Functions:</span> ' + Object.keys(data['mon-wiz-functions']).length + '</div>';
-                            if (data['mon-wiz-commands'] && Object.keys(data['mon-wiz-commands']).length > 0)
-                                sum += '<div><span style="font-weight:bold">Commands:</span> ' + Object.keys(data['mon-wiz-commands']).length + '</div>';
+                            if (data['mon-wiz-variables'] && data['mon-wiz-variables'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Variables:</span> ' + data['mon-wiz-functions'].length + '</div>';
+                            if (data['mon-wiz-functions'] && data['mon-wiz-functions'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Functions:</span> ' + data['mon-wiz-functions'].length + '</div>';
+                            if (data['mon-wiz-commands'] && data['mon-wiz-commands'].length > 0)
+                                sum += '<div><span style="font-weight:bold">Commands:</span> ' + data['mon-wiz-commands'].length + '</div>';
                             summary.innerHTML = sum;
                         }
                     })
@@ -8327,45 +8325,42 @@
                     tmpl.inherits += data['mon-wiz-inherits'].map(i => `\ninherit ${i};`).join('');
 
                 if (data['mon-wiz-defines']) {
-                    Object.keys(data['mon-wiz-defines']).forEach(r => tmpl['create pre'] += `#define ${r}${data['mon-wiz-defines'][r] && data['mon-wiz-defines'][r].trim().length ? ' ' + data['mon-wiz-defines'][r].trim() : ''}\n`);
-                    if (Object.keys(data['mon-wiz-defines']).length)
+                    data['mon-wiz-defines'].forEach(r => tmpl['create pre'] += `#define ${r.key}${r.value && r.value.trim().length ? ' ' + r.value.trim() : ''}\n`);
+                    if (data['mon-wiz-defines'].length)
                         tmpl['create pre'] += '\n';
                 }
                 if (data['mon-wiz-variables']) {
-                    tmp = Object.keys(data['mon-wiz-variables']);
-                    tmpl['create pre'] += Object.keys(data['mon-wiz-variables']).map(
-                        arg => {
-                            if (data['mon-wiz-variables'][arg].type == 'function' || (data['mon-wiz-variables'][arg].type === 'mixed' && data['mon-wiz-variables'][arg].value.trim().startsWith('(:'))) {
-                                tmp3 = formatFunctionPointer(data['mon-wiz-variables'][arg].value);
+                    tmpl['create pre'] += data['mon-wiz-variables'].map(
+                        variable => {
+                            if (variable.type == 'function' || (variable.type === 'mixed' && variable.value.trim().startsWith('(:'))) {
+                                tmp3 = formatFunctionPointer(variable.value);
                                 if (!stubs[tmp3]) {
-                                    data['create pre'] += createFunction(tmp3);
+                                    tmpl['create pre'] += createFunction(tmp3);
                                     stubs[tmp3] = 1;
                                 }
                             }
-                            return `${data['mon-wiz-variables'][arg].type || 'mixed'}${data['mon-wiz-variables'][arg].array ? ' *' : ' '}${arg} = ${formatVariableValue(data['mon-wiz-variables'][arg].type, data['mon-wiz-variables'][arg].value, 0, data['mon-wiz-variables'][arg].array)};\n`;
+                            return `${variable.type || 'mixed'}${variable.name} = ${formatVariableValue(variable.type, variable.value, 0)};\n`;
                         }
                     ).join('');
-                    tmpl['reset body'] += Object.keys(data['mon-wiz-variables']).filter(v => data['mon-wiz-variables'][v].reset).map(
-                        arg => `${arg} = ${formatVariableValue(data['mon-wiz-variables'][arg].type, data['mon-wiz-variables'][arg].value, 0, data['mon-wiz-variables'][arg].array)};\n`
+                    tmpl['reset body'] += data['mon-wiz-variables'].filter(v => v.reset).map(
+                        variable => `${variable.name} = ${formatVariableValue(variable.type, variable.value, 0)};\n`
                     ).join('');
                     if (tmp.length)
                         tmpl['create pre'] += '\n';
                 }
 
                 if (data['mon-wiz-functions']) {
-                    tmp = Object.keys(data['mon-wiz-functions']);
-                    for (const func in data['mon-wiz-functions']) {
-                        if (!data['mon-wiz-functions'].hasOwnProperty(func)) continue;
-                        tmpl['create pre'] += createFunction(func, data['mon-wiz-functions'][func]);
-                        stubs[formatFunctionPointer(func)] = 1;
-                    }
+                    data['mon-wiz-functions'].forEach(func => {
+                        tmpl['create pre'] += createFunction(func.name, func);
+                        stubs[formatFunctionPointer(func.name)] = 1;
+                    });
                 }
 
-                if (data['mon-wiz-commands'] && Object.keys(data['mon-wiz-commands']).length) {
+                if (data['mon-wiz-commands'] && data['mon-wiz-commands'].length) {
                     data['create post'] += '\n\nvoid init()\n{\n';
-                    Object.keys(data['mon-wiz-commands']).forEach(r => {
-                        const cmds = r.split(',').map(c => c.trim());
-                        tmp = data['mon-wiz-commands'][r];
+                    data['mon-wiz-commands'].forEach(r => {
+                        const cmds = r.name.split(',').map(c => c.trim());
+                        tmp = r.function;
                         if (cmds.length > 1) {
                             if (!tmp || !tmp.length)
                                 tmp = 'cmd_' + cmds[0];
@@ -8373,8 +8368,8 @@
                         }
                         else {
                             if (!tmp || !tmp.length)
-                                tmp = 'cmd_' + r;
-                            tmpl['create post'] += `    add_action("${tmp}", "${r}");\n`;
+                                tmp = 'cmd_' + r.name.trim();
+                            tmpl['create post'] += `    add_action("${tmp}", "${r.name.trim()}");\n`;
                         }
                         if (!stubs[formatFunctionPointer(tmp)]) {
                             tmpl['create pre'] += createFunction(tmp, 'int', 'string args', '   return 1;');

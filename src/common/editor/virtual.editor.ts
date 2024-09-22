@@ -682,9 +682,9 @@ export class VirtualEditor extends EditorBase {
         el.style.display = 'none';
         frag.appendChild(el);
         this.$descriptionGrid = new DataGrid(el);
-        this.$descriptionGrid.enterMoveFirst = this.$enterMoveFirst;
-        this.$descriptionGrid.enterMoveNext = this.$enterMoveNext;
-        this.$descriptionGrid.enterMoveNew = this.$enterMoveNew;
+        this.$descriptionGrid.enterMoveFirst = this.enterMoveFirst;
+        this.$descriptionGrid.enterMoveNext = this.enterMoveNext;
+        this.$descriptionGrid.enterMoveNew = this.enterMoveNew;
         this.$descriptionGrid.clipboardPrefix = 'jiMUD/';
         this.$descriptionGrid.columns = [
             {
@@ -1080,9 +1080,9 @@ export class VirtualEditor extends EditorBase {
         el.style.display = 'none';
         frag.appendChild(el);
         this.$itemGrid = new DataGrid(el);
-        this.$itemGrid.enterMoveFirst = this.$enterMoveFirst;
-        this.$itemGrid.enterMoveNext = this.$enterMoveNext;
-        //this.$itemGrid.enterMoveNew = this.$enterMoveNew;
+        this.$itemGrid.enterMoveFirst = this.enterMoveFirst;
+        this.$itemGrid.enterMoveNext = this.enterMoveNext;
+        //this.$itemGrid.enterMoveNew = this.enterMoveNew;
         this.$itemGrid.enterMoveNew = false;
         this.$itemGrid.clipboardPrefix = 'jiMUD/';
         this.$itemGrid.showChildren = true;
@@ -1432,9 +1432,9 @@ export class VirtualEditor extends EditorBase {
         el.style.display = 'none';
         frag.appendChild(el);
         this.$exitGrid = new DataGrid(el);
-        this.$exitGrid.enterMoveFirst = this.$enterMoveFirst;
-        this.$exitGrid.enterMoveNext = this.$enterMoveNext;
-        this.$exitGrid.enterMoveNew = this.$enterMoveNew;
+        this.$exitGrid.enterMoveFirst = this.enterMoveFirst;
+        this.$exitGrid.enterMoveNext = this.enterMoveNext;
+        this.$exitGrid.enterMoveNew = this.enterMoveNew;
         this.$exitGrid.on('browse-file', e => {
             this.emit('browse-file', e);
         });
@@ -3969,9 +3969,9 @@ export class VirtualEditor extends EditorBase {
                     type: EditorType.custom,
                     editor: ExternalExitValueEditor,
                     options: {
-                        enterMoveFirst: this.$enterMoveFirst,
-                        enterMoveNext: this.$enterMoveNext,
-                        enterMoveNew: this.$enterMoveNew
+                        enterMoveFirst: this.enterMoveFirst,
+                        enterMoveNext: this.enterMoveNext,
+                        enterMoveNew: this.enterMoveNew
                     }
                 }
             },
@@ -4045,9 +4045,9 @@ export class VirtualEditor extends EditorBase {
                     type: EditorType.custom,
                     editor: ItemsValueEditor,
                     options: {
-                        enterMoveFirst: this.$enterMoveFirst,
-                        enterMoveNext: this.$enterMoveNext,
-                        enterMoveNew: this.$enterMoveNew
+                        enterMoveFirst: this.enterMoveFirst,
+                        enterMoveNext: this.enterMoveNext,
+                        enterMoveNew: this.enterMoveNew
                     }
                 },
                 sort: 2
@@ -6461,62 +6461,23 @@ export class VirtualEditor extends EditorBase {
         this.$yAxis.style.top = (32 - this.$mapContainer.scrollTop) + 'px';
     }
 
+    private enterMoveFirst() {
+        return this.$enterMoveFirst;
+    }
+
+    private enterMoveNext() {
+        return this.$enterMoveNext;
+    }
+
+    private enterMoveNew() {
+        return this.$enterMoveNew;
+    }
+
     public set options(value: any) {
         if (!value) return;
         this.$enterMoveFirst = value.enterMoveFirst;
         this.$enterMoveNext = value.enterMoveNext;
         this.$enterMoveNew = value.enterMoveNew;
-
-        if (this.$descriptionGrid) {
-            this.$descriptionGrid.enterMoveFirst = value.enterMoveFirst;
-            this.$descriptionGrid.enterMoveNext = value.enterMoveNext;
-            this.$descriptionGrid.enterMoveNew = value.enterMoveNew;
-        }
-        if (this.$itemGrid) {
-            this.$itemGrid.enterMoveFirst = value.enterMoveFirst;
-            this.$itemGrid.enterMoveNext = value.enterMoveNext;
-            //this.$itemGrid.enterMoveNew = value.enterMoveNew;
-        }
-        if (this.$exitGrid) {
-            this.$exitGrid.enterMoveFirst = value.enterMoveFirst;
-            this.$exitGrid.enterMoveNext = value.enterMoveNext;
-            this.$exitGrid.enterMoveNew = value.enterMoveNew;
-        }
-
-        if (this.$roomEditor) {
-            this.$roomEditor.setPropertyOptions([
-                {
-                    property: 'external',
-                    label: 'External exits',
-                    formatter: this.formatExternal,
-                    sort: 5,
-                    editor: {
-                        type: EditorType.custom,
-                        editor: ExternalExitValueEditor,
-                        options: {
-                            enterMoveFirst: this.$enterMoveFirst,
-                            enterMoveNext: this.$enterMoveNext,
-                            enterMoveNew: this.$enterMoveNew
-                        }
-                    }
-                },
-                {
-                    property: 'items',
-                    group: 'Description',
-                    formatter: this.formatItems,
-                    editor: {
-                        type: EditorType.custom,
-                        editor: ItemsValueEditor,
-                        options: {
-                            enterMoveFirst: this.$enterMoveFirst,
-                            enterMoveNext: this.$enterMoveNext,
-                            enterMoveNew: this.$enterMoveNew
-                        }
-                    },
-                    sort: 2
-                }
-            ]);
-        }
 
         this.AllowResize = value.allowResize;
         this.AllowExitWalk = value.allowExitWalk;
@@ -7474,7 +7435,7 @@ export class VirtualEditor extends EditorBase {
                 this.DrawRoom(this.$mapContext, r[x], false);
         }
         this.$mapContext.strokeStyle = 'black';
-        Timer.end('Draw time');
+        Timer.end('Virtual Draw time');
         this.$mapContext.restore();
     }
 
@@ -9403,12 +9364,13 @@ export class VirtualEditor extends EditorBase {
                 bottom: 0
             };
         }
-        Timer.end('BuildRooms time');
+        Timer.end('Virtual BuildRooms time');
         this.doUpdate(UpdateType.status | UpdateType.refreshDescriptions);
     }
 
     private BuildMap() {
         Timer.start();
+        this.$drawCache = null;
         if (this.$depth >= this.$mapSize.depth)
             this.$depth = this.$mapSize.depth - 1;
         if (this.$mapSize.right !== this.$map.width || this.$map.height !== this.$mapSize.bottom) {
@@ -9416,6 +9378,7 @@ export class VirtualEditor extends EditorBase {
             this.$map.height = this.$mapSize.bottom;
             this.BuildAxises();
             setTimeout(() => {
+                this.$drawCache = null;
                 this.DrawMap();
             }, 250);
         }
@@ -9445,7 +9408,7 @@ export class VirtualEditor extends EditorBase {
         }
         this.$exitGrid.columns = cols;
         this.emit('rebuild-buttons');
-        Timer.end('BuildMap time');
+        Timer.end('Virtual BuildMap time');
     }
 
     private BuildAxises() {
@@ -9982,7 +9945,7 @@ export class VirtualEditor extends EditorBase {
         this.emit('rebuild-menu', 'edit');
         this.emit('rebuild-buttons');
         this.emit('resize-map');
-        Timer.end('Resize time');
+        Timer.end('Virtual Resize time');
         this.roomsChanged(this.$mapSize.width, this.$mapSize.height, this.$mapSize.depth);
         this.doUpdate(UpdateType.drawMap);
         if (!noUndo) {
@@ -10176,7 +10139,7 @@ export class VirtualEditor extends EditorBase {
         this.$map.height = this.$mapSize.bottom;
         this.BuildAxises();
         this.emit('flip-map');
-        Timer.end('Flip time');
+        Timer.end('Virtual Flip time');
         this.roomsChanged(this.$mapSize.width, this.$mapSize.height, this.$mapSize.depth);
         this.doUpdate(UpdateType.drawMap);
         if (!noUndo)
