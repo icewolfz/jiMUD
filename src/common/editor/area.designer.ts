@@ -3449,6 +3449,8 @@ export class AreaDesigner extends EditorBase {
         });
         this.$roomEditor = new PropertyGrid({ parent: this.$splitterEditor.panel2 });
         this.$roomEditor.hideUnSetProperties = true;
+        this.$roomEditor.setGroupOptions('Advanced', {sort: 1});
+        this.$roomEditor.setGroupOptions('Expert', {sort: 2});
         this.$roomEditor.readonly = (prop, value, object) => {
             if (object && object.filter(o => o.ef).length !== 0)
                 return prop !== 'ef';

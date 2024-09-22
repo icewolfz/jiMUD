@@ -32,8 +32,11 @@
     - Fix advanced edit text drop downs being cut off when used in a dialog window
     - Fix error tooltips not displaying correctly
     - Dialogs that validate data will no longer close until error is corrected
+    - Fix new monster/room wizard titles when launched from file menu
 - **Changed:**
-  - Code editor: Hide items that only should appear when text is selected in context menu
+  - Code editor:
+    - Hide items that only should appear when text is selected in context menu
+    - Area Designer: Room property groups now sort advanced at the bottom
   - Update electron 31.1.0 to 32.1.2
   - Update better-sqlite3 11.2.1 to 11.3.0
   - Update chokidar 3.6.0 to 4.0.0

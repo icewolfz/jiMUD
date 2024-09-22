@@ -2331,12 +2331,12 @@
                         {
                             label: '&Room...',
                             //accelerator: "CmdOrCtrl+N",
-                            click: roomWizard
+                            click: () => roomWizard()
                         },
                         {
                             label: '&Monster...',
                             //accelerator: "CmdOrCtrl+N",
-                            click: monsterWizard
+                            click: () => monsterWizard()
                         },
                         { type: 'separator' },
                         {
@@ -7679,7 +7679,7 @@
                         }
                     }),
                     new WizardDataGridPage({
-                        title: 'resistances',
+                        title: 'Resistances',
                         id: 'mon-wiz-resistances',
                         clipboard: 'jiMUD/',
                         columns: [
