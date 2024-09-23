@@ -207,8 +207,8 @@ const StandardObjects = {
         file: 'OBJ_COINS',
         type: StdObjectType.object
     },
-    '-37': {
-        id: -37,
+    '-34': {
+        id: -34,
         name: 'pile of coins',
         short: 'a pile of coins',
         file: 'OBJ_COINS',
@@ -387,13 +387,6 @@ const StandardObjects = {
         name: 'chess board',
         short: 'a chess board',
         file: 'OBJ_CHESS',
-        type: StdObjectType.object
-    },
-    '-34': {
-        id: -34,
-        name: 'pile of coins',
-        short: 'a pile of coins',
-        file: 'OBJ_COINS',
         type: StdObjectType.object
     },
     '-35': {
