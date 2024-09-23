@@ -138,6 +138,280 @@ export const MonsterTypes = [
 
 export enum UpdateType { none = 0, drawMap = 1, buildMap = 2, resize = 4, status = 8, flip = 16 }
 
+
+export enum StdObjectType {
+    object, chest, material, ore, weapon, armor, sheath, material_weapon, rope, instrument, food, drink, fishing_pole, backpack, bag_of_holding, armor_of_holding
+}
+
+const StandardObjects = {
+    '-1': {
+        id: -1,
+        name: 'common gem',
+        short: 'a common gem',
+        file: '',
+        type: StdObjectType.object
+    },
+    '-2': {
+        id: -2,
+        name: 'uncommon gem',
+        short: 'a uncommon gem',
+        file: '',
+        type: StdObjectType.object
+    },
+    '-3': {
+        id: -3,
+        name: 'rare gem',
+        short: 'a rare gem',
+        file: '',
+        type: StdObjectType.object
+    },
+    '-4': {
+        id: -4,
+        name: 'exceptional gem',
+        short: 'a exceptional gem',
+        file: '',
+        type: StdObjectType.object
+    },
+    '-5': {
+        id: -5,
+        name: 'platinum',
+        short: 'platinum coins',
+        file: 'OBJ_COINS',
+        type: StdObjectType.object
+    },
+    '-6': {
+        id: -6,
+        name: 'gold',
+        short: 'gold coins',
+        file: 'OBJ_COINS',
+        type: StdObjectType.object
+    },
+    '-7': {
+        id: -7,
+        name: 'electrum',
+        short: 'electrum coins',
+        file: 'OBJ_COINS',
+        type: StdObjectType.object
+    },
+    '-8': {
+        id: -8,
+        name: 'silver',
+        short: 'silver coins',
+        file: 'OBJ_COINS',
+        type: StdObjectType.object
+    },
+    '-9': {
+        id: -9,
+        name: 'copper',
+        short: 'copper coins',
+        file: 'OBJ_COINS',
+        type: StdObjectType.object
+    },
+    '-37': {
+        id: -37,
+        name: 'pile of coins',
+        short: 'a pile of coins',
+        file: 'OBJ_COINS',
+        type: StdObjectType.object
+    },
+    '-38': {
+        id: -38,
+        name: 'gem',
+        short: 'a gem',
+        file: 'OBJ_GEM',
+        type: StdObjectType.object
+    },    
+    '-10': {
+        id: -10,
+        name: 'torch',
+        short: 'a torch',
+        file: 'OBJ_TORCH',
+        type: StdObjectType.object
+    },
+    '-11': {
+        id: -11,
+        name: 'random weapon',
+        short: 'a random weapon',
+        file: 'OBJ_WEAPON_RAND',
+        type: StdObjectType.object
+    },
+    '-12': {
+        id: -11,
+        name: 'random armor',
+        short: 'a random armor',
+        file: 'OBJ_ARMOR_RAND',
+        type: StdObjectType.object
+    },
+    '-13': {
+        id: -13,
+        name: 'random shield',
+        short: 'a random shield',
+        file: 'OBJ_SHIELD_RAND',
+        type: StdObjectType.object
+    },
+    '-14': {
+        id: -14,
+        name: 'random sheath',
+        short: 'a random sheath',
+        file: 'OBJ_SHEATH_RAND',
+        type: StdObjectType.object
+    },
+    '-15': {
+        id: -15,
+        name: 'random bolas',
+        short: 'a random bolas',
+        file: 'OBJ_BOLAS_RAND',
+        type: StdObjectType.object
+    },
+    '-16': {
+        id: -16,
+        name: 'random bow',
+        short: 'a random bow',
+        file: 'OBJ_BOW_RAND',
+        type: StdObjectType.object
+    },
+    '-17': {
+        id: -17,
+        name: 'random quiver',
+        short: 'a random quiver',
+        file: 'OBJ_QUIVER_RAND',
+        type: StdObjectType.object
+    },
+    '-18': {
+        id: -18,
+        name: 'random arrow',
+        short: 'a random arrow',
+        file: 'OBJ_ARROW_RAND',
+        type: StdObjectType.object
+    },
+    '-19': {
+        id: -13,
+        name: 'random instrument',
+        short: 'a random instrument',
+        file: 'OBJ_INSTRUMENT_RAND',
+        type: StdObjectType.object
+    },
+    '-20': {
+        id: -20,
+        name: 'random set of lockpocks',
+        short: 'a random set of lockpocks',
+        file: 'OBJ_LOCKPICKS_RAND',
+        type: StdObjectType.object
+    },
+    '-21': {
+        id: -21,
+        name: 'backpack',
+        short: 'a backpack',
+        file: 'OBJ_BACKPACK',
+        type: StdObjectType.object
+    },
+    '-22': {
+        id: -22,
+        name: 'random backpack',
+        short: 'a random backpack',
+        file: 'OBJ_BACKPACK_RAND',
+        type: StdObjectType.object
+    },
+    '-23': {
+        id: -23,
+        name: 'small metal lantern',
+        short: 'a small metal lantern',
+        file: 'OBJ_LANTERN',
+        type: StdObjectType.object
+    },
+    '-24': {
+        id: -24,
+        name: 'small flask of oil',
+        short: 'a small flask of oil',
+        file: 'OBJ_OIL',
+        type: StdObjectType.object
+    },
+    '-25': {
+        id: -25,
+        name: '50\' rope',
+        short: 'a 50\' rope',
+        file: 'OBJ_ROPE',
+        type: StdObjectType.object
+    },
+    '-26': {
+        id: -26,
+        name: 'cloth tourniquet',
+        short: 'a cloth tourniquet',
+        file: 'OBJ_TOURNIQUET',
+        type: StdObjectType.object
+    },
+    '-27': {
+        id: -27,
+        name: 'random piece of ore',
+        short: 'a random piece of ore',
+        file: 'OBJ_ORE_RAND',
+        type: StdObjectType.object
+    },
+    '-28': {
+        id: -28,
+        name: 'random piece of material',
+        short: 'a random piece of material',
+        file: 'OBJ_MATERIAL',
+        type: StdObjectType.object
+    },
+    '-29': {
+        id: -29,
+        name: 'random piece of material weapon',
+        short: 'a random piece of material weapon',
+        file: 'OBJ_MATERIAL_WEAPON',
+        type: StdObjectType.object
+    },
+    '-30': {
+        id: -30,
+        name: 'empty bottle',
+        short: 'an empty bottle',
+        file: 'OBJ_BOTTLE',
+        type: StdObjectType.object
+    },
+    '-31': {
+        id: -31,
+        name: 'deck of cards',
+        short: 'a deck of cards',
+        file: 'OBJ_CARDDECK',
+        type: StdObjectType.object
+    },
+    '-32': {
+        id: -32,
+        name: 'lasso',
+        short: 'a lasso',
+        file: 'OBJ_LASSO',
+        type: StdObjectType.object
+    },
+    '-33': {
+        id: -33,
+        name: 'chess board',
+        short: 'a chess board',
+        file: 'OBJ_CHESS',
+        type: StdObjectType.object
+    },
+    '-34': {
+        id: -34,
+        name: 'pile of coins',
+        short: 'a pile of coins',
+        file: 'OBJ_COINS',
+        type: StdObjectType.object
+    },
+    '-35': {
+        id: -35,
+        name: 'smoke-bomb',
+        short: 'a smoke-bomb',
+        file: 'OBJ_SMOKEBOMB',
+        type: StdObjectType.object
+    },
+    '-36': {
+        id: -36,
+        name: 'disguise kit',
+        short: 'a disguise kit',
+        file: 'OBJ_DISGUISEKIT',
+        type: StdObjectType.object
+    }
+};
+
 interface ObjectInfo {
     id: number;
     minAmount?: number;
@@ -145,6 +419,7 @@ interface ObjectInfo {
     random?: number;
     unique?: boolean;
     action?: string;
+    arguments?: string;
 }
 
 interface RoomItem {
@@ -240,10 +515,10 @@ interface lpcFunction {
     type: string;
     code: string;
     variableArguments: boolean;
-    arguments: lpcFuntionArgument[];
+    arguments: lpcFunctionArgument[];
 }
 
-interface lpcFuntionArgument {
+interface lpcFunctionArgument {
     name: string;
     type: string;
     expand: boolean;
@@ -777,10 +1052,6 @@ class Monster {
         this.emotes = [];
         this.properties = [];
     }
-}
-
-export enum StdObjectType {
-    object, chest, material, ore, weapon, armor, sheath, material_weapon, rope, instrument, food, drink, fishing_pole, backpack, bag_of_holding, armor_of_holding
 }
 
 interface Property {
@@ -3449,8 +3720,8 @@ export class AreaDesigner extends EditorBase {
         });
         this.$roomEditor = new PropertyGrid({ parent: this.$splitterEditor.panel2 });
         this.$roomEditor.hideUnSetProperties = true;
-        this.$roomEditor.setGroupOptions('Advanced', {sort: 1});
-        this.$roomEditor.setGroupOptions('Expert', {sort: 2});
+        this.$roomEditor.setGroupOptions('Advanced', { sort: 1 });
+        this.$roomEditor.setGroupOptions('Expert', { sort: 2 });
         this.$roomEditor.readonly = (prop, value, object) => {
             if (object && object.filter(o => o.ef).length !== 0)
                 return prop !== 'ef';
@@ -3968,23 +4239,22 @@ export class AreaDesigner extends EditorBase {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
                                         return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                    if (StandardObjects[data.cell])
+                                        return StandardObjects[data.cell].name;
                                     return '';
                                 },
                                 tooltipFormatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
                                         return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                    if (StandardObjects[data.cell])
+                                        return StandardObjects[data.cell].name;
                                     return '';
                                 },
                                 editor: {
                                     type: EditorType.select,
                                     options: {
-                                        data: this.$area ? Object.values<StdObject>(this.$area.objects).map(o => {
-                                            return {
-                                                display: o.name || o.short,
-                                                value: o.id
-                                            };
-                                        }) : []
+                                        data: this.objectData()
                                     }
                                 }
                             },
@@ -4007,6 +4277,23 @@ export class AreaDesigner extends EditorBase {
                                 label: 'Unique',
                                 field: 'unique',
                                 width: 150
+                            },
+                            {
+                                label: 'Arguments',
+                                field: 'arguments',
+                                width: 300,
+                                editor: {
+                                    type: EditorType.collection,
+                                    options: {
+                                        columnLabel: 'Argument',
+                                        stringCollection: true,
+                                        open: true,
+                                        type: 'object',
+                                        enterMoveFirst: this.enterMoveFirst,
+                                        enterMoveNext: this.enterMoveNext,
+                                        enterMoveNew: this.enterMoveNew
+                                    }
+                                }
                             }
                         ],
                         onAdd: (e) => {
@@ -4015,7 +4302,8 @@ export class AreaDesigner extends EditorBase {
                                 minAmount: 0,
                                 maxAmount: 0,
                                 random: 0,
-                                unique: false
+                                unique: false,
+                                arguments: ''
                             };
                         },
                         type: 'object',
@@ -4082,6 +4370,23 @@ export class AreaDesigner extends EditorBase {
                                 label: 'Unique',
                                 field: 'unique',
                                 width: 150
+                            },
+                            {
+                                label: 'Arguments',
+                                field: 'arguments',
+                                width: 250,
+                                editor: {
+                                    type: EditorType.collection,
+                                    options: {
+                                        columnLabel: 'Argument',
+                                        stringCollection: true,
+                                        open: true,
+                                        type: 'object',
+                                        enterMoveFirst: this.enterMoveFirst,
+                                        enterMoveNext: this.enterMoveNext,
+                                        enterMoveNew: this.enterMoveNew
+                                    }
+                                },
                             }
                         ],
                         onAdd: (e) => {
@@ -4091,7 +4396,8 @@ export class AreaDesigner extends EditorBase {
                                 maxAmount: 0,
                                 random: 0,
                                 unique: false,
-                                action: ''
+                                action: '',
+                                arguments: ''
                             };
                         },
                         type: 'object',
@@ -4347,27 +4653,27 @@ export class AreaDesigner extends EditorBase {
                                 label: 'Name',
                                 field: 'id',
                                 spring: true,
+                                width: 300,
                                 formatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
                                         return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                    if (StandardObjects[data.cell])
+                                        return StandardObjects[data.cell].name;
                                     return '';
                                 },
                                 tooltipFormatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
                                         return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                    if (StandardObjects[data.cell])
+                                        return StandardObjects[data.cell].name;
                                     return '';
                                 },
                                 editor: {
                                     type: EditorType.select,
                                     options: {
-                                        data: this.$area ? Object.values<StdObject>(this.$area.objects).map(o => {
-                                            return {
-                                                display: o.name || o.short,
-                                                value: o.id
-                                            };
-                                        }) : []
+                                        data: this.objectData()
                                     }
                                 }
                             },
@@ -4375,12 +4681,30 @@ export class AreaDesigner extends EditorBase {
                                 label: 'Random',
                                 field: 'random',
                                 width: 150
+                            },
+                            {
+                                label: 'Arguments',
+                                field: 'arguments',
+                                width: 250,
+                                editor: {
+                                    type: EditorType.collection,
+                                    options: {
+                                        columnLabel: 'Argument',
+                                        stringCollection: true,
+                                        open: true,
+                                        type: 'object',
+                                        enterMoveFirst: this.enterMoveFirst,
+                                        enterMoveNext: this.enterMoveNext,
+                                        enterMoveNew: this.enterMoveNew
+                                    }
+                                },
                             }
                         ],
                         onAdd: (e) => {
                             e.data = {
                                 id: 0,
-                                random: 0
+                                random: 0,
+                                arguments: ''
                             };
                         },
                         type: 'object',
@@ -4406,27 +4730,27 @@ export class AreaDesigner extends EditorBase {
                                 label: 'Name',
                                 field: 'id',
                                 spring: true,
+                                width: 300,
                                 formatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
                                         return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                    if (StandardObjects[data.cell])
+                                        return StandardObjects[data.cell].name;
                                     return '';
                                 },
                                 tooltipFormatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
                                         return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                    if (StandardObjects[data.cell])
+                                        return StandardObjects[data.cell].name;
                                     return '';
                                 },
                                 editor: {
                                     type: EditorType.select,
                                     options: {
-                                        data: this.$area ? Object.values<StdObject>(this.$area.objects).map(o => {
-                                            return {
-                                                display: o.name || o.short,
-                                                value: o.id
-                                            };
-                                        }) : []
+                                        data: this.objectData()
                                     }
                                 }
                             },
@@ -4434,12 +4758,30 @@ export class AreaDesigner extends EditorBase {
                                 label: 'Random',
                                 field: 'random',
                                 width: 150
+                            },
+                            {
+                                label: 'Arguments',
+                                field: 'arguments',
+                                width: 250,
+                                editor: {
+                                    type: EditorType.collection,
+                                    options: {
+                                        columnLabel: 'Argument',
+                                        stringCollection: true,
+                                        open: true,
+                                        type: 'object',
+                                        enterMoveFirst: this.enterMoveFirst,
+                                        enterMoveNext: this.enterMoveNext,
+                                        enterMoveNew: this.enterMoveNew
+                                    }
+                                }
                             }
                         ],
                         onAdd: (e) => {
                             e.data = {
                                 id: 0,
-                                random: 0
+                                random: 0,
+                                arguments: ''
                             };
                         },
                         type: 'object',
@@ -5226,23 +5568,22 @@ export class AreaDesigner extends EditorBase {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
                                         return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                    if (StandardObjects[data.cell])
+                                        return StandardObjects[data.cell].name;
                                     return '';
                                 },
                                 tooltipFormatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
                                         return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                    if (StandardObjects[data.cell])
+                                        return StandardObjects[data.cell].name;
                                     return '';
                                 },
                                 editor: {
                                     type: EditorType.select,
                                     options: {
-                                        data: this.$area ? Object.values<StdObject>(this.$area.objects).map(o => {
-                                            return {
-                                                display: o.name || o.short,
-                                                value: o.id
-                                            };
-                                        }) : []
+                                        data: this.objectData()
                                     }
                                 }
                             },
@@ -5281,6 +5622,23 @@ export class AreaDesigner extends EditorBase {
                                         ]
                                     }
                                 }
+                            },
+                            {
+                                label: 'Arguments',
+                                field: 'arguments',
+                                width: 300,
+                                editor: {
+                                    type: EditorType.collection,
+                                    options: {
+                                        columnLabel: 'Argument',
+                                        stringCollection: true,
+                                        open: true,
+                                        type: 'object',
+                                        enterMoveFirst: this.enterMoveFirst,
+                                        enterMoveNext: this.enterMoveNext,
+                                        enterMoveNew: this.enterMoveNew
+                                    }
+                                }
                             }
                         ],
                         onAdd: (e) => {
@@ -5290,7 +5648,8 @@ export class AreaDesigner extends EditorBase {
                                 maxAmount: 0,
                                 random: 0,
                                 unique: false,
-                                action: ''
+                                action: '',
+                                arguments: ''
                             };
                         },
                         type: 'object',
@@ -5655,23 +6014,22 @@ export class AreaDesigner extends EditorBase {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
                                         return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                    if (StandardObjects[data.cell])
+                                        return StandardObjects[data.cell].name;
                                     return '';
                                 },
                                 tooltipFormatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
                                         return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                    if (StandardObjects[data.cell])
+                                        return StandardObjects[data.cell].name;
                                     return '';
                                 },
                                 editor: {
                                     type: EditorType.select,
                                     options: {
-                                        data: this.$area ? Object.values<StdObject>(this.$area.objects).map(o => {
-                                            return {
-                                                display: o.name || o.short,
-                                                value: o.id
-                                            };
-                                        }) : []
+                                        data: this.objectData()
                                     }
                                 }
                             },
@@ -5694,6 +6052,23 @@ export class AreaDesigner extends EditorBase {
                                 label: 'Unique',
                                 field: 'unique',
                                 width: 150
+                            },
+                            {
+                                label: 'Arguments',
+                                field: 'arguments',
+                                width: 300,
+                                editor: {
+                                    type: EditorType.collection,
+                                    options: {
+                                        columnLabel: 'Argument',
+                                        stringCollection: true,
+                                        open: true,
+                                        type: 'object',
+                                        enterMoveFirst: this.enterMoveFirst,
+                                        enterMoveNext: this.enterMoveNext,
+                                        enterMoveNew: this.enterMoveNew
+                                    }
+                                }
                             }
                         ],
                         onAdd: (e) => {
@@ -5702,7 +6077,8 @@ export class AreaDesigner extends EditorBase {
                                 minAmount: 0,
                                 maxAmount: 0,
                                 random: 0,
-                                unique: false
+                                unique: false,
+                                arguments: ''
                             };
                         },
                         type: 'object',
@@ -5770,6 +6146,23 @@ export class AreaDesigner extends EditorBase {
                                 label: 'Unique',
                                 field: 'unique',
                                 width: 150
+                            },
+                            {
+                                label: 'Arguments',
+                                field: 'arguments',
+                                width: 250,
+                                editor: {
+                                    type: EditorType.collection,
+                                    options: {
+                                        columnLabel: 'Argument',
+                                        stringCollection: true,
+                                        open: true,
+                                        type: 'object',
+                                        enterMoveFirst: this.enterMoveFirst,
+                                        enterMoveNext: this.enterMoveNext,
+                                        enterMoveNew: this.enterMoveNew
+                                    }
+                                },
                             }
                         ],
                         onAdd: (e) => {
@@ -5779,7 +6172,8 @@ export class AreaDesigner extends EditorBase {
                                 maxAmount: 0,
                                 random: 0,
                                 unique: false,
-                                action: ''
+                                action: '',
+                                arguments: ''
                             };
                         },
                         type: 'object',
@@ -5965,23 +6359,22 @@ export class AreaDesigner extends EditorBase {
                                                     if (!data) return '';
                                                     if (data.cell >= 0 && this.$area.objects[data.cell])
                                                         return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                                    if (StandardObjects[data.cell])
+                                                        return StandardObjects[data.cell].name;
                                                     return '';
                                                 },
                                                 tooltipFormatter: (data) => {
                                                     if (!data) return '';
                                                     if (data.cell >= 0 && this.$area.objects[data.cell])
                                                         return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                                    if (StandardObjects[data.cell])
+                                                        return StandardObjects[data.cell].name;
                                                     return '';
                                                 },
                                                 editor: {
                                                     type: EditorType.select,
                                                     options: {
-                                                        data: this.$area ? Object.values<StdObject>(this.$area.objects).map(o => {
-                                                            return {
-                                                                display: o.name || o.short,
-                                                                value: o.id
-                                                            };
-                                                        }) : []
+                                                        data: this.objectData()
                                                     }
                                                 }
                                             },
@@ -5989,12 +6382,30 @@ export class AreaDesigner extends EditorBase {
                                                 label: 'Random',
                                                 field: 'random',
                                                 width: 150
+                                            },
+                                            {
+                                                label: 'Arguments',
+                                                field: 'arguments',
+                                                width: 250,
+                                                editor: {
+                                                    type: EditorType.collection,
+                                                    options: {
+                                                        columnLabel: 'Argument',
+                                                        stringCollection: true,
+                                                        open: true,
+                                                        type: 'object',
+                                                        enterMoveFirst: this.enterMoveFirst,
+                                                        enterMoveNext: this.enterMoveNext,
+                                                        enterMoveNew: this.enterMoveNew
+                                                    }
+                                                },
                                             }
                                         ],
                                         add: (e) => {
                                             e.data = {
                                                 item: 0,
-                                                random: 0
+                                                random: 0,
+                                                arguments: ''
                                             };
                                         },
                                         enterMoveFirst: this.enterMoveFirst,
@@ -6014,23 +6425,22 @@ export class AreaDesigner extends EditorBase {
                                                     if (!data) return '';
                                                     if (data.cell >= 0 && this.$area.objects[data.cell])
                                                         return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                                    if (StandardObjects[data.cell])
+                                                        return StandardObjects[data.cell].name;
                                                     return '';
                                                 },
                                                 tooltipFormatter: (data) => {
                                                     if (!data) return '';
                                                     if (data.cell >= 0 && this.$area.objects[data.cell])
                                                         return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                                    if (StandardObjects[data.cell])
+                                                        return StandardObjects[data.cell].name;
                                                     return '';
                                                 },
                                                 editor: {
                                                     type: EditorType.select,
                                                     options: {
-                                                        data: this.$area ? Object.values<StdObject>(this.$area.objects).map(o => {
-                                                            return {
-                                                                display: o.name || o.short,
-                                                                value: o.id
-                                                            };
-                                                        }) : []
+                                                        data: this.objectData()
                                                     }
                                                 }
                                             },
@@ -6038,12 +6448,30 @@ export class AreaDesigner extends EditorBase {
                                                 label: 'Random',
                                                 field: 'random',
                                                 width: 150
+                                            },
+                                            {
+                                                label: 'Arguments',
+                                                field: 'arguments',
+                                                width: 250,
+                                                editor: {
+                                                    type: EditorType.collection,
+                                                    options: {
+                                                        columnLabel: 'Argument',
+                                                        stringCollection: true,
+                                                        open: true,
+                                                        type: 'object',
+                                                        enterMoveFirst: this.enterMoveFirst,
+                                                        enterMoveNext: this.enterMoveNext,
+                                                        enterMoveNew: this.enterMoveNew
+                                                    }
+                                                },
                                             }
                                         ],
                                         add: (e) => {
                                             e.data = {
                                                 item: 0,
-                                                random: 0
+                                                random: 0,
+                                                arguments
                                             };
                                         },
                                         enterMoveFirst: this.enterMoveFirst,
@@ -6423,23 +6851,22 @@ export class AreaDesigner extends EditorBase {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
                                         return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                    if (StandardObjects[data.cell])
+                                        return StandardObjects[data.cell].name;
                                     return '';
                                 },
                                 tooltipFormatter: (data) => {
                                     if (!data) return '';
                                     if (data.cell >= 0 && this.$area.objects[data.cell])
                                         return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                    if (StandardObjects[data.cell])
+                                        return StandardObjects[data.cell].name;
                                     return '';
                                 },
                                 editor: {
                                     type: EditorType.select,
                                     options: {
-                                        data: this.$area ? Object.values<StdObject>(this.$area.objects).map(o => {
-                                            return {
-                                                display: o.name || o.short,
-                                                value: o.id
-                                            };
-                                        }) : []
+                                        data: this.objectData()
                                     }
                                 }
                             },
@@ -6480,6 +6907,23 @@ export class AreaDesigner extends EditorBase {
                                         ]
                                     }
                                 }
+                            },
+                            {
+                                label: 'Arguments',
+                                field: 'arguments',
+                                width: 300,
+                                editor: {
+                                    type: EditorType.collection,
+                                    options: {
+                                        columnLabel: 'Argument',
+                                        stringCollection: true,
+                                        open: true,
+                                        type: 'object',
+                                        enterMoveFirst: this.enterMoveFirst,
+                                        enterMoveNext: this.enterMoveNext,
+                                        enterMoveNew: this.enterMoveNew
+                                    }
+                                }
                             }
                         ],
                         onAdd: (e) => {
@@ -6489,7 +6933,8 @@ export class AreaDesigner extends EditorBase {
                                 maxAmount: 0,
                                 random: 0,
                                 unique: false,
-                                action: ''
+                                action: '',
+                                arguments: ''
                             };
                         },
                         type: 'object',
@@ -8203,75 +8648,24 @@ export class AreaDesigner extends EditorBase {
                                                     if (!data) return '';
                                                     data.cell = +data.cell;
                                                     if (data.cell >= 0 && this.$area.objects[data.cell])
-                                                        return stripPinkfish(this.$area.objects[data.cell].short);
-                                                    switch (data.cell) {
-                                                        case -1:
-                                                            return 'common gem';
-                                                        case -2:
-                                                            return 'uncommon gem';
-                                                        case -3:
-                                                            return 'rare gem';
-                                                        case -4:
-                                                            return 'exceptional gem';
-                                                        case -5:
-                                                            return 'platinum';
-                                                        case -6:
-                                                            return 'gold';
-                                                        case -7:
-                                                            return 'electrum';
-                                                        case -8:
-                                                            return 'silver';
-                                                        case -9:
-                                                            return 'copper';
-                                                    }
+                                                        return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                                    if (StandardObjects[data.cell])
+                                                        return StandardObjects[data.cell].name;
                                                     return '';
                                                 },
                                                 tooltipFormatter: (data) => {
                                                     if (!data) return '';
                                                     data.cell = +data.cell;
                                                     if (data.cell >= 0 && this.$area.objects[data.cell])
-                                                        return this.$area.objects[data.cell].short;
-                                                    switch (data.cell) {
-                                                        case -1:
-                                                            return 'common gem';
-                                                        case -2:
-                                                            return 'uncommon gem';
-                                                        case -3:
-                                                            return 'rare gem';
-                                                        case -4:
-                                                            return 'exceptional gem';
-                                                        case -5:
-                                                            return 'platinum';
-                                                        case -6:
-                                                            return 'gold';
-                                                        case -7:
-                                                            return 'electrum';
-                                                        case -8:
-                                                            return 'silver';
-                                                        case -9:
-                                                            return 'copper';
-                                                    }
+                                                        return stripPinkfish(this.$area.objects[data.cell].name || this.$area.objects[data.cell].short);
+                                                    if (StandardObjects[data.cell])
+                                                        return StandardObjects[data.cell].name;
                                                     return '';
                                                 },
                                                 editor: {
                                                     type: EditorType.select,
                                                     options: {
-                                                        data: [
-                                                            { display: 'common gem', value: -1 },
-                                                            { display: 'uncommon gem', value: -2 },
-                                                            { display: 'rare gem', value: -3 },
-                                                            { display: 'exceptional gem', value: -4 },
-                                                            { display: 'platinum', value: -5 },
-                                                            { display: 'gold', value: -6 },
-                                                            { display: 'electrum', value: -7 },
-                                                            { display: 'silver', value: -8 },
-                                                            { display: 'copper', value: -9 }
-                                                        ].concat(...Object.values<StdObject>(this.$area.objects).filter(o => o.id !== ed.value.id).map(o => {
-                                                            return {
-                                                                display: stripPinkfish(o.short || o.name),
-                                                                value: o.id
-                                                            };
-                                                        }))
+                                                        data: this.objectData()
                                                     }
                                                 }
                                             },
@@ -8295,6 +8689,23 @@ export class AreaDesigner extends EditorBase {
                                                         max: 100
                                                     }
                                                 }
+                                            },
+                                            {
+                                                label: 'Arguments',
+                                                field: 'arguments',
+                                                width: 300,
+                                                editor: {
+                                                    type: EditorType.collection,
+                                                    options: {
+                                                        columnLabel: 'Argument',
+                                                        stringCollection: true,
+                                                        open: true,
+                                                        type: 'object',
+                                                        enterMoveFirst: this.enterMoveFirst,
+                                                        enterMoveNext: this.enterMoveNext,
+                                                        enterMoveNew: this.enterMoveNew
+                                                    }
+                                                }
                                             }
                                         ],
                                         add: (e) => {
@@ -8302,7 +8713,8 @@ export class AreaDesigner extends EditorBase {
                                                 item: 0,
                                                 minAmount: 0,
                                                 maxAmount: 0,
-                                                random: 0
+                                                random: 0,
+                                                arguments: ''
                                             };
                                         },
                                         enterMoveFirst: this.enterMoveFirst,
@@ -12086,7 +12498,13 @@ export class AreaDesigner extends EditorBase {
             counts = {};
             preview = {}
             room.objects.forEach(i => {
-                const short = this.$area.objects[i.id].getShort();
+                let short;
+                if (i.id < 0 && StandardObjects[i.id])
+                    short = StandardObjects[i.id].short;
+                else if (this.$area.objects[i.id])
+                    short = this.$area.objects[i.id].getShort();
+                else
+                    return;
                 if (!counts[short])
                     counts[short] = 0;
                 if (i.minAmount > 0)
@@ -12098,7 +12516,13 @@ export class AreaDesigner extends EditorBase {
             });
             if ((room.baseFlags & RoomBaseFlags.No_Objects) !== RoomBaseFlags.No_Objects)
                 base.objects.forEach(i => {
-                    const short = this.$area.objects[i.id].getShort();
+                    let short;
+                    if (i.id < 0 && StandardObjects[i.id])
+                        short = StandardObjects[i.id].short;
+                    else if (this.$area.objects[i.id])
+                        short = this.$area.objects[i.id].getShort();
+                    else
+                        return;
                     if (!counts[short])
                         counts[short] = 0;
                     if (i.minAmount > 0)
@@ -12152,7 +12576,11 @@ export class AreaDesigner extends EditorBase {
         if (objs.length > 0) {
             description += `${capitalize(sub)} is carrying:\n`;
             description += objs.map(v => {
-                let short = this.$area.objects[v.id].short;
+                let short;
+                if (v.id < 0 && StandardObjects[v.id])
+                    short = StandardObjects[v.id].short;
+                else
+                    short = this.$area.objects[v.id].getShort();
                 if ((v.maxAmount || v.minAmount) > 1)
                     short += `%^RESET%^ (%^RGB150%^${v.maxAmount || v.minAmount}%^RESET%^)`;
                 if (v.action === 'wield')
@@ -12301,12 +12729,8 @@ export class AreaDesigner extends EditorBase {
                     object: this.$area.objects[m]
                 };
             });
-        const data = Object.values<StdObject>(this.$area.objects).map(o => {
-            return {
-                display: stripPinkfish(o.name || o.short),
-                value: o.id
-            };
-        });
+        const data = this.objectData();
+
         let cols = this.$monsterGrid.columns;
         cols[5].editor.options.columns[0].editor.options.data = data;
         this.$monsterGrid.columns = cols;
@@ -12328,6 +12752,31 @@ export class AreaDesigner extends EditorBase {
         cols = this.$roomEditor.getPropertyOptions('rummageObjects');
         cols.editor.options.columns[0].editor.options.data = data;
         this.$roomEditor.setPropertyOptions('rummageObjects', cols);
+    }
+
+    private objectData(standardFirst?: boolean) {
+        if (this.$area)
+            if (standardFirst)
+                return Object.values(StandardObjects).map(o => {
+                    return { display: o.short, value: o.id, group: 'Standard' }
+                }).concat(...Object.values<StdObject>(this.$area.objects).map(o => {
+                    return {
+                        display: stripPinkfish(o.short || o.name),
+                        value: o.id, group: 'Area'
+                    };
+                }));
+            else
+                return Object.values<StdObject>(this.$area.objects).map(o => {
+                    return {
+                        display: stripPinkfish(o.short || o.name),
+                        value: o.id, group: 'Area'
+                    };
+                }).concat(...Object.values(StandardObjects).map(o => {
+                    return { display: o.short, value: o.id, group: 'Standard' }
+                }));
+        return Object.values(StandardObjects).map(o => {
+            return { display: o.short, value: o.id }
+        })
     }
 
     private BuildAxises() {
@@ -12664,7 +13113,7 @@ export class AreaDesigner extends EditorBase {
         data['reset body'] = '';
         data['reset post'] = '';
         const base: Room = this.$area.baseRooms[room.type] || this.$area.baseRooms[this.$area.defaultRoom] || new Room(0, 0, 0);
-        tmp2 = room.objects.filter(o => this.$area.objects[o.id] && (o.minAmount > 0 || o.unique));
+        tmp2 = room.objects.filter(o => (StandardObjects[o.id] || this.$area.objects[o.id]) && (o.minAmount > 0 || o.unique));
         tmp3 = room.monsters.filter(o => this.$area.monsters[o.id] && (o.minAmount > 0 || o.unique));
         if (baseRoom && (room.forage !== base.forage || doors.length > 0 || tmp2.length !== 0 || tmp3.length !== 0)) {
             data['reset body'] += '\n';
@@ -12676,21 +13125,56 @@ export class AreaDesigner extends EditorBase {
                 data['reset body'] += `   set_open("${r.door}", ${r.closed ? 0 : 1});\n`;
             });
             if (tmp2.length !== 0) {
+                tmp4 = '';
                 data['reset body'] += '   if(!query_property("no clone objects"))\n   {\n';
                 tmp2.forEach(o => {
+                    let file;
+                    if (o.id < -4 && o.id > -10) {
+                        let c = '';
+                        if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount === 0))
+                            c = `   money->add_money("${StandardObjects[o.id].name}", ${o.minAmount});\n`;
+                        else if (o.minAmount > 0 && o.maxAmount > 0)
+                            c = `   money->add_money("${StandardObjects[o.id].name}", ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
+                        if (o.random > 0 && c.length !== 0 && o.random < 100)
+                            tmp4 += `   if(random(${o.random}) <= random(101))\n   `;
+                        tmp4 += c;
+                        return;
+                    }
+                    if (o.id < 0 && o.id > -5) {
+                        let c = '';
+                        if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount === 0))
+                            c = `   clone(OBJ_GEM, ${o.minAmount} - sizeof(filter(query_item_contents(), (: $1->is_gem() && $1->query_property("gemtype") == "${StandardObjects[o.id].name}" :))), 0, "${StandardObjects[o.id].name}"${o.arguments && o.arguments.trim().length ? (', ' + o.arguments.trim()) : ''});\n`;
+                        else if (o.minAmount > 0 && o.maxAmount > 0)
+                            c = `   clone(OBJ_GEM, ${o.minAmount} + random(${o.maxAmount - o.minAmount}) - sizeof(filter(query_item_contents(), (: $1->is_gem() && $1->query_property("gemtype") == "${StandardObjects[o.id].name}" :))), 0, "${StandardObjects[o.id].name}"${o.arguments && o.arguments.trim().length ? (', ' + o.arguments.trim()) : ''});\n`;
+                        if (o.random > 0 && c.length !== 0 && o.random < 100)
+                            data['create body'] += `   if(random(${o.random}) <= random(101))\n   `;
+                        data['create body'] += c;
+                        return;
+                    }
+                    if (o.id < 0 && StandardObjects[o.id])
+                        file = StandardObjects[o.id].file;
+                    else
+                        file = `OBJ + "${files[o.id]}.c"`;
                     tmp = '';
                     if (o.unique)
-                        tmp = `      clone_unique(OBJ + "${files[o.id]}.c");\n`;
+                        tmp = `      clone_unique(${file}${o.arguments && o.arguments.trim().length ? (', 0, ' + o.arguments.trim()) : ''});\n`;
                     else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount < 1))
-                        tmp = `      clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount});\n`;
+                        tmp = `      clone_max(${file}, ${o.minAmount}${o.arguments && o.arguments.trim().length ? (', 0, ' + o.arguments.trim()) : ''});\n`;
                     else if (o.minAmount > 0 && o.maxAmount > 0)
-                        tmp = `      clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
+                        tmp = `      clone_max(${file}, ${o.minAmount} + random(${o.maxAmount - o.minAmount}${o.arguments && o.arguments.trim().length ? (', 0, ' + o.arguments.trim()) : ''}));\n`;
                     if (o.random > 0 && tmp.length !== 0 && o.random < 100)
                         data['reset body'] += `      if(random(${o.random}) <= random(101))\n   `;
                     data['reset body'] += tmp;
                 });
-                if (tmp2.filter(o => this.$area.objects[o.id].type === StdObjectType.chest && (o.minAmount > 0 || o.unique)).length !== 0)
+
+                if (tmp2.filter(o => (StandardObjects[o.id]?.type === StdObjectType.chest || this.$area.objects[o.id]?.type === StdObjectType.chest) && (o.minAmount > 0 || o.unique)).length !== 0)
                     data['reset body'] += '      filter(query_item_contents(), (: $1->is_chest() :))->reset_chest();\n';
+                if (tmp4 && tmp4.length) {
+                    data['reset body'] += '   money = new(OBJ_COINS);\n';
+                    data['reset body'] += tmp4;
+                    data['reset body'] += '   money->move(this_object());\n';
+                    data['reset body'] = '\n   object money;' + data['reset body'];
+                }
                 data['reset body'] += '   }\n';
             }
 
@@ -12706,17 +13190,17 @@ export class AreaDesigner extends EditorBase {
                             max = `MAX${mon.type.replace(/ /g, '_').toUpperCase()}`;
                     }
                     if (o.unique)
-                        tmp = `   clone_unique(MON + "${files[o.id]}.c");\n`;
+                        tmp = `   clone_unique(MON + "${files[o.id]}.c"${o.arguments && o.arguments.trim().length ? (', 0, ' + o.arguments.trim()) : ''});\n`;
                     else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount < 1)) {
                         if (max.length !== 0)
-                            tmp = `   clone_max_children(MON + "${files[o.id]}.c", ${o.minAmount}, ${max});\n`;
+                            tmp = `   clone_max_children(MON + "${files[o.id]}.c", ${o.minAmount}, ${max}${o.arguments && o.arguments.trim().length ? (', 0, ' + o.arguments.trim()) : ''});\n`;
                         else
-                            tmp = `   clone_max(MON + "${files[o.id]}.c", ${o.minAmount});\n`;
+                            tmp = `   clone_max(MON + "${files[o.id]}.c", ${o.minAmount}${o.arguments && o.arguments.trim().length ? (', 0, ' + o.arguments.trim()) : ''});\n`;
                     }
                     else if (max.length !== 0 && o.minAmount > 0 && o.maxAmount > 0)
-                        tmp = `   clone_max_children(MON + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}), ${max});\n`;
+                        tmp = `   clone_max_children(MON + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}), ${max}${o.arguments && o.arguments.trim().length ? (', 0, ' + o.arguments.trim()) : ''});\n`;
                     else if (o.minAmount > 0 && o.maxAmount > 0)
-                        tmp = `   clone_max(MON + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
+                        tmp = `   clone_max(MON + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount})${o.arguments && o.arguments.trim().length ? (', 0, ' + o.arguments.trim()) : ''});\n`;
 
                     if (o.random > 0 && tmp.length !== 0 && o.random < 100)
                         data['reset body'] += `  if(random(${o.random}) <= random(101))\n   `;
@@ -12725,7 +13209,10 @@ export class AreaDesigner extends EditorBase {
             }
         }
         else if (!baseRoom && (room.forage !== base.forage || doors.length > 0 || tmp2.length !== 0 || tmp3.length !== 0)) {
-            data['create post'] += '\n\nvoid reset()\n{\n   ::reset();\n';
+            if (tmp2.length && tmp2.filter(f => f.id < -4 && f.id > -10).length)
+                data['create post'] += '\n\nvoid reset()\n{\n   object money;\n   ::reset();\n';
+            else
+                data['create post'] += '\n\nvoid reset()\n{\n   ::reset();\n';
             if (room.forage !== base.forage)
                 props['forage'] = room.forage;
             doors.forEach(r => {
@@ -12733,20 +13220,53 @@ export class AreaDesigner extends EditorBase {
                 data['create post'] += `   set_open("${r.door}", ${r.closed ? 0 : 1});\n`;
             });
             if (tmp2.length !== 0) {
+                tmp4 = '';
                 tmp2.forEach(o => {
+                    let file;
+                    if (o.id < -4 && o.id > -10) {
+                        let c = '';
+                        if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount === 0))
+                            c = `   money->add_money("${StandardObjects[o.id].name}", ${o.minAmount});\n`;
+                        else if (o.minAmount > 0 && o.maxAmount > 0)
+                            c = `   money->add_money("${StandardObjects[o.id].name}", ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
+                        if (o.random > 0 && c.length !== 0 && o.random < 100)
+                            tmp4 += `   if(random(${o.random}) <= random(101))\n   `;
+                        tmp4 += c;
+                        return;
+                    }
+                    if (o.id < 0 && o.id > -5) {
+                        let c = '';
+                        if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount === 0))
+                            c = `   clone(OBJ_GEM, ${o.minAmount} - sizeof(filter(query_item_contents(), (: $1->is_gem() && $1->query_property("gemtype") == "${StandardObjects[o.id].name}" :))), 0, "${StandardObjects[o.id].name}"${o.arguments && o.arguments.trim().length ? (', ' + o.arguments.trim()) : ''});\n`;
+                        else if (o.minAmount > 0 && o.maxAmount > 0)
+                            c = `   clone(OBJ_GEM, ${o.minAmount} + random(${o.maxAmount - o.minAmount}) - sizeof(filter(query_item_contents(), (: $1->is_gem() && $1->query_property("gemtype") == "${StandardObjects[o.id].name}" :))), 0, "${StandardObjects[o.id].name}"${o.arguments && o.arguments.trim().length ? (', ' + o.arguments.trim()) : ''});\n`;
+                        if (o.random > 0 && c.length !== 0 && o.random < 100)
+                            data['create body'] += `   if(random(${o.random}) <= random(101))\n   `;
+                        data['create body'] += c;
+                        return;
+                    }
+                    if (o.id < 0 && StandardObjects[o.id])
+                        file = StandardObjects[o.id].file;
+                    else
+                        file = `OBJ + "${files[o.id]}.c"`;
                     tmp = '';
                     if (o.unique)
-                        tmp = `   clone_unique(OBJ + "${files[o.id]}.c");\n`;
+                        tmp = `   clone_unique(${file}${o.arguments && o.arguments.trim().length ? (', 0, ' + o.arguments.trim()) : ''});\n`;
                     else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount === 0))
-                        tmp = `   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount});\n`;
+                        tmp = `   clone_max(${file}, ${o.minAmount}${o.arguments && o.arguments.trim().length ? (', 0, ' + o.arguments.trim()) : ''});\n`;
                     else if (o.minAmount > 0 && o.maxAmount > 0)
-                        tmp = `   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
+                        tmp = `   clone_max(${file}, ${o.minAmount} + random(${o.maxAmount - o.minAmount})${o.arguments && o.arguments.trim().length ? (', 0, ' + o.arguments.trim()) : ''});\n`;
                     if (o.random > 0 && tmp.length !== 0 && o.random < 100)
                         data['create post'] += `   if(random(${o.random}) <= random(101))\n   `;
                     data['create post'] += tmp;
                 });
                 if (tmp2.filter(o => this.$area.objects[o.id].type === StdObjectType.chest && (o.minAmount > 0 || o.unique)).length !== 0)
                     data['create post'] += '   filter(query_item_contents(), (: $1->is_chest() :))->reset_chest();\n';
+                if (tmp4 && tmp4.length) {
+                    data['create post'] += '   money = new(OBJ_COINS);\n';
+                    data['create post'] += tmp4;
+                    data['create post'] += '   money->move(this_object());\n';
+                }
             }
             if (tmp3.length !== 0) {
                 tmp3.forEach(o => {
@@ -12759,17 +13279,17 @@ export class AreaDesigner extends EditorBase {
                             max = `MAX${mon.type.replace(/ /g, '_').toUpperCase()}`;
                     }
                     if (o.unique)
-                        tmp = `   clone_unique(MON + "${files[o.id]}.c");\n`;
+                        tmp = `   clone_unique(MON + "${files[o.id]}.c"${o.arguments && o.arguments.trim().length ? (', 0, ' + o.arguments.trim()) : ''});\n`;
                     else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount < 1)) {
                         if (max.length !== 0)
-                            tmp = `   clone_max_children(MON + "${files[o.id]}.c", ${o.minAmount}, ${max});\n`;
+                            tmp = `   clone_max_children(MON + "${files[o.id]}.c", ${o.minAmount}, ${max}${o.arguments && o.arguments.trim().length ? (', 0, ' + o.arguments.trim()) : ''});\n`;
                         else
-                            tmp = `   clone_max(MON + "${files[o.id]}.c", ${o.minAmount});\n`;
+                            tmp = `   clone_max(MON + "${files[o.id]}.c", ${o.minAmount}${o.arguments && o.arguments.trim().length ? (', 0, ' + o.arguments.trim()) : ''});\n`;
                     }
                     else if (max.length !== 0 && o.minAmount > 0 && o.maxAmount > 0)
-                        tmp = `   clone_max_children(MON + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}), ${max});\n`;
+                        tmp = `   clone_max_children(MON + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}), ${max}${o.arguments && o.arguments.trim().length ? (', 0, ' + o.arguments.trim()) : ''});\n`;
                     else if (o.minAmount > 0 && o.maxAmount > 0)
-                        tmp = `   clone_max(MON + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
+                        tmp = `   clone_max(MON + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount})${o.arguments && o.arguments.trim().length ? (', 0, ' + o.arguments.trim()) : ''});\n`;
                     if (o.random > 0 && tmp.length !== 0 && o.random < 100)
                         data['create post'] += `   if(random(${o.random}) <= random(101))\n   `;
                     data['create post'] += tmp;
@@ -12778,7 +13298,7 @@ export class AreaDesigner extends EditorBase {
             data['create post'] += '}\n';
         }
 
-        tmp2 = room.forageObjects.filter(o => this.$area.objects[o.id]).sort((a, b) => {
+        tmp2 = room.forageObjects.filter(o => StandardObjects[o.id] || this.$area.objects[o.id]).sort((a, b) => {
             if ((a.random === 0 || a.random >= 100) && b.random > 0 && b.random < 100)
                 return 1;
             if ((b.random === 0 || b.random >= 100) && a.random > 0 && a.random < 100)
@@ -12799,9 +13319,21 @@ export class AreaDesigner extends EditorBase {
                     data['create post'] += `   if(random(${o.random}) <= random(101))\n   `;
                 else
                     tmp = true;
-                data['create post'] += `   return new(OBJ + "${files[o.id]}.c");\n`;
+                if (o.id < -4 && o.id > -10) {
+                    data['create post'] += `    return new(OBJ_COIN, "${StandardObjects[o.id].name}", ${o.arguments.trim()})\n`;
+                    return;
+                }
+                if (o.id < 0 && o.id > -5) {
+                    data['create post'] += `   return new(OBJ_GEM, "${StandardObjects[o.id].name}"${o.arguments && o.arguments.trim().length ? (', ' + o.arguments.trim()) : ''});\n`;
+                    return;
+                }
+                let file;
+                if (o.id < 0 && StandardObjects[o.id])
+                    file = StandardObjects[o.id].file;
+                else
+                    file = `OBJ + "${files[o.id]}.c"`;
+                data['create post'] += `   return new(${file}${o.arguments && o.arguments.trim().length ? (', ' + o.arguments.trim()) : ''});\n`;
             });
-
             if ((room.baseFlags & RoomBaseFlags.No_Forage_Objects) !== RoomBaseFlags.No_Forage_Objects && base.forageObjects.filter(o => this.$area.objects[o.id]).length !== 0)
                 data['create post'] += '   return ::query_forage();\n';
             else if (!tmp)
@@ -12830,7 +13362,20 @@ export class AreaDesigner extends EditorBase {
                     data['create post'] += `   if(random(${o.random}) <= random(101))\n   `;
                 else
                     tmp = true;
-                data['create post'] += `   return new(OBJ + "${files[o.id]}.c");\n`;
+                if (o.id < -4 && o.id > -10) {
+                    data['create post'] += `    return new(OBJ_COIN, "${StandardObjects[o.id].name}", ${o.arguments.trim()})\n`;
+                    return;
+                }
+                if (o.id < 0 && o.id > -5) {
+                    data['create post'] += `   return new(OBJ_GEM, "${StandardObjects[o.id].name}"${o.arguments && o.arguments.trim().length ? (', ' + o.arguments.trim()) : ''});\n`;
+                    return;
+                }
+                let file;
+                if (o.id < 0 && StandardObjects[o.id])
+                    file = StandardObjects[o.id].file;
+                else
+                    file = `OBJ + "${files[o.id]}.c"`;
+                data['create post'] += `   return new(${file}${o.arguments && o.arguments.trim().length ? (', ' + o.arguments.trim()) : ''});\n`;
             });
             if ((room.baseFlags & RoomBaseFlags.No_Rummage_Objects) !== RoomBaseFlags.No_Rummage_Objects && base.forageObjects.filter(o => this.$area.objects[o.id]).length !== 0)
                 data['create post'] += '   return ::query_rummage();\n';
@@ -14477,20 +15022,47 @@ export class AreaDesigner extends EditorBase {
                 data['create body'] += '   if(!query_property("no objects"))\n{\n';
             }
             monster.objects.forEach(o => {
-                if (!this.$area.objects[o.id]) return;
+                if (!StandardObjects[o.id] && !this.$area.objects[o.id]) return;
+                if (o.id < -4 && o.id > -10) {
+                    let c = '';
+                    if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount === 0))
+                        c = `   add_money("${StandardObjects[o.id].name}", ${o.minAmount});\n`;
+                    else if (o.minAmount > 0 && o.maxAmount > 0)
+                        c = `   add_money("${StandardObjects[o.id].name}", ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
+                    if (o.random > 0 && c.length !== 0 && o.random < 100)
+                        data['create post'] += `   if(random(${o.random}) <= random(101))\n   `;
+                    data['create post'] += c;
+                    return;
+                }
+                if (o.id < 0 && o.id > -5) {
+                    let c = '';
+                    if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount === 0))
+                        c = `   clone(OBJ_GEM, ${o.minAmount}, 0, "${StandardObjects[o.id].name}"${o.arguments && o.arguments.trim().length ? (', ' + o.arguments.trim()) : ''});\n`;
+                    else if (o.minAmount > 0 && o.maxAmount > 0)
+                        c = `   clone(OBJ_GEM, ${o.minAmount} + random(${o.maxAmount - o.minAmount}), 0, "${StandardObjects[o.id].name}"${o.arguments && o.arguments.trim().length ? (', ' + o.arguments.trim()) : ''});\n`;
+                    if (o.random > 0 && c.length !== 0 && o.random < 100)
+                        data['create body'] += `   if(random(${o.random}) <= random(101))\n   `;
+                    data['create body'] += c;
+                    return;
+                }
+                let file;
+                if (o.id < 0 && StandardObjects[o.id])
+                    file = StandardObjects[o.id].file;
+                else
+                    file = `OBJ + "${files[o.id]}.c"`;
                 tmp = '';
                 if (o.unique) {
-                    tmp = `   clone_unique(OBJ + "${files[o.id]}.c");\n`;
+                    tmp = `   clone_unique(${file}${o.arguments && o.arguments.trim().length ? (', 0, ' + o.arguments.trim()) : ''});\n`;
                     if (o.action.trim().length > 0)
                         tmp3.push(`${o.action.trim()} ${this.$area.objects[o.id].name}`);
                 }
                 else if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount === 0)) {
-                    tmp = `   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount});\n`;
+                    tmp = `   clone_max(${file}, ${o.minAmount}${o.arguments && o.arguments.trim().length ? (', 0, ' + o.arguments.trim()) : ''});\n`;
                     if (o.action.trim().length > 0)
                         tmp3.push(`${o.action.trim()} ${this.$area.objects[o.id].name}`);
                 }
                 else if (o.minAmount > 0 && o.maxAmount > 0) {
-                    tmp = `   clone_max(OBJ + "${files[o.id]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
+                    tmp = `   clone_max(${file}, ${o.minAmount} + random(${o.maxAmount - o.minAmount})${o.arguments && o.arguments.trim().length ? (', 0, ' + o.arguments.trim()) : ''});\n`;
                     if (o.action.trim().length > 0)
                         tmp3.push(`${o.action.trim()} ${this.$area.objects[o.id].name}`);
                 }
@@ -14785,44 +15357,24 @@ export class AreaDesigner extends EditorBase {
                     data['create body'] += `   set_can_lock(1);\n`;
 
                 if (obj.contents && obj.contents.length > 0) {
-                    tmp = obj.contents.filter(c => c.item < -4);
-                    tmp2 = obj.contents.filter(c => c.item >= 0);
+                    tmp = obj.contents.filter(c => c.item < -4 && c.item > -10);
+                    tmp2 = obj.contents.filter(c => c.item >= 0 || c.item < -9);
                     tmp3 = obj.contents.filter(c => c.item >= -4 && c.item < 0);
                     data['create post'] += '\n\nvoid reset_chest()\n{\n';
                     if (tmp.length !== 0)
                         data['create post'] += '   object money;\n';
-                    if (tmp2.length !== 0)
-                        data['create post'] += '   int gems;\n';
                     data['create post'] += '   //check if contains contents\n   if(sizeof(query_item_contents()))\n      return;\n';
                     data['create post'] += '   set_locked(0);\n';
                     data['create post'] += '   set_closed(0);\n';
                     //item, minAmount, maxAmount, random
                     if (tmp.length !== 0) {
                         data['create post'] += '   money = new(OBJ_COINS);\n';
-                        let type;
                         tmp.forEach(o => {
-                            switch (+o.item) {
-                                case -5:
-                                    type = '"platinum"';
-                                    break;
-                                case -6:
-                                    type = '"gold"';
-                                    break;
-                                case -7:
-                                    type = '"electrum"';
-                                    break;
-                                case -8:
-                                    type = '"silver"';
-                                    break;
-                                default:
-                                    type = '"copper"';
-                                    break;
-                            }
                             let c = '';
                             if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount === 0))
-                                c = `   money->add_money(${type}, ${o.minAmount});\n`;
+                                c = `   money->add_money("${StandardObjects[o.item].name}", ${o.minAmount});\n`;
                             else if (o.minAmount > 0 && o.maxAmount > 0)
-                                c = `   money->add_money(${type}, ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
+                                c = `   money->add_money("${StandardObjects[o.item].name}", ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
                             if (o.random > 0 && c.length !== 0 && o.random < 100)
                                 data['create post'] += `   if(random(${o.random}) <= random(101))\n   `;
                             data['create post'] += c;
@@ -14832,49 +15384,29 @@ export class AreaDesigner extends EditorBase {
 
                     if (tmp3.length !== 0) {
                         tmp3.forEach(o => {
-                            let type;
-                            switch (o.item) {
-                                case -2:
-                                    type = '"uncommon gem"';
-                                    break;
-                                case -3:
-                                    type = '"rare gem"';
-                                    break;
-                                case -4:
-                                    type = '"exceptional gem"';
-                                    break;
-                                default:
-                                    type = '"common gem"';
-                                    break;
-                            }
                             let c = '';
                             if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount === 0))
-                                c = `   gems = ${o.minAmount < 1 ? 1 : o.minAmount};\n`;
+                                c = `   clone(OBJ_GEM, ${o.minAmount}, 0, "${StandardObjects[o.item].name}"${o.arguments && o.arguments.trim().length ? (', ' + o.arguments.trim()) : ''});\n`;
                             else if (o.minAmount > 0 && o.maxAmount > 0)
-                                c = `   gems = ${o.minAmount} + random(${o.maxAmount - o.minAmount});\n`;
-                            if (o.random > 0 && c.length !== 0 && o.random < 100) {
-                                data['create body'] += `   if(random(${o.random}) <= random(101))\n{\n   `;
-                                data['create body'] += c;
-                                data['create body'] += '      while(gems--)\n';
-                                data['create body'] += `         GEM_D->clone_gem(${type})->move(this_object())\n`;
-                                data['create body'] += '   }\n';
-                            }
-                            else if (c.length === 0)
-                                data['create body'] += `   GEM_D->clone_gem(${type})->move(this_object())`;
-                            else {
-                                data['create body'] += '   while(gems--)\n';
-                                data['create body'] += `      GEM_D->clone_gem(${type})->move(this_object())`;
-                            }
+                                c = `   clone(OBJ_GEM, ${o.minAmount} + random(${o.maxAmount - o.minAmount}), 0, "${StandardObjects[o.item].name}"${o.arguments && o.arguments.trim().length ? (', ' + o.arguments.trim()) : ''});\n`;
+                            if (o.random > 0 && c.length !== 0 && o.random < 100)
+                                data['create body'] += `   if(random(${o.random}) <= random(101))\n   `;
+                            data['create body'] += c;
                         });
                     }
 
                     tmp2.forEach(o => {
-                        if (!this.$area.objects[o.item]) return;
+                        if (!StandardObjects[o.item] && !this.$area.objects[o.item]) return;
                         tmp = '';
+                        let file;
+                        if (o.id < 0 && StandardObjects[o.id])
+                            file = StandardObjects[o.id].file;
+                        else
+                            file = `OBJ + "${files[o.id]}.c"`;
                         if (o.minAmount > 0 && (o.minAmount === o.maxAmount || o.maxAmount === 0))
-                            tmp = `   clone_max(OBJ + "${files[o.item]}.c", ${o.minAmount});\n`;
+                            tmp = `   clone_max(${file}, ${o.minAmount}${o.arguments && o.arguments.trim().length ? (', 0, ' + o.arguments.trim()) : ''});\n`;
                         else if (o.minAmount > 0 && o.maxAmount > 0)
-                            tmp = `   clone_max(OBJ + "${files[o.item]}.c", ${o.minAmount} + random(${o.maxAmount - o.minAmount}));\n`;
+                            tmp = `   clone_max(${file}, ${o.minAmount} + random(${o.maxAmount - o.minAmount})${o.arguments && o.arguments.trim().length ? (', 0, ' + o.arguments.trim()) : ''});\n`;
                         if (o.random > 0 && tmp.length !== 0 && o.random < 100)
                             data['create body'] += `   if(random(${o.random}) <= random(101))\n   `;
                         data['create body'] += tmp;

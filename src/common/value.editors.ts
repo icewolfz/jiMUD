@@ -1279,7 +1279,7 @@ export class CollectionValueEditor extends ValueEditor {
         this.$el.classList.add('property-grid-editor-dropdown', 'property-grid-editor-collection');
         this.$editor = document.createElement('input');
         this.$editor.type = 'text';
-        this.$editor.readOnly = true;
+        this.$editor.readOnly = !this.options || !this.options.stringCollection;
         this.$editor.classList.add('property-grid-editor');
         this.$editor.addEventListener('blur', (e) => {
             if ((this.$dialog && this.$dialog.contains(e.relatedTarget)) || (e.relatedTarget && (<HTMLElement>e.relatedTarget).dataset.editor === 'dropdown')) {
@@ -1317,7 +1317,8 @@ export class CollectionValueEditor extends ValueEditor {
         });
         this.$el.appendChild(this.$editor);
         this.$editor.addEventListener('click', e => {
-            this.openAdvanced();
+            if (!this.options || !this.options.stringCollection)
+                this.openAdvanced();
         });
         this.$dButton = document.createElement('button');
         this.$dButton.title = 'Edit' + (this.options ? ' ' + this.options.type + 's' : '') + '...';
@@ -1331,7 +1332,7 @@ export class CollectionValueEditor extends ValueEditor {
             this.$dialog.style.height = '300px';
             this.$dialog.style.padding = '5px';
             this.$dialog.cleanUp = () => {
-                this.options.columns.forEach(c => {
+                this.options?.columns?.forEach(c => {
                     if (c.editor && c.editor.options && c.editor.options.container === this.$dialog)
                         delete c.editor.options.container;
                 });
@@ -1393,7 +1394,17 @@ export class CollectionValueEditor extends ValueEditor {
                     return c;
                 });
             }
-            if (this.$value)
+            if (this.options && this.options.stringCollection) {
+                if (!this.options.columns || !this.options.columns.length)
+                    dg.columns = [{
+                        label: this.options.columnLabel || 'Value',
+                        field: 'value',
+                        spring: true,
+                        editor: { options: { container: this.$dialog } }
+                    }];
+                dg.addRows(this.value?.trim().splitQuote(',').map(a => { return { value: a.trim() } }));
+            }
+            else if (this.$value && this.$value.map)
                 dg.addRows(this.$value.map(a => ({ ...a })));
             dg.on('selection-changed', () => {
                 if (this.options && this.options.noControls) return;
@@ -1446,6 +1457,11 @@ export class CollectionValueEditor extends ValueEditor {
                     this.$paste.setAttribute('disabled', 'true');
             });
             dg.on('add', e2 => {
+                if (!this.options) return;
+                if (this.options.stringCollection)
+                    e2.data = {
+                        value: ''
+                    };
                 if (this.options.add)
                     this.options.add(e2);
                 if (this.options.onAdd)
@@ -1470,7 +1486,10 @@ export class CollectionValueEditor extends ValueEditor {
             button.classList.add('btn', 'btn-primary');
             button.addEventListener('click', () => {
                 if (this.error || (<any>dg).error) return;
-                this.value = dg.rows;
+                if (this.options && this.options.stringCollection)
+                    this.value = dg.rows.map(r => r.value).join(', ');
+                else
+                    this.value = dg.rows;
                 this.$dialog.close();
                 this.$dialog.cleanUp();
             });
@@ -1576,11 +1595,14 @@ export class CollectionValueEditor extends ValueEditor {
 
     private formatValue(value?) {
         if (!value) value = this.$value;
-        if (!value)
+        if (!value) {
+            if (this.options && this.options.stringCollection)
+                return '';
             return 'None';
+        }
         const ops = this.control.getPropertyOptions(this.property, 'formatter');
         if (ops)
-            return ops(this.property, value, this.data);
+            return ops({ row: this.data, cell: value, field: this.property });
         if (this.options && this.options.enum)
             return enumToString(value, this.options.enum, this.options.exact);
         if (typeof value === 'boolean')
@@ -1589,11 +1611,19 @@ export class CollectionValueEditor extends ValueEditor {
     }
 
     get value() {
+        if (this.options && this.options.stringCollection)
+            return this.$editor.value;
         return this.$value;
     }
     set value(value: any) {
-        this.$value = value;
-        this.$editor.value = this.formatValue(value);
+        if (this.options && this.options.stringCollection) {
+            this.$value = Array.isArray(value) ? value.join(', ') : value;
+            this.$editor.value = this.$value;
+        }
+        else {
+            this.$value = value;
+            this.$editor.value = this.formatValue(value);
+        }
         resetCursor(this.$editor);
     }
 }

@@ -12,6 +12,8 @@
       - Add hover previews to display monster look/item longs for room preview and monster preview panels
       - Add includes to area properties
       - Add functions to rooms
+      - Add standard object support to add money, gems, and standard objects
+      - Add argument support to objects and monsters to allow passing arguments when object is created
     - Virtual area editor: Add ctrl+click selection system
 - **Fixed:**
   - Increase progress dialog height

@@ -735,6 +735,8 @@ if (typeof String.prototype.trimStart !== 'function') {
 
 String.prototype.splitQuote = function (this: string, sep: string, type?, escape?, escapeChar?) {
     if (this.length === 0)
+        return [];
+    if (!sep || !sep.length)
         return [this];
     if (!type) type = 1 | 2;
     if (!escape) escape = 1 | 2;
@@ -1357,7 +1359,9 @@ export function splitQuoted(str, sep, t?, e?, ec?) {
     if (typeof (t) === 'undefined') t = 1 | 2;
     if (typeof (e) === 'undefined') e = 0;
     if (typeof (ec) === 'undefined') ec = '\\';
-    if (!str || str.length === 0 || !sep || sep.length === 0)
+    if (!str || str.length === 0)
+        return [];
+    if (!sep || sep.length === 0)
         return [str];
     sep = sep.split('');
     let q = false;

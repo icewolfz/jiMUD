@@ -11,37 +11,6 @@ Allows you to design areas quickly and easily
 The room editor allows you to edit the currently selected rooms, if rooms have different property values, that property will remain blank until edited.
 Pressing escape inside any active property editor will cancel the editor and not modify the value, pressing enter or clicking outside of the editor will confirm the change and update the value.
 
-### Advanced
-
-Advanced options for when creating a room
-
-- `Type` The room type, either an area base room or a standard room type
-- `Background` a css background color to make the room stand out in the map, not used for anything else
-- `Sub Area` An optional subarea name that will be used when creating code
-- `Sounds` Sounds the player can listen to with the listen command
-  - `Sound` the sound to listen to
-  - `Description` the sound to display
-- `Smells` smells for the room
-  - `Smell` the smell
-  - `Description` the smell to display
-- `Searches` searches the player can, in general this should be used to create stubs and expanded once the area is generated
-  - `search` what to search
-  - `Message` if a string will be displayed to player
-  - `function` if in the format of (:name:) it will generate a function stub to later fill in with more advanced search code
-- `Base properties` settings that effect how the base inherit object is handled
-  - `No Items` replace inherited base object items, if false items are merged with base items, and any with the same name are replaced with current
-  - `No Monsters` disable base inherited monsters
-  - `No objects` disable base inherited objects
-  - `No forage` do not return inherited forage object function
-  - `No rummage` do not return inherited rummage object function
-- `Forage Objects` objects to return when a player forages for food
-  - `Name` the object to return
-  - `Random` the chance it is this object  
-- `Rummage Objects` objects to return when a player rummages for materials
-  - `Name` the object to return
-  - `Random` the chance it is this object  
-- `Custom properties` custom properties you may want to set for a room
-
 ### Description
 
 The basic properties used to describe the room
@@ -107,12 +76,74 @@ General room properties
   - `Sinking up` is room sink up, **Note** this requires sink room type or custom handling, this will call set_up(path to up) and set_living_sink to on
   - `Sinking down` is room sink down, **Note** this requires sink room type or custom handling, this will call set_down(path to down) and set_living_sink to on
   - `No mgive` do not allow mages to mgive to people in this room
+  - `Underwater` Cause the room to be underwater
+  - `Waterdrink` Enable the water drink systems
 - `Forage` the amount of food returned each forage, -1 default to random amount of Max forage
 - `Max forage` the max amount player can forage per reset
 - `Secret exit` provide a hint that there is a secret exit in this room
 - `Dirt type` custom dirt type, if empty it will be based on terrain and weather
 - `Prevent peer` a message, true/false or a function to prevent peering any exit
 - `Temperature` set the room Temperature, every 100 or -100 triggers damage done by heat or cold
+- `Custom` custom properties you may want to set for a room
+  - `Type` The type of property
+    - `Normal` Saved when room is auto loading enabled, else works like Temporary
+    - `Temporary` Lost when room is reloaded
+  - `Name` The name of the property
+  - `Value` The value of the property, may use (:function:), ([mapping]), or ({array}) for mor advanced values, it will attempt to correctly format when possible
+
+
+
+### Advanced
+
+Advanced options for when creating a room
+
+- `Type` The room type, either an area base room or a standard room type
+- `Background` a css background color to make the room stand out in the map, not used for anything else
+- `Sub Area` An optional subarea name that will be used when creating code
+- `Sounds` Sounds the player can listen to with the listen command
+  - `Sound` the sound to listen to
+  - `Description` the sound to display
+- `Smells` smells for the room
+  - `Smell` the smell
+  - `Description` the smell to display
+- `Searches` searches the player can, in general this should be used to create stubs and expanded once the area is generated
+  - `search` what to search
+  - `Message` if a string will be displayed to player, if in the format of (:name:) it will generate a function stub to later fill in with more advanced search code or use function if exist
+- `Base properties` settings that effect how the base inherit object is handled
+  - `No Items` replace inherited base object items, if false items are merged with base items, and any with the same name are replaced with current
+  - `No Monsters` disable base inherited monsters
+  - `No objects` disable base inherited objects
+  - `No forage` do not return inherited forage object function
+  - `No rummage` do not return inherited rummage object function
+- `Forage Objects` objects to return when a player forages for food
+  - `Name` the object to return
+  - `Random` the chance it is this object  
+  - `Arguments` Allows passing arguments when object is created, should be in data format meaning strings should be enclosed in "" e.g. "string", 1, 1.0, **money types and gem types do not support arguments, must use pile of coins or gem instead**
+- `Rummage Objects` objects to return when a player rummages for materials
+  - `Name` the object to return
+  - `Random` the chance it is this object  
+  - `Arguments` Allows passing arguments when object is created, should be in data format meaning strings should be enclosed in "" e.g. "string", 1, 1.0, **money types and gem types do not support arguments, must use pile of coins or gem instead**
+- `Water Drink Message` message to display when drinking from water, **Requires WaterDrink property to be enabled**
+- `Water Germs` The germs that infect player when water is drunk, **Requires WaterDrink property to be enabled**
+- `Water Poisoned` The amount of poison in the water to poison drinker with, **Requires WaterDrink property to be enabled**
+- `Water Quality` How good the water is, **Requires WaterDrink property to be enabled**
+- `Water Source` Where the water comes from, **Requires WaterDrink property to be enabled**
+- `Water Wash Message`, The message to display when using water to wash, **Requires WaterDrink property to be enabled**
+- `Notes` Notes that will be appended after the description in the header comment block
+
+### Expert
+
+Expert options for room, these typically require coding experience to use properly
+
+- `Functions` functions to create when building the room, may use (: Name :) to use in places that support functions
+  - `Name` The name of the function, must follow the lpc identify naming rules
+  - `Type` The data type of the function, types that end in * are array data types
+  - `Code` The code body of the function
+  - `Variable Arguments` Are arguments optional
+  - `Arguments` The arguments for the function
+    - `Name` The name of the argument, must follow the lpc identify naming rules
+    - `Type` The data type of the argument, types that end in * are array data types
+    - `Expand` Functions allow ... expand operator that will store all dynamic arguments in this argument, it will be auto sorted as the final argument and there can only be one
 
 ## Design properties
 
@@ -140,19 +171,23 @@ Allows you to create base room types for rooms to inherit
   - `Max amount` the maximum amount to add
   - `Random` the random chance the object will be added, 0 to 100, 0/100 always
   - `Unique` Only one should ever exist
+  - `Arguments` Allows passing arguments when object is created, should be in data format meaning strings should be enclosed in "" e.g. "string", 1, 1.0, **money types and gem types do not support arguments, must use pile of coins or gem instead**
 - `Monsters` the default monsters to create
   - `Name` the item to add
   - `Min amount` the minimum amount to add
   - `Max amount` the maximum amount to add
   - `Random` the random chance the object will be added, 0 to 100, 0/100 always
   - `Unique` Only one should ever exist
+  - `Arguments` Allows passing arguments when object is created, should be in data format meaning strings should be enclosed in "" e.g. "string", 1, 1.0, **money types and gem types do not support arguments, must use pile of coins or gem instead**
 - `...` open room editor to allow more fine control of different room properties
   - `Forage objects` objects to return when a player forages for food
     - `Name` the object to return
     - `Random` the chance it is this object
+    - `Arguments` Allows passing arguments when object is created, should be in data format meaning strings should be enclosed in "" e.g. "string", 1, 1.0, **money types and gem types do not support arguments, must use pile of coins or gem instead**
   - `Rummage objects` objects to return when a player rummages for materials
     - `Name` the object to return
     - `Random` the chance it is this object  
+    - `Arguments` Allows passing arguments when object is created, should be in data format meaning strings should be enclosed in "" e.g. "string", 1, 1.0, **money types and gem types do not support arguments, must use pile of coins or gem instead**
   - see [Room wizard](codeeditor.md#newroom) for more details
   - `Notes` optional notes about the monster, included in the header comments when code generated
 
@@ -172,11 +207,12 @@ Allows you to create base monsters for monsters to inherit
   - `Random` the random chance the object will be added, 0 to 100, 0/100 always
   - `Unique` Only one should ever exist
   - `Action` an action to do with the item
+  - `Arguments` Allows passing arguments when object is created, should be in data format meaning strings should be enclosed in "" e.g. "string", 1, 1.0, **money types and gem types do not support arguments, must use pile of coins or gem instead**
 - `...` open monster editor to allow more fine control of different monster properties
   - see [Monster wizard](codeeditor.md#newmonster) for details
   - `Notes` optional notes about the monster, included in the header comments when code generated
 
-### Includes
+### Area Includes
 
 Allows you to add includes to the area.h
 
@@ -201,6 +237,7 @@ Create monsters for your area
   - `Random` the random chance the object will be added, 0 to 100, 0/100 always
   - `Unique` Only one should ever exist
   - `Action` an action to do with the item
+  - `Arguments` Allows passing arguments when object is created, should be in data format meaning strings should be enclosed in "" e.g. "string", 1, 1.0, **money types and gem types do not support arguments, must use pile of coins or gem instead**
 - `...` open monster editor to allow more fine control of different monster properties
   see [Monster wizard](codeeditor.md#newmonster) for details
   - `Notes` optional notes about the monster, included in the header comments when code generated
