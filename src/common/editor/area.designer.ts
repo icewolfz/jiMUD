@@ -220,7 +220,7 @@ const StandardObjects = {
         short: 'a gem',
         file: 'OBJ_GEM',
         type: StdObjectType.object
-    },    
+    },
     '-10': {
         id: -10,
         name: 'torch',
@@ -12553,24 +12553,28 @@ export class AreaDesigner extends EditorBase {
 
     private monsterPreview(monster, colors?, itemTooltips?) {
         if (!monster) return '';
+        const base: Monster = this.$area.baseMonsters[monster.type] || this.$area.baseMonsters[this.$area.defaultMonster] || new Monster();
         let sub = 'it', poss = 'its', obj = 'it';
-        if (monster.gender == 'female' || (monster.gender == 'random' && Math.floor(Math.random() * 2) == 1)) {
+        if ((monster.gender || base.gender) == 'female' || ((monster.gender || base.gender) == 'random' && Math.floor(Math.random() * 2) == 1)) {
             sub = 'she';
             poss = 'her';
             obj = 'her';
         }
-        else if (monster.gender == 'male' || monster.gender == 'random') {
+        else if ((monster.gender || base.gender) == 'male' || (monster.gender || base.gender) == 'random') {
             sub = 'he';
             poss = 'his';
             obj = 'him';
         }
-        let description = `You look over the ${monster.gender} ${monster.race || 'UNKNOWN'}.\nYou are about the same size as ${obj}.\n${monster.long}\n${capitalize(sub)} is in top shape.\n${capitalize(sub)} is missing no limbs.\n`;
-        const objs = monster.objects.filter(v => v.maxAmount > 0 || v.minAmount > 0);
+        let description = `You look over the ${monster.gender || base.gender} ${monster.race || base.race || 'UNKNOWN'}.\nYou are about the same size as ${obj}.\n${monster.long || base.long}\n${capitalize(sub)} is in top shape.\n${capitalize(sub)} is missing no limbs.\n`;
+        const objs = monster.objects.filter(v => (v.maxAmount > 0 || v.minAmount > 0) && (this.$area.objects[v.id] || StandardObjects[v.id])).concat(
+            ...base.objects.filter(v => (v.maxAmount > 0 || v.minAmount > 0) && (this.$area.objects[v.id] || StandardObjects[v.id]))
+        );
+
         if (objs.length > 0) {
             description += `${capitalize(sub)} is carrying:\n`;
             description += objs.map(v => {
                 let short;
-                if (v.id < 0 && StandardObjects[v.id])
+                if (v.id < 0)
                     short = StandardObjects[v.id].short;
                 else
                     short = this.$area.objects[v.id].getShort();
@@ -12581,6 +12585,8 @@ export class AreaDesigner extends EditorBase {
                 if (v.action === 'wear')
                     short += "%^RESET%^ (%^RGB210%^worn%^RESET%^)";
                 if (itemTooltips) {
+                    if (v.id < 0)
+                        return `<span class="preview-room-item" title="${StandardObjects[v.id].long || StandardObjects[v.id].short || StandardObjects[v.id].name}">${short}</span>`;
                     if (colors)
                         return `<span class="preview-room-item" title="${this.$area.objects[v.id].long.replace(/\"/g, '&quot;')}">${pinkfishToHTML(short)}</span>`;
                     return `<span class="preview-room-item" title="${this.$area.objects[v.id].long.replace(/\"/g, '&quot;')}">${stripPinkfish(short)}</span>`;
@@ -15080,8 +15086,8 @@ export class AreaDesigner extends EditorBase {
         }
 
         if (monster.actions !== base.actions) {
-            monster.actions = monster.actions.split(',');
-            monster.actions.forEach(w => {
+            tmp = monster.actions.split(',');
+            tmp.forEach(w => {
                 w = w.trim();
                 if (w.length === 0) return;
                 if (!w.startsWith('"'))
