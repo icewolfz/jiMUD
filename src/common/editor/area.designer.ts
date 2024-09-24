@@ -974,7 +974,15 @@ class Monster {
         let prop;
         for (prop in this) {
             if (!this.hasOwnProperty(prop)) continue;
-            if (this[prop] !== monster[prop])
+            if (Array.isArray(this[prop])) {
+                if(!isArrayEqual(this[prop], monster[prop]))
+                    return false;
+            }
+            else if (typeof this[prop] === 'object') {
+                if(!isObjectEqual(this[prop], monster[prop]))
+                    return false;
+            }
+            else if (this[prop] !== monster[prop])
                 return false;
         }
         return true;
@@ -1137,7 +1145,15 @@ class StdObject {
         let prop;
         for (prop in this) {
             if (!this.hasOwnProperty(prop)) continue;
-            if (this[prop] !== item[prop])
+            if (Array.isArray(this[prop])) {
+                if(!isArrayEqual(this[prop], item[prop]))
+                    return false;
+            }
+            else if (typeof this[prop] === 'object') {
+                if(!isObjectEqual(this[prop], item[prop]))
+                    return false;
+            }
+            else if (this[prop] !== item[prop])
                 return false;
         }
         return true;
