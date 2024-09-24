@@ -592,7 +592,7 @@ export class Room {
                 if (prop === 'variables' || prop === 'functions' || prop == 'commands') {
                     if (Array.isArray(data[prop]))
                         this[prop] = copy(data[prop]);
-                    else
+                    else if (data[prop])
                         this[prop] = Object.keys(data[prop]).map(d => {
                             data[prop][d].name = d;
                             return copy(data[prop][d]);
@@ -601,7 +601,7 @@ export class Room {
                 else if (prop === 'defines') {
                     if (Array.isArray(data[prop]))
                         this[prop] = data[prop];
-                    else
+                    else if (data['defines'])
                         this.defines = Object.keys(data['defines']).map(d => {
                             return {
                                 key: d,
@@ -12283,6 +12283,36 @@ export class AreaDesigner extends EditorBase {
         this.$roomEditor.refresh();
     }
 
+    private getRoomProperty(room, property) {
+        if (!room) return this.$area.baseRooms[this.$area.defaultRoom] ? this.$area.baseRooms[this.$area.defaultRoom][property] : null;
+        if (room.type) {
+            if (!room[property])
+                return this.getRoomProperty(this.$area.baseRooms[room.type], property);
+            if (typeof (room[property] === 'string') && !room[property].trim().length)
+                return this.getRoomProperty(this.$area.baseRooms[room.type], property);
+        }
+        return room[property];
+    }
+
+    private getRoomPropertyMerged(room, property) {
+        if (!room) return this.$area.baseRooms[this.$area.defaultRoom] ? this.$area.baseRooms[this.$area.defaultRoom][property] : 0;
+        return room[property] | this.getRoomProperty(this.$area.baseRooms[room.type], property);
+    }
+
+    private getRoomArray(room, array, baseFlag) {
+        if (!room) return this.$area.baseRooms[this.$area.defaultRoom] ? this.$area.baseRooms[this.$area.defaultRoom][array] || [] : [];
+        if (room.type && (room.baseFlags & baseFlag) !== baseFlag)
+            return room[array].concat(...this.getRoomArray(this.$area.baseRooms[room.type], array, baseFlag))
+        return room[array];
+    }
+
+    private getRoomExitDetails(room, exit) {
+        if (!room) return this.$area.baseRooms[this.$area.defaultRoom] ? this.$area.baseRooms[this.$area.defaultRoom].exitsDetails[exit] : null;
+        if (room.type)
+            return room.exitsDetails[exit] || this.getRoomExitDetails(this.$area.baseRooms[room.type], exit);
+        return room.exitsDetails[exit];
+    }
+
     private UpdatePreview(room) {
         let ex;
         let e;
@@ -12302,38 +12332,20 @@ export class AreaDesigner extends EditorBase {
             this.$roomPreview.objects.textContent = '';
         }
         else {
-            const base: Room = this.$area.baseRooms[room.type] || this.$area.baseRooms[this.$area.defaultRoom] || new Room(0, 0, 0);
-            if (!room.short || room.short.trim().length === 0)
-                str = base.short;
-            else
-                str = room.short;
+            str = this.getRoomProperty(room, 'short');
             if (str.startsWith('"') && str.endsWith('"'))
                 str = str.substr(1, str.length - 2);
             this.$roomPreview.short.textContent = str;
-            if (!room.long || room.long.trim().length === 0)
-                str = base.long;
-            else
-                str = room.long;
+            str = this.getRoomProperty(room, 'long');
             if (str.startsWith('"') && str.endsWith('"'))
                 str = str.substr(1, str.length - 2);
             this.$roomPreview.long.textContent = str;
 
             str = this.$roomPreview.long.innerHTML;
             items = [];
-            if ((room.baseFlags & RoomBaseFlags.No_Items) === RoomBaseFlags.No_Items && room.items && room.items.length !== 0)
-                room.items.forEach(i => {
-                    i = i.item.split(',').map(i2 => items.push({ item: i2.trim(), description: i.description }));
-                });
-            else if ((room.baseFlags & RoomBaseFlags.No_Items) !== RoomBaseFlags.No_Items) {
-                if (room.items && room.items.length !== 0)
-                    room.items.forEach(i => {
-                        i.item.split(',').forEach(i2 => items.push({ item: i2.trim(), description: i.description }));
-                    });
-                if (base.items && base.items.length !== 0)
-                    base.items.forEach(i => {
-                        i.item.split(',').forEach(i2 => items.push({ item: i2.trim(), description: i.description }));
-                    });
-            }
+            this.getRoomArray(room, 'items', RoomBaseFlags.No_Items).forEach(i => {
+                i = i.item.split(',').map(i2 => items.push({ item: i2.trim(), description: i.description }));
+            });
 
             if (items.length > 0) {
                 items = items.sort((a, b) => { return b.item.length - a.item.length; });
@@ -12344,21 +12356,16 @@ export class AreaDesigner extends EditorBase {
             }
             else
                 items = null;
-            e = room.climbs || base.climbs;
+            e = this.getRoomPropertyMerged(room, 'climbs');
             if (e !== RoomExit.None) {
                 ex = [];
                 for (exit in RoomExits) {
                     if (!RoomExits.hasOwnProperty(exit)) continue;
                     if (!RoomExits[exit]) continue;
                     if ((e & RoomExits[exit]) === RoomExits[exit]) {
-                        if (room.exitsDetails[exit]) {
-                            if (room.exitsDetails[exit].hidden)
-                                continue;
-                        }
-                        else if (base.exitsDetails[exit]) {
-                            if (base.exitsDetails[exit].hidden)
-                                continue;
-                        }
+                        let ed = this.getRoomExitDetails(room, exit);
+                        if (ed && ed.hidden)
+                            continue;
                         ex.push(exit);
                     }
                 }
@@ -12382,9 +12389,8 @@ export class AreaDesigner extends EditorBase {
                     });
                 }
             }
-
-            const smell = room.smell || base.smell;
-            const sound = room.sound || base.sound;
+            const smell = this.getRoomProperty(room, 'smell');
+            const sound = this.getRoomProperty(room, 'sound');
             if (smell.length > 0 && sound.length > 0) {
                 this.$roomPreview.sound.style.display = 'block';
                 this.$roomPreview.smell.style.display = 'block';
@@ -12412,8 +12418,8 @@ export class AreaDesigner extends EditorBase {
                 this.$roomPreview.smell.style.display = 'none';
                 this.$roomPreview.sound.style.display = 'none';
             }
-            e = room.exits | room.external || base.exits || base.external;
-            e &= ~(room.climbs || base.climbs);
+            e = this.getRoomPropertyMerged(room, 'exits') | this.getRoomPropertyMerged(room, 'external');
+            e &= ~(this.getRoomPropertyMerged(room, 'climbs'));
             if (e === RoomExit.None)
                 this.$roomPreview.exits.textContent = 'There are no obvious exits.';
             else {
@@ -12422,14 +12428,9 @@ export class AreaDesigner extends EditorBase {
                     if (!RoomExits.hasOwnProperty(exit)) continue;
                     if (!RoomExits[exit]) continue;
                     if ((e & RoomExits[exit]) === RoomExits[exit]) {
-                        if (room.exitsDetails[exit]) {
-                            if (room.exitsDetails[exit].hidden || (room.exitsDetails[exit].door.length && room.exitsDetails[exit].closed))
-                                continue;
-                        }
-                        else if (base.exitsDetails[exit]) {
-                            if (base.exitsDetails[exit].hidden || (room.exitsDetails[exit].door.length && room.exitsDetails[exit].closed))
-                                continue;
-                        }
+                        let ed = this.getRoomExitDetails(room, exit);
+                        if (ed && (ed.hidden || (ed.door.length && ed.closed)))
+                            continue;
                         ex.push(exit);
                     }
                 }
@@ -12446,7 +12447,7 @@ export class AreaDesigner extends EditorBase {
             }
             let counts = {};
             let preview = {};
-            room.monsters.forEach(i => {
+            this.getRoomArray(room, 'monsters', RoomBaseFlags.No_Monsters).forEach(i => {
                 let short;
                 if (this.$area.monsters[i.id].flags & MonsterFlags.Flying)
                     short = this.$area.monsters[i.id].short + ' (flying)';
@@ -12462,22 +12463,6 @@ export class AreaDesigner extends EditorBase {
                 if (!preview[short])
                     preview[short] = this.monsterPreview(this.$area.monsters[i.id]);
             });
-            if ((room.baseFlags & RoomBaseFlags.No_Monsters) !== RoomBaseFlags.No_Monsters)
-                base.monsters.forEach(i => {
-                    let short;
-                    if (this.$area.monsters[i.id].flags & MonsterFlags.Flying)
-                        short = this.$area.monsters[i.id].short + ' (flying)';
-                    else
-                        short = this.$area.monsters[i.id].short;
-                    if (!counts[short])
-                        counts[short] = 0;
-                    if (i.minAmount > 0 || i.maxAmount > 0)
-                        counts[short] += i.minAmount || i.maxAmount;
-                    else if (i.unique)
-                        counts[short]++;
-                    if (!preview[short])
-                        preview[short] = this.monsterPreview(this.$area.monsters[i.id]);
-                });
             items = Object.keys(counts);
             if (items.length > 0) {
                 this.$roomPreview.living.style.display = '';
@@ -12490,7 +12475,7 @@ export class AreaDesigner extends EditorBase {
 
             counts = {};
             preview = {}
-            room.objects.forEach(i => {
+            this.getRoomArray(room, 'objects', RoomBaseFlags.No_Objects).forEach(i => {
                 let short;
                 if (i.id < 0 && StandardObjects[i.id])
                     short = StandardObjects[i.id].short;
@@ -12507,24 +12492,6 @@ export class AreaDesigner extends EditorBase {
                 if (!preview[short])
                     preview[short] = this.$area.objects[i.id].long;
             });
-            if ((room.baseFlags & RoomBaseFlags.No_Objects) !== RoomBaseFlags.No_Objects)
-                base.objects.forEach(i => {
-                    let short;
-                    if (i.id < 0 && StandardObjects[i.id])
-                        short = StandardObjects[i.id].short;
-                    else if (this.$area.objects[i.id])
-                        short = this.$area.objects[i.id].getShort();
-                    else
-                        return;
-                    if (!counts[short])
-                        counts[short] = 0;
-                    if (i.minAmount > 0)
-                        counts[short] += i.minAmount;
-                    else if (i.unique)
-                        counts[short]++;
-                    if (!preview[short])
-                        preview[short] = this.$area.objects[i.id].long;
-                });
             items = Object.keys(counts);
             if (items.length === 1) {
                 this.$roomPreview.objects.style.display = '';
@@ -12551,25 +12518,40 @@ export class AreaDesigner extends EditorBase {
         }
     }
 
+    private getMonsterProperty(monster, property) {
+        if (!monster) return this.$area.baseMonsters[this.$area.defaultMonster] ? this.$area.baseMonsters[this.$area.defaultMonster][property] : null;
+        if (monster.type) {
+            if (!monster[property])
+                return this.getRoomProperty(this.$area.baseMonsters[monster.type], property);
+            if (typeof (monster[property] === 'string') && !monster[property].trim().length)
+                return this.getRoomProperty(this.$area.baseMonsters[monster.type], property);
+        }
+        return monster[property];
+    }
+
+    private getMonsterArray(monster, array, baseFlag) {
+        if (!monster) return this.$area.baseMonsters[this.$area.defaultMonster] ? this.$area.baseMonsters[this.$area.defaultMonster][array] || [] : [];
+        if (monster.type && (monster.baseFlags & baseFlag) !== baseFlag)
+            return monster[array].concat(...this.getRoomArray(this.$area.baseMonsters[monster.type], array, baseFlag))
+        return monster[array];
+    }
+
     private monsterPreview(monster, colors?, itemTooltips?) {
         if (!monster) return '';
-        const base: Monster = this.$area.baseMonsters[monster.type] || this.$area.baseMonsters[this.$area.defaultMonster] || new Monster();
         let sub = 'it', poss = 'its', obj = 'it';
-        if ((monster.gender || base.gender) == 'female' || ((monster.gender || base.gender) == 'random' && Math.floor(Math.random() * 2) == 1)) {
+        let gender = this.getMonsterProperty(monster, 'gender');
+        if (gender == 'female' || (gender == 'random' && Math.floor(Math.random() * 2) == 1)) {
             sub = 'she';
             poss = 'her';
             obj = 'her';
         }
-        else if ((monster.gender || base.gender) == 'male' || (monster.gender || base.gender) == 'random') {
+        else if (gender == 'male' || gender == 'random') {
             sub = 'he';
             poss = 'his';
             obj = 'him';
         }
-        let description = `You look over the ${monster.gender || base.gender} ${monster.race || base.race || 'UNKNOWN'}.\nYou are about the same size as ${obj}.\n${monster.long || base.long}\n${capitalize(sub)} is in top shape.\n${capitalize(sub)} is missing no limbs.\n`;
-        const objs = monster.objects.filter(v => (v.maxAmount > 0 || v.minAmount > 0) && (this.$area.objects[v.id] || StandardObjects[v.id])).concat(
-            ...base.objects.filter(v => (v.maxAmount > 0 || v.minAmount > 0) && (this.$area.objects[v.id] || StandardObjects[v.id]))
-        );
-
+        let description = `You look over the ${gender} ${this.getMonsterProperty(monster, 'race') || 'UNKNOWN'}.\nYou are about the same size as ${obj}.\n${this.getMonsterProperty(monster, 'long')}\n${capitalize(sub)} is in top shape.\n${capitalize(sub)} is missing no limbs.\n`;
+        const objs = this.getMonsterArray(monster, 'objects', MonsterBaseFlags.No_Objects).filter(v => (v.maxAmount > 0 || v.minAmount > 0) && (this.$area.objects[v.id] || StandardObjects[v.id]));
         if (objs.length > 0) {
             description += `${capitalize(sub)} is carrying:\n`;
             description += objs.map(v => {
