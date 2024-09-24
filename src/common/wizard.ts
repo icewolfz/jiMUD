@@ -68,21 +68,29 @@ export class WizardPage extends EventEmitter {
     public set body(value: any) {
         if (value === this.$body) return;
         if (this.$body) {
-            while (this.$body.firstChild) {
-                this.$body.removeChild(this.$body.firstChild);
+            while (this.$el.firstChild) {
+                this.$el.removeChild(this.$el.firstChild);
             }
         }
         this.$body = value;
         if (!value) return;
-        if (typeof value === 'string')
+        if (typeof value === 'string') {
             this.$el.innerHTML = value;
+            if (this.$el.firstElementChild.hasAttribute('data-visible'))
+                this.visible = (<HTMLElement>this.$el.firstElementChild).dataset.visible !== 'false';
+        }
         else if (value instanceof $) {
             const bl = (<JQuery>value).length;
             for (let b = 0; b < bl; b++)
                 this.$el.appendChild(value[b]);
+            if (typeof (<JQuery>value).data('visible') !== 'undefined')
+                this.visible = (<JQuery>value).data('visible') !== 'false';
         }
-        else if (value instanceof HTMLElement)
+        else if (value instanceof HTMLElement) {
             this.$el.appendChild(value);
+            if (value.hasAttribute('data-visible'))
+                this.visible = value.dataset.visible !== 'false';
+        }
     }
     public get body() { return this.$body; }
 
