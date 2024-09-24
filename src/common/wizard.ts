@@ -34,7 +34,17 @@ export class WizardPage extends EventEmitter {
     private $body;
     private $el: HTMLElement;
     private _title;
+    private $visible = true;
     public wizard: Wizard;
+
+    public get visible() {
+        return this.$visible;
+    }
+    public set visible(value) {
+        if (this.$visible === value) return;
+        this.$visible = value;
+        this.wizard.refreshAll();
+    }
 
     constructor(options?: PageOptions) {
         super();
@@ -332,6 +342,7 @@ export class Wizard extends EventEmitter {
     private $finish;
 
     private $pages: WizardPage[] = [];
+    private $navPages = [];
     private $current = 0;
     private $nav: HTMLSelectElement;
     private $update: UpdateType;
@@ -378,9 +389,14 @@ export class Wizard extends EventEmitter {
         if (!Array.isArray(value))
             value = [value];
         if (this.$pages === value) return;
+        this.$navPages = [];
         this.unbindEvents(this.$pages);
         this.$pages = value;
-        this.$pages.forEach(p => p.wizard = this);
+        this.$pages.forEach((p, i) => {
+            p.wizard = this;
+            if (p.visible)
+                this.$navPages.push(i);
+        });
         this.bindEvents(value);
     }
 
@@ -473,7 +489,7 @@ export class Wizard extends EventEmitter {
         this.$finish.classList.add('btn', 'btn-primary');
         this.$finish.style.cssFloat = 'right';
         this.$finish.addEventListener('click', () => {
-            if (this.$current === this.$pages.length - 1) {
+            if (this.$current === this.$navPages.length - 1) {
                 const e = { data: this.$data, preventDefault: false };
                 this.emit('finished', e);
                 if (!e.preventDefault)
@@ -521,8 +537,13 @@ export class Wizard extends EventEmitter {
         if (!pages) return;
         if (!Array.isArray(pages))
             pages = [pages];
+        this.$navPages = [];
         this.$pages.push(...pages);
-        this.$pages.forEach(p => p.wizard = this);
+        this.$pages.forEach((p, i) => {
+            p.wizard = this
+            if (p.visible)
+                this.$navPages.push(i);
+        });
         this.bindEvents(pages);
         this.doUpdate(UpdateType.rebuildNav | UpdateType.refresh);
     }
@@ -537,6 +558,9 @@ export class Wizard extends EventEmitter {
             idx = this.$pages.indexOf(pages[pl]);
             if (idx !== -1)
                 this.$pages.splice(idx, 1);
+            idx = this.$navPages.indexOf(idx);
+            if (idx !== -1)
+                this.$navPages.splice(idx, 1);
         }
         this.unbindEvents(pages);
         this.doUpdate(UpdateType.rebuildNav | UpdateType.refresh);
@@ -546,8 +570,13 @@ export class Wizard extends EventEmitter {
         if (!pages) return;
         if (!Array.isArray(pages))
             pages = [pages];
+        this.$navPages = [];
         this.$pages.splice(idx, 0, ...pages);
-        this.pages.forEach(p => p.wizard = this);
+        this.$pages.forEach((p, i) => {
+            p.wizard = this;
+            if (p.visible)
+                this.$navPages.push(i);
+        });
         this.bindEvents(pages);
         this.doUpdate(UpdateType.rebuildNav | UpdateType.refresh);
     }
@@ -613,21 +642,25 @@ export class Wizard extends EventEmitter {
     private getDataInput(e) {
         const el = e.relatedTarget || e.target;
         this.$data[el.id || el.name] = el.value;
+        this.emit('value-changed', { element: el, id: el.id || el.name, data: this.$data[el.id || el.name], wizard: this });
     }
 
     private getDataSelect(e) {
         const el = e.relatedTarget || e.target;
         this.$data[el.id || el.name] = { value: el.selectedOptions.length ? el.value : null, display: el.selectedOptions.length ? el.selectedOptions[0].textContent : null };
+        this.emit('value-changed', { element: el, id: el.id || el.name, value: this.$data[el.id || el.name].value, display: this.$data[el.id || el.name].display, wizard: this });
     }
 
     private getDataNumber(e) {
         const el = e.relatedTarget || e.target;
         this.$data[el.id || el.name] = +el.value;
+        this.emit('value-changed', { element: el, id: el.id || el.name, value: this.$data[el.id || el.name], wizard: this });
     }
 
     private getDataCheckbox(e) {
         const el = e.relatedTarget || e.target;
         this.$data[el.id || el.name] = el.checked;
+        this.emit('value-changed', { element: el, id: el.id || el.name, value: this.$data[el.id || el.name], wizard: this });
     }
 
     private rebuildNav() {
@@ -636,9 +669,10 @@ export class Wizard extends EventEmitter {
         }
         const frag = document.createDocumentFragment();
         this.$pages.forEach((p, idx) => {
+            if (!p.visible) return;
             const op = document.createElement('option');
             op.textContent = p.title;
-            op.value = '' + idx;
+            op.value = '' + this.$navPages.indexOf(idx);
             if (idx === this.$current)
                 op.selected = true;
             frag.appendChild(op);
@@ -652,7 +686,7 @@ export class Wizard extends EventEmitter {
             this.$prev.setAttribute('disabled', 'disabled');
         else
             this.$prev.removeAttribute('disabled');
-        if (this.$current === this.$pages.length - 1)
+        if (this.$current === this.$navPages.length - 1)
             this.$next.setAttribute('disabled', 'disabled');
         else
             this.$next.removeAttribute('disabled');
@@ -665,7 +699,7 @@ export class Wizard extends EventEmitter {
                 dest = 0;
                 break;
             case 'last':
-                dest = this.$pages.length - 1;
+                dest = this.$navPages.length - 1;
                 break;
             case 'next':
                 dest = this.$current + 1;
@@ -679,22 +713,26 @@ export class Wizard extends EventEmitter {
                     dest = where;
                 break;
         }
-        if (dest >= this.$pages.length)
-            dest = this.$pages.length - 1;
+        if (dest >= this.$navPages.length)
+            dest = this.$navPages.length - 1;
         if (dest < 0)
             dest = 0;
         if (this.$current === dest && !force) return;
-        const e = { destIndex: dest, destPage: this.$pages[dest], index: this.$current, page: this.$pages[this.$current], preventDefault: false };
+        const nDest = dest;
+        dest = this.$navPages[nDest]
+        let curr = this.$navPages[this.$current];
+        const e = { destIndex: dest, destPage: this.$pages[dest], index: curr, page: this.$pages[curr], preventDefault: false };
         this.emit('hidden', e);
         if (e.preventDefault) return;
-        if (this.$pages[this.$current]) {
-            this.$pages[this.$current].emit('hidden', e);
+        if (this.$pages[curr]) {
+            this.$pages[curr].emit('hidden', e);
             if (e.preventDefault) return;
         }
-        this.$current = dest;
+        this.$current = nDest;
+        curr = this.$navPages[this.$current];
         this.refresh();
-        this.$pages[this.$current].emit('shown', this.$pages[this.$current]);
-        this.emit('shown', this.$current);
+        this.$pages[curr].emit('shown', this.$pages[curr]);
+        this.emit('shown', curr);
     }
 
     public next() { this.goto('next'); }
@@ -703,12 +741,29 @@ export class Wizard extends EventEmitter {
     public first() { this.goto(0); }
     public last() { this.goto('last'); }
 
+    public refreshAll() {
+        let curr = this.$navPages[this.$current];
+        this.$navPages = [];
+        this.$pages.forEach((p, i) => {
+            p.wizard = this;
+            if (p.visible)
+                this.$navPages.push(i);
+            else if (i === curr)
+                curr++;
+        });
+        this.$current = this.$navPages.indexOf(curr);
+        if (this.$current === -1)
+            this.$current = this.$navPages.length - 1;
+        this.rebuildNav();
+        this.refresh();
+    }
+
     public refresh() {
         while (this.$body.firstChild) {
             this.$body.removeChild(this.$body.firstChild);
         }
-        if (this.$pages.length > 0 && this.$current < this.$pages.length && this.$pages[this.$current])
-            this.$body.appendChild(this.$pages[this.$current].page);
+        if (this.$navPages.length > 0 && this.$current < this.$navPages.length && this.$pages[this.$navPages[this.$current]])
+            this.$body.appendChild(this.$pages[this.$navPages[this.$current]].page);
         this.$nav.selectedIndex = this.$current;
         $(this.$nav).val('' + this.$current);
         $(this.$nav).selectpicker('render');
