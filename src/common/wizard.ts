@@ -13,6 +13,7 @@ export interface PageOptions {
     id: string;
     title: string;
     body?: any;
+    visible?: boolean;
     reset?(...args: any[]): void;
     shown?(...args: any[]): void;
     hidden?(...args: any[]): void;
@@ -59,6 +60,9 @@ export class WizardPage extends EventEmitter {
                 this.on('shown', options.shown);
             if (options.hidden)
                 this.on('hidden', options.hidden);
+            //Object.hasOwn(options, 'visible')
+            if (options.hasOwnProperty('visible'))
+                this.visible = options.visible;
         }
     }
 
