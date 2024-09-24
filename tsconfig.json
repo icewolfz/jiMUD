@@ -2,7 +2,7 @@
     "compileOnSave": true,
     "compilerOptions": {
         "incremental": true,
-        "target": "es2021",
+        "target": "es2022",
         "module": "commonjs",
         "moduleResolution": "node",
         "sourceMap": false,
@@ -14,7 +14,8 @@
             "./src/workers"
         ],
         "newLine": "LF",
-        "checkJs": true
+        "checkJs": true,
+        "useDefineForClassFields": false
     },
     "exclude": [
         "./node_modules",

@@ -60,8 +60,7 @@ export class WizardPage extends EventEmitter {
                 this.on('shown', options.shown);
             if (options.hidden)
                 this.on('hidden', options.hidden);
-            //Object.hasOwn(options, 'visible')
-            if (options.hasOwnProperty('visible'))
+            if (Object.hasOwn(options, 'visible'))
                 this.visible = options.visible;
         }
     }

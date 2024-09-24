@@ -2019,8 +2019,22 @@ export class CodeValueEditor extends ValueEditor {
                     var aWindow;
                     document.body.appendChild(notes);
                     document.getElementById(notes.id + '-advanced').addEventListener('click', () => {
-                        aWindow = openAdvancedEditor(this.$codeEditor.getValue(), text => {
-                            this.$codeEditor.setValue(text);
+                        aWindow = openAdvancedEditor(this.selected, text => {
+                            const selections = this.$codeEditor.getSelections();
+                            const commands: monaco.editor.ICommand[] = [];
+                            const len = selections.length;
+                            for (let i = 0; i < len; i++) {
+                                const selection = selections[i];
+                                if (selection.isEmpty()) {
+                                    const cursor = selection.getStartPosition();
+                                    commands.push(new ReplaceCommand(new monaco.Range(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column), text));
+                                } else {
+                                    commands.push(new ReplaceCommand(selection, text));
+                                }
+                            }
+                            this.$codeEditor.pushUndoStop();
+                            this.$codeEditor.executeCommands('jiMUD.action.insert', commands);
+                            this.$codeEditor.pushUndoStop();
                         });
                         this.$codeEditor.focus();
                     });
