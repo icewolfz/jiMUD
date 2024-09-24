@@ -586,7 +586,7 @@ export class Room {
     public commands: Command[] = [];
 
     constructor(x, y, z, data?, type?) {
-        if (data)
+        if (data) {
             for (const prop in data) {
                 if (!data.hasOwnProperty(prop)) continue;
                 if (prop === 'variables' || prop === 'functions' || prop == 'commands') {
@@ -612,7 +612,10 @@ export class Room {
                 else
                     this[prop] = copy(data[prop]);
             }
-        this.type = type;
+            this.type = type || data.type;
+        }
+        else
+            this.type = type;
         this.x = x;
         this.y = y;
         this.z = z;
@@ -6298,7 +6301,7 @@ export class AreaDesigner extends EditorBase {
                                     nRoom.waterPoisoned = +e.data['room-wiz-water-poisoned'];
                                     nRoom.waterSource = e.data['room-wiz-water-source'];
                                     nRoom.waterDrinkMessage = e.data['room-wiz-water-drink-message'];
-                                    nRoom.waterWashMessage = e.data['room-wiz-water-was-message'];
+                                    nRoom.waterWashMessage = e.data['room-wiz-water-wash-message'];
                                     nRoom.waterGerms = e.data['room-wiz-water-germs'] || [];
                                     nRoom.forage = +e.data['room-wiz-forage'];
                                     nRoom.maxForage = +e.data['room-wiz-max-forage'];

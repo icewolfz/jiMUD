@@ -1,6 +1,7 @@
 //spellchecker:ignore datagrid
 import { EventEmitter } from 'events';
 import { DataGrid } from './datagrid';
+import { copy } from './library';
 
 export interface WizardOptions {
     id: string;
@@ -718,7 +719,7 @@ export class Wizard extends EventEmitter {
     }
 
     public show() {
-        this.$data = {};
+        this.$data = copy(this.defaults) || {};
         if (this.$dialog.open) return;
         this.goto(0, true);
         this.$pages.forEach(p => {

@@ -19,6 +19,7 @@
   - Increase progress dialog height
   - Fix issue when using non default theme and button bar hidden
   - Fix always on top for child windows opened outside of client
+  - Fix datagrid body height issue not accounting for horizontal scroll bar
   - Advanced editor/Mail composer: Fix inserted text defaulting to bold white
   - Code editor:
     - No longer generate function stubs if invalid function names in (: :) values
@@ -30,6 +31,7 @@
     - Area Designer:
       - Fix type in monster resistances code
       - Room editor now remembers collapsed state
+      - Fix issue where base rooms lose room types on load
     - Fix usage of advanced editor in text edit dialogs
     - Fix advanced edit text drop downs being cut off when used in a dialog window
     - Fix error tooltips not displaying correctly

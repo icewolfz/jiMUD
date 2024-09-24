@@ -2005,6 +2005,7 @@ export class DataGrid extends EventEmitter {
             springRow.style.height = '0px';
             helper = document.createElement('div');
             helper.style.height = '100%';
+            helper.style.width = this.$dataWidth + 'px';
             helper.style.position = 'absolute';
             helper.style.top = '0';
             helper.style.left = '0';
@@ -2022,6 +2023,7 @@ export class DataGrid extends EventEmitter {
         springRow.style.height = '0px';
         helper = document.createElement('div');
         helper.style.height = '100%';
+        helper.style.width = this.$dataWidth + 'px';
         helper.style.position = 'absolute';
         helper.style.top = '0';
         helper.style.left = '0';
