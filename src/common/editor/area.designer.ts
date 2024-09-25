@@ -12632,7 +12632,7 @@ export class AreaDesigner extends EditorBase {
     }
 
     private getMonsterType(monster) {
-        if (!monster) return this.$area.baseMonsters[this.$area.defaultMonster]?.type;
+        if (!monster) return this.$area.defaultMonster || 'base';
         if (typeof monster === 'object')
             monster = monster.type;
         if (!this.$area.baseMonsters[monster]) {
@@ -12644,7 +12644,7 @@ export class AreaDesigner extends EditorBase {
     }
 
     private getRoomType(type) {
-        if (!type) return this.$area.baseRooms[this.$area.defaultRoom]?.type;
+        if (!type) return this.$area.defaultRoom || 'base';
         if (typeof type === 'object')
             type = type.type;
         if (!this.$area.baseRooms[type])
