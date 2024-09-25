@@ -40,6 +40,40 @@ export enum MonsterTypeFlags {
     Vendor = 1 << 0
 }
 
+export function getMonsterTypeFlags(type) {
+    let t = MonsterTypeFlags.None;
+    switch (type) {
+        case 'STD_MONSTER':
+        case 'MONTYPE_BARKEEP':
+        case 'MONTYPE_HEALER':
+        case 'MONTYPE_MON_EDIBLE':
+        case 'MONTYPE_SUMMON_MOB':
+        case 'MONTYPE_SHIPWRIGHT':
+        case 'MONTYPE_TATTOOIST':
+            break;
+        case 'MONTYPE_ARMOR_REPAIR':
+        case 'MONTYPE_CRAFTER':
+        case 'MONTYPE_CLERIC_TRAINER':
+        case 'MONTYPE_SUBCLASSER':
+        case 'MONTYPE_JEWELER':
+        case 'MONTYPE_LOCKPICK_REPAIR':
+        case 'MONTYPE_MAGE_TRAINER':
+        case 'MONTYPE_SAGE_NPC':
+        case 'MONTYPE_SKILL_TRAINER':
+        case 'MONTYPE_SMITH':
+        case 'MONTYPE_CMD_TRAIN_NPC':
+        case 'MONTYPE_VENDOR':
+        case 'MONTYPE_WEAPON_REPAIR':
+            t |= MonsterTypeFlags.Vendor;
+            break;
+    }
+    return t;
+}
+
+export function getRoomTypeFlags(type) {
+    return RoomTypeFlags.None;
+}
+
 export enum RoomTypeFlags {
     None = 0
 }
@@ -5901,32 +5935,7 @@ export class AreaDesigner extends EditorBase {
                                     ed.focus();
                                 },
                                 valueChanged: e => {
-                                    e.type = 0;
-                                    switch (this.getMonsterType(e.value)) {
-                                        case 'STD_MONSTER':
-                                        case 'MONTYPE_BARKEEP':
-                                        case 'MONTYPE_HEALER':
-                                        case 'MONTYPE_MON_EDIBLE':
-                                        case 'MONTYPE_SUMMON_MOB':
-                                        case 'MONTYPE_SHIPWRIGHT':
-                                        case 'MONTYPE_TATTOOIST':
-                                            break;
-                                        case 'MONTYPE_ARMOR_REPAIR':
-                                        case 'MONTYPE_CRAFTER':
-                                        case 'MONTYPE_CLERIC_TRAINER':
-                                        case 'MONTYPE_SUBCLASSER':
-                                        case 'MONTYPE_JEWELER':
-                                        case 'MONTYPE_LOCKPICK_REPAIR':
-                                        case 'MONTYPE_MAGE_TRAINER':
-                                        case 'MONTYPE_SAGE_NPC':
-                                        case 'MONTYPE_SKILL_TRAINER':
-                                        case 'MONTYPE_SMITH':
-                                        case 'MONTYPE_CMD_TRAIN_NPC':
-                                        case 'MONTYPE_VENDOR':
-                                        case 'MONTYPE_WEAPON_REPAIR':
-                                            e.type |= MonsterTypeFlags.Vendor;
-                                            break;
-                                    }
+                                    e.type = getMonsterTypeFlags(this.getMonsterType(e.value.type));
                                 }
                             });
                         }
@@ -7244,32 +7253,7 @@ export class AreaDesigner extends EditorBase {
                                     ed.focus();
                                 },
                                 valueChanged: e => {
-                                    e.type = 0;
-                                    switch (this.getMonsterType(e.value)) {
-                                        case 'STD_MONSTER':
-                                        case 'MONTYPE_BARKEEP':
-                                        case 'MONTYPE_HEALER':
-                                        case 'MONTYPE_MON_EDIBLE':
-                                        case 'MONTYPE_SUMMON_MOB':
-                                        case 'MONTYPE_SHIPWRIGHT':
-                                        case 'MONTYPE_TATTOOIST':
-                                            break;
-                                        case 'MONTYPE_ARMOR_REPAIR':
-                                        case 'MONTYPE_CRAFTER':
-                                        case 'MONTYPE_CLERIC_TRAINER':
-                                        case 'MONTYPE_SUBCLASSER':
-                                        case 'MONTYPE_JEWELER':
-                                        case 'MONTYPE_LOCKPICK_REPAIR':
-                                        case 'MONTYPE_MAGE_TRAINER':
-                                        case 'MONTYPE_SAGE_NPC':
-                                        case 'MONTYPE_SKILL_TRAINER':
-                                        case 'MONTYPE_SMITH':
-                                        case 'MONTYPE_CMD_TRAIN_NPC':
-                                        case 'MONTYPE_VENDOR':
-                                        case 'MONTYPE_WEAPON_REPAIR':
-                                            e.type |= MonsterTypeFlags.Vendor;
-                                            break;
-                                    }
+                                    e.type = getMonsterTypeFlags(this.getMonsterType(e.value.type));
                                 }
                             });
                         }
@@ -12657,6 +12641,15 @@ export class AreaDesigner extends EditorBase {
             return this.getMonsterType(this.$area.monsters[monster].type);
         }
         return this.getMonsterType(this.$area.baseMonsters[monster].type);
+    }
+
+    private getRoomType(type) {
+        if (!type) return this.$area.baseRooms[this.$area.defaultRoom]?.type;
+        if (typeof type === 'object')
+            type = type.type;
+        if (!this.$area.baseRooms[type])
+            return type;
+        return this.getMonsterType(this.$area.baseRooms[type].type);
     }
 
     private getMonsterArray(monster, array, baseFlag) {

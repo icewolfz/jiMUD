@@ -2103,7 +2103,7 @@
     const { DockManager } = require('./js/dockmanager');
     const { EditorType } = require('./js/value.editors');
     const { DataGrid } = require('./js/datagrid');
-    const { createFunction, formatFunctionPointer, formatArgumentList, formatMapping, MonacoCodeEditor, VirtualEditor, AreaDesigner, Source, FileBrowseValueEditor, RoomExit, RoomStates, formatVariableValue, formatArray, MonsterTypeFlags, RoomTypeFlags } = require('./js/editor/code.editor');
+    const { createFunction, formatFunctionPointer, formatArgumentList, formatMapping, MonacoCodeEditor, VirtualEditor, AreaDesigner, Source, FileBrowseValueEditor, RoomExit, RoomStates, formatVariableValue, formatArray, MonsterTypeFlags, RoomTypeFlags, getMonsterTypeFlags, getRoomTypeFlags } = require('./js/editor/code.editor');
     const { EditorSettings } = require('./js/editor/code.editor.settings');
     const { language } = require('./js/editor/lpc');
 
@@ -8230,34 +8230,8 @@
                     $dialogs.monster.options.valueChanged(e);
                 if (e.preventDefault) return;
                 if (e.id === 'mon-wiz-type') {
-                    let type = e.type || 0;
+                    let type = (e.type || 0) | getMonsterTypeFlags(e.value);
                     let page;
-                    switch (e.value) {
-                        case 'STD_MONSTER':
-                        case 'MONTYPE_BARKEEP':
-                        case 'MONTYPE_HEALER':
-                        case 'MONTYPE_MON_EDIBLE':
-                        case 'MONTYPE_SUMMON_MOB':
-                        case 'MONTYPE_SHIPWRIGHT':
-                        case 'MONTYPE_TATTOOIST':
-                            break;
-                        case 'MONTYPE_ARMOR_REPAIR':
-                        case 'MONTYPE_CRAFTER':
-                        case 'MONTYPE_CLERIC_TRAINER':
-                        case 'MONTYPE_SUBCLASSER':
-                        case 'MONTYPE_JEWELER':
-                        case 'MONTYPE_LOCKPICK_REPAIR':
-                        case 'MONTYPE_MAGE_TRAINER':
-                        case 'MONTYPE_SAGE_NPC':
-                        case 'MONTYPE_SKILL_TRAINER':
-                        case 'MONTYPE_SMITH':
-                        case 'MONTYPE_CMD_TRAIN_NPC':
-                        case 'MONTYPE_VENDOR':
-                        case 'MONTYPE_WEAPON_REPAIR':
-                            type |= MonsterTypeFlags.Vendor;
-                            break;
-                    }
-
                     page = $dialogs.monster.pages.find(i => i.title === 'Vendor properties');
                     page.visible = (type & MonsterTypeFlags.Vendor) === MonsterTypeFlags.Vendor;
                 }
