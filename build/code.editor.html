@@ -8291,6 +8291,7 @@
                 var props = [];
                 var tempProps = [];
                 var stubs = {};
+                let typeFlags = getMonsterTypeFlags(data['mon-wiz-type'].value);
                 tmpl.inherit = data['mon-wiz-type'].value;
                 tmpl.includes = data['mon-wiz-type'].display === 'Base' ? '\n#include "../area.h"' : '';
                 tmpl.inherits = '';
@@ -8370,7 +8371,7 @@
                         tmpl.doc.push('/doc/build/monster/types/vendor');
                         break;
                 }
-                if (data['mon-wiz-typeData-storageroom']) {
+                if (data['mon-wiz-typeData-storageroom'] && (TypeFlags & MonsterTypeFlags.Vendor) === MonsterTypeFlags.Vendor) {
                     data['mon-wiz-typeData-storageroom'] = data['mon-wiz-typeData-storageroom'].trim();
                     if (data['mon-wiz-typeData-storageroom'].startsWith('"') && data['mon-wiz-typeData-storageroom'].endsWith('"'))
                         tmpl['create body'] += `    set_storage_room(${data['mon-wiz-typeData-storageroom']})\n`;

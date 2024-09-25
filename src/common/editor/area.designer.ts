@@ -14431,6 +14431,7 @@ export class AreaDesigner extends EditorBase {
         let props: any = {};
         let tempProps: any = {};
         let stubs: any = {};
+        let typeFlags = getMonsterTypeFlags(this.getMonsterType(monster.type));
         if (files[monster.type])
             data.inherit = `(MON + "${files[monster.type]}")`;
         else
@@ -14582,7 +14583,7 @@ export class AreaDesigner extends EditorBase {
                 data.doc.push('/doc/build/monster/types/vendor');
                 break;
         }
-        if (monster.typeData && monster.typeData.storageroom) {
+        if (monster.typeData && monster.typeData.storageroom && (typeFlags & MonsterTypeFlags.Vendor) === MonsterTypeFlags.Vendor) {
             monster.typeData.storageroom = monster.typeData.storageroom.trim();
             tmp = monster.typeData.storageroom;
             if (files[monster.typeData.storageroom])
