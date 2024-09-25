@@ -44,7 +44,8 @@ export class WizardPage extends EventEmitter {
     public set visible(value) {
         if (this.$visible === value) return;
         this.$visible = value;
-        this.wizard.refreshAll();
+        if(this.wizard)
+            this.wizard.refreshAll();
     }
 
     constructor(options?: PageOptions) {
@@ -652,26 +653,34 @@ export class Wizard extends EventEmitter {
 
     private getDataInput(e) {
         const el = e.relatedTarget || e.target;
+        const old = this.$data[el.id || el.name];
         this.$data[el.id || el.name] = el.value;
-        this.emit('value-changed', { element: el, id: el.id || el.name, data: this.$data[el.id || el.name], wizard: this });
+        if (!old || old != this.$data[el.id || el.name])
+            this.emit('value-changed', { element: el, id: el.id || el.name, value: this.$data[el.id || el.name], wizard: this });
     }
 
     private getDataSelect(e) {
         const el = e.relatedTarget || e.target;
+        const old = this.$data[el.id || el.name];
         this.$data[el.id || el.name] = { value: el.selectedOptions.length ? el.value : null, display: el.selectedOptions.length ? el.selectedOptions[0].textContent : null };
-        this.emit('value-changed', { element: el, id: el.id || el.name, value: this.$data[el.id || el.name].value, display: this.$data[el.id || el.name].display, wizard: this });
+        if (!old || old.value !== this.$data[el.id || el.name].value || old.display !== this.$data[el.id || el.name].display)
+            this.emit('value-changed', { element: el, id: el.id || el.name, value: this.$data[el.id || el.name].value, display: this.$data[el.id || el.name].display, wizard: this });
     }
 
     private getDataNumber(e) {
         const el = e.relatedTarget || e.target;
+        const old = this.$data[el.id || el.name];
         this.$data[el.id || el.name] = +el.value;
-        this.emit('value-changed', { element: el, id: el.id || el.name, value: this.$data[el.id || el.name], wizard: this });
+        if (!old || old != this.$data[el.id || el.name])
+            this.emit('value-changed', { element: el, id: el.id || el.name, value: this.$data[el.id || el.name], wizard: this });
     }
 
     private getDataCheckbox(e) {
         const el = e.relatedTarget || e.target;
+        const old = this.$data[el.id || el.name];
         this.$data[el.id || el.name] = el.checked;
-        this.emit('value-changed', { element: el, id: el.id || el.name, value: this.$data[el.id || el.name], wizard: this });
+        if (!old || old != this.$data[el.id || el.name])
+            this.emit('value-changed', { element: el, id: el.id || el.name, value: this.$data[el.id || el.name], wizard: this });
     }
 
     private rebuildNav() {

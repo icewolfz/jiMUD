@@ -35,6 +35,15 @@ interface AreaDesignerOptions extends EditorOptions {
     depth?: number;
 }
 
+export enum MonsterTypeFlags {
+    None = 0,
+    Vendor = 1 << 0
+}
+
+export enum RoomTypeFlags {
+    None = 0
+}
+
 export enum RoomFlags {
     WaterDrink = 1 << 17,
     Underwater = 1 << 16,
@@ -584,6 +593,7 @@ export class Room {
     public variables: Variable[] = [];
     public functions: lpcFunction[] = [];
     public commands: Command[] = [];
+    public typeData = {};
 
     constructor(x, y, z, data?, type?) {
         if (data) {
@@ -695,7 +705,15 @@ export class Room {
                         return false;
                     break;
                 default:
-                    if (this[prop] !== room[prop])
+                    if (Array.isArray(this[prop])) {
+                        if (!isArrayEqual(this[prop], room[prop]))
+                            return false;
+                    }
+                    else if (typeof this[prop] === 'object') {
+                        if (!isObjectEqual(this[prop], room[prop]))
+                            return false;
+                    }
+                    else if (this[prop] !== room[prop])
                         return false;
                     break;
             }
@@ -914,6 +932,7 @@ class Monster {
     public variables: Variable[] = [];
     public functions: lpcFunction[] = [];
     public commands: Command[] = [];
+    public typeData = {};
 
     constructor(id?, data?, type?) {
         if (typeof id === 'string') {
@@ -975,11 +994,11 @@ class Monster {
         for (prop in this) {
             if (!this.hasOwnProperty(prop)) continue;
             if (Array.isArray(this[prop])) {
-                if(!isArrayEqual(this[prop], monster[prop]))
+                if (!isArrayEqual(this[prop], monster[prop]))
                     return false;
             }
             else if (typeof this[prop] === 'object') {
-                if(!isObjectEqual(this[prop], monster[prop]))
+                if (!isObjectEqual(this[prop], monster[prop]))
                     return false;
             }
             else if (this[prop] !== monster[prop])
@@ -1146,11 +1165,11 @@ class StdObject {
         for (prop in this) {
             if (!this.hasOwnProperty(prop)) continue;
             if (Array.isArray(this[prop])) {
-                if(!isArrayEqual(this[prop], item[prop]))
+                if (!isArrayEqual(this[prop], item[prop]))
                     return false;
             }
             else if (typeof this[prop] === 'object') {
-                if(!isObjectEqual(this[prop], item[prop]))
+                if (!isObjectEqual(this[prop], item[prop]))
                     return false;
             }
             else if (this[prop] !== item[prop])
@@ -5682,6 +5701,93 @@ export class AreaDesigner extends EditorBase {
                     type: EditorType.button,
                     options: {
                         click: ed => {
+                            const data = {
+                                'mon-wiz-notes': ed.value.notes || '',
+                                'mon-wiz-emotes': ed.value.emotes || [],
+                                'mon-wiz-emotes-chance': '' + ed.value.emotesChance,
+                                'mon-wiz-speech-chance': '' + ed.value.speechChance,
+                                'mon-wiz-emotes-chance-combat': '' + ed.value.emotesChanceCombat,
+                                'mon-wiz-speech-chance-combat': '' + ed.value.speechChanceCombat,
+                                'mon-wiz-welcome-message': 'Welcome to the base monster editor, this will take you through the steps to edit a monster quickly and easily. You may finish at any time to save your current selections.',
+                                'mon-wiz-area-types': Object.keys(this.$area.baseMonsters || { base: null }).filter(r => r !== ed.data.name).map(r => {
+                                    return {
+                                        value: r,
+                                        display: capitalize(r),
+                                        group: 'Area'
+                                    };
+                                }),
+                                'mon-wiz-type': ed.value.type || 'base',
+                                'mon-wiz-level': '' + ed.value.level,
+                                'mon-wiz-alignment': '' + ed.value.alignment,
+                                'mon-wiz-race': ed.value.race,
+                                'mon-wiz-class': ed.value.class,
+                                'mon-wiz-language': ed.value.language,
+                                'mon-wiz-ridable': (ed.value.flags & MonsterFlags.Ridable) === MonsterFlags.Ridable,
+                                'mon-wiz-flying': (ed.value.flags & MonsterFlags.Flying) === MonsterFlags.Flying,
+                                'mon-wiz-getable': (ed.value.flags & MonsterFlags.Getable) === MonsterFlags.Getable,
+                                'mon-wiz-undead': (ed.value.flags & MonsterFlags.Undead) === MonsterFlags.Undead,
+                                'mon-wiz-waterbreathing': (ed.value.flags & MonsterFlags.Water_Breathing) === MonsterFlags.Water_Breathing,
+                                'mon-wiz-requires-water': (ed.value.flags & MonsterFlags.Requires_Water) === MonsterFlags.Requires_Water,
+                                'mon-wiz-no-bleed': (ed.value.flags & MonsterFlags.No_Bleeding) === MonsterFlags.No_Bleeding,
+                                'mon-wiz-name': ed.value.name,
+                                'mon-wiz-short': ed.value.short,
+                                'mon-wiz-nouns': ed.value.nouns,
+                                'mon-wiz-adjectives': ed.value.adjectives,
+                                'mon-wiz-long': ed.value.long,
+                                'mon-wiz-mass': '' + ed.value.mass,
+                                'mon-wiz-height': '' + ed.value.height,
+                                'mon-wiz-eye': ed.value.eyeColor,
+                                'mon-wiz-hair': ed.value.hairColor,
+                                'mon-wiz-gender': ed.value.gender,
+                                'mon-wiz-body': ed.value.bodyType,
+                                'mon-wiz-no-corpse': ed.value.noCorpse,
+                                'mon-wiz-no-limbs': ed.value.noLimbs,
+                                'mon-wiz-attack-commands': ed.value.attackCommands,
+                                'mon-wiz-chance': '' + ed.value.attackCommandChance,
+                                'mon-wiz-initiators': ed.value.attackInitiators,
+                                'mon-wiz-aggressive': ed.value.aggressive,
+                                'mon-wiz-speed': '' + ed.value.speed,
+                                'mon-wiz-patrol': ed.value.patrolRoute,
+                                'mon-wiz-no-walk': ed.value.noWalkRooms,
+                                'mon-wiz-auto-drop': '' + ed.value.autoDrop.time,
+                                'mon-wiz-auto-drop-enabled': ed.value.autoDrop.enabled,
+                                'mon-wiz-storage': '' + ed.value.openStorage.time,
+                                'mon-wiz-storage-enabled': ed.value.openStorage.enabled,
+                                'mon-wiz-auto-wield': '' + ed.value.autoWield.time,
+                                'mon-wiz-auto-wield-enabled': ed.value.autoWield.enabled,
+                                'mon-wiz-auto-loot': '' + ed.value.autoLoot.time,
+                                'mon-wiz-auto-loot-enabled': ed.value.autoLoot.enabled,
+                                'mon-wiz-auto-wear': '' + ed.value.autoWear.time,
+                                'mon-wiz-auto-wear-enabled': ed.value.autoWear.enabled,
+                                'mon-wiz-wimpy': '' + ed.value.wimpy,
+                                'mon-wiz-auto-stand': (ed.value.flags & MonsterFlags.Auto_Stand) === MonsterFlags.Auto_Stand,
+                                'mon-wiz-actions': ed.value.actions,
+                                'mon-wiz-reactions': ed.value.reactions || [],
+                                'mon-wiz-party': ed.value.party,
+                                'mon-wiz-tracking': ed.value.tracking,
+                                'mon-wiz-tracking-message': ed.value.trackingMessage,
+                                'mon-wiz-tracking-type': ed.value.trackingType,
+                                'mon-wiz-tracking-aggressively': ed.value.trackingAggressively,
+                                'mon-wiz-ask': ed.value.askEnabled,
+                                'mon-wiz-ask-no-topic': ed.value.askNoTopic,
+                                'mon-wiz-ask-response': '' + (ed.value.askResponseType || 0),
+                                'mon-wiz-ask-topics': ed.value.askTopics,
+                                'mon-wiz-reputation-group': ed.value.reputationGroup,
+                                'mon-wiz-reputations': ed.value.reputations,
+                                'mon-wiz-properties': ed.value.properties || [],
+                                'mon-wiz-resistances': ed.value.resistances || [],
+                                'mon-wiz-includes': ed.value.includes,
+                                'mon-wiz-defines': ed.value.defines,
+                                'mon-wiz-inherits': ed.value.inherits,
+                                'mon-wiz-variables': ed.value.variables,
+                                'mon-wiz-functions': ed.value.functions,
+                                'mon-wiz-commands': ed.value.commands
+                            };
+                            if (ed.value.typeData) {
+                                Object.keys(ed.value.typeData).forEach(k => {
+                                    data['mon-wiz-typeData-' + k] = ed.value.typeData[k];
+                                });
+                            }
                             this.emit('show-monster-wizard', {
                                 title: 'Edit base monster',
                                 pages: [
@@ -5694,88 +5800,7 @@ export class AreaDesigner extends EditorBase {
                                         }
                                     })
                                 ],
-                                data: {
-                                    'mon-wiz-notes': ed.value.notes || '',
-                                    'mon-wiz-emotes': ed.value.emotes || [],
-                                    'mon-wiz-emotes-chance': '' + ed.value.emotesChance,
-                                    'mon-wiz-speech-chance': '' + ed.value.speechChance,
-                                    'mon-wiz-emotes-chance-combat': '' + ed.value.emotesChanceCombat,
-                                    'mon-wiz-speech-chance-combat': '' + ed.value.speechChanceCombat,
-                                    'mon-wiz-welcome-message': 'Welcome to the base monster editor, this will take you through the steps to edit a monster quickly and easily. You may finish at any time to save your current selections.',
-                                    'mon-wiz-area-types': Object.keys(this.$area.baseMonsters || { base: null }).filter(r => r !== ed.data.name).map(r => {
-                                        return {
-                                            value: r,
-                                            display: capitalize(r),
-                                            group: 'Area'
-                                        };
-                                    }),
-                                    'mon-wiz-type': ed.value.type || 'base',
-                                    'mon-wiz-level': '' + ed.value.level,
-                                    'mon-wiz-alignment': '' + ed.value.alignment,
-                                    'mon-wiz-race': ed.value.race,
-                                    'mon-wiz-class': ed.value.class,
-                                    'mon-wiz-language': ed.value.language,
-                                    'mon-wiz-ridable': (ed.value.flags & MonsterFlags.Ridable) === MonsterFlags.Ridable,
-                                    'mon-wiz-flying': (ed.value.flags & MonsterFlags.Flying) === MonsterFlags.Flying,
-                                    'mon-wiz-getable': (ed.value.flags & MonsterFlags.Getable) === MonsterFlags.Getable,
-                                    'mon-wiz-undead': (ed.value.flags & MonsterFlags.Undead) === MonsterFlags.Undead,
-                                    'mon-wiz-waterbreathing': (ed.value.flags & MonsterFlags.Water_Breathing) === MonsterFlags.Water_Breathing,
-                                    'mon-wiz-requires-water': (ed.value.flags & MonsterFlags.Requires_Water) === MonsterFlags.Requires_Water,
-                                    'mon-wiz-no-bleed': (ed.value.flags & MonsterFlags.No_Bleeding) === MonsterFlags.No_Bleeding,
-                                    'mon-wiz-name': ed.value.name,
-                                    'mon-wiz-short': ed.value.short,
-                                    'mon-wiz-nouns': ed.value.nouns,
-                                    'mon-wiz-adjectives': ed.value.adjectives,
-                                    'mon-wiz-long': ed.value.long,
-                                    'mon-wiz-mass': '' + ed.value.mass,
-                                    'mon-wiz-height': '' + ed.value.height,
-                                    'mon-wiz-eye': ed.value.eyeColor,
-                                    'mon-wiz-hair': ed.value.hairColor,
-                                    'mon-wiz-gender': ed.value.gender,
-                                    'mon-wiz-body': ed.value.bodyType,
-                                    'mon-wiz-no-corpse': ed.value.noCorpse,
-                                    'mon-wiz-no-limbs': ed.value.noLimbs,
-                                    'mon-wiz-attack-commands': ed.value.attackCommands,
-                                    'mon-wiz-chance': '' + ed.value.attackCommandChance,
-                                    'mon-wiz-initiators': ed.value.attackInitiators,
-                                    'mon-wiz-aggressive': ed.value.aggressive,
-                                    'mon-wiz-speed': '' + ed.value.speed,
-                                    'mon-wiz-patrol': ed.value.patrolRoute,
-                                    'mon-wiz-no-walk': ed.value.noWalkRooms,
-                                    'mon-wiz-auto-drop': '' + ed.value.autoDrop.time,
-                                    'mon-wiz-auto-drop-enabled': ed.value.autoDrop.enabled,
-                                    'mon-wiz-storage': '' + ed.value.openStorage.time,
-                                    'mon-wiz-storage-enabled': ed.value.openStorage.enabled,
-                                    'mon-wiz-auto-wield': '' + ed.value.autoWield.time,
-                                    'mon-wiz-auto-wield-enabled': ed.value.autoWield.enabled,
-                                    'mon-wiz-auto-loot': '' + ed.value.autoLoot.time,
-                                    'mon-wiz-auto-loot-enabled': ed.value.autoLoot.enabled,
-                                    'mon-wiz-auto-wear': '' + ed.value.autoWear.time,
-                                    'mon-wiz-auto-wear-enabled': ed.value.autoWear.enabled,
-                                    'mon-wiz-wimpy': '' + ed.value.wimpy,
-                                    'mon-wiz-auto-stand': (ed.value.flags & MonsterFlags.Auto_Stand) === MonsterFlags.Auto_Stand,
-                                    'mon-wiz-actions': ed.value.actions,
-                                    'mon-wiz-reactions': ed.value.reactions || [],
-                                    'mon-wiz-party': ed.value.party,
-                                    'mon-wiz-tracking': ed.value.tracking,
-                                    'mon-wiz-tracking-message': ed.value.trackingMessage,
-                                    'mon-wiz-tracking-type': ed.value.trackingType,
-                                    'mon-wiz-tracking-aggressively': ed.value.trackingAggressively,
-                                    'mon-wiz-ask': ed.value.askEnabled,
-                                    'mon-wiz-ask-no-topic': ed.value.askNoTopic,
-                                    'mon-wiz-ask-response': '' + (ed.value.askResponseType || 0),
-                                    'mon-wiz-ask-topics': ed.value.askTopics,
-                                    'mon-wiz-reputation-group': ed.value.reputationGroup,
-                                    'mon-wiz-reputations': ed.value.reputations,
-                                    'mon-wiz-properties': ed.value.properties || [],
-                                    'mon-wiz-resistances': ed.value.resistances || [],
-                                    'mon-wiz-includes': ed.value.includes,
-                                    'mon-wiz-defines': ed.value.defines,
-                                    'mon-wiz-inherits': ed.value.inherits,
-                                    'mon-wiz-variables': ed.value.variables,
-                                    'mon-wiz-functions': ed.value.functions,
-                                    'mon-wiz-commands': ed.value.commands
-                                },
+                                data: data,
                                 finish: e => {
                                     const nMonster = ed.value.clone();
                                     nMonster.notes = e.data['mon-wiz-notes'];
@@ -5862,12 +5887,46 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.functions = e.data['mon-wiz-functions'];
                                     nMonster.commands = e.data['mon-wiz-commands'];
 
+                                    Object.keys(e.data).forEach(k => {
+                                        if (!k.startsWith('mon-wiz-typeData-')) return;
+                                        if (!nMonster.typeData) nMonster.typeData = {};
+                                        nMonster.typeData[k.substr(17)] = e.data[k];
+                                    });
+
                                     if (!nMonster.equals(ed.data.monster))
                                         ed.value = nMonster;
                                     ed.focus();
                                 },
                                 closed: e => {
                                     ed.focus();
+                                },
+                                valueChanged: e => {
+                                    e.type = 0;
+                                    switch (this.getMonsterType(e.value)) {
+                                        case 'STD_MONSTER':
+                                        case 'MONTYPE_BARKEEP':
+                                        case 'MONTYPE_HEALER':
+                                        case 'MONTYPE_MON_EDIBLE':
+                                        case 'MONTYPE_SUMMON_MOB':
+                                        case 'MONTYPE_SHIPWRIGHT':
+                                        case 'MONTYPE_TATTOOIST':
+                                            break;
+                                        case 'MONTYPE_ARMOR_REPAIR':
+                                        case 'MONTYPE_CRAFTER':
+                                        case 'MONTYPE_CLERIC_TRAINER':
+                                        case 'MONTYPE_SUBCLASSER':
+                                        case 'MONTYPE_JEWELER':
+                                        case 'MONTYPE_LOCKPICK_REPAIR':
+                                        case 'MONTYPE_MAGE_TRAINER':
+                                        case 'MONTYPE_SAGE_NPC':
+                                        case 'MONTYPE_SKILL_TRAINER':
+                                        case 'MONTYPE_SMITH':
+                                        case 'MONTYPE_CMD_TRAIN_NPC':
+                                        case 'MONTYPE_VENDOR':
+                                        case 'MONTYPE_WEAPON_REPAIR':
+                                            e.type |= MonsterTypeFlags.Vendor;
+                                            break;
+                                    }
                                 }
                             });
                         }
@@ -6971,6 +7030,93 @@ export class AreaDesigner extends EditorBase {
                     type: EditorType.button,
                     options: {
                         click: ed => {
+                            const data = {
+                                'mon-wiz-notes': ed.value.notes || '',
+                                'mon-wiz-emotes': ed.value.emotes || [],
+                                'mon-wiz-emotes-chance': '' + ed.value.emotesChance,
+                                'mon-wiz-speech-chance': '' + ed.value.speechChance,
+                                'mon-wiz-emotes-chance-combat': '' + ed.value.emotesChanceCombat,
+                                'mon-wiz-speech-chance-combat': '' + ed.value.speechChanceCombat,
+                                'mon-wiz-welcome-message': 'Welcome to the monster editor, this will take you through the steps to edit a monster quickly and easily. You may finish at any time to save your current selections.',
+                                'mon-wiz-area-types': Object.keys(this.$area.baseMonsters || { base: null }).map(r => {
+                                    return {
+                                        value: r,
+                                        display: capitalize(r),
+                                        group: 'Area'
+                                    };
+                                }),
+                                'mon-wiz-type': ed.value.type || 'base',
+                                'mon-wiz-level': '' + ed.value.level,
+                                'mon-wiz-alignment': '' + ed.value.alignment,
+                                'mon-wiz-race': ed.value.race,
+                                'mon-wiz-class': ed.value.class,
+                                'mon-wiz-language': ed.value.language,
+                                'mon-wiz-ridable': (ed.value.flags & MonsterFlags.Ridable) === MonsterFlags.Ridable,
+                                'mon-wiz-flying': (ed.value.flags & MonsterFlags.Flying) === MonsterFlags.Flying,
+                                'mon-wiz-getable': (ed.value.flags & MonsterFlags.Getable) === MonsterFlags.Getable,
+                                'mon-wiz-undead': (ed.value.flags & MonsterFlags.Undead) === MonsterFlags.Undead,
+                                'mon-wiz-waterbreathing': (ed.value.flags & MonsterFlags.Water_Breathing) === MonsterFlags.Water_Breathing,
+                                'mon-wiz-requires-water': (ed.value.flags & MonsterFlags.Requires_Water) === MonsterFlags.Requires_Water,
+                                'mon-wiz-no-bleed': (ed.value.flags & MonsterFlags.No_Bleeding) === MonsterFlags.No_Bleeding,
+                                'mon-wiz-name': ed.editors ? ed.editors[0].editor.value : ed.value.name,
+                                'mon-wiz-short': ed.editors ? ed.editors[1].editor.value : ed.value.short,
+                                'mon-wiz-nouns': ed.value.nouns,
+                                'mon-wiz-adjectives': ed.value.adjectives,
+                                'mon-wiz-long': ed.value.long,
+                                'mon-wiz-mass': '' + ed.value.mass,
+                                'mon-wiz-height': '' + ed.value.height,
+                                'mon-wiz-eye': ed.value.eyeColor,
+                                'mon-wiz-hair': ed.value.hairColor,
+                                'mon-wiz-gender': ed.value.gender,
+                                'mon-wiz-body': ed.value.bodyType,
+                                'mon-wiz-no-corpse': ed.value.noCorpse,
+                                'mon-wiz-no-limbs': ed.value.noLimbs,
+                                'mon-wiz-attack-commands': ed.value.attackCommands,
+                                'mon-wiz-chance': '' + ed.value.attackCommandChance,
+                                'mon-wiz-initiators': ed.value.attackInitiators,
+                                'mon-wiz-aggressive': ed.value.aggressive,
+                                'mon-wiz-speed': '' + ed.value.speed,
+                                'mon-wiz-patrol': ed.value.patrolRoute,
+                                'mon-wiz-no-walk': ed.value.noWalkRooms,
+                                'mon-wiz-auto-drop': '' + ed.value.autoDrop.time,
+                                'mon-wiz-auto-drop-enabled': ed.value.autoDrop.enabled,
+                                'mon-wiz-storage': '' + ed.value.openStorage.time,
+                                'mon-wiz-storage-enabled': ed.value.openStorage.enabled,
+                                'mon-wiz-auto-wield': '' + ed.value.autoWield.time,
+                                'mon-wiz-auto-wield-enabled': ed.value.autoWield.enabled,
+                                'mon-wiz-auto-loot': '' + ed.value.autoLoot.time,
+                                'mon-wiz-auto-loot-enabled': ed.value.autoLoot.enabled,
+                                'mon-wiz-auto-wear': '' + ed.value.autoWear.time,
+                                'mon-wiz-auto-wear-enabled': ed.value.autoWear.enabled,
+                                'mon-wiz-wimpy': '' + ed.value.wimpy,
+                                'mon-wiz-auto-stand': (ed.value.flags & MonsterFlags.Auto_Stand) === MonsterFlags.Auto_Stand,
+                                'mon-wiz-actions': ed.value.actions,
+                                'mon-wiz-reactions': ed.value.reactions,
+                                'mon-wiz-party': ed.value.party,
+                                'mon-wiz-tracking': ed.value.tracking,
+                                'mon-wiz-tracking-message': ed.value.trackingMessage,
+                                'mon-wiz-tracking-type': ed.value.trackingType,
+                                'mon-wiz-tracking-aggressively': ed.value.trackingAggressively,
+                                'mon-wiz-ask': ed.value.askEnabled,
+                                'mon-wiz-ask-no-topic': ed.value.askNoTopic,
+                                'mon-wiz-ask-response': '' + (ed.value.askResponseType || 0),
+                                'mon-wiz-ask-topics': ed.value.askTopics,
+                                'mon-wiz-reputation-group': ed.value.reputationGroup,
+                                'mon-wiz-reputations': ed.value.reputations,
+                                'mon-wiz-properties': ed.value.properties || [],
+                                'mon-wiz-resistances': ed.value.resistances || [],
+                                'mon-wiz-includes': ed.value.includes,
+                                'mon-wiz-defines': ed.value.defines,
+                                'mon-wiz-inherits': ed.value.inherits,
+                                'mon-wiz-variables': ed.value.variables,
+                                'mon-wiz-functions': ed.value.functions,
+                                'mon-wiz-commands': ed.value.commands
+                            };
+                            if (ed.value.typeData) {
+                                Object.keys(ed.value.typeData).forEach(k => {
+                                    data['mon-wiz-typeData-' + k] = ed.value.typeData[k];
+                                });
+                            }
                             this.emit('show-monster-wizard', {
                                 title: 'Edit monster',
                                 pages: [
@@ -6992,88 +7138,7 @@ export class AreaDesigner extends EditorBase {
                                         };
                                     })
                                 },
-                                data: {
-                                    'mon-wiz-notes': ed.value.notes || '',
-                                    'mon-wiz-emotes': ed.value.emotes || [],
-                                    'mon-wiz-emotes-chance': '' + ed.value.emotesChance,
-                                    'mon-wiz-speech-chance': '' + ed.value.speechChance,
-                                    'mon-wiz-emotes-chance-combat': '' + ed.value.emotesChanceCombat,
-                                    'mon-wiz-speech-chance-combat': '' + ed.value.speechChanceCombat,
-                                    'mon-wiz-welcome-message': 'Welcome to the monster editor, this will take you through the steps to edit a monster quickly and easily. You may finish at any time to save your current selections.',
-                                    'mon-wiz-area-types': Object.keys(this.$area.baseMonsters || { base: null }).map(r => {
-                                        return {
-                                            value: r,
-                                            display: capitalize(r),
-                                            group: 'Area'
-                                        };
-                                    }),
-                                    'mon-wiz-type': ed.value.type || 'base',
-                                    'mon-wiz-level': '' + ed.value.level,
-                                    'mon-wiz-alignment': '' + ed.value.alignment,
-                                    'mon-wiz-race': ed.value.race,
-                                    'mon-wiz-class': ed.value.class,
-                                    'mon-wiz-language': ed.value.language,
-                                    'mon-wiz-ridable': (ed.value.flags & MonsterFlags.Ridable) === MonsterFlags.Ridable,
-                                    'mon-wiz-flying': (ed.value.flags & MonsterFlags.Flying) === MonsterFlags.Flying,
-                                    'mon-wiz-getable': (ed.value.flags & MonsterFlags.Getable) === MonsterFlags.Getable,
-                                    'mon-wiz-undead': (ed.value.flags & MonsterFlags.Undead) === MonsterFlags.Undead,
-                                    'mon-wiz-waterbreathing': (ed.value.flags & MonsterFlags.Water_Breathing) === MonsterFlags.Water_Breathing,
-                                    'mon-wiz-requires-water': (ed.value.flags & MonsterFlags.Requires_Water) === MonsterFlags.Requires_Water,
-                                    'mon-wiz-no-bleed': (ed.value.flags & MonsterFlags.No_Bleeding) === MonsterFlags.No_Bleeding,
-                                    'mon-wiz-name': ed.editors ? ed.editors[0].editor.value : ed.value.name,
-                                    'mon-wiz-short': ed.editors ? ed.editors[1].editor.value : ed.value.short,
-                                    'mon-wiz-nouns': ed.value.nouns,
-                                    'mon-wiz-adjectives': ed.value.adjectives,
-                                    'mon-wiz-long': ed.value.long,
-                                    'mon-wiz-mass': '' + ed.value.mass,
-                                    'mon-wiz-height': '' + ed.value.height,
-                                    'mon-wiz-eye': ed.value.eyeColor,
-                                    'mon-wiz-hair': ed.value.hairColor,
-                                    'mon-wiz-gender': ed.value.gender,
-                                    'mon-wiz-body': ed.value.bodyType,
-                                    'mon-wiz-no-corpse': ed.value.noCorpse,
-                                    'mon-wiz-no-limbs': ed.value.noLimbs,
-                                    'mon-wiz-attack-commands': ed.value.attackCommands,
-                                    'mon-wiz-chance': '' + ed.value.attackCommandChance,
-                                    'mon-wiz-initiators': ed.value.attackInitiators,
-                                    'mon-wiz-aggressive': ed.value.aggressive,
-                                    'mon-wiz-speed': '' + ed.value.speed,
-                                    'mon-wiz-patrol': ed.value.patrolRoute,
-                                    'mon-wiz-no-walk': ed.value.noWalkRooms,
-                                    'mon-wiz-auto-drop': '' + ed.value.autoDrop.time,
-                                    'mon-wiz-auto-drop-enabled': ed.value.autoDrop.enabled,
-                                    'mon-wiz-storage': '' + ed.value.openStorage.time,
-                                    'mon-wiz-storage-enabled': ed.value.openStorage.enabled,
-                                    'mon-wiz-auto-wield': '' + ed.value.autoWield.time,
-                                    'mon-wiz-auto-wield-enabled': ed.value.autoWield.enabled,
-                                    'mon-wiz-auto-loot': '' + ed.value.autoLoot.time,
-                                    'mon-wiz-auto-loot-enabled': ed.value.autoLoot.enabled,
-                                    'mon-wiz-auto-wear': '' + ed.value.autoWear.time,
-                                    'mon-wiz-auto-wear-enabled': ed.value.autoWear.enabled,
-                                    'mon-wiz-wimpy': '' + ed.value.wimpy,
-                                    'mon-wiz-auto-stand': (ed.value.flags & MonsterFlags.Auto_Stand) === MonsterFlags.Auto_Stand,
-                                    'mon-wiz-actions': ed.value.actions,
-                                    'mon-wiz-reactions': ed.value.reactions,
-                                    'mon-wiz-party': ed.value.party,
-                                    'mon-wiz-tracking': ed.value.tracking,
-                                    'mon-wiz-tracking-message': ed.value.trackingMessage,
-                                    'mon-wiz-tracking-type': ed.value.trackingType,
-                                    'mon-wiz-tracking-aggressively': ed.value.trackingAggressively,
-                                    'mon-wiz-ask': ed.value.askEnabled,
-                                    'mon-wiz-ask-no-topic': ed.value.askNoTopic,
-                                    'mon-wiz-ask-response': '' + (ed.value.askResponseType || 0),
-                                    'mon-wiz-ask-topics': ed.value.askTopics,
-                                    'mon-wiz-reputation-group': ed.value.reputationGroup,
-                                    'mon-wiz-reputations': ed.value.reputations,
-                                    'mon-wiz-properties': ed.value.properties || [],
-                                    'mon-wiz-resistances': ed.value.resistances || [],
-                                    'mon-wiz-includes': ed.value.includes,
-                                    'mon-wiz-defines': ed.value.defines,
-                                    'mon-wiz-inherits': ed.value.inherits,
-                                    'mon-wiz-variables': ed.value.variables,
-                                    'mon-wiz-functions': ed.value.functions,
-                                    'mon-wiz-commands': ed.value.commands
-                                },
+                                data: data,
                                 finish: e => {
                                     if (ed.editors) {
                                         ed.editors[0].editor.value = e.data['mon-wiz-name'];
@@ -7165,12 +7230,46 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.functions = e.data['mon-wiz-functions'];
                                     nMonster.commands = e.data['mon-wiz-commands'];
 
+                                    Object.keys(e.data).forEach(k => {
+                                        if (!k.startsWith('mon-wiz-typeData-')) return;
+                                        if (!nMonster.typeData) nMonster.typeData = {};
+                                        nMonster.typeData[k.substr(17)] = e.data[k];
+                                    });
+
                                     if (!nMonster.equals(ed.data.monster))
                                         ed.value = nMonster;
                                     ed.focus();
                                 },
                                 closed: () => {
                                     ed.focus();
+                                },
+                                valueChanged: e => {
+                                    e.type = 0;
+                                    switch (this.getMonsterType(e.value)) {
+                                        case 'STD_MONSTER':
+                                        case 'MONTYPE_BARKEEP':
+                                        case 'MONTYPE_HEALER':
+                                        case 'MONTYPE_MON_EDIBLE':
+                                        case 'MONTYPE_SUMMON_MOB':
+                                        case 'MONTYPE_SHIPWRIGHT':
+                                        case 'MONTYPE_TATTOOIST':
+                                            break;
+                                        case 'MONTYPE_ARMOR_REPAIR':
+                                        case 'MONTYPE_CRAFTER':
+                                        case 'MONTYPE_CLERIC_TRAINER':
+                                        case 'MONTYPE_SUBCLASSER':
+                                        case 'MONTYPE_JEWELER':
+                                        case 'MONTYPE_LOCKPICK_REPAIR':
+                                        case 'MONTYPE_MAGE_TRAINER':
+                                        case 'MONTYPE_SAGE_NPC':
+                                        case 'MONTYPE_SKILL_TRAINER':
+                                        case 'MONTYPE_SMITH':
+                                        case 'MONTYPE_CMD_TRAIN_NPC':
+                                        case 'MONTYPE_VENDOR':
+                                        case 'MONTYPE_WEAPON_REPAIR':
+                                            e.type |= MonsterTypeFlags.Vendor;
+                                            break;
+                                    }
                                 }
                             });
                         }
@@ -12548,6 +12647,18 @@ export class AreaDesigner extends EditorBase {
         return monster[property];
     }
 
+    private getMonsterType(monster) {
+        if (!monster) return this.$area.baseMonsters[this.$area.defaultMonster]?.type;
+        if (typeof monster === 'object')
+            monster = monster.type;
+        if (!this.$area.baseMonsters[monster]) {
+            if (!this.$area.monsters[monster])
+                return monster;
+            return this.getMonsterType(this.$area.monsters[monster].type);
+        }
+        return this.getMonsterType(this.$area.baseMonsters[monster].type);
+    }
+
     private getMonsterArray(monster, array, baseFlag) {
         if (!monster) return this.$area.baseMonsters[this.$area.defaultMonster] ? this.$area.baseMonsters[this.$area.defaultMonster][array] || [] : [];
         if (monster.type && (monster.baseFlags & baseFlag) !== baseFlag)
@@ -14478,7 +14589,15 @@ export class AreaDesigner extends EditorBase {
                 data.doc.push('/doc/build/monster/types/vendor');
                 break;
         }
-
+        if (monster.typeData && monster.typeData.storageroom) {
+            monster.typeData.storageroom = monster.typeData.storageroom.trim();
+            tmp = monster.typeData.storageroom;
+            if (files[monster.typeData.storageroom])
+                tmp = `RMS + "${files[monster.typeData.storageroom]}.c"`;
+            else if (!(tmp.startsWith('"') && tmp.endsWith('"')))
+                tmp = '"' + tmp.storageroom.replace(/"/g, '\\"') + '"';
+            data['create body'] += `    set_storage_room(${tmp})\n`;
+        }
         if (baseMonster) {
             if (monster.level !== base.level)
                 data['create arguments'] += `lvl || ${monster.level}, `;
@@ -15616,7 +15735,7 @@ export class AreaDesigner extends EditorBase {
                 //#region Food
                 data.inherit = 'OBJ_FOOD';
                 if (obj.bait)
-                    data.inherits = '\ninherit OBJ_FISHING_BAIT;';
+                    data.inherits += '\ninherit OBJ_FISHING_BAIT;';
                 data['doc'].push('/doc/build/etc/food');
                 if (obj.myMessage && obj.myMessage.trim().length !== 0 && obj.yourMessage && obj.yourMessage.trim().length !== 0)
                     data['create body'] += `   set_eat("${obj.myMessage.trim()}", "${obj.yourMessage.trim()}");\n`;

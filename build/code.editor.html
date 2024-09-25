@@ -1745,6 +1745,22 @@
                 </label>
             </div>
         </div>
+        <div id="mon-wizard-vendor" data-visible="false">
+            <div class="col-sm-12 form-group">
+                <label class="control-label">Storage room
+                    <div class="input-group" style="width: 100%">
+                        <input type="text" id="mon-wiz-typeData-storageroom" style="width:100%" class="input-sm form-control" />
+                        <span class="input-group-btn">
+                            <!--
+                            <button class="btn btn-default btn-sm" type="button" id="btn-mon-wiz-typeData-storageroom">
+                                &hellip;
+                            </button>
+                            -->
+                        </span>
+                    </div>
+                </label>
+            </div>
+        </div>
         <div id="room-wizard-welcome">
             <img src="../assets/icons/png/wizroomlogo.png" alt="Welcome to the room wizard" style="float: left;margin-top: 56px;height: 128px;width:128px;">
             <div style="padding-top:76px" id="room-wizard-welcome-message">Welcome to the new room wizard, this will take you through the steps to create a room quickly and easily. You may finish at any time to generate a room based on your current selections.</div>
@@ -2087,7 +2103,7 @@
     const { DockManager } = require('./js/dockmanager');
     const { EditorType } = require('./js/value.editors');
     const { DataGrid } = require('./js/datagrid');
-    const { createFunction, formatFunctionPointer, formatArgumentList, formatMapping, MonacoCodeEditor, VirtualEditor, AreaDesigner, Source, FileBrowseValueEditor, RoomExit, RoomStates, formatVariableValue, formatArray } = require('./js/editor/code.editor');
+    const { createFunction, formatFunctionPointer, formatArgumentList, formatMapping, MonacoCodeEditor, VirtualEditor, AreaDesigner, Source, FileBrowseValueEditor, RoomExit, RoomStates, formatVariableValue, formatArray, MonsterTypeFlags, RoomTypeFlags } = require('./js/editor/code.editor');
     const { EditorSettings } = require('./js/editor/code.editor.settings');
     const { language } = require('./js/editor/lpc');
 
@@ -6576,7 +6592,7 @@
             });
             $dialogs.room.height = '345px';
             $dialogs.room.width = '570px';
-            $dialogs.room.on('value-changed', e=> {
+            $dialogs.room.on('value-changed', e => {
                 if ($dialogs.room.options && $dialogs.room.options.valueChanged)
                     $dialogs.room.options.valueChanged(e);
             });
@@ -7781,6 +7797,30 @@
                         }
                     }),
                     new WizardPage({
+                        title: 'Vendor properties',
+                        body: document.getElementById('mon-wizard-vendor'),
+                        reset: e => {
+                            const controls = e.page.querySelectorAll('[id^="mon-wiz-typeData"]');
+                            const cl = controls.length;
+                            for (let c = 0; c < cl; c++) {
+                                switch (controls[c].tagName) {
+                                    case 'INPUT':
+                                        if (controls.type === 'checkbox')
+                                            controls[c].check = e.wizard.defaults[controls[c].id] || false;
+                                        else
+                                            controls[c].value = e.wizard.defaults[controls[c].id] || '';
+                                        break;
+                                    case 'SELECT':
+                                        $(controls[c]).val(e.wizard.defaults[controls[c].id] || '').selectpicker('render');
+                                        break;
+                                    default:
+                                        controls[c].value = e.wizard.defaults[controls[c].id] || '';
+                                        break;
+                                }
+                            }
+                        }
+                    }),
+                    new WizardPage({
                         title: 'Advanced properties',
                         body: document.getElementById('mon-wizard-advanced'),
                         reset: (e) => {
@@ -8185,10 +8225,43 @@
                     $dialogs.monster.options.typeChange(e);
             });
             $dialogs.monster.height = '402px';
-            $dialogs.monster.on('value-changed', e=> {
+            $dialogs.monster.on('value-changed', e => {
                 if ($dialogs.monster.options && $dialogs.monster.options.valueChanged)
                     $dialogs.monster.options.valueChanged(e);
-            });            
+                if (e.preventDefault) return;
+                if (e.id === 'mon-wiz-type') {
+                    let type = e.type || 0;
+                    let page;
+                    switch (e.value) {
+                        case 'STD_MONSTER':
+                        case 'MONTYPE_BARKEEP':
+                        case 'MONTYPE_HEALER':
+                        case 'MONTYPE_MON_EDIBLE':
+                        case 'MONTYPE_SUMMON_MOB':
+                        case 'MONTYPE_SHIPWRIGHT':
+                        case 'MONTYPE_TATTOOIST':
+                            break;
+                        case 'MONTYPE_ARMOR_REPAIR':
+                        case 'MONTYPE_CRAFTER':
+                        case 'MONTYPE_CLERIC_TRAINER':
+                        case 'MONTYPE_SUBCLASSER':
+                        case 'MONTYPE_JEWELER':
+                        case 'MONTYPE_LOCKPICK_REPAIR':
+                        case 'MONTYPE_MAGE_TRAINER':
+                        case 'MONTYPE_SAGE_NPC':
+                        case 'MONTYPE_SKILL_TRAINER':
+                        case 'MONTYPE_SMITH':
+                        case 'MONTYPE_CMD_TRAIN_NPC':
+                        case 'MONTYPE_VENDOR':
+                        case 'MONTYPE_WEAPON_REPAIR':
+                            type |= MonsterTypeFlags.Vendor;
+                            break;
+                    }
+
+                    page = $dialogs.monster.pages.find(i => i.title === 'Vendor properties');
+                    page.visible = (type & MonsterTypeFlags.Vendor) === MonsterTypeFlags.Vendor;
+                }
+            });
             $dialogs.monster.on('open', () => {
                 menubar.enabled = false;
             });
@@ -8249,6 +8322,7 @@
                 tmpl.inherits = '';
                 tmpl['doc'] = [];
                 tmpl['create pre'] = '';
+                tmpl['create body'] = '';
                 tmpl['create post'] = '';
                 switch (data['mon-wiz-type'].display) {
                     case 'Base':
@@ -8321,6 +8395,13 @@
                         tmpl.doc.push('/doc/build/monster/types/smith');
                         tmpl.doc.push('/doc/build/monster/types/vendor');
                         break;
+                }
+                if (data['mon-wiz-typeData-storageroom']) {
+                    data['mon-wiz-typeData-storageroom'] = data['mon-wiz-typeData-storageroom'].trim();
+                    if (data['mon-wiz-typeData-storageroom'].startsWith('"') && data['mon-wiz-typeData-storageroom'].endsWith('"'))
+                        tmpl['create body'] += `    set_storage_room(${data['mon-wiz-typeData-storageroom']})\n`;
+                    else
+                        tmpl['create body'] += `    set_storage_room("${data['mon-wiz-typeData-storageroom'].replace(/"/g, '\\"')}")\n`;
                 }
                 if (data['mon-wiz-includes'] && tmpl['mon-wiz-includes'].length) {
                     tmpl.includes += data['mon-wiz-includes'].map(i => {
@@ -8459,7 +8540,6 @@
                     tmpl['create arguments'] += `, "${data['mon-wiz-body']}"`;
                     tmpl['create arguments comment'] += ', Body type';
                 }
-                tmpl['create body'] = '';
                 if (data['mon-wiz-nouns'].length > 0) {
 
                     data['mon-wiz-nouns'] = data['mon-wiz-nouns'].split(',');
