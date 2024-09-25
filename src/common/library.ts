@@ -7,6 +7,7 @@
 //spell-checker:ignore Wsctrl, Cusel, Enlw, Backtab, Crsel, Exsel, Ereof rtrim ltrim Dropdown DBLUNDERLINE noflash
 const path = require('path');
 const fs = require('fs');
+const util = require('util');
 let crypto;
 import { ipcRenderer } from 'electron';
 
@@ -2158,7 +2159,7 @@ export function isArrayEqual(a, b): boolean {
         }
         else if (a[i] instanceof Object && b[i] instanceof Object) {
             // recurse into another objects
-            if (!isObjectEqual(a[i], b[i]))
+            if (!util.isDeepStrictEqual(a[i], b[i]))
                 return false;
         }
         else if (a[i] !== b[i]) {
@@ -2169,8 +2170,15 @@ export function isArrayEqual(a, b): boolean {
     return true;
 }
 
-export function isObjectEqual(a, b): boolean {
+//export function isObjectEqual(a, b): boolean {
+    //return util.isDeepStrictEqual(a, b);
+    /*
     let propName;
+    if (a === b) return true;
+    if (a === null || b === null) return false;
+    if (Object.keys(a).length !== Object.keys(b).length) return false;
+    if (Array.isArray(a) || Array.isArray(b))
+        return isArrayEqual(a, b);
     //For the first loop, we only check for types
     for (propName in a) {
         //Check for inherited methods and properties - like .equals itself
@@ -2219,13 +2227,14 @@ export function isObjectEqual(a, b): boolean {
     }
     //If everything passed, let's say YES
     return true;
-}
+    */
+//}
 
 export function isEqual(a, b): boolean {
     if (Array.isArray(a) && Array.isArray(b))
         return isArrayEqual(a, b);
     else if (a instanceof Object && b instanceof Object)
-        return isObjectEqual(a, b);
+        return util.isDeepStrictEqual(a, b);
     return a === b;
 }
 

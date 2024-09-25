@@ -181,6 +181,57 @@ export class PropertyGrid extends EventEmitter {
         this.doUpdate(UpdateType.build);
     }
 
+    public hideProperties(props) {
+        if (!props || !this.$options) return;
+        if (!Array.isArray(props))
+            props = [props];
+        props.forEach(prop => {
+            if (this.$options[prop])
+                this.$options[prop].visible = false;
+        });
+        this.doUpdate(UpdateType.build);
+    }
+
+    public showProperties(props) {
+        if (!props || !this.$options) return;
+        if (!Array.isArray(props))
+            props = [props];
+        props.forEach(prop => {
+            if (this.$options[prop])
+                this.$options[prop].visible = true;
+        });
+        this.doUpdate(UpdateType.build);
+    }
+
+    public setPropertiesVisible(props, value) {
+        if (!props || !this.$options) return;
+        if (!Array.isArray(props))
+            props = [props];
+        props.forEach(prop => {
+            if (this.$options[prop])
+                this.$options[prop].visible = value;
+        });
+        this.doUpdate(UpdateType.build);
+    }
+
+    public setPropertyVisible(prop, value) {
+        if (!this.$options || !this.$options[prop]) return;
+        this.$options[prop].visible = value;
+        this.doUpdate(UpdateType.build);
+    }
+
+    public hideProperty(prop) {
+        if (!this.$options || !this.$options[prop]) return;
+        this.$options[prop].visible = false;
+        this.doUpdate(UpdateType.build);
+    }
+
+    public showProperty(prop) {
+        if (!this.$options || !this.$options[prop]) return;
+        this.$options[prop].visible = true;
+        this.doUpdate(UpdateType.build);
+    }
+
     public getPropertyOptions(prop, ops?) {
         if (!prop || !this.$options) return null;
         if (ops) {

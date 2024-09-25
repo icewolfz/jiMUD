@@ -8,10 +8,11 @@ import { Splitter, Orientation } from '../splitter';
 import { PropertyGrid } from '../propertygrid';
 import { EditorType } from '../value.editors';
 import { DataGrid } from '../datagrid';
-import { copy, formatString, isFileSync, capitalize, Cardinal, pinkfishToHTML, stripPinkfish, consolidate, parseTemplate, initEditDropdown, capitalizePinkfish, isObjectEqual, addSlashes, isDirSync, isArrayEqual } from '../library';
+import { copy, formatString, isFileSync, capitalize, Cardinal, pinkfishToHTML, stripPinkfish, consolidate, parseTemplate, initEditDropdown, capitalizePinkfish, addSlashes, isDirSync, isArrayEqual } from '../library';
 const { clipboard } = require('electron');
 const path = require('path');
 const fs = require('fs-extra');
+const util = require('util');
 const { deflateSync, unzipSync } = require('zlib');
 import { Wizard, WizardPage, WizardDataGridPage } from '../wizard';
 import { MousePosition, RoomExits, shiftType, FileBrowseValueEditor, RoomExit, flipType } from './virtual.editor';
@@ -744,7 +745,7 @@ export class Room {
                             return false;
                     }
                     else if (typeof this[prop] === 'object') {
-                        if (!isObjectEqual(this[prop], room[prop]))
+                        if (!util.isDeepStrictEqual(this[prop], room[prop]))
                             return false;
                     }
                     else if (this[prop] !== room[prop])
@@ -1032,7 +1033,7 @@ class Monster {
                     return false;
             }
             else if (typeof this[prop] === 'object') {
-                if (!isObjectEqual(this[prop], monster[prop]))
+                if (!util.isDeepStrictEqual(this[prop], monster[prop]))
                     return false;
             }
             else if (this[prop] !== monster[prop])
@@ -1203,7 +1204,7 @@ class StdObject {
                     return false;
             }
             else if (typeof this[prop] === 'object') {
-                if (!isObjectEqual(this[prop], item[prop]))
+                if (!util.isDeepStrictEqual(this[prop], item[prop]))
                     return false;
             }
             else if (this[prop] !== item[prop])
@@ -3812,6 +3813,8 @@ export class AreaDesigner extends EditorBase {
             const oldValues = [];
             const mx = this.$mouse.rx;
             const my = this.$mouse.ry;
+            if (prop === 'flags')
+                this.$roomEditor.setPropertiesVisible(['waterQuality', 'waterPoisoned', 'waterSource', 'waterDrinkMessage', 'waterWashMessage', 'waterGerms'], (newValue & RoomFlags.WaterDrink) === RoomFlags.WaterDrink);
             if (prop === 'exitsDetails') {
                 this.startUndoGroup();
                 const oldEE = [];
@@ -4862,6 +4865,7 @@ export class AreaDesigner extends EditorBase {
                 label: 'Water Quality',
                 group: 'Advanced',
                 sort: 6,
+                visible: false,
                 editor: {
                     options: {
                         min: -100,
@@ -4874,6 +4878,7 @@ export class AreaDesigner extends EditorBase {
                 label: 'Water Poisoned',
                 group: 'Advanced',
                 sort: 6,
+                visible: false,
                 editor: {
                     options: {
                         min: -100,
@@ -4886,6 +4891,7 @@ export class AreaDesigner extends EditorBase {
                 label: 'Water Source',
                 group: 'Advanced',
                 sort: 6,
+                visible: false,
                 editor: {
                     options: {
                         singleLine: true,
@@ -4898,6 +4904,7 @@ export class AreaDesigner extends EditorBase {
                 label: 'Water Drink Message',
                 group: 'Advanced',
                 sort: 6,
+                visible: false,
                 editor: {
                     options: {
                         singleLine: true,
@@ -4910,6 +4917,7 @@ export class AreaDesigner extends EditorBase {
                 label: 'Water Wash Message',
                 group: 'Advanced',
                 sort: 6,
+                visible: false,
                 editor: {
                     options: {
                         singleLine: true,
@@ -4924,6 +4932,7 @@ export class AreaDesigner extends EditorBase {
                 formatter: this.formatCollection.bind(this),
                 tooltipFormatter: this.formatCollection.bind(this),
                 sort: 6,
+                visible: false,
                 editor: {
                     type: EditorType.collection,
                     options: {
@@ -12367,6 +12376,7 @@ export class AreaDesigner extends EditorBase {
         this.$roomEditor.defaults.type = 'base';
         this.$roomEditor.defaults.exitsDetails = Object.values(this.$roomEditor.defaults.exitsDetails);
         this.$roomEditor.objects = objects;
+        this.$roomEditor.setPropertiesVisible(['waterQuality', 'waterPoisoned', 'waterSource', 'waterDrinkMessage', 'waterWashMessage', 'waterGerms'], !objects.length ? false : (objects[0].flags & RoomFlags.WaterDrink) === RoomFlags.WaterDrink);
     }
 
     private refreshEditor() {
