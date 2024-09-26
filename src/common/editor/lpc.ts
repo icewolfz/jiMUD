@@ -3330,12 +3330,14 @@ export function parseArguments(str) {
     let values = [];
     for (let t = 0; t < tl; t++) {
         switch (tokens[t].type) {
+            //inside a mapping/array/clousre/ () nested so do not split
             case FormatTokenType.parenLMapping:
             case FormatTokenType.parenLArray:
             case FormatTokenType.parenLClosure:
-                case FormatTokenType.parenLParen:
+            case FormatTokenType.parenLParen:
                 nest++;
                 break;
+            //hit end so nest back
             case FormatTokenType.parenRMapping:
             case FormatTokenType.parenRArray:
             case FormatTokenType.parenRClosure:
@@ -3343,9 +3345,15 @@ export function parseArguments(str) {
                 nest--;
                 break;
             case FormatTokenType.newline:
-            case FormatTokenType.whitespace:
                 continue;
+            case FormatTokenType.whitespace:
+                //skip whitespace as it is not important and likely to be trimmed anyways or reformated    
+                if(nest === 0)
+                    continue;
+                //if in a nest leave it as it could improve readable
+                break;
             case FormatTokenType.comma:
+                //comma so split out the value
                 if (nest === 0) {
                     values.push(buff.join(''));
                     buff = [];
