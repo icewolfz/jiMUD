@@ -38,20 +38,30 @@ interface AreaDesignerOptions extends EditorOptions {
 
 export enum MonsterTypeFlags {
     None = 0,
-    Vendor = 1 << 0
+    Vendor = 1 << 0,
+    Barkeep = 1 << 1,
+    Healer = 1 << 2,
+    ShipWright = 1 << 3,
+    Tattooist = 1 << 4,
+    Sage = 1 << 5
 }
 
 export function getMonsterTypeFlags(type) {
-    let t = MonsterTypeFlags.None;
     switch (type) {
-        case 'STD_MONSTER':
         case 'MONTYPE_BARKEEP':
+            return MonsterTypeFlags.Barkeep;
         case 'MONTYPE_HEALER':
+            return MonsterTypeFlags.Healer;
         case 'MONTYPE_MON_EDIBLE':
-        case 'MONTYPE_SUMMON_MOB':
-        case 'MONTYPE_SHIPWRIGHT':
-        case 'MONTYPE_TATTOOIST':
             break;
+        case 'MONTYPE_SUMMON_MOB':
+            break;
+        case 'MONTYPE_SHIPWRIGHT':
+            return MonsterTypeFlags.ShipWright;
+        case 'MONTYPE_TATTOOIST':
+            return MonsterTypeFlags.Tattooist;
+        case 'MONTYPE_SAGE_NPC':
+            return MonsterTypeFlags.Vendor | MonsterTypeFlags.Sage;
         case 'MONTYPE_ARMOR_REPAIR':
         case 'MONTYPE_CRAFTER':
         case 'MONTYPE_CLERIC_TRAINER':
@@ -59,16 +69,14 @@ export function getMonsterTypeFlags(type) {
         case 'MONTYPE_JEWELER':
         case 'MONTYPE_LOCKPICK_REPAIR':
         case 'MONTYPE_MAGE_TRAINER':
-        case 'MONTYPE_SAGE_NPC':
         case 'MONTYPE_SKILL_TRAINER':
         case 'MONTYPE_SMITH':
         case 'MONTYPE_CMD_TRAIN_NPC':
         case 'MONTYPE_VENDOR':
         case 'MONTYPE_WEAPON_REPAIR':
-            t |= MonsterTypeFlags.Vendor;
-            break;
+            return MonsterTypeFlags.Vendor;
     }
-    return t;
+    return MonsterTypeFlags.None;
 }
 
 export function getRoomTypeFlags(type) {
@@ -14612,6 +14620,42 @@ export class AreaDesigner extends EditorBase {
             else if (!(tmp.startsWith('"') && tmp.endsWith('"')))
                 tmp = '"' + tmp.storageroom.replace(/"/g, '\\"') + '"';
             data['create body'] += `    set_storage_room(${tmp})\n`;
+        }
+        if (monster.typeData && (typeFlags & MonsterTypeFlags.Barkeep) === MonsterTypeFlags.Barkeep) {
+            if (monster.typeData.menu && Array.isArray(monster.typeData.menu) && monster.typeData.menu.length) {
+                data['create body'] += `    create_menu( ([\n`;
+                tmp = monster.typeData.menu.map(i => {
+                    return `      "${i.short}": (["name":"${i.name}", "strength": ${i.strength}, "type":"${i.type}",\n
+      "long": "${i.long}", 
+      "nouns": ({ ${(Array.isArray(i.nouns) ? i.nouns : i.nouns.splitQuote()).map(n => '"' + n.trim().replace(/^"(.+(?="$))?"$/, '$1') + '"').join(', ')} }), 
+      "adjectives": ({ ${(Array.isArray(i.adjectives) ? i.adjectives : i.adjectives.splitQuote()).map(n => '"' + n.trim().replace(/^"(.+(?="$))?"$/, '$1') + '"').join(', ')} }), 
+      "category": "${i.category}",
+      "my_mess":"${i.my_mess}",
+      "your_mess": "${i.your_mess}"
+   ])`});
+                data['create body'] += tmp.join(',');
+                data['create body'] += `    ]) );\n`;
+            }
+            if (monster.typeData.menu_title && monster.typeData.menu_title.trim().length)
+                data['create body'] += `    set_menu_title("${monster.typeData.menu_title.trim().replace(/"/g, '\\"')}");\n`;
+            if (monster.typeData.read_items && monster.typeData.read_items.trim().length && monster.typeData.read_items.trim() !== 'menu') {
+                tmp = monster.typeData.read_items.splitQuote().map(v => '"' + v.trim().replace(/"/g, '\\"') + '"');
+                if (tmp.length === 1)
+                    data['create body'] += `    set_read_item(${tmp[0]});\n`;
+                else
+                    data['create body'] += `    set_read_items(${tmp[0].join(', ')})\;n`;
+            }
+            if (monster.typeData.no_money_message && monster.typeData.no_money_message.trim().length)
+                data['create body'] += `    set_no_money_message("${monster.typeData.no_money_message.trim().replace(/"/g, '\\"')}");\n`;
+            if (monster.typeData.premenu && monster.typeData.premenu.trim().length)
+                data['create body'] += `    set_premenu("${monster.typeData.premenu.trim().replace(/"/g, '\\"')}");\n`;
+            if (monster.typeData.postmenu && monster.typeData.postmenu.trim().length)
+                data['create body'] += `    set_postmenu("${monster.typeData.postmenu.trim().replace(/"/g, '\\"')}");\n`;
+            if (monster.typeData.refill === true)
+                data['create body'] += `    set_refill(1);\n`;
+            if (monster.typeData.buy_empty === true)
+                data['create body'] += `    set_buy_empty(1);\n`;
+            data['create body'] += '/* End barkeep properties*/\n';
         }
         if (baseMonster) {
             if (monster.level !== base.level)

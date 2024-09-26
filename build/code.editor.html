@@ -1761,6 +1761,43 @@
                 </label>
             </div>
         </div>
+        <div id="mon-wizard-barkeep" data-visible="false">
+            <div class="col-sm-12 form-group">
+                <label class="control-label">Menu title
+                    <input type="text" id="mon-wiz-typeData-menu_title" style="width:100%" class="input-sm form-control" />
+                </label>
+            </div>
+            <div class="col-sm-12 form-group">
+                <label class="control-label">Read item(s) <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">A comma delimited list of words, defaults to menu</span>
+                    <input type="text" id="mon-wiz-typeData-read_items" style="width:100%" class="input-sm form-control" />
+                </label>
+            </div>
+            <div class="col-sm-12 form-group">
+                <label class="control-label">No money message
+                    <input type="text" id="mon-wiz-typeData-no_money_message" style="width:100%" class="input-sm form-control" />
+                </label>
+            </div>
+            <div class="col-sm-12 form-group">
+                <label class="control-label">Pre menu text
+                    <input type="text" id="mon-wiz-typeData-premenu" style="width:100%" class="input-sm form-control" />
+                </label>
+            </div>
+            <div class="col-sm-12 form-group">
+                <label class="control-label">Post menu text
+                    <input type="text" id="mon-wiz-typeData-postmenu" style="width:100%" class="input-sm form-control" />
+                </label>
+            </div>
+            <div class="col-sm-3 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="mon-wiz-typeData-refill" /> Can refill
+                </label>
+            </div>
+            <div class="col-sm-3 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="mon-wiz-typeData-buy_empty" /> Can buy empty bottles
+                </label>
+            </div>
+        </div>
         <div id="room-wizard-welcome">
             <img src="../assets/icons/png/wizroomlogo.png" alt="Welcome to the room wizard" style="float: left;margin-top: 56px;height: 128px;width:128px;">
             <div style="padding-top:76px" id="room-wizard-welcome-message">Welcome to the new room wizard, this will take you through the steps to create a room quickly and easily. You may finish at any time to generate a room based on your current selections.</div>
@@ -7805,7 +7842,178 @@
                             for (let c = 0; c < cl; c++) {
                                 switch (controls[c].tagName) {
                                     case 'INPUT':
-                                        if (controls.type === 'checkbox')
+                                        if (controls[c].type === 'checkbox')
+                                            controls[c].check = e.wizard.defaults[controls[c].id] || false;
+                                        else
+                                            controls[c].value = e.wizard.defaults[controls[c].id] || '';
+                                        break;
+                                    case 'SELECT':
+                                        $(controls[c]).val(e.wizard.defaults[controls[c].id] || '').selectpicker('render');
+                                        break;
+                                    default:
+                                        controls[c].value = e.wizard.defaults[controls[c].id] || '';
+                                        break;
+                                }
+                            }
+                        }
+                    }),
+                    new WizardDataGridPage({
+                        title: 'Barkeep menu',
+                        id: 'mon-wiz-typeData-menu',
+                        visible: false,
+                        clipboard: 'jiMUD/',
+                        columns: [
+                            {
+                                label: 'Short',
+                                field: 'short',
+                                width: 150,
+                                editor: {
+                                    options: {
+                                        container: '#monster-wizard',
+                                        singleLine: true
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Name',
+                                field: 'name',
+                                width: 150,
+                                editor: {
+                                    options: {
+                                        container: '#monster-wizard',
+                                        singleLine: true
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Strength',
+                                field: 'strength',
+                                width: 75,
+                                editor: {
+                                    options: {
+                                        min: 0,
+                                        max: 1000
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Type',
+                                field: 'type',
+                                width: 150,
+                                editor: {
+                                    type: EditorType.select,
+                                    options: {
+                                        data: [
+                                            { value: 'alcoholic', display: 'alcoholic' },
+                                            { value: 'caffeine', display: 'caffeine' },
+                                            { value: 'drink', display: 'drink' },
+                                            { value: 'food', display: 'food' }
+                                        ]
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Long',
+                                field: 'long',
+                                width: 250,
+                                editor: {
+                                    options: {
+                                        dialog: true,
+                                        title: 'Edit long&hellip;',
+                                        container: document.body
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Nouns',
+                                field: 'nouns',
+                                width: 150,
+                                editor: {
+                                    type: EditorType.collection,
+                                    options: {
+                                        columnLabel: 'Noun',
+                                        stringCollection: true,
+                                        open: true,
+                                        type: 'string'
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Adjectives',
+                                field: 'adjectives',
+                                width: 150,
+                                editor: {
+                                    type: EditorType.collection,
+                                    options: {
+                                        columnLabel: 'Adjective',
+                                        stringCollection: true,
+                                        open: true,
+                                        type: 'string'
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Category',
+                                field: 'category',
+                                width: 100,
+                                editor: {
+                                    type: EditorType.dropdown,
+                                    options: {
+                                        container: '#monster-wizard',
+                                        data: ['food', 'drink']
+                                    }
+                                }
+                            },
+                            {
+                                label: 'My Message',
+                                field: 'my_mess',
+                                width: 250,
+                                editor: {
+                                    options: {
+                                        dialog: true,
+                                        title: 'Edit long&hellip;',
+                                        container: document.body
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Your Message',
+                                field: 'your_mess',
+                                width: 250,
+                                editor: {
+                                    options: {
+                                        dialog: true,
+                                        title: 'Edit long&hellip;',
+                                        container: document.body
+                                    }
+                                }
+                            },
+                        ],
+                        add: (e) => {
+                            e.data = {
+                                short: '',
+                                name: '',
+                                strength: 5,
+                                type: '',
+                                long: '',
+                                nouns: '',
+                                adjectives: '',
+                                category: '',
+                                my_mess: '',
+                                your_mess: ''
+                            };
+                        }
+                    }),
+                    new WizardPage({
+                        title: 'Barkeep properties',
+                        body: document.getElementById('mon-wizard-barkeep'),
+                        reset: e => {
+                            const controls = e.page.querySelectorAll('[id^="mon-wiz-typeData"]');
+                            const cl = controls.length;
+                            for (let c = 0; c < cl; c++) {
+                                switch (controls[c].tagName) {
+                                    case 'INPUT':
+                                        if (controls[c].type === 'checkbox')
                                             controls[c].check = e.wizard.defaults[controls[c].id] || false;
                                         else
                                             controls[c].value = e.wizard.defaults[controls[c].id] || '';
@@ -8234,6 +8442,10 @@
                     let page;
                     page = $dialogs.monster.pages.find(i => i.title === 'Vendor properties');
                     page.visible = (type & MonsterTypeFlags.Vendor) === MonsterTypeFlags.Vendor;
+                    page = $dialogs.monster.pages.find(i => i.title === 'Barkeep menu');
+                    page.visible = (type & MonsterTypeFlags.Barkeep) === MonsterTypeFlags.Barkeep;
+                    page = $dialogs.monster.pages.find(i => i.title === 'Barkeep properties');
+                    page.visible = (type & MonsterTypeFlags.Barkeep) === MonsterTypeFlags.Barkeep;
                 }
             });
             $dialogs.monster.on('open', () => {
@@ -8378,6 +8590,45 @@
                     else
                         tmpl['create body'] += `    set_storage_room("${data['mon-wiz-typeData-storageroom'].replace(/"/g, '\\"')}")\n`;
                 }
+
+                if ((typeFlags & MonsterTypeFlags.Barkeep) === MonsterTypeFlags.Barkeep) {
+                    tmpl['create body'] += '/* Start barkeep properties*/\n';
+                    if (data['mon-wiz-typeData-menu'] && Array.isArray(data['mon-wiz-typeData-menu']) && data['mon-wiz-typeData-menu'].length) {
+                        tmpl['create body'] += `    create_menu( ([\n`;
+                        tmp = data['mon-wiz-typeData-menu'].map(i => {
+                            return `      "${i.short}": (["name":"${i.name}", "strength": ${i.strength}, "type":"${i.type}",\n
+      "long": "${i.long}", 
+      "nouns": ({ ${(Array.isArray(i.nouns) ? i.nouns : i.nouns.splitQuote()).map(n => '"' + n.trim().replace(/^"(.+(?="$))?"$/, '$1') + '"').join(', ')} }), 
+      "adjectives": ({ ${(Array.isArray(i.adjectives) ? i.adjectives : i.adjectives.splitQuote()).map(n => '"' + n.trim().replace(/^"(.+(?="$))?"$/, '$1') + '"').join(', ')} }), 
+      "category": "${i.category}",
+      "my_mess":"${i.my_mess}",
+      "your_mess": "${i.your_mess}"
+   ])`});
+                        tmpl['create body'] += tmp.join(',');
+                        tmpl['create body'] += `    ]) );\n`;
+                    }
+                    if (data['mon-wiz-typeData-menu_title'] && data['mon-wiz-typeData-menu_title'].trim().length)
+                        tmpl['create body'] += `    set_menu_title("${data['mon-wiz-typeData-menu_title'].trim().replace(/"/g, '\\"')}");\n`;
+                    if (data['mon-wiz-typeData-read_items'] && data['mon-wiz-typeData-read_items'].trim().length && data['mon-wiz-typeData-read_items'].trim() !== 'menu') {
+                        tmp = data['mon-wiz-typeData-read_items'].splitQuote().map(v => '"' + v.trim().replace(/"/g, '\\"') + '"');
+                        if (tmp.length === 1)
+                            tmpl['create body'] += `    set_read_item(${tmp[0]});\n`;
+                        else
+                            tmpl['create body'] += `    set_read_items(${tmp[0].join(', ')})\;n`;
+                    }
+                    if (data['mon-wiz-typeData-no_money_message'] && data['mon-wiz-typeData-no_money_message'].trim().length)
+                        tmpl['create body'] += `    set_no_money_message("${data['mon-wiz-typeData-no_money_message'].trim().replace(/"/g, '\\"')}");\n`;
+                    if (data['mon-wiz-typeData-premenu'] && data['mon-wiz-typeData-premenu'].trim().length)
+                        tmpl['create body'] += `    set_premenu("${data['mon-wiz-typeData-premenu'].trim().replace(/"/g, '\\"')}");\n`;
+                    if (data['mon-wiz-typeData-postmenu'] && data['mon-wiz-typeData-postmenu'].trim().length)
+                        tmpl['create body'] += `    set_postmenu("${data['mon-wiz-typeData-postmenu'].trim().replace(/"/g, '\\"')}");\n`;
+                    if (data['mon-wiz-typeData-refill'] === true)
+                        tmpl['create body'] += `    set_refill(1);\n`;
+                    if (data['mon-wiz-typeData-buy_empty'] === true)
+                        tmpl['create body'] += `    set_buy_empty(1);\n`;
+                    tmpl['create body'] += '/* End barkeep properties*/\n';
+                }
+
                 if (data['mon-wiz-includes'] && tmpl['mon-wiz-includes'].length) {
                     tmpl.includes += data['mon-wiz-includes'].map(i => {
                         if (i.relative)
