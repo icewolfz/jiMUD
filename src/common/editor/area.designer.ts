@@ -3,7 +3,7 @@
 //spell-checker:ignore nonetrackable bandedmail splintmail chainmail ringmail scalemail overclothing polearm tekagi shuko tekko bardiche katana wakizashi pilum warstaff
 import { DebugTimer, EditorBase, EditorOptions, FileState } from './editor.base';
 import { formatCode } from './monaco';
-import { createFunction, formatFunctionPointer, formatArgumentList, formatMapping, formatVariableValue, formatArray } from './lpc';
+import { createFunction, formatFunctionPointer, formatArgumentList, formatMapping, formatVariableValue, formatArray, parseArguments } from './lpc';
 import { Splitter, Orientation } from '../splitter';
 import { PropertyGrid } from '../propertygrid';
 import { EditorType } from '../value.editors';
@@ -4355,6 +4355,7 @@ export class AreaDesigner extends EditorBase {
                                     options: {
                                         columnLabel: 'Argument',
                                         stringCollection: true,
+                                        split: parseArguments,
                                         open: true,
                                         type: 'object',
                                         enterMoveFirst: this.enterMoveFirst,
@@ -4448,6 +4449,7 @@ export class AreaDesigner extends EditorBase {
                                     options: {
                                         columnLabel: 'Argument',
                                         stringCollection: true,
+                                        split: parseArguments,
                                         open: true,
                                         type: 'object',
                                         enterMoveFirst: this.enterMoveFirst,
@@ -4759,6 +4761,7 @@ export class AreaDesigner extends EditorBase {
                                     options: {
                                         columnLabel: 'Argument',
                                         stringCollection: true,
+                                        split: parseArguments,
                                         open: true,
                                         type: 'object',
                                         enterMoveFirst: this.enterMoveFirst,
@@ -4836,6 +4839,7 @@ export class AreaDesigner extends EditorBase {
                                     options: {
                                         columnLabel: 'Argument',
                                         stringCollection: true,
+                                        split: parseArguments,
                                         open: true,
                                         type: 'object',
                                         enterMoveFirst: this.enterMoveFirst,
@@ -5706,6 +5710,7 @@ export class AreaDesigner extends EditorBase {
                                     options: {
                                         columnLabel: 'Argument',
                                         stringCollection: true,
+                                        split: parseArguments,
                                         open: true,
                                         type: 'object',
                                         enterMoveFirst: this.enterMoveFirst,
@@ -6151,6 +6156,7 @@ export class AreaDesigner extends EditorBase {
                                     options: {
                                         columnLabel: 'Argument',
                                         stringCollection: true,
+                                        split: parseArguments,
                                         open: true,
                                         type: 'object',
                                         enterMoveFirst: this.enterMoveFirst,
@@ -6245,6 +6251,7 @@ export class AreaDesigner extends EditorBase {
                                     options: {
                                         columnLabel: 'Argument',
                                         stringCollection: true,
+                                        split: parseArguments,
                                         open: true,
                                         type: 'object',
                                         enterMoveFirst: this.enterMoveFirst,
@@ -6481,6 +6488,7 @@ export class AreaDesigner extends EditorBase {
                                                     options: {
                                                         columnLabel: 'Argument',
                                                         stringCollection: true,
+                                                        split: parseArguments,
                                                         open: true,
                                                         type: 'object',
                                                         enterMoveFirst: this.enterMoveFirst,
@@ -6547,6 +6555,7 @@ export class AreaDesigner extends EditorBase {
                                                     options: {
                                                         columnLabel: 'Argument',
                                                         stringCollection: true,
+                                                        split: parseArguments,
                                                         open: true,
                                                         type: 'object',
                                                         enterMoveFirst: this.enterMoveFirst,
@@ -7006,6 +7015,7 @@ export class AreaDesigner extends EditorBase {
                                     options: {
                                         columnLabel: 'Argument',
                                         stringCollection: true,
+                                        split: parseArguments,
                                         open: true,
                                         type: 'object',
                                         enterMoveFirst: this.enterMoveFirst,
@@ -8803,6 +8813,7 @@ export class AreaDesigner extends EditorBase {
                                                     options: {
                                                         columnLabel: 'Argument',
                                                         stringCollection: true,
+                                                        split: parseArguments,
                                                         open: true,
                                                         type: 'object',
                                                         enterMoveFirst: this.enterMoveFirst,

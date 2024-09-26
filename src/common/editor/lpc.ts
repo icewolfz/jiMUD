@@ -2450,6 +2450,553 @@ export class LPCFormatter extends EventEmitter {
     }
 }
 
+export function tokenizeLPC(str, byLine?: boolean) {
+    let $position = 0;
+    let $inComment = 0;
+    let b = [];
+    //spellchecker:disable
+    let tokenType = function (txt) {
+        switch (txt) {
+            case 'break':
+            case 'case':
+            case 'continue':
+            case 'default':
+            case 'do':
+            case 'else':
+            case 'for':
+            case 'foreach':
+            case 'goto':
+            case 'if':
+            case 'return':
+            case 'switch':
+            case 'while':
+            case 'catch':
+            case 'try':
+            case 'throw':
+            case 'using':
+                return { value: txt, type: FormatTokenType.keyword };
+            case 'object':
+            case 'function':
+            case 'float':
+            case 'mapping':
+            case 'string':
+            case 'int':
+            case 'struct':
+            case 'void':
+            case 'class':
+            case 'status':
+            case 'mixed':
+            case 'buffer':
+            case 'array':
+                return { value: txt, type: FormatTokenType.datatype };
+            case 'private':
+            case 'protected':
+            case 'public':
+            case 'static':
+            case 'varargs':
+            case 'nosave':
+            case 'nomask':
+            case 'virtual':
+            case 'inherit':
+                return { value: txt, type: FormatTokenType.modifier };
+            case 'MUDOS':
+            case '__PORT__':
+            case '__ARCH__':
+            case '__COMPILER__':
+            case '__OPTIMIZATION__':
+            case 'MUD_NAME':
+            case 'HAS_ED':
+            case 'HAS_PRINTF':
+            case 'HAS_RUSAGE':
+            case 'HAS_DEBUG_LEVEL':
+            case '__DIR__':
+            case 'FLUFFOS':
+            case '__WIN32__':
+            case '__HAS_RUSAGE__':
+            case '__M64__':
+            case '__PACKAGE_DB__':
+            case '__GET_CHAR_IS_BUFFERED__':
+            case '__DSLIB__':
+            case '__DWLIB__':
+            case '__FD_SETSIZE__':
+            case '__VERSION__':
+            case '__DEBUG__':
+            case 'SIZEOFINT':
+            case 'MAX_INT':
+            case 'MIN_INT':
+            case 'MAX_FLOAT':
+            case 'MIN_FLOAT':
+                return { value: txt, type: FormatTokenType.constant };
+        }
+        return { value: txt, type: FormatTokenType.text };
+    }
+    //spellchecker:enable
+
+    let getToken = function (): FormatToken {
+        const len = str.length;
+        let idx = $position;
+        const s = str;
+        let val = '';
+        let state = 0;
+        let c;
+        for (; idx < len; idx++) {
+            c = s.charAt(idx);
+            //i = s.charCodeAt(idx);
+            switch (state) {
+                case 1:
+                    switch (c) {
+                        case '[':
+                            $position = idx + 1;
+                            state = 0;
+                            return { value: '([', type: FormatTokenType.parenLMapping };
+                        case '{':
+                            state = 0;
+                            $position = idx + 1;
+                            return { value: '({', type: FormatTokenType.parenLArray };
+                        case ':':
+                            state = 0;
+                            //(::key
+                            if (idx + 1 < len && idx + 2 < len) {
+                                //(::)
+                                if (s.charAt(idx + 1) === ':' && s.charAt(idx + 2) === ')') {
+                                    $position = idx + 1;
+                                    return { value: '(:', type: FormatTokenType.parenLClosure };
+                                }
+                                else if (s.charAt(idx + 1) === ':' && s.charAt(idx + 2) !== ':') {
+                                    $position = idx;
+                                    return { value: '(', type: FormatTokenType.parenLParen };
+                                }
+                            }
+                            $position = idx + 1;
+                            return { value: '(:', type: FormatTokenType.parenLClosure };
+                        default:
+                            state = 0;
+                            $position = idx;
+                            return { value: '(', type: FormatTokenType.parenLParen };
+                    }
+                case 2:
+                    switch (c) {
+                        case ')':
+                            state = 0;
+                            $position = idx + 1;
+                            return { value: '})', type: FormatTokenType.parenRArray };
+                        default:
+                            state = 0;
+                            $position = idx;
+                            return { value: '}', type: FormatTokenType.parenRBrace };
+                    }
+                case 3:
+                    switch (c) {
+                        case ')':
+                            state = 0;
+                            if (b.length) {
+                                $position = idx;
+                                b.pop();
+                                return { value: ']', type: FormatTokenType.parenRBracket };
+                            }
+                            $position = idx + 1;
+                            return { value: '])', type: FormatTokenType.parenRMapping };
+                        default:
+                            state = 0;
+                            $position = idx;
+                            b.pop();
+                            return { value: ']', type: FormatTokenType.parenRBracket };
+                    }
+                case 4:
+                    if ($inComment && c === '\n') {
+                        $position = idx;
+                        state = 0;
+                        return { value: val, type: FormatTokenType.string };
+                    }
+                    else if (c === '\\') {
+                        val += c;
+                        state = 5;
+                    }
+                    else if (c === '"') {
+                        val += c;
+                        $position = idx + 1;
+                        state = 0;
+                        return { value: val, type: FormatTokenType.string };
+                    }
+                    else {
+                        val += c;
+                        $position = idx + 1;
+                    }
+                    break;
+                case 5:
+                    val += c;
+                    $position = idx + 1;
+                    state = 4;
+                    break;
+                case 6:
+                    if (c === ' ' || c === '\t') {
+                        val += c;
+                        $position = idx + 1;
+                    }
+                    else {
+                        $position = idx;
+                        state = 0;
+                        return { value: val, type: FormatTokenType.whitespace };
+                    }
+                    break;
+                case 7:
+                    switch (c) {
+                        case ')':
+                            state = 0;
+                            $position = idx + 1;
+                            return { value: ':)', type: FormatTokenType.parenRClosure };
+                        case ':':
+                            state = 0;
+                            $position = idx + 1;
+                            return { value: '::', type: FormatTokenType.operatorBase };
+                        default:
+                            state = 0;
+                            $position = idx;
+                            return { value: ':', type: FormatTokenType.operator };
+                    }
+                case 8:
+                    switch (c) {
+                        case '/':
+                            $inComment = 1;
+                            $position = idx + 1;
+                            return { value: '//', type: FormatTokenType.commentInline };
+                        case '*':
+                            state = 0;
+                            $position = idx + 1;
+                            return { value: '/*', type: FormatTokenType.commentLeft };
+                        case '=':
+                            state = 0;
+                            $position = idx + 1;
+                            return { value: '/=', type: FormatTokenType.operator };
+                        default:
+                            state = 0;
+                            $position = idx;
+                            return { value: '/', type: FormatTokenType.operator };
+                    }
+                case 9:
+                    switch (c) {
+                        case '/':
+                            state = 0;
+                            $position = idx + 1;
+                            return { value: '*/', type: FormatTokenType.commentRight };
+                        case '=':
+                            state = 0;
+                            $position = idx + 1;
+                            return { value: '*=', type: FormatTokenType.operator };
+                        default:
+                            state = 0;
+                            $position = idx;
+                            return { value: '*', type: FormatTokenType.operator };
+                    }
+                case 10:
+                    switch (c) {
+                        case val:
+                        case '=':
+                            state = 0;
+                            $position = idx + 1;
+                            return { value: val + c, type: FormatTokenType.operator };
+                        default:
+                            state = 0;
+                            $position = idx;
+                            return { value: val, type: FormatTokenType.operator };
+                    }
+                case 11: // -- -= ->
+                    switch (c) {
+                        case '-':
+                        case '=':
+                            state = 0;
+                            $position = idx + 1;
+                            return { value: val + c, type: FormatTokenType.operator };
+                        case '>':
+                            state = 0;
+                            $position = idx + 1;
+                            return { value: '->', type: FormatTokenType.operatorMethod };
+                        default:
+                            state = 0;
+                            $position = idx;
+                            return { value: '-', type: FormatTokenType.operator };
+                    }
+                case 12:
+                    switch (c) {
+                        case '=':
+                            state = 0;
+                            $position = idx + 1;
+                            return { value: val + c, type: FormatTokenType.operator };
+                        default:
+                            state = 0;
+                            $position = idx;
+                            return { value: val, type: FormatTokenType.operator };
+                    }
+                case 13:
+                    switch (c) {
+                        case '=':
+                            state = 0;
+                            $position = idx + 1;
+                            return { value: val + c, type: FormatTokenType.operator };
+                        default:
+                            state = 0;
+                            $position = idx;
+                            return { value: val, type: FormatTokenType.operatorNot };
+                    }
+                case 14:
+                    switch (c) {
+                        case '.':
+                            val += c;
+                            $position = idx + 1;
+                            if (val.length === 3) {
+                                state = 0;
+                                return { value: val, type: FormatTokenType.flatten };
+                            }
+                            break;
+                        default:
+                            state = 0;
+                            $position = idx;
+                            return { value: val, type: FormatTokenType.unknown };
+                    }
+                    break;
+                case 15:
+                    if (c === '\\') {
+                        val += c;
+                        state = 15;
+                    }
+                    else if (c === '\'') {
+                        val += c;
+                        $position = idx + 1;
+                        state = 0;
+                        return { value: val, type: FormatTokenType.char };
+                    }
+                    else if (val.length > 1 && val[0] !== '\\') {
+                        $position = idx - val.length + 1;
+                        return { value: '\'', type: FormatTokenType.text };
+                    }
+                    else if (val.length > 2) {
+                        $position = idx - val.length + 1;
+                        return { value: '\'', type: FormatTokenType.text };
+                    }
+                    else {
+                        val += c;
+                        $position = idx + 1;
+                    }
+                    break;
+                case 16:
+                    val += c;
+                    $position = idx + 1;
+                    state = 15;
+                    break;
+                default:
+                    switch (c) {
+                        case '(':
+                            if (val.length > 0) return tokenType(val);
+                            state = 1;
+                            if (idx + 1 >= len) {
+                                $position = idx + 1;
+                                return { value: '(', type: FormatTokenType.parenLParen };
+                            }
+                            break;
+                        case ')':
+                            if (val.length > 0) return tokenType(val);
+                            $position = idx + 1;
+                            return { value: ')', type: FormatTokenType.parenRParen };
+                        case '{':
+                            if (val.length > 0) return tokenType(val);
+                            $position = idx + 1;
+                            return { value: '{', type: FormatTokenType.parenLBrace };
+                        case '}':
+                            if (val.length > 0) return tokenType(val);
+                            state = 2;
+                            if (idx + 1 >= len) {
+                                $position = idx + 1;
+                                return { value: '}', type: FormatTokenType.parenRBrace };
+                            }
+                            break;
+                        case ':':
+                            if (val.length > 0) return tokenType(val);
+                            state = 7;
+                            if (idx + 1 >= len) {
+                                $position = idx + 1;
+                                return { value: ':', type: FormatTokenType.operator };
+                            }
+                            break;
+                        case '/':
+                            if (val.length > 0) return tokenType(val);
+                            state = 8;
+                            if (idx + 1 >= len) {
+                                $position = idx + 1;
+                                return { value: '/', type: FormatTokenType.operator };
+                            }
+                            break;
+                        case '*':
+                            if (val.length > 0) return tokenType(val);
+                            state = 9;
+                            if (idx + 1 >= len) {
+                                $position = idx + 1;
+                                return { value: '*', type: FormatTokenType.operator };
+                            }
+                            break;
+                        case '[':
+                            if (val.length > 0) return tokenType(val);
+                            $position = idx + 1;
+                            b.push('[');
+                            return { value: '[', type: FormatTokenType.parenLBracket };
+                        case ']':
+                            if (val.length > 0) return tokenType(val);
+                            state = 3;
+                            if (idx + 1 >= len) {
+                                $position = idx + 1;
+                                b.pop();
+                                return { value: ']', type: FormatTokenType.parenRBracket };
+                            }
+                            break;
+                        case '"':
+                            if (val.length > 0) return tokenType(val);
+                            state = 4;
+                            val = '"';
+                            if (idx + 1 >= len) {
+                                $position = idx + 1;
+                                return { value: '"', type: FormatTokenType.text };
+                            }
+                            break;
+                        case '\'':
+                            if (val.length > 0) return tokenType(val);
+                            state = 15;
+                            val = '\'';
+                            if (idx + 1 >= len) {
+                                $position = idx + 1;
+                                return { value: '\'', type: FormatTokenType.text };
+                            }
+                            break;
+                        case '\r':
+                            $position = idx + 1;
+                            break;
+                        case '\n':
+                            if (val.length > 0) return tokenType(val);
+                            $inComment = 0;
+                            $position = idx + 1;
+                            return { value: '\n', type: FormatTokenType.newline };
+                        case ' ':
+                        case '\t':
+                            if (val.length > 0) return tokenType(val);
+                            val += c;
+                            $position = idx + 1;
+                            state = 6;
+                            break;
+                        case '#':
+                            if (val.length > 0) return tokenType(val);
+                            $position = idx + 1;
+                            return { value: c, type: FormatTokenType.precompiler };
+                        case '&': //&& &=
+                        case '|': // || |=
+                        case '+': // ++ +=
+                        case '<': // << <=
+                        case '>': // >> >=
+                            if (val.length > 0) return tokenType(val);
+                            state = 10;
+                            val = c;
+                            if (idx + 1 >= len) {
+                                $position = idx + 1;
+                                return { value: c, type: FormatTokenType.operator };
+                            }
+                            break;
+                        case '-': // -- -= ->
+                            if (val.length > 0) return tokenType(val);
+                            state = 11;
+                            val = c;
+                            if (idx + 1 >= len) {
+                                $position = idx + 1;
+                                return { value: c, type: FormatTokenType.operator };
+                            }
+                            break;
+                        case '=': // ==
+                        case '%': // %=
+                            if (val.length > 0) return tokenType(val);
+                            state = 12;
+                            val = c;
+                            if (idx + 1 >= len) {
+                                $position = idx + 1;
+                                return { value: c, type: FormatTokenType.operator };
+                            }
+                            break;
+                        case '!': // !=
+                            if (val.length > 0) return tokenType(val);
+                            state = 13;
+                            val = c;
+                            if (idx + 1 >= len) {
+                                $position = idx + 1;
+                                return { value: c, type: FormatTokenType.operatorNot };
+                            }
+                            break;
+                        case '.': //...
+                            if (val.length > 0) return tokenType(val);
+
+                            state = 14;
+                            val = c;
+                            if (idx + 1 >= len) {
+                                $position = idx + 1;
+                                return { value: c, type: FormatTokenType.unknown };
+                            }
+                            break;
+                        case '?':
+                            if (val.length > 0) return tokenType(val);
+                            $position = idx + 1;
+                            return { value: c, type: FormatTokenType.operator };
+                        case ';':
+                            if (val.length > 0) return tokenType(val);
+                            $position = idx + 1;
+                            return { value: c, type: FormatTokenType.semicolon };
+                        case '\\':
+                        case '~':
+                        case '^':
+                            if (val.length > 0) return tokenType(val);
+                            $position = idx + 1;
+                            return { value: c, type: FormatTokenType.text };
+                        case ',':
+                            if (val.length > 0) return tokenType(val);
+                            $position = idx + 1;
+                            return { value: c, type: FormatTokenType.comma };
+                        case '@':
+                            if (val.length > 0) return tokenType(val);
+                            $position = idx + 1;
+                            return { value: c, type: FormatTokenType.stringBlock };
+                        default:
+                            if (c === '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
+                                val += c;
+                                $position = idx + 1;
+                            }
+                            else {
+                                if (val.length > 0) return tokenType(val);
+                                $position = idx + 1;
+                                return { value: c, type: FormatTokenType.unknown };
+                            }
+                            break;
+                    }
+                    break;
+            }
+        }
+        if (idx >= len && val.length === 0)
+            return null;
+        if (state === 6)
+            return { value: val, type: FormatTokenType.whitespace };
+        return tokenType(val);
+    }
+
+    let token: FormatToken = getToken();
+    const tokens = [];
+    let t = [];
+    while (token) {
+        t.push(token);
+        if (byLine && token.type === FormatTokenType.newline) {
+            tokens.push(t);
+            t = [];
+        }
+        token = getToken();
+    }
+    if (!byLine) return t;
+    if (t.length)
+        tokens.push(t);
+    return tokens;
+
+}
+
 export function getFunctionName(name: string) {
     if (!name) return name;
     name = name.trim();
@@ -2614,9 +3161,9 @@ function parseString(str, format?) {
     if (str.startsWith('(:'))
         return format ? formatFunctionPointer(str) : 'Function: ' + str;
     if (str.startsWith('(['))
-        return format ? str : 'Mapping: ' + str;
+        return format ? formatMapping(str) : 'Mapping: ' + str;
     if (str.startsWith('({'))
-        return format ? str : 'Array: ' + str;
+        return format ? formatArray(str) : 'Array: ' + str;
     const sb = [];
     let save = true;
     let c;
@@ -2773,7 +3320,47 @@ function parseKeyPair(str, format?) {
     return pair;
 }
 
-function parseArray(str) {
+export function parseArguments(str) {
+    if (!str || str.length === 0)
+        return [];
+    const tokens = tokenizeLPC(str);
+    const tl = tokens.length;
+    let buff = [];
+    let nest = 0;
+    let values = [];
+    for (let t = 0; t < tl; t++) {
+        switch (tokens[t].type) {
+            case FormatTokenType.parenLMapping:
+            case FormatTokenType.parenLArray:
+            case FormatTokenType.parenLClosure:
+                case FormatTokenType.parenLParen:
+                nest++;
+                break;
+            case FormatTokenType.parenRMapping:
+            case FormatTokenType.parenRArray:
+            case FormatTokenType.parenRClosure:
+            case FormatTokenType.parenRParen:
+                nest--;
+                break;
+            case FormatTokenType.newline:
+            case FormatTokenType.whitespace:
+                continue;
+            case FormatTokenType.comma:
+                if (nest === 0) {
+                    values.push(buff.join(''));
+                    buff = [];
+                    continue;
+                }
+                break;
+        }
+        buff.push(tokens[t].value);
+    }
+    if (buff.length)
+        values.push(buff.join(''));
+    return values;
+}
+
+export function parseArray(str) {
     if (!str || str.length === 0)
         return [];
     if (!str.startsWith('({'))
@@ -2781,7 +3368,7 @@ function parseArray(str) {
     if (!str.endsWith('})'))
         return [];
     str = str.slice(2, -2).trim();
-    return str = str.splitQuote(',');
+    return parseArguments(str);
 }
 
 export function formatArray(str, indent?, wrap?) {

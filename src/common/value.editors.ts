@@ -1402,7 +1402,10 @@ export class CollectionValueEditor extends ValueEditor {
                         spring: true,
                         editor: { options: { container: this.$dialog } }
                     }];
-                dg.addRows(this.value?.trim().splitQuote(',').map(a => { return { value: a.trim() } }));
+                if(this.options.split)
+                    dg.addRows(this.options.split(this.value)?.map(a => { return { value: a.trim() } }));
+                else
+                    dg.addRows(this.value?.trim().splitQuote(',').map(a => { return { value: a.trim() } }));
             }
             else if (this.$value && this.$value.map)
                 dg.addRows(this.$value.map(a => ({ ...a })));
@@ -1486,8 +1489,12 @@ export class CollectionValueEditor extends ValueEditor {
             button.classList.add('btn', 'btn-primary');
             button.addEventListener('click', () => {
                 if (this.error || (<any>dg).error) return;
-                if (this.options && this.options.stringCollection)
-                    this.value = dg.rows.map(r => r.value).join(', ');
+                if (this.options && this.options.stringCollection) {
+                    if(this.options.join)
+                        this.value = this.options.join(dg.rows.map(r => r.value));
+                    else
+                        this.value = dg.rows.map(r => r.value).join(', ');
+                }
                 else
                     this.value = dg.rows;
                 this.$dialog.close();
