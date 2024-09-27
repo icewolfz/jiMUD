@@ -1746,18 +1746,107 @@
             </div>
         </div>
         <div id="mon-wizard-vendor" data-visible="false">
+            <!--
+            Advanced properts?
+
+            max_item number 5
+            
+            permanent_percent float 0.05
+            permanent_offset float 5
+            
+            currency_type - None - gold ....
+            only_currency_type - bool false
+            
+            translate - bool
+            translate_list - bool
+            translate_commands - bool
+
+            enable_price_tracking - bool false
+            price_tracking_weight - float 30.0
+            price_tracking_max float 15.0
+            -->
+            <div class="col-sm-6 form-group">
+                <label class="control-label">Vendor type
+                    <div class="input-group edit-dropdown">
+                        <input type="text" id="mon-wiz-typeData-vendor" class="input-sm form-control">
+                        <span class="input-group-btn">
+                            <button id="btn-mon-wiz-typeData-vendor" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="caret" style="margin-left: -1px;"></span>
+                            </button>
+                            <ul style="max-height: 180px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-typeData-vendor" data-container="body">
+                                <li><a href="#" class="main">armour</a></li>
+                                <li><a href="#" class="main">armor</a></li>
+                                <li><a href="#" class="main">treasure</a></li>
+                                <li><a href="#" class="main">weapons</a></li>
+                                <li><a href="#" class="main">weapon</a></li>
+                                <li><a href="#" class="main">fruit</a></li>
+                                <li><a href="#" class="main">raw</a></li>
+                                <li><a href="#" class="main">potion</a></li>
+                                <li><a href="#" class="main">herb</a></li>
+                                <li><a href="#" class="main">food</a></li>
+                                <li><a href="#" class="main">drink</a></li>
+                                <li><a href="#" class="main">ore</a></li>
+                                <li><a href="#" class="main">material</a></li>
+                                <li><a href="#" class="main">gem</a></li>
+                                <li><a href="#" class="main">bait</a></li>
+                            </ul>
+                        </span>
+                    </div>
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="mon-wiz-typeData-use_default_storage" /> Use default storage room
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="mon-wiz-typeData-no_clean_storage" /> Do not clean storage
+                </label>
+            </div>
             <div class="col-sm-12 form-group">
                 <label class="control-label">Storage room
                     <div class="input-group" style="width: 100%">
                         <input type="text" id="mon-wiz-typeData-storageroom" style="width:100%" class="input-sm form-control" />
                         <span class="input-group-btn">
-                            <!--
                             <button class="btn btn-default btn-sm" type="button" id="btn-mon-wiz-typeData-storageroom">
                                 &hellip;
                             </button>
-                            -->
                         </span>
                     </div>
+                </label>
+            </div>
+            <div class="col-sm-12 form-group">
+                <label class="control-label">List item(s) <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">A comma delimited list of words</span>
+                    <input type="text" id="mon-wiz-typeData-list_items" style="width:100%" class="input-sm form-control" />
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">List type
+                    <div class="input-group edit-dropdown">
+                        <input type="text" id="mon-wiz-typeData-list_type" class="input-sm form-control">
+                        <span class="input-group-btn">
+                            <button id="btn-mon-wiz-typeData-list_type" class="btn-sm btn btn-default" style="width: 17px;min-width:17px;padding-left:4px;padding-right:4px;border-top-right-radius: 4px;border-bottom-right-radius: 4px;" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="caret" style="margin-left: -1px;"></span>
+                            </button>
+                            <ul style="max-height: 180px;" class="dropdown-menu pull-right" aria-labelledby="btn-mon-wiz-typeData-list_type" data-container="body">
+                                <li><a href="#" class="main">item</a></li>
+                                <li><a href="#" class="main">armor</a></li>
+                                <li><a href="#" class="main">weapon</a></li>
+                                <li><a href="#" class="main">fruit</a></li>
+                            </ul>
+                        </span>
+                    </div>
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="mon-wiz-typeData-display_list_item" checked="checked" /> Append display list long to room
+                </label>
+            </div>
+            <div class="col-sm-12 form-group">
+                <label class="control-label">List item long
+                    <input type="text" id="mon-wiz-typeData-list_long" style="width:100%" class="input-sm form-control" disabled="disabled" />
                 </label>
             </div>
         </div>
@@ -7450,6 +7539,25 @@
 
     function monsterWizard(dData, opts) {
         if (!$dialogs.monster) {
+            $('#btn-mon-wiz-typeData-storageroom').on('click', () => {
+                showBrowseDialog({
+                    defaultFile: document.getElementById('mon-wiz-typeData-storageroom').value || (manager.active ? (manager.active.editor.remote || options.uploadAs || (options.remote + "/" + path.basename(manager.active.editor.file))) : options.uploadAs),
+                    title: 'Select remote folder',
+                    properties: ['openDirectory']
+                }, (files) => {
+                    if (!files || files.length === 0) return;
+                    document.getElementById('mon-wiz-typeData-storageroom').value = files[0];
+                });
+            });
+            var list = function() {
+                if(!document.getElementById('mon-wiz-typeData-list_long')) return;
+                if(!document.getElementById('mon-wiz-typeData-list_items')) return;
+                if(!document.getElementById('mon-wiz-typeData-display_list_item')) return;
+                document.getElementById('mon-wiz-typeData-list_long').disabled = !(document.getElementById('mon-wiz-typeData-list_items').value.trim().length && document.getElementById('mon-wiz-typeData-display_list_item').checked)
+            }
+            document.getElementById('mon-wiz-typeData-display_list_item').addEventListener('change', list);
+            document.getElementById('mon-wiz-typeData-list_items').addEventListener('change', list);
+            document.getElementById('mon-wiz-typeData-list_items').addEventListener('input', list);
             var colors = '<li><a href="#">' + fs.readFileSync(parseTemplate(path.join('{assets}', 'editor', 'color.lst')), 'utf8').replace(/\r\n|\n|\r/g, '</a></li><li><a href="#">') + '</a></li>';
             var races = '<li><a href="#">' + fs.readFileSync(parseTemplate(path.join('{assets}', 'editor', 'monster-race.lst')), 'utf8').replace(/\r\n|\n|\r/g, '</a></li><li><a href="#">') + '</a></li>';
             var bodies = '<li><a href="#">' + fs.readFileSync(parseTemplate(path.join('{assets}', 'editor', 'monster-bodies.lst')), 'utf8').replace(/\r\n|\n|\r/g, '</a></li><li><a href="#">') + '</a></li>';
@@ -7855,6 +7963,9 @@
                                         break;
                                 }
                             }
+                        },
+                        shown: e => {
+                            list();
                         }
                     }),
                     new WizardDataGridPage({
@@ -8583,12 +8694,34 @@
                         tmpl.doc.push('/doc/build/monster/types/vendor');
                         break;
                 }
-                if (data['mon-wiz-typeData-storageroom'] && (TypeFlags & MonsterTypeFlags.Vendor) === MonsterTypeFlags.Vendor) {
-                    data['mon-wiz-typeData-storageroom'] = data['mon-wiz-typeData-storageroom'].trim();
-                    if (data['mon-wiz-typeData-storageroom'].startsWith('"') && data['mon-wiz-typeData-storageroom'].endsWith('"'))
-                        tmpl['create body'] += `    set_storage_room(${data['mon-wiz-typeData-storageroom']})\n`;
-                    else
-                        tmpl['create body'] += `    set_storage_room("${data['mon-wiz-typeData-storageroom'].replace(/"/g, '\\"')}")\n`;
+                if ((typeFlags & MonsterTypeFlags.Vendor) === MonsterTypeFlags.Vendor) {
+                    if (data['mon-wiz-typeData-storageroom']) {
+                        data['mon-wiz-typeData-storageroom'] = data['mon-wiz-typeData-storageroom'].trim();
+                        if (data['mon-wiz-typeData-storageroom'].startsWith('"') && data['mon-wiz-typeData-storageroom'].endsWith('"'))
+                            tmpl['create body'] += `    set_storage_room(${data['mon-wiz-typeData-storageroom']})\n`;
+                        else
+                            tmpl['create body'] += `    set_storage_room("${data['mon-wiz-typeData-storageroom'].replace(/"/g, '\\"')}")\n`;
+                    }
+                    if (data['mon-wiz-typeData-vender'] && data['mon-wiz-typeData-vender'].trim().length && data['mon-wiz-typeData-vender'].trim() !== 'treasure')
+                        tmpl['create body'] += `    set_vendor("${data['mon-wiz-typeData-vender'].trim()}");\n`;
+                    if (data['mon-wiz-typeData-use_default_storage'])
+                        tmpl['create body'] += `    set_use_default_storage(1);\n`;
+                    if (data['mon-wiz-typeData-no_clean_storage'])
+                        tmpl['create body'] += `    set_no_clean_storage(1);\n`;
+                    if (data['mon-wiz-typeData-list_items'] && data['mon-wiz-typeData-list_items'].trim().length) {
+                        tmp = data['mon-wiz-typeData-list_items'].split(',').map(i => '"' + i.trim() + '"');
+                        if (tmp.length > 1)
+                            tmpl['create body'] += `    set_list_items(${tmp.join(', ')});\n`;
+                        else
+                            tmpl['create body'] += `    set_list_item(${tmp[0]});\n`;
+                    }
+                    if (data['mon-wiz-typeData-list_long'] && data['mon-wiz-typeData-list_long'].trim().length)
+                        tmpl['create body'] += `    set_list_long("${data['mon-wiz-typeData-vender'].trim()}");\n`;
+
+                    if (data['mon-wiz-typeData-list_type'] && data['mon-wiz-typeData-list_type'].trim().length && data['mon-wiz-typeData-list_type'].trim() !== 'item')
+                        tmpl['create body'] += `    set_list_type("${data['mon-wiz-typeData-list_type'].trim()}");\n`;
+                    if (Object.hasOwn(data, 'on-wiz-typeData-display_list_item') && !data['mon-wiz-typeData-display_list_item'])
+                        tmpl['create body'] += `    set_display_list_item(0);\n`;
                 }
 
                 if ((typeFlags & MonsterTypeFlags.Barkeep) === MonsterTypeFlags.Barkeep) {

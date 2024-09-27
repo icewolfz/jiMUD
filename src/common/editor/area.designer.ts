@@ -14612,14 +14612,36 @@ export class AreaDesigner extends EditorBase {
                 data.doc.push('/doc/build/monster/types/vendor');
                 break;
         }
-        if (monster.typeData && monster.typeData.storageroom && (typeFlags & MonsterTypeFlags.Vendor) === MonsterTypeFlags.Vendor) {
-            monster.typeData.storageroom = monster.typeData.storageroom.trim();
-            tmp = monster.typeData.storageroom;
-            if (files[monster.typeData.storageroom])
-                tmp = `RMS + "${files[monster.typeData.storageroom]}.c"`;
-            else if (!(tmp.startsWith('"') && tmp.endsWith('"')))
-                tmp = '"' + tmp.storageroom.replace(/"/g, '\\"') + '"';
-            data['create body'] += `    set_storage_room(${tmp})\n`;
+        if (monster.typeData && (typeFlags & MonsterTypeFlags.Vendor) === MonsterTypeFlags.Vendor) {
+            if (monster.typeData.storageroom) {
+                monster.typeData.storageroom = monster.typeData.storageroom.trim();
+                if (files[monster.typeData.storageroom])
+                    tmp = `RMS + "${files[monster.typeData.storageroom]}.c"`;
+                else
+                    tmp = this.getFilePath(monster.typeData.storageroom, data.path);
+                if (tmp.length)
+                    data['create body'] += `    set_storage_room(${tmp})\n`;
+            }
+            if (monster.typeData.vender && monster.typeData.vender.trim().length && monster.typeData.vender.trim() !== 'treasure')
+                data['create body'] += `    set_vendor("${monster.typeData.vender.trim()}");\n`;
+            if (monster.typeData.use_default_storage)
+                data['create body'] += `    set_use_default_storage(1);\n`;
+            if (monster.typeData.no_clean_storage)
+                data['create body'] += `    set_no_clean_storage(1);\n`;
+            if (monster.typeData.list_items && monster.typeData.list_items.trim().length) {
+                tmp = monster.typeData.list_items.split(',').map(i => '"' + i.trim() + '"');
+                if (tmp.length > 1)
+                    data['create body'] += `    set_list_items(${tmp.join(', ')});\n`;
+                else
+                    data['create body'] += `    set_list_item(${tmp[0]});\n`;
+            }
+            if (monster.typeData.list_long && monster.typeData.list_long.trim().length)
+                data['create body'] += `    set_list_long("${monster.typeData.vender.trim()}");\n`;
+
+            if (monster.typeData.list_type && monster.typeData.list_type.trim().length && monster.typeData.list_type.trim() !== 'item')
+                data['create body'] += `    set_list_type("${monster.typeData.list_type.trim()}");\n`;
+            if (Object.hasOwn(monster.typeData, 'display_list_item') && !monster.typeData.display_list_item)
+                data['create body'] += `    set_display_list_item(0);\n`;
         }
         if (monster.typeData && (typeFlags & MonsterTypeFlags.Barkeep) === MonsterTypeFlags.Barkeep) {
             if (monster.typeData.menu && Array.isArray(monster.typeData.menu) && monster.typeData.menu.length) {
@@ -16455,6 +16477,26 @@ export class AreaDesigner extends EditorBase {
             data.description += ' * Notes:\n * ' + obj.notes.split('\n').join('\n * ') + '\n *';
         }
         return this.parseFileTemplate(this.read(parseTemplate(path.join('{assets}', 'templates', 'wizards', 'designer', 'object.c'))), data);
+    }
+
+    private getFilePath(path, root) {
+        let quotes = false;
+        path = path.trim();
+        if (path.startsWith('"') && path.endsWith('"'))
+            path = path.substring(1, path.length - 2).trim();
+        if (root && root.length) {
+            if (path.startsWith(root + '/mon/'))
+                return `(MON + "${path.substring(root.length + 5)}")`;
+            if (path.startsWith(root + '/std/'))
+                return `(STD + "${path.substring(root.length + 5)}")`;
+            if (path.startsWith(root + '/obj/'))
+                return `(OBJ + "${path.substring(root.length + 5)}")`;
+            if (path.startsWith(root + '/cmds/'))
+                return `(CMDS + "${path.substring(root.length + 6)}")`;
+            if (path.startsWith(root + '/'))
+                return `(RMS + "${path.substring(root.length + 1)}")`;
+        }
+        return '"' + path.storageroom.replace(/"/g, '\\"') + '"';
     }
 
     private getExitId(exit, x, y, z) {
