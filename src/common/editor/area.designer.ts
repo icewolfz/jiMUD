@@ -5485,7 +5485,7 @@ export class AreaDesigner extends EditorBase {
         this.$propertiesEditor.container.classList.add('tabbable', 'tabs-left', 'area-editor-properties');
         this.$propertiesEditor.tabs.classList.add('nav', 'nav-tabs');
         this.$propertiesEditor.tabs.style.height = '100%';
-        this.$propertiesEditor.tabs.innerHTML = '<li class="active"><a href="#' + this.parent.id + 'general" data-toggle="tab">General</a></li><li><a href="#' + this.parent.id + 'rooms" data-toggle="tab">Base rooms</a></li><li><a href="#' + this.parent.id + 'monsters" data-toggle="tab">Base monsters</a></li><li><a href="#' + this.parent.id + 'includes" data-toggle="tab">Area includes</a></li>';
+        this.$propertiesEditor.tabs.innerHTML = '<li class="active"><a href="#' + this.parent.id + 'general" data-toggle="tab">General</a></li><li><a href="#' + this.parent.id + 'rooms" data-toggle="tab">Base rooms</a></li><li><a href="#' + this.parent.id + 'monsters" data-toggle="tab">Base monsters</a></li><li><a href="#' + this.parent.id + 'includes" data-toggle="tab">Area includes</a></li><li><a href="#' + this.parent.id + 'defines" data-toggle="tab">Area defines</a></li>';
         this.$propertiesEditor.container.appendChild(this.$propertiesEditor.tabs);
         this.$propertiesEditor.tabsContents.classList.add('tab-content');
         this.$propertiesEditor.container.appendChild(this.$propertiesEditor.tabsContents);
@@ -5942,6 +5942,7 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.variables = e.data['mon-wiz-variables'];
                                     nMonster.functions = e.data['mon-wiz-functions'];
                                     nMonster.commands = e.data['mon-wiz-commands'];
+                                    nMonster.defines = e.data['mon-wiz-defines'];
 
                                     Object.keys(e.data).forEach(k => {
                                         if (!k.startsWith('mon-wiz-typeData-')) return;
@@ -6839,6 +6840,125 @@ export class AreaDesigner extends EditorBase {
         this.$propertiesEditor.includesTab.appendChild(this.createButtonGroup(this.$propertiesEditor.includesGrid, 'include'));
         this.$propertiesEditor.includesTab.appendChild(el);
         //#endregion
+        //#region Defines tab
+        el = document.createElement('div');
+        el.classList.add('datagrid-standard');
+        this.$propertiesEditor.definesGrid = new DataGrid(el);
+        this.$propertiesEditor.definesGrid.clipboardPrefix = 'jiMUD/';
+        this.$propertiesEditor.definesGrid.enterMoveFirst = this.enterMoveFirst;
+        this.$propertiesEditor.definesGrid.enterMoveNext = this.enterMoveNext;
+        this.$propertiesEditor.definesGrid.enterMoveNew = this.enterMoveNew;
+        this.$propertiesEditor.definesGrid.columns = [
+            {
+                label: 'Name',
+                field: 'key',
+                width: 200,
+                editor: {
+                    options: {
+                        container: document.body,
+                        validate: (oldValue, newValue, data: Include) => {
+                            if (oldValue !== newValue && this.$area.defines.findIndex((element: KeyValue) => element.key === newValue) !== -1)
+                                return `Define ${newValue} already added!`;
+                            return true;
+                        }
+                    }
+                }
+            },
+            {
+                label: 'Value',
+                field: 'value',
+                spring: true,
+            },
+        ];
+        this.$propertiesEditor.definesGrid.on('value-changed', (newValue, oldValue, dataIndex) => {
+            this.pushUndo(undoAction.edit, undoType.properties, { property: 'defines', old: oldValue, new: copy(newValue), index: dataIndex });
+            this.$area.defines[dataIndex].key = newValue.value;
+            this.$area.defines[dataIndex].value = newValue.value;
+            this.changed = true;
+        });
+        this.$propertiesEditor.definesGrid.on('add', e => {
+            e.data = {
+                key: '',
+                value: '',
+            };
+            this.pushUndo(undoAction.add, undoType.properties, { property: 'defines', index: this.$area.defines.length - 1, value: e.data });
+            this.changed = true;
+        });
+        this.$propertiesEditor.definesGrid.on('cut', (e) => {
+            this.pushUndo(undoAction.delete, undoType.properties, {
+                property: 'defines', values: e.data.map(r => {
+                    let idx = this.$area.defines.indexOf(r.data);
+                    return { value: this.$area.defines[idx], index: idx };
+                }).sort((a, b) => {
+                    if (a.index < b.index) return 1;
+                    if (a.index > b.index) return -1;
+                    return 0;
+                })
+            });
+            this.emit('supports-changed');
+            this.changed = true;
+        });
+        this.$propertiesEditor.definesGrid.on('copy', () => {
+            this.emit('supports-changed');
+        });
+        this.$propertiesEditor.definesGrid.on('paste', (e) => {
+            this.startUndoGroup();
+            e.data.forEach(d => {
+                if (this.$area.defines.findIndex((element: KeyValue) => element.key === d.data.key) === -1) {
+                    d.data = copy(d.data);
+                    this.pushUndo(undoAction.add, undoType.properties, { property: 'defines', index: this.$area.defines.length, value: d.data });
+                }
+                else
+                    e.preventDefault = true;
+            });
+            this.stopUndoGroup();
+            this.changed = true;
+        });
+        this.$propertiesEditor.definesGrid.on('delete', (e) => {
+            if (dialog.showMessageBoxSync({
+                type: 'warning',
+                title: 'Delete',
+                message: 'Delete selected define' + (this.$propertiesEditor.definesGrid.selectedCount > 1 ? 's' : '') + '?',
+                buttons: ['Yes', 'No'],
+                defaultId: 1,
+                noLink: true
+            })
+                === 1)
+                e.preventDefault = true;
+            else {
+                this.pushUndo(undoAction.delete, undoType.properties, {
+                    property: 'defines', values: e.data.map(r => {
+                        let idx = this.$area.defines.indexOf(r.data);
+                        return { value: this.$area.defines[idx], index: idx };
+                    }).sort((a, b) => {
+                        if (a.index < b.index) return 1;
+                        if (a.index > b.index) return -1;
+                        return 0;
+                    })
+                });
+                this.changed = true;
+            }
+        });
+        this.$propertiesEditor.definesGrid.on('selection-changed', () => {
+            if (this.$view !== View.properties) return;
+            const group = this.$propertiesEditor.definesTab.firstChild;
+            if (this.$propertiesEditor.definesGrid.selectedCount) {
+                group.children[1].removeAttribute('disabled');
+                group.children[2].removeAttribute('disabled');
+                if (this.$propertiesEditor.definesGrid.selectedCount > 1)
+                    (<HTMLElement>group.children[2]).title = 'Delete defines';
+                else
+                    (<HTMLElement>group.children[2]).title = 'Delete define';
+            }
+            else {
+                group.children[1].setAttribute('disabled', 'true');
+                group.children[2].setAttribute('disabled', 'true');
+                (<HTMLElement>group.children[2]).title = 'Delete define(s)';
+            }
+            this.emit('selection-changed');
+        });
+        this.$propertiesEditor.definesTab.appendChild(this.createButtonGroup(this.$propertiesEditor.definesGrid, 'define'));
+        this.$propertiesEditor.definesTab.appendChild(el);
         this.parent.appendChild(this.$propertiesEditor.container);
         //#endregion
         //#region create monster grid
@@ -7265,6 +7385,7 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.variables = e.data['mon-wiz-variables'];
                                     nMonster.functions = e.data['mon-wiz-functions'];
                                     nMonster.commands = e.data['mon-wiz-commands'];
+                                    nMonster.defines = e.data['mon-wiz-defines'];
 
                                     Object.keys(e.data).forEach(k => {
                                         if (!k.startsWith('mon-wiz-typeData-')) return;
@@ -10313,6 +10434,14 @@ export class AreaDesigner extends EditorBase {
                                 this.pushRedo(undo);
                                 this.changed = true;
                                 break;
+                            case 'defines':
+                                undo.data.index = this.$area.defines.indexOf(undo.data.value);
+                                if (undo.data.index !== -1)
+                                    this.$area.defines.splice(undo.data.index, 1);
+                                this.$propertiesEditor.definesGrid.rows = this.$area.defines;
+                                this.pushRedo(undo);
+                                this.changed = true;
+                                break;
                         }
                         break;
                     case undoType.room:
@@ -10376,6 +10505,14 @@ export class AreaDesigner extends EditorBase {
                                 });
                                 this.pushRedo(undo);
                                 this.$propertiesEditor.includesGrid.rows = this.$area.includes;
+                                this.changed = true;
+                                break;
+                            case 'defines':
+                                undo.data.values.forEach(r => {
+                                    this.$area.defines.splice(r.index, 0, r.value);
+                                });
+                                this.pushRedo(undo);
+                                this.$propertiesEditor.definesGrid.rows = this.$area.defines;
                                 this.changed = true;
                                 break;
                         }
@@ -10450,6 +10587,13 @@ export class AreaDesigner extends EditorBase {
                                 this.$area.includes[undo.data.index].relative = undo.data.old.relative;
                                 this.pushRedo(undo);
                                 this.$propertiesEditor.includesGrid.rows = this.$area.includes;
+                                this.changed = true;
+                                break;
+                            case 'defines':
+                                this.$area.defines[undo.data.index].key = undo.data.old.key;
+                                this.$area.defines[undo.data.index].value = undo.data.old.value;
+                                this.pushRedo(undo);
+                                this.$propertiesEditor.definesGrid.rows = this.$area.defines;
                                 this.changed = true;
                                 break;
                             case 'defaultRoom':
@@ -10570,6 +10714,12 @@ export class AreaDesigner extends EditorBase {
                                 this.$propertiesEditor.includesGrid.rows = this.$area.includes;
                                 this.changed = true;
                                 break;
+                                case 'defines':
+                                    this.$area.defines.splice(undo.data.index, 0, undo.data.value);
+                                    this.pushUndoObject(undo);
+                                    this.$propertiesEditor.definesGrid.rows = this.$area.defines;
+                                    this.changed = true;
+                                    break;                                
                         }
                         break;
                     case undoType.room:
@@ -10627,7 +10777,14 @@ export class AreaDesigner extends EditorBase {
                                 this.$propertiesEditor.includesGrid.rows = this.$area.includes;
                                 this.changed = true;
                                 break;
-                                break;
+                                case 'defines':
+                                    undo.data.values.forEach(r => {
+                                        this.$area.defines.splice(r.index, 1);
+                                    });
+                                    this.pushRedo(undo);
+                                    this.$propertiesEditor.definesGrid.rows = this.$area.defines;
+                                    this.changed = true;
+                                    break;
                         }
                         break;
                     case undoType.room:
@@ -10690,6 +10847,13 @@ export class AreaDesigner extends EditorBase {
                                 this.$propertiesEditor.includesGrid.rows = this.$area.includes;
                                 this.changed = true;
                                 break;
+                                case 'defines':
+                                    this.$area.defines[undo.data.index].key = undo.data.new.key;
+                                    this.$area.defines[undo.data.index].value = undo.data.new.value;
+                                    this.pushUndoObject(undo);
+                                    this.$propertiesEditor.definesGrid.rows = this.$area.defines;
+                                    this.changed = true;
+                                    break;                                
                             case 'defaultRoom':
                             case 'defaultMonster':
                                 this.$area[undo.data.property] = undo.data.new;
@@ -12793,6 +12957,7 @@ export class AreaDesigner extends EditorBase {
         this.updateMonsters();
         this.updateObjects();
         this.$propertiesEditor.includesGrid.rows = this.$area.includes;
+        this.$propertiesEditor.definesGrid.rows = this.$area.defines;
         this.emit('rebuild-buttons');
         Timer.end('Area BuildMap time');
     }
@@ -13168,10 +13333,9 @@ export class AreaDesigner extends EditorBase {
                     return `\n#include <${i.path}>`;
                 }).join('');
             }
-            if (this.$area.defines) {
+            if (this.$area.defines && this.$area.defines.length) {
                 this.$area.defines.forEach(r => template['area post'] += `#define ${r.key}${r.value && r.value.trim().length ? ' ' + r.value.trim() : ''}\n`);
-                if (this.$area.defines.length)
-                    template['area post'] += '\n';
+                template['area post'] += '\n';
             }
             this.writeFormatted(this.parseFileTemplate(fs.readFileSync(path.join(templePath, 'area.h'), 'utf8'), template), path.join(p, 'area.h'));
             //Generate base rooms
@@ -13539,10 +13703,9 @@ export class AreaDesigner extends EditorBase {
         if (room.inherits && room.inherits.length)
             data.inherits += room.inherits.map(i => `\ninherit ${i};`).join('');
 
-        if (room.defines) {
+        if (room.defines && room.defines.length) {
             room.defines.forEach(r => data['create pre'] += `#define ${r.key}${r.value && r.value.trim().length ? ' ' + r.value.trim() : ''}\n`);
-            if (room.defines.length)
-                data['create pre'] += '\n';
+            data['create pre'] += '\n';
         }
         if (room.variables) {
             data['create pre'] += room.variables.map(
@@ -14491,10 +14654,9 @@ export class AreaDesigner extends EditorBase {
         if (monster.inherits && monster.inherits.length)
             data.inherits += monster.inherits.map(i => `\ninherit ${i};`).join('');
 
-        if (monster.defines) {
+        if (monster.defines && monster.defines.length) {
             monster.defines.forEach(r => data['create pre'] += `#define ${r.key}${r.value && r.value.trim().length ? ' ' + r.value.trim() : ''}\n`);
-            if (monster.defines.length)
-                data['create pre'] += '\n';
+            data['create pre'] += '\n';
         }
         if (monster.variables) {
             data['create pre'] += monster.variables.map(
@@ -16002,10 +16164,9 @@ export class AreaDesigner extends EditorBase {
         if (obj.inherits && obj.inherits.length)
             data.inherits += obj.inherits.map(i => `\ninherit ${i};`).join('');
 
-        if (obj.defines) {
+        if (obj.defines && obj.defines.length) {
             obj.defines.forEach(r => data['create pre'] += `#define ${r.key}${r.value && r.value.trim().length ? ' ' + r.value.trim() : ''}\n`);
-            if (obj.defines.length)
-                data['create pre'] += '\n';
+            data['create pre'] += '\n';
         }
         if (obj.variables) {
             data['create pre'] += obj.variables.map(
