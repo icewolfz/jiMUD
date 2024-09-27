@@ -13064,6 +13064,9 @@ export class AreaDesigner extends EditorBase {
                         else
                             counts[name]++;
                         files[`${x},${y},${z}`] = name + counts[name];
+                        //allow 0 to be optional in cuse onyl 1 depth
+                        if (z === 0)
+                            files[`${x},${y}`] = name + counts[name];
                         Object.values<Exit>(r.exitsDetails).forEach(e => {
                             if (!e.dest || e.dest.length === 0 || files[e.dest]) return;
                             if (e.dest.match(/^\d+\s*,\s*\d+\s*,\s*\d+$/) || e.dest.match(/^\d+\s*,\s*\d+$/) || e.dest.match(/^\$\{(rms|mon|std|cmds|obj)\}/i))

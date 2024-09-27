@@ -136,10 +136,37 @@ Create a new monster using a wizard for easy option selection
   - `Hair color` monster's hair color, pick from predefined list or supply any color you wish
   - `Gender` the monster's gender, male, female, or none
   - `Body type` allows you to pick a body type to set the initial limbs for monster, if not set will be determined based on race
+- `Resistances` Monster damage resistances
+  - `Type` The type of resistance to protect against
+  - `Amount` The amount to protect, should be in a -100 to 100 range
+- `Ask` Control if monster can be asked about questions
+  - `Can be asked questions` Enable ask system
+  - `Ask no topic reply` Message to display when topic is not found
+  - `Ask response type` How a monster will responses when asked a question
+    - `Say` reply using the say command
+    - `Tell` send a tell to asking player
+    - `Speak` reply using speak command
+    - `Whisper` reply using whisper command
+    - `Custom` use a custom system to control, will require advanced coding after code created
+- `Ask Topics` The topics that the monster can be questioned about
+  - `Topic` The topic to ask about
+  - `Message` The message to display
 - `Advanced properties` Advanced options that while useful are not always needed
   - `No corpse` will the monster leave a corpse, string will be displayed to player and no corpse left, if "" no message and no corpse, $N/$n replaced with monster's name
   - `No limbs` will the limbs be dropped on the ground, if "" no limbs and no message, else message displayed to player, $L/$l will be replaced with limb name, $N/$n replaced with monster's name
 - `Custom properties` custom properties you may want to set for a monster
+  - `Type` The type of property
+    - `Temporary` lost when monster is saved using auto save system
+    - `Normal` will be saved if monster is autosaved
+  - `Name` The name of the property
+  - `Value` The value of the property
+- `Reputation` The monsters reputation
+  - `Default group` The default reputation
+  - `Type` The type of reputation
+    - `Attack` Applied if attacked
+    - `Die` Applied when dies
+  - `Group` The reputation group that is effected
+  - `Amount` The amount of reputation to apply
 - `Movement` determine if the monster will wander randomly or a set list of direction
   - `Speed` he speed the monster moves in heartbeats, must be set to enable movement
   - `Patrol route` a set list of exits the monster will attempt to follow
@@ -161,6 +188,11 @@ Create a new monster using a wizard for easy option selection
   - `Attack commands` a list of comma delimited abilities or commands the monster will randomly do during combat
   - `Attack command chance` the chance a command will be used, from 0 to 101, 0 never, 100/101 always
   - `Attack initiators` list of comma delimited commands or abilities to randomly picked from when the monster starts combat
+- `Tracking` Monster tracking system
+  - `Enable attacker tracking` Will cause monster to track those that it is attacking
+  - `Track aggressively only` Constantly follower attacker
+  - `Enter message` Message to display when monster enters a room by tracking someone
+  - `Enter message action` How the enter messages is displayed
 - `Aggressive` monsters aggressiveness, can be a simple number or a complex mapping of values to determine how different races, classes and others options effects auto attacking, see /doc/build/monster/haggle on mud for full list and details
 - `Actions` actions or reactions to different things
   - `Auto drop` drop items after a delay of seconds
@@ -219,6 +251,66 @@ Create a new monster using a wizard for easy option selection
       - ({ ({"property name", value to match, "command to fire"}), ... })
   - `Action` the action to do, see docs for full formatting for more advanced reactions
 - `Finish` A final summary of selected options and properties, some properties and options will always be set even if empty: name, level, race, short, long
+
+#### Monster type properties
+
+##### Vendor properties
+
+Visible when monster type is a vendor
+
+- `Vendor type` the type of vendor
+- `Use default storage` Weather to use global default storage room
+- `Do not clean storage` Do not clean storage on room reset
+- `Storage room` The path to the room that contains objects the vendor sells
+- `List item(s)` A comma delimited list of items that a user can read to see vendor syntaxes
+- `List type` Used to build dynamic sign text
+- `Append display list long to room` Will append the list long to the rooms description
+- `List item long` The long description of the item when it appears in the room
+
+##### Vendor advanced properties
+
+More advanced vendor properties, most of these should be left alone unless you know what they do
+
+- `Max number of each item` The max number of items to keep in storage, all over this amount will be removed
+- `Permanent Percent` The percent to adjust permanent inventory as more are sold
+- `Permanent offset` The number of items to sell at base value
+- `Currency type` The type of currency the vendor takes, only used if  `Only except currency type` enabled
+- `Only except currency type` Only allow currency type when items are bought/sold
+- `Translate` Translate all items to the vendor's primary language
+- `Translate list` Translate the displayed sign
+- `Translate commands` Translate the command words
+- `Enable price tracking` Enable price tracking to offer supply and demand adjustments
+- `Price tracking weight` How much to weight tracked items
+- `Price tracking max` The max amount to weight tracked items
+
+##### Barkeep menu
+
+The menu a barkeep sells
+
+- `Short` The item's short name, normal the name with a/an prepended
+- `Name` The item's name
+- `Strength` How strong the item is when a person drinks/eats it
+- `Type` The type of item
+  - `alcoholic` Item is alcoholic drink
+  - `caffeine` Item is caffeine
+  - `drink` Item is a generic drink that does not get drinker drunk
+  - `food` Item is food
+- `Long` The long description of item when looked at
+- `Nouns` The item nouns that are used to build the item's id, should aim no more then 2 or 3
+- `Adjectives` The item's adjectives used to build item's id, should be no more then 2 or 3
+- `Category` The item's category when displayed on menu, drinks should all be in the drink category
+- `My Message` The message displays to the person who eats/drinks item
+- `Your Message` The message displayed to the room when person eats/drinks tiem
+
+##### Barkeep properties
+
+- `Menu title` The menus title
+- `Read item(s)` The items used to display menu when read/looked
+- `No money message` The message displayed when buyer does not have enough money
+- `Pre menu text` The text before the menu
+- `Post menu test` The text after the menu
+- `Can refill` Can the barkeep refill drink containers
+- `Can buy empty` Can barkeep buy empty bottles
 
 ## Code editor features
 
