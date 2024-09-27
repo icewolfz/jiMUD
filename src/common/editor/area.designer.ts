@@ -707,12 +707,12 @@ export class Room {
                 case 'smells':
                 case 'searches':
                 case 'properties':
-                case 'inherits':
                     if (this[prop].length !== room[prop].length)
                         return false;
                     if (this[prop].filter((v, i) => room[prop][i] !== v).length !== 0)
                         return false;
                     break;
+                case 'inherits':                    
                 case 'waterGerms':
                     if (this[prop].length !== room[prop].length)
                         return false;
@@ -3923,7 +3923,6 @@ export class AreaDesigner extends EditorBase {
                         case 'properties':
                         case 'functions':
                         case 'commands':
-                        case 'inherits':
                         case 'defines':
                         case 'variables':
                             oldValues[sl] = copy(old[prop]);
@@ -3931,14 +3930,15 @@ export class AreaDesigner extends EditorBase {
                             this.RoomChanged(curr, old, true);
                             old[prop] = copy(newValue);
                             break;
+                        case 'inherits':                            
                         case 'waterGerms':
                             oldValues[sl] = copy(old[prop]);
                             curr[prop] = newValue.map(function (item) {
-                                return item['germ'];
+                                return item['value'];
                             });
                             this.RoomChanged(curr, old, true);
                             old[prop] = newValue.map(function (item) {
-                                return item['germ'];
+                                return item['value'];
                             });
                             break;
                         default:
@@ -4952,7 +4952,7 @@ export class AreaDesigner extends EditorBase {
                         columns: [
                             {
                                 label: 'Germ',
-                                field: 'germ',
+                                field: 'value',
                                 width: 300,
                                 spring: true,
                                 editor: {
@@ -4972,7 +4972,7 @@ export class AreaDesigner extends EditorBase {
                         ],
                         onAdd: (e) => {
                             e.data = {
-                                germ: '',
+                                value: '',
                             };
                         },
                         type: 'waterGerms',
@@ -5542,6 +5542,50 @@ export class AreaDesigner extends EditorBase {
                             };
                         },
                         type: 'define',
+                        enterMoveFirst: this.enterMoveFirst,
+                        enterMoveNext: this.enterMoveNext,
+                        enterMoveNew: this.enterMoveNew
+                    }
+                }
+            },
+            {
+                property: 'inherits',
+                label: 'Inherits',
+                group: 'Expert',
+                formatter: this.formatCollection.bind(this),
+                tooltipFormatter: this.formatCollection.bind(this),
+                sort: 6,
+                editor: {
+                    type: EditorType.collection,
+                    options: {
+                        open: true,
+                        columns: [
+                            {
+                                label: 'inherit',
+                                field: 'value',
+                                width: 300,
+                                spring: true,
+                                editor: {
+                                    type: EditorType.custom,
+                                    editor: FileBrowseValueEditor,
+                                    options: {
+                                        placeholder: 'Input file path to inherit',
+                                        browse: e => {
+                                            this.emit('browse-file', e);
+                                        }
+                                    },
+                                    show: (prop, value) => {
+                                        return value;
+                                    }
+                                }
+                            }
+                        ],
+                        onAdd: (e) => {
+                            e.data = {
+                                value: '',
+                            };
+                        },
+                        type: 'inherit',
                         enterMoveFirst: this.enterMoveFirst,
                         enterMoveNext: this.enterMoveNext,
                         enterMoveNew: this.enterMoveNew
@@ -6535,7 +6579,7 @@ export class AreaDesigner extends EditorBase {
                                     nRoom.rummageObjects = e.data['room-wiz-rummage-objects'];
                                     nRoom.includes = e.data['room-wiz-includes'];
                                     nRoom.defines = e.data['room-wiz-defines'];
-                                    nRoom.inherits = e.data['room-wiz-inherits'];
+                                    nRoom.inherits = e.data['room-wiz-inherits'] || [];
                                     nRoom.variables = e.data['room-wiz-variables'];
                                     nRoom.functions = e.data['room-wiz-functions'];
                                     nRoom.commands = e.data['room-wiz-commands'];
@@ -9840,7 +9884,8 @@ export class AreaDesigner extends EditorBase {
             case 'reads':
                 return value.map(v => v.read).join(', ');
             case 'waterGerms':
-                return value.map(v => v.germ).join(', ');
+            case 'inherits':
+                return value.map(v => v.value).join(', ');                
         }
         return value.join(', ');
     }
@@ -12664,7 +12709,8 @@ export class AreaDesigner extends EditorBase {
                     if (!o[v] || o[v].length === 0)
                         o[v] = ri;
                 });
-                o.waterGerms = o['waterGerms'].map(i => { return { 'germ': i } });
+                o.waterGerms = o['waterGerms'].map(i => { return { 'value': i } });
+                o.inherits = o['inherits'].map(i => { return { 'value': i } });
                 objects.unshift(o);
             }
         }
