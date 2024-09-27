@@ -201,6 +201,8 @@ export class TextValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
+            if(document.activeElement && document.activeElement.tagName === 'BODY')
+                this.control.clearEditor(e);
             setTimeout(() => this.control.clearEditor(e));
         });
         this.$editor.addEventListener('click', (e) => {
@@ -589,6 +591,8 @@ export class BooleanValueEditor extends ValueEditor {
             return;
         });
         this.$el.addEventListener('blur', (e) => {
+            if(document.activeElement && document.activeElement.tagName === 'BODY')
+                this.control.clearEditor(e);
             setTimeout(() => this.control.clearEditor(e));
         });
         this.parent.appendChild(this.$el);
@@ -647,6 +651,8 @@ export class NumberValueEditor extends ValueEditor {
             return;
         });
         this.$el.addEventListener('blur', (e) => {
+            if(document.activeElement && document.activeElement.tagName === 'BODY')
+                this.control.clearEditor(e);
             setTimeout(() => this.control.clearEditor(e));
         });
         this.$el.addEventListener('click', (e) => {
@@ -717,6 +723,8 @@ export class FlagValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
+            if(document.activeElement && document.activeElement.tagName === 'BODY')
+                this.control.clearEditor(e);
             setTimeout(() => this.control.clearEditor(e));
         });
         this.$editor.addEventListener('focus', () => {
@@ -1012,6 +1020,8 @@ export class DropDownEditValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
+            if(document.activeElement && document.activeElement.tagName === 'BODY')
+                this.control.clearEditor(e);
             setTimeout(() => this.control.clearEditor(e));
         });
         this.$editor.addEventListener('focus', () => {
@@ -1290,6 +1300,8 @@ export class CollectionValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
+            if(document.activeElement && document.activeElement.tagName === 'BODY')
+                this.control.clearEditor(e);            
             setTimeout(() => this.control.clearEditor(e));
         });
         this.$editor.addEventListener('keyup', (e) => {
@@ -1697,6 +1709,8 @@ export class SelectValueEditor extends ValueEditor {
             return;
         });
         this.$el.addEventListener('blur', (e) => {
+            if(document.activeElement && document.activeElement.tagName === 'BODY')
+                this.control.clearEditor(e);
             setTimeout(() => this.control.clearEditor(e));
         });
         this.$el.addEventListener('change', e => {
@@ -1781,6 +1795,8 @@ export class ButtonValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
+            if(document.activeElement && document.activeElement.tagName === 'BODY')
+                this.control.clearEditor(e);
             setTimeout(() => this.control.clearEditor(e));
         });
         this.$el.addEventListener('click', (e) => {
@@ -1878,6 +1894,8 @@ export class CodeValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
+            if(document.activeElement && document.activeElement.tagName === 'BODY')
+                this.control.clearEditor(e);
             setTimeout(() => this.control.clearEditor(e));
         });
         this.$editor.addEventListener('click', (e) => {

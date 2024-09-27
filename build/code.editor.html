@@ -1857,7 +1857,7 @@
                         <option value='copper'>Copper</option>
                         <option value='silver'>Silver</option>
                         <option value='electrum'>Electrum</option>
-                        <option value='gold'>Gold/option>
+                        <option value='gold'>Gold</option>
                         <option value='platinum'>Platinum</option>
                     </select>
                 </label>
@@ -2886,6 +2886,8 @@
             e.panel.editor.focus();
     });
     manager.on('remove', (e) => {
+        if (document.activeElement)
+            document.activeElement.blur();
         if (e.panel.editor.changed || e.panel.editor.new) {
             e.cancel = !confirmSave(e.panel);
         }
@@ -8817,8 +8819,8 @@
                         tmpl['create body'] += `    set_permanent_percent(${data['mon-wiz-typeData-permanent_percent']});\n`;
                     if (data['mon-wiz-typeData-permanent_offset'] && data['mon-wiz-typeData-permanent_offset'] !== 5.0)
                         tmpl['create body'] += `    set_permanent_offset(${data['mon-wiz-typeData-permanent_offset']});\n`;
-                    if (data['mon-wiz-typeData-currency_type'] && data['mon-wiz-typeData-currency_type'].length)
-                        tmpl['create body'] += `    set_currency_type("${data['mon-wiz-typeData-currency_type']}");\n`;
+                    if (data['mon-wiz-typeData-currency_type'] && data['mon-wiz-typeData-currency_type'].value && data['mon-wiz-typeData-currency_type'].value.length)
+                        tmpl['create body'] += `    set_currency_type("${data['mon-wiz-typeData-currency_type'].value}");\n`;
                     if (data['mon-wiz-typeData-only_currency_type'] === true)
                         tmpl['create body'] += `    set_currency_type(1);\n`;
                     if (data['mon-wiz-typeData-translate'] === true)
@@ -9224,7 +9226,7 @@
                     tmpl['create body'] += '   set_enable_ask(1);\n';
                 if (data['mon-wiz-ask-no-topic'].trim().length !== 0)
                     tmpl['create body'] += `   set_no_topic("${data['mon-wiz-ask-no-topic'].trim()}");\n`;
-                switch (data['mon-wiz-ask-response']) {
+                switch (+data['mon-wiz-ask-response'].value) {
                     case 1:
                         tmpl['create body'] += '   set_response_type("tell");\n';
                         break;

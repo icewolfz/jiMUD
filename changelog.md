@@ -18,6 +18,7 @@
       - Add monster type basic vendor and barkeep property support
       - Allow x,y format for exit destination if z is 0
     - Virtual area editor: Add ctrl+click selection system
+    - Fix where data could be lost when closing window and datagrid/property editor open
 - **Fixed:**
   - Increase progress dialog height
   - Fix issue when using non default theme and button bar hidden

@@ -10180,6 +10180,8 @@ export class FileOpenValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
+            if(document.activeElement && document.activeElement.tagName === 'BODY')
+                this.control.clearEditor(e);            
             setTimeout(() => this.control.clearEditor(e));
         });
         this.$editor.addEventListener('keyup', (e) => {
@@ -10285,6 +10287,8 @@ export class FileBrowseValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
+            if(document.activeElement && document.activeElement.tagName === 'BODY')
+                this.control.clearEditor(e);
             setTimeout(() => this.control.clearEditor(e));
         });
         this.$editor.addEventListener('keyup', (e) => {
@@ -10386,6 +10390,8 @@ export class ExternalExitValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
+            if(document.activeElement && document.activeElement.tagName === 'BODY')
+                this.control.clearEditor(e);
             setTimeout(() => this.control.clearEditor(e));
         });
         this.$editor.addEventListener('keyup', (e) => {
@@ -10759,6 +10765,8 @@ export class ItemsValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
+            if(document.activeElement && document.activeElement.tagName === 'BODY')
+                this.control.clearEditor(e);            
             setTimeout(() => this.control.clearEditor(e));
         });
         this.$editor.addEventListener('keyup', (e) => {

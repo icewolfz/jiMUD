@@ -6085,7 +6085,7 @@ export class AreaDesigner extends EditorBase {
 
                                     nMonster.askEnabled = e.data['mon-wiz-ask'];
                                     nMonster.askNoTopic = e.data['mon-wiz-ask-no-topic'];
-                                    nMonster.askResponseType = +e.data['mon-wiz-ask-response'];
+                                    nMonster.askResponseType = +e.data['mon-wiz-ask-response'].value;
                                     nMonster.askTopics = e.data['mon-wiz-ask-topics'];
                                     nMonster.emotes = e.data['mon-wiz-emotes'];
                                     nMonster.emotesChance = +e.data['mon-wiz-emotes-chance'];
@@ -6104,7 +6104,10 @@ export class AreaDesigner extends EditorBase {
                                     Object.keys(e.data).forEach(k => {
                                         if (!k.startsWith('mon-wiz-typeData-')) return;
                                         if (!nMonster.typeData) nMonster.typeData = {};
-                                        nMonster.typeData[k.substr(17)] = e.data[k];
+                                        if(typeof(e.data[k]) === 'object' && Object.hasOwn(e.data[k], 'value') && Object.hasOwn(e.data[k], 'display'))
+                                            nMonster.typeData[k.substr(17)] = e.data[k].value;
+                                        else
+                                            nMonster.typeData[k.substr(17)] = e.data[k];
                                     });
 
                                     if (!nMonster.equals(ed.data.monster))
@@ -7405,7 +7408,7 @@ export class AreaDesigner extends EditorBase {
                                 'mon-wiz-wimpy': '' + ed.value.wimpy,
                                 'mon-wiz-auto-stand': (ed.value.flags & MonsterFlags.Auto_Stand) === MonsterFlags.Auto_Stand,
                                 'mon-wiz-actions': ed.value.actions,
-                                'mon-wiz-reactions': ed.value.reactions,
+                                'mon-wiz-reactions': ed.value.reactions || [],
                                 'mon-wiz-party': ed.value.party,
                                 'mon-wiz-tracking': ed.value.tracking,
                                 'mon-wiz-tracking-message': ed.value.trackingMessage,
@@ -7517,7 +7520,6 @@ export class AreaDesigner extends EditorBase {
                                     nMonster.reputationGroup = e.data['mon-wiz-reputation-group'];
                                     nMonster.reputations = e.data['mon-wiz-reputations'] || [];
                                     nMonster.resistances = e.data['mon-wiz-resistances'] || [];
-
                                     if (e.data['mon-wiz-auto-stand'])
                                         nMonster.flags |= MonsterFlags.Auto_Stand;
 
@@ -7529,13 +7531,13 @@ export class AreaDesigner extends EditorBase {
 
                                     nMonster.askEnabled = e.data['mon-wiz-ask'];
                                     nMonster.askNoTopic = e.data['mon-wiz-ask-no-topic'];
-                                    nMonster.askResponseType = +(e.data['mon-wiz-ask-response'].value);
+                                    nMonster.askResponseType = +e.data['mon-wiz-ask-response'].value;
                                     nMonster.askTopics = e.data['mon-wiz-ask-topics'];
                                     nMonster.emotes = e.data['mon-wiz-emotes'];
-                                    nMonster.emotesChance = e.data['mon-wiz-emotes-chance'];
-                                    nMonster.speechChance = e.data['mon-wiz-speech-chance'];
-                                    nMonster.emotesChanceCombat = e.data['mon-wiz-emotes-chance-combat'];
-                                    nMonster.speechChanceCombat = e.data['mon-wiz-speech-chance-combat'];
+                                    nMonster.emotesChance = +e.data['mon-wiz-emotes-chance'];
+                                    nMonster.speechChance = +e.data['mon-wiz-speech-chance'];
+                                    nMonster.emotesChanceCombat = +e.data['mon-wiz-emotes-chance-combat'];
+                                    nMonster.speechChanceCombat = +e.data['mon-wiz-speech-chance-combat'];
                                     nMonster.properties = e.data['mon-wiz-properties'] || [];
                                     nMonster.includes = e.data['mon-wiz-includes'];
                                     nMonster.defines = e.data['mon-wiz-defines'];
@@ -7548,7 +7550,10 @@ export class AreaDesigner extends EditorBase {
                                     Object.keys(e.data).forEach(k => {
                                         if (!k.startsWith('mon-wiz-typeData-')) return;
                                         if (!nMonster.typeData) nMonster.typeData = {};
-                                        nMonster.typeData[k.substr(17)] = e.data[k];
+                                        if(typeof(e.data[k]) === 'object' && Object.hasOwn(e.data[k], 'value') && Object.hasOwn(e.data[k], 'display'))
+                                            nMonster.typeData[k.substr(17)] = e.data[k].value;
+                                        else                                        
+                                            nMonster.typeData[k.substr(17)] = e.data[k];
                                     });
 
                                     if (!nMonster.equals(ed.data.monster))
