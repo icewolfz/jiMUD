@@ -11,7 +11,7 @@
       - Fix code generation of room sounds and smells
       - Add hover previews to display monster look/item longs for room preview and monster preview panels
       - Add includes and defines to area properties
-      - Add functions to rooms
+      - Add functions, includes, and defines to room editors
       - Add standard object support to add money, gems, and standard objects
       - Add argument support to objects and monsters to allow passing arguments when object is created
       - Hide water properties unless waterdrink flag enabled

@@ -4459,7 +4459,7 @@ export class AreaDesigner extends EditorBase {
                                         stringCollection: true,
                                         split: parseArguments,
                                         open: true,
-                                        type: 'object',
+                                        type: 'argument',
                                         enterMoveFirst: this.enterMoveFirst,
                                         enterMoveNext: this.enterMoveNext,
                                         enterMoveNew: this.enterMoveNew
@@ -4478,7 +4478,7 @@ export class AreaDesigner extends EditorBase {
                                 arguments: ''
                             };
                         },
-                        type: 'object',
+                        type: 'monster',
                         enterMoveFirst: this.enterMoveFirst,
                         enterMoveNext: this.enterMoveNext,
                         enterMoveNew: this.enterMoveNew
@@ -4771,7 +4771,7 @@ export class AreaDesigner extends EditorBase {
                                         stringCollection: true,
                                         split: parseArguments,
                                         open: true,
-                                        type: 'object',
+                                        type: 'argument',
                                         enterMoveFirst: this.enterMoveFirst,
                                         enterMoveNext: this.enterMoveNext,
                                         enterMoveNew: this.enterMoveNew
@@ -4849,7 +4849,7 @@ export class AreaDesigner extends EditorBase {
                                         stringCollection: true,
                                         split: parseArguments,
                                         open: true,
-                                        type: 'object',
+                                        type: 'argument',
                                         enterMoveFirst: this.enterMoveFirst,
                                         enterMoveNext: this.enterMoveNext,
                                         enterMoveNew: this.enterMoveNew
@@ -5410,7 +5410,7 @@ export class AreaDesigner extends EditorBase {
                                                 expand: false
                                             };
                                         },
-                                        type: 'object',
+                                        type: 'argument',
                                         enterMoveFirst: this.enterMoveFirst,
                                         enterMoveNext: this.enterMoveNext,
                                         enterMoveNew: this.enterMoveNew
@@ -5428,13 +5428,126 @@ export class AreaDesigner extends EditorBase {
                                 arguments: []
                             };
                         },
-                        type: 'object',
+                        type: 'argument',
                         enterMoveFirst: this.enterMoveFirst,
                         enterMoveNext: this.enterMoveNext,
                         enterMoveNew: this.enterMoveNew
                     }
                 }
             },
+            {
+                property: 'includes',
+                label: 'Includes',
+                group: 'Expert',
+                formatter: this.formatCollection.bind(this),
+                tooltipFormatter: this.formatCollection.bind(this),
+                sort: 9,
+                editor: {
+                    type: EditorType.collection,
+                    options: {
+                        open: true,
+                        columns: [
+                            {
+                                label: 'Include',
+                                field: 'path',
+                                width: 150,
+                                spring: true,
+                                editor: {
+                                    type: EditorType.dropdown,
+                                    options: {
+                                        data: () => this.getIncludeList(),
+                                        validate: (oldValue, newValue, data, control) => {
+                                            if (oldValue !== newValue && dialog.$control.rows.findIndex((element: Include) => element.path === newValue && element.relative === data.relative) !== -1)
+                                                return `Include ${newValue} already added!`;
+                                            return true;
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Relative',
+                                field: 'relative',
+                            },
+                            {
+                                field: 'browse',
+                                sortable: false,
+                                label: '',
+                                width: 32,
+                                formatter: () => '',
+                                editor: {
+                                    type: EditorType.button,
+                                    options: {
+                                        open: true,
+                                        click: ed => {
+                                            const arg = {
+                                                file: ed.editors[0].editor.$editor.value, property: 'path', editor: ed, callback: (files) => {
+                                                    ed.editors[0].editor.$editor.value = files[0];
+                                                }
+                                            };
+                                            this.emit('browse-file', arg);
+                                        }
+                                    }
+                                }
+                            },
+                        ],
+                        onAdd: (e) => {
+                            e.data = {
+                                path: '',
+                                relative: false,
+                            };
+                        },
+                        type: 'include',
+                        enterMoveFirst: this.enterMoveFirst,
+                        enterMoveNext: this.enterMoveNext,
+                        enterMoveNew: this.enterMoveNew
+                    }
+                }
+            },
+            {
+                property: 'defines',
+                label: 'Defines',
+                group: 'Expert',
+                formatter: this.formatCollection.bind(this),
+                tooltipFormatter: this.formatCollection.bind(this),
+                sort: 9,
+                editor: {
+                    type: EditorType.collection,
+                    options: {
+                        open: true,
+                        columns: [
+                            {
+                                label: 'Name',
+                                field: 'key',
+                                width: 200,
+                                editor: {
+                                    options: {
+                                        validate: (oldValue, newValue, data: KeyValue, dialog) => {
+                                            if (oldValue !== newValue && dialog.$control.rows.findIndex((element: KeyValue) => element.key === newValue) !== -1)
+                                                return `Define ${newValue} already added!`;
+                                            return true;
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Value',
+                                field: 'value',
+                                spring: true,
+                            },
+                        ],
+                        onAdd: (e) => {
+                            e.data = {
+                                key: '',
+                                value: '',
+                            };
+                        },
+                        type: 'define',
+                        enterMoveFirst: this.enterMoveFirst,
+                        enterMoveNext: this.enterMoveNext,
+                        enterMoveNew: this.enterMoveNew
+                    }
+                }
+            },            
         ]);
         this.$roomEditor.on('group-expanded', group => {
             this.emit('option-changed', 'roomEditorStates', Object.keys(this.$roomEditor.groupStates).filter(e => this.$roomEditor.groupStates[e]));
@@ -5720,7 +5833,7 @@ export class AreaDesigner extends EditorBase {
                                         stringCollection: true,
                                         split: parseArguments,
                                         open: true,
-                                        type: 'object',
+                                        type: 'argument',
                                         enterMoveFirst: this.enterMoveFirst,
                                         enterMoveNext: this.enterMoveNext,
                                         enterMoveNew: this.enterMoveNew
@@ -6168,7 +6281,7 @@ export class AreaDesigner extends EditorBase {
                                         stringCollection: true,
                                         split: parseArguments,
                                         open: true,
-                                        type: 'object',
+                                        type: 'argument',
                                         enterMoveFirst: this.enterMoveFirst,
                                         enterMoveNext: this.enterMoveNext,
                                         enterMoveNew: this.enterMoveNew
@@ -6263,7 +6376,7 @@ export class AreaDesigner extends EditorBase {
                                         stringCollection: true,
                                         split: parseArguments,
                                         open: true,
-                                        type: 'object',
+                                        type: 'argument',
                                         enterMoveFirst: this.enterMoveFirst,
                                         enterMoveNext: this.enterMoveNext,
                                         enterMoveNew: this.enterMoveNew
@@ -6282,7 +6395,7 @@ export class AreaDesigner extends EditorBase {
                                 arguments: ''
                             };
                         },
-                        type: 'object',
+                        type: 'monster',
                         enterMoveFirst: this.enterMoveFirst,
                         enterMoveNext: this.enterMoveNext,
                         enterMoveNew: this.enterMoveNew
@@ -6500,7 +6613,7 @@ export class AreaDesigner extends EditorBase {
                                                         stringCollection: true,
                                                         split: parseArguments,
                                                         open: true,
-                                                        type: 'object',
+                                                        type: 'argument',
                                                         enterMoveFirst: this.enterMoveFirst,
                                                         enterMoveNext: this.enterMoveNext,
                                                         enterMoveNew: this.enterMoveNew
@@ -6567,7 +6680,7 @@ export class AreaDesigner extends EditorBase {
                                                         stringCollection: true,
                                                         split: parseArguments,
                                                         open: true,
-                                                        type: 'object',
+                                                        type: 'argument',
                                                         enterMoveFirst: this.enterMoveFirst,
                                                         enterMoveNext: this.enterMoveNext,
                                                         enterMoveNew: this.enterMoveNew
@@ -7146,7 +7259,7 @@ export class AreaDesigner extends EditorBase {
                                         stringCollection: true,
                                         split: parseArguments,
                                         open: true,
-                                        type: 'object',
+                                        type: 'argument',
                                         enterMoveFirst: this.enterMoveFirst,
                                         enterMoveNext: this.enterMoveNext,
                                         enterMoveNew: this.enterMoveNew
@@ -10716,12 +10829,12 @@ export class AreaDesigner extends EditorBase {
                                 this.$propertiesEditor.includesGrid.rows = this.$area.includes;
                                 this.changed = true;
                                 break;
-                                case 'defines':
-                                    this.$area.defines.splice(undo.data.index, 0, undo.data.value);
-                                    this.pushUndoObject(undo);
-                                    this.$propertiesEditor.definesGrid.rows = this.$area.defines;
-                                    this.changed = true;
-                                    break;                                
+                            case 'defines':
+                                this.$area.defines.splice(undo.data.index, 0, undo.data.value);
+                                this.pushUndoObject(undo);
+                                this.$propertiesEditor.definesGrid.rows = this.$area.defines;
+                                this.changed = true;
+                                break;
                         }
                         break;
                     case undoType.room:
@@ -10779,14 +10892,14 @@ export class AreaDesigner extends EditorBase {
                                 this.$propertiesEditor.includesGrid.rows = this.$area.includes;
                                 this.changed = true;
                                 break;
-                                case 'defines':
-                                    undo.data.values.forEach(r => {
-                                        this.$area.defines.splice(r.index, 1);
-                                    });
-                                    this.pushRedo(undo);
-                                    this.$propertiesEditor.definesGrid.rows = this.$area.defines;
-                                    this.changed = true;
-                                    break;
+                            case 'defines':
+                                undo.data.values.forEach(r => {
+                                    this.$area.defines.splice(r.index, 1);
+                                });
+                                this.pushRedo(undo);
+                                this.$propertiesEditor.definesGrid.rows = this.$area.defines;
+                                this.changed = true;
+                                break;
                         }
                         break;
                     case undoType.room:
@@ -10849,13 +10962,13 @@ export class AreaDesigner extends EditorBase {
                                 this.$propertiesEditor.includesGrid.rows = this.$area.includes;
                                 this.changed = true;
                                 break;
-                                case 'defines':
-                                    this.$area.defines[undo.data.index].key = undo.data.new.key;
-                                    this.$area.defines[undo.data.index].value = undo.data.new.value;
-                                    this.pushUndoObject(undo);
-                                    this.$propertiesEditor.definesGrid.rows = this.$area.defines;
-                                    this.changed = true;
-                                    break;                                
+                            case 'defines':
+                                this.$area.defines[undo.data.index].key = undo.data.new.key;
+                                this.$area.defines[undo.data.index].value = undo.data.new.value;
+                                this.pushUndoObject(undo);
+                                this.$propertiesEditor.definesGrid.rows = this.$area.defines;
+                                this.changed = true;
+                                break;
                             case 'defaultRoom':
                             case 'defaultMonster':
                                 this.$area[undo.data.property] = undo.data.new;
