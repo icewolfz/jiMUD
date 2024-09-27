@@ -5958,7 +5958,8 @@ export class AreaDesigner extends EditorBase {
                                     ed.focus();
                                 },
                                 valueChanged: e => {
-                                    e.type = getMonsterTypeFlags(this.getMonsterType(e.value.type));
+                                    if (e.id === 'mon-wiz-type')
+                                        e.type = getMonsterTypeFlags(this.getMonsterType(e.value));
                                 }
                             });
                         }
@@ -7401,7 +7402,8 @@ export class AreaDesigner extends EditorBase {
                                     ed.focus();
                                 },
                                 valueChanged: e => {
-                                    e.type = getMonsterTypeFlags(this.getMonsterType(e.value.type));
+                                    if (e.id === 'mon-wiz-type')
+                                        e.type = getMonsterTypeFlags(this.getMonsterType(e.value));
                                 }
                             });
                         }
