@@ -1746,25 +1746,6 @@
             </div>
         </div>
         <div id="mon-wizard-vendor" data-visible="false">
-            <!--
-            Advanced properts?
-
-            max_item number 5
-            
-            permanent_percent float 0.05
-            permanent_offset float 5
-            
-            currency_type - None - gold ....
-            only_currency_type - bool false
-            
-            translate - bool
-            translate_list - bool
-            translate_commands - bool
-
-            enable_price_tracking - bool false
-            price_tracking_weight - float 30.0
-            price_tracking_max float 15.0
-            -->
             <div class="col-sm-6 form-group">
                 <label class="control-label">Vendor type
                     <div class="input-group edit-dropdown">
@@ -1841,12 +1822,81 @@
             </div>
             <div class="col-sm-6 form-group">
                 <label class="control-label">
-                    <input type="checkbox" id="mon-wiz-typeData-display_list_item" checked="checked" /> Append display list long to room
+                    <input type="checkbox" id="mon-wiz-typeData-display_list_item" checked="checked" data-default="true" /> Append display list long to room
                 </label>
             </div>
             <div class="col-sm-12 form-group">
                 <label class="control-label">List item long
                     <input type="text" id="mon-wiz-typeData-list_long" style="width:100%" class="input-sm form-control" disabled="disabled" />
+                </label>
+            </div>
+        </div>
+        <div id="mon-wizard-vendor-advanced" data-visible="false">
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    Max number of each item
+                    <input type="number" id="mon-wiz-typeData-max_item" class="input-sm form-control" min="0" max="20" value="5" data-default="5" />
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    Permanent percent
+                    <input type="number" step="0.01" id="mon-wiz-typeData-permanent_percent" class="input-sm form-control" min="-2.0" value="2.0" value="0.05" data-default="0.05" />
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    Permanent offset
+                    <input type="number" id="mon-wiz-typeData-permanent_offset" class="input-sm form-control" min="0" value="100" value="5" data-default="5" />
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">Currency type
+                    <select id="mon-wiz-typeData-currency_type" class="form-control selectpicker" data-style="btn-default btn-sm" data-width="100%" data-default="">
+                        <option value=''>None</option>
+                        <option value='copper'>Copper</option>
+                        <option value='silver'>Silver</option>
+                        <option value='electrum'>Electrum</option>
+                        <option value='gold'>Gold/option>
+                        <option value='platinum'>Platinum</option>
+                    </select>
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="mon-wiz-typeData-only_currency_type" /> Only except currency type
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="mon-wiz-typeData-translate" /> Translate
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="mon-wiz-typeData-translate_list" /> Translate list
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="mon-wiz-typeData-translate_commands" /> Translate commands
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    <input type="checkbox" id="mon-wiz-typeData-enable_price_tracking" /> Enable price tracking
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    Price tracking weight
+                    <input type="number" step="0.1" id="mon-wiz-typeData-price_tracking_weight" class="input-sm form-control" min="-1000.0" value="1000.0" value="30.0" data-default="30.0" />
+                </label>
+            </div>
+            <div class="col-sm-6 form-group">
+                <label class="control-label">
+                    Price tracking weight
+                    <input type="number" step="0.1" id="mon-wiz-typeData-price_tracking_max" class="input-sm form-control" min="-1000.0" value="1000.0" value="15.0" data-default="15.0" />
                 </label>
             </div>
         </div>
@@ -7549,10 +7599,10 @@
                     document.getElementById('mon-wiz-typeData-storageroom').value = files[0];
                 });
             });
-            var list = function() {
-                if(!document.getElementById('mon-wiz-typeData-list_long')) return;
-                if(!document.getElementById('mon-wiz-typeData-list_items')) return;
-                if(!document.getElementById('mon-wiz-typeData-display_list_item')) return;
+            var list = function () {
+                if (!document.getElementById('mon-wiz-typeData-list_long')) return;
+                if (!document.getElementById('mon-wiz-typeData-list_items')) return;
+                if (!document.getElementById('mon-wiz-typeData-display_list_item')) return;
                 document.getElementById('mon-wiz-typeData-list_long').disabled = !(document.getElementById('mon-wiz-typeData-list_items').value.trim().length && document.getElementById('mon-wiz-typeData-display_list_item').checked)
             }
             document.getElementById('mon-wiz-typeData-display_list_item').addEventListener('change', list);
@@ -7948,18 +7998,51 @@
                             const controls = e.page.querySelectorAll('[id^="mon-wiz-typeData"]');
                             const cl = controls.length;
                             for (let c = 0; c < cl; c++) {
+                                let d = controls[c].dataset ? controls[c].dataset.default : null;
                                 switch (controls[c].tagName) {
                                     case 'INPUT':
                                         if (controls[c].type === 'checkbox')
-                                            controls[c].check = e.wizard.defaults[controls[c].id] || false;
+                                            controls[c].check = e.wizard.defaults[controls[c].id] || d === 'true' || false;
+                                        else if (controls[c].type === 'number')
+                                            controls[c].value = e.wizard.defaults[controls[c].id] || +d || 0;
                                         else
-                                            controls[c].value = e.wizard.defaults[controls[c].id] || '';
+                                            controls[c].value = e.wizard.defaults[controls[c].id] || d || '';
                                         break;
                                     case 'SELECT':
-                                        $(controls[c]).val(e.wizard.defaults[controls[c].id] || '').selectpicker('render');
+                                        $(controls[c]).val(e.wizard.defaults[controls[c].id] || d || '').selectpicker('render');
                                         break;
                                     default:
-                                        controls[c].value = e.wizard.defaults[controls[c].id] || '';
+                                        controls[c].value = e.wizard.defaults[controls[c].id] || d || '';
+                                        break;
+                                }
+                            }
+                        },
+                        shown: e => {
+                            list();
+                        }
+                    }),
+                    new WizardPage({
+                        title: 'Vendor advanced properties',
+                        body: document.getElementById('mon-wizard-vendor-advanced'),
+                        reset: e => {
+                            const controls = e.page.querySelectorAll('[id^="mon-wiz-typeData"]');
+                            const cl = controls.length;
+                            for (let c = 0; c < cl; c++) {
+                                let d = controls[c].dataset ? controls[c].dataset.default : null;
+                                switch (controls[c].tagName) {
+                                    case 'INPUT':
+                                        if (controls[c].type === 'checkbox')
+                                            controls[c].check = e.wizard.defaults[controls[c].id] || d === 'true' || false;
+                                        else if (controls[c].type === 'number')
+                                            controls[c].value = e.wizard.defaults[controls[c].id] || +d || 0;
+                                        else
+                                            controls[c].value = e.wizard.defaults[controls[c].id] || d || '';
+                                        break;
+                                    case 'SELECT':
+                                        $(controls[c]).val(e.wizard.defaults[controls[c].id] || d || '').selectpicker('render');
+                                        break;
+                                    default:
+                                        controls[c].value = e.wizard.defaults[controls[c].id] || d || '';
                                         break;
                                 }
                             }
@@ -8122,18 +8205,21 @@
                             const controls = e.page.querySelectorAll('[id^="mon-wiz-typeData"]');
                             const cl = controls.length;
                             for (let c = 0; c < cl; c++) {
+                                let d = controls[c].dataset ? controls[c].dataset.default : null;
                                 switch (controls[c].tagName) {
                                     case 'INPUT':
                                         if (controls[c].type === 'checkbox')
-                                            controls[c].check = e.wizard.defaults[controls[c].id] || false;
+                                            controls[c].check = e.wizard.defaults[controls[c].id] || d === 'true' || false;
+                                        else if (controls[c].type === 'number')
+                                            controls[c].value = e.wizard.defaults[controls[c].id] || +d || 0;
                                         else
-                                            controls[c].value = e.wizard.defaults[controls[c].id] || '';
+                                            controls[c].value = e.wizard.defaults[controls[c].id] || d || '';
                                         break;
                                     case 'SELECT':
-                                        $(controls[c]).val(e.wizard.defaults[controls[c].id] || '').selectpicker('render');
+                                        $(controls[c]).val(e.wizard.defaults[controls[c].id] || d || '').selectpicker('render');
                                         break;
                                     default:
-                                        controls[c].value = e.wizard.defaults[controls[c].id] || '';
+                                        controls[c].value = e.wizard.defaults[controls[c].id] || d || '';
                                         break;
                                 }
                             }
@@ -8553,6 +8639,8 @@
                     let page;
                     page = $dialogs.monster.pages.find(i => i.title === 'Vendor properties');
                     page.visible = (type & MonsterTypeFlags.Vendor) === MonsterTypeFlags.Vendor;
+                    page = $dialogs.monster.pages.find(i => i.title === 'Vendor advanced properties');
+                    page.visible = (type & MonsterTypeFlags.Vendor) === MonsterTypeFlags.Vendor;
                     page = $dialogs.monster.pages.find(i => i.title === 'Barkeep menu');
                     page.visible = (type & MonsterTypeFlags.Barkeep) === MonsterTypeFlags.Barkeep;
                     page = $dialogs.monster.pages.find(i => i.title === 'Barkeep properties');
@@ -8722,6 +8810,29 @@
                         tmpl['create body'] += `    set_list_type("${data['mon-wiz-typeData-list_type'].trim()}");\n`;
                     if (Object.hasOwn(data, 'on-wiz-typeData-display_list_item') && !data['mon-wiz-typeData-display_list_item'])
                         tmpl['create body'] += `    set_display_list_item(0);\n`;
+
+                    if (data['mon-wiz-typeData-max_item'] && data['mon-wiz-typeData-max_item'] !== 5)
+                        tmpl['create body'] += `    set_max_item(${data['mon-wiz-typeData-max_item']});\n`;
+                    if (data['mon-wiz-typeData-permanent_percent'] && data['mon-wiz-typeData-permanent_percent'] !== 0.05)
+                        tmpl['create body'] += `    set_permanent_percent(${data['mon-wiz-typeData-permanent_percent']});\n`;
+                    if (data['mon-wiz-typeData-permanent_offset'] && data['mon-wiz-typeData-permanent_offset'] !== 5.0)
+                        tmpl['create body'] += `    set_permanent_offset(${data['mon-wiz-typeData-permanent_offset']});\n`;
+                    if (data['mon-wiz-typeData-currency_type'] && data['mon-wiz-typeData-currency_type'].length)
+                        tmpl['create body'] += `    set_currency_type("${data['mon-wiz-typeData-currency_type']}");\n`;
+                    if (data['mon-wiz-typeData-only_currency_type'] === true)
+                        tmpl['create body'] += `    set_currency_type(1);\n`;
+                    if (data['mon-wiz-typeData-translate'] === true)
+                        tmpl['create body'] += `    set_translate(1);\n`;
+                    if (data['mon-wiz-typeData-translate_list'] === true)
+                        tmpl['create body'] += `    set_translate_list(1);\n`;
+                    if (data['mon-wiz-typeData-translate_commands'] === true)
+                        tmpl['create body'] += `    set_translate_commands(1);\n`;
+                    if (data['mon-wiz-typeData-enable_price_tracking'] === true)
+                        tmpl['create body'] += `    set_enable_price_tracking(1);\n`;
+                    if (data['mon-wiz-typeData-price_tracking_weight'] && data['mon-wiz-typeData-price_tracking_weight'] !== 30.0)
+                        tmpl['create body'] += `    set_price_tracking_weight(${data['mon-wiz-typeData-price_tracking_weight']});\n`;
+                    if (data['mon-wiz-typeData-price_tracking_max'] && data['mon-wiz-typeData-price_tracking_max'] !== 15.0)
+                        tmpl['create body'] += `    set_price_tracking_max(${data['mon-wiz-typeData-price_tracking_max']});\n`;
                 }
 
                 if ((typeFlags & MonsterTypeFlags.Barkeep) === MonsterTypeFlags.Barkeep) {

@@ -14642,6 +14642,30 @@ export class AreaDesigner extends EditorBase {
                 data['create body'] += `    set_list_type("${monster.typeData.list_type.trim()}");\n`;
             if (Object.hasOwn(monster.typeData, 'display_list_item') && !monster.typeData.display_list_item)
                 data['create body'] += `    set_display_list_item(0);\n`;
+
+            if (monster.typeData.max_item && monster.typeData.max_item !== 5)
+                data['create body'] += `    set_max_item(${monster.typeData.max_item});\n`;
+            if (monster.typeData.permanent_percent && monster.typeData.permanent_percent !== 0.05)
+                data['create body'] += `    set_permanent_percent(${monster.typeData.permanent_percent});\n`;
+            if (monster.typeData.permanent_offset && monster.typeData.permanent_offset !== 5.0)
+                data['create body'] += `    set_permanent_offset(${monster.typeData.permanent_offset});\n`;
+            if (monster.typeData.currency_type && monster.typeData.currency_type.length)
+                data['create body'] += `    set_currency_type("${monster.typeData.currency_type}");\n`;
+            if (monster.typeData.only_currency_type === true)
+                data['create body'] += `    set_currency_type(1);\n`;
+            if (monster.typeData.translate === true)
+                data['create body'] += `    set_translate(1);\n`;
+            if (monster.typeData.translate_list === true)
+                data['create body'] += `    set_translate_list(1);\n`;
+            if (monster.typeData.translate_commands === true)
+                data['create body'] += `    set_translate_commands(1);\n`;
+            if (monster.typeData.enable_price_tracking === true)
+                data['create body'] += `    set_enable_price_tracking(1);\n`;
+            if (monster.typeData.price_tracking_weight && monster.typeData.price_tracking_weight !== 30.0)
+                data['create body'] += `    set_price_tracking_weight(${monster.typeData.price_tracking_weight});\n`;
+            if (monster.typeData.price_tracking_max && monster.typeData.price_tracking_max !== 15.0)
+                data['create body'] += `    set_price_tracking_max(${monster.typeData.price_tracking_max});\n`;
+
         }
         if (monster.typeData && (typeFlags & MonsterTypeFlags.Barkeep) === MonsterTypeFlags.Barkeep) {
             if (monster.typeData.menu && Array.isArray(monster.typeData.menu) && monster.typeData.menu.length) {
