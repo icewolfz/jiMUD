@@ -2075,9 +2075,9 @@ export function initEditDropdown(d) {
         const list = b.nextElementSibling;
         let items = Array.from(list.querySelectorAll('li'));
         items.forEach(e => (<HTMLElement>e).firstElementChild.classList.remove('active'));
-        items.forEach(e => (<HTMLElement>e).style.display = '');
-        items = items.filter(e => !(<HTMLElement>e).textContent.toLowerCase().match(new RegExp(ip.value.toLowerCase())));
         items.forEach(e => (<HTMLElement>e).style.display = 'none');
+        items = items.filter(e => (<HTMLElement>e).textContent.toLowerCase().match(new RegExp(ip.value.toLowerCase())));
+        items.forEach(e => (<HTMLElement>e).style.display = '');
         if (items.length !== 0)
             parent.classList.add('open', 'autocomplete');
         else

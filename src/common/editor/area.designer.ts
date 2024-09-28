@@ -712,7 +712,7 @@ export class Room {
                     if (this[prop].filter((v, i) => room[prop][i] !== v).length !== 0)
                         return false;
                     break;
-                case 'inherits':                    
+                case 'inherits':
                 case 'waterGerms':
                     if (this[prop].length !== room[prop].length)
                         return false;
@@ -3930,7 +3930,7 @@ export class AreaDesigner extends EditorBase {
                             this.RoomChanged(curr, old, true);
                             old[prop] = copy(newValue);
                             break;
-                        case 'inherits':                            
+                        case 'inherits':
                         case 'waterGerms':
                             oldValues[sl] = copy(old[prop]);
                             curr[prop] = newValue.map(function (item) {
@@ -4184,7 +4184,16 @@ export class AreaDesigner extends EditorBase {
                                 label: 'Description',
                                 field: 'description',
                                 spring: true,
-                                width: 200
+                                width: 200,
+                                editor: {
+                                    options: {
+                                        autoComplete: (oldValue, newValue, object, editor) => {
+                                            if (this.$roomEditor.objects.length)
+                                                return this.$roomEditor.objects[0].functions.map(f => `(: ${f.name} :)`)
+                                            return [];
+                                        }
+                                    }
+                                }
                             }
                         ],
                         onAdd: (e) => {
@@ -4208,7 +4217,12 @@ export class AreaDesigner extends EditorBase {
                 editor: {
                     options: {
                         singleLine: true,
-                        container: document.body
+                        container: document.body,
+                        autoComplete: (oldValue, newValue, object, editor) => {
+                            if (this.$roomEditor.objects.length)
+                                return this.$roomEditor.objects[0].functions.map(f => `(: ${f.name} :)`)
+                            return [];
+                        }
                     }
                 }
             },
@@ -4220,7 +4234,12 @@ export class AreaDesigner extends EditorBase {
                     options: {
                         dialog: true,
                         title: 'Edit long&hellip;',
-                        container: document.body
+                        container: document.body,
+                        autoComplete: (oldValue, newValue, object, editor) => {
+                            if (this.$roomEditor.objects.length)
+                                return this.$roomEditor.objects[0].functions.map(f => `(: ${f.name} :)`)
+                            return [];
+                        }
                     }
                 }
             },
@@ -4281,7 +4300,12 @@ export class AreaDesigner extends EditorBase {
                 editor: {
                     options: {
                         singleLine: true,
-                        container: document.body
+                        container: document.body,
+                        autoComplete: (oldValue, newValue, object, editor) => {
+                            if (this.$roomEditor.objects.length)
+                                return this.$roomEditor.objects[0].functions.map(f => `(: ${f.name} :)`)
+                            return [];
+                        }
                     }
                 }
             },
@@ -4293,7 +4317,12 @@ export class AreaDesigner extends EditorBase {
                 editor: {
                     options: {
                         singleLine: true,
-                        container: document.body
+                        container: document.body,
+                        autoComplete: (oldValue, newValue, object, editor) => {
+                            if (this.$roomEditor.objects.length)
+                                return this.$roomEditor.objects[0].functions.map(f => `(: ${f.name} :)`)
+                            return [];
+                        }
                     }
                 }
             },
@@ -4521,7 +4550,16 @@ export class AreaDesigner extends EditorBase {
                                 label: 'Description',
                                 field: 'description',
                                 spring: true,
-                                width: 200
+                                width: 200,
+                                editor: {
+                                    options: {
+                                        autoComplete: (oldValue, newValue, object, editor) => {
+                                            if (this.$roomEditor.objects.length)
+                                                return this.$roomEditor.objects[0].functions.map(f => `(: ${f.name} :)`)
+                                            return [];
+                                        }
+                                    }
+                                }
                             }
                         ],
                         onAdd: (e) => {
@@ -4562,7 +4600,16 @@ export class AreaDesigner extends EditorBase {
                                 label: 'Description',
                                 field: 'description',
                                 spring: true,
-                                width: 200
+                                width: 200,
+                                editor: {
+                                    options: {
+                                        autoComplete: (oldValue, newValue, object, editor) => {
+                                            if (this.$roomEditor.objects.length)
+                                                return this.$roomEditor.objects[0].functions.map(f => `(: ${f.name} :)`)
+                                            return [];
+                                        }
+                                    }
+                                }
                             }
                         ],
                         onAdd: (e) => {
@@ -4603,7 +4650,16 @@ export class AreaDesigner extends EditorBase {
                                 label: 'Message',
                                 field: 'message',
                                 spring: true,
-                                width: 200
+                                width: 200,
+                                editor: {
+                                    options: {
+                                        autoComplete: (oldValue, newValue, object, editor) => {
+                                            if (this.$roomEditor.objects.length)
+                                                return this.$roomEditor.objects[0].functions.map(f => `(: ${f.name} :)`)
+                                            return [];
+                                        }
+                                    }
+                                }
                             }
                         ],
                         onAdd: (e) => {
@@ -4644,7 +4700,16 @@ export class AreaDesigner extends EditorBase {
                                 label: 'Description',
                                 field: 'description',
                                 spring: true,
-                                width: 200
+                                width: 200,
+                                editor: {
+                                    options: {
+                                        autoComplete: (oldValue, newValue, object, editor) => {
+                                            if (this.$roomEditor.objects.length)
+                                                return this.$roomEditor.objects[0].functions.map(f => `(: ${f.name} :)`)
+                                            return [];
+                                        }
+                                    }
+                                }
                             },
                             {
                                 label: 'Language',
@@ -4920,7 +4985,12 @@ export class AreaDesigner extends EditorBase {
                 editor: {
                     options: {
                         singleLine: true,
-                        container: document.body
+                        container: document.body,
+                        autoComplete: (oldValue, newValue, object, editor) => {
+                            if (this.$roomEditor.objects.length)
+                                return this.$roomEditor.objects[0].functions.map(f => `(: ${f.name} :)`)
+                            return [];
+                        }
                     }
                 }
             },
@@ -4933,7 +5003,12 @@ export class AreaDesigner extends EditorBase {
                 editor: {
                     options: {
                         singleLine: true,
-                        container: document.body
+                        container: document.body,
+                        autoComplete: (oldValue, newValue, object, editor) => {
+                            if (this.$roomEditor.objects.length)
+                                return this.$roomEditor.objects[0].functions.map(f => `(: ${f.name} :)`)
+                            return [];
+                        }
                     }
                 }
             },
@@ -5129,7 +5204,16 @@ export class AreaDesigner extends EditorBase {
                                 label: 'Value',
                                 field: 'value',
                                 spring: true,
-                                width: 200
+                                width: 200,
+                                editor: {
+                                    options: {
+                                        autoComplete: (oldValue, newValue, object, editor) => {
+                                            if (this.$roomEditor.objects.length)
+                                                return this.$roomEditor.objects[0].functions.map(f => `(: ${f.name} :)`)
+                                            return [];
+                                        }
+                                    }
+                                }
                             }
                         ],
                         onAdd: (e) => {
@@ -5591,7 +5675,7 @@ export class AreaDesigner extends EditorBase {
                         enterMoveNew: this.enterMoveNew
                     }
                 }
-            },            
+            },
         ]);
         this.$roomEditor.on('group-expanded', group => {
             this.emit('option-changed', 'roomEditorStates', Object.keys(this.$roomEditor.groupStates).filter(e => this.$roomEditor.groupStates[e]));
@@ -6104,7 +6188,7 @@ export class AreaDesigner extends EditorBase {
                                     Object.keys(e.data).forEach(k => {
                                         if (!k.startsWith('mon-wiz-typeData-')) return;
                                         if (!nMonster.typeData) nMonster.typeData = {};
-                                        if(typeof(e.data[k]) === 'object' && Object.hasOwn(e.data[k], 'value') && Object.hasOwn(e.data[k], 'display'))
+                                        if (typeof (e.data[k]) === 'object' && Object.hasOwn(e.data[k], 'value') && Object.hasOwn(e.data[k], 'display'))
                                             nMonster.typeData[k.substr(17)] = e.data[k].value;
                                         else
                                             nMonster.typeData[k.substr(17)] = e.data[k];
@@ -7550,9 +7634,9 @@ export class AreaDesigner extends EditorBase {
                                     Object.keys(e.data).forEach(k => {
                                         if (!k.startsWith('mon-wiz-typeData-')) return;
                                         if (!nMonster.typeData) nMonster.typeData = {};
-                                        if(typeof(e.data[k]) === 'object' && Object.hasOwn(e.data[k], 'value') && Object.hasOwn(e.data[k], 'display'))
+                                        if (typeof (e.data[k]) === 'object' && Object.hasOwn(e.data[k], 'value') && Object.hasOwn(e.data[k], 'display'))
                                             nMonster.typeData[k.substr(17)] = e.data[k].value;
-                                        else                                        
+                                        else
                                             nMonster.typeData[k.substr(17)] = e.data[k];
                                     });
 
@@ -9890,7 +9974,7 @@ export class AreaDesigner extends EditorBase {
                 return value.map(v => v.read).join(', ');
             case 'waterGerms':
             case 'inherits':
-                return value.map(v => v.value).join(', ');                
+                return value.map(v => v.value).join(', ');
         }
         return value.join(', ');
     }

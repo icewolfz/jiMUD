@@ -45,8 +45,8 @@ export abstract class ValueEditor extends EventEmitter {
     constructor(control, parent, property?, options?) {
         super();
         this.options = options;
-        this.parent = parent;
         this.control = control;
+        this.parent = parent;
         this.property = property;
     }
 
@@ -152,6 +152,8 @@ export class TextValueEditor extends ValueEditor {
     private $dBlur;
     private $cancel = false;
     private $clicked = false;
+    private $ac;
+    private $acChange;
 
     public create() {
         this.$el = document.createElement('div');
@@ -163,6 +165,7 @@ export class TextValueEditor extends ValueEditor {
         el.classList.add('property-grid-editor-dropdown-fill-container');
         this.$el.appendChild(el);
         this.$editor = document.createElement('textarea');
+        let vl: any = this.$editor;
         if (this.options && this.options.placeholder)
             this.$editor.placeholder = this.options.placeholder;
         this.$editor.classList.add('property-grid-editor');
@@ -185,6 +188,17 @@ export class TextValueEditor extends ValueEditor {
             });
         });
         this.$editor.addEventListener('blur', (e) => {
+            if (this.options && this.options.autoComplete && vl.parentElement.classList.contains('autocomplete') && (!e.relatedTarget || !vl.parentElement.contains(<Node>e.relatedTarget))) {
+                if (this.$ac.contains(e.relatedTarget)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.cancelBubble = true;
+                    return;
+                }
+                vl.parentElement.classList.remove('open', 'autocomplete');
+                Array.from(this.$ac.querySelectorAll('li')).forEach(a => (<HTMLElement>a).style.display = '');
+                this.$ac.style.display = 'none';
+            }
             if (this.$ignore) return;
             if (this.$clicked) {
                 e.preventDefault();
@@ -201,7 +215,7 @@ export class TextValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
-            if(document.activeElement && document.activeElement.tagName === 'BODY')
+            if (document.activeElement && document.activeElement.tagName === 'BODY')
                 this.control.clearEditor(e);
             setTimeout(() => this.control.clearEditor(e));
         });
@@ -281,14 +295,18 @@ export class TextValueEditor extends ValueEditor {
                 return false;
             }
         });
-
         el.appendChild(this.$editor);
+
         if (!this.options || !this.options.noDropdown) {
-            const vl = document.createElement('button');
+            vl = document.createElement('button');
             vl.title = 'Open editor...';
             vl.innerHTML = '<span class="caret"></span>';
             vl.dataset.editor = 'dropdown';
             vl.addEventListener('click', (e) => {
+                if (this.$ac) {
+                    vl.parentElement.classList.remove('open', 'autocomplete');
+                    this.$ac.style.display = 'none';
+                }
                 if (this.options && this.options.dialog) {
                     var aWindow;
                     e.stopPropagation();
@@ -484,6 +502,63 @@ export class TextValueEditor extends ValueEditor {
             });
             this.$el.appendChild(vl);
         }
+        if (this.options && this.options.autoComplete) {
+            let acItems;
+            if (typeof this.options.autoComplete === 'function')
+                acItems = this.options.autoComplete(this);
+            else
+                acItems = this.options.autoComplete;
+            if (!acItems || acItems.length === 0) return;
+            this.$el.classList.add('dropdown');
+            this.$acChange = () => {
+                const parent = vl.parentElement;
+                const list = vl.nextElementSibling;
+                let items = Array.from(this.$ac.querySelectorAll('li'));
+                items.forEach(e => (<HTMLElement>e).firstElementChild.classList.remove('active'));
+                items.forEach(e => (<HTMLElement>e).style.display = 'none');
+                items = items.filter(e => (<HTMLElement>e).textContent.toLowerCase().match(new RegExp(this.$editor.value.toLowerCase())));
+                items.forEach(e => (<HTMLElement>e).style.display = '');
+                if (items.length !== 0) {
+                    this.$ac.style.display = 'block';
+                    parent.classList.add('open', 'autocomplete');
+                }
+                else {
+                    this.$ac.style.display = 'none';
+                    parent.classList.remove('open', 'autocomplete');
+                }
+            }
+            this.$editor.addEventListener('change', this.$acChange);
+            this.$editor.addEventListener('input', this.$acChange);
+            this.$ac = document.createElement('ul');
+            this.$ac.style.maxHeight = '200px';
+            this.$ac.style.overflow = 'auto';
+            this.$ac.classList.add('dropdown-menu', 'pull-right');
+            this.$ac.dataset.container = this.options.autoCompleteContainer || 'body';
+            this.$ac.innerHTML = '<li><a href="#">' + acItems.join('</a></li><li><a href="#">') + '</a></li>';
+            const m = Array.from(this.$ac.querySelectorAll('ul > li > a'));
+            m.forEach(i => {
+                (<HTMLElement>i).addEventListener('click', (e) => {
+                    if (e.ctrlKey && (this.$ac.dataset.multiple === '1' || this.$ac.dataset.multiple === 'true')) {
+                        if (this.$editor.value.length !== 0)
+                            this.$editor.value += ',' + ((<HTMLElement>e.target).dataset.value || (<HTMLElement>e.target).textContent || '');
+                        else
+                            this.$editor.value = (<HTMLElement>e.target).dataset.value || (<HTMLElement>e.target).textContent || '';
+                    }
+                    else
+                        this.$editor.value = (<HTMLElement>e.target).dataset.value || (<HTMLElement>e.target).textContent || '';
+                    const evt = document.createEvent('HTMLEvents');
+                    evt.initEvent('change', false, true);
+                    this.$editor.dispatchEvent(evt);
+                    e.returnValue = false;
+                    vl.parentElement.classList.remove('open', 'autocomplete');
+                    this.$ac.style.display = 'none';
+                    Array.from(this.$ac.querySelectorAll('li')).forEach(a => (<HTMLElement>a).style.display = '');
+                    return false;
+                });
+            });
+            this.container.append(this.$ac);
+            this.positionAutoComplete();
+        }
         this.parent.appendChild(this.$el);
     }
     public focus() {
@@ -496,6 +571,8 @@ export class TextValueEditor extends ValueEditor {
             this.$dropdown.remove();
         if (this.$el && this.$el.parentNode && this.$el.parentNode.contains(this.$el))
             this.$el.remove();
+        if (this.$ac && this.$ac.parentNode && this.$ac.parentNode.contains(this.$ac))
+            this.$ac.remove();
     }
 
     public scroll() {
@@ -535,6 +612,36 @@ export class TextValueEditor extends ValueEditor {
         this.$dropdown.style.left = left + 'px';
         this.$dropdown.style.width = width + 'px';
         this.$dropdown.style.top = top + 'px';
+    }
+
+    private positionAutoComplete() {
+        const b = this.parent.getBoundingClientRect();
+        const c = this.container.getBoundingClientRect();
+        let left = 0;
+        let width = this.options?.minWidth || 300;
+        let top = b.bottom - c.top;
+        if (b.width < width) {
+            left = (b.left - width + b.width - c.left);
+        }
+        else {
+            left = b.left - c.left;
+            width = b.width;
+        }
+        if (left < -c.left)
+            left = -c.left;
+        else if (left < 0 && this.options && this.options.limitBounds)
+            left = 0;
+        if (width > c.width)
+            width = c.width;
+        if (Math.abs(left) + width > c.width)
+            left = c.width - Math.abs(left);
+        //extends past bottom so open up
+        if (top + 150 > c.height)
+            top = b.top - 150;
+
+        this.$ac.style.left = left + 'px';
+        this.$ac.style.width = width + 'px';
+        this.$ac.style.top = top + 'px';
     }
 
     set options(ops) {
@@ -591,7 +698,7 @@ export class BooleanValueEditor extends ValueEditor {
             return;
         });
         this.$el.addEventListener('blur', (e) => {
-            if(document.activeElement && document.activeElement.tagName === 'BODY')
+            if (document.activeElement && document.activeElement.tagName === 'BODY')
                 this.control.clearEditor(e);
             setTimeout(() => this.control.clearEditor(e));
         });
@@ -651,7 +758,7 @@ export class NumberValueEditor extends ValueEditor {
             return;
         });
         this.$el.addEventListener('blur', (e) => {
-            if(document.activeElement && document.activeElement.tagName === 'BODY')
+            if (document.activeElement && document.activeElement.tagName === 'BODY')
                 this.control.clearEditor(e);
             setTimeout(() => this.control.clearEditor(e));
         });
@@ -723,7 +830,7 @@ export class FlagValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
-            if(document.activeElement && document.activeElement.tagName === 'BODY')
+            if (document.activeElement && document.activeElement.tagName === 'BODY')
                 this.control.clearEditor(e);
             setTimeout(() => this.control.clearEditor(e));
         });
@@ -1020,7 +1127,7 @@ export class DropDownEditValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
-            if(document.activeElement && document.activeElement.tagName === 'BODY')
+            if (document.activeElement && document.activeElement.tagName === 'BODY')
                 this.control.clearEditor(e);
             setTimeout(() => this.control.clearEditor(e));
         });
@@ -1300,8 +1407,8 @@ export class CollectionValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
-            if(document.activeElement && document.activeElement.tagName === 'BODY')
-                this.control.clearEditor(e);            
+            if (document.activeElement && document.activeElement.tagName === 'BODY')
+                this.control.clearEditor(e);
             setTimeout(() => this.control.clearEditor(e));
         });
         this.$editor.addEventListener('keyup', (e) => {
@@ -1414,7 +1521,7 @@ export class CollectionValueEditor extends ValueEditor {
                         spring: true,
                         editor: { options: { container: this.$dialog } }
                     }];
-                if(this.options.split)
+                if (this.options.split)
                     dg.addRows(this.options.split(this.value)?.map(a => { return { value: a.trim() } }));
                 else
                     dg.addRows(this.value?.trim().splitQuote(',').map(a => { return { value: a.trim() } }));
@@ -1502,7 +1609,7 @@ export class CollectionValueEditor extends ValueEditor {
             button.addEventListener('click', () => {
                 if (this.error || (<any>dg).error) return;
                 if (this.options && this.options.stringCollection) {
-                    if(this.options.join)
+                    if (this.options.join)
                         this.value = this.options.join(dg.rows.map(r => r.value));
                     else
                         this.value = dg.rows.map(r => r.value).join(', ');
@@ -1709,7 +1816,7 @@ export class SelectValueEditor extends ValueEditor {
             return;
         });
         this.$el.addEventListener('blur', (e) => {
-            if(document.activeElement && document.activeElement.tagName === 'BODY')
+            if (document.activeElement && document.activeElement.tagName === 'BODY')
                 this.control.clearEditor(e);
             setTimeout(() => this.control.clearEditor(e));
         });
@@ -1795,7 +1902,7 @@ export class ButtonValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
-            if(document.activeElement && document.activeElement.tagName === 'BODY')
+            if (document.activeElement && document.activeElement.tagName === 'BODY')
                 this.control.clearEditor(e);
             setTimeout(() => this.control.clearEditor(e));
         });
@@ -1894,7 +2001,7 @@ export class CodeValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
-            if(document.activeElement && document.activeElement.tagName === 'BODY')
+            if (document.activeElement && document.activeElement.tagName === 'BODY')
                 this.control.clearEditor(e);
             setTimeout(() => this.control.clearEditor(e));
         });
