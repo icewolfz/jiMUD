@@ -508,56 +508,57 @@ export class TextValueEditor extends ValueEditor {
                 acItems = this.options.autoComplete(this);
             else
                 acItems = this.options.autoComplete;
-            if (!acItems || acItems.length === 0) return;
-            this.$el.classList.add('dropdown');
-            this.$acChange = () => {
-                const parent = vl.parentElement;
-                const list = vl.nextElementSibling;
-                let items = Array.from(this.$ac.querySelectorAll('li'));
-                items.forEach(e => (<HTMLElement>e).firstElementChild.classList.remove('active'));
-                items.forEach(e => (<HTMLElement>e).style.display = 'none');
-                items = items.filter(e => (<HTMLElement>e).textContent.toLowerCase().match(new RegExp(this.$editor.value.toLowerCase())));
-                items.forEach(e => (<HTMLElement>e).style.display = '');
-                if (items.length !== 0) {
-                    this.$ac.style.display = 'block';
-                    parent.classList.add('open', 'autocomplete');
+            if (acItems && acItems.length === 0) {
+                this.$el.classList.add('dropdown');
+                this.$acChange = () => {
+                    const parent = vl.parentElement;
+                    const list = vl.nextElementSibling;
+                    let items = Array.from(this.$ac.querySelectorAll('li'));
+                    items.forEach(e => (<HTMLElement>e).firstElementChild.classList.remove('active'));
+                    items.forEach(e => (<HTMLElement>e).style.display = 'none');
+                    items = items.filter(e => (<HTMLElement>e).textContent.toLowerCase().match(new RegExp(this.$editor.value.toLowerCase())));
+                    items.forEach(e => (<HTMLElement>e).style.display = '');
+                    if (items.length !== 0) {
+                        this.$ac.style.display = 'block';
+                        parent.classList.add('open', 'autocomplete');
+                    }
+                    else {
+                        this.$ac.style.display = 'none';
+                        parent.classList.remove('open', 'autocomplete');
+                    }
                 }
-                else {
-                    this.$ac.style.display = 'none';
-                    parent.classList.remove('open', 'autocomplete');
-                }
-            }
-            this.$editor.addEventListener('change', this.$acChange);
-            this.$editor.addEventListener('input', this.$acChange);
-            this.$ac = document.createElement('ul');
-            this.$ac.style.maxHeight = '200px';
-            this.$ac.style.overflow = 'auto';
-            this.$ac.classList.add('dropdown-menu', 'pull-right');
-            this.$ac.dataset.container = this.options.autoCompleteContainer || 'body';
-            this.$ac.innerHTML = '<li><a href="#">' + acItems.join('</a></li><li><a href="#">') + '</a></li>';
-            const m = Array.from(this.$ac.querySelectorAll('ul > li > a'));
-            m.forEach(i => {
-                (<HTMLElement>i).addEventListener('click', (e) => {
-                    if (e.ctrlKey && (this.$ac.dataset.multiple === '1' || this.$ac.dataset.multiple === 'true')) {
-                        if (this.$editor.value.length !== 0)
-                            this.$editor.value += ',' + ((<HTMLElement>e.target).dataset.value || (<HTMLElement>e.target).textContent || '');
+                this.$editor.addEventListener('change', this.$acChange);
+                this.$editor.addEventListener('input', this.$acChange);
+                this.$ac = document.createElement('ul');
+                this.$ac.style.maxHeight = '200px';
+                this.$ac.style.overflow = 'auto';
+                this.$ac.classList.add('dropdown-menu', 'pull-right');
+                this.$ac.dataset.container = this.options.autoCompleteContainer || 'body';
+                this.$ac.innerHTML = '<li><a href="#">' + acItems.join('</a></li><li><a href="#">') + '</a></li>';
+                const m = Array.from(this.$ac.querySelectorAll('ul > li > a'));
+                m.forEach(i => {
+                    (<HTMLElement>i).addEventListener('click', (e) => {
+                        if (e.ctrlKey && (this.$ac.dataset.multiple === '1' || this.$ac.dataset.multiple === 'true')) {
+                            if (this.$editor.value.length !== 0)
+                                this.$editor.value += ',' + ((<HTMLElement>e.target).dataset.value || (<HTMLElement>e.target).textContent || '');
+                            else
+                                this.$editor.value = (<HTMLElement>e.target).dataset.value || (<HTMLElement>e.target).textContent || '';
+                        }
                         else
                             this.$editor.value = (<HTMLElement>e.target).dataset.value || (<HTMLElement>e.target).textContent || '';
-                    }
-                    else
-                        this.$editor.value = (<HTMLElement>e.target).dataset.value || (<HTMLElement>e.target).textContent || '';
-                    const evt = document.createEvent('HTMLEvents');
-                    evt.initEvent('change', false, true);
-                    this.$editor.dispatchEvent(evt);
-                    e.returnValue = false;
-                    vl.parentElement.classList.remove('open', 'autocomplete');
-                    this.$ac.style.display = 'none';
-                    Array.from(this.$ac.querySelectorAll('li')).forEach(a => (<HTMLElement>a).style.display = '');
-                    return false;
+                        const evt = document.createEvent('HTMLEvents');
+                        evt.initEvent('change', false, true);
+                        this.$editor.dispatchEvent(evt);
+                        e.returnValue = false;
+                        vl.parentElement.classList.remove('open', 'autocomplete');
+                        this.$ac.style.display = 'none';
+                        Array.from(this.$ac.querySelectorAll('li')).forEach(a => (<HTMLElement>a).style.display = '');
+                        return false;
+                    });
                 });
-            });
-            this.container.append(this.$ac);
-            this.positionAutoComplete();
+                this.container.append(this.$ac);
+                this.positionAutoComplete();
+            }
         }
         this.parent.appendChild(this.$el);
     }

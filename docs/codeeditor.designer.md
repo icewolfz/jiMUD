@@ -135,6 +135,12 @@ Advanced options for when creating a room
 
 Expert options for room, these typically require coding experience to use properly
 
+- `Commands` Command actions for the room
+  - `Name` The name of the action, may be a list of words separated by a comma
+  - `Function` The name of the function to execute when command is used
+- `Defines` Defines added to the top of the room
+  - `Name` The name of the define
+  - `Value` The value of the define, may be left blank
 - `Functions` functions to create when building the room, may use (: Name :) to use in places that support functions
   - `Name` The name of the function, must follow the lpc identify naming rules
   - `Type` The data type of the function, types that end in * are array data types
@@ -144,6 +150,17 @@ Expert options for room, these typically require coding experience to use proper
     - `Name` The name of the argument, must follow the lpc identify naming rules
     - `Type` The data type of the argument, types that end in * are array data types
     - `Expand` Functions allow ... expand operator that will store all dynamic arguments in this argument, it will be auto sorted as the final argument and there can only be one
+- `Includes` Files to include
+  - `Include` The path or name of include file, either a global include file name or a path to an include file
+  - `Relative` Is include relative to the file e.g. use "" instead of <> when including file
+  - `...` Browse remotely for file to include, **Note** Must be used while connected to the mud
+- `Inherits` Additional inherits for the room
+  - `Inherit` The full path to inherit or a predefined define
+- `Variables` Room variables
+  - `Name` The name of the variable
+  - `Type` The data type of the function, types that end in * are array data types
+  - `Reset` Reset the variable to value in the reset function
+  - `Value` The value of the variable
 
 ## Design properties
 
@@ -219,6 +236,13 @@ Allows you to add includes to the area.h
 - `Include` The path or name of include file, either a global include file name or a path to an include file
 - `Relative` Is include relative to the file e.g. use "" instead of <> when including file
 - `...` Browse remotely for file to include, **Note** Must be used while connected to the mud
+
+### Area Defines
+
+Allows you to create defines in the area.h
+
+- `Name` The name of the define
+- `Value` The value of the define, may be left blank
 
 ## Monster editor
 

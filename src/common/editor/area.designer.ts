@@ -5297,7 +5297,16 @@ export class AreaDesigner extends EditorBase {
                 editor: {
                     options: {
                         singleLine: true,
-                        container: document.body
+                        container: document.body,
+                        editor: {
+                            options: {
+                                autoComplete: (oldValue, newValue, object, editor) => {
+                                    if (this.$roomEditor.objects.length)
+                                        return this.$roomEditor.objects[0].functions.map(f => `(: ${f.name} :)`)
+                                    return [];
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -5321,7 +5330,16 @@ export class AreaDesigner extends EditorBase {
                 editor: {
                     options: {
                         singleLine: true,
-                        container: document.body
+                        container: document.body,
+                        editor: {
+                            options: {
+                                autoComplete: (oldValue, newValue, object, editor) => {
+                                    if (this.$roomEditor.objects.length)
+                                        return this.$roomEditor.objects[0].functions.map(f => `(: ${f.name} :)`)
+                                    return [];
+                                }
+                            }
+                        }
                     }
                 }
             },
@@ -5343,7 +5361,6 @@ export class AreaDesigner extends EditorBase {
                 group: 'Expert',
                 formatter: this.formatCollection.bind(this),
                 tooltipFormatter: this.formatCollection.bind(this),
-                sort: 9,
                 editor: {
                     type: EditorType.collection,
                     options: {
@@ -5525,7 +5542,6 @@ export class AreaDesigner extends EditorBase {
                 group: 'Expert',
                 formatter: this.formatCollection.bind(this),
                 tooltipFormatter: this.formatCollection.bind(this),
-                sort: 9,
                 editor: {
                     type: EditorType.collection,
                     options: {
@@ -5593,7 +5609,6 @@ export class AreaDesigner extends EditorBase {
                 group: 'Expert',
                 formatter: this.formatCollection.bind(this),
                 tooltipFormatter: this.formatCollection.bind(this),
-                sort: 9,
                 editor: {
                     type: EditorType.collection,
                     options: {
@@ -5638,14 +5653,13 @@ export class AreaDesigner extends EditorBase {
                 group: 'Expert',
                 formatter: this.formatCollection.bind(this),
                 tooltipFormatter: this.formatCollection.bind(this),
-                sort: 6,
                 editor: {
                     type: EditorType.collection,
                     options: {
                         open: true,
                         columns: [
                             {
-                                label: 'inherit',
+                                label: 'Inherit',
                                 field: 'value',
                                 width: 300,
                                 spring: true,
@@ -5670,6 +5684,146 @@ export class AreaDesigner extends EditorBase {
                             };
                         },
                         type: 'inherit',
+                        enterMoveFirst: this.enterMoveFirst,
+                        enterMoveNext: this.enterMoveNext,
+                        enterMoveNew: this.enterMoveNew
+                    }
+                }
+            },
+            {
+                property: 'commands',
+                label: 'Commands',
+                group: 'Expert',
+                formatter: this.formatCollection.bind(this),
+                tooltipFormatter: this.formatCollection.bind(this),
+                editor: {
+                    type: EditorType.collection,
+                    options: {
+                        open: true,
+                        columns: [
+                            {
+                                label: 'Name',
+                                field: 'name',
+                                width: 300,
+                                spring: true,
+                                editor: {
+                                    options: {
+                                        singleLine: true
+                                    }
+                                }
+                            },
+                            {
+                                label: 'Function',
+                                field: 'function',
+                                spring: true,
+                                width: 200,
+                                editor: {
+                                    options: {
+                                        singleLine: true,
+                                        autoComplete: (oldValue, newValue, object, editor) => {
+                                            if (this.$roomEditor.objects.length)
+                                                return this.$roomEditor.objects[0].functions.map(f => f.name)
+                                            return [];
+                                        },
+                                        validate: (oldValue, newValue, object, editor) => {
+                                            if (!isValidIdentifier(newValue))
+                                                return 'Invalid function name';
+                                            return true;
+                                        }                                        
+                                    }
+                                }
+                            }
+                        ],
+                        onAdd: (e) => {
+                            e.data = {
+                                name: '',
+                                function: ''
+                            };
+                        },
+                        type: 'command',
+                        enterMoveFirst: this.enterMoveFirst,
+                        enterMoveNext: this.enterMoveNext,
+                        enterMoveNew: this.enterMoveNew
+                    }
+                }
+            },
+            {
+                property: 'variables',
+                label: 'Variables',
+                group: 'Expert',
+                formatter: this.formatCollection.bind(this),
+                tooltipFormatter: this.formatCollection.bind(this),
+                editor: {
+                    type: EditorType.collection,
+                    options: {
+                        open: true,
+                        columns: [
+                            {
+                                label: 'Name',
+                                field: 'name',
+                                width: 300,
+                                spring: true,
+                                singleLine: true,
+                                validate: (oldValue, newValue, object, editor) => {
+                                    const rows = editor?.control?.rows || [];
+                                    if (!isValidIdentifier(newValue))
+                                        return 'Invalid variable name';
+                                    if (oldValue !== newValue && rows.findIndex(element => element.name === newValue) !== -1)
+                                        return `Variable ${newValue} already exist!`;
+                                    return true;
+                                }
+                            },
+                            {
+                                label: 'Type',
+                                field: 'type',
+                                width: 150,
+                                editor: {
+                                    type: EditorType.select,
+                                    options: {
+                                        data: [
+                                            'int',
+                                            'int *',
+                                            'string',
+                                            'string *',
+                                            'object',
+                                            'object *',
+                                            'mapping',
+                                            'mapping *',
+                                            'float',
+                                            'float *',
+                                            'function',
+                                            'function *',
+                                            'mixed',
+                                            'mixed *',
+                                        ]
+                                    }
+                                },
+                            },
+                            {
+                                label: 'Reset',
+                                field: 'reset',
+                                width: 50
+                            },
+                            {
+                                label: 'Value',
+                                field: 'value',
+                                width: 150,
+                                editor: {
+                                    options: {
+                                        singleLine: true
+                                    }
+                                }
+                            },
+                        ],
+                        onAdd: (e) => {
+                            e.data = {
+                                name: '',
+                                type: '',
+                                reset: false,
+                                value: ''
+                            };
+                        },
+                        type: 'variable',
                         enterMoveFirst: this.enterMoveFirst,
                         enterMoveNext: this.enterMoveNext,
                         enterMoveNew: this.enterMoveNew
