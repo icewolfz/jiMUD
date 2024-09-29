@@ -6854,6 +6854,7 @@ export class AreaDesigner extends EditorBase {
                                         title: 'Forage objects',
                                         id: 'room-wiz-forage-objects',
                                         clipboard: 'jiMUD/',
+                                        mode: 1,
                                         columns: [
                                             {
                                                 label: 'Name',
@@ -6921,6 +6922,7 @@ export class AreaDesigner extends EditorBase {
                                         title: 'Rummage objects',
                                         id: 'room-wiz-rummage-objects',
                                         clipboard: 'jiMUD/',
+                                        mode: 1,
                                         columns: [
                                             {
                                                 label: 'Name',
@@ -7993,6 +7995,7 @@ export class AreaDesigner extends EditorBase {
                                 title: 'Bonuses',
                                 id: 'obj-bonuses',
                                 clipboard: 'jiMUD/',
+                                mode: 1,
                                 columns: [
                                     {
                                         label: 'Type',
@@ -8368,6 +8371,7 @@ export class AreaDesigner extends EditorBase {
                                 title: 'Skill requirements',
                                 id: 'obj-skills',
                                 clipboard: 'jiMUD/',
+                                mode: 1,
                                 columns: [
                                     {
                                         label: 'Type',
@@ -8629,6 +8633,7 @@ export class AreaDesigner extends EditorBase {
                                         title: 'Custom properties',
                                         id: 'obj-properties',
                                         clipboard: 'jiMUD/',
+                                        mode: 1,
                                         columns: [
                                             {
                                                 label: 'Type',
@@ -8702,6 +8707,7 @@ export class AreaDesigner extends EditorBase {
                                     new WizardPage({
                                         id: 'obj-prevent-actions',
                                         title: 'Prevent actions',
+                                        mode: 1,
                                         body: `<div class="col-sm-12 form-group">
                                             <label class="control-label" style="width: 100%">Prevent offer
                                                 <input type="text" class="input-sm form-control" id="obj-preventOffer" placeholder="1, true, a string to display, or a function pointer"/>
@@ -8740,6 +8746,7 @@ export class AreaDesigner extends EditorBase {
                                         title: 'Reads',
                                         id: 'obj-reads',
                                         clipboard: 'jiMUD/',
+                                        mode: 1,
                                         columns: [
                                             {
                                                 label: 'Read',
@@ -8921,6 +8928,7 @@ export class AreaDesigner extends EditorBase {
                                         title: 'Damaged armor descriptions',
                                         id: 'obj-damaged',
                                         clipboard: 'jiMUD/',
+                                        mode: 1,
                                         columns: [
                                             {
                                                 label: 'Type',
@@ -9101,6 +9109,7 @@ export class AreaDesigner extends EditorBase {
                                         title: 'Damaged armor descriptions',
                                         id: 'obj-damaged',
                                         clipboard: 'jiMUD/',
+                                        mode: 1,
                                         columns: [
                                             {
                                                 label: 'Type',

@@ -3,10 +3,18 @@ import { EventEmitter } from 'events';
 import { DataGrid } from './datagrid';
 import { copy } from './library';
 
+export enum WizardMode {
+    normal = 0,
+    advanced = 1 << 0,
+    expert = 1 << 1,
+    all = normal | advanced | expert
+}
+
 export interface WizardOptions {
     id: string;
     pages?: WizardPage[];
     title?: string;
+    mode?: WizardMode;
 }
 
 export interface PageOptions {
@@ -14,6 +22,7 @@ export interface PageOptions {
     title: string;
     body?: any;
     visible?: boolean;
+    mode?: WizardMode;
     reset?(...args: any[]): void;
     shown?(...args: any[]): void;
     hidden?(...args: any[]): void;
@@ -37,6 +46,15 @@ export class WizardPage extends EventEmitter {
     private _title;
     private $visible = true;
     public wizard: Wizard;
+    private $mode: WizardMode = WizardMode.normal;
+
+    public get mode() { return this.$mode; }
+    public set mode(value: WizardMode) {
+        if (this.$mode === value) return;
+        this.$mode = value;
+        if (this.wizard)
+            this.wizard.refreshAll();
+    }
 
     public get visible() {
         return this.$visible;
@@ -44,7 +62,7 @@ export class WizardPage extends EventEmitter {
     public set visible(value) {
         if (this.$visible === value) return;
         this.$visible = value;
-        if(this.wizard)
+        if (this.wizard)
             this.wizard.refreshAll();
     }
 
@@ -63,6 +81,8 @@ export class WizardPage extends EventEmitter {
                 this.on('hidden', options.hidden);
             if (Object.hasOwn(options, 'visible'))
                 this.visible = options.visible;
+            if (Object.hasOwn(options, 'mode'))
+                this.mode = options.mode;
         }
     }
 
@@ -79,6 +99,20 @@ export class WizardPage extends EventEmitter {
             this.$el.innerHTML = value;
             if (this.$el.firstElementChild.hasAttribute('data-visible'))
                 this.visible = (<HTMLElement>this.$el.firstElementChild).dataset.visible !== 'false';
+            if (this.$el.firstElementChild.hasAttribute('data-mode'))
+                switch ((<HTMLElement>this.$el.firstElementChild).dataset.mode) {
+                    case '1':
+                    case 'advanced':
+                        this.mode = WizardMode.advanced;
+                        break;
+                    case '2':
+                    case 'expert':
+                        this.mode = WizardMode.advanced;
+                        break;
+                    default:
+                        this.mode = WizardMode.normal;
+                        break;
+                }
         }
         else if (value instanceof $) {
             const bl = (<JQuery>value).length;
@@ -86,11 +120,41 @@ export class WizardPage extends EventEmitter {
                 this.$el.appendChild(value[b]);
             if (typeof (<JQuery>value).data('visible') !== 'undefined')
                 this.visible = (<JQuery>value).data('visible') !== 'false';
+            if (typeof (<JQuery>value).data('mode') !== 'undefined')
+                switch ((<JQuery>value).data('mode')) {
+                    case 1:
+                    case '1':
+                    case 'advanced':
+                        this.mode = WizardMode.advanced;
+                        break;
+                    case 2:
+                    case '2':
+                    case 'expert':
+                        this.mode = WizardMode.advanced;
+                        break;
+                    default:
+                        this.mode = WizardMode.normal;
+                        break;
+                }
         }
         else if (value instanceof HTMLElement) {
             this.$el.appendChild(value);
             if (value.hasAttribute('data-visible'))
                 this.visible = value.dataset.visible !== 'false';
+            if (value.hasAttribute('data-mode'))
+                switch (value.dataset.mode) {
+                    case '1':
+                    case 'advanced':
+                        this.mode = WizardMode.advanced;
+                        break;
+                    case '2':
+                    case 'expert':
+                        this.mode = WizardMode.advanced;
+                        break;
+                    default:
+                        this.mode = WizardMode.normal;
+                        break;
+                }
         }
     }
     public get body() { return this.$body; }
@@ -346,8 +410,8 @@ export class Wizard extends EventEmitter {
     private $body: HTMLElement;
     private $title;
     private $titleEl: HTMLElement;
-    private $height = '208px';
-    private $width = '500px';
+    private $height = '432px';
+    private $width = '576px';
     private $next: HTMLButtonElement;
     private $prev: HTMLButtonElement;
     private $data;
@@ -357,8 +421,10 @@ export class Wizard extends EventEmitter {
     private $navPages = [];
     private $current = 0;
     private $nav: HTMLSelectElement;
+    private $navMode: HTMLSelectElement;
     private $update: UpdateType;
     private _rTimeout = 0;
+    private $mode: WizardMode = WizardMode.normal;
     public defaults;
 
     get id() { return this.$id; }
@@ -379,7 +445,7 @@ export class Wizard extends EventEmitter {
 
     get width() { return this.$width; }
     set width(value) {
-        value = value || '500px';
+        value = value || '576px';
         if (this.$width === value) return;
         this.$width = value;
         if (this.$dialog)
@@ -388,7 +454,7 @@ export class Wizard extends EventEmitter {
 
     get height() { return this.$height; }
     set height(value) {
-        value = value || '208px';
+        value = value || '432px';
         if (this.$height === value) return;
         this.$height = value;
         if (this.$dialog)
@@ -406,7 +472,7 @@ export class Wizard extends EventEmitter {
         this.$pages = value;
         this.$pages.forEach((p, i) => {
             p.wizard = this;
-            if (p.visible)
+            if (p.visible && p.mode <= this.$mode)
                 this.$navPages.push(i);
         });
         this.bindEvents(value);
@@ -422,11 +488,20 @@ export class Wizard extends EventEmitter {
         this.$finish.disabled = value;
     }
 
+    get mode() { return this.$mode; }
+    set mode(value: WizardMode) {
+        if (value === this.$mode) return;
+        this.$mode = value;
+        this.refreshAll();
+        this.emit('mode-changed');
+    }
+
     constructor(options?: WizardOptions) {
         super();
         if (options) {
             this.id = options.id || 'wizard';
             this.pages = options.pages || [];
+            this.mode = options.mode || WizardMode.normal;
         }
         this.create();
         if (options) {
@@ -476,6 +551,7 @@ export class Wizard extends EventEmitter {
 
         el = document.createElement('div');
         el.classList.add('dialog-footer');
+
         this.$nav = document.createElement('select');
         this.$nav.style.cssFloat = 'left';
         this.$nav.classList.add('form-control', 'selectpicker', 'dropup');
@@ -487,6 +563,22 @@ export class Wizard extends EventEmitter {
             this.goto(+(<HTMLSelectElement>e.target).selectedIndex);
         });
         el.appendChild(this.$nav);
+
+        this.$navMode = document.createElement('select');
+        this.$navMode.style.cssFloat = 'left';
+        this.$navMode.classList.add('form-control', 'selectpicker', 'dropup');
+        this.$navMode.dataset.width = '100px';
+        this.$navMode.dataset.dropupAuto = 'false';
+        this.$navMode.dataset.size = '12';
+        this.$navMode.addEventListener('change', (e) => {
+            this.mode = +(<HTMLSelectElement>e.target).value;
+        });
+
+        this.$navMode.innerHTML = `<option value="${WizardMode.normal}">Normal</option><option value="${WizardMode.advanced}">Advanced</option><option value="${WizardMode.expert}">Expert</option>`
+        el.appendChild(this.$navMode);
+        $(this.$navMode).selectpicker('render');
+        $(this.$navMode).selectpicker('refresh');
+
 
         button = document.createElement('button');
         button.classList.add('btn', 'btn-default');
@@ -553,7 +645,7 @@ export class Wizard extends EventEmitter {
         this.$pages.push(...pages);
         this.$pages.forEach((p, i) => {
             p.wizard = this
-            if (p.visible)
+            if (p.visible && p.mode <= this.$mode)
                 this.$navPages.push(i);
         });
         this.bindEvents(pages);
@@ -586,7 +678,7 @@ export class Wizard extends EventEmitter {
         this.$pages.splice(idx, 0, ...pages);
         this.$pages.forEach((p, i) => {
             p.wizard = this;
-            if (p.visible)
+            if (p.visible && p.mode <= this.$mode)
                 this.$navPages.push(i);
         });
         this.bindEvents(pages);
@@ -689,7 +781,7 @@ export class Wizard extends EventEmitter {
         }
         const frag = document.createDocumentFragment();
         this.$pages.forEach((p, idx) => {
-            if (!p.visible) return;
+            if (!p.visible || p.mode > this.$mode) return;
             const op = document.createElement('option');
             op.textContent = p.title;
             op.value = '' + this.$navPages.indexOf(idx);
@@ -766,7 +858,7 @@ export class Wizard extends EventEmitter {
         this.$navPages = [];
         this.$pages.forEach((p, i) => {
             p.wizard = this;
-            if (p.visible)
+            if (p.visible && p.mode <= this.$mode)
                 this.$navPages.push(i);
             else if (i === curr)
                 curr++;

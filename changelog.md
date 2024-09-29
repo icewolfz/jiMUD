@@ -19,6 +19,7 @@
       - Allow x,y format for exit destination if z is 0
     - Virtual area editor: Add ctrl+click selection system
     - Fix where data could be lost when closing window and datagrid/property editor open
+    - Add normal, advanced, and expert view modes to room, monster, and object wizards to show/hide more complex pages and properties
 - **Fixed:**
   - Increase progress dialog height
   - Fix issue when using non default theme and button bar hidden

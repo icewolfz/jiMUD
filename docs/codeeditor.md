@@ -74,11 +74,11 @@ You may open a session and merge it with current opened files or you may attempt
   - `Enable pk` allow players to kill each other
   - `No dirt` can not throw dirt
   - `Dirt type` custom dirt type, if empty it will be based on terrain and weather
-- `Custom properties` custom properties you may want to set for a room
+- `Custom properties` custom properties you may want to set for a room, **Advanced**
 - `Items` the items you can look at in the room, there should be one for each noun from the description
   - `Item` the item name
   - `Description` the item description, you should also add any looks for nouns in descriptions of other items
-- `Reads` things can be read in the room, **Note** they must be included as an item to be readable
+- `Reads` things can be read in the room, **Note** they must be included as an item to be readable, **Advanced**
   - `Read` the id to match
   - `Description` the description to display to the user
   - `Language` the language the description is in
@@ -100,7 +100,7 @@ You may open a session and merge it with current opened files or you may attempt
 - `Sounds` the sounds for the room
   - `Sound` the sound, use `default` to have the smell set as default room smell
   - `Description` the sound description
-- `Searches` the searches for the room
+- `Searches` the searches for the room, **Advanced**
   - `Search` the search/searches, you can supply a comma delimited list to assign all searches the same description
   - `Message` the message to display or a function to execute
 - `Finish` A final summary of selected options and properties, some properties and options will always be set even if empty: terrain, short, long, exits, items, **Note** climbs are only supported with standard, base (see area if supported), and climb types and will prevent you from finishing until you pick a supported type or remove climbs.
@@ -136,10 +136,10 @@ Create a new monster using a wizard for easy option selection
   - `Hair color` monster's hair color, pick from predefined list or supply any color you wish
   - `Gender` the monster's gender, male, female, or none
   - `Body type` allows you to pick a body type to set the initial limbs for monster, if not set will be determined based on race
-- `Resistances` Monster damage resistances
+- `Resistances` Monster damage resistances, **Advanced**
   - `Type` The type of resistance to protect against
   - `Amount` The amount to protect, should be in a -100 to 100 range
-- `Ask` Control if monster can be asked about questions
+- `Ask` Control if monster can be asked about questions, **Advanced**
   - `Can be asked questions` Enable ask system
   - `Ask no topic reply` Message to display when topic is not found
   - `Ask response type` How a monster will responses when asked a question
@@ -148,30 +148,30 @@ Create a new monster using a wizard for easy option selection
     - `Speak` reply using speak command
     - `Whisper` reply using whisper command
     - `Custom` use a custom system to control, will require advanced coding after code created
-- `Ask Topics` The topics that the monster can be questioned about
+- `Ask Topics` The topics that the monster can be questioned about, **Advanced**
   - `Topic` The topic to ask about
   - `Message` The message to display
-- `Advanced properties` Advanced options that while useful are not always needed
+- `Advanced properties` Advanced options that while useful are not always needed, **Advanced**
   - `No corpse` will the monster leave a corpse, string will be displayed to player and no corpse left, if "" no message and no corpse, $N/$n replaced with monster's name
   - `No limbs` will the limbs be dropped on the ground, if "" no limbs and no message, else message displayed to player, $L/$l will be replaced with limb name, $N/$n replaced with monster's name
-- `Custom properties` custom properties you may want to set for a monster
+- `Custom properties` custom properties you may want to set for a monster, **Advanced**
   - `Type` The type of property
     - `Temporary` lost when monster is saved using auto save system
     - `Normal` will be saved if monster is autosaved
   - `Name` The name of the property
   - `Value` The value of the property
-- `Reputation` The monsters reputation
+- `Reputation` The monsters reputation, **Advanced**
   - `Default group` The default reputation
   - `Type` The type of reputation
     - `Attack` Applied if attacked
     - `Die` Applied when dies
   - `Group` The reputation group that is effected
   - `Amount` The amount of reputation to apply
-- `Movement` determine if the monster will wander randomly or a set list of direction
+- `Movement` determine if the monster will wander randomly or a set list of direction, **Advanced**
   - `Speed` he speed the monster moves in heartbeats, must be set to enable movement
   - `Patrol route` a set list of exits the monster will attempt to follow
   - `No walk rooms` a list of room file names that the monster can no enter, allows containment of monster to a general area, **Note** filenames should always include the trailing `.c`
-- `Emotes and speaks` random emote or speak when players are in the room
+- `Emotes and speaks` random emote or speak when players are in the room, **Advanced**
   - `Emote chance` the chance a normal emote will display
   - `Emote combat` the chance a combat emote will display during combat
   - `Speak chance` the chance a monster will speak
@@ -188,13 +188,13 @@ Create a new monster using a wizard for easy option selection
   - `Attack commands` a list of comma delimited abilities or commands the monster will randomly do during combat
   - `Attack command chance` the chance a command will be used, from 0 to 101, 0 never, 100/101 always
   - `Attack initiators` list of comma delimited commands or abilities to randomly picked from when the monster starts combat
-- `Tracking` Monster tracking system
+- `Tracking` Monster tracking system, **Advanced**
   - `Enable attacker tracking` Will cause monster to track those that it is attacking
   - `Track aggressively only` Constantly follower attacker
   - `Enter message` Message to display when monster enters a room by tracking someone
   - `Enter message action` How the enter messages is displayed
 - `Aggressive` monsters aggressiveness, can be a simple number or a complex mapping of values to determine how different races, classes and others options effects auto attacking, see /doc/build/monster/haggle on mud for full list and details
-- `Actions` actions or reactions to different things
+- `Actions` actions or reactions to different things, **Advanced**
   - `Auto drop` drop items after a delay of seconds
   - `Open storage` open storage items that have been given and how long to wait
   - `Auto wield` wield any weapon given or looted after a delay of seconds
@@ -204,7 +204,7 @@ Create a new monster using a wizard for easy option selection
   - `Drop encumbered` drop extra inventory when 50% or higher encumbered
   - `Drop encumbered combat` drop extra inventory when 50% or higher encumbered if in combat
   - `Auto stand` stand backup when lying on the ground during combat
-- `Reactions` Determine how your monster reactions to different effects
+- `Reactions` Determine how your monster reactions to different effects, **Advanced**
   - `Type` The type of reaction, see /doc/build/monster/reactions
     - `Normal` a normal reaction that happens out side of combat
     - `Party` a normal reaction that happens outside of combat but only effects party members
@@ -267,7 +267,7 @@ Visible when monster type is a vendor
 - `Append display list long to room` Will append the list long to the rooms description
 - `List item long` The long description of the item when it appears in the room
 
-##### Vendor advanced properties
+##### Vendor advanced properties, **Advanced**
 
 More advanced vendor properties, most of these should be left alone unless you know what they do
 
@@ -302,7 +302,7 @@ The menu a barkeep sells
 - `My Message` The message displays to the person who eats/drinks item
 - `Your Message` The message displayed to the room when person eats/drinks tiem
 
-##### Barkeep properties
+##### Barkeep properties, **Advanced**
 
 - `Menu title` The menus title
 - `Read item(s)` The items used to display menu when read/looked

@@ -1994,10 +1994,10 @@ export function getColors() {
     return _ColorTable;
 }
 
-export function updateEditDropdown(d) {
+export function updateEditDropdown(d, noButton?) {
     const m = Array.from(d.querySelectorAll('ul > li > a'));
     const ip = d.querySelector('input');
-    const b = d.querySelector('button');
+    const b = noButton ? ip : d.querySelector('button');
     m.forEach(i => {
         (<HTMLElement>i).addEventListener('click', (e) => {
             if (e.ctrlKey && (d.dataset.multiple === '1' || d.dataset.multiple === 'true')) {
@@ -2022,46 +2022,47 @@ export function updateEditDropdown(d) {
     });
 }
 
-export function initEditDropdown(d) {
+export function initEditDropdown(d, noButton?) {
     updateEditDropdown(d);
     const ip = d.querySelector('input');
-    const b = d.querySelector('button');
+    const b = noButton ? ip : d.querySelector('button');
 
-    b.addEventListener('click', () => {
-        const m = Array.from(b.nextElementSibling.querySelectorAll('li > a'));
-        let val;
-        if (ip.value.length !== 0 && (d.dataset.multiple === '1' || d.dataset.multiple === 'true'))
-            val = ip.value.toLowerCase().split(',').map(i => i.trim());
-        else if (ip.value.length !== 0)
-            val = [ip.value.toLowerCase().trim()];
-        if (!val || val.length === 0) {
-            b.nextElementSibling.scrollTop = 0;
-            return;
-        }
+    if (!noButton)
+        b.addEventListener('click', () => {
+            const m = Array.from(b.nextElementSibling.querySelectorAll('li > a'));
+            let val;
+            if (ip.value.length !== 0 && (d.dataset.multiple === '1' || d.dataset.multiple === 'true'))
+                val = ip.value.toLowerCase().split(',').map(i => i.trim());
+            else if (ip.value.length !== 0)
+                val = [ip.value.toLowerCase().trim()];
+            if (!val || val.length === 0) {
+                b.nextElementSibling.scrollTop = 0;
+                return;
+            }
 
-        m.forEach(i => {
-            (<HTMLElement>i).classList.remove('active');
+            m.forEach(i => {
+                (<HTMLElement>i).classList.remove('active');
+            });
+            let el: any = m.filter(i => (val.indexOf(((<HTMLElement>i).dataset.value || '').toLowerCase()) !== -1));
+            if (el.length === 0)
+                el = m.filter(i => val.indexOf((<HTMLElement>i).textContent.toLowerCase()) !== -1);
+            if (el.length === 0) {
+                b.nextElementSibling.scrollTop = 0;
+                return;
+            }
+            if (d.dataset.multiple === '1' || d.dataset.multiple === 'true') {
+                el.forEach(a => a.classList.add('active'));
+                if (el.length !== 0)
+                    b.nextElementSibling.scrollTop = el[0].parentElement.offsetTop;
+            }
+            else {
+                el = el[0];
+                el.classList.add('active');
+                setTimeout(() => {
+                    b.nextElementSibling.scrollTop = el.parentElement.offsetTop;
+                }, 50);
+            }
         });
-        let el: any = m.filter(i => (val.indexOf(((<HTMLElement>i).dataset.value || '').toLowerCase()) !== -1));
-        if (el.length === 0)
-            el = m.filter(i => val.indexOf((<HTMLElement>i).textContent.toLowerCase()) !== -1);
-        if (el.length === 0) {
-            b.nextElementSibling.scrollTop = 0;
-            return;
-        }
-        if (d.dataset.multiple === '1' || d.dataset.multiple === 'true') {
-            el.forEach(a => a.classList.add('active'));
-            if (el.length !== 0)
-                b.nextElementSibling.scrollTop = el[0].parentElement.offsetTop;
-        }
-        else {
-            el = el[0];
-            el.classList.add('active');
-            setTimeout(() => {
-                b.nextElementSibling.scrollTop = el.parentElement.offsetTop;
-            }, 50);
-        }
-    });
 
     ip.addEventListener('blur', (e) => {
         if (b.parentElement.classList.contains('autocomplete') && (!e.relatedTarget || !b.parentElement.contains(e.relatedTarget))) {
@@ -2171,63 +2172,63 @@ export function isArrayEqual(a, b): boolean {
 }
 
 //export function isObjectEqual(a, b): boolean {
-    //return util.isDeepStrictEqual(a, b);
-    /*
-    let propName;
-    if (a === b) return true;
-    if (a === null || b === null) return false;
-    if (Object.keys(a).length !== Object.keys(b).length) return false;
-    if (Array.isArray(a) || Array.isArray(b))
-        return isArrayEqual(a, b);
-    //For the first loop, we only check for types
-    for (propName in a) {
-        //Check for inherited methods and properties - like .equals itself
-        //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwnProperty
-        //Return false if the return value is different
-        if (a.hasOwnProperty(propName) != b.hasOwnProperty(propName)) {
-            return false;
-        }
-        //Check instance type
-        else if (typeof a[propName] != typeof b[propName]) {
-            //Different types => not equal
-            return false;
-        }
+//return util.isDeepStrictEqual(a, b);
+/*
+let propName;
+if (a === b) return true;
+if (a === null || b === null) return false;
+if (Object.keys(a).length !== Object.keys(b).length) return false;
+if (Array.isArray(a) || Array.isArray(b))
+    return isArrayEqual(a, b);
+//For the first loop, we only check for types
+for (propName in a) {
+    //Check for inherited methods and properties - like .equals itself
+    //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwnProperty
+    //Return false if the return value is different
+    if (a.hasOwnProperty(propName) != b.hasOwnProperty(propName)) {
+        return false;
     }
-    //Now a deeper check using other objects property names
-    for (propName in b) {
-        //We must check instances anyway, there may be a property that only exists in object2
-        //I wonder, if remembering the checked values from the first loop would be faster or not 
-        if (a.hasOwnProperty(propName) != b.hasOwnProperty(propName)) {
-            return false;
-        }
-        else if (typeof a[propName] != typeof b[propName]) {
-            return false;
-        }
-        //If the property is inherited, do not check any more (it must be equal if both objects inherit it)
-        if (!a.hasOwnProperty(propName))
-            continue;
-
-        //Now the detail check and recursion
-
-        //This returns the script back to the array comparing
-        if (Array.isArray(a[propName]) && Array.isArray(b[propName])) {
-            // recurse into the nested arrays
-            if (!isArrayEqual(a[propName], b[propName]))
-                return false;
-        }
-        else if (a[propName] instanceof Object && b[propName] instanceof Object) {
-            // recurse into another objects
-            if (!isObjectEqual(a[propName], b[propName]))
-                return false;
-        }
-        //Normal value comparison for strings and numbers
-        else if (a[propName] !== b[propName]) {
-            return false;
-        }
+    //Check instance type
+    else if (typeof a[propName] != typeof b[propName]) {
+        //Different types => not equal
+        return false;
     }
-    //If everything passed, let's say YES
-    return true;
-    */
+}
+//Now a deeper check using other objects property names
+for (propName in b) {
+    //We must check instances anyway, there may be a property that only exists in object2
+    //I wonder, if remembering the checked values from the first loop would be faster or not 
+    if (a.hasOwnProperty(propName) != b.hasOwnProperty(propName)) {
+        return false;
+    }
+    else if (typeof a[propName] != typeof b[propName]) {
+        return false;
+    }
+    //If the property is inherited, do not check any more (it must be equal if both objects inherit it)
+    if (!a.hasOwnProperty(propName))
+        continue;
+
+    //Now the detail check and recursion
+
+    //This returns the script back to the array comparing
+    if (Array.isArray(a[propName]) && Array.isArray(b[propName])) {
+        // recurse into the nested arrays
+        if (!isArrayEqual(a[propName], b[propName]))
+            return false;
+    }
+    else if (a[propName] instanceof Object && b[propName] instanceof Object) {
+        // recurse into another objects
+        if (!isObjectEqual(a[propName], b[propName]))
+            return false;
+    }
+    //Normal value comparison for strings and numbers
+    else if (a[propName] !== b[propName]) {
+        return false;
+    }
+}
+//If everything passed, let's say YES
+return true;
+*/
 //}
 
 export function isEqual(a, b): boolean {

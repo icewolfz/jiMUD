@@ -1518,7 +1518,7 @@
                 </label>
             </div>
         </div>
-        <div id="mon-wizard-ask">
+        <div id="mon-wizard-ask" data-mode="advanced">
             <div class="col-sm-4 form-group" style="width: auto;">
                 <label class="control-label">
                     <input type="checkbox" id="mon-wiz-ask" /> Can be asked questions
@@ -1541,7 +1541,7 @@
                 </label>
             </div>
         </div>
-        <div id="mon-wizard-advanced">
+        <div id="mon-wizard-advanced" data-mode="advanced">
             <div class="col-sm-12 form-group">
                 <label class="control-label">No corpse
                     <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">"" disable, $N or $n name, empty default</span>
@@ -1586,7 +1586,7 @@
                 </label>
             </div>
         </div>
-        <div id="mon-wizard-tracking">
+        <div id="mon-wizard-tracking" data-mode="advanced">
             <div class="col-sm-6 form-group">
                 <label class="control-label">
                     <input type="checkbox" id="mon-wiz-tracking" /> Enable attacker tracking
@@ -1629,7 +1629,7 @@
                 </label>
             </div>
         </div>
-        <div id="mon-wizard-aggressive">
+        <div id="mon-wizard-aggressive" data-mode="advanced">
             <div class="col-sm-12 form-group">
                 <label class="control-label" style="width: 100%">Aggressive
                     <textarea class="input-sm form-control" id="mon-wiz-aggressive" style="width: 100%;height: 265px;"></textarea>
@@ -1637,7 +1637,7 @@
                 </label>
             </div>
         </div>
-        <div id="mon-wizard-movement">
+        <div id="mon-wizard-movement" data-mode="advanced">
             <div class="col-sm-12 form-group">
                 <label class="control-label">
                     Speed
@@ -1658,7 +1658,7 @@
                 </label>
             </div>
         </div>
-        <div id="mon-wizard-actions">
+        <div id="mon-wizard-actions" data-mode="advanced">
             <div class="col-sm-12 form-group">
                 <label class="control-label" style="width: 100%">Actions
                     <span class="help-block" style="font-size: 0.8em;margin:0;padding:0;display:inline">A comma delimited list of commands to execute on repop</span>
@@ -1831,7 +1831,7 @@
                 </label>
             </div>
         </div>
-        <div id="mon-wizard-vendor-advanced" data-visible="false">
+        <div id="mon-wizard-vendor-advanced" data-visible="false" data-mode="advanced">
             <div class="col-sm-6 form-group">
                 <label class="control-label">
                     Max number of each item
@@ -1900,7 +1900,7 @@
                 </label>
             </div>
         </div>
-        <div id="mon-wizard-barkeep" data-visible="false">
+        <div id="mon-wizard-barkeep" data-visible="false" data-mode="advanced">
             <div class="col-sm-12 form-group">
                 <label class="control-label">Menu title
                     <input type="text" id="mon-wiz-typeData-menu_title" style="width:100%" class="input-sm form-control" />
@@ -6391,6 +6391,7 @@
                         title: 'Custom properties',
                         id: 'room-wiz-properties',
                         clipboard: 'jiMUD/',
+                        mode: 1,
                         columns: [
                             {
                                 label: 'Type',
@@ -6527,6 +6528,7 @@
                         title: 'Reads',
                         id: 'room-wiz-reads',
                         clipboard: 'jiMUD/',
+                        mode: 1,
                         columns: [
                             {
                                 label: 'Read',
@@ -6653,6 +6655,7 @@
                         title: 'Searches',
                         id: 'room-wiz-searches',
                         clipboard: 'jiMUD/',
+                        mode: 1,
                         columns: [
                             {
                                 label: 'Search',
@@ -6769,7 +6772,6 @@
                 ]
             });
             $dialogs.room.height = '345px';
-            $dialogs.room.width = '570px';
             $dialogs.room.on('value-changed', e => {
                 if ($dialogs.room.options && $dialogs.room.options.valueChanged)
                     $dialogs.room.options.valueChanged(e);
@@ -7625,6 +7627,7 @@
                 title: 'Reputation',
                 id: 'mon-wiz-reputations',
                 clipboard: 'jiMUD/',
+                mode: 1,
                 columns: [
                     {
                         label: 'Type',
@@ -7691,6 +7694,7 @@
                 title: 'Emotes and speaks',
                 id: 'mon-wiz-emotes',
                 clipboard: 'jiMUD/',
+                mode: 1,
                 columns: [
                     {
                         label: 'Type',
@@ -7899,6 +7903,7 @@
                         title: 'Resistances',
                         id: 'mon-wiz-resistances',
                         clipboard: 'jiMUD/',
+                        mode: 1,
                         columns: [
                             {
                                 label: 'Type',
@@ -7967,6 +7972,7 @@
                         title: 'Ask topics',
                         id: 'mon-wiz-ask-topics',
                         clipboard: 'jiMUD/',
+                        mode: 1,
                         columns: [
                             {
                                 label: 'Topic',
@@ -8240,6 +8246,7 @@
                         title: 'Custom properties',
                         id: 'mon-wiz-properties',
                         clipboard: 'jiMUD/',
+                        mode: 1,
                         columns: [
                             {
                                 label: 'Type',
@@ -8342,6 +8349,7 @@
                     reputation,
                     new WizardPage({
                         title: 'Movement',
+                        mode: 1,
                         body: document.getElementById('mon-wizard-movement'),
                         reset: (e) => {
                             e.page.querySelector('#mon-wiz-speed').value = e.wizard.defaults['mon-wiz-speed'] || '0';
@@ -8399,6 +8407,7 @@
                         title: 'Reactions',
                         id: 'mon-wiz-reactions',
                         clipboard: 'jiMUD/',
+                        mode: 1,
                         columns: [
                             {
                                 label: 'Type',
