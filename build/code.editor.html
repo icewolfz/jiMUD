@@ -8651,7 +8651,7 @@
             });
             $dialogs.monster.height = '402px';
             $dialogs.monster.on('mode-changed', () => {
-                options.monWizardMode = $dialogs.mon.mode;
+                options.monWizardMode = $dialogs.monster.mode;
             })
             $dialogs.monster.on('value-changed', e => {
                 if ($dialogs.monster.options && $dialogs.monster.options.valueChanged)
