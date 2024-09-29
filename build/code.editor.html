@@ -3488,6 +3488,10 @@
         menubar.updateItem('sessions|replace with previous session', { enabled: options.session && options.session.length });
         if (_windows && _windows['help.html'] && _windows['help.html'].loadOptions)
             _windows['help.html'].loadOptions();
+        if ($dialogs.room)
+            $dialogs.room.mode = options.roomWizardMode;
+        if ($dialogs.monster)
+            $dialogs.monster.mode = options.monWizardMode;
         doUpdate(260);
     }
 
@@ -6318,6 +6322,7 @@
             $dialogs.room = new Wizard({
                 id: 'room-wizard',
                 title: 'Create new room...',
+                mode: options.roomWizardMode,
                 pages: [
                     new WizardPage({
                         title: 'Welcome',
@@ -6772,6 +6777,9 @@
                 ]
             });
             $dialogs.room.height = '345px';
+            $dialogs.room.on('mode-changed', () => {
+                options.roomWizardMode = $dialogs.room.mode;
+            })
             $dialogs.room.on('value-changed', e => {
                 if ($dialogs.room.options && $dialogs.room.options.valueChanged)
                     $dialogs.room.options.valueChanged(e);
@@ -7818,6 +7826,7 @@
             $dialogs.monster = new Wizard({
                 id: 'monster-wizard',
                 title: 'Create new monster...',
+                mode: options.monWizardMode,
                 pages: [
                     new WizardPage({
                         title: 'Welcome',
@@ -8641,6 +8650,9 @@
                     $dialogs.monster.options.typeChange(e);
             });
             $dialogs.monster.height = '402px';
+            $dialogs.monster.on('mode-changed', () => {
+                options.monWizardMode = $dialogs.mon.mode;
+            })
             $dialogs.monster.on('value-changed', e => {
                 if ($dialogs.monster.options && $dialogs.monster.options.valueChanged)
                     $dialogs.monster.options.valueChanged(e);
@@ -10136,6 +10148,7 @@
                 data.options = options.designOptions;
                 try {
                     p.editor = new AreaDesigner(data);
+                    p.editor.objWizardMode = options.objWizardMode;
                     p.editor.includePaths = options.includePaths;
                 }
                 catch (err) {
@@ -11144,7 +11157,10 @@
                     saveOptions();
                 }
                 else if (p.editor.type === 3) {
-                    options.designOptions[option] = value;
+                    if (option === 'objWizardMode')
+                        options.objWizardMode = value;
+                    else
+                        options.designOptions[option] = value;
                     saveOptions();
                 }
             });

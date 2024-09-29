@@ -1540,6 +1540,8 @@ export class AreaDesigner extends EditorBase {
     private $includePaths: string[] = [];
     private $includeCache;
 
+    public objWizardMode = 0;
+
     public get includePaths(): string[] {
         return this.$includePaths;
     }
@@ -8493,6 +8495,7 @@ export class AreaDesigner extends EditorBase {
                             const wiz = new Wizard({
                                 id: 'object-wizard',
                                 title: 'Edit object...',
+                                mode: this.objWizardMode,
                                 pages: [
                                     new WizardPage({
                                         id: 'obj-welcome',
@@ -8799,6 +8802,10 @@ export class AreaDesigner extends EditorBase {
                                         }
                                     })
                                 ]
+                            });
+                            wiz.on('mode-changed', () => {
+                                this.objWizardMode = wiz.mode;
+                                this.emit('option-changed', 'objWizardMode', this.objWizardMode);
                             });
                             wiz.defaults = {
                                 'obj-reads': ed.value.reads,

@@ -25,6 +25,9 @@ export class EditorSettings {
     public recentSessions = [];
     public includePaths = [];
     public hideOpenRecent: boolean = true;
+    public roomWizardMode = 0;
+    public monWizardMode = 0;
+    public objWizardMode = 0;
 
     public window = {
         persistent: false,
