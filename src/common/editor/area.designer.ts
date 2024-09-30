@@ -5731,7 +5731,7 @@ export class AreaDesigner extends EditorBase {
                                             if (!isValidIdentifier(newValue))
                                                 return 'Invalid function name';
                                             return true;
-                                        }                                        
+                                        }
                                     }
                                 }
                             }
@@ -9901,16 +9901,39 @@ export class AreaDesigner extends EditorBase {
                                 shown: (e) => {
                                     const summary = e.page.querySelector('#obj-summary');
                                     const data = e.wizard.data;
+                                    const defaults = new StdObject();
                                     let sum = '';
                                     for (const prop in data) {
                                         if (!data.hasOwnProperty(prop)) continue;
-                                        if (Array.isArray(data[prop]))
-                                            sum += '<div><span style="font-weight:bold">' + (prop === 'obj-subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + data[prop].length + '</div>';
-                                        else if (typeof data[prop] === 'object')
-                                            sum += '<div><span style="font-weight:bold">' + (prop === 'obj-subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + data[prop].display + '</div>';
-                                        else if (typeof data[prop] === 'string')
-                                            sum += '<div><span style="font-weight:bold">' + (prop === 'obj-subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + ellipse(data[prop]) + '</div>';
-                                        else
+                                        if(prop === 'obj-canBait' && data[prop]) continue;
+                                        if(prop === 'obj-bait' && !data[prop]) continue;
+                                        if(prop === 'obj-baitStrength' && data[prop] === 1) continue;
+                                        if(prop === 'obj-baitUses' && data[prop] === 5) continue;
+                                        if(prop === 'obj-enchantment' && data[prop] === 0) continue;
+                                        if(prop === 'obj-maxWearable' && data[prop] === 0) continue;
+                                        if(prop === 'obj-value' && data[prop] === 0) continue;
+                                        if(prop === 'obj-limbsOptional' && !data[prop]) continue;
+                                        if (Array.isArray(data[prop])) {
+                                            if (!Object.hasOwn(defaults, prop.substr(4))) {
+                                                if (data[prop].length)
+                                                    sum += '<div><span style="font-weight:bold">' + (prop === 'obj-subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + data[prop].length + '</div>';
+                                            }
+                                            else if (!isArrayEqual(data[prop], defaults[prop.substr(4)]))
+                                                sum += '<div><span style="font-weight:bold">' + (prop === 'obj-subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + data[prop].length + '</div>';
+                                        }
+                                        else if (typeof data[prop] === 'object') {
+                                            if (!util.isDeepStrictEqual(defaults[prop.substr(4)], data[prop].value))
+                                                sum += '<div><span style="font-weight:bold">' + (prop === 'obj-subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + data[prop].display + '</div>';
+                                        }
+                                        else if (typeof data[prop] === 'string') {
+                                            if (!Object.hasOwn(defaults, prop.substr(4))) {
+                                                if(data[prop].length)
+                                                    sum += '<div><span style="font-weight:bold">' + (prop === 'obj-subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + ellipse(data[prop]) + '</div>';
+                                            }
+                                            else if (data[prop] != defaults[prop.substr(4)])
+                                                sum += '<div><span style="font-weight:bold">' + (prop === 'obj-subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + ellipse(data[prop]) + '</div>';
+                                        }
+                                        else if (data[prop] !== defaults[prop.substr(4)])
                                             sum += '<div><span style="font-weight:bold">' + (prop === 'obj-subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + data[prop] + '</div>';
                                     }
                                     summary.innerHTML = sum;

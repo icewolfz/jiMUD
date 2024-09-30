@@ -6709,7 +6709,8 @@
                             sum += '<div><span style="font-weight:bold">Short:</span> ' + data['room-wiz-short'] + '</div>';
                             sum += '<div><span style="font-weight:bold">Long:</span> ' + ellipse(data['room-wiz-long']) + '</div>';
                             sum += '<div><span style="font-weight:bold">Light:</span> ' + (data['room-wiz-light'] || 0) + '</div>';
-                            sum += '<div><span style="font-weight:bold">Night light adjustment:</span> ' + (data['room-wiz-night-adjust'] || 0) + '</div>';
+                            if (data['room-wiz-night-adjust'] !== 0)
+                                sum += '<div><span style="font-weight:bold">Night light adjustment:</span> ' + (data['room-wiz-night-adjust'] || 0) + '</div>';
                             if (data['room-wiz-prevent-peer'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Prevent peer all:</span> ' + data['room-wiz-prevent-peer'] + '</div>';
                             if (data['room-wiz-indoors']) sum += '<div><span style="font-weight:bold">Indoors:</span> Yes</div>';
@@ -8511,7 +8512,8 @@
                             var data = e.wizard.data;
                             var sum = '<div><span style="font-weight:bold">Type:</span> ' + data['mon-wiz-type'].display + '</div>';
                             sum += '<div><span style="font-weight:bold">Level:</span> ' + data['mon-wiz-level'] + '</div>';
-                            sum += '<div><span style="font-weight:bold">Alignment:</span> ' + (data['mon-wiz-alignment'] || 'neutral') + '</div>';
+                            if (data['mon-wiz-alignment'] && data['mon-wiz-alignment'].length > 0 && data['mon-wiz-alignment'] !== '0' && data['mon-wiz-alignment'] !== 'neutral')
+                                sum += '<div><span style="font-weight:bold">Alignment:</span> ' + (data['mon-wiz-alignment'] || 'neutral') + '</div>';
                             sum += '<div><span style="font-weight:bold">Race:</span> ' + (data['mon-wiz-race'] || 'human') + '</div>';
                             if (data['mon-wiz-class'] && data['mon-wiz-class'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Class:</span> ' + data['mon-wiz-class'] + '</div>';
@@ -8555,7 +8557,8 @@
                                 sum += '<div><span style="font-weight:bold">Can ask questions:</span> Yes</div>';
                             if (data['mon-wiz-ask-no-topic'] && data['mon-wiz-ask-no-topic'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Ask no topic:</span> ' + ellipse(data['mon-wiz-ask-no-topic'].replace(/\n/g, '')) + '</div>';
-                            sum += '<div><span style="font-weight:bold">Ask response type:</span> ' + data['mon-wiz-ask-response'].display + '</div>';
+                            if (+data['mon-wiz-ask-response'].value !== 0)
+                                sum += '<div><span style="font-weight:bold">Ask response type:</span> ' + data['mon-wiz-ask-response'].display + '</div>';
                             if (data['mon-wiz-ask-topics'].length !== 0)
                                 sum += '<div><span style="font-weight:bold">Ask topics:</span> ' + data['mon-wiz-ask-topics'].length + '</div>';
                             if (data['mon-wiz-no-corpse'] && data['mon-wiz-no-corpse'].length > 0)
@@ -8584,12 +8587,14 @@
                             if (data['mon-wiz-initiators'] && data['mon-wiz-initiators'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Attack initiators:</span> ' + ellipse(data['mon-wiz-initiators'].replace(/\n/g, '')) + '</div>';
 
-                            sum += '<div><span style="font-weight:bold">Enable attacker tracking:</span> ' + (data['mon-wiz-tracking'] ? 'Yes' : 'No') + '</div>';
+                            if (data['mon-wiz-tracking'])
+                                sum += '<div><span style="font-weight:bold">Enable attacker tracking:</span> ' + (data['mon-wiz-tracking'] ? 'Yes' : 'No') + '</div>';
                             if (data['mon-wiz-tracking-message'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Enter message:</span> ' + ellipse(data['mon-wiz-tracking-message']) + '</div>';
                             if (data['mon-wiz-tracking-type'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Enter message action:</span> ' + ellipse(data['mon-wiz-tracking-type']) + '</div>';
-                            sum += '<div><span style="font-weight:bold">Aggressive:</span> ' + (data['mon-wiz-tracking-aggressively'] ? 'Yes' : 'No') + '</div>';
+                            if (data['mon-wiz-tracking-aggressively'])
+                                sum += '<div><span style="font-weight:bold">Aggressive:</span> ' + (data['mon-wiz-tracking-aggressively'] ? 'Yes' : 'No') + '</div>';
 
                             if (data['mon-wiz-aggressive'] && data['mon-wiz-aggressive'].length > 0)
                                 sum += '<div><span style="font-weight:bold">Aggressive:</span> ' + ellipse(data['mon-wiz-aggressive']) + '</div>';
@@ -8604,27 +8609,30 @@
                                 sum += '<div><span style="font-weight:bold">Auto drop:</span> Yes</div>';
                                 sum += '<div><span style="font-weight:bold">Auto drop delay:</span> ' + data['mon-wiz-auto-drop'] + ' seconds</div>';
                             }
-                            if (data['mon-wiz-storage-enabled']) {
-                                sum += '<div><span style="font-weight:bold">Open storage:</span> Yes</div>';
+                            if (!data['mon-wiz-storage-enabled'])
+                                sum += '<div><span style="font-weight:bold">Open storage:</span> No</div>';
+                            if (data['mon-wiz-storage'] !== 3)
                                 sum += '<div><span style="font-weight:bold">Open storage delay:</span> ' + data['mon-wiz-storage'] + ' seconds</div>';
-                            }
-                            if (data['mon-wiz-auto-wield-enabled']) {
+                            if (!data['mon-wiz-auto-wield-enabled'])
                                 sum += '<div><span style="font-weight:bold">Auto wield:</span> Yes</div>';
+                            if (data['mon-wiz-auto-wield'] !== 3)
                                 sum += '<div><span style="font-weight:bold">Auto wield delay:</span> ' + data['mon-wiz-auto-wield'] + ' seconds</div>';
-                            }
-                            if (data['mon-wiz-auto-loot-enabled']) {
+
+                            if (data['mon-wiz-auto-loot-enabled'])
                                 sum += '<div><span style="font-weight:bold">Auto loot:</span> Yes</div>';
+                            if (data['mon-wiz-auto-loot'] !== 1)
                                 sum += '<div><span style="font-weight:bold">Auto loot delay:</span> ' + data['mon-wiz-auto-loot'] + ' seconds</div>';
-                            }
-                            if (data['mon-wiz-auto-wear-enabled']) {
+
+                            if (data['mon-wiz-auto-wear-enabled'])
                                 sum += '<div><span style="font-weight:bold">Auto wear:</span> Yes</div>';
+                            if (data['mon-wiz-auto-wear'] !== 3)
                                 sum += '<div><span style="font-weight:bold">Auto wear delay:</span> ' + data['mon-wiz-auto-wear'] + ' seconds</div>';
-                            }
+
                             if (data['mon-wiz-wimpy'] !== 0)
                                 sum += '<div><span style="font-weight:bold">Wimpy:</span> ' + data['mon-wiz-wimpy'] + '%</div>';
-                            if (data['mon-wiz-auto-stand'])
-                                sum += '<div><span style="font-weight:bold">Auto stand:</span> Yes</div>';
-                            if (data['mon-wiz-properties'] || data['mon-wiz-properties'].length !== 0)
+                            if (!data['mon-wiz-auto-stand'])
+                                sum += '<div><span style="font-weight:bold">Auto stand:</span> No</div>';
+                            if (data['mon-wiz-properties'] && data['mon-wiz-properties'].length !== 0)
                                 sum += '<div><span style="font-weight:bold">Custom properties:</span> ' + data['mon-wiz-properties'].length + '</div>';
 
 
