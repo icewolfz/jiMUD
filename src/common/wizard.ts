@@ -405,6 +405,7 @@ enum UpdateType {
 }
 
 export class Wizard extends EventEmitter {
+    private $mode: WizardMode = WizardMode.normal;
     private $dialog: HTMLDialogElement;
     private $id = 'wizard';
     private $body: HTMLElement;
@@ -424,7 +425,6 @@ export class Wizard extends EventEmitter {
     private $navMode: HTMLSelectElement;
     private $update: UpdateType;
     private _rTimeout = 0;
-    private $mode: WizardMode = WizardMode.normal;
     public defaults;
 
     get id() { return this.$id; }
@@ -492,6 +492,10 @@ export class Wizard extends EventEmitter {
     set mode(value: WizardMode) {
         if (value === this.$mode) return;
         this.$mode = value;
+        if(this.$navMode) {
+            $(this.$navMode).val('' + value);
+            $(this.$navMode).selectpicker('render');        
+        }
         this.refreshAll();
         this.emit('mode-changed');
     }
@@ -500,8 +504,8 @@ export class Wizard extends EventEmitter {
         super();
         if (options) {
             this.id = options.id || 'wizard';
+            this.$mode = options.mode || WizardMode.normal;
             this.pages = options.pages || [];
-            this.mode = options.mode || WizardMode.normal;
         }
         this.create();
         if (options) {
@@ -573,9 +577,9 @@ export class Wizard extends EventEmitter {
         this.$navMode.addEventListener('change', (e) => {
             this.mode = +(<HTMLSelectElement>e.target).value;
         });
-
         this.$navMode.innerHTML = `<option value="${WizardMode.normal}">Normal</option><option value="${WizardMode.advanced}">Advanced</option><option value="${WizardMode.expert}">Expert</option>`
         el.appendChild(this.$navMode);
+        $(this.$navMode).val('' + this.$mode);
         $(this.$navMode).selectpicker('render');
         $(this.$navMode).selectpicker('refresh');
 
@@ -776,6 +780,7 @@ export class Wizard extends EventEmitter {
     }
 
     private rebuildNav() {
+        if(!this.$nav) return;
         while (this.$nav.firstChild) {
             this.$nav.removeChild(this.$nav.firstChild);
         }
@@ -871,6 +876,7 @@ export class Wizard extends EventEmitter {
     }
 
     public refresh() {
+        if(!this.$body || !this.$nav || !this.$navPages) return;
         while (this.$body.firstChild) {
             this.$body.removeChild(this.$body.firstChild);
         }
