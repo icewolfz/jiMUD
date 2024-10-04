@@ -49,6 +49,8 @@
   - Update electron 31.1.0 to 32.1.2
   - Update better-sqlite3 11.2.1 to 11.3.0
   - Update chokidar 3.6.0 to 4.0.1
+  - Update mathjs 13.1.1 to 13.2.0
+  - Update electron-updater 6.3.4 to 6.3.9
   
 ## 1.5.0 2024-09-01
 
