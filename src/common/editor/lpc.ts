@@ -1622,6 +1622,33 @@ export class LPCFormatter extends EventEmitter {
                                     else if (t3 >= 0 && tokenLine[t3].type === FormatTokenType.parenLParen)
                                         op.rtrim();
                                 }
+                                /*
+                                else if (tokenLine[t].value === '<<' || tokenLine[t].value === '>>') {
+                                    t3 = t + 1;
+                                    while (t3 < tll && tokenLine[t3].type === FormatTokenType.whitespace) {
+                                        t3++;
+                                        if (t3 <= 0)
+                                            break;
+                                    }
+                                    if (t3 < tll && tokenLine[t3].type === FormatTokenType.operator && tokenLine[t3].value === '=')
+                                        op = op.rtrim();
+                                    else {
+                                        op = op.rtrim();
+                                        op += ' ';
+                                    }
+                                }
+                                */
+                                else if (tokenLine[t].value === '=') {
+                                    t3 = t - 1;
+                                    while (t3 >= 0 && tokenLine[t3].type === FormatTokenType.whitespace) {
+                                        t3--;
+                                        if (t3 <= 0)
+                                            break;
+                                    }
+                                    if (t3 >= 0 && tokenLine[t3].type === FormatTokenType.operator
+                                        && (tokenLine[t3].value === '<<' || tokenLine[t3].value === '>>'))
+                                        op = op.rtrim();
+                                }                                
                                 else if (tokenLine[t].value === '--' || tokenLine[t].value === '++')
                                     op = op.rtrim();
                                 else {
@@ -1723,12 +1750,34 @@ export class LPCFormatter extends EventEmitter {
                                             op += ' ';
                                         }
                                     }
-                                    else if (tokenLine[t].value === '--' || tokenLine[t].value === '++')
+                                    /*
+                                    else if (tokenLine[t1].value === '<<' || tokenLine[t1].value === '>>') {
+                                        t3 = t + 1;
+                                        while (t3 < tll && tokenLine[t3].type === FormatTokenType.whitespace) {
+                                            t3++;
+                                            if (t3 <= 0)
+                                                break;
+                                        }
+                                        if (t3 < tll && tokenLine[t3].type === FormatTokenType.operator && tokenLine[t3].value === '=')
+                                            op = op.rtrim();
+                                        else {
+                                            op = op.rtrim();
+                                            op += ' ';
+                                        }
+                                    }
+                                    */
+                                    else if (tokenLine[t1].value === '--' || tokenLine[t1].value === '++')
                                         op = op.trimRight();
                                     else if (inCase && tokenLine[t1].value === ':') {
                                         op = op.trimRight();
                                         op += '\n';
                                         inCase = 0;
+                                    }
+                                    else if (tokenLine[t1].value === '=') {
+                                        //previous is text so should add a space
+                                        if (t3 >= 0 && tokenLine[t3].type === FormatTokenType.operator
+                                            && (tokenLine[t3].value === '<<' || tokenLine[t3].value === '>>'))
+                                            op = op.rtrim();
                                     }
                                     else {
                                         op = op.trimRight();
@@ -2692,6 +2741,7 @@ export function tokenizeLPC(str, byLine?: boolean) {
                     switch (c) {
                         case val:
                         case '=':
+                            val += c;
                             state = 0;
                             $position = idx + 1;
                             return { value: val + c, type: FormatTokenType.operator };
@@ -3348,7 +3398,7 @@ export function parseArguments(str) {
                 continue;
             case FormatTokenType.whitespace:
                 //skip whitespace as it is not important and likely to be trimmed anyways or reformated    
-                if(nest === 0)
+                if (nest === 0)
                     continue;
                 //if in a nest leave it as it could improve readable
                 break;

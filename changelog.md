@@ -42,6 +42,7 @@
     - Fix error tooltips not displaying correctly
     - Dialogs that validate data will no longer close until error is corrected
     - Fix new monster/room wizard titles when launched from file menu
+    - Fix invalid formatting of >>= and <<= operators
 - **Changed:**
   - Code editor:
     - Hide items that only should appear when text is selected in context menu
