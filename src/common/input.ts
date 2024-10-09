@@ -6055,7 +6055,7 @@ export class Input extends EventEmitter {
                     break;
                 case ParseState.doubleQuotedEscape:
                     state = ParseState.doubleQuoted;
-                    if (c !== '"') {
+                    if (c !== '"' && c !== escChar) {
                         idx--;
                         if (eAlias && findAlias)
                             alias += escChar;
@@ -6083,7 +6083,7 @@ export class Input extends EventEmitter {
                     break;
                 case ParseState.singleQuotedEscape:
                     state = ParseState.singleQuoted;
-                    if (c !== '\'') {
+                    if (c !== '\'' && c !== escChar) {
                         idx--;
                         if (eAlias && findAlias)
                             alias += escChar;
