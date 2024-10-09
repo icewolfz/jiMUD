@@ -43,7 +43,8 @@
     - Dialogs that validate data will no longer close until error is corrected
     - Fix new monster/room wizard titles when launched from file menu
     - Fix invalid formatting of >>= and <<= operators
-  - Fix issue not respecting escape when parsing " and ' quoted strings when parse quoted enabled,
+  - Fix issue not respecting escape when parsing " and ' quoted strings when parse quoted enabled
+  - Fix typo in MSP protocol URL parameter
 - **Changed:**
   - Code editor:
     - Hide items that only should appear when text is selected in context menu

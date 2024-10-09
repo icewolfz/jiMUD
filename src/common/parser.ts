@@ -1699,7 +1699,7 @@ export class Parser extends EventEmitter {
                                 case 'U':  //url
                                     e.url = stripQuotes(arg[1]);
                                     if (!e.url.endsWith('/') && e.url.length > 0)
-                                        e.Url += '/';
+                                        e.url += '/';
                                     break;
                             }
                         }
@@ -1731,7 +1731,7 @@ export class Parser extends EventEmitter {
                         else if (x === 5) {
                             e.url = stripQuotes(args[x]);
                             if (!e.url.endsWith('/') && e.url.length > 0)
-                                e.Url += '/';
+                                e.url += '/';
                         }
                     }
                     this.emit('music', e);
@@ -1774,7 +1774,7 @@ export class Parser extends EventEmitter {
                                 case 'U':  //url
                                     e.url = stripQuotes(arg[1]);
                                     if (!e.url.endsWith('/') && e.url.length > 0)
-                                        e.Url += '/';
+                                        e.url += '/';
                                     break;
                             }
                         }
@@ -1810,7 +1810,7 @@ export class Parser extends EventEmitter {
                         else if (x === 5) {
                             e.url = stripQuotes(args[x]);
                             if (!e.url.endsWith('/') && e.url.length > 0)
-                                e.Url += '/';
+                                e.url += '/';
                         }
                     }
                     this.emit('sound', e);
