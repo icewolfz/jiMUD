@@ -43,6 +43,7 @@
     - Dialogs that validate data will no longer close until error is corrected
     - Fix new monster/room wizard titles when launched from file menu
     - Fix invalid formatting of >>= and <<= operators
+  - Fix issue not respecting escape when parsing " and ' quoted strings when parse quoted enabled,
 - **Changed:**
   - Code editor:
     - Hide items that only should appear when text is selected in context menu
@@ -52,7 +53,7 @@
   - Update chokidar 3.6.0 to 4.0.1
   - Update mathjs 13.1.1 to 13.2.0
   - Update electron-updater 6.3.4 to 6.3.9
-  
+
 ## 1.5.0 2024-09-01
 
 - **New:**
@@ -3173,13 +3174,13 @@
   - Add proper escape system with parser changes, characters: $%"'{\ and command stack character, to escape a character simply just do \CHARACTER
   - Expressions now allow the function dice to be used as if normal math function, eg: `${5 + dice(2d6) * 5}` is the same as `${5 + ${dice(2d6)} * 5}`
   - Functions:
-    - ${dice(**x**d**y****+n**)}, roll a dice, x is the # of dice, y is the # of sides, with optional +,-,\*,/ modifier
+    - ${dice(**x**d**y\*\***+n\*\*)}, roll a dice, x is the # of dice, y is the # of sides, with optional +,-,\*,/ modifier
       - example: ${dice(2d6+5)}, rolls 2, 6 sided dice and returns the sum + 5
-    - ${diceavg(**x**d**y****+n**)} the avg roll of dice, x is the # of dice, y is the # of sides, with optional +,-,\*,/ modifier
-    - ${dicemin(**x**d**y****+n**)} the minimum roll of dice, x is the # of dice, y is the # of sides, with optional +,-,\*,/ modifier
-    - ${dicemax(**x**d**y****+n**)} the maximum roll of dice, x is the # of dice, y is the # of sides, with optional +,-,\*,/ modifier
-    - ${dicedev(**x**d**y****+n**)} return standard deviation of dice `sqrt((y^2-1)/12 * x)`, x is the # of dice, y is the # of sides, with optional +,-,\*,/ modifier
-    - ${zdicedev(**x**d**y****+n**)} return zMUD/cMUD standard deviation of dice `sqrt(((y-1)^2-1)/12 * x)`, x is the # of dice, y is the # of sides, with optional +,-,\*,/ modifier
+    - ${diceavg(**x**d**y\*\***+n\*\*)} the avg roll of dice, x is the # of dice, y is the # of sides, with optional +,-,\*,/ modifier
+    - ${dicemin(**x**d**y\*\***+n\*\*)} the minimum roll of dice, x is the # of dice, y is the # of sides, with optional +,-,\*,/ modifier
+    - ${dicemax(**x**d**y\*\***+n\*\*)} the maximum roll of dice, x is the # of dice, y is the # of sides, with optional +,-,\*,/ modifier
+    - ${dicedev(**x**d**y\*\***+n\*_)} return standard deviation of dice `sqrt((y^2-1)/12 _ x)`, x is the # of dice, y is the # of sides, with optional +,-,\*,/ modifier
+    - ${zdicedev(**x**d**y\*\***+n\*_)} return zMUD/cMUD standard deviation of dice `sqrt(((y-1)^2-1)/12 _ x)`, x is the # of dice, y is the # of sides, with optional +,-,\*,/ modifier
   - Verbatim system, you can now start a line of text with a ` and all text after that to a newline will be sent as is to the mud with no parsing or manipulation
   - Preferences:
     - Escape character, allows changing which character is used for escaping

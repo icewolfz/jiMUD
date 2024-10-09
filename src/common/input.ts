@@ -114,7 +114,9 @@ enum ParseState {
     inlineComment = 22,
     blockCommentStart = 23,
     blockComment = 24,
-    blockCommentEnd = 25
+    blockCommentEnd = 25,
+    doubleQuotedEscape = 26,
+    singleQuotedEscape = 27
 }
 
 /**
@@ -1480,7 +1482,7 @@ export class Input extends EventEmitter {
                     this._tabWords = null;
                     this._tabSearch = null
                     if (this.client.getOption('commandAutoSize') || this.client.getOption('commandScrollbars'))
-                        resizeCommandInput();                    
+                        resizeCommandInput();
                     break;
                 case 'ArrowUp': //up
                     //any modifier set not a proper history navigation    
@@ -6039,23 +6041,59 @@ export class Input extends EventEmitter {
             switch (state) {
                 case ParseState.doubleQuoted:
                     //quoted string
-                    if (c === '"' && pd)
-                        state = ParseState.none;
-                    if (eAlias && findAlias)
-                        alias += c;
-                    else
-                        str += c;
+                    if (eEscape && c === escChar)
+                        state = ParseState.doubleQuotedEscape;
+                    else {
+                        if (c === '"' && pd)
+                            state = ParseState.none;
+                        if (eAlias && findAlias)
+                            alias += c;
+                        else
+                            str += c;
+                    }
                     start = false;
                     break;
-                case ParseState.singleQuoted:
-                    //quoted string
-                    if (c === '\'' && ps)
-                        state = ParseState.none;
-                    if (eAlias && findAlias)
+                case ParseState.doubleQuotedEscape:
+                    state = ParseState.doubleQuoted;
+                    if (c !== '"') {
+                        idx--;
+                        if (eAlias && findAlias)
+                            alias += escChar;
+                        else
+                            str += escChar;
+                    }
+                    else if (eAlias && findAlias)
                         alias += c;
                     else
                         str += c;
+                    break;
+                case ParseState.singleQuoted:
+                    if (eEscape && c === escChar)
+                        state = ParseState.doubleQuotedEscape;
+                    else {
+                        //quoted string
+                        if (c === '\'' && ps)
+                            state = ParseState.none;
+                        if (eAlias && findAlias)
+                            alias += c;
+                        else
+                            str += c;
+                    }
                     start = false;
+                    break;
+                case ParseState.singleQuotedEscape:
+                    state = ParseState.singleQuoted;
+                    if (c !== '\'') {
+                        idx--;
+                        if (eAlias && findAlias)
+                            alias += escChar;
+                        else
+                            str += escChar;
+                    }
+                    else if (eAlias && findAlias)
+                        alias += c;
+                    else
+                        str += c;
                     break;
                 case ParseState.aliasArguments:
                     //quoted string so keep intact
