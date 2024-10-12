@@ -46,6 +46,7 @@
   - Fix issue not respecting escape when parsing " and ' quoted strings when parse quoted enabled
   - Fix typo in MSP protocol URL parameter
 - **Changed:**
+  - Make chat capture selective line mode ignore case
   - Code editor:
     - Hide items that only should appear when text is selected in context menu
     - Area Designer: Room property groups now sort advanced at the bottom

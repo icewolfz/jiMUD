@@ -2993,9 +2993,9 @@
                     const lines = client.getOption('chat.lines');
                     for (var l = 0, ll = lines.length; l < ll; l++) {
                         if (lines[l].trim().length === 0) continue;
-                        _captures.push(new RegExp('\\[' + lines[l].trim() + '\\](.*)'));
+                        _captures.push(new RegExp('\\[' + lines[l].trim() + '\\](.*)', 'i'));
                         if (client.getOption('chat.captureReviews'))
-                            _captureReviews.push(new RegExp('^-=-=- ' + lines[l].trim() + ' Review -=-=-$'));
+                            _captureReviews.push(new RegExp('^-=-=- ' + lines[l].trim() + ' Review -=-=-$', 'i'));
                     }
                 }
             }

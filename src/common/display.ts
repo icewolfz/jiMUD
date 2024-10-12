@@ -2946,6 +2946,8 @@ export class Display extends EventEmitter {
                     if (td.length > 0)
                         style.push('text-decoration:', td.join('').trim(), ';');
                 }
+                else
+                    style.push('padding-bottom: 1px;');
                 if (offset < start || end < start)
                     continue;
                 style = style.join('').trim();
