@@ -1868,12 +1868,6 @@ export class Input extends EventEmitter {
     public executeScript(txt: string) {
         if (txt == null)
             return txt;
-        const tTxt: string = txt.trim().substr(1);
-        if (this._tests.TestFunctions[tTxt.toLowerCase()]) {
-            this._tests.TestFunctions[tTxt.toLowerCase()].apply(this._tests, []);
-            return null;
-        }
-
         let state: number = 0;
         let idx: number = 0;
         let c: string;
@@ -2039,84 +2033,6 @@ export class Input extends EventEmitter {
         let max;
         let min;
         switch (fun.toLowerCase()) {
-            case 'testfile':
-                if ((this.client.getOption('echo') & 4) === 4)
-                    this.client.echo(raw, -3, -4, true, true);
-                args = this.parseInline(args.join(' '));
-                if (!args || args.length === 0)
-                    throw new Error('Invalid syntax use ' + cmdChar + 'testfile file');
-                if (!isFileSync(args))
-                    throw new Error('Invalid file "' + args + '"');
-                tmp = fs.readFileSync(args, 'utf-8');
-                n = this.client.getOption('enableCommands');
-                this.client.options.enableCommands = true;
-                i = new Date().getTime();
-                this.client.sendCommand(tmp, null, this.client.getOption('allowCommentsFromCommand'));
-                p = new Date().getTime();
-                this.client.options.enableCommands = n;
-                this.client.print(`Time: ${p - i}\n`, true);
-                return null;
-            case 'testspeedfile':
-                if ((this.client.getOption('echo') & 4) === 4)
-                    this.client.echo(raw, -3, -4, true, true);
-                args = this.parseInline(args.join(' '));
-                items = [];
-                if (!args || args.length === 0)
-                    throw new Error('Invalid syntax use ' + cmdChar + 'testspeedfile file');
-                if (!isFileSync(args))
-                    throw new Error('Invalid file "' + args + '"');
-                tmp = fs.readFileSync(args, 'utf-8');
-                n = this.client.getOption('enableCommands');
-                this.client.options.enableCommands = true;
-                avg = 0;
-                max = 0;
-                min = 0;
-                for (i = 0; i < 10; i++) {
-                    const start = new Date().getTime();
-                    this.client.sendCommand(tmp, null, this.client.getOption('allowCommentsFromCommand'));
-                    const end = new Date().getTime();
-                    p = end - start;
-                    avg += p;
-                    if (p > max) max = p;
-                    if (!min || p < min) min = p;
-                    items.push(`${i} - ${p}`);
-                }
-                items.push(`Total - ${avg}`);
-                items.push(`Average - ${avg / 10}`);
-                items.push(`Min - ${min}`);
-                items.push(`Max - ${max}`);
-                this.client.print(items.join('\n') + '\n', true);
-                this.client.options.enableCommands = n;
-                return null;
-            case 'testspeedfiler':
-                if ((this.client.getOption('echo') & 4) === 4)
-                    this.client.echo(raw, -3, -4, true, true);
-                args = this.parseInline(args.join(' '));
-                items = [];
-                if (!args || args.length === 0)
-                    throw new Error('Invalid syntax use ' + cmdChar + 'testspeedfile file');
-                if (!isFileSync(args))
-                    throw new Error('Invalid file "' + args + '"');
-                tmp = fs.readFileSync(args, 'utf-8');
-                avg = 0;
-                max = 0;
-                min = 0;
-                for (i = 0; i < 10; i++) {
-                    const start = new Date().getTime();
-                    this.client.telnet.receivedData(Buffer.from(tmp), true, true);
-                    const end = new Date().getTime();
-                    p = end - start;
-                    avg += p;
-                    if (p > max) max = p;
-                    if (!min || p < min) min = p;
-                    items.push(`${i} - ${p}`);
-                }
-                items.push(`Total - ${avg}`);
-                items.push(`Average - ${avg / 10}`);
-                items.push(`Min - ${min}`);
-                items.push(`Max - ${max}`);
-                this.client.print(items.join('\n') + '\n', true);
-                return null;
             //spell-checker:ignore chatprompt chatp
             case 'chatprompt':
             case 'chatp':

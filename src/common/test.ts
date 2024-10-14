@@ -2,7 +2,8 @@
 import { EventEmitter } from 'events';
 import { Client } from './client';
 import { AnsiColorCode, Ansi } from './ansi';
-
+import { FunctionEvent } from './types';
+import { isFileSync } from './library';
 /**
  * Client text functions
  *
@@ -21,14 +22,14 @@ export class Tests extends EventEmitter {
      * @type {object}
      * @memberof Tests
      */
-    public TestFunctions: object = {};
+    public functions: object = {};
     /**
      * The client the test functions are for
      *
      * @type {object}
      * @memberof Tests
      */
-    public Client: Client;
+    public client: Client;
 
     /**
      * Creates an instance of Tests.
@@ -38,13 +39,99 @@ export class Tests extends EventEmitter {
      */
     constructor(client: Client) {
         super();
-        this.Client = client;
+        this.client = client;
+        this.client.on('function', this.processFunction);
 
-        this.TestFunctions['testlist'] = function () {
+        this.functions['testfile'] = data => {
+            const fs = require('fs');
+            if ((this.client.getOption('echo') & 4) === 4)
+                this.client.echo(data.raw, -3, -4, true, true);
+            let args = this.client.parseInline(data.args.join(' '));
+            if (!args || args.length === 0)
+                throw new Error('Invalid syntax use ' + this.client.getOption('commandChar') + 'testfile file');
+            if (!isFileSync(args))
+                throw new Error('Invalid file "' + args + '"');
+            let tmp = fs.readFileSync(args, 'utf-8');
+            let n = this.client.getOption('enableCommands');
+            this.client.options.enableCommands = true;
+            let i = new Date().getTime();
+            this.client.sendCommand(tmp, null, this.client.getOption('allowCommentsFromCommand'));
+            let p = new Date().getTime();
+            this.client.options.enableCommands = n;
+            this.client.print(`Time: ${p - i}\n`, true);
+        };
+        this.functions['testspeedfile'] = data => {
+            const fs = require('fs');
+            if ((this.client.getOption('echo') & 4) === 4)
+                this.client.echo(data.raw, -3, -4, true, true);
+            let args = this.client.parseInline(data.args.join(' '));
+            let items = [];
+            if (!args || args.length === 0)
+                throw new Error('Invalid syntax use ' + this.client.getOption('commandChar') + 'testspeedfile file');
+            if (!isFileSync(args))
+                throw new Error('Invalid file "' + args + '"');
+            let tmp = fs.readFileSync(args, 'utf-8');
+            let n = this.client.getOption('enableCommands');
+            this.client.options.enableCommands = true;
+            let avg = 0;
+            let max = 0;
+            let min = 0;
+            let p;
+            for (let i = 0; i < 10; i++) {
+                const start = new Date().getTime();
+                this.client.sendCommand(tmp, null, this.client.getOption('allowCommentsFromCommand'));
+                const end = new Date().getTime();
+                p = end - start;
+                avg += p;
+                if (p > max) max = p;
+                if (!min || p < min) min = p;
+                items.push(`${i} - ${p}`);
+            }
+            items.push(`Total - ${avg}`);
+            items.push(`Average - ${avg / 10}`);
+            items.push(`Min - ${min}`);
+            items.push(`Max - ${max}`);
+            this.client.print(items.join('\n') + '\n', true);
+            this.client.options.enableCommands = n;
+        }
+        this.functions['testspeedfiler'] = data => {
+            const fs = require('fs');
+            if ((this.client.getOption('echo') & 4) === 4)
+                this.client.echo(data.raw, -3, -4, true, true);
+            let args = this.client.parseInline(data.args.join(' '));
+            let items = [];
+            if (!args || args.length === 0)
+                throw new Error('Invalid syntax use ' + this.client.getOption('commandChar') + 'testspeedfile file');
+            if (!isFileSync(args))
+                throw new Error('Invalid file "' + args + '"');
+            let tmp = fs.readFileSync(args, 'utf-8');
+            let avg = 0;
+            let max = 0;
+            let min = 0;
+            let p;
+            for (let i = 0; i < 10; i++) {
+                const start = new Date().getTime();
+                this.client.telnet.receivedData(Buffer.from(tmp), true, true);
+                const end = new Date().getTime();
+                p = end - start;
+                avg += p;
+                if (p > max) max = p;
+                if (!min || p < min) min = p;
+                items.push(`${i} - ${p}`);
+            }
+            items.push(`Total - ${avg}`);
+            items.push(`Average - ${avg / 10}`);
+            items.push(`Min - ${min}`);
+            items.push(`Max - ${max}`);
+            this.client.print(items.join('\n') + '\n', true);
+            return null;
+        }
+
+        this.functions['testlist'] = function () {
             let sample = 'Test commands:\n';
             let t;
-            for (t in this.TestFunctions) {
-                if (!this.TestFunctions.hasOwnProperty(t)) continue;
+            for (t in this.functions) {
+                if (!this.functions.hasOwnProperty(t)) continue;
                 sample += `\t${this.Client.getOption('commandChar') + t}\n`;
             }
             sample += `\t${this.Client.getOption('commandChar')}testfile file\n`;
@@ -53,7 +140,7 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['testcolors'] = function () {
+        this.functions['testcolors'] = function () {
             let r;
             let sample = 'Colors and Styles\n-------------------------------------------------------------------------------------------\n';
             for (r = 30; r < 38; r++) {
@@ -90,7 +177,7 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['testcolorsdetails'] = function () {
+        this.functions['testcolorsdetails'] = function () {
             let sample = '';
             if (this.Client.telnet.prompt)
                 sample = '\n';
@@ -141,7 +228,7 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['testxterm'] = function (title) {
+        this.functions['testxterm'] = function (title) {
             let r;
             let g;
             let b;
@@ -182,7 +269,7 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
         //spell-checker:disable
-        this.TestFunctions['testmxp'] = function () {
+        this.functions['testmxp'] = function () {
             let sample = 'Text Formatting\n';
             sample += '\t\x1B[6z';
             sample += '<!--Test-->&lt;!--Test--&gt;\n';
@@ -260,7 +347,7 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['testmxp2'] = function () {
+        this.functions['testmxp2'] = function () {
             let sample = '\x1B[6z';
             sample += '<!-- Elements to support the Auto mapper -->';
             sample += '<!ELEMENT RName \'<FONT COLOR=Red><B>\' FLAG="RoomName">';
@@ -297,11 +384,11 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
         //spell-checker:enable
-        this.TestFunctions['testmxpexpire'] = function () {
+        this.functions['testmxpexpire'] = function () {
             this.Client.print('\t\x1B[6z<SEND "sample" PROMPT EXPIRE=prompt>Expire sample</SEND> <SEND "sample" PROMPT EXPIRE=prompt2>Expire sample2</SEND><EXPIRE prompt> <SEND "sample" PROMPT EXPIRE=prompt>Expire sample3</SEND>\x1B[0z\n', true);
         };
 
-        this.TestFunctions['testmxpcolors'] = function () {
+        this.functions['testmxpcolors'] = function () {
             const colors = ['IndianRed', 'LightCoral', 'Salmon', 'DarkSalmon', 'LightSalmon',
                 'Crimson', 'Red', 'FireBrick', 'DarkRed', 'Pink', 'LightPink', 'HotPink', 'DeepPink',
                 'MediumVioletRed', 'PaleVioletRed', 'LightSalmon', 'Coral', 'Tomato', 'OrangeRed',
@@ -368,7 +455,7 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['testmxpelements'] = function () {
+        this.functions['testmxpelements'] = function () {
             let sample = '\x1B[6z';
             sample += 'Custom Element\n';
             sample += '\t<!ELEMENT help \'<send href="help &text;">\'>&lt;!ELEMENT help \'&lt;send href="help &amp;text;"&gt;\'&gt;\n';
@@ -379,7 +466,7 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['testmxpLines'] = function () {
+        this.functions['testmxpLines'] = function () {
             let sample = '\x1B[6z';
             sample += '<!ELEMENT Auction \'<FONT COLOR=red>\' TAG=20 OPEN>';
             sample += '\x1B[20zA nice shiny sword is being auctioned.\n';
@@ -395,8 +482,8 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['testmapper'] = () => {
-            this.Client.emit('received-GMCP', 'Room.Info', {
+        this.functions['testmapper'] = () => {
+            this.client.emit('received-GMCP', 'Room.Info', {
                 details: [],
                 doors: {},
                 prevroom: { num: 0, dir: '', area: '' },
@@ -409,7 +496,7 @@ export class Tests extends EventEmitter {
                 num: 1968208336,
                 indoors: 0
             });
-            this.Client.emit('received-GMCP', 'Room.Info', {
+            this.client.emit('received-GMCP', 'Room.Info', {
                 details: [],
                 doors: {},
                 prevroom: { num: 1968208336, dir: 'east', area: 'Doc Build Samples Area' },
@@ -424,7 +511,7 @@ export class Tests extends EventEmitter {
                 num: -329701270,
                 indoors: 0
             });
-            this.Client.emit('received-GMCP', 'Room.Info', {
+            this.client.emit('received-GMCP', 'Room.Info', {
                 details: [],
                 doors: {},
                 prevroom: { num: -329701270, dir: 'east', area: 'Doc Build Samples Area' },
@@ -438,7 +525,7 @@ export class Tests extends EventEmitter {
                 num: -1688332036,
                 indoors: 0
             });
-            this.Client.emit('received-GMCP', 'Room.Info', {
+            this.client.emit('received-GMCP', 'Room.Info', {
                 details: [],
                 doors: {},
                 prevroom: { num: -1688332036, dir: 'south', area: 'Doc Build Samples Area' },
@@ -452,7 +539,7 @@ export class Tests extends EventEmitter {
                 num: -348853133,
                 indoors: 0
             });
-            this.Client.emit('received-GMCP', 'Room.Info', {
+            this.client.emit('received-GMCP', 'Room.Info', {
                 details: [],
                 doors: {},
                 prevroom: { num: -348853133, dir: 'west', area: 'Doc Build Samples Area' },
@@ -468,7 +555,7 @@ export class Tests extends EventEmitter {
                 num: 1916648905,
                 indoors: 1
             });
-            this.Client.emit('received-GMCP', 'Room.Info', {
+            this.client.emit('received-GMCP', 'Room.Info', {
                 details: [],
                 doors: {},
                 prevroom: { num: 1916648905, dir: 'west', area: 'Doc Build Samples Area' },
@@ -483,7 +570,7 @@ export class Tests extends EventEmitter {
                 num: 87723359,
                 indoors: 0
             });
-            this.Client.emit('received-GMCP', 'Room.Info', {
+            this.client.emit('received-GMCP', 'Room.Info', {
                 details: [],
                 doors: {},
                 prevroom: { num: 87723359, dir: 'south', area: 'Doc Build Samples Area' },
@@ -497,7 +584,7 @@ export class Tests extends EventEmitter {
                 num: -1674322715,
                 indoors: 0
             });
-            this.Client.emit('received-GMCP', 'Room.Info', {
+            this.client.emit('received-GMCP', 'Room.Info', {
                 details: [],
                 doors: {},
                 prevroom: { num: -1674322715, dir: 'east', area: 'Doc Build Samples Area' },
@@ -512,7 +599,7 @@ export class Tests extends EventEmitter {
                 num: 210551156,
                 indoors: 0
             });
-            this.Client.emit('received-GMCP', 'Room.Info', {
+            this.client.emit('received-GMCP', 'Room.Info', {
                 details: [],
                 doors: {},
                 prevroom: { num: 210551156, dir: 'east', area: 'Doc Build Samples Area' },
@@ -527,7 +614,7 @@ export class Tests extends EventEmitter {
             });
         };
 
-        this.TestFunctions['testfansi'] = function () {
+        this.functions['testfansi'] = function () {
             let sample = '';
             let i;
             sample = String.fromCharCode(1);
@@ -557,7 +644,7 @@ export class Tests extends EventEmitter {
             this.Client.display.displayControlCodes = dcc;
         };
 
-        this.TestFunctions['testcontrolchars'] = function () {
+        this.functions['testcontrolchars'] = function () {
             let i;
             let sample = '1:  ' + String.fromCharCode(1) + ',';
             for (i = 3; i <= 9; i++)
@@ -576,7 +663,7 @@ export class Tests extends EventEmitter {
         }
 
         //spell-checker:disable
-        this.TestFunctions['testurldetect'] = function () {
+        this.functions['testurldetect'] = function () {
             let sample = '\x1B[0mhttp://www.google.com\n';
             sample += '\thttp://www.google.com\x1B[44m\n';
             sample += 'http://www.google.com\n';
@@ -601,7 +688,7 @@ export class Tests extends EventEmitter {
         };
         //spell-checker:enable
 
-        this.TestFunctions['testxtermrgb'] = function () {
+        this.functions['testxtermrgb'] = function () {
             let sample = '';
             let r;
             let g;
@@ -621,7 +708,7 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['testsize'] = function () {
+        this.functions['testsize'] = function () {
             const ws = this.Client.display.WindowSize;
             let sample = ws.width + 'x' + ws.height + ' ';
             ws.width -= sample.length;
@@ -632,7 +719,7 @@ export class Tests extends EventEmitter {
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['testspeed'] = function () {
+        this.functions['testspeed'] = function () {
             const sample = [];
             const commands = this.Client.getOption('commandChar') + ['testmxpcolors', 'testmxp', 'testcolors', 'testcolorsdetails', 'testxterm', 'testxtermrgb'].join('\n' + this.Client.getOption('commandChar'));
             const e = this.Client.getOption('enableCommands');
@@ -659,7 +746,7 @@ export class Tests extends EventEmitter {
             this.Client.options.enableCommands = e;
         };
 
-        this.TestFunctions['testperiod'] = () => {
+        this.functions['testperiod'] = () => {
             if (window['periodID']) {
                 clearInterval(window['periodID']);
                 delete window['period'];
@@ -678,7 +765,7 @@ export class Tests extends EventEmitter {
             }, 2000);
         };
 
-        this.TestFunctions['testutf8'] = function () {
+        this.functions['testutf8'] = function () {
             const sample = `Armenian
 Ա Բ Գ Դ Ե Զ Է Ը Թ Ժ Ի Լ Խ Ծ Կ Հ Ձ Ղ Ճ Մ Յ Ն Շ Ո Չ Պ Ջ Ռ Ս Վ Տ Ր Ց Ւ Փ Ք Օ Ֆ ՙ ՚ ՛ ՜ ՝ ՞ ՟ ա բ գ դ ե զ է ը թ ժ ի լ խ ծ կ հ ձ ղ ճ մ յ ն շ ո չ պ ջ ռ ս վ տ ր ց ւ փ ք օ ֆ և ։
 Hebrew
@@ -699,7 +786,7 @@ Devanagari
             this.Client.print(sample, true);
         };
 
-        this.TestFunctions['testunicodeemoji'] = function () {
+        this.functions['testunicodeemoji'] = function () {
             let sample = '';
             //https://apps.timwhitlock.info/emoji/tables/unicode
             var emojiRange = [
@@ -746,7 +833,7 @@ Devanagari
             this.Client.print(sample2, true);
         };
 
-        this.TestFunctions['testlines'] = function () {
+        this.functions['testlines'] = function () {
             const maxLines = this.Client.display.maxLines;
             let sample = '';
             const id = this.Client.display.model.getNextLineID;
@@ -754,5 +841,25 @@ Devanagari
                 sample += `Line: ${h}, LineID: ${id + h}\n`;
             this.Client.print(sample, true);
         };
+    }
+
+    /**
+ * Process function event to execute custom text functions
+ * @param data {FunctionEvent} The data about the function to execute
+ */
+    public processFunction(data: FunctionEvent) {
+        let name;
+        //const data = { name: fun, args: args, raw: raw, handled: false, return: null };
+        if (!data) return;
+        name = data.name.toLowerCase();
+        //old name() format
+        if (name.endsWith('()'))
+            name = name.substring(0, name.length - 2);
+        if (this.functions[name]) {
+            console.time(name);
+            this.functions[name].apply(this, data || {});
+            console.timeEnd(name);
+            data.handled = true;
+        }
     }
 }
