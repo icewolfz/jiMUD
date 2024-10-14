@@ -341,3 +341,17 @@ export enum ProfileSaveType {
   Context = 16,
   Variable = 32
 }
+
+export interface MenuItem {
+  name: string;
+  action: Function;
+  icon?: string;
+}
+
+export interface FunctionEvent {
+  name: string;
+  args: string[];
+  raw: string;
+  handled: boolean;
+  return: any;
+}

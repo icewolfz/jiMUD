@@ -12,7 +12,7 @@ import { MacroModifiers, MacroDisplay, Alias, Trigger, Button, Profile, TriggerT
 import { getTimeSpan, FilterArrayByKeyValue, SortItemArrayByPriority, clone, parseTemplate, isFileSync, isDirSync, splitQuoted, isValidIdentifier, fileSizeSync, getCursor, insertValue } from './library';
 import { Client } from './client';
 import { Tests } from './test';
-import { NewLineType, ProfileSaveType, ScriptEngineType, TabCompletion } from './types';
+import { NewLineType, ProfileSaveType, ScriptEngineType, TabCompletion, FunctionEvent } from './types';
 import { SettingList } from './settings';
 import { getAnsiColorCode, getColorCode, isMXPColor, getAnsiCode } from './ansi';
 
@@ -5901,7 +5901,7 @@ export class Input extends EventEmitter {
                 return this.executeForLoop((-i) + 1, 1, args);
             return this.executeForLoop(0, i, args);
         }
-        const data = { name: fun, args: args, raw: raw, handled: false, return: null };
+        const data: FunctionEvent = { name: fun, args: args, raw: raw, handled: false, return: null };
         this.client.emit('function', data);
         if (data.handled) {
             if ((this.client.getOption('echo') & 4) === 4)
@@ -7315,7 +7315,13 @@ export class Input extends EventEmitter {
         }
         const re = new RegExp('^([a-zA-Z]+)\\((.*)\\)$', 'g');
         let res = re.exec(text);
-        if (!res || !res.length) return null;
+        if (!res || !res.length) {
+            const data: FunctionEvent = { raw: text, name: text, args: [], handled: false, return: null };
+            this.client.emit('variable', data);
+            if (data.handled)
+                return data.return;
+            return null;
+        }
         let sides;
         let mod;
         let args;
@@ -8249,6 +8255,10 @@ export class Input extends EventEmitter {
                 if (files && files.length) return files[0];
                 return '';
         }
+        const data: FunctionEvent = { raw: text, name: res[1], args: res[2] && res[2].length ? this.parseOutgoing(res[2]).split(',') : [], handled: false, return: null };
+        this.client.emit('variable', data);
+        if (data.handled)
+            return data.return;
         return null;
     }
 

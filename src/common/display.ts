@@ -1584,7 +1584,7 @@ export class Display extends EventEmitter {
     public removeLines(line: number, amt: number) {
         if (line < 0 || line >= this.lines.length) return;
         if (amt < 1) amt = 1;
-        this.emit('lines-removed', line, this._lines.slice(line, amt));
+        this.emit('lines-removed', line, this._lines.slice(line, line + amt - 1));
         const lineID = this._model.getLineID(line);
         const wrapIndex = this._lines.findIndex(l => l.id === lineID);
         let wrapAmt = 0;

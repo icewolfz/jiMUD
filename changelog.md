@@ -45,6 +45,7 @@
     - Fix invalid formatting of >>= and <<= operators
   - Fix issue not respecting escape when parsing " and ' quoted strings when parse quoted enabled
   - Fix typo in MSP protocol URL parameter
+  - Fix [#GAG](docs/commands.md#display) when removing multiple lines
 - **Changed:**
   - Make chat capture selective line mode ignore case
   - Code editor:
