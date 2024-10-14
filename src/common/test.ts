@@ -40,7 +40,7 @@ export class Tests extends EventEmitter {
     constructor(client: Client) {
         super();
         this.client = client;
-        this.client.on('function', this.processFunction);
+        this.client.on('function', data => this.processFunction(data));
 
         this.functions['testfile'] = data => {
             const fs = require('fs');
@@ -132,12 +132,12 @@ export class Tests extends EventEmitter {
             let t;
             for (t in this.functions) {
                 if (!this.functions.hasOwnProperty(t)) continue;
-                sample += `\t${this.Client.getOption('commandChar') + t}\n`;
+                sample += `\t${this.client.getOption('commandChar') + t}\n`;
             }
-            sample += `\t${this.Client.getOption('commandChar')}testfile file\n`;
-            sample += `\t${this.Client.getOption('commandChar')}testspeedfile file\n`;
-            sample += `\t${this.Client.getOption('commandChar')}testspeedfiler file\n`;
-            this.Client.print(sample, true);
+            sample += `\t${this.client.getOption('commandChar')}testfile file\n`;
+            sample += `\t${this.client.getOption('commandChar')}testspeedfile file\n`;
+            sample += `\t${this.client.getOption('commandChar')}testspeedfiler file\n`;
+            this.client.print(sample, true);
         };
 
         this.functions['testcolors'] = function () {
@@ -174,12 +174,12 @@ export class Tests extends EventEmitter {
                 sample += '\x1b[0m\n';
             }
             sample += '-------------------------------------------------------------------------------------------\n';
-            this.Client.print(sample, true);
+            this.client.print(sample, true);
         };
 
         this.functions['testcolorsdetails'] = function () {
             let sample = '';
-            if (this.Client.telnet.prompt)
+            if (this.client.telnet.prompt)
                 sample = '\n';
             sample += 'Table for 16-color terminal escape sequences.\n';
             sample += '\n';
@@ -225,7 +225,7 @@ export class Tests extends EventEmitter {
                 */
                 sample += '------------------------------------------------------------------------------------\n';
             }
-            this.Client.print(sample, true);
+            this.client.print(sample, true);
         };
 
         this.functions['testxterm'] = function (title) {
@@ -266,7 +266,7 @@ export class Tests extends EventEmitter {
             for (c = 232; c < 256; c++)
                 sample += '\x1B[48;5;' + c + 'm  ';
             sample += '\x1B[0m\n';
-            this.Client.print(sample, true);
+            this.client.print(sample, true);
         };
         //spell-checker:disable
         this.functions['testmxp'] = function () {
@@ -329,7 +329,7 @@ export class Tests extends EventEmitter {
             sample += 'Entities\n';
             sample += '\t&#243;&brvbar;&copy;&plusmn;&sup3;&para;&frac34;&infin;&Dagger;&dagger;&spades;&clubs;&hearts;&diams;\n';
             sample += 'Custom Entity\n';
-            sample += '\t<!ENTITY version "' + this.Client.version + '">&lt;!ENTITY version "' + this.Client.version + '"&gt;\n';
+            sample += '\t<!ENTITY version "' + this.client.version + '">&lt;!ENTITY version "' + this.client.version + '"&gt;\n';
             sample += '\t&amp;version; = &version;\n';
             sample += '\t&lt;V Hp&gt;<V Hp>100</V>&lt;/V&gt; &amp;Hp; = &Hp; &amp;hp; = &hp;\n';
             sample += '\t&lt;VAR Sp&gt;<VAR Sp>200</VAR>&lt;/VAR&gt; &amp;Sp; = &Sp; &amp;sp; = &sp;\n';
@@ -344,7 +344,7 @@ export class Tests extends EventEmitter {
             sample += '<STAT Hp version Test>';
             sample += '<GAUGE Hp version Test>';
             sample += '\x1B[0z';
-            this.Client.print(sample, true);
+            this.client.print(sample, true);
         };
 
         this.functions['testmxp2'] = function () {
@@ -381,11 +381,11 @@ export class Tests extends EventEmitter {
             sample += '<boldtext col=blue>This is bold blue text</boldtext>\n';
             sample += '<boldtext blue>This is also bold blue text</boldtext>\n';
             sample += '\x1B[0z';
-            this.Client.print(sample, true);
+            this.client.print(sample, true);
         };
         //spell-checker:enable
         this.functions['testmxpexpire'] = function () {
-            this.Client.print('\t\x1B[6z<SEND "sample" PROMPT EXPIRE=prompt>Expire sample</SEND> <SEND "sample" PROMPT EXPIRE=prompt2>Expire sample2</SEND><EXPIRE prompt> <SEND "sample" PROMPT EXPIRE=prompt>Expire sample3</SEND>\x1B[0z\n', true);
+            this.client.print('\t\x1B[6z<SEND "sample" PROMPT EXPIRE=prompt>Expire sample</SEND> <SEND "sample" PROMPT EXPIRE=prompt2>Expire sample2</SEND><EXPIRE prompt> <SEND "sample" PROMPT EXPIRE=prompt>Expire sample3</SEND>\x1B[0z\n', true);
         };
 
         this.functions['testmxpcolors'] = function () {
@@ -452,7 +452,7 @@ export class Tests extends EventEmitter {
             sample += '\x1b[53mOverline\x1b[0m';
             sample += '</C>\n';
             sample += '\x1B[0z';
-            this.Client.print(sample, true);
+            this.client.print(sample, true);
         };
 
         this.functions['testmxpelements'] = function () {
@@ -463,7 +463,7 @@ export class Tests extends EventEmitter {
             sample += '\t<!ELEMENT redbu \'<c red><b><u>\'>&lt;!ELEMENT redbu \'&lt;c red&gt;&lt;b&gt;&lt;u&gt;\'&gt;\n';
             sample += '\t&lt;redbu&gt;test&lt;/redbu&gt; = <redbu>test</redbu>\n';
             sample += '\x1B[0z';
-            this.Client.print(sample, true);
+            this.client.print(sample, true);
         };
 
         this.functions['testmxpLines'] = function () {
@@ -479,7 +479,7 @@ export class Tests extends EventEmitter {
             sample += '\x1B[20zA nice shiny sword is being auctioned.\n';
             sample += '\x1B[6z<Auction>Also, a gold ring is being auctioned.</Auction>\n';
             sample += '\x1B[0z';
-            this.Client.print(sample, true);
+            this.client.print(sample, true);
         };
 
         this.functions['testmapper'] = () => {
@@ -627,21 +627,21 @@ export class Tests extends EventEmitter {
             for (i = 127; i <= 254; i++)
                 sample += String.fromCharCode(i);
             sample += '\n';
-            const dcc = this.Client.display.displayControlCodes;
-            this.Client.display.displayControlCodes = true;
-            if (!this.Client.display.emulateTerminal) {
-                this.Client.print(sample, true);
-                this.Client.display.emulateTerminal = true;
-                this.Client.print(sample, true);
-                this.Client.display.emulateTerminal = false;
+            const dcc = this.client.display.displayControlCodes;
+            this.client.display.displayControlCodes = true;
+            if (!this.client.display.emulateTerminal) {
+                this.client.print(sample, true);
+                this.client.display.emulateTerminal = true;
+                this.client.print(sample, true);
+                this.client.display.emulateTerminal = false;
             }
             else {
-                this.Client.display.emulateTerminal = false;
-                this.Client.print(sample, true);
-                this.Client.display.emulateTerminal = true;
-                this.Client.print(sample, true);
+                this.client.display.emulateTerminal = false;
+                this.client.print(sample, true);
+                this.client.display.emulateTerminal = true;
+                this.client.print(sample, true);
             }
-            this.Client.display.displayControlCodes = dcc;
+            this.client.display.displayControlCodes = dcc;
         };
 
         this.functions['testcontrolchars'] = function () {
@@ -656,10 +656,10 @@ export class Tests extends EventEmitter {
             for (i = 127; i <= 254; i++)
                 sample += `${i}: ${String.fromCharCode(i)},`;
             sample += '\n';
-            const dcc = this.Client.display.displayControlCodes;
-            this.Client.display.displayControlCodes = true;
-            this.Client.print(sample, true)
-            this.Client.display.displayControlCodes = dcc;
+            const dcc = this.client.display.displayControlCodes;
+            this.client.display.displayControlCodes = true;
+            this.client.print(sample, true)
+            this.client.display.displayControlCodes = dcc;
         }
 
         //spell-checker:disable
@@ -684,7 +684,7 @@ export class Tests extends EventEmitter {
             sample += '\tmailto:address@localhost irc://<host>[:<port>]/[<channel>[?<password>]]\n';
             sample += 'awww... www.google.com awww.com\n';
             sample += 'www.google.com www.google.com\x1B[0m';
-            this.Client.print(sample, true);
+            this.client.print(sample, true);
         };
         //spell-checker:enable
 
@@ -705,32 +705,32 @@ export class Tests extends EventEmitter {
                 }
             }
             sample += '\x1B[0m';
-            this.Client.print(sample, true);
+            this.client.print(sample, true);
         };
 
         this.functions['testsize'] = function () {
-            const ws = this.Client.display.WindowSize;
+            const ws = this.client.display.WindowSize;
             let sample = ws.width + 'x' + ws.height + ' ';
             ws.width -= sample.length;
             for (let w = 0; w < ws.width; w++)
                 sample += 'w';
             for (let h = 1; h < ws.height; h++)
                 sample += '\n' + h;
-            this.Client.print(sample, true);
+            this.client.print(sample, true);
         };
 
         this.functions['testspeed'] = function () {
             const sample = [];
-            const commands = this.Client.getOption('commandChar') + ['testmxpcolors', 'testmxp', 'testcolors', 'testcolorsdetails', 'testxterm', 'testxtermrgb'].join('\n' + this.Client.getOption('commandChar'));
-            const e = this.Client.getOption('enableCommands');
-            this.Client.options.enableCommands = true;
+            const commands = this.client.getOption('commandChar') + ['testmxpcolors', 'testmxp', 'testcolors', 'testcolorsdetails', 'testxterm', 'testxtermrgb'].join('\n' + this.client.getOption('commandChar'));
+            const e = this.client.getOption('enableCommands');
+            this.client.options.enableCommands = true;
             let avg = 0;
             let max = 0;
             let min = 0;
             let t;
             for (let i = 0; i < 10; i++) {
                 const start = new Date().getTime();
-                this.Client.sendCommand(commands);
+                this.client.sendCommand(commands);
                 const end = new Date().getTime();
                 t = end - start;
                 avg += t;
@@ -742,8 +742,8 @@ export class Tests extends EventEmitter {
             sample.push(`Average - ${avg / 10}`);
             sample.push(`Min - ${min}`);
             sample.push(`Max - ${max}`);
-            this.Client.print(sample.join('\n') + '\n', true);
-            this.Client.options.enableCommands = e;
+            this.client.print(sample.join('\n') + '\n', true);
+            this.client.options.enableCommands = e;
         };
 
         this.functions['testperiod'] = () => {
@@ -783,7 +783,7 @@ Arabic
 ، ؛ ؟ ء آ أ ؤ إ ئ ا ب ة ت ث ج ح خ د ذ ر ز س ش ص ض ط ظ ع\x1b[34m غ ـ ف ق ك ل م ن ه و ى ي ً ٌ ٍ َ ُ ِ ّ ْ ٠ ١ ٢ ٣ ٤ ٥ ٦ ٧ ٨ ٩ ٪ ٫ ٬ ٭ ٰ ٱ ٲ ٳ ٴ ٵ ٶ ٷ ٸ ٹ ٺ ٻ ټ ٽ پ ٿ ڀ ځ ڂ ڃ ڄ څ چ ڇ ڈ ډ ڊ ڋ ڌ ڍ ڎ ڏ ڐ ڑ ڒ ړ ڔ ڕ ږ ڗ ژ ڙ ښ ڛ ڜ ڝ ڞ ڟ ڠ ڡ ڢ ڣ ڤ ڥ ڦ \x1b[33mڧ ڨ ک ڪ ګ ڬ ڭ ڮ گ ڰ ڱ ...\x1b[0m
 Devanagari
 ँ ं ः अ आ इ ई उ ऊ ऋ ऌ ऍ ऎ ए ऐ ऑ ऒ ओ औ क ख ग घ ङ च छ ज झ ञ ट ठ ड ढ ण त थ द ध न ऩ प \x1b[33mफ ब भ म य र ऱ ल ळ ऴ व श ष स ह ़ ऽ ा ि ी ु ू ृ ॄ ॅ ॆ े ै ॉ ॊ ो ौ ् ॐ ॑ ॒ ॓ ॔ क़ ख़ ग़ ज़\x1b[34m ड़ ढ़ फ़ य़ ॠ ॡ ॢ ॣ । ॥ ० १ २ ३ ४ ५ ६ ७ ८ ९ ॰\x1b[0m`;
-            this.Client.print(sample, true);
+            this.client.print(sample, true);
         };
 
         this.functions['testunicodeemoji'] = function () {
@@ -829,17 +829,17 @@ Devanagari
 📱📲📳📴📶📷📹📺📻📼🔃🔊🔋🔌🔍🔎🔏🔐🔑🔒🔓🔔🔖🔗🔘🔙🔚🔛🔜🔝🔞🔟🔠
 🔡🔢🔣🔤🔥🔦🔧🔨🔩🔪🔫🔮🔯🔰🔱🔲🔳🔴🔵🔶🔷🔸🔹🔺🔻🔼🔽🕐🕑🕒🕓🕔🕕
 🕖🕗🕘🕙🕚🕛🗻🗼🗽🗾🗿`
-            this.Client.print(sample, true);
-            this.Client.print(sample2, true);
+            this.client.print(sample, true);
+            this.client.print(sample2, true);
         };
 
         this.functions['testlines'] = function () {
-            const maxLines = this.Client.display.maxLines;
+            const maxLines = this.client.display.maxLines;
             let sample = '';
-            const id = this.Client.display.model.getNextLineID;
+            const id = this.client.display.model.getNextLineID;
             for (let h = 0; h < maxLines; h++)
                 sample += `Line: ${h}, LineID: ${id + h}\n`;
-            this.Client.print(sample, true);
+            this.client.print(sample, true);
         };
     }
 
