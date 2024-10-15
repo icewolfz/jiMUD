@@ -2099,7 +2099,6 @@ export class Input extends EventEmitter {
                         throw new Error('Trigger \'' + args[0] + '\' not found in \'' + profile.name + '\'!');
                     this.client.removeTrigger(item);
                     this.client.echo('Trigger \'' + args[0] + '\' removed from \'' + profile.name + '\'.', -7, -8, true, true);
-                    return null;
                 }
                 else {
                     profile = this.parseInline(profile);
@@ -2110,7 +2109,6 @@ export class Input extends EventEmitter {
                             throw new Error('Trigger \'' + args[0] + '\' not found in \'' + profile.name + '\'!');
                         this.client.removeTrigger(item);
                         this.client.echo('Trigger \'' + args[0] + '\' removed from \'' + profile.name + '\'.', -7, -8, true, true);
-                        return null;
                     }
                     else {
                         name = profile;
@@ -3883,7 +3881,7 @@ export class Input extends EventEmitter {
                     al = files.length;
                     for (i = 0; i < al; i++) {
                         if (path.extname(files[i]) === '.json') {
-                            if (this.client.profiles.items[path.basename(files[i], '.json')] && this.client.profiles.items[path.basename(files[i], '.json')].enabled)
+                            if (this.client.enabledProfiles.indexOf(path.basename(files[i], '.json').toLowerCase()) !== -1)
                                 this.client.echo('   ' + this.client.profiles.keys[i] + ' is enabled', -7, -8, true, true);
                             else
                                 this.client.echo('   ' + path.basename(files[i], '.json') + ' is disabled', -7, -8, true, true);

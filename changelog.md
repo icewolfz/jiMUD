@@ -46,6 +46,7 @@
   - Fix issue not respecting escape when parsing " and ' quoted strings when parse quoted enabled
   - Fix typo in MSP protocol URL parameter
   - Fix [#GAG](docs/commands.md#display) when removing multiple lines
+  - Fix [#PROFILELIST](docs/commands.md#display) not correctly showing enabled state
 - **Changed:**
   - Make chat capture selective line mode ignore case
   - Code editor:
