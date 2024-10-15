@@ -115,8 +115,8 @@ enum ParseState {
     blockCommentStart = 23,
     blockComment = 24,
     blockCommentEnd = 25,
-    doubleQuotedEscape = 26,
-    singleQuotedEscape = 27
+    doubleQuotedEscape = 27,
+    singleQuotedEscape = 28
 }
 
 /**
