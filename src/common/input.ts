@@ -1231,7 +1231,7 @@ export class Input extends EventEmitter {
                     }
                 }
                 else if (args.length === 2) {
-                    args[1].compile().evaluate(scope);
+                    args[1] = args[1].compile().evaluate(scope);
                     let profile;
                     if (this.client.profiles.contains(args[1]))
                         profile = this.client.profiles.items[args[1].toLowerCase()];
@@ -5170,7 +5170,7 @@ export class Input extends EventEmitter {
                             else {
                                 profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
                                 if (!profile)
-                                    throw new Error('Profile not found: ' + args[1]);
+                                    throw new Error('Profile not found: ' + args[2]);
                             }
                             trigger = SortItemArrayByPriority(profile.triggers);
                             trigger = trigger.find(t => {
@@ -5240,7 +5240,7 @@ export class Input extends EventEmitter {
                         else {
                             profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
                             if (!profile)
-                                throw new Error('Profile not found: ' + args[1]);
+                                throw new Error('Profile not found: ' + args[2]);
                         }
                         trigger = SortItemArrayByPriority(profile.triggers);
                         trigger = trigger.find(t => {
