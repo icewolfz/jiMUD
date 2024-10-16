@@ -112,6 +112,13 @@ export class Client extends EventEmitter {
         return this.getOption('profiles.enabled');
     }
 
+    set simpleAlarms(value) {
+        this.options.simpleAlarms = value;
+        this.saveOptions();
+    }
+
+    get simpleAlarms() { return this.getOption('simpleAlarms'); }
+
     set enableParsing(value) {
         this.options.enableParsing = value;
         this._input.enableParsing = value;
@@ -364,7 +371,7 @@ export class Client extends EventEmitter {
         if (names.length === 0) return;
         const nl = names.length;
         let name;
-        for (let n = 0; n < nl; n++) {            
+        for (let n = 0; n < nl; n++) {
             name = names[n];
             this.variables[name] = variables[name];
         }
@@ -882,39 +889,62 @@ export class Client extends EventEmitter {
         if (!alarm || alarm.suspended) return false;
         let match: boolean = true;
         let ts;
-        if (alarm.start)
-            ts = moment.duration(now - this.connectTime);
-        else
-            ts = moment.duration(now - alarm.startTime);
-        if (ts.asMilliseconds() < 1000)
-            return false;
-        const sec = Math.round(ts.asMilliseconds() / 1000);
-        const min = Math.floor(sec / 60);
-        const hr = Math.floor(min / 60);
+        let sec;
+        let min;
+        let hr;
+        let hours;
+        let minutes;
+        let seconds;
+        //no moment fall back to simple math
+        if (this.simpleAlarms) {
+            ts = now - this.connectTime;
+            if (ts < 1000)
+                return false;
+            sec = Math.round(ts / 1000);
+            min = Math.floor(sec / 60);
+            hr = Math.floor(min / 60);
+            hours = hr;
+            minutes = Math.floor(min % 60);
+            seconds = Math.floor(sec % 60);
+        }
+        else {
+            if (alarm.start)
+                ts = moment.duration(now - this.connectTime);
+            else
+                ts = moment.duration(now - alarm.startTime);
+            if (ts.asMilliseconds() < 1000)
+                return false;
+            sec = Math.round(ts.asMilliseconds() / 1000);
+            min = Math.floor(sec / 60);
+            hr = Math.floor(min / 60);
+            hours = ts.hours();
+            minutes = ts.minutes();
+            seconds = ts.seconds();
+        }
         if (alarm.hoursWildCard) {
             if (alarm.hours === 0)
-                match = match && ts.hours() === 0;
+                match = match && hours === 0;
             else if (alarm.hours !== -1)
                 match = match && hr !== 0 && hr % alarm.hours === 0;
         }
         else if (alarm.hours !== -1)
-            match = match && alarm.hours === (alarm.start ? ts.hours() : dNow.getHours());
+            match = match && alarm.hours === (alarm.start ? hours : dNow.getHours());
         if (alarm.minutesWildcard) {
             if (alarm.minutes === 0)
-                match = match && ts.minutes() === 0;
+                match = match && minutes === 0;
             else if (alarm.minutes !== -1)
                 match = match && min !== 0 && min % alarm.minutes === 0;
         }
         else if (alarm.minutes !== -1)
-            match = match && alarm.minutes === (alarm.start ? ts.minutes() : dNow.getMinutes());
+            match = match && alarm.minutes === (alarm.start ? minutes : dNow.getMinutes());
         if (alarm.secondsWildcard) {
             if (alarm.seconds === 0)
-                match = match && ts.seconds() === 0;
+                match = match && seconds === 0;
             else if (alarm.seconds !== -1)
                 match = match && sec % alarm.seconds === 0;
         }
         else if (alarm.seconds !== -1)
-            match = match && alarm.seconds === (alarm.start ? ts.seconds() : dNow.getSeconds());
+            match = match && alarm.seconds === (alarm.start ? seconds : dNow.getSeconds());
 
         return match;
     }
@@ -1173,9 +1203,11 @@ export class Client extends EventEmitter {
 
     set enableDebug(enable: boolean) {
         this._enableDebug = enable;
+        this.options.enableDebug = enable;
         this.telnet.enableDebug = enable;
         this.display.enableDebug = enable;
         this.MSP.enableDebug = enable;
+        this.saveOptions();
     }
 
     get host(): string {
@@ -1289,8 +1321,8 @@ export class Client extends EventEmitter {
         let opt = this.options.getValue(name);
         //check for undefined as !opt could be a valid setting, cache settings locally for speed boost as global settings only change if pref edited
         if (typeof opt === 'undefined') {
-            if(name in  this._optionCache)
-                return this._optionCache[name]    
+            if (name in this._optionCache)
+                return this._optionCache[name]
             return this._optionCache[name] = window.getSetting(name);
         }
         return opt;

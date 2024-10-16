@@ -20,6 +20,7 @@
     - Virtual area editor: Add ctrl+click selection system
     - Fix where data could be lost when closing window and datagrid/property editor open
     - Add normal, advanced, and expert view modes to room, monster, and object wizards to show/hide more complex pages and properties
+    - Add `Simple Alarms` preference, disables using moment duration when alarm pattern matching, may give a minor speed boost if lots of alarms
 - **Fixed:**
   - Increase progress dialog height
   - Fix issue when using non default theme and button bar hidden

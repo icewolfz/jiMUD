@@ -8222,7 +8222,7 @@ export class Input extends EventEmitter {
                     /*jslint evil: true */
                     const named = this.GetNamedArguments(alias.params, args);
                     if (named)
-                        ret = Object.keys(named).map(v => `let ${v} = this._input.stack.named["${v}"];`).join('') + '\n';
+                        ret = Object.keys(named).map(v => `let ${v} = this.input.stack.named["${v}"];`).join('') + '\n';
                     else
                         ret = '';
                     const f = new Function('try { ' + ret + alias.value + '\n} catch (e) { if(this.getOption(\'showScriptErrors\')) this.error(e);}');
@@ -8980,10 +8980,9 @@ export class Input extends EventEmitter {
         if (this.client.connected)
             this.client.telnet.sendData(ret);
         if (this.client.telnet.echo && this.client.getOption('commandEcho')) {
-            const delay = function () {
+            setTimeout(() => {
                 this.client.echo(ret);
-            };
-            setTimeout(delay, 1);
+            }, 1);
         }
     }
 

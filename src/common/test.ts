@@ -127,7 +127,7 @@ export class Tests extends EventEmitter {
             return null;
         }
 
-        this.functions['testlist'] = function () {
+        this.functions['testlist'] = () => {
             let sample = 'Test commands:\n';
             let t;
             for (t in this.functions) {
@@ -140,7 +140,7 @@ export class Tests extends EventEmitter {
             this.client.print(sample, true);
         };
 
-        this.functions['testcolors'] = function () {
+        this.functions['testcolors'] = () => {
             let r;
             let sample = 'Colors and Styles\n-------------------------------------------------------------------------------------------\n';
             for (r = 30; r < 38; r++) {
@@ -177,7 +177,7 @@ export class Tests extends EventEmitter {
             this.client.print(sample, true);
         };
 
-        this.functions['testcolorsdetails'] = function () {
+        this.functions['testcolorsdetails'] = () => {
             let sample = '';
             if (this.client.telnet.prompt)
                 sample = '\n';
@@ -269,7 +269,7 @@ export class Tests extends EventEmitter {
             this.client.print(sample, true);
         };
         //spell-checker:disable
-        this.functions['testmxp'] = function () {
+        this.functions['testmxp'] = () => {
             let sample = 'Text Formatting\n';
             sample += '\t\x1B[6z';
             sample += '<!--Test-->&lt;!--Test--&gt;\n';
@@ -347,7 +347,7 @@ export class Tests extends EventEmitter {
             this.client.print(sample, true);
         };
 
-        this.functions['testmxp2'] = function () {
+        this.functions['testmxp2'] = () => {
             let sample = '\x1B[6z';
             sample += '<!-- Elements to support the Auto mapper -->';
             sample += '<!ELEMENT RName \'<FONT COLOR=Red><B>\' FLAG="RoomName">';
@@ -384,11 +384,11 @@ export class Tests extends EventEmitter {
             this.client.print(sample, true);
         };
         //spell-checker:enable
-        this.functions['testmxpexpire'] = function () {
+        this.functions['testmxpexpire'] = () => {
             this.client.print('\t\x1B[6z<SEND "sample" PROMPT EXPIRE=prompt>Expire sample</SEND> <SEND "sample" PROMPT EXPIRE=prompt2>Expire sample2</SEND><EXPIRE prompt> <SEND "sample" PROMPT EXPIRE=prompt>Expire sample3</SEND>\x1B[0z\n', true);
         };
 
-        this.functions['testmxpcolors'] = function () {
+        this.functions['testmxpcolors'] = () => {
             const colors = ['IndianRed', 'LightCoral', 'Salmon', 'DarkSalmon', 'LightSalmon',
                 'Crimson', 'Red', 'FireBrick', 'DarkRed', 'Pink', 'LightPink', 'HotPink', 'DeepPink',
                 'MediumVioletRed', 'PaleVioletRed', 'LightSalmon', 'Coral', 'Tomato', 'OrangeRed',
@@ -455,7 +455,7 @@ export class Tests extends EventEmitter {
             this.client.print(sample, true);
         };
 
-        this.functions['testmxpelements'] = function () {
+        this.functions['testmxpelements'] = () => {
             let sample = '\x1B[6z';
             sample += 'Custom Element\n';
             sample += '\t<!ELEMENT help \'<send href="help &text;">\'>&lt;!ELEMENT help \'&lt;send href="help &amp;text;"&gt;\'&gt;\n';
@@ -466,7 +466,7 @@ export class Tests extends EventEmitter {
             this.client.print(sample, true);
         };
 
-        this.functions['testmxpLines'] = function () {
+        this.functions['testmxpLines'] = () => {
             let sample = '\x1B[6z';
             sample += '<!ELEMENT Auction \'<FONT COLOR=red>\' TAG=20 OPEN>';
             sample += '\x1B[20zA nice shiny sword is being auctioned.\n';
@@ -614,7 +614,7 @@ export class Tests extends EventEmitter {
             });
         };
 
-        this.functions['testfansi'] = function () {
+        this.functions['testfansi'] = () => {
             let sample = '';
             let i;
             sample = String.fromCharCode(1);
@@ -644,7 +644,7 @@ export class Tests extends EventEmitter {
             this.client.display.displayControlCodes = dcc;
         };
 
-        this.functions['testcontrolchars'] = function () {
+        this.functions['testcontrolchars'] = () => {
             let i;
             let sample = '1:  ' + String.fromCharCode(1) + ',';
             for (i = 3; i <= 9; i++)
@@ -663,7 +663,7 @@ export class Tests extends EventEmitter {
         }
 
         //spell-checker:disable
-        this.functions['testurldetect'] = function () {
+        this.functions['testurldetect'] = () => {
             let sample = '\x1B[0mhttp://www.google.com\n';
             sample += '\thttp://www.google.com\x1B[44m\n';
             sample += 'http://www.google.com\n';
@@ -688,7 +688,7 @@ export class Tests extends EventEmitter {
         };
         //spell-checker:enable
 
-        this.functions['testxtermrgb'] = function () {
+        this.functions['testxtermrgb'] = () => {
             let sample = '';
             let r;
             let g;
@@ -708,7 +708,7 @@ export class Tests extends EventEmitter {
             this.client.print(sample, true);
         };
 
-        this.functions['testsize'] = function () {
+        this.functions['testsize'] = () => {
             const ws = this.client.display.WindowSize;
             let sample = ws.width + 'x' + ws.height + ' ';
             ws.width -= sample.length;
@@ -719,7 +719,7 @@ export class Tests extends EventEmitter {
             this.client.print(sample, true);
         };
 
-        this.functions['testspeed'] = function () {
+        this.functions['testspeed'] = () => {
             const sample = [];
             const commands = this.client.getOption('commandChar') + ['testmxpcolors', 'testmxp', 'testcolors', 'testcolorsdetails', 'testxterm', 'testxtermrgb'].join('\n' + this.client.getOption('commandChar'));
             const e = this.client.getOption('enableCommands');
@@ -765,7 +765,7 @@ export class Tests extends EventEmitter {
             }, 2000);
         };
 
-        this.functions['testutf8'] = function () {
+        this.functions['testutf8'] = () => {
             const sample = `Armenian
 Ա Բ Գ Դ Ե Զ Է Ը Թ Ժ Ի Լ Խ Ծ Կ Հ Ձ Ղ Ճ Մ Յ Ն Շ Ո Չ Պ Ջ Ռ Ս Վ Տ Ր Ց Ւ Փ Ք Օ Ֆ ՙ ՚ ՛ ՜ ՝ ՞ ՟ ա բ գ դ ե զ է ը թ ժ ի լ խ ծ կ հ ձ ղ ճ մ յ ն շ ո չ պ ջ ռ ս վ տ ր ց ւ փ ք օ ֆ և ։
 Hebrew
@@ -786,7 +786,7 @@ Devanagari
             this.client.print(sample, true);
         };
 
-        this.functions['testunicodeemoji'] = function () {
+        this.functions['testunicodeemoji'] = () => {
             let sample = '';
             //https://apps.timwhitlock.info/emoji/tables/unicode
             var emojiRange = [
@@ -833,7 +833,7 @@ Devanagari
             this.client.print(sample2, true);
         };
 
-        this.functions['testlines'] = function () {
+        this.functions['testlines'] = () => {
             const maxLines = this.client.display.maxLines;
             let sample = '';
             const id = this.client.display.model.getNextLineID;
