@@ -1764,8 +1764,8 @@ export function pinkfishToHTML(text) {
     for (; t < tl; t++) {
         switch (text[t]) {
             case 'ITALIC':
-                this.stack.push('<em>');
-                this.codes.push('</em>');
+                stack.push('<em>');
+                codes.push('</em>');
                 break;
             case 'UNDERLINE':
                 classes.push('underline');
