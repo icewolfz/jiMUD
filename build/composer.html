@@ -28,7 +28,7 @@
         const { ipcRenderer, webFrame, nativeImage, clipboard } = require('electron');
         const remote = require('@electron/remote');
         const { Menu, MenuItem } = remote;
-        const { stripHTML, htmlEncode, invert, parseTemplate, getColors, createColorDialog } = require('./js/library');
+        const { stripHTML, htmlEncode, invert, parseTemplate, getColors, createColorDialog, pinkfishToHTML } = require('./js/library');
         const { Settings } = require('./js/settings');
         //const { Mail } = require('./js/mail');
         //const { MailStatus, MailReadFormat } = require('./js/types');
@@ -56,6 +56,7 @@
             'RED BOLD': 'Red',
             'BOLD GREEN': 'Lime',
             'YELLOW': 'Yellow',
+            'BOLD YELLOW': 'Yellow',
             'BOLD BLUE': 'Blue',
             'BOLD MAGENTA': 'Magenta',
             'BOLD CYAN': 'Cyan',
@@ -220,103 +221,9 @@
         }
 
         function insertFormatted(text) {
-            text = text || '';
-            text = text.split('%^');
-            var stack = [];
-            var codes = [];
-            var t = 0;
-            var tl = text.length;
-            var bold = false;
-            var clr = 'WHITE';
-            var classes = [];
-            for (; t < tl; t++) {
-                switch (text[t]) {
-                    case 'ITALIC':
-                        stack.push('<em>');
-                        codes.push('</em>');
-                        break;
-                    case 'UNDERLINE':
-                        classes.push('underline');
-                        break;
-                    case 'STRIKEOUT':
-                        classes.push('strikeout');
-                        break;
-                    case 'DBLUNDERLINE':
-                        classes.push('dblunderline');
-                        break;
-                    case 'OVERLINE':
-                        classes.push('overline');
-                        break;
-                    case 'FLASH':
-                        if (getOption('flashing'))
-                            classes.push('flash');
-                        else
-                            classes.push('noflash');
-                        break;
-                    case 'REVERSE':
-                        classes.push('reverse');
-                        break;
-                    case 'RESET':
-                    case 'DEFAULT':
-                        for (var c = 0, cl = codes.length; c < cl; c++)
-                            stack.push(codes[c]);
-                        codes = [];
-                        classes = [];
-                        bold = false;
-                        clr = 'WHITE';
-                        break;
-                    case 'BOLD':
-                        bold = true;
-                        break;
-                    case '':
-                        break;
-                    default:
-                        if (text[t].startsWith('B_')) {
-                            text[t] = text[t].substr(2);
-                            /*
-                            if (bold) {
-                                stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^WHITE'] + '">');
-                                codes.push('</span>');
-                            }
-                            */
-                            stack.push('<span style=border: inherit;text-decoration:inherit;"background-color: #' + _colorCodes[text[t]] + '">');
-                            codes.push('</span>');
-                            //bold = 0;
-                            continue;
-                        }
-                        else if (_colorCodes[text[t]]) {
-                            clr = text[t];
-                            if (bold)
-                                stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + (_colorCodes['BOLD%^%^' + clr] || _colorCodes['BOLD%^%^WHITE']) + '">');
-                            else
-                                stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes[clr] + '">');
-                            codes.push('</span>');
-                            continue;
-                        }
-                        else if (bold) {
-                            stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + (_colorCodes['BOLD%^%^' + clr] || _colorCodes['BOLD%^%^WHITE']) + '">');
-                            codes.push('</span>');
-                        }
-                        if (classes.length) {
-                            stack.push('<span class="' + classes.join(' ') + '">');
-                            codes.push('</span>');
-                            classes = [];
-                        }
-                        stack.push(text[t].replaceAll(' ', '&nbsp;'));
-                        bold = false;
-                        break;
-                }
-            }
-            if (classes.length) {
-                stack.push('<span class="' + classes.join(' ') + '">');
-                codes.push('</span>');
-            }
-            for (t = 0, tl = codes.length; t < tl; t++)
-                stack.push(codes[t]);
-            //format text
-            tinymce.activeEditor.execCommand('insertHTML', false, stack.join('').replace(/(\r\n|\r|\n)/g, '<br/>'));
+            tinymce.activeEditor.execCommand('insertHTML', false, pinkfishToHTML(text).replace(/(\r\n|\r|\n)/g, '<br/>'));
         }
-        
+
         function buildHTMLStack(els) {
             var tag, $el, t, tl;
             var stack = [];
@@ -1421,9 +1328,13 @@
             _ColorTable.push(color, 'BOLD GREEN');
             _bold.push(color);
             color = new rgbcolor(ClientColors[11] || _dColors[11]).toHex().substr(1).toUpperCase();
+            _colors[color] = 'BOLD%^%^YELLOW';
+            _ColorTable.push(color, 'BOLD%^%^YELLOW');
+            _bold.push(color);
+            color = new rgbcolor(ClientColors[11] || _dColors[11]).toHex().substr(1).toUpperCase();
             _colors[color] = 'YELLOW';
             _ColorTable.push(color, 'YELLOW');
-            _bold.push(color);
+            _bold.push(color);            
             color = new rgbcolor(ClientColors[12] || _dColors[12]).toHex().substr(1).toUpperCase();
             _colors[color] = 'BOLD%^%^BLUE';
             _ColorTable.push(color, 'BOLD BLUE');
@@ -1503,7 +1414,7 @@
             if (!window.opener.client)
                 options = Settings.load(window.getGlobal('settingsFile'));
             else if (window.opener.client)
-                options = window.opener.client.options;                      
+                options = window.opener.client.options;
             $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-size', getOption('cmdfontSize'));
             $('.mce-content-body', tinymce.activeEditor.getDoc()).css('font-family', getOption('cmdfont') + ', monospace');
             if (tinymce.activeEditor.formatter)

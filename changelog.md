@@ -26,7 +26,9 @@
   - Fix issue when using non default theme and button bar hidden
   - Fix always on top for child windows opened outside of client
   - Fix datagrid body height issue not accounting for horizontal scroll bar
-  - Advanced editor/Mail composer: Fix inserted text defaulting to bold white
+  - Advanced editor/Mail composer:
+    - Fix inserted text defaulting to bold white
+    - Fix YELLOW code not correctly formatting when combined with bold
   - Code editor:
     - No longer generate function stubs if invalid function names in (: :) values
     - Fix creating duplicate function stubs in generated code

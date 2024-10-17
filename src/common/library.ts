@@ -1871,6 +1871,7 @@ function loadColors() {
     _colorCodes['BOLD%^%^RED'] = 'FF0000';
     _colorCodes['BOLD%^%^GREEN'] = '00FF00';
     _colorCodes['YELLOW'] = 'FFFF00';
+    _colorCodes['BOLD%^%^YELLOW'] = 'FFFF00';
     _colorCodes['BOLD%^%^BLUE'] = '5C5CFF';
     _colorCodes['BOLD%^%^MAGENTA'] = 'FF00FF';
     _colorCodes['BOLD%^%^CYAN'] = '00FFFF';
