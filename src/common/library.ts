@@ -1805,7 +1805,7 @@ export function pinkfishToHTML(text) {
                         stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^WHITE'] + '">');
                         codes.push('</span>');
                     }
-                    stack.push('<span style=border: inherit;text-decoration:inherit;"background-color: #' + _colorCodes[text[t]] + '">');
+                    stack.push('<span style=border: inherit;text-decoration:inherit;background-color: #' + _colorCodes[text[t]] + '">');
                     codes.push('</span>');
                     bold = false;
                     continue;

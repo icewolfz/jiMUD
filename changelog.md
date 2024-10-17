@@ -51,6 +51,7 @@
   - Fix [#GAG](docs/commands.md#display) when removing multiple lines
   - Fix [#PROFILELIST](docs/commands.md#display) not correctly showing enabled state
   - Fix [%state("name|pattern", "profile")](docs/functions.md#miscellaneous) profile argument evaluated
+  - Fix issue when converting background pinkfish codes to html
 - **Changed:**
   - Make chat capture selective line mode ignore case
   - Code editor:
