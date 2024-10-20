@@ -60,6 +60,21 @@ export class Tests extends EventEmitter {
             this.client.options.enableCommands = n;
             this.client.print(`Time: ${p - i}\n`, true);
         };
+        this.functions['testfiler'] = data => {
+            const fs = require('fs');
+            if ((this.client.getOption('echo') & 4) === 4)
+                this.client.echo(data.raw, -3, -4, true, true);
+            let args = this.client.parseInline(data.args.join(' '));
+            if (!args || args.length === 0)
+                throw new Error('Invalid syntax use ' + this.client.getOption('commandChar') + 'testfile file');
+            if (!isFileSync(args))
+                throw new Error('Invalid file "' + args + '"');
+            let tmp = fs.readFileSync(args, 'utf-8');
+            let i = new Date().getTime();
+            this.client.telnet.receivedData(Buffer.from(tmp), true, true);
+            let p = new Date().getTime();
+            this.client.print(`Time: ${p - i}\n`, true);
+        };        
         this.functions['testspeedfile'] = data => {
             const fs = require('fs');
             if ((this.client.getOption('echo') & 4) === 4)

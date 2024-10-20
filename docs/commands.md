@@ -390,7 +390,10 @@ Test commands allow you to debug or test features of the client
 >Works exactly like #TestSpeedFile but will attempt to emulate as if sent from remote mud for processing
 
 #TESTFILE file
->Loads a file, displays it and time to display **Note** this will cause the client to become unresponsive or locked while running this test, either wait til done or close.
+>Loads a file, displays it and time to display **Note** this may cause the client to become unresponsive or locked while running this test, either wait til done or close.
+
+#TESTFILER file
+>Loads a file, and displays it as if it was sent from remote **Note** this may cause the client to become unresponsive or locked while running this test, either wait til done or close.
 
 #TESTPERIOD
 >Toggle on/off a test that will alternate between #testcolors, #textxterm, #testlist every 2 seconds to simulate constant streaming of text
