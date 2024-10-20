@@ -1474,10 +1474,10 @@ export class Client extends EventEmitter {
         if (data.handled || data.value == null || typeof data.value === 'undefined') return;
         if (data.value.length > 0)
             this.send(data.value, !noEcho);
-        if (this.getOption('keepLastCommand'))
-            this.commandInput.select();
-        else
+        if (!this.getOption('keepLastCommand'))
             this.commandInput.value = '';
+        else if (this.getOption('selectLastCommand'))
+            this.commandInput.select();            
     }
 
     public sendBackground(txt: string, noEcho?: boolean, comments?: boolean) {

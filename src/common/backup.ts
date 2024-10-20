@@ -146,7 +146,7 @@ export class Backup extends EventEmitter {
                 MapperOpen: this.client.options.showMapper,
                 showCharacterManager: this.client.options.showCharacterManager,
                 logErrors: this.client.options.logErrors,
-                showErrorsExtended: this.client.options.showErrorsExtended
+                showErrorsExtended: this.client.options.showErrorsExtended,
             },
             map: {},
             inherited: {},

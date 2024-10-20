@@ -86,6 +86,7 @@ Reset all windows - Reset all windows to default sizes and screen locations and 
 - `Font` The font for the command input box
 - `Font size` The font size for the command input box
 - `Keep Last Command` This leaves the last command entered into the command input and selected it, if disabled it will be cleared
+- `Select Last Command` This selects the last command if keep last command enabled
 - `Auto size to contents` Resize command input height based on contents
 - `Word wrap` Wrap long lines in command input
 - `Scrollbars` Add scrollbars when needed to command input
