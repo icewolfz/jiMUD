@@ -1801,7 +1801,7 @@ export function pinkfishToHTML(text) {
             default:
                 if (text[t].startsWith('B_')) {
                     text[t] = text[t].substr(2);
-                    if (bold) {
+                    if (bold && !boldNest) {
                         stack.push('<span style="border: inherit;text-decoration:inherit;color: #' + _colorCodes['BOLD%^%^WHITE'] + '">');
                         codes.push('</span>');
                     }
