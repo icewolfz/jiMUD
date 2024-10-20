@@ -1179,9 +1179,9 @@ export class Client extends EventEmitter {
         });
         this.display.on('set-title', (title, type) => {
             if (typeof title === 'undefined' || title == null || title.length === 0)
-                this.emit('set-title', this.defaultTitle);
+                this.emit('set-title', this.getOption('title').replace('$t', this.defaultTitle) || this.defaultTitle);
             else if (type !== 1)
-                this.emit('set-title', this.getOption('title').replace('$t', title))
+                this.emit('set-title', this.getOption('title').replace('$t', title) || '')
         });
         this.display.on('music', (data) => {
             this.MSP.music(data);

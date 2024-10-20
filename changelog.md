@@ -3270,7 +3270,7 @@
   - Add [client.show()](docs/scripting.md#Basic-function-list) function to show the window
   - Add [client.hide()](docs/scripting.md#Basic-function-list) function to hide the window
   - Add [client.toggle()](docs/scripting.md#Basic-function-list) to toggle hide and show
-  - Added ${#}, %{#}, %{_}, ${_} formats to match {} variable format
+  - Added \${#}, %{#}, %{_}, ${_} formats to match {} variable format
   - Added proper %\{, $\{ escape system
   - New scripting setting scripting for allow expression/evaluate and moved parse double/single quote options there value returned
 - **Change:**
