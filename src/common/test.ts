@@ -854,7 +854,7 @@ Devanagari
             name = name.substring(0, name.length - 2);
         if (this.functions[name]) {
             console.time(name);
-            this.functions[name].apply(this, data || {});
+            this.functions[name].apply(this, [data || {}]);
             console.timeEnd(name);
             data.handled = true;
         }
