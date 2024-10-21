@@ -991,7 +991,10 @@ export class Profile {
             }
             return data;
         }
-        data = clone(this);
+        data = clone(this, (key, value) => {
+            if (key === 'profile') return undefined;
+            return value;
+        });
         const profile = new Profile(false);
         let prop;
         for (prop in data) {
@@ -1279,12 +1282,12 @@ export class ProfileCollection {
         if (version === 2) {
             const profiles = {};
             for (const p in this.items)
-                profiles[this.items[p].name] = this.items[p].clone(2);
+                profiles[this.items[p].name.toLowerCase()] = this.items[p].clone(2);
             return profiles;
         }
         const pc = new ProfileCollection();
         for (const p in this.items)
-            pc.items[this.items[p].name] = this.items[p].clone();
+            pc.items[this.items[p].name.toLowerCase()] = this.items[p].clone();
         pc.update();
         return pc;
     }
