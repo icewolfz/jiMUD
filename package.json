@@ -65,7 +65,7 @@
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.5.31",
-    "@types/node": "^20.16.13",
+    "@types/node": "^20.16.14",
     "electron": "^32.2.1",
     "electron-builder": "^25.1.8",
     "electron-rebuild": "^3.2.9",
@@ -159,7 +159,7 @@
   },
   "dependencies": {
     "@electron/remote": "^2.1.2",
-    "better-sqlite3": "^11.4.0",
+    "better-sqlite3": "^11.5.0",
     "buzz": "^1.2.1",
     "chokidar": "^4.0.1",
     "electron-updater": "^6.3.9",
