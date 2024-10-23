@@ -1148,9 +1148,9 @@ export class ProfileCollection {
             ap = this.items[a].name;
             bp = this.items[b].name;
             if (ap > bp)
-                return -1;
-            if (ap < bp)
                 return 1;
+            if (ap < bp)
+                return -1;
             return 0;
         });
     }

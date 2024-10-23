@@ -55,6 +55,7 @@
   - Fix [%state("name|pattern", "profile")](docs/functions.md#miscellaneous) profile argument evaluated
   - Fix issue when converting background pinkfish codes to html
   - Fix sorting profile priorities with default profile
+  - Fix sort profiles by alpha when priorities are the same
 - **Changed:**
   - Make chat capture selective line mode ignore case
   - Code editor:
