@@ -54,6 +54,7 @@
   - Fix [#PROFILELIST](docs/commands.md#display) not correctly showing enabled state
   - Fix [%state("name|pattern", "profile")](docs/functions.md#miscellaneous) profile argument evaluated
   - Fix issue when converting background pinkfish codes to html
+  - Fix sorting profile priorities with default profile
 - **Changed:**
   - Make chat capture selective line mode ignore case
   - Code editor:

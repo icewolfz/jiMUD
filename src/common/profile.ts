@@ -1141,12 +1141,12 @@ export class ProfileCollection {
                 return -1;
             if (ap < bp)
                 return 1;
+            if (a === 'default')
+                return -1;
+            if (b === 'default')
+                return 1;            
             ap = this.items[a].name;
             bp = this.items[b].name;
-            if (ap === 'default')
-                return -1;
-            if (bp === 'default')
-                return 1;
             if (ap > bp)
                 return -1;
             if (ap < bp)

@@ -215,7 +215,7 @@ export class Splitter extends EventEmitter {
             this.$dragBar.style.right = '0';
             if (this.$anchor === PanelAnchor.panel1) {
                 this.$dragBar.style.bottom = '';
-                this.$dragBar.style.top = (this.$splitterDistance - this.$splitterWidth) + 'px';
+                this.$dragBar.style.top = (this.$splitterDistance) + 'px';
             }
             else {
                 this.$dragBar.style.top = '';
@@ -239,7 +239,7 @@ export class Splitter extends EventEmitter {
             }
             else if (this.$anchor === PanelAnchor.panel1) {
                 this.$panel1.style.display = '';
-                this.$panel1.style.height = this.$splitterDistance + 'px';
+                this.$panel1.style.height = (this.$splitterDistance - this.$splitterWidth) + 'px';
                 this.$panel2.style.display = '';
                 this.$panel2.style.top = (this.$splitterDistance - this.$splitterWidth) + 'px';
                 this.$panel2.style.height = '';
@@ -295,7 +295,7 @@ export class Splitter extends EventEmitter {
             }
             else if (this.$anchor === PanelAnchor.panel1) {
                 this.$panel1.style.display = '';
-                this.$panel1.style.width = this.$splitterDistance + 'px';
+                this.$panel1.style.width = (this.$splitterDistance - this.$splitterWidth) + 'px';
                 this.$panel2.style.display = '';
                 this.$panel2.style.left = this.$splitterDistance - this.$splitterWidth + 'px';
                 this.$panel2.style.width = '';
@@ -348,7 +348,7 @@ export class Splitter extends EventEmitter {
             if (this.$orientation === Orientation.horizontal) {
                 this.$ghostBar.style.left = '0';
                 if (this.$anchor === PanelAnchor.panel1)
-                    this.$ghostBar.style.top = (bnd.bottom - this.$elBounds.top - this.$splitterWidth) + 'px';
+                    this.$ghostBar.style.top = (bnd.bottom - this.$elBounds.top) + 'px';
                 else
                     this.$ghostBar.style.top = (bnd.top - this.$elBounds.top - this.$splitterWidth) + 'px';
                 this.$ghostBar.style.right = '0';
@@ -359,7 +359,7 @@ export class Splitter extends EventEmitter {
             }
             else {
                 if (this.$anchor === PanelAnchor.panel1)
-                    this.$ghostBar.style.left = (bnd.right - this.$elBounds.left - this.$splitterWidth) + 'px';
+                    this.$ghostBar.style.left = (bnd.right - this.$elBounds.left) + 'px';
                 else
                     this.$ghostBar.style.left = (bnd.left - this.$elBounds.left - this.$splitterWidth) + 'px';
                 this.$ghostBar.style.top = '0';
@@ -373,19 +373,19 @@ export class Splitter extends EventEmitter {
                 let l;
                 if (this.$orientation === Orientation.horizontal && this.$anchor === PanelAnchor.panel1) {
                     l = ge.pageY - this.$elBounds.top;
-                    if (l < this.$panel1MinSize)
+                    if (l < this.$panel1MinSize + this.$splitterWidth)
                         this.$ghostBar.style.top = this.$panel1MinSize + 'px';
-                    else if (l > this.parent.clientHeight - this.$panel2MinSize)
-                        this.$ghostBar.style.top = (this.parent.clientHeight - this.$panel2MinSize) + 'px';
+                    else if (l > this.parent.clientHeight - this.$panel2MinSize - this.$splitterWidth)
+                        this.$ghostBar.style.top = (this.parent.clientHeight - this.$panel2MinSize - this.$splitterWidth) + 'px';
                     else
                         this.$ghostBar.style.top = (l - 2) + 'px';
                     if (this.live) {
-                        if (l < this.$panel1MinSize)
+                        if (l < this.$panel1MinSize + this.$splitterWidth)
                             this.SplitterDistance = this.$panel1MinSize + this.$splitterWidth;
-                        else if (l > this.parent.clientHeight - this.$panel2MinSize)
+                        else if (l > this.parent.clientHeight - this.$panel2MinSize - this.$splitterWidth)
                             this.SplitterDistance = this.parent.clientHeight - this.$panel2MinSize;
                         else
-                            this.SplitterDistance = l + 2;
+                            this.SplitterDistance = l - 2 + this.$splitterWidth;
                     }
                 }
                 else if (this.$orientation === Orientation.horizontal) {
@@ -407,19 +407,19 @@ export class Splitter extends EventEmitter {
                 }
                 else if (this.$orientation === Orientation.vertical && this.$anchor === PanelAnchor.panel1) {
                     l = ge.pageX - this.$elBounds.left;
-                    if (l < this.$panel1MinSize)
+                    if (l < this.$panel1MinSize + this.$splitterWidth)
                         this.$ghostBar.style.left = this.$panel1MinSize + 'px';
-                    else if (l > this.parent.clientWidth - this.$panel2MinSize - this.$splitterWidth)
+                    else if (l >= this.parent.clientWidth - this.$panel2MinSize - this.$splitterWidth)
                         this.$ghostBar.style.left = (this.parent.clientWidth - this.$panel2MinSize - this.$splitterWidth) + 'px';
                     else
                         this.$ghostBar.style.left = (l - 2) + 'px';
                     if (this.live) {
-                        if (l < this.$panel1MinSize)
+                        if (l < this.$panel1MinSize + this.$splitterWidth)
                             this.SplitterDistance = this.$panel1MinSize + this.$splitterWidth;
-                        else if (l > this.parent.clientWidth - this.$panel2MinSize)
+                        else if (l >= this.parent.clientWidth - this.$panel2MinSize - this.$splitterWidth)
                             this.SplitterDistance = this.parent.clientWidth - this.$panel2MinSize;
                         else
-                            this.SplitterDistance = l + this.$splitterWidth;
+                            this.SplitterDistance = l - 2 + this.$splitterWidth;
                     }
                 }
                 else {
@@ -459,12 +459,12 @@ export class Splitter extends EventEmitter {
             if (this.$orientation === Orientation.horizontal) {
                 l = e.pageY - this.$elBounds.top;
                 if (this.$anchor === PanelAnchor.panel1) {
-                    if (l < this.$panel1MinSize)
+                    if (l < this.$panel1MinSize + this.$splitterWidth)
                         this.SplitterDistance = this.$panel1MinSize + this.$splitterWidth;
-                    else if (l > this.parent.clientWidth - this.$panel2MinSize)
+                    else if (l > this.parent.clientHeight - this.$panel2MinSize - this.$splitterWidth)
                         this.SplitterDistance = this.parent.clientHeight - this.$panel2MinSize;
                     else
-                        this.SplitterDistance = l + this.$splitterWidth;
+                        this.SplitterDistance = l - 2 + this.$splitterWidth;
                 }
                 else if (l < this.$panel1MinSize)
                     this.SplitterDistance = this.parent.clientHeight - this.$panel1MinSize - 2;
@@ -476,12 +476,12 @@ export class Splitter extends EventEmitter {
             else {
                 l = e.pageX - this.$elBounds.left;
                 if (this.$anchor === PanelAnchor.panel1) {
-                    if (l < this.$panel1MinSize)
+                    if (l < this.$panel1MinSize + this.$splitterWidth)
                         this.SplitterDistance = this.$panel1MinSize + this.$splitterWidth;
-                    else if (l > this.parent.clientWidth - this.$panel2MinSize)
+                    else if (l > this.parent.clientWidth - this.$panel2MinSize - this.$splitterWidth)
                         this.SplitterDistance = this.parent.clientWidth - this.$panel2MinSize;
                     else
-                        this.SplitterDistance = l + this.$splitterWidth;
+                        this.SplitterDistance = l - 2 + this.$splitterWidth;
                 }
                 else if (l < this.$panel1MinSize)
                     this.SplitterDistance = this.parent.clientWidth - this.$panel1MinSize - 2;
