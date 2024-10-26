@@ -62,7 +62,7 @@
   - Code editor:
     - Hide items that only should appear when text is selected in context menu
     - Area Designer: Room property groups now sort advanced at the bottom
-  - Update electron 31.1.0 to 32.2.1
+  - Update electron 31.1.0 to 32.2.2
   - Update better-sqlite3 11.2.1 to 11.5.0
   - Update chokidar 3.6.0 to 4.0.1
   - Update mathjs 13.1.1 to 13.2.0

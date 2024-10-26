@@ -64,14 +64,14 @@
   },
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
-    "@types/jquery": "^3.5.31",
-    "@types/node": "^20.16.14",
-    "electron": "^32.2.1",
+    "@types/jquery": "^3.5.32",
+    "@types/node": "^20.17.1",
+    "electron": "^32.2.2",
     "electron-builder": "^25.1.8",
     "electron-rebuild": "^3.2.9",
     "eslint": "^9.13.0",
     "eslint-plugin-html": "^8.1.2",
-    "sass": "^1.80.3",
+    "sass": "^1.80.4",
     "terser": "^5.36.0"
   },
   "build": {
