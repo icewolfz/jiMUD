@@ -3187,7 +3187,7 @@
                 window.loadTheme();
                 client.emit('load-theme');
                 client.clearOptionCache();
-                setTimeout(()=> doUpdate(1), 50);
+                setTimeout(() => doUpdate(1), 50);
             }
             if (settings !== _windowState.data.settings) {
                 if (global) {
@@ -3284,7 +3284,7 @@
         });
         //#endregion
 
-        ipcRenderer.on('menu-changed', ()=> {
+        ipcRenderer.on('menu-changed', () => {
             doUpdate(4);
         })
 

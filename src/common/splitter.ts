@@ -175,11 +175,15 @@ export class Splitter extends EventEmitter {
         if (value) {
             if (this.$collapsed === 1) return;
             this.$collapsed = 1;
+            this.panel1.dataset.collapsed = 'true';
+            this.panel2.dataset.collapsed = 'false';
             this.emit('collapsed', 1);
             this.updatePanels();
         }
         else if (this.$collapsed === 1) {
             this.$collapsed = 0;
+            delete this.panel1.dataset.collapsed;
+            delete this.panel2.dataset.collapsed;
             this.emit('collapsed', 0);
             this.updatePanels();
         }
@@ -190,11 +194,15 @@ export class Splitter extends EventEmitter {
         if (value) {
             if (this.$collapsed === 2) return;
             this.$collapsed = 2;
+            this.panel1.dataset.collapsed = 'false';
+            this.panel2.dataset.collapsed = 'true';
             this.emit('collapsed', 2);
             this.updatePanels();
         }
         else if (this.$collapsed === 2) {
             this.$collapsed = 0;
+            delete this.panel1.dataset.collapsed;
+            delete this.panel2.dataset.collapsed;
             this.emit('collapsed', 0);
             this.updatePanels();
         }
@@ -234,6 +242,7 @@ export class Splitter extends EventEmitter {
             else if (this.$collapsed === 2) {
                 this.$panel1.style.display = '';
                 this.$panel1.style.bottom = '0';
+                this.$panel1.style.height = '';
                 this.$panel2.style.display = 'none';
                 this.$dragBar.style.display = 'none';
             }
@@ -290,6 +299,7 @@ export class Splitter extends EventEmitter {
             else if (this.$collapsed === 2) {
                 this.$panel1.style.display = '';
                 this.$panel1.style.right = '0';
+                this.$panel1.style.width = '';
                 this.$panel2.style.display = 'none';
                 this.$dragBar.style.display = 'none';
             }

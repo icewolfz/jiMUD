@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<htmlf>
+<html>
 
 <head>
     <meta charset="UTF-8">
@@ -220,6 +220,7 @@
         function buildHTMLStack(els) {
             var tag, $el, t, tl;
             var stack = [];
+            var tags;
             for (var e = 0, el = els.length; e < el; e++) {
                 $el = $(els[e]);
                 tag = $el.prop('tagName');
@@ -230,29 +231,22 @@
                 if (!tag)
                     stack.push('"' + $el.text() + '"');
                 else if (tag === 'SPAN') {
+                    tags = [];
                     if (els[e].className != '') {
                         tag = els[e].className.toUpperCase().split(/\s+/g);
                         tl = tag.length;
                         for (t = 0; t < tl; t++) {
                             if (tag[t] === 'NOFLASH')
-                                stack.push('FLASH');
+                                tags.push('FLASH');
                             else if (tag[t].length > 0)
-                                stack.push(tag[t]);
+                                tags.push(tag[t]);
                         }
-                        stack = stack.concat(buildHTMLStack($el.contents()));
-                        for (t = 0; t < tl; t++) {
-                            if (tag[t] === 'NOFLASH')
-                                stack.push('FLASH');
-                            else if (tag[t].length > 0)
-                                stack.push('/' + tag[t]);
-                        }
-                        continue;
                     }
-                    else if ($el.css('text-decoration') === 'line-through')
-                        tag = 'STRIKEOUT';
-                    else if ($el.css('text-decoration') === 'underline')
-                        tag = 'UNDERLINE';
-                    else if ($el.data('mce-style')) {
+                    if ($el.css('text-decoration') === 'line-through')
+                        tags.push('STRIKEOUT');
+                    if ($el.css('text-decoration') === 'underline')
+                        tags.push('UNDERLINE');
+                    if ($el.data('mce-style')) {
                         tag = $el.data('mce-style').toUpperCase().split(';');
                         tl = tag.length;
                         for (t = 0; t < tl; t++) {
@@ -261,41 +255,33 @@
                             tag[t] = tag[t].trim();
                             tag[t] = tag[t].replace('BACKGROUND:', 'BACKGROUND-COLOR:');
                             if (tag[t].length > 0)
-                                stack.push(tag[t]);
+                                tags.push(tag[t]);
                         }
-                        stack = stack.concat(buildHTMLStack($el.contents()));
-                        for (t = 0; t < tl; t++) {
-                            if (tag[t].endsWith('INHERIT') || tag[t].endsWith('BLACK'))
-                                continue;
-                            if (tag[t].length > 0)
-                                stack.push('/' + tag[t].trim());
-                        }
-                        continue;
                     }
                     else if ($el.css('color') || $el.css('background-color') || $el.css('background')) {
                         tag = [];
                         if ($el.css('color'))
-                            tag.push('COLOR: ' + new rgbcolor($el.css('color')).toHex().toUpperCase());
+                            tag.push('COLOR: ' + new RGBColor($el.css('color')).toHex().toUpperCase());
                         if ($el.css('background-color'))
-                            tag.push('BACKGROUND-COLOR: ' + new rgbcolor($el.css('background-color')).toHex().toUpperCase());
+                            tag.push('BACKGROUND-COLOR: ' + new RGBColor($el.css('background-color')).toHex().toUpperCase());
                         if ($el.css('background'))
-                            tag.push('BACKGROUND-COLOR: ' + new rgbcolor($el.css('background')).toHex().toUpperCase());
+                            tag.push('BACKGROUND-COLOR: ' + new RGBColor($el.css('background')).toHex().toUpperCase());
                         tl = tag.length;
                         for (t = 0; t < tl; t++) {
                             if (tag[t].length > 0)
-                                stack.push(tag[t].trim());
+                                tags.push(tag[t].trim());
                         }
-                        stack = stack.concat(buildHTMLStack($el.contents()));
-                        for (t = 0; t < tl; t++) {
-                            if (tag[t].length > 0)
-                                stack.push('/' + tag[t].trim());
-                        }
-                        continue;
                     }
-
-                    stack.push(tag);
-                    stack = stack.concat(buildHTMLStack($el.contents()));
-                    stack.push('/' + tag);
+                    tl = tags.length;
+                    for (t = 0; t < tl; t++) {
+                        if (!tags[t].length) continue;
+                        stack.push(tags[t].trim());
+                    }
+                    stack = stack.concat(this.buildHTMLStack($el.contents()));
+                    for (t = tl - 1; t >= 0; t--) {
+                        if (!tags[t].length) continue;
+                        stack.push('/' + tags[t].trim());
+                    }
                 }
                 else if (tag == 'BR' && $el.data('mce-bogus'))
                     stack.push('RESET');
@@ -1241,7 +1227,7 @@
             color = new rgbcolor(clientColors[11] || _dColors[11]).toHex().substr(1).toUpperCase();
             _colors[color] = 'YELLOW';
             _ColorTable.push(color, 'YELLOW');
-            _bold.push(color);            
+            _bold.push(color);
             color = new rgbcolor(clientColors[12] || _dColors[12]).toHex().substr(1).toUpperCase();
             _colors[color] = 'BOLD%^%^BLUE';
             _ColorTable.push(color, 'BOLD BLUE');

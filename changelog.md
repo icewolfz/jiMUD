@@ -31,6 +31,7 @@
   - Advanced editor/Mail composer:
     - Fix inserted text defaulting to bold white
     - Fix YELLOW code not correctly formatting when combined with bold
+    - Fix issue with stacked formats being ignored
   - Code editor:
     - No longer generate function stubs if invalid function names in (: :) values
     - Fix creating duplicate function stubs in generated code
