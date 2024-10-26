@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.5.1
+## 1.5.1 2024-10-26
 
 - **New:**
   - Code editor:
