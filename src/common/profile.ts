@@ -453,6 +453,14 @@ export class Trigger extends Item {
     public clone() {
         return new Trigger(this);
     }
+
+    public getState(state) {
+        if (state === 0)
+            return this;
+        state--;
+        if (state >= this.triggers.length || state < 0) return null;
+        return this.triggers[state];
+    }    
 }
 
 export class Context extends Item {
@@ -1034,9 +1042,7 @@ export class Profile {
         if (data.contexts && data.contexts.length > 0) {
             il = data.contexts.length;
             for (i = 0; i < il; i++) {
-                const item = data.contexts[i].clone();
-                item.profile = profile;
-                profile.contexts.push(item);
+                profile.contexts.push(new Context(data.contexts[i], profile));
             }
         }
         return profile;

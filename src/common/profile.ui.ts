@@ -1064,7 +1064,7 @@ function setEditorValue(editor, value) {
 }
 
 function focusEditor(editor) {
-    if(noEditorFocus) return;
+    if (noEditorFocus) return;
     if (editors[editor])
         editors[editor].focus();
     else
@@ -4957,6 +4957,6 @@ export function validateIdentifiers(el: HTMLInputElement, focus?) {
 function selectItem(id) {
     //setTimeout(() => {
     const n = $('#profile-tree').treeview('findNodes', ['^' + id + '$', 'id']);
-    n[0].$el[0].scrollIntoView({block: 'center'});
+    n[0].$el[0].scrollIntoView({ block: 'center' });
     //}, 1000);
 }

@@ -2,6 +2,8 @@
 
 ## 1.6.0
 
+- **Fixed:**
+  - Fix issue with MXP image maps not correctly appending ?x,y to command
 - **Changed:**
   - Update electron 32.2.2 to 33.0.2
 

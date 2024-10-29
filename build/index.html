@@ -634,7 +634,7 @@
         function doMXPSend(e, el, url, pmt, tt) {
             var im = el.querySelector('img[ismap]');
             var extra = '';
-            if (im > 0) {
+            if (im) {
                 var os = offset(im);
                 var x = Math.floor(e.clientX - os.left);
                 var y = Math.floor(e.clientY - os.top);
