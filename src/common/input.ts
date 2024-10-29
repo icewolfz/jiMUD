@@ -9248,7 +9248,7 @@ export class Input extends EventEmitter {
 
     public buildTriggerCache() {
         if (this._TriggerCache == null) {
-            this._TriggerCache = $.grep(this.client.triggers, (a) => {
+            this._TriggerCache = this.client.triggers.filter((a) => {
                 if (a && a.enabled && a.triggers.length) {
                     if (a.type !== TriggerType.Alarm) return true;
                     //loop sub states if one is not alarm cache it for future
