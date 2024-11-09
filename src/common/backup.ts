@@ -46,10 +46,18 @@ export class Backup extends EventEmitter {
 
         this.client.on('connected', () => {
             this._port = this.client.port;
+            if (this._save)
+                this.emit('close');
+            this._save = 0;
+            this._abort = false;
         });
 
         this.client.on('closed', () => {
             this._port = this.client.port;
+            if (this._save)
+                this.emit('close');
+            this._save = 0;
+            this._abort = false;
         });
 
         this.client.on('received-GMCP', async (mod, obj) => {
@@ -310,6 +318,8 @@ export class Backup extends EventEmitter {
                         this.abort('No data returned');
                     else if (data.error)
                         this.abort(data.error);
+                    else if (data.msg)
+                        this.abort(data.msg || 'Error');                    
                     else {
                         this._save[1] = data.chunk || 0;
                         this._save[3] += data.data || '';
@@ -345,6 +355,8 @@ export class Backup extends EventEmitter {
                         this.abort('No data returned');
                     else if (data.msg !== 'Successfully saved')
                         this.abort(data.msg || 'Error');
+                    else if (data.error)
+                        this.abort(data.error);                    
                     else if (this._save[0].length > 0) {
                         this.emit('progress', this._save[1] / this._save[3] * 100);
                         this._save[1]++;

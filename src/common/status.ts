@@ -627,7 +627,7 @@ export class Status extends EventEmitter {
         this.updateBar('need-percent', 0, 0, '0');
         this.clear('combat');
         this.clear('party');
-        document.getElementById('earn-value').classList.remove('hasmembers');
+        document.getElementById('party').classList.remove('hasmembers');
         this.updateOverall();
         this.updateStatus();
         this.emit('skill init');
