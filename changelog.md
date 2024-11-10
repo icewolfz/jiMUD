@@ -5,6 +5,7 @@
 - **Fixed:**
   - Fix issue with MXP image maps not correctly appending ?x,y to command
   - Fix status not removing separator between party/combat bars when party members removed
+  - Preferences: Fix `Log gagged lines` not being settable
   - Backup:
     - Reset state on disconnect/reconnect
     - Fix load not displaying error messages always

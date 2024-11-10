@@ -269,21 +269,21 @@ function fileChanged() {
         if (isFileSync(f))
             fs.renameSync(f, currentFile + '.htm');
         if (options.debug)
-            postMessage({ event: 'debug', args: 'File changed: "' + f + '.htm" to "' + currentFile + '.htm"' });
+            postMessage({ event: 'debug', args: 'File changed: "' + f + '" to "' + currentFile + '.htm"' });
     }
     if ((options.what & Log.Raw) === Log.Raw) {
         const f = pFile + '.raw.txt';
         if (isFileSync(f))
             fs.renameSync(f, currentFile + '.raw.txt');
         if (options.debug)
-            postMessage({ event: 'debug', args: 'File changed: "' + f + '.raw.txt" to "' + currentFile + '.raw.txt"' });
+            postMessage({ event: 'debug', args: 'File changed: "' + f + '" to "' + currentFile + '.raw.txt"' });
     }
     if ((options.what & Log.Text) === Log.Text || options.what === Log.None) {
         const f = pFile + '.txt';
         if (isFileSync(f))
             fs.renameSync(f, currentFile + '.txt');
         if (options.debug)
-            postMessage({ event: 'debug', args: 'File changed: "' + f + '.txt" to "' + currentFile + '.txt"' });
+            postMessage({ event: 'debug', args: 'File changed: "' + f + '" to "' + currentFile + '.txt"' });
     }
     //if flush buffer and file is not the same as previous file flush it
     if (flushBuffer && flushBuffer.currentFile !== pFile)
