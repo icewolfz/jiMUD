@@ -2557,7 +2557,9 @@
             client = new (require('./js/client.js').Client)('display', 'commandInput', _windowState.data.settings);
             initCommandInput();
             initClientEvents();
-            client.sendChat = updateChat;
+            client.sendChat = data => this.updateChat(client.parseInline(data));
+            client.sendChatRaw = updateChat; 
+
             client.display.enableBell = false;
             window.client = client;
             window.OoMUD = client;

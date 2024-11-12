@@ -135,7 +135,8 @@ this.print(name + ' says ' + message);
 - `client.show()` show client's parent window
 - `client.hide()` hide client's parent window
 - `client.toggle()` toggle hide and show
-- `client.sendChat(text)` send text to chat window
+- `client.sendChat(text)` send parsed text to chat window
+- `client.sendChatRAw(text)` send raw text to chat window
 - `client.indices` return the current indices for trigger or an empty array same as [%x1..$x99](functions.md)
 
 ### **WARNING**: you can effect the client if you access the wrong function, so any function used other then this list may caused unknown results and could cause the client to stop working
