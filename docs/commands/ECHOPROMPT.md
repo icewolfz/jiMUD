@@ -6,7 +6,7 @@
 
 > Display text to the screen
 
-### **Related:** [#SHOW](SHOW.md), [#SHOWPROMPT](SHOWPROMPT.md), [#ECHO](ECHO.md), [#SAY](ECHO.md), [#SAYPROMPT](SAYPROMPT.md)
+### **Related:** [#SHOW](SHOW.md), [#SHOWPROMPT](SHOWPROMPT.md), [#ECHO](ECHO.md), [#SAY](SAY.md), [#SAYPROMPT](SAYPROMPT.md)
 
 ### **Examples:**
 `#echop %{random}`

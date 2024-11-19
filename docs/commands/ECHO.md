@@ -6,7 +6,7 @@
 
 > Display text to the screen and append newline
 
-### **Related:** [#SHOW](SHOW.md), [#SHOWPROMPT](SHOWPROMPT.md), [#ECHOPROMPT](ECHOPROMPT.md), [#SAY](ECHO.md), [#SAYPROMPT](SAYPROMPT.md)
+### **Related:** [#SHOW](SHOW.md), [#SHOWPROMPT](SHOWPROMPT.md), [#ECHOPROMPT](ECHOPROMPT.md), [#SAY](SAY.md), [#SAYPROMPT](SAYPROMPT.md)
 
 ### **Examples:**
 `#ec %{random}`

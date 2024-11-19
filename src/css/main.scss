@@ -1,62 +1,62 @@
 $images: "./../../assets";
 
 html {
-    height: 100%;
-    background-color: inherit;
+  height: 100%;
+  background-color: inherit;
 }
 
 body {
-    -webkit-user-select: none;
-    user-select: none;
-    overflow: hidden;
-    font-size: 14px;
-    height: 100%;
-    line-height: normal !important;
-    background-color: inherit;
+  -webkit-user-select: none;
+  user-select: none;
+  overflow: hidden;
+  font-size: 14px;
+  height: 100%;
+  line-height: normal !important;
+  background-color: inherit;
 }
 
 #display-container {
-    position: absolute;
-    z-index: 2;
-    overflow: hidden;
-    -webkit-user-select: auto;
-    user-select: auto;
-    color: #BBBBBB;
-    font-family: "Courier New", monospace;
-    text-align: left;
-    font-size: 1em;
-    background-color: black;
-    text-shadow: none;
+  position: absolute;
+  z-index: 2;
+  overflow: hidden;
+  -webkit-user-select: auto;
+  user-select: auto;
+  color: #bbbbbb;
+  font-family: "Courier New", monospace;
+  text-align: left;
+  font-size: 1em;
+  background-color: black;
+  text-shadow: none;
 }
 
 #display {
-    position: absolute;
-    z-index: 2;
-    overflow-y: scroll;
-    box-sizing: border-box;
-    color: #BBBBBB;
-    border: 0px solid silver;
-    font-family: "Courier New", monospace;
-    text-align: left;
-    font-size: 1em;
-    background-color: black;
-    text-shadow: none;
-    padding: 2px;
-    overflow: hidden;
+  position: absolute;
+  z-index: 2;
+  overflow-y: scroll;
+  box-sizing: border-box;
+  color: #bbbbbb;
+  border: 0px solid silver;
+  font-family: "Courier New", monospace;
+  text-align: left;
+  font-size: 1em;
+  background-color: black;
+  text-shadow: none;
+  padding: 2px;
+  overflow: hidden;
 
-    /*
+  /*
     -webkit-transform: translate3d(0, 0, 0);
     transform: translate3d(0, 0, 0);    
     */
 }
 
 #display-view {
-    z-index: 3;
-    position: absolute;
-    top: 0px;
-    left: 0px;
+  z-index: 3;
+  position: absolute;
+  top: 0px;
+  left: 0px;
 
-    /*
+  /*
     position: relative;
     top: 2px;
     left: 2px;
@@ -66,580 +66,628 @@ body {
 }
 
 #display-background {
-    top: 0px;
-    z-index: 1;
-    left: 0px;
-    right: 0px;
-    position: absolute;
-    pointer-events: none;
+  top: 0px;
+  z-index: 1;
+  left: 0px;
+  right: 0px;
+  position: absolute;
+  pointer-events: none;
 }
 
 #display-overlay {
-    top: 0px;
-    z-index: 2;
-    left: 0px;
-    right: 0px;
-    position: absolute;
-    pointer-events: none;
+  top: 0px;
+  z-index: 2;
+  left: 0px;
+  right: 0px;
+  position: absolute;
+  pointer-events: none;
 }
 
 #display-split {
-    position: absolute;
-    z-index: 3;
-    overflow: hidden;
-    -webkit-user-select: auto;
-    user-select: auto;
-    box-sizing: border-box;
-    left: 0px;
-    right: 0px;
-    bottom: 0px;
-    height: 100%;
-    color: #BBBBBB;
-    border: 0px solid silver;
-    font-family: "Courier New", monospace;
-    text-align: left;
-    font-size: 1em;
-    background-color: black;
-    text-shadow: none;
-    padding: 2px;
-    -webkit-transform: translate3d(0, 0, 0);
-    transform: translate3d(0, 0, 0);
+  position: absolute;
+  z-index: 3;
+  overflow: hidden;
+  -webkit-user-select: auto;
+  user-select: auto;
+  box-sizing: border-box;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  height: 100%;
+  color: #bbbbbb;
+  border: 0px solid silver;
+  font-family: "Courier New", monospace;
+  text-align: left;
+  font-size: 1em;
+  background-color: black;
+  text-shadow: none;
+  padding: 2px;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
 }
 
 #display-split-bar {
-    background-color: menu;
-    height: 4px;
-    cursor: ns-resize;
-    position: absolute;
-    background-color: menu;
-    z-index: 1000;
-    width: 100%;
-    right: 0px;
-    box-sizing: border-box;
+  background-color: menu;
+  height: 4px;
+  cursor: ns-resize;
+  position: absolute;
+  background-color: menu;
+  z-index: 1000;
+  width: 100%;
+  right: 0px;
+  box-sizing: border-box;
 }
 
 #display-split-ghost-bar {
-    height: 4px;
-    right: 12px;
-    left: 0;
-    background-color: transparent;
-    opacity: 0.5;
-    position: absolute;
-    cursor: ns-resize;
-    z-index: 9991;
-    box-sizing: border-box;
+  height: 4px;
+  right: 12px;
+  left: 0;
+  background-color: transparent;
+  opacity: 0.5;
+  position: absolute;
+  cursor: ns-resize;
+  z-index: 9991;
+  box-sizing: border-box;
 }
 
 #display-split-frame {
-    height: 20%;
-    min-height: 150px;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 12px;
-    display: none;
-    background-color: black;
-    overflow: hidden;
-    z-index: 10;
+  height: 20%;
+  min-height: 150px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 12px;
+  display: none;
+  background-color: black;
+  overflow: hidden;
+  z-index: 10;
 }
 
 .overlay-line {
-    position: absolute;
-    clear: both;
+  position: absolute;
+  clear: both;
 }
 
 #Character,
 #CmdCharacter {
-    position: absolute;
-    visibility: hidden;
-    height: auto;
-    width: auto;
-    font-family: "Courier New", monospace;
-    font-size: 1em;
-    border-bottom: 1px solid #d7d7d7;
-    top: -100px;
-    left: -100px;
-    margin: 0px;
-    text-decoration: underline overline;
-    line-height: normal;
+  position: absolute;
+  visibility: hidden;
+  height: auto;
+  width: auto;
+  font-family: "Courier New", monospace;
+  font-size: 1em;
+  border-bottom: 1px solid #d7d7d7;
+  top: -100px;
+  left: -100px;
+  margin: 0px;
+  text-decoration: underline overline;
+  line-height: normal;
 }
 
 #command {
-    position: absolute;
-    z-index: 4;
-    box-sizing: border-box;
+  position: absolute;
+  z-index: 4;
+  box-sizing: border-box;
 }
 
 #commandMeasure {
-    white-space: pre;
-    position: absolute;
-    z-index: 1000;
-    max-height: 50%;
-    visibility: hidden;
-    line-height: 1.2;
-    min-height: 16px;
+  white-space: pre;
+  position: absolute;
+  z-index: 1000;
+  max-height: 50%;
+  visibility: hidden;
+  line-height: 1.2;
+  min-height: 16px;
 }
 
 #commandbox {
-    position: absolute;
-    box-sizing: border-box;
+  position: absolute;
+  box-sizing: border-box;
 }
 
 #commandBoxButtons {
-    display: inline-flex;
-    float: right;
+  display: inline-flex;
+  float: right;
 }
 
 #commandInput {
-    outline: none;
-    resize: none;
-    overflow: hidden;
-    line-height: 1.2;
-    min-height: 16px;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  line-height: 1.2;
+  min-height: 16px;
 }
 
 #commandInput:focus {
-    outline: none;
+  outline: none;
 }
 
 #buttonbar {
-    z-index: 5;
-    width: 32px;
-    position: absolute;
-    overflow: hidden;
+  z-index: 5;
+  width: 32px;
+  position: absolute;
+  overflow: hidden;
 }
 
 #buttonbar.scroll {
-    /*
+  /*
     padding-top: 18px;
     padding-bottom: 18px;
     */
 }
 
-#bb-scroll-up, #bb-scroll-down {
-    left: 2px;
-    position: absolute;
-    text-align: center;
-    width: 32px;
-    z-index: 100000;
-    height: 16px;
-    margin-top: 0;
+#bb-scroll-up,
+#bb-scroll-down {
+  left: 2px;
+  position: absolute;
+  text-align: center;
+  width: 32px;
+  z-index: 100000;
+  height: 16px;
+  margin-top: 0;
 }
 
-#bb-scroll-up:focus, #bb-scroll-down:focus {
-    /*
+#bb-scroll-up:focus,
+#bb-scroll-down:focus {
+  /*
     color: inherit !important;
     background-color: inherit !important;
     */
 }
 
-#bb-scroll-up .fa, #bb-scroll-down .fa {
-    margin-top: 0;
-    font-size: 16px;
+#bb-scroll-up .fa,
+#bb-scroll-down .fa {
+  margin-top: 0;
+  font-size: 16px;
 }
 
 #bb-scroll-up {
-    top: 2px;
+  top: 2px;
 }
 
 #bb-scroll-down {
-    bottom: 2px;
+  bottom: 2px;
 }
 
 .command-history {
-    margin-right: 2px;
+  margin-right: 2px;
 }
 
-#advedit, #btnTriggers, #btnParsing {
-    margin-right: 2px;
-    border-radius: 4px;
+#advedit,
+#btnTriggers,
+#btnParsing {
+  margin-right: 2px;
+  border-radius: 4px;
 }
 
 .find {
-    position: absolute;
-    display: none;
-    z-index: 100;
+  position: absolute;
+  display: none;
+  z-index: 100;
 }
 
 .find-drag-grip {
-    text-decoration: none;
-    cursor: grab;
+  text-decoration: none;
+  cursor: grab;
 }
 
 .find-drag-grip.dragging {
-    cursor: grabbing;
+  cursor: grabbing;
 }
 
 .find-drag-grip svg {
-    height: 14px;
-    padding-top: 2px;
+  height: 14px;
+  padding-top: 2px;
 }
 
 .find input,
 .findlay-find input:focus {
-    outline: none;
-    position: relative;
+  outline: none;
+  position: relative;
 }
 
 .find button {
-    display: inline-block;
-    outline: none;
+  display: inline-block;
+  outline: none;
 }
 
 .find button:disabled,
 .find button:disabled:hover {
-    cursor: not-allowed;
+  cursor: not-allowed;
 }
 
 .find button:hover,
 .find button.active:hover {
-    cursor: default;
+  cursor: default;
 }
 
 .find button:active {
-    cursor: default;
+  cursor: default;
 }
 
 .find button.active {
-    cursor: default;
+  cursor: default;
 }
 
 .find-count {
-    display: inline-block;
-    width: 100px;
-    font-family: Arial, Helvetica, sans-serif;
-    padding: 4px;
-    text-align: center;
+  display: inline-block;
+  width: 100px;
+  font-family: Arial, Helvetica, sans-serif;
+  padding: 4px;
+  text-align: center;
 }
 
 .find-selection {
-    display: none !important;
+  display: none !important;
 }
 
 /** status */
 
 #status {
-    z-index: 100;
-    position: absolute;
-    cursor: default;
-    box-sizing: border-box;
+  z-index: 100;
+  position: absolute;
+  cursor: default;
+  box-sizing: border-box;
 }
 
 #status-border {
-    position: absolute;
-    box-sizing: border-box;
+  position: absolute;
+  box-sizing: border-box;
 }
 
 #environment {
-    position: absolute;
-    overflow: hidden;
-    box-sizing: border-box;
-    background-repeat: no-repeat;
-    background-size: cover;    
+  position: absolute;
+  overflow: hidden;
+  box-sizing: border-box;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 #environmentleft {
-    position: absolute;
-    top: 15px;
-    left: calc(50% - 75px);
-    float: left;
-    width: 50px;
-    height: 50px;
-    background-repeat: no-repeat;
-    background-size: cover;       
+  position: absolute;
+  top: 15px;
+  left: calc(50% - 75px);
+  float: left;
+  width: 50px;
+  height: 50px;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 #environmentcenter {
-    position: absolute;
-    top: 5px;
-    left: calc(50% - 25px);
-    width: 50px;
-    height: 50px;
-    background-repeat: no-repeat;
-    background-size: cover;       
+  position: absolute;
+  top: 5px;
+  left: calc(50% - 25px);
+  width: 50px;
+  height: 50px;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 #environmentright {
-    position: absolute;
-    top: 15px;
-    right: calc(50% - 75px);
-    width: 50px;
-    height: 50px;
-    background-repeat: no-repeat;
-    background-size: cover;       
+  position: absolute;
+  top: 15px;
+  right: calc(50% - 75px);
+  width: 50px;
+  height: 50px;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 #environmentweather {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    right: 0px;
-    bottom: 0px;
-    z-index: 100;
-    background-repeat: no-repeat;
-    background-size: cover;    
-    height: 100%;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  z-index: 100;
+  background-repeat: no-repeat;
+  background-size: cover;
+  height: 100%;
 }
 
 #character-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 #lefthandweapon {
-    position: absolute;
+  position: absolute;
 }
 
 #righthandweapon {
-    position: absolute;
+  position: absolute;
 }
 
 #experience {
-    position: absolute;
-    font-size: 12px;
+  position: absolute;
+  font-size: 12px;
 }
 
 #experience div span:first-child {
-    display: inline-block;
+  display: inline-block;
 }
 
 #experience div span:nth-child(2) {
-    float: right;
+  float: right;
 }
 
 #experience div span:nth-child(2) {
-    text-align: right;
+  text-align: right;
 }
 
 #bars {
-    position: absolute;
-    overflow: auto;
-    overflow-x: hidden;
-    box-sizing: border-box;
+  position: absolute;
+  overflow: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .combat-bar {
-    position: relative;
+  position: relative;
 }
 
 .combat-name {
-    position: absolute;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-    font-size: 1em;
+  position: absolute;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  font-size: 1em;
 }
 
 .combat-bar .progressbar {
-    position: absolute;
-    width: auto;
+  position: absolute;
+  width: auto;
 }
 
 #body {
-    position: absolute;
-    box-sizing: border-box;
-    font-size: 12px;
+  position: absolute;
+  box-sizing: border-box;
+  font-size: 12px;
 }
 
 #body svg {
-    image-rendering: crisp-edges;
+  image-rendering: crisp-edges;
 }
 
 #armor,
 #health,
 #health.on:hover,
 #armor.on:hover {
-    position: absolute;
+  position: absolute;
 }
 
 #tail,
 #leftwing,
 #rightwing {
-    display: none;
+  display: none;
 }
 
 #hp-status > div {
-    position: relative;
+  position: relative;
 }
 
-#hp-status > div > .progressbar, #need-percent {
-    width: initial;
-    position: absolute;
-    left: 30px;
-    right: 0;
-    top: 0;
+#hp-status > div > .progressbar,
+#need-percent {
+  width: initial;
+  position: absolute;
+  left: 30px;
+  right: 0;
+  top: 0;
 }
 
 #need-percent {
-    left: 50px;
-    display:none;
-    background: rgb(252, 238, 42);
+  left: 50px;
+  display: none;
+  background: rgb(252, 238, 42);
 }
 
 #experience > div {
-    position: relative;
+  position: relative;
 }
 
 .progressbar {
-    float: right;
-    overflow: hidden;
+  float: right;
+  overflow: hidden;
 }
 
 .progressbar .progressbar-text {
-    position: absolute;
-    z-index: 1;
+  position: absolute;
+  z-index: 1;
 }
 
 .progressbar .progressbar-value {
-    float: right;
+  float: right;
 }
 
 #lagMeter {
-    position: absolute;
-    width: auto;
-    box-sizing: border-box;
+  position: absolute;
+  width: auto;
+  box-sizing: border-box;
+}
+
+#fullbody.aura-blue {
+  -webkit-filter: drop-shadow(0px 0px 4px rgb(255, 255, 255))
+    drop-shadow(0px 0px 4px #009fff);
+  filter: drop-shadow(0px 0px 4px rgb(255, 255, 255)) drop-shadow(0px 0px 4px #009fff);
+}
+
+#fullbody.aura-red {
+  -webkit-filter: drop-shadow(0px 0px 4px rgb(255, 255, 255))
+    drop-shadow(0px 0px 4px #f00);
+  filter: drop-shadow(0px 0px 4px rgb(255, 255, 255)) drop-shadow(0px 0px 4px #f00);
+}
+
+#fullbody.aura-red.aura-blue {
+  -webkit-filter: drop-shadow(0px 0px 4px rgb(255, 255, 255))
+    drop-shadow(0px 0px 4px #c700ff);
+  filter: drop-shadow(0px 0px 4px rgb(255, 255, 255)) drop-shadow(0px 0px 4px #c700ff);
 }
 
 /*end status*/
 
 .find-highlight {
-    display: inline-block;
-    height: 100%;
-    pointer-events: none;
-    position: absolute;
-    box-sizing: border-box;
-    white-space: pre;
-    overflow: hidden;
+  display: inline-block;
+  height: 100%;
+  pointer-events: none;
+  position: absolute;
+  box-sizing: border-box;
+  white-space: pre;
+  overflow: hidden;
 }
 
 .select-text {
-    background-color: rgb(51, 153, 255);
-    color: rgb(255, 255, 255);
-    display: inline-block;
-    height: 100%;
-    pointer-events: none;
-    position: absolute;
-    box-sizing: border-box;
-    white-space: pre;
-    overflow: hidden;
-    opacity: 0.85;
+  background-color: rgb(51, 153, 255);
+  color: rgb(255, 255, 255);
+  display: inline-block;
+  height: 100%;
+  pointer-events: none;
+  position: absolute;
+  box-sizing: border-box;
+  white-space: pre;
+  overflow: hidden;
+  opacity: 0.85;
 }
 
-.select-text.trc, .find-highlight.trc {
-    border-top-right-radius: 4px;
+.select-text.trc,
+.find-highlight.trc {
+  border-top-right-radius: 4px;
 }
 
-.select-text.tlc, .find-highlight.tlc {
-    border-top-left-radius: 4px;
+.select-text.tlc,
+.find-highlight.tlc {
+  border-top-left-radius: 4px;
 }
 
-.select-text.brc, .find-highlight.brc {
-    border-bottom-right-radius: 4px;
+.select-text.brc,
+.find-highlight.brc {
+  border-bottom-right-radius: 4px;
 }
 
-.select-text.blc, .find-highlight.blc {
-    border-bottom-left-radius: 4px;
+.select-text.blc,
+.find-highlight.blc {
+  border-bottom-left-radius: 4px;
 }
 
 .ist {
-    height: 7px;
-    width: 7px;
-    -webkit-mask-image: radial-gradient(circle 9px at 0 100%, transparent 0, transparent 7px, black 7px);
+  height: 7px;
+  width: 7px;
+  -webkit-mask-image: radial-gradient(
+    circle 9px at 0 100%,
+    transparent 0,
+    transparent 7px,
+    black 7px
+  );
 }
 
 .isb {
-    height: 7px;
-    width: 7px;
-    -webkit-mask-image: radial-gradient(circle 9px at 0 0, transparent 0, transparent 7px, black 7px);
+  height: 7px;
+  width: 7px;
+  -webkit-mask-image: radial-gradient(
+    circle 9px at 0 0,
+    transparent 0,
+    transparent 7px,
+    black 7px
+  );
 }
 
 .iet {
-    height: 7px;
-    width: 7px;
-    -webkit-mask-image: radial-gradient(circle 9px at 100% 100%, transparent 0, transparent 7px, black 7px);
+  height: 7px;
+  width: 7px;
+  -webkit-mask-image: radial-gradient(
+    circle 9px at 100% 100%,
+    transparent 0,
+    transparent 7px,
+    black 7px
+  );
 }
 
 .ieb {
-    height: 7px;
-    width: 7px;
-    -webkit-mask-image: radial-gradient(circle 9px at 100% 0, transparent 0, transparent 7px, black 7px);
+  height: 7px;
+  width: 7px;
+  -webkit-mask-image: radial-gradient(
+    circle 9px at 100% 0,
+    transparent 0,
+    transparent 7px,
+    black 7px
+  );
 }
 
 dialog {
-    border: 1px solid black;
-    box-shadow: 3px 3px 5px #535353;
+  border: 1px solid black;
+  box-shadow: 3px 3px 5px #535353;
 }
 
 .dialog-footer {
-    background-color: #F5F5F5;
-    box-shadow: inset 0 1px 0 #fff;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 5px;
-    border-top: 1px solid #ddd;
+  background-color: #f5f5f5;
+  box-shadow: inset 0 1px 0 #fff;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 5px;
+  border-top: 1px solid #ddd;
 }
 
 .dialog-footer .btn {
-    margin: 5px;
+  margin: 5px;
 }
 
 .dialog-header {
-    background-color: #F5F5F5;
-    box-shadow: inset 0 -1px 0 #ddd;
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    padding: 5px;
-    border-bottom: 1px solid #fff;
+  background-color: #f5f5f5;
+  box-shadow: inset 0 -1px 0 #ddd;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 5px;
+  border-bottom: 1px solid #fff;
 }
 
 .dialog-header .btn {
-    margin: 5px;
+  margin: 5px;
 }
 
 .command-history ul {
-    overflow: auto;
+  overflow: auto;
 }
 
 .truncate {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 #status-drag-bar {
-    background-color: transparent;
-    height: 100%;
-    width: 3px;
-    cursor: ew-resize;
-    position: absolute;
-    left: -3px;    
+  background-color: transparent;
+  height: 100%;
+  width: 3px;
+  cursor: ew-resize;
+  position: absolute;
+  left: -3px;
 }
 
 #status-ghost-bar {
-    width: 3px;
-    background-color: #000;
-    opacity: 0.75;
-    position: absolute;
-    cursor: ew-resize;
-    z-index: 999
+  width: 3px;
+  background-color: #000;
+  opacity: 0.75;
+  position: absolute;
+  cursor: ew-resize;
+  z-index: 999;
 }
 
 .dot {
-    height: 10px;
-    width: 10px;
-    background-color: red;
-    border-radius: 50%;
-    display: inline-block;
-  }
+  height: 10px;
+  width: 10px;
+  background-color: red;
+  border-radius: 50%;
+  display: inline-block;
+}
 
 .dot-container {
-    display: inline-block;
-    bottom: 70px;
-    position: absolute;
-    left: 5px;
-    width:15px;
+  display: inline-block;
+  bottom: 70px;
+  position: absolute;
+  left: 5px;
+  width: 15px;
 }

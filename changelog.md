@@ -4,6 +4,7 @@
 
 - **New:**
   - Add [client.sendChatRaw](scripting.md) to send raw text to chat window
+  - Status: Add color aura's to reflect buffer/fortify state
 - **Fixed:**
   - Fix issue with MXP image maps not correctly appending ?x,y to command
   - Fix status not removing separator between party/combat bars when party members removed
@@ -14,7 +15,7 @@
 - **Changed:**
   - Change [client.sendChat](scripting.md) to parse text then send to chat window, works like #chat now
   - Update electron 32.2.2 to 33.2.0
-  - Update mathjs 13.2.0 to 13.2.1
+  - Update mathjs 13.2.0 to 13.2.2
   - Update yauzl 3.1.3 to 3.2.0
   - Update yazl 3.1.0 to 3.3.0
 

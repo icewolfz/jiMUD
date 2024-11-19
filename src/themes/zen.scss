@@ -20,175 +20,179 @@ $panelInsetBorder: #445942;
 $progressText: #445942;
 $progressBack: #a1b88d;
 
-html, body {
-    background-color: #{$background};
+html,
+body {
+  background-color: #{$background};
 }
 
 #display {
-    left: 36px;
-    right: 170px;
-    top: 2px;
-    bottom: 29px;
-    border: 1px solid #{$borderColor};
-    margin-bottom: 5px;
+  left: 36px;
+  right: 170px;
+  top: 2px;
+  bottom: 29px;
+  border: 1px solid #{$borderColor};
+  margin-bottom: 5px;
 }
 
 #display-split-bar {
-    background: #{$background};
-    border-top: 1px solid #{$borderColor};
-    border-bottom: 1px solid #{$borderColor};
+  background: #{$background};
+  border-top: 1px solid #{$borderColor};
+  border-bottom: 1px solid #{$borderColor};
 }
 
 #display-split-ghost-bar {
-    background: #{$buttonHoverColor};
-    border-top: 1px solid #{$buttonTextHoverColor};
-    border-bottom: 1px solid #{$buttonTextHoverColor};
+  background: #{$buttonHoverColor};
+  border-top: 1px solid #{$buttonTextHoverColor};
+  border-bottom: 1px solid #{$buttonTextHoverColor};
 }
 
 #display-split-bar:hover,
 #display-split-bar:active,
 #display-split-bar:focus {
-    background-color: #{$buttonHoverColor};
-    border-top: 1px solid #{$buttonTextHoverColor};
-    border-bottom: 1px solid #{$buttonTextHoverColor};
-    transition-delay:1s;
+  background-color: #{$buttonHoverColor};
+  border-top: 1px solid #{$buttonTextHoverColor};
+  border-bottom: 1px solid #{$buttonTextHoverColor};
+  transition-delay: 1s;
 }
 
-
 #command {
-    height: 24px;
-    bottom: 2px;
-    left: 36px;
-    right: 170px;
-    background-color: #{$commandBack};
-    border: 1px solid #{$borderColor};
-    color: #{$commandText};
-    padding: 2px;
+  height: 24px;
+  bottom: 2px;
+  left: 36px;
+  right: 170px;
+  background-color: #{$commandBack};
+  border: 1px solid #{$borderColor};
+  color: #{$commandText};
+  padding: 2px;
 }
 
 #commandbox {
-    left: 2px;
-    right: 96px;
-    height: 18px;
-    bottom: 2px;
+  left: 2px;
+  right: 96px;
+  height: 18px;
+  bottom: 2px;
 }
 
 #commandInput {
-    width: 100%;
-    height: 100%;
-    margin: 0px;
-    border: 0px;
-    background-color: transparent;
-    color: #{$commandText};
-    box-sizing: border-box;
-    padding: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0px;
+  border: 0px;
+  background-color: transparent;
+  color: #{$commandText};
+  box-sizing: border-box;
+  padding: 0;
 }
 
 #buttonbar {
-    top: 20px;
-    left: 2px;
-    bottom: 2px;
+  top: 20px;
+  left: 2px;
+  bottom: 2px;
 }
 
 #bb-scroll-up {
-    top: 20px;
+  top: 20px;
 }
 
 #bb-scroll-down {
-    bottom: 0px;
+  bottom: 0px;
 }
 
 .scroll-track {
-    background-color: #{$panelBack};
-    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
-    border-top: 1px solid #{$borderColor};
-    border-left: 1px solid #{$borderColor};
+  background-color: #{$panelBack};
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  border-top: 1px solid #{$borderColor};
+  border-left: 1px solid #{$borderColor};
 }
 
 .scroll-thumb {
-    background: #{$buttonColor};
-    border: 1px solid #{$buttonBorder};
+  background: #{$buttonColor};
+  border: 1px solid #{$buttonBorder};
 }
 
 .scroll-thumb:hover {
-    background: #{$buttonHoverColor};
+  background: #{$buttonHoverColor};
 }
 
 .scroll-thumb:active {
-    background-color: #{$buttonActiveBack};
+  background-color: #{$buttonActiveBack};
 }
 
 .scroll-corner {
-    background-color: #{$panelBack};
-    box-shadow: inset 0 0 6px rgb(0 0 0 / 30%);
+  background-color: #{$panelBack};
+  box-shadow: inset 0 0 6px rgb(0 0 0 / 30%);
 }
 
 .scroll-split-button {
-    display: block !important;
-    color: #{$textColor};
-    background-color: #{$buttonColor} !important;
-    border-top: 1px solid #{$buttonBorder};
-    border-left: 1px solid #{$buttonBorder};
-    border-right: 0;
-    border-bottom: 0; 
+  display: block !important;
+  color: #{$textColor};
+  background-color: #{$buttonColor} !important;
+  border-top: 1px solid #{$buttonBorder};
+  border-left: 1px solid #{$buttonBorder};
+  border-right: 0;
+  border-bottom: 0;
 }
 
 .scroll-split-button.active {
-    background-color: #{$buttonHoverColor} !important;
-    color: #{$buttonTextHoverColor};
-    border-top: 1px solid #{$buttonBorder};
-    border-left: 1px solid #{$buttonBorder};
-    border-right: 0;
-    border-bottom: 0;     
+  background-color: #{$buttonHoverColor} !important;
+  color: #{$buttonTextHoverColor};
+  border-top: 1px solid #{$buttonBorder};
+  border-left: 1px solid #{$buttonBorder};
+  border-right: 0;
+  border-bottom: 0;
 }
 
 .scroll-split-button.active:hover {
-    background-color: #{$buttonColor} !important;
-    color: #{$textColor};
+  background-color: #{$buttonColor} !important;
+  color: #{$textColor};
 }
 
 .scroll-split-button.active:active {
-    background-color: #{$buttonColor} !important;
-    color: #{$textColor};
+  background-color: #{$buttonColor} !important;
+  color: #{$textColor};
 }
 
 .scroll-split-button:hover {
-    background-color: #{$buttonHoverColor} !important;
-    color: #{$buttonTextHoverColor};
+  background-color: #{$buttonHoverColor} !important;
+  color: #{$buttonTextHoverColor};
 }
 
 .scroll-split-button:active {
-    background-color: #{$buttonActiveBack} !important;
-    color: #{$buttonActiveText};
+  background-color: #{$buttonActiveBack} !important;
+  color: #{$buttonActiveText};
 }
 
-.scroll-split-button.disabled, .scroll-split-button.disabled:hover, .scroll-split-button.disabled:active {
-    background-color: #{$buttonDisabledBack} !important;
-    color: #{$buttonDisabledText};
+.scroll-split-button.disabled,
+.scroll-split-button.disabled:hover,
+.scroll-split-button.disabled:active {
+  background-color: #{$buttonDisabledBack} !important;
+  color: #{$buttonDisabledText};
 }
 
 .scroll-split-button:focus {
-    color: #{$textColor};
+  color: #{$textColor};
 }
 
 .scroll-horizontal {
-    border-top: 1px solid #494238;
+  border-top: 1px solid #494238;
 }
 
 .scroll-vertical {
-    border-left: 1px solid #494238;
+  border-left: 1px solid #494238;
 }
 
-.scroll-disabled .scroll-thumb, .scroll-disabled .scroll-thumb:hover, .scroll-disabled .scroll-thumb:active {
-    background: rgba(51, 48, 43, 0.4);
-    border: 0px;
+.scroll-disabled .scroll-thumb,
+.scroll-disabled .scroll-thumb:hover,
+.scroll-disabled .scroll-thumb:active {
+  background: rgba(51, 48, 43, 0.4);
+  border: 0px;
 }
 
 #display::-webkit-scrollbar,
 #bars::-webkit-scrollbar,
 #commandInput::-webkit-scrollbar {
-    width: 12px;
-    height: 12px;
+  width: 12px;
+  height: 12px;
 }
 
 /* Track */
@@ -196,10 +200,10 @@ html, body {
 #display::-webkit-scrollbar-track,
 #bars::-webkit-scrollbar-track,
 #commandInput::-webkit-scrollbar-track {
-    background-color: #{$panelBack};
-    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
-    border-top: 1px solid #{$borderColor};
-    border-left: 1px solid #{$borderColor};
+  background-color: #{$panelBack};
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  border-top: 1px solid #{$borderColor};
+  border-left: 1px solid #{$borderColor};
 }
 
 /* Handle */
@@ -207,450 +211,480 @@ html, body {
 #display::-webkit-scrollbar-thumb,
 #bars::-webkit-scrollbar-thumb,
 #commandInput::-webkit-scrollbar-thumb {
-    background: #{$buttonColor};
-    border: 1px solid #{$buttonBorder};
+  background: #{$buttonColor};
+  border: 1px solid #{$buttonBorder};
 }
 
 #display::-webkit-scrollbar-thumb:hover,
 #bars::-webkit-scrollbar-thumb:hover,
 #commandInput::-webkit-scrollbar-thumb:hover {
-    background: #{$buttonHoverColor};
+  background: #{$buttonHoverColor};
 }
 
 #display::-webkit-scrollbar-thumb:active,
 #bars::-webkit-scrollbar-thumb:active,
 #commandInput::-webkit-scrollbar-thumb:active {
-    background-color: #{$buttonActiveBack};
+  background-color: #{$buttonActiveBack};
 }
 
 #display::-webkit-scrollbar-thumb:window-inactive,
 #bars::-webkit-scrollbar-thumb:window-inactive,
 #commandInput::-webkit-scrollbar-thumb:window-inactive {
-    background-color: #{$buttonColor};
+  background-color: #{$buttonColor};
 }
 
 #display::-webkit-scrollbar-corner,
 #bars::-webkit-scrollbar-corner,
 #commandInput::-webkit-scrollbar-corner {
-    background-color: #{$panelBack};
+  background-color: #{$panelBack};
 }
 
 .find {
-    top: 5px;
-    right: 20px;
-    color: #{$textColor};
-    padding: 2px;
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 1em;
-    border-radius: 4px;
-    border: 1px solid #{$borderColor};
-    background-color: #{$buttonColor};
+  top: 5px;
+  right: 20px;
+  color: #{$textColor};
+  padding: 2px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1em;
+  border-radius: 4px;
+  border: 1px solid #{$borderColor};
+  background-color: #{$buttonColor};
 }
 
 .find-drag-grip svg {
-    fill: #bbb ;
+  fill: #bbb;
 }
-.find-drag-grip:hover  {
-    background: #{$buttonActiveBack};
+.find-drag-grip:hover {
+  background: #{$buttonActiveBack};
 }
 
 .find-drag-grip:hover svg {
-    fill: #{$buttonTextHoverColor};
+  fill: #{$buttonTextHoverColor};
 }
 
 .find input,
 .find input:focus {
-    border: 1px solid #{$borderColor};
-    width: 100px;
-    background-color: inherit;
-    color: inherit;
-    padding: 2px 2px;
-    height: 16px;
-    top: -1px;
-    border-radius: 2px;
+  border: 1px solid #{$borderColor};
+  width: 100px;
+  background-color: inherit;
+  color: inherit;
+  padding: 2px 2px;
+  height: 16px;
+  top: -1px;
+  border-radius: 2px;
 }
 
 .find input:focus {
-    border: 1px solid #{$buttonActiveText};
-    color: #{$buttonActiveText};
-    background: #{$buttonActiveBack};
+  border: 1px solid #{$buttonActiveText};
+  color: #{$buttonActiveText};
+  background: #{$buttonActiveBack};
 }
 
 .find button:hover,
 .find button.active:hover {
-    border: 1px solid #{$borderColor};
-    background-color: #{$buttonHoverColor};
-    color: #{$buttonTextHoverColor};
+  border: 1px solid #{$borderColor};
+  background-color: #{$buttonHoverColor};
+  color: #{$buttonTextHoverColor};
 }
 
 .find button:active {
-    border: 1px solid #{$borderColor};
+  border: 1px solid #{$borderColor};
 }
 
 .find button:disabled,
 .find button:disabled:hover {
-    border: 1px solid transparent;
-    color: #{$buttonDisabledText};
-    background-color: #{$buttonDisabledBack};
+  border: 1px solid transparent;
+  color: #{$buttonDisabledText};
+  background-color: #{$buttonDisabledBack};
 }
 
 .find button.active {
-    border: 1px solid #{$buttonColor};
-    background: #{$buttonActiveBack};
-    color: #{$buttonActiveText};
+  border: 1px solid #{$buttonColor};
+  background: #{$buttonActiveBack};
+  color: #{$buttonActiveText};
 }
 
 /* begin status */
 
 #status {
-    width: 164px;
-    text-align: center;
-    right: 2px;
-    top: 2px;
-    bottom: 2px;
-    background-color: #{$panelBack};
-    border: 1px solid #{$borderColor};
-    padding: 2px;
+  width: 164px;
+  text-align: center;
+  right: 2px;
+  top: 2px;
+  bottom: 2px;
+  background-color: #{$panelBack};
+  border: 1px solid #{$borderColor};
+  padding: 2px;
 }
 
 #status-border {
-    width: 168px;
-    display: none;
+  width: 168px;
+  display: none;
 }
 
 #environment {
-    height: 50px;
-    top: 3px;
-    left: 3px;
-    right: 3px;
-    background-color: #{$panelInsetBack};
-    border: 1px solid #{$panelInsetBorder};
-    color: #{$panelInsetColor};
+  height: 50px;
+  top: 3px;
+  left: 3px;
+  right: 3px;
+  background-color: #{$panelInsetBack};
+  border: 1px solid #{$panelInsetBorder};
+  color: #{$panelInsetColor};
 }
 
 #character-name {
-    color: #{$textColor};
-    padding: 0 22px;
-    font-size: 1.2em;
+  color: #{$textColor};
+  padding: 0 22px;
+  font-size: 1.2em;
 }
 
 #lefthandweapon {
-    top: 85px;
-    background-color: #{$panelBack};
-    color: #{$textColor};
-    border: 1px solid #{$borderColor};
-    width: 32px;
-    height: 32px;
-    left: 5px;
+  top: 85px;
+  background-color: #{$panelBack};
+  color: #{$textColor};
+  border: 1px solid #{$borderColor};
+  width: 32px;
+  height: 32px;
+  left: 5px;
 }
 
 #righthandweapon {
-    top: 85px;
-    background-color: #{$panelBack};
-    color: #{$textColor};
-    border: 1px solid #{$borderColor};
-    width: 32px;
-    height: 32px;
-    right: 5px;
+  top: 85px;
+  background-color: #{$panelBack};
+  color: #{$textColor};
+  border: 1px solid #{$borderColor};
+  width: 32px;
+  height: 32px;
+  right: 5px;
 }
 
 #experience {
-    top: 3px;
-    right: 3px;
-    left: 3px;
-    background-color: #{$panelInsetBack};
-    border: 1px solid #{$panelInsetBorder};
-    padding: 2px;
-    color: #{$panelInsetColor};
-    text-align: left;
+  top: 3px;
+  right: 3px;
+  left: 3px;
+  background-color: #{$panelInsetBack};
+  border: 1px solid #{$panelInsetBorder};
+  padding: 2px;
+  color: #{$panelInsetColor};
+  text-align: left;
 }
 
 #experience div span:nth-child(2) {
-    padding-right: 2px;
+  padding-right: 2px;
 }
 
 #bars {
-    top: 3px;
-    right: 3px;
-    left: 3px;
-    bottom: 3px;
-    padding: 2px;
-    color: #{$textColor};
-    text-align: left;
+  top: 3px;
+  right: 3px;
+  left: 3px;
+  bottom: 3px;
+  padding: 2px;
+  color: #{$textColor};
+  text-align: left;
 }
 
 .combat-bar {
-    height: 34px;
-    width: 100%;
-    margin-bottom: 2px;
+  height: 34px;
+  width: 100%;
+  margin-bottom: 2px;
 }
 
 .combat-name {
-    right: 1px;
-    left: 38px;
+  right: 1px;
+  left: 38px;
 }
 
 .combat-icon {
-    height: 32px;
-    width: 32px;
-    float: left;
-    background-color: black;
-    border: 1px solid #{$borderColor};
+  height: 32px;
+  width: 32px;
+  float: left;
+  background-color: black;
+  border: 1px solid #{$borderColor};
 }
 
 .combat-bar .progressbar {
-    right: 1px;
-    left: 38px;
-    font-size: 0.75em;
-    bottom: 2px;
+  right: 1px;
+  left: 38px;
+  font-size: 0.75em;
+  bottom: 2px;
 }
 
 .combat-bar .progressbar .progressbar-text {
-    color: #{$progressText};
+  color: #{$progressText};
 }
 
 #body {
-    top: 3px;
-    right: 3px;
-    left: 3px;
-    background-color: #{$panelInsetBack};
-    color: #{$panelInsetColor};
-    border: 1px solid #{$panelInsetBorder};
-    padding: 2px;
+  top: 3px;
+  right: 3px;
+  left: 3px;
+  background-color: #{$panelInsetBack};
+  color: #{$panelInsetColor};
+  border: 1px solid #{$panelInsetBorder};
+  padding: 2px;
 }
 
 .progressbar {
-    border: 1px solid #{$borderColor};
+  border: 1px solid #{$borderColor};
 }
 
 #hp-status {
-    text-align: left;
-    color: #{$panelInsetColor};
+  text-align: left;
+  color: #{$panelInsetColor};
 }
 
 .progressbar .progressbar-text {
-    left: 0px;
-    right: 0px;
-    text-align: center;
-    background-color: transparent;
-    color: #{$progressText};
+  left: 0px;
+  right: 0px;
+  text-align: center;
+  background-color: transparent;
+  color: #{$progressText};
 }
 
 .progressbar .progressbar-value {
-    height: 100%;
-    width: 0%;
-    background-color: #{$progressBack};
+  height: 100%;
+  width: 0%;
+  background-color: #{$progressBack};
 }
 
 #lagMeter {
-    bottom: 3px;
-    right: 3px;
-    left: 3px;
-    font-size: 0.75em;
+  bottom: 3px;
+  right: 3px;
+  left: 3px;
+  font-size: 0.75em;
 }
 
 #lagMeter.progressbar .progressbar-text {
-    left: 0;
-    color: #{$progressText};
+  left: 0;
+  color: #{$progressText};
 }
 
 #party.hasmembers {
-    border-bottom: 1px solid #{$borderColor};
-    padding-bottom: 4px;
+  border-bottom: 1px solid #{$borderColor};
+  padding-bottom: 4px;
 }
 
+#fullbody {
+  filter: drop-shadow(0px 0px 1px black);
+}
+
+#fullbody.aura-blue {
+  -webkit-filter: drop-shadow(0px 0px 0px black)
+    drop-shadow(0px 0px 2px #009fff);
+  filter: drop-shadow(0px 0px 0px black) drop-shadow(0px 0px 2px #009fff);
+}
+
+#fullbody.aura-red {
+  -webkit-filter: drop-shadow(0px 0px 0px black) drop-shadow(0px 0px 2px #f00);
+  filter: drop-shadow(0px 0px 0px black) drop-shadow(0px 0px 2px #f00);
+}
+
+#fullbody.aura-red.aura-blue {
+  -webkit-filter: drop-shadow(0px 0px 0px black)
+    drop-shadow(0px 0px 2px #c700ff);
+  filter: drop-shadow(0px 0px 0px black) drop-shadow(0px 0px 2px #c700ff);
+}
 
 /** end stats **/
 
-
 /** button stats */
 
-
 #history-dropup {
-    text-align: center;
-    border-radius: 4px;
-    border: 0px;
-    background-color: transparent;
+  text-align: center;
+  border-radius: 4px;
+  border: 0px;
+  background-color: transparent;
 }
 
 #history-dropup .fa {
-    margin-top: 1px;
+  margin-top: 1px;
 }
 
 #history-dropup:hover {
-    background-color: #{$buttonHoverColor};
-    color: #{$buttonTextHoverColor};
+  background-color: #{$buttonHoverColor};
+  color: #{$buttonTextHoverColor};
 }
 
 #history-dropup:active {
-    background-color: #{$buttonActiveBack};
+  background-color: #{$buttonActiveBack};
 }
 
-#btnTriggers, #btnParsing {
-    text-align: center;
-    border-radius: 4px;
-    border: 0px;
-    height: 16px;
-    width: 16px;
-    background-color: transparent;
+#btnTriggers,
+#btnParsing {
+  text-align: center;
+  border-radius: 4px;
+  border: 0px;
+  height: 16px;
+  width: 16px;
+  background-color: transparent;
 }
 
-#btnTriggers.on, #btnParsing.on {
-    background-color: #{$buttonHoverColor};
-    color: #{$buttonTextHoverColor};
+#btnTriggers.on,
+#btnParsing.on {
+  background-color: #{$buttonHoverColor};
+  color: #{$buttonTextHoverColor};
 }
 
-#btnTriggers:hover, #btnParsing:hover, #btnTriggers.on:active, #btnParsing.on:active {
-    background-color: #{$buttonHoverColor};
-    color: #{$buttonTextHoverColor};
+#btnTriggers:hover,
+#btnParsing:hover,
+#btnTriggers.on:active,
+#btnParsing.on:active {
+  background-color: #{$buttonHoverColor};
+  color: #{$buttonTextHoverColor};
 }
 
-#btnTriggers:active, #btnParsing:active, #btnTriggers.on:hover, #btnParsing.on:hover {
-    background-color: #{$buttonActiveBack};
+#btnTriggers:active,
+#btnParsing:active,
+#btnTriggers.on:hover,
+#btnParsing.on:hover {
+  background-color: #{$buttonActiveBack};
 }
 
 #advedit {
-    text-align: center;
-    border-radius: 4px;
-    border: 0px;
-    background-color: transparent;
-    height: 16px;
-    width: 16px;
+  text-align: center;
+  border-radius: 4px;
+  border: 0px;
+  background-color: transparent;
+  height: 16px;
+  width: 16px;
 }
 
 #advedit .fa {
-    margin-top: 1px;
+  margin-top: 1px;
 }
 
 #advedit:hover {
-    background-color: #{$buttonHoverColor};
-    color: #{$buttonTextHoverColor};
+  background-color: #{$buttonHoverColor};
+  color: #{$buttonTextHoverColor};
 }
 
 #advedit:active {
-    background-color: #{$buttonActiveBack};
+  background-color: #{$buttonActiveBack};
 }
 
 .button {
-    color: #{$textColor};
-    background-color: #{$buttonColor};
-    border: 1px solid #{$buttonBorder};
-    margin-bottom: 2px;
+  color: #{$textColor};
+  background-color: #{$buttonColor};
+  border: 1px solid #{$buttonBorder};
+  margin-bottom: 2px;
 }
 
 .button svg {
-    fill: #{$textColor};
+  fill: #{$textColor};
 }
 
 .button:hover svg {
-    fill: #{$buttonTextHoverColor};
+  fill: #{$buttonTextHoverColor};
 }
 
 .button img,
 .button-icon {
-    margin-top: 5px;
-    margin-left: 5px;
+  margin-top: 5px;
+  margin-left: 5px;
 }
 
 .button.on {
-    background-color: #{$buttonHoverColor};
-    color: #{$buttonTextHoverColor};
+  background-color: #{$buttonHoverColor};
+  color: #{$buttonTextHoverColor};
 }
 
 .button.on svg {
-    fill: #{$buttonTextHoverColor};
+  fill: #{$buttonTextHoverColor};
 }
 
-.button.on:hover svg, .button.on:focus svg {
-    fill: #{$buttonActiveText};
+.button.on:hover svg,
+.button.on:focus svg {
+  fill: #{$buttonActiveText};
 }
 
 .button.on:hover {
-    background-color: #{$buttonActiveBack};
-    color: #{$buttonActiveText};
+  background-color: #{$buttonActiveBack};
+  color: #{$buttonActiveText};
 }
 
-.button.on:active, .button.on:focus {
-    background-color: #{$buttonColor};
-    color: #{$textColor};
+.button.on:active,
+.button.on:focus {
+  background-color: #{$buttonColor};
+  color: #{$textColor};
 }
 
-.button.on:active svg, .button.on:focus svg {
-    fill: #{$textColor};
+.button.on:active svg,
+.button.on:focus svg {
+  fill: #{$textColor};
 }
 
 .button:hover {
-    background-color: #{$buttonHoverColor};
-    color: #{$buttonTextHoverColor};
+  background-color: #{$buttonHoverColor};
+  color: #{$buttonTextHoverColor};
 }
 
 .button:active {
-    background-color: #{$buttonActiveBack};
-    color: #{$buttonActiveText};
+  background-color: #{$buttonActiveBack};
+  color: #{$buttonActiveText};
 }
 
 .button:focus {
-    color: #{$textColor};
+  color: #{$textColor};
 }
 
-.button:hover .overlay, .button.on:hover {
-    background-color: rgba(195,211,178, 0.40);
+.button:hover .overlay,
+.button.on:hover {
+  background-color: rgba(195, 211, 178, 0.4);
 }
 
 /** button end */
 
 #status-ghost-bar {
-    background-color: #{$buttonHoverColor};
-    border: 1px solid #{$buttonHoverColor};
+  background-color: #{$buttonHoverColor};
+  border: 1px solid #{$buttonHoverColor};
 }
 
 #status-drag-bar {
-    left: -2px;
-    top: -7px;
-    height: initial;
-    bottom: -14px;      
-    transition: 0s background-color, 0s border;
+  left: -2px;
+  top: -7px;
+  height: initial;
+  bottom: -14px;
+  transition: 0s background-color, 0s border;
 }
 
-#status-drag-bar:hover{
-    background-color: #{$buttonHoverColor};
-    border: 1px solid #{$buttonHoverColor};  
-    transition-delay:1s;
+#status-drag-bar:hover {
+  background-color: #{$buttonHoverColor};
+  border: 1px solid #{$buttonHoverColor};
+  transition-delay: 1s;
 }
 
 /** Grip button */
 .drag-grip {
-    left: 2px;
-    top: 2px;    
+  left: 2px;
+  top: 2px;
 }
 
 .drag-grip:focus {
-    color: #{$color};
+  color: #{$color};
 }
 
 .drag-grip span {
-    left: 8px;
-    top: -6px;
+  left: 8px;
+  top: -6px;
 }
 
 .drag-grip svg {
-    left: -1px;
-    top: -12px;    
+  left: -1px;
+  top: -12px;
 }
 
-.drag-grip[style*='display: none']~#bb-scroll-up,
-.drag-grip[style*='display: none']~#buttonbar {
-    top: 2px;
+.drag-grip[style*="display: none"] ~ #bb-scroll-up,
+.drag-grip[style*="display: none"] ~ #buttonbar {
+  top: 2px;
 }
 
 #loader {
-    color: #333;
-    background-color: #{$background};
+  color: #333;
+  background-color: #{$background};
 }
 
 .loader {
-    border: 16px solid #445942;
-    /* Light grey */
-    border-top: 16px solid #c3d3b2;
-    /* Blue */
+  border: 16px solid #445942;
+  /* Light grey */
+  border-top: 16px solid #c3d3b2;
+  /* Blue */
 }
