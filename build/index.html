@@ -2557,8 +2557,8 @@
             client = new (require('./js/client.js').Client)('display', 'commandInput', _windowState.data.settings);
             initCommandInput();
             initClientEvents();
-            client.sendChat = data => this.updateChat(client.parseInline(data));
-            client.sendChatRaw = updateChat; 
+            client.sendChat = data => { let e = { data: this.client.parseInline(data), raw: data }; this.client.emit('send-chat', e); this.updateChat(e.data) };
+            client.sendChatRaw = data => { let e = { data: data, raw: data }; this.client.emit('send-chat', e); this.updateChat(e.raw) };
 
             client.display.enableBell = false;
             window.client = client;

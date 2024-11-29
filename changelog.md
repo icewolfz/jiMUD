@@ -14,10 +14,11 @@
     - Fix load not displaying error messages always
 - **Changed:**
   - Change [client.sendChat](scripting.md) to parse text then send to chat window, works like #chat now
-  - Update electron 32.2.2 to 33.2.0
-  - Update mathjs 13.2.0 to 13.2.2
+  - Update electron 32.2.2 to 33.2.1
+  - Update mathjs 13.2.0 to 14.0.0
   - Update yauzl 3.1.3 to 3.2.0
-  - Update yazl 3.1.0 to 3.3.0
+  - Update yazl 3.1.0 to 3.3.1
+  - Update better-sqlite3 11.5.0 to 11.6.0
 
 ## 1.5.1 2024-10-26
 
