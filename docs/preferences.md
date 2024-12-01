@@ -50,7 +50,7 @@ Reset all windows - Reset all windows to default sizes and screen locations and 
 - `Enable URL detection` Attempt to detect urls and convert them into links that can be clicked to.
 - `Focus to command input on click` Will auto focus to the command input when the display area is clicked.
 - `Split scroll` Enable split screen scroll, this will allow you to scroll while displaying the most recent lines at the bottom, has known issues with text selection and find system scroll to view
-- `Split scroll live update` determines how the split screen updates as resize bar is adjusted, if on it will update once resize bar released, if slow resizing enable this as it should reduce cpu load during drag
+- `Split scroll live update` determines how the split screen updates as resize bar is adjusted, if on it will update as resize bar is moved, if slow resizing disable this as it should reduce cpu load during drag
 - `Show split button` Show or hide split toggle button in split scroll to allow for quick toggling
 - `Enable colors` disable or enable all colors
 - `Enable background colors` disable or enable just background colors
