@@ -3882,8 +3882,8 @@ async function newClientWindow(caller, connection, data, name) {
             if (connection)
                 clients[id].view.webContents.send('connection-settings', connection);
         });
-        window.window.webContents.send('new-client', { id: id });
         onContentsLoaded(window.window.webContents).then(() => {
+            window.window.webContents.send('new-client', { id: id });
             if (focusedClient === id && focusedWindow === windowId)
                 focusWindow(window.window, true);
         });

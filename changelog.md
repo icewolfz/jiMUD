@@ -12,6 +12,7 @@
   - Backup:
     - Reset state on disconnect/reconnect
     - Fix load not displaying error messages always
+  - Fix broken resize when client first used
 - **Changed:**
   - Change [client.sendChat](scripting.md) to parse text then send to chat window, works like #chat now
   - Update electron 32.2.2 to 33.2.1
