@@ -44,6 +44,7 @@
         var _colors, _ColorTable, options, _colorCodes, client;
         var _colorDialog;
         var _body = null;
+        var _inEditTimeout;
         var colorNames = {
             'BLACK': 'Black',
             'RED': 'Maroon',
@@ -285,7 +286,7 @@
                         if (!tags[t].length) continue;
                         stack.push(tags[t].trim());
                     }
-                    stack = stack.concat(this.buildHTMLStack($el.contents()));
+                    stack = stack.concat(buildHTMLStack($el.contents()));
                     for (t = tl - 1; t >= 0; t--) {
                         if (!tags[t].length) continue;
                         stack.push('/' + tags[t].trim());
@@ -977,12 +978,30 @@
             });
         }
 
-        function sendMail(body, type) {
+        async function sendMail(body, type) {
             if (!window.opener.client.connected) {
                 dialog.showMessageBox({
                     type: 'error',
                     title: 'Not connected',
                     message: 'Must be connected to mud to send mail'
+                });
+                return;
+            }
+            try {
+                if (await this._inEdit()) {
+                    dialog.showMessageBox({
+                        type: 'error',
+                        title: 'In editor',
+                        message: 'Can not send mail while in editor.'
+                    });
+                    return;
+                }
+            }
+            catch (err) {
+                dialog.showMessageBox({
+                    type: 'error',
+                    title: 'Error',
+                    message: err
                 });
                 return;
             }
@@ -1493,6 +1512,37 @@
                 'format': MailReadFormat.ansi,
                 'markReadDelay': 2000
             };
+        }
+
+        async function _inEdit() {
+            return new Promise((resolve, reject) => {
+                let to = window.opener.client.getOption('mail.timeout');
+                if (to < 1000) to = 1000;
+                if (to > 20000) to = 20000;
+                //setup a timeout just to be save
+                _inEditTimeout = setTimeout(() => {
+                    reject('Sendmail timed out try again.');
+                    _inEditTimeout = 0;
+                }, to);
+                var _gmcp = (mod, obj) => {
+                    if (mod.toLowerCase() === 'omud.info') {
+                        clearTimeout(_inEditTimeout);
+                        window.opener.client.off('received-GMCP', _gmcp);
+                        _inEditTimeout = 0;
+                        _gmcp = 0;
+                        resolve(obj.inEdit || false);
+                    }
+                    else if (mod.toLowerCase() === 'core.goodbye') {
+                        clearTimeout(_inEditTimeout);
+                        _inEditTimeout = 0;
+                        window.opener.client.off('received-GMCP', _gmcp);
+                        _gmcp = 0;
+                        reject('Disconnected');
+                    }
+                };
+                window.opener.client.on('received-GMCP', _gmcp);
+                window.opener.client.sendGMCP('oMUD.inEdit');
+            });
         }
 
         window.onbeforeunload = function (evt) {

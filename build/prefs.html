@@ -906,7 +906,10 @@
             if (typeof value == 'string' && parseFloat(value).toString() == value)
                 value = parseFloat(value);
             */
-            option = option.split('-');
+            if (option === 'mail-timeout')
+                option = ['mail.timeout'];
+            else
+                option = option.split('-');
             if (option.length === 3)
                 _settings[option[0]][option[1]][option[2]] = value;
             else if (option.length === 2)
@@ -2601,11 +2604,11 @@
                             <input type="checkbox" id="keepLastCommand" /> Keep last command
                         </label>
                     </div>
-                  <div class="col-sm-6 form-group">
+                    <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="selectLastCommand" /> Select last command
                         </label>
-                    </div>                    
+                    </div>
                     <div class="col-sm-6 form-group">
                         <label class="control-label">
                             <input type="checkbox" id="commandAutoSize" /> Auto size to contents
@@ -3476,11 +3479,20 @@
                         <label class="control-label">
                             <input type="checkbox" id="simpleAlarms" /> Simple Alarms
                         </label>
-                    </div>                    
+                    </div>
+                    <div class="col-sm-6 form-group">
+                        <label class="control-label">
+                            Composer send timeout
+                            <div class="input-group">
+                                <input type="number" id="mail-timeout" class="input-sm form-control" min="1000" max="20000" />
+                                <div class="input-group-addon">ms</div>
+                            </div>
+                        </label>
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="backup">
                     <div class="col-sm-12 form-group">
-                        <label class="control-label">Backup save</label><br/>
+                        <label class="control-label">Backup save</label><br />
                         <div class="btn-group" data-toggle="buttons">
                             <label class="btn btn-default btn-xs">
                                 <input type="checkbox" id="backup-save-settings"> Settings
@@ -3494,16 +3506,16 @@
                             <label class="btn btn-default btn-xs">
                                 <input type="checkbox" id="backup-save-windows"> Windows
                             </label>
-                                <label class="btn btn-default btn-xs">
+                            <label class="btn btn-default btn-xs">
                                 <input type="checkbox" id="backup-save-characters"> Characters
                             </label>
                         </div>
                     </div>
                     <div class="col-sm-12 form-group">
                         <span class="help-block" style="font-size: 0.8em;margin:0;padding:0">Character passwords are not backed up and will have to be set in the manager</span>
-                    </div>                    
+                    </div>
                     <div class="col-sm-12 form-group">
-                        <label class="control-label">Backup load</label><br/>
+                        <label class="control-label">Backup load</label><br />
                         <div class="btn-group" data-toggle="buttons">
                             <label class="btn btn-default btn-xs">
                                 <input type="checkbox" id="backup-load-settings"> Settings
@@ -3517,7 +3529,7 @@
                             <label class="btn btn-default btn-xs">
                                 <input type="checkbox" id="backup-load-windows"> Windows
                             </label>
-                                <label class="btn btn-default btn-xs">
+                            <label class="btn btn-default btn-xs">
                                 <input type="checkbox" id="backup-load-characters"> Characters
                             </label>
                         </div>
@@ -3531,7 +3543,7 @@
                         <label class="control-label">
                             <input type="checkbox" id="backupReplaceCharacters" /> Replace characters on load
                         </label>
-                    </div>                    
+                    </div>
                 </div>
                 <div role="tabpanel" class="pref-pane" id="connection">
                     <div class="col-sm-6 form-group">

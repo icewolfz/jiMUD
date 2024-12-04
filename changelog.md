@@ -5,6 +5,7 @@
 - **New:**
   - Add [client.sendChatRaw](scripting.md) to send raw text to chat window
   - Status: Add color aura's to reflect buffer/fortify state
+  - Composer now properly checks if you are in edit mode to avoid sending mail
 - **Fixed:**
   - Fix issue with MXP image maps not correctly appending ?x,y to command
   - Fix status not removing separator between party/combat bars when party members removed
