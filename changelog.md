@@ -6,7 +6,7 @@
   - Add [client.sendChatRaw](scripting.md) to send raw text to chat window
   - Status: Add color aura's to reflect buffer/fortify state
   - Composer now properly checks if you are in edit mode to avoid sending mail
-  - Add `Default MXP on state` preference, Set the default state for mxp line state, when on it works more like MUSHclient and Mudlet and requires all < and > to be encoded from the mud
+  - Add `Set Default MXP on state to true` preference, Set the default state for mxp line state, when true it works more like MUSHclient and Mudlet and requires all < and > to be encoded from the mud
 - **Fixed:**
   - Fix issue with MXP image maps not correctly appending ?x,y to command
   - Fix status not removing separator between party/combat bars when party members removed
