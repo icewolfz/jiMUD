@@ -1241,6 +1241,7 @@ export class Client extends EventEmitter {
         this.display.enableMSP = this.getOption('enableMSP');
         this.display.enableColors = this.getOption('display.enableColors');
         this.display.enableBackgroundColors = this.getOption('display.enableBackgroundColors');
+        this.display.defaultMXPState = this.getOption('display.defaultMXPState');
         const colors = this.getOption('colors');
         if (colors && colors.length > 0) {
             let c;
