@@ -71,6 +71,7 @@ Reset all windows - Reset all windows to default sizes and screen locations and 
 - `Emulate terminal extended characters` Enable/disable Terminal IBM/OEM (code page 437) extended characters, will convert them to the correct unicode character in an attempt to display like classic terminal
 - `Emulate control codes` Emulate control codes: bell, tab, backspace, escape
 - `Hide trailing line` Hide trailing empty line, **note** if more then one it will only hide the final line
+- `Default MXP on state` Set the default state for mxp line state, when on it works more like MUSHclient and Mudlet and requires all < and > to be encoded from the mud
 
 ## Colors
 

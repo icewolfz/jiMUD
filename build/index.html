@@ -871,8 +871,8 @@
             measure.style.fontSize = this.commandInput.style.fontSize;
             measure.style.fontFamily = this.commandInput.style.fontFamily;
             measure.style.width = document.getElementById('commandInput').offsetWidth + 'px';
-            const oldMeasure = measure.innerHTML;
-            measure.innerHTML = 'W';
+            const oldMeasure = measure.textContent;
+            measure.textContent = 'W';
             let minHeight = client.getOption('commandMinLines');
             const height = measure.offsetHeight;
             minHeight = height * (minHeight < 1 ? 1 : minHeight);
@@ -880,7 +880,7 @@
             padding += parseFloat(cmdSize.borderBottomWidth) || 0;
             padding += parseFloat(cmdSize.paddingTop) || 0;
             padding += parseFloat(cmdSize.paddingBottom) || 0;
-            measure.innerHTML = oldMeasure;
+            measure.textContent = oldMeasure;
             cmd.style.height = (height + padding) + 'px';
             document.getElementById('commandbox').style.height = height + 'px';
             document.getElementById('display').style.bottom = (height + padding) + 'px';
@@ -900,7 +900,7 @@
             /*
             const measure = commandInput.measure;
             const cmd = commandInput.cmd;
-            measure.innerHTML = client.commandInput.value + '\n';            
+            measure.textContent = client.commandInput.value + '\n';            
             const height = measure.offsetHeight;
             const padding = commandInput.padding;
             cmd.style.height = (height + padding) + 'px';
@@ -912,7 +912,7 @@
         function _resizeCommandInput() {
             const measure = commandInput.measure;
             const cmd = commandInput.cmd;
-            measure.innerHTML = client.commandInput.value + '\n';
+            measure.textContent = client.commandInput.value + '\n';
             let height = measure.offsetHeight;
             if (height < commandInput.minHeight)
                 height = commandInput.minHeight;

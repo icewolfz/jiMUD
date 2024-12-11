@@ -6,6 +6,7 @@
   - Add [client.sendChatRaw](scripting.md) to send raw text to chat window
   - Status: Add color aura's to reflect buffer/fortify state
   - Composer now properly checks if you are in edit mode to avoid sending mail
+  - Add `Default MXP on state` preference, Set the default state for mxp line state, when on it works more like MUSHclient and Mudlet and requires all < and > to be encoded from the mud
 - **Fixed:**
   - Fix issue with MXP image maps not correctly appending ?x,y to command
   - Fix status not removing separator between party/combat bars when party members removed
@@ -14,13 +15,14 @@
     - Reset state on disconnect/reconnect
     - Fix load not displaying error messages always
   - Fix broken resize when client first used
+  - Fix command input auto size when html tags in text
 - **Changed:**
   - Change [client.sendChat](scripting.md) to parse text then send to chat window, works like #chat now
   - Update electron 32.2.2 to 33.2.1
   - Update mathjs 13.2.0 to 14.0.0
   - Update yauzl 3.1.3 to 3.2.0
   - Update yazl 3.1.0 to 3.3.1
-  - Update better-sqlite3 11.5.0 to 11.6.0
+  - Update better-sqlite3 11.5.0 to 11.7.0
 
 ## 1.5.1 2024-10-26
 

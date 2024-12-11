@@ -4422,6 +4422,13 @@ export class DisplayModel extends EventEmitter {
         return this._parser.enableMXP;
     }
 
+    set defaultMXPState(value: boolean) {
+        this._parser.defaultMXPState = value;
+    }
+    get defaultMXPState(): boolean {
+        return this._parser.defaultMXPState;
+    }
+
     set showInvalidMXPTags(value: boolean) {
         this._parser.showInvalidMXPTags = value;
     }

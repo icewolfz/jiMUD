@@ -71,8 +71,8 @@
     "electron-rebuild": "^3.2.9",
     "eslint": "^9.16.0",
     "eslint-plugin-html": "^8.1.2",
-    "sass": "^1.81.0",
-    "terser": "^5.36.0"
+    "sass": "^1.82.0",
+    "terser": "^5.37.0"
   },
   "build": {
     "appId": "jiMUD",
@@ -159,7 +159,7 @@
   },
   "dependencies": {
     "@electron/remote": "^2.1.2",
-    "better-sqlite3": "^11.6.0",
+    "better-sqlite3": "^11.7.0",
     "buzz": "^1.2.1",
     "chokidar": "^4.0.1",
     "electron-updater": "^6.3.9",
