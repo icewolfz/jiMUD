@@ -16,6 +16,7 @@
     - Fix load not displaying error messages always
   - Fix broken resize when client first used
   - Fix command input auto size when html tags in text
+  - Disable MXP parsing when echoing text as echo should always be raw text and ignore MXP commands
 - **Changed:**
   - Change [client.sendChat](scripting.md) to parse text then send to chat window, works like #chat now
   - Update electron 32.2.2 to 33.2.1

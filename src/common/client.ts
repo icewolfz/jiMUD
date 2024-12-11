@@ -1404,12 +1404,15 @@ export class Client extends EventEmitter {
         str = '' + str;
         if (str.endsWith('\n'))
             str = str.substr(0, str.length - 1);
+        let mxp = this.display.enableMXP;
+        this.display.enableMXP = false;
         if (this.telnet.prompt && forceLine) {
             this.print('\n\x1b[' + fore + ';' + back + 'm' + str + codes, newline);
             this.telnet.prompt = false;
         }
         else
             this.print('\x1b[' + fore + ';' + back + 'm' + str + codes, newline);
+        this.display.enableMXP = mxp;
     }
 
     public print(txt: string, newline?: boolean) {
@@ -1478,7 +1481,7 @@ export class Client extends EventEmitter {
         if (!this.getOption('keepLastCommand'))
             this.commandInput.value = '';
         else if (this.getOption('selectLastCommand'))
-            this.commandInput.select();            
+            this.commandInput.select();
     }
 
     public sendBackground(txt: string, noEcho?: boolean, comments?: boolean) {
