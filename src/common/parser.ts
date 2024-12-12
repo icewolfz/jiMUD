@@ -2712,6 +2712,8 @@ export class Parser extends EventEmitter {
                                     this.ClearMXPOpen();
                                     break;
                                 case 3:
+                                    this.mxpState.lineType = this.iMXPDefaultMode;
+                                    this.ClearMXPOpen();
                                     this.ResetMXP();
                                     break;
                                 case 4:
@@ -2722,7 +2724,7 @@ export class Parser extends EventEmitter {
                                     }
                                     const ct = text.charAt(idx + 1);
                                     if (ct !== '<') {
-                                        this.mxpState.lineType = lineType.Open;
+                                        this.mxpState.lineType = this.iMXPDefaultMode;
                                         this.mxpState.on = this.DefaultMXPState;
                                     }
                                     this.mxpState.locked = false;
@@ -3029,6 +3031,8 @@ export class Parser extends EventEmitter {
                             }
                             state = ParserState.None;
                             this._SplitBuffer = '';
+                            if (this.mxpState.lineType === lineType.TempSecure)
+                                this.mxpState.lineType = this.iMXPDefaultMode;
                         }
                         //Malformed broken so just display it
                         else if (c === '<') {
@@ -3132,6 +3136,8 @@ export class Parser extends EventEmitter {
                             }
                             state = ParserState.None;
                             this._SplitBuffer = '';
+                            if(this.mxpState.lineType === lineType.TempSecure)
+                                this.mxpState.lineType = this.iMXPDefaultMode;                            
                         }
                         else {
                             this._SplitBuffer += c;
