@@ -1075,7 +1075,7 @@ export class Profile {
                         return tmp[t];
                 }
             }
-            return -1;
+            return null;
         }
         for (let t = 0; t < l; t++) {
             if (tmp[t][field] === value)

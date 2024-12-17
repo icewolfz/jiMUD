@@ -19,6 +19,7 @@
   - Disable MXP parsing when echoing text as echo should always be raw text and ignore MXP commands
   - Fix MXP TempSecure line mode
   - Fix MXP Reset line mode
+  - Fix bug in #trigger/#action when creating new trigger
 - **Changed:**
   - Change [client.sendChat](scripting.md) to parse text then send to chat window, works like #chat now
   - Update electron 32.2.2 to 33.2.1
