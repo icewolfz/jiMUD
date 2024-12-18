@@ -3519,7 +3519,7 @@ export class Input extends EventEmitter {
                         }
                     }
                     profile.aliases = items;
-                    profile.save(p);
+                    profile.save(parseTemplate('{profiles}'));
                     profile = null;
                     if (reload)
                         this._client.clearCache();
