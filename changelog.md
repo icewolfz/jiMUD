@@ -8,6 +8,7 @@
   - Status: Add color aura's to reflect buffer/fortify state
   - Composer now properly checks if you are in edit mode to avoid sending mail
   - Add `Set Default MXP on state to true` preference, Set the default state for mxp line state, when true it works more like MUSHclient and Mudlet and requires all < and > to be encoded from the mud
+  - Expand [#TRIGGER](docs/commands.md#triggers)/[#BUTTON](docs/commands.md#createmodify-profile-or-items)/[#EVENT](docs/commands.md#triggers) options to allow explicit true/value support of option=true|false
 - **Fixed:**
   - Fix issue with MXP image maps not correctly appending ?x,y to command
   - Fix status not removing separator between party/combat bars when party members removed

@@ -475,6 +475,8 @@ Explain what each argument does and if it is optional
 - `reparsepattern` create reparse pattern trigger, sub triggers only, may be used instead of type=
 - `manual` create manual trigger, sub triggers only,  may be used instead of type=
 
+  Allow options that are simple toggle allow explicit setting by doing option=true or option=false to toggle state
+
 2.Button options
 
 - `nosend` do not send to mud
@@ -484,3 +486,5 @@ Explain what each argument does and if it is optional
 - `disable` disable button
 - `enable` enable button
 - `priority=#` set the priority of button
+
+Allow options that are simple toggle allow explicit setting by doing option=true or option=false to toggle state

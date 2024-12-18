@@ -2378,23 +2378,23 @@ export class Input extends EventEmitter {
                 if (item.commands !== null)
                     trigger.value = item.commands;
                 trigger.type = TriggerType.Event;
-                if (item.options.prompt)
-                    trigger.triggerPrompt = true;
-                if (item.options.nocr)
-                    trigger.triggerNewline = false;
-                if (item.options.case)
-                    trigger.caseSensitive = true;
-                if (item.options.raw)
-                    trigger.raw = true;
+                if (item.options.hasOwnProperty('prompt'))
+                    trigger.triggerPrompt = item.options.prompt;
+                if (item.options.hasOwnProperty('nocr'))
+                    trigger.triggerNewline = !item.options.nocr;
+                if (item.options.hasOwnProperty('case'))
+                    trigger.caseSensitive = item.options.case;
+                if (item.options.hasOwnProperty('raw'))
+                    trigger.raw = item.options.raw;
 
-                if (item.options.verbatim)
-                    trigger.verbatim = true;
-                if (item.options.disable)
-                    trigger.enabled = false;
-                else if (item.options.enable)
-                    trigger.enabled = true;
-                if (item.options.temporary || item.options.temp)
-                    trigger.temp = true;
+                if (item.options.hasOwnProperty('verbatim'))
+                    trigger.verbatim = item.options.verbatim;
+                if (item.options.hasOwnProperty('disable'))
+                    trigger.enabled = !item.options.disable;
+                else if (item.options.hasOwnProperty('enable'))
+                    trigger.enabled = item.options.enable;
+                if (item.options.hasOwnProperty('temporary') || item.options.hasOwnProperty('temp'))
+                    trigger.temp = item.options.temporary || item.options.temp;
                 trigger.priority = item.options.priority;
                 profile.save(p);
                 if (reload)
@@ -2566,20 +2566,20 @@ export class Input extends EventEmitter {
                 if (item.commands !== null)
                     trigger.value = item.commands;
 
-                if (item.options.icon)
+                if (item.options.hasOwnProperty('icon'))
                     trigger.icon = item.options.icon;
-                if (item.options.nosend)
-                    trigger.send = false;
-                if (item.options.chain)
-                    trigger.chain = true;
-                if (item.options.append)
-                    trigger.append = true;
-                if (item.options.stretch)
-                    trigger.stretch = true;
-                if (item.options.disable)
-                    trigger.enabled = false;
-                else if (item.options.enable)
-                    trigger.enabled = true;
+                if (item.options.hasOwnProperty('nosend'))
+                    trigger.send = !item.options.nosend;
+                if (item.options.hasOwnProperty('chain'))
+                    trigger.chain = item.options.chain;
+                if (item.options.hasOwnProperty('append'))
+                    trigger.append = item.options.append;
+                if (item.options.hasOwnProperty('stretch'))
+                    trigger.stretch = item.options.stretch;
+                if (item.options.hasOwnProperty('disable'))
+                    trigger.enabled = !item.options.disable;
+                else if (item.options.hasOwnProperty('enable'))
+                    trigger.enabled = item.options.enable;
                 trigger.priority = item.options.priority;
                 profile.save(p);
                 if (reload)
@@ -8940,23 +8940,23 @@ export class Input extends EventEmitter {
                 if (options.withinlines)
                     sTrigger.type = SubTriggerTypes.WithinLines;
 
-                if (options.prompt)
-                    sTrigger.triggerPrompt = true;
-                if (options.nocr)
-                    sTrigger.triggerNewline = false;
-                if (options.case)
-                    sTrigger.caseSensitive = true;
-                if (options.raw)
-                    sTrigger.raw = true;
-                if (options.verbatim)
-                    sTrigger.verbatim = true;
-                if (options.disable)
-                    sTrigger.enabled = false;
-                else if (options.enable)
-                    sTrigger.enabled = true;
-                if (options.temporary || options.temp)
-                    sTrigger.temp = true;
-                if (options.params)
+                if (options.hasOwnProperty('prompt'))
+                    sTrigger.triggerPrompt = options.prompt;
+                if (options.hasOwnProperty('nocr'))
+                    sTrigger.triggerNewline = !options.nocr;
+                if (options.hasOwnProperty('case'))
+                    sTrigger.caseSensitive = options.case;
+                if (options.hasOwnProperty('raw'))
+                    sTrigger.raw = options.raw;
+                if (options.hasOwnProperty('verbatim'))
+                    sTrigger.verbatim = options.verbatim;
+                if (options.hasOwnProperty('disable'))
+                    sTrigger.enabled = !options.disable;
+                else if (options.hasOwnProperty('enable'))
+                    sTrigger.enabled = options.enable;
+                if (options.hasOwnProperty('temporary') || options.hasOwnProperty('temp'))
+                    sTrigger.temp = options.temporary || options.temp;
+                if (options.hasOwnProperty('params'))
                     sTrigger.params = options.params;
                 if (options.type) {
                     if (this._isTriggerType(options.type))
@@ -9003,23 +9003,23 @@ export class Input extends EventEmitter {
                 //if(options.expression)
                 //trigger.type = TriggerType.Expression;
 
-                if (options.prompt)
-                    trigger.triggerPrompt = true;
-                if (options.nocr)
-                    trigger.triggerNewline = false;
-                if (options.case)
-                    trigger.caseSensitive = true;
-                if (options.raw)
-                    trigger.raw = true;
-                if (options.verbatim)
-                    trigger.verbatim = true;
-                if (options.disable)
-                    trigger.enabled = false;
-                else if (options.enable)
-                    trigger.enabled = true;
-                if (options.temporary || options.temp)
-                    trigger.temp = true;
-                if (options.params)
+                if (options.hasOwnProperty('prompt'))
+                    trigger.triggerPrompt = options.prompt;
+                if (options.hasOwnProperty('nocr'))
+                    trigger.triggerNewline = !options.nocr;
+                if (options.hasOwnProperty('case'))
+                    trigger.caseSensitive = options.case;
+                if (options.hasOwnProperty('raw'))
+                    trigger.raw = options.raw;
+                if (options.hasOwnProperty('verbatim'))
+                    trigger.verbatim = options.verbatim;
+                if (options.hasOwnProperty('disable'))
+                    trigger.enabled = !options.disable;
+                else if (options.hasOwnProperty('enable'))
+                    trigger.enabled = options.enable;
+                if (options.hasOwnProperty('temporary') || options.hasOwnProperty('temp'))
+                    trigger.temp = options.temporary || options.temp;
+                if (options.hasOwnProperty('params'))
                     trigger.params = options.params;
                 if (options.type) {
                     if (this._isTriggerType(options.type, TriggerTypeFilter.Main))
@@ -9045,7 +9045,22 @@ export class Input extends EventEmitter {
     private _parseTriggerOptions(data, type?: ParseTriggerType) {
         let options = { priority: 0 };
         this.parseInline(data).split(',').forEach(o => {
-            switch (o.trim()) {
+            let field = o.toLowerCase().split('=').map(m => m.trim());
+            if (field.length > 2) {
+                if (type === ParseTriggerType.temporary)
+                    throw new Error(`Invalid temporary trgger option '${field[0]}' format, must be in KEY=VALUE format`);
+                if (type === ParseTriggerType.event)
+                    throw new Error(`Invalid event option '${field[0]}' format, must be in KEY=VALUE format`);
+                throw new Error(`Invalid trgger option '${field[0]}' format, must be in KEY=VALUE format`);
+            }
+            if (!field[0].length) {
+                if (type === ParseTriggerType.temporary)
+                    throw new InvalidTemporaryTrigger(`option'`);
+                else if (type === ParseTriggerType.event)
+                    throw new InvalidOption('event');
+                throw new InvalidTrigger(`option`);
+            }
+            switch (field[0]) {
                 case 'nocr':
                 case 'prompt':
                 case 'case':
@@ -9054,7 +9069,7 @@ export class Input extends EventEmitter {
                 case 'enable':
                 case 'temporary':
                 case 'temp':
-                    options[o.trim()] = true;
+                    options[field[0]] = field.length === 2 ? (field[1] === 'true' || field[1] === 'on' || field[1] === 'yes') : true;
                     break;
                 case 'cmd':
                 case 'raw':
@@ -9067,7 +9082,7 @@ export class Input extends EventEmitter {
                     if (type === ParseTriggerType.event)
                         throw new InvalidOption('event', o);
                     //case 'expression':
-                    options[o.trim()] = true;
+                    options[field[0]] = field.length === 2 ? (field[1] === 'true' || field[1] === 'on' || field[1] === 'yes') : true;
                     break;
                 case 'reparse':
                 case 'reparsepattern':
@@ -9079,43 +9094,42 @@ export class Input extends EventEmitter {
                 case 'duration':
                 case 'withinlines':
                     if (type === ParseTriggerType.temporary)
-                        throw new InvalidTemporaryTrigger(`option '${o.trim()}'`);
+                        throw new InvalidTemporaryTrigger(`option '${field[0]}'`);
                     else if (type === ParseTriggerType.event)
                         throw new InvalidOption('event', o);
                     else if (type !== ParseTriggerType.subTrigger)
-                        throw new InvalidTrigger(`option '${o.trim()}'`);
-                    options[o.trim()] = true;
+                        throw new InvalidTrigger(`option '${field[0]}'`);
+                    options[field[0]] = field.length === 2 ? (field[1] === 'true' || field[1] === 'on' || field[1] === 'yes') : true;
+                    break;
+                case 'pri':
+                case 'priority':
+                    if (field.length !== 2)
+                        throw new InvalidTrigger(`priority option '${field[0]}'`);
+                    let i = parseInt(field[1], 10);
+                    if (isNaN(i))
+                        throw new InvalidTrigger(`priority value '${field[1]}' must be a number`);
+                    options['priority'] = i;
+                    break;
+                case 'param':
+                case 'params':
+                    if (field.length !== 2)
+                        throw new InvalidTrigger(`param option '${field[0]}'`);
+                    options['params'] = field[1];
+                    break;
+                case 'type':
+                    if (field.length !== 2)
+                        throw new InvalidTrigger(`type option '${field[0]}'`);
+                    if (!this._isTriggerType(field[1]))
+                        throw new InvalidTrigger('type');
+                    options['type'] = field[1];
                     break;
                 default:
-                    if (type !== ParseTriggerType.event && o.trim().startsWith('param=')) {
-                        let tmp = o.trim().split('=');
-                        if (tmp.length !== 2)
-                            throw new InvalidTrigger(`param option '${o.trim()}'`);
-                        options['params'] = tmp[1];
-                    }
-                    else if (type !== ParseTriggerType.event && o.trim().startsWith('type=')) {
-                        let tmp = o.trim().split('=');
-                        if (tmp.length !== 2)
-                            throw new InvalidTrigger(`type option '${o.trim()}'`);
-                        if (!this._isTriggerType(tmp[1]))
-                            throw new InvalidTrigger('type');
-                        options['type'] = tmp[1];
-                    }
-                    else if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
-                        let tmp = o.trim().split('=');
-                        if (tmp.length !== 2)
-                            throw new InvalidTrigger(`priority option '${o.trim()}'`);
-                        let i = parseInt(tmp[1], 10);
-                        if (isNaN(i))
-                            throw new InvalidTrigger('priority value \'' + tmp[1] + '\' must be a number');
-                        options['priority'] = i;
-                    }
-                    else if (type === ParseTriggerType.temporary)
-                        throw new InvalidTemporaryTrigger(`option '${o.trim()}'`);
+                    if (type === ParseTriggerType.temporary)
+                        throw new InvalidTemporaryTrigger(`option '${field[0]}'`);
                     else if (type === ParseTriggerType.event)
                         throw new InvalidOption('event', o);
                     else
-                        throw new InvalidTrigger(`option '${o.trim()}'`);
+                        throw new InvalidTrigger(`option '${field[0]}'`);
             }
         });
         return options;
@@ -9236,27 +9250,31 @@ export class Input extends EventEmitter {
     private _parseButtonOptions(data) {
         let options = { priority: 0 };
         this.parseInline(data).split(',').forEach(o => {
-            switch (o.trim()) {
+            let field = o.toLowerCase().split('=').map(m => m.trim());
+            if (field.length > 2)
+                throw new Error(`Invalid button option '${field[0]}' format, must be in KEY=VALUE format`);
+            if (!field[0].length)
+                throw new Error(`Missing button option`);
+            switch (field[0]) {
                 case 'nosend':
                 case 'chain':
                 case 'append':
                 case 'stretch':
                 case 'disable':
                 case 'enable':
-                    options[o.trim()] = true;
+                    options[field[0]] = field.length === 2 ? (field[1] === 'true' || field[1] === 'on' || field[1] === 'yes') : true;
+                    break;
+                case 'pri':
+                case 'priority':
+                    if (field.length !== 2)
+                        throw new InvalidOption('button', o + ' value');
+                    let i = parseInt(field[1], 10);
+                    if (isNaN(i))
+                        throw new Error('Invalid button priority value \'' + field[1] + '\' must be a number');
+                    options['priority'] = i;
                     break;
                 default:
-                    if (o.trim().startsWith('pri=') || o.trim().startsWith('priority=')) {
-                        let tmp = o.trim().split('=');
-                        if (tmp.length !== 2)
-                            throw new InvalidOption('button', o + ' value');
-                        let i = parseInt(tmp[1], 10);
-                        if (isNaN(i))
-                            throw new Error('Invalid button priority value \'' + tmp[1] + '\' must be a number');
-                        options['priority'] = i;
-                    }
-                    else
-                        throw new InvalidOption('button', o);
+                    throw new InvalidOption('button', o);
             }
         });
         return options;
