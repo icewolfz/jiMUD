@@ -4773,7 +4773,7 @@ function optionsChanged() {
 }
 
 
-function profileAddItem(type, profile, item) {
+function profileAddItem(type, profile, idx, item) {
     filesChanged = true;
     $('#btn-refresh').addClass('btn-warning');
 };

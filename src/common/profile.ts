@@ -1,5 +1,5 @@
 //spell-checker:ignore displaytype, submenu, triggernewline, triggerprompt
-import { clone, keyCodeToChar, isFileSync, SortItemArrayByPriority, splitQuoted, isValidIdentifier } from './library';
+import { clone, keyCodeToChar, isFileSync, SortItemArrayByPriority, splitQuoted, isValidIdentifier, isEqual } from './library';
 const path = require('path');
 const fs = require('fs');
 
@@ -321,6 +321,11 @@ export class Item {
     public clone() {
         return new Item(this);
     }
+
+    public equals(item) {
+        if (!item) return false;
+        return isEqual(this, item);
+    }
 }
 
 export class Button extends Item {
@@ -331,6 +336,14 @@ export class Button extends Item {
     public chain: boolean = false;
     public stretch: boolean = false;
     public parse: boolean = false;
+    public top: number = -1;
+    public left: number = -1;
+    public right: number = -1;
+    public bottom: number = -1;
+    public width: number = 64;
+    public height: number = 64;
+    public iconOnly: boolean = false;
+
     constructor(data?, profile?) {
         super(data);
         this.caption = 'NewButton';
@@ -460,7 +473,7 @@ export class Trigger extends Item {
         state--;
         if (state >= this.triggers.length || state < 0) return null;
         return this.triggers[state];
-    }    
+    }
 }
 
 export class Context extends Item {
@@ -783,6 +796,108 @@ export class Profile {
         return m;
     }
 
+    static get DefaultButtons(): Button[] {
+        const buttons: Button[] = [];
+        let b;
+        b = new Button();
+        b.right = 176;
+        b.top = 14;
+        b.caption = 'fa-solid fa-angle-double-up';
+        b.value = 'up';
+        b.width = 48;
+        b.height = 48;
+        buttons.push(b);
+        b = new Button();
+        b.right = 124;
+        b.top = 14;
+        b.caption = 'fa-solid fa-caret-up,rotate--45';
+        b.value = 'northwest';
+        b.width = 48;
+        b.height = 48;
+        buttons.push(b);
+        b = new Button();
+        b.right = 72;
+        b.top = 14;
+        b.caption = 'fa-solid fa-caret-up';
+        b.value = 'north';
+        b.width = 48;
+        b.height = 48;
+        buttons.push(b);
+        b = new Button();
+        b.right = 20;
+        b.top = 14;
+        b.caption = 'fa-solid fa-caret-up,rotate-45';
+        b.value = 'northeast';
+        b.width = 48;
+        b.height = 48;
+        buttons.push(b);
+        b = new Button();
+        b.right = 176;
+        b.top = 66;
+        b.caption = 'fa-solid fa-crosshairs';
+        b.value = 'kill ${selected}';
+        b.width = 48;
+        b.height = 48;
+        buttons.push(b);
+        b = new Button();
+        b.right = 124;
+        b.top = 66;
+        b.caption = 'fa-solid fa-caret-left';
+        b.value = 'west';
+        b.width = 48;
+        b.height = 48;
+        buttons.push(b);
+        b = new Button();
+        b.right = 72;
+        b.top = 66;
+        b.caption = 'fa-solid fa-magnifying-glass';
+        b.value = 'look ${selected}';
+        b.width = 48;
+        b.height = 48;
+        buttons.push(b);
+        b = new Button();
+        b.right = 20;
+        b.top = 66;
+        b.caption = 'fa-solid fa-caret-right';
+        b.value = 'east';
+        b.width = 48;
+        b.height = 48;
+        buttons.push(b);
+        b = new Button();
+        b.right = 176;
+        b.top = 118;
+        b.caption = 'fa-solid fa-angle-double-down';
+        b.value = 'down';
+        b.width = 48;
+        b.height = 48;
+        buttons.push(b);
+        b = new Button();
+        b.right = 124;
+        b.top = 118;
+        b.caption = 'fa-solid fa-caret-down,rotate-45';
+        b.value = 'southwest';
+        b.width = 48;
+        b.height = 48;
+        buttons.push(b);
+        b = new Button();
+        b.right = 72;
+        b.top = 118;
+        b.caption = 'fa-solid fa-caret-down';
+        b.value = 'south';
+        b.width = 48;
+        b.height = 48;
+        buttons.push(b);
+        b = new Button();
+        b.right = 20;
+        b.top = 118;
+        b.caption = 'fa-solid fa-caret-down,rotate--45';
+        b.value = 'southeast';
+        b.width = 48;
+        b.height = 48;
+        buttons.push(b);
+        return buttons;
+    }
+
     public static load(file) {
         let profile;
         let data;
@@ -848,7 +963,7 @@ export class Profile {
             }
         }
         //copied or something as name does not match file so just change the name to file to prevent data loss.
-        if(path.basename(file, '.json') !== profile.name)
+        if (path.basename(file, '.json') !== profile.name)
             profile.name = path.basename(file, '.json');
         profile.file = profile.name;
         return profile;
@@ -1054,6 +1169,41 @@ export class Profile {
             return null;
         tmp = SortItemArrayByPriority(this[type]);
         const l = tmp.length;
+        let found = false;
+        if (Array.isArray(field)) {
+            for (let t = 0; t < l; t++) {
+                for (let f = 0, fl = field.length; f < fl; f++) {
+                    found = true;
+                    if (tmp[t][field[f]] !== value) {
+                        found = false;
+                        break;
+                    }
+                }
+                if (found) return tmp[t];
+            }
+            return null;
+        }
+        if (typeof field === 'object') {
+            for (let t = 0; t < l; t++) {
+                for (const v in field) {
+                    if (!field.hasOwnProperty(v)) continue;
+                    found = true;
+                    if (tmp[t][v] !== field[v]) {
+                        found = false;
+                        break;
+                    }
+                }
+                if (found) return tmp[t];
+            }
+            return null;
+        }
+        if (typeof field === 'function') {
+            for (let t = 0; t < l; t++) {
+                if (field(tmp[t], value))
+                    return tmp[t];
+            }
+            return null;
+        }        
         for (let t = 0; t < l; t++) {
             if (tmp[t][field] === value)
                 return tmp[t];
@@ -1067,6 +1217,15 @@ export class Profile {
             return null;
         tmp = SortItemArrayByPriority(this[type]);
         const l = tmp.length;
+        if (Array.isArray(field)) {
+            for (let t = 0; t < l; t++) {
+                for (let f = 0, fl = field.length; f < fl; f++) {
+                    if (tmp[t][field[f]] === value)
+                        return tmp[t];
+                }
+            }
+            return null;
+        }
         if (typeof field === 'object') {
             for (let t = 0; t < l; t++) {
                 for (const v in field) {
@@ -1074,6 +1233,13 @@ export class Profile {
                     if (tmp[t][v] === field[v])
                         return tmp[t];
                 }
+            }
+            return null;
+        }
+        if (typeof field === 'function') {
+            for (let t = 0; t < l; t++) {
+                if (field(tmp[t], value))
+                    return tmp[t];
             }
             return null;
         }
@@ -1150,7 +1316,7 @@ export class ProfileCollection {
             if (a === 'default')
                 return -1;
             if (b === 'default')
-                return 1;            
+                return 1;
             ap = this.items[a].name;
             bp = this.items[b].name;
             if (ap > bp)
@@ -1248,11 +1414,12 @@ export class ProfileCollection {
         this.SortByPriority();
     }
 
-    public add(profile: Profile) {
+    public add(profile: Profile, noUpdate?: boolean) {
         if (!profile)
             return;
         this.items[profile.name.toLowerCase()] = profile;
-        this.update();
+        if (!noUpdate)
+            this.update();
     }
 
     public remove(profile: (string | Profile | number)) {
@@ -1354,8 +1521,8 @@ export class ProfileCollection {
         }
         //search for first enabled profile
         for (const key in keys) {
-            if (this.items[key].enabled)
-                return this.items[key];
+            if (this.items[keys[key]].enabled)
+                return this.items[keys[key]];
         }
         //none found, see if default exist, if so enable and return
         if (this.items['default']) {
@@ -1613,31 +1780,31 @@ export function convertPattern(pattern: string, client?) {
             case convertPatternState.Percent:
                 switch (c) {
                     case 'd':
-                        stringBuilder.push("\\d+");
+                        stringBuilder.push('\\d+');
                         state = convertPatternState.None;
                         break;
                     case 'n':
-                        stringBuilder.push("[+-]?\\d+");
+                        stringBuilder.push('[+-]?\\d+');
                         state = convertPatternState.None;
                         break;
                     case 'w':
-                        stringBuilder.push("\\w");
+                        stringBuilder.push('\\w');
                         state = convertPatternState.None;
                         break;
                     case 'a':
-                        stringBuilder.push("[a-zA-Z0-9]*");
+                        stringBuilder.push('[a-zA-Z0-9]*');
                         state = convertPatternState.None;
                         break;
                     case 's':
-                        stringBuilder.push("\\s*");
+                        stringBuilder.push('\\s*');
                         state = convertPatternState.None;
                         break;
                     case 'x':
-                        stringBuilder.push("\\S*");
+                        stringBuilder.push('\\S*');
                         state = convertPatternState.None;
                         break;
                     case 'y':
-                        stringBuilder.push("\\S*");
+                        stringBuilder.push('\\S*');
                         state = convertPatternState.None;
                         break;
                     case 'p':
@@ -1652,7 +1819,7 @@ export function convertPattern(pattern: string, client?) {
                         state = convertPatternState.None;
                         break;
                     case 'e':
-                        stringBuilder.push("\x1b");
+                        stringBuilder.push('\x1b');
                         state = convertPatternState.None;
                         break;
                     case '/': // %/pattern/%

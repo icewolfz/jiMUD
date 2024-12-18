@@ -996,8 +996,8 @@ export class Client extends EventEmitter {
         });
         this._input.on('command-history-changed', history => this.emit('command-history-changed', history));
 
-        this._input.on('item-added', (type, profile, item) => {
-            this.emit('item-added', type, profile, item);
+        this._input.on('item-added', (type, profile, idx, item) => {
+            this.emit('item-added', type, profile, idx, item);
         });
 
         this._input.on('item-updated', (type, profile, idx, item) => {

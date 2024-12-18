@@ -1796,7 +1796,7 @@
                 }
             });
 
-            client.on('item-added', (type, profile, item) => {
+            client.on('item-added', (type, profile, idx, item) => {
                 if (type === 'button')
                     doUpdate(8);
             });
