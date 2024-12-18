@@ -4,6 +4,7 @@
 
 - **New:**
   - Add [client.sendChatRaw](scripting.md) to send raw text to chat window
+  - Add [#UNMACRO/#UNKEY](docs/commands/UNMACRO.md) to delete macros from command input
   - Status: Add color aura's to reflect buffer/fortify state
   - Composer now properly checks if you are in edit mode to avoid sending mail
   - Add `Set Default MXP on state to true` preference, Set the default state for mxp line state, when true it works more like MUSHclient and Mudlet and requires all < and > to be encoded from the mud
@@ -20,6 +21,7 @@
   - Fix MXP TempSecure line mode
   - Fix MXP Reset line mode
   - Fix bug in #trigger/#action when creating new trigger
+  - Fix #IF and %{if} not allowing optional else argument
 - **Changed:**
   - Change [client.sendChat](scripting.md) to parse text then send to chat window, works like #chat now
   - Update electron 32.2.2 to 33.2.1

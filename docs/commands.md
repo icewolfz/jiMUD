@@ -148,8 +148,14 @@ Display text to the screen, and the display text will not fire triggers
 #PROFILELIST
 >display a list of all profiles and current state
 
-<u>#UNB</u>UTTON name|index|caption
+<u>#UNB</u>UTTON name|index|caption *profile*
 >remove a button, if index it is the position in order of buttons in profile manager
+
+[<u>#UNK</u>EY](commands/UNMACRO.md) key|index *profile*
+>remove a macro
+
+[<u>#UNM</u>ACRO](commands/UNMACRO.md) key|index *profile*
+>remove a macro
 
 <u>#VA</u>RIABLE *name value*
 >Set, get, or display all user set variables
@@ -233,10 +239,11 @@ Display text to the screen, and the display text will not fire triggers
 >Send current character name to the mud, without echoing to the screen
 
 <u>#CLEARNA</u>ME *name or id*
->Clear client current or named client's name
+>Clear client current or named client's names
 
 <u>#CL</u>OSE *name or id*
 >Close current tab/window or named window
+>Supported names: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills, who
 
 #CR
 >Send a blank line to the mud
@@ -322,7 +329,7 @@ Display text to the screen, and the display text will not fire triggers
 <u>#WIN</u>DOW name *close*
 <u>#WIN</u>DOW name *character or id*
 >Open or show named window or create new window with name, supported names: about, prefs, mapper, editor, profiles, chat, code-editor, help, immortals, history, log-viewer, skills, who
->Pass close as 3rd argument will close the window if open and possible
+>Pass close as 2nd argument and will close the window if open and possible
 
 <u>#WIN</u>DOW new *character or id* *name*
 >Create a new client window using the optional character title or id
@@ -403,6 +410,9 @@ Test commands allow you to debug or test features of the client
 
 #TESTCONTROLCHARS
 >Test display control codes setting for display
+
+#TESTSTATUS
+>Test the status display
 
 **Note:** All italic arguments are optional and can be left out
 
