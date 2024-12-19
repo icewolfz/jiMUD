@@ -2198,7 +2198,6 @@ export class Input extends EventEmitter {
                     commands: null,
                     options: { priority: 0 }
                 };
-                p = parseTemplate('{profiles}');
                 if (args.length < 2 || args.length > 5)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'tr\x1b[0;-11;-12migger name {pattern} {commands} \x1b[3moptions profile\x1b[0;-11;-12m or \x1b[4m' + cmdChar + 'tr\x1b[0;-11;-12migger {pattern} {commands} \x1b[3m{options} profile\x1b[0;-11;-12m');
                 if (args[0].length === 0)
@@ -2259,7 +2258,6 @@ export class Input extends EventEmitter {
                     commands: null,
                     options: { priority: 0 }
                 };
-                p = parseTemplate('{profiles}');
                 if (args.length < 2 || args.length > 4)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'ev\x1b[0;-11;-12ment name {commands} \x1b[3moptions profile\x1b[0;-11;-12m');
                 if (args[0].length === 0)
@@ -2332,7 +2330,7 @@ export class Input extends EventEmitter {
                     if (this._profiles.contains(item.profile))
                         profile = this._profiles.items[item.profile.toLowerCase()];
                     else {
-                        profile = Profile.load(path.join(p, item.profile.toLowerCase() + '.json'));
+                        profile = Profile.load(path.join(parseTemplate('{profiles}'), item.profile.toLowerCase() + '.json'));
                         if (!profile)
                             new ProfileNotFound(item.profile)
                     }
@@ -2371,7 +2369,7 @@ export class Input extends EventEmitter {
                 if (item.options.hasOwnProperty('temporary') || item.options.hasOwnProperty('temp'))
                     trigger.temp = item.options.temporary || item.options.temp;
                 trigger.priority = item.options.priority;
-                profile.save(p);
+                profile.save(parseTemplate('{profiles}'));
                 if (this._profiles.contains(profile))
                     this._client.clearCache();
                 if (item.new)
@@ -2424,7 +2422,6 @@ export class Input extends EventEmitter {
                     icon: null,
                     options: { priority: 0 }
                 };
-                p = parseTemplate('{profiles}');
                 if (args.length < 2 || args.length > 5)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'bu\x1b[0;-11;-12mtton name|index or \x1b[4m' + cmdChar + 'bu\x1b[0;-11;-12mtton name \x1b[3mcaption\x1b[0;-11;-12m {commands} \x1b[3m{icon} options profile\x1b[0;-11;-12m or \x1b[4m' + cmdChar + 'by\x1b[0;-11;-12mutton \x1b[3mcaption\x1b[0;-11;-12m {commands} \x1b[3m{icon} {options} profile\x1b[0;-11;-12m');
                 if (args[0].length === 0)
@@ -2512,7 +2509,7 @@ export class Input extends EventEmitter {
                     if (this._profiles.contains(item.profile))
                         profile = this._profiles.items[item.profile.toLowerCase()];
                     else {
-                        profile = Profile.load(path.join(p, item.profile.toLowerCase() + '.json'));
+                        profile = Profile.load(path.join(parseTemplate('{profiles}'), item.profile.toLowerCase() + '.json'));
                         if (!profile)
                             new ProfileNotFound(item.profile)
                     }
@@ -2554,7 +2551,7 @@ export class Input extends EventEmitter {
                 else if (item.options.hasOwnProperty('enable'))
                     trigger.enabled = item.options.enable;
                 trigger.priority = item.options.priority;
-                profile.save(p);
+                profile.save(parseTemplate('{profiles}'));
                 if (this._profiles.contains(profile))
                     this._client.clearCache();
                 if (item.new)
@@ -2623,7 +2620,6 @@ export class Input extends EventEmitter {
                 profile = null;
                 name = null;
                 n = false;
-                p = parseTemplate('{profiles}');
                 if (args.length < 2 || args.length > 4)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'ala\x1b[0;-11;-12mrm name {timepattern} {commands} \x1b[3mprofile\x1b[0;-11;-12m, \x1b[4m' + cmdChar + 'ala\x1b[0;-11;-12mrm name {timepattern} \x1b[3mprofile\x1b[0;-11;-12m, or \x1b[4m' + cmdChar + 'ala\x1b[0;-11;-12mrm {timepattern} {commands} \x1b[3mprofile\x1b[0;-11;-12m');
                 if (args[0].length === 0)
@@ -2647,7 +2643,7 @@ export class Input extends EventEmitter {
                             profile = this._profiles.items[profile.toLowerCase()];
                         else {
                             name = profile;
-                            profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
+                            profile = Profile.load(path.join(parseTemplate('{profiles}'), profile.toLowerCase() + '.json'));
                             if (!profile)
                                 throw new ProfileNotFound(profile);
                         }
@@ -2657,7 +2653,7 @@ export class Input extends EventEmitter {
                     trigger.value = args[1];
                     trigger.type = TriggerType.Alarm;
                     profile.triggers.push(trigger);
-                    profile.save(p);
+                    profile.save(parseTemplate('{profiles}'));
                     if (this._profiles.contains(profile)) {
                         this._lastSuspend = -1;
                         this._client.updateAlarms();
@@ -2742,7 +2738,7 @@ export class Input extends EventEmitter {
                         profile = this._profiles.items[profile.toLowerCase()];
                     else {
                         name = profile;
-                        profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
+                        profile = Profile.load(path.join(parseTemplate('{profiles}'), profile.toLowerCase() + '.json'));
                         if (!profile)
                             throw new ProfileNotFound(profile);
                     }
@@ -2763,7 +2759,7 @@ export class Input extends EventEmitter {
                 trigger.type = TriggerType.Alarm;
                 if (commands)
                     trigger.value = commands;
-                profile.save(p);
+                profile.save(parseTemplate('{profiles}'));
                 if (n)
                     this.emit('item-added', 'trigger', profile.name, profile.triggers.length - 1, trigger);
                 else
@@ -4592,7 +4588,7 @@ export class Input extends EventEmitter {
                             if (this._profiles.contains(profile))
                                 profile = this._profiles.items[profile.toLowerCase()];
                             else {
-                                profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
+                                profile = Profile.load(path.join(parseTemplate('{profiles}'), profile.toLowerCase() + '.json'));
                                 if (!profile)
                                     throw new ProfileNotFound(args[1]);
                             }
@@ -4613,7 +4609,7 @@ export class Input extends EventEmitter {
                         if (this._profiles.contains(profile))
                             profile = this._profiles.items[profile.toLowerCase()];
                         else {
-                            profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
+                            profile = Profile.load(path.join(parseTemplate('{profiles}'), profile.toLowerCase() + '.json'));
                             if (!profile)
                                 throw new ProfileNotFound(args[2]);
                         }
@@ -4747,7 +4743,7 @@ export class Input extends EventEmitter {
                             if (this._profiles.contains(profile))
                                 profile = this._profiles.items[profile.toLowerCase()];
                             else {
-                                profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
+                                profile = Profile.load(path.join(parseTemplate('{profiles}'), profile.toLowerCase() + '.json'));
                                 if (!profile)
                                     throw new ProfileNotFound(args[2]);
                             }
@@ -4817,7 +4813,7 @@ export class Input extends EventEmitter {
                         if (this._profiles.contains(profile))
                             profile = this._profiles.items[profile.toLowerCase()];
                         else {
-                            profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
+                            profile = Profile.load(path.join(parseTemplate('{profiles}'), profile.toLowerCase() + '.json'));
                             if (!profile)
                                 throw new ProfileNotFound(args[2]);
                         }
@@ -4866,7 +4862,6 @@ export class Input extends EventEmitter {
                     commands: null,
                     options: { priority: 0 }
                 };
-                p = parseTemplate('{profiles}');
                 if (args.length < 2 || args.length > 5)
                     throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'cond\x1b[0;-11;-12mition name|pattern {pattern} {commands} \x1b[3moptions profile\x1b[0;-11;-12m or \x1b[4m' + cmdChar + 'cond\x1b[0;-11;-12mition {pattern} {commands} \x1b[3m{options} profile\x1b[0;-11;-12m');
                 if (args[0].length === 0)
@@ -5036,7 +5031,6 @@ export class Input extends EventEmitter {
                     commands: null,
                     options: { priority: 0 }
                 };
-                p = parseTemplate('{profiles}');
                 if (args.length < 2 || args.length > 5)
                     throw new Error('Invalid syntax use ' + cmdChar + 'temp name {pattern} {commands} \x1b[3moptions profile\x1b[0;-11;-12m or ' + cmdChar + 'temp {pattern} {commands} \x1b[3m{options} profile\x1b[0;-11;-12m');
                 if (args[0].length === 0)
@@ -8785,7 +8779,6 @@ export class Input extends EventEmitter {
         let sTrigger;
         let reload = true;
         let isNew = false;
-        const p = parseTemplate('{profiles}');
         if (!pattern && !name)
             throw new Error(`Trigger '${name || ''}' not found`);
         if (!profile) {
@@ -8843,7 +8836,7 @@ export class Input extends EventEmitter {
                 profile = this._profiles.items[profile.toLowerCase()];
             else {
                 reload = false;
-                profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
+                profile = Profile.load(path.join(parseTemplate('{profiles}'), profile.toLowerCase() + '.json'));
                 if (!profile)
                     throw new Error('Profile not found: ' + profile);
             }
@@ -9001,7 +8994,7 @@ export class Input extends EventEmitter {
             else
                 trigger.priority = 0;
         }
-        (<Profile>profile).save(p);
+        (<Profile>profile).save(parseTemplate('{profiles}'));
         if (reload)
             this._client.clearCache();
         if (isNew)
