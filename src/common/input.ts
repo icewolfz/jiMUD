@@ -2101,11 +2101,7 @@ export class Input extends EventEmitter {
         let name = null;
         let item;
         let p;
-        let reload;
         let trigger;
-        let avg;
-        let max;
-        let min;
         switch (fun.toLowerCase()) {
             //spell-checker:ignore chatprompt chatp
             case 'chatprompt':
@@ -2256,7 +2252,6 @@ export class Input extends EventEmitter {
                 this._echoRaw(raw);
                 //#region event
                 profile = null;
-                reload = true;
                 item = {
                     profile: null,
                     name: null,
@@ -2338,7 +2333,6 @@ export class Input extends EventEmitter {
                         profile = this._profiles.items[item.profile.toLowerCase()];
                     else {
                         profile = Profile.load(path.join(p, item.profile.toLowerCase() + '.json'));
-                        reload = false;
                         if (!profile)
                             new ProfileNotFound(item.profile)
                     }
@@ -2378,7 +2372,7 @@ export class Input extends EventEmitter {
                     trigger.temp = item.options.temporary || item.options.temp;
                 trigger.priority = item.options.priority;
                 profile.save(p);
-                if (reload)
+                if (this._profiles.contains(profile))
                     this._client.clearCache();
                 if (item.new)
                     this.emit('item-added', 'trigger', profile.name, profile.triggers.length - 1, trigger);
@@ -2422,7 +2416,6 @@ export class Input extends EventEmitter {
                     return null;
                 }
                 profile = null;
-                reload = true;
                 item = {
                     profile: null,
                     name: null,
@@ -2519,7 +2512,6 @@ export class Input extends EventEmitter {
                     if (this._profiles.contains(item.profile))
                         profile = this._profiles.items[item.profile.toLowerCase()];
                     else {
-                        reload = false;
                         profile = Profile.load(path.join(p, item.profile.toLowerCase() + '.json'));
                         if (!profile)
                             new ProfileNotFound(item.profile)
@@ -2563,7 +2555,7 @@ export class Input extends EventEmitter {
                     trigger.enabled = item.options.enable;
                 trigger.priority = item.options.priority;
                 profile.save(p);
-                if (reload)
+                if (this._profiles.contains(profile))
                     this._client.clearCache();
                 if (item.new)
                     this.emit('item-added', 'button', profile.name, profile.buttons.length - 1, trigger);
@@ -2630,7 +2622,6 @@ export class Input extends EventEmitter {
                 //spell-checker:ignore timepattern
                 profile = null;
                 name = null;
-                reload = true;
                 n = false;
                 p = parseTemplate('{profiles}');
                 if (args.length < 2 || args.length > 4)
@@ -2649,7 +2640,6 @@ export class Input extends EventEmitter {
                         profile = this.stripQuotes(args[2]);
                         profile = this.parseInline(profile);
                     }
-
                     if (!profile || profile.length === 0)
                         profile = this._client.activeProfile;
                     else {
@@ -2657,7 +2647,6 @@ export class Input extends EventEmitter {
                             profile = this._profiles.items[profile.toLowerCase()];
                         else {
                             name = profile;
-                            reload = false;
                             profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
                             if (!profile)
                                 throw new ProfileNotFound(profile);
@@ -2669,7 +2658,7 @@ export class Input extends EventEmitter {
                     trigger.type = TriggerType.Alarm;
                     profile.triggers.push(trigger);
                     profile.save(p);
-                    if (reload) {
+                    if (this._profiles.contains(profile)) {
                         this._lastSuspend = -1;
                         this._client.updateAlarms();
                     }
@@ -2753,7 +2742,6 @@ export class Input extends EventEmitter {
                         profile = this._profiles.items[profile.toLowerCase()];
                     else {
                         name = profile;
-                        reload = false;
                         profile = Profile.load(path.join(p, profile.toLowerCase() + '.json'));
                         if (!profile)
                             throw new ProfileNotFound(profile);
@@ -2780,11 +2768,11 @@ export class Input extends EventEmitter {
                     this.emit('item-added', 'trigger', profile.name, profile.triggers.length - 1, trigger);
                 else
                     this.emit('item-updated', 'trigger', profile.name, profile.triggers.indexOf(trigger), trigger);
-                profile = null;
-                if (reload) {
+                if (this._profiles.contains(profile)) {
                     this._lastSuspend = -1;
                     this._client.updateAlarms();
                 }
+                profile = null;
                 //#endregion
                 return null;
             case 'ungag':
@@ -3322,9 +3310,9 @@ export class Input extends EventEmitter {
                     }
                     profile.aliases = items;
                     profile.save(parseTemplate('{profiles}'));
-                    profile = null;
-                    if (reload)
+                    if (this._profiles.contains(profile))
                         this._client.clearCache();
+                    profile = null;
                 }
                 return null;
             case 'unalias':
