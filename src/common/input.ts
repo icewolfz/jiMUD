@@ -20,7 +20,6 @@ declare let getCharacterNotes;
 declare let getId;
 declare let getName;
 declare let clearName;
-declare let resizeCommandInput;
 declare let setMapFile;
 
 /**
@@ -1291,7 +1290,7 @@ export class Input extends EventEmitter {
                     if (kl === 0)
                         return null;
                     if (kl === 1) {
-                        if (this._client.enabledProfiles.indexOf(keys[0]) === -1 || !this._profiles.items[keys[0]].enableTriggers)
+                        if (!this._isProfileEnabled(keys[0]) || !this._profiles.items[keys[0]].enableTriggers)
                             throw Error('No enabled profiles found!');
                         trigger = SortItemArrayByPriority(this._profiles.items[keys[k]].triggers);
                         trigger = trigger.find(t => {
@@ -1300,7 +1299,7 @@ export class Input extends EventEmitter {
                     }
                     else {
                         for (; k < kl; k++) {
-                            if (this._client.enabledProfiles.indexOf(keys[k]) === -1 || !this._profiles.items[keys[k]].enableTriggers || this._profiles.items[keys[k]].triggers.length === 0)
+                            if (!this._isProfileEnabled(keys[k]) || !this._profiles.items[keys[k]].enableTriggers || this._profiles.items[keys[k]].triggers.length === 0)
                                 continue;
                             trigger = SortItemArrayByPriority(this._profiles.items[keys[k]].triggers);
                             trigger = trigger.find(t => {
@@ -1564,8 +1563,6 @@ export class Input extends EventEmitter {
                     this._tabIdx = -1;
                     this._tabWords = null;
                     this._tabSearch = null
-                    if (this._getOption('commandAutoSize') || this._getOption('commandScrollbars'))
-                        resizeCommandInput();
                     this.emit('history-navigate', event);
                     break;
                 case 'ArrowUp': //up
@@ -1587,8 +1584,6 @@ export class Input extends EventEmitter {
                         this._commandInput.value = this._commandHistory[this._historyIdx];
                     }
                     setTimeout(() => this._commandInput.select(), 0);
-                    if (this._getOption('commandAutoSize') || this._getOption('commandScrollbars'))
-                        resizeCommandInput();
                     this.emit('history-navigate', event);
                     break;
                 case 'ArrowDown': //down
@@ -1605,8 +1600,6 @@ export class Input extends EventEmitter {
                         this._commandInput.value = this._commandHistory[this._historyIdx];
                     }
                     setTimeout(() => this._commandInput.select(), 0);
-                    if (this._getOption('commandAutoSize') || this._getOption('commandScrollbars'))
-                        resizeCommandInput();
                     this.emit('history-navigate', event);
                     break;
                 case 'Enter': // return
@@ -1614,8 +1607,6 @@ export class Input extends EventEmitter {
                         case NewLineType.Ctrl:
                             if (event.ctrlKey && !event.shiftKey && !event.metaKey && !event.altKey) {
                                 insertValue(this._commandInput, '\n');
-                                if (this._getOption('commandAutoSize') || this._getOption('commandScrollbars'))
-                                    resizeCommandInput();
                                 this.emit('history-navigate', event);
                                 this._commandInput.blur();
                                 this._commandInput.focus();
@@ -1625,8 +1616,6 @@ export class Input extends EventEmitter {
                         case NewLineType.CtrlAndShift:
                             if (event.ctrlKey && event.shiftKey && !event.metaKey && !event.altKey) {
                                 insertValue(this._commandInput, '\n');
-                                if (this._getOption('commandAutoSize') || this._getOption('commandScrollbars'))
-                                    resizeCommandInput();
                                 this.emit('history-navigate', event);
                                 this._commandInput.blur();
                                 this._commandInput.focus();
@@ -1636,8 +1625,6 @@ export class Input extends EventEmitter {
                         case NewLineType.CtrlOrShift:
                             if ((event.ctrlKey || event.shiftKey) && !event.metaKey && !event.altKey) {
                                 insertValue(this._commandInput, '\n');
-                                if (this._getOption('commandAutoSize') || this._getOption('commandScrollbars'))
-                                    resizeCommandInput();
                                 this.emit('history-navigate', event);
                                 this._commandInput.blur();
                                 this._commandInput.focus();
@@ -1647,8 +1634,6 @@ export class Input extends EventEmitter {
                         case NewLineType.Shift:
                             if ((event.ctrlKey && event.shiftKey) && !event.metaKey && !event.altKey) {
                                 insertValue(this._commandInput, '\n');
-                                if (this._getOption('commandAutoSize') || this._getOption('commandScrollbars'))
-                                    resizeCommandInput();
                                 this.emit('history-navigate', event);
                                 this._commandInput.blur();
                                 this._commandInput.focus();
@@ -1663,8 +1648,6 @@ export class Input extends EventEmitter {
                         this._tabSearch = null
                         event.preventDefault();
                         this._client.sendCommand(null, null, this._getOption('allowCommentsFromCommand'));
-                        if (this._getOption('commandAutoSize') || this._getOption('commandScrollbars'))
-                            resizeCommandInput();
                         this.emit('history-navigate', event);
                     }
                     event.preventDefault();
@@ -1737,8 +1720,6 @@ export class Input extends EventEmitter {
                     this._commandInput.selectionStart = this._tabSearch.start + this._tabSearch.find;
                     this._commandInput.selectionEnd = this._tabSearch.start + this._tabWords[this._tabIdx].length;
                     event.preventDefault();
-                    if (this._getOption('commandAutoSize') || this._getOption('commandScrollbars'))
-                        resizeCommandInput();
                     this.emit('history-navigate', event);
                     break;
                 case 'Shift':
@@ -2327,7 +2308,7 @@ export class Input extends EventEmitter {
                     if (kl === 0)
                         return null;
                     if (kl === 1) {
-                        if (this._client.enabledProfiles.indexOf(keys[0]) === -1 || !this._profiles.items[keys[0]].enableTriggers)
+                        if (!this._isProfileEnabled(keys[0]) || !this._profiles.items[keys[0]].enableTriggers)
                             throw Error('No enabled profiles found!');
                         profile = this._profiles.items[keys[0]];
                         tmp = SortItemArrayByPriority(this._profiles.items[keys[k]].triggers.filter(t => t.type === TriggerType.Event));
@@ -2337,7 +2318,7 @@ export class Input extends EventEmitter {
                     }
                     else {
                         for (; k < kl; k++) {
-                            if (this._client.enabledProfiles.indexOf(keys[k]) === -1 || !this._profiles.items[keys[k]].enableTriggers || this._profiles.items[keys[k]].triggers.length === 0)
+                            if (!this._isProfileEnabled(keys[k]) || !this._profiles.items[keys[k]].enableTriggers || this._profiles.items[keys[k]].triggers.length === 0)
                                 continue;
                             tmp = SortItemArrayByPriority(this._profiles.items[keys[k]].triggers.filter(t => t.type === TriggerType.Event));
                             trigger = tmp.find(t => {
@@ -2509,7 +2490,7 @@ export class Input extends EventEmitter {
                     if (kl === 0)
                         return null;
                     if (kl === 1) {
-                        if (this._client.enabledProfiles.indexOf(keys[0]) === -1 || !this._profiles.items[keys[0]].enableTriggers)
+                        if (!this._isProfileEnabled(keys[0]) || !this._profiles.items[keys[0]].enableTriggers)
                             throw Error('No enabled profiles found!');
                         profile = this._profiles.items[keys[0]];
                         if (item.name !== null)
@@ -2519,7 +2500,7 @@ export class Input extends EventEmitter {
                     }
                     else {
                         for (; k < kl; k++) {
-                            if (this._client.enabledProfiles.indexOf(keys[k]) === -1 || !this._profiles.items[keys[k]].enableTriggers || this._profiles.items[keys[k]].triggers.length === 0)
+                            if (!this._isProfileEnabled(keys[k]) || !this._profiles.items[keys[k]].enableTriggers || this._profiles.items[keys[k]].triggers.length === 0)
                                 continue;
                             if (item.name !== null)
                                 trigger = this._profiles.items[keys[k]].find('buttons', 'name', item.name);
@@ -2725,7 +2706,7 @@ export class Input extends EventEmitter {
                     if (kl === 0)
                         return null;
                     if (kl === 1) {
-                        if (this._client.enabledProfiles.indexOf(keys[0]) === -1 || !this._profiles.items[keys[0]].enableTriggers)
+                        if (!this._isProfileEnabled(keys[0]) || !this._profiles.items[keys[0]].enableTriggers)
                             throw Error('No enabled profiles found!');
                         profile = this._profiles.items[keys[0]];
                         trigger = profile.find('triggers', 'name', name);
@@ -2743,7 +2724,7 @@ export class Input extends EventEmitter {
                     }
                     else {
                         for (; k < kl; k++) {
-                            if (this._client.enabledProfiles.indexOf(keys[k]) === -1 || !this._profiles.items[keys[k]].enableTriggers || this._profiles.items[keys[k]].triggers.length === 0)
+                            if (!this._isProfileEnabled(keys[k]) || !this._profiles.items[keys[k]].enableTriggers || this._profiles.items[keys[k]].triggers.length === 0)
                                 continue;
                             trigger = this._profiles.items[keys[k]].find('triggers', 'name', name);
                             if (trigger) {
@@ -3518,7 +3499,7 @@ export class Input extends EventEmitter {
                     al = files.length;
                     for (i = 0; i < al; i++) {
                         if (path.extname(files[i]) === '.json') {
-                            if (this._client.enabledProfiles.indexOf(path.basename(files[i], '.json').toLowerCase()) !== -1)
+                            if (this._isProfileEnabled(path.basename(files[i], '.json').toLowerCase()))
                                 this._echo('   ' + this._profiles.keys[i] + ' is enabled', -7, -8, true, true);
                             else
                                 this._echo('   ' + path.basename(files[i], '.json') + ' is disabled', -7, -8, true, true);
@@ -3538,7 +3519,7 @@ export class Input extends EventEmitter {
                         throw new ProfileNotFound(args[0]);
                     else if (this._profiles.length === 1)
                         throw new Error(args[0] + ' can not be disabled as it is the only one enabled');
-                    if (this._client.enabledProfiles.indexOf(args[0].toLowerCase()) !== -1)
+                    if (this._isProfileEnabled(args[0].toLowerCase()))
                         args = args[0] + ' is enabled';
                     else
                         args = args[0] + ' is disabled';
@@ -3557,11 +3538,11 @@ export class Input extends EventEmitter {
                         case 'enable':
                         case 'on':
                         case 'yes':
-                            if (this._client.enabledProfiles.indexOf(args[0].toLowerCase()) !== -1)
+                            if (this._isProfileEnabled(args[0].toLowerCase()))
                                 args = args[0] + ' is already enabled';
                             else {
                                 this._client.toggleProfile(args[0]);
-                                if (this._client.enabledProfiles.indexOf(args[0].toLowerCase()) !== -1)
+                                if (this._isProfileEnabled(args[0].toLowerCase()))
                                     args = args[0] + ' is enabled';
                                 else
                                     args = args[0] + ' remains disabled';
@@ -3570,7 +3551,7 @@ export class Input extends EventEmitter {
                         case 'disable':
                         case 'off':
                         case 'no':
-                            if (this._client.enabledProfiles.indexOf(args[0].toLowerCase()) === -1)
+                            if (!this._isProfileEnabled(args[0].toLowerCase()))
                                 args = args[0] + ' is already disabled';
                             else {
                                 if (this._profiles.length === 1)
@@ -4557,7 +4538,7 @@ export class Input extends EventEmitter {
                             if (kl === 0)
                                 return null;
                             if (kl === 1) {
-                                if (this._client.enabledProfiles.indexOf(keys[0]) === -1 || !this._profiles.items[keys[0]].enableTriggers)
+                                if (!this._isProfileEnabled(keys[0]) || !this._profiles.items[keys[0]].enableTriggers)
                                     throw Error('No enabled profiles found!');
                                 trigger = SortItemArrayByPriority(this._profiles.items[keys[k]].triggers);
                                 trigger = trigger.find(t => {
@@ -4566,7 +4547,7 @@ export class Input extends EventEmitter {
                             }
                             else {
                                 for (; k < kl; k++) {
-                                    if (this._client.enabledProfiles.indexOf(keys[k]) === -1 || !this._profiles.items[keys[k]].enableTriggers || this._profiles.items[keys[k]].triggers.length === 0)
+                                    if (!this._isProfileEnabled(keys[k]) || !this._profiles.items[keys[k]].enableTriggers || this._profiles.items[keys[k]].triggers.length === 0)
                                         continue;
                                     trigger = SortItemArrayByPriority(this._profiles.items[keys[k]].triggers);
                                     trigger = trigger.find(t => {
@@ -4593,7 +4574,7 @@ export class Input extends EventEmitter {
                             if (kl === 0)
                                 return null;
                             if (kl === 1) {
-                                if (this._client.enabledProfiles.indexOf(keys[0]) === -1 || !this._profiles.items[keys[0]].enableTriggers)
+                                if (!this._isProfileEnabled(keys[0]) || !this._profiles.items[keys[0]].enableTriggers)
                                     throw Error('No enabled profiles found!');
                                 trigger = SortItemArrayByPriority(this._profiles.items[keys[k]].triggers);
                                 trigger = trigger.find(t => {
@@ -4602,7 +4583,7 @@ export class Input extends EventEmitter {
                             }
                             else {
                                 for (; k < kl; k++) {
-                                    if (this._client.enabledProfiles.indexOf(keys[k]) === -1 || !this._profiles.items[keys[k]].enableTriggers || this._profiles.items[keys[k]].triggers.length === 0)
+                                    if (!this._isProfileEnabled(keys[k]) || !this._profiles.items[keys[k]].enableTriggers || this._profiles.items[keys[k]].triggers.length === 0)
                                         continue;
                                     trigger = SortItemArrayByPriority(this._profiles.items[keys[k]].triggers);
                                     trigger = trigger.find(t => {
@@ -4737,7 +4718,7 @@ export class Input extends EventEmitter {
                             if (kl === 0)
                                 return null;
                             if (kl === 1) {
-                                if (this._client.enabledProfiles.indexOf(keys[0]) === -1 || !this._profiles.items[keys[0]].enableTriggers)
+                                if (!this._isProfileEnabled(keys[0]) || !this._profiles.items[keys[0]].enableTriggers)
                                     throw Error('No enabled profiles found!');
                                 trigger = SortItemArrayByPriority(this._profiles.items[keys[k]].triggers);
                                 trigger = trigger.find(t => {
@@ -4746,7 +4727,7 @@ export class Input extends EventEmitter {
                             }
                             else {
                                 for (; k < kl; k++) {
-                                    if (this._client.enabledProfiles.indexOf(keys[k]) === -1 || !this._profiles.items[keys[k]].enableTriggers || this._profiles.items[keys[k]].triggers.length === 0)
+                                    if (!this._isProfileEnabled(keys[k]) || !this._profiles.items[keys[k]].enableTriggers || this._profiles.items[keys[k]].triggers.length === 0)
                                         continue;
                                     trigger = SortItemArrayByPriority(this._profiles.items[keys[k]].triggers);
                                     trigger = trigger.find(t => {
@@ -4808,7 +4789,7 @@ export class Input extends EventEmitter {
                             if (kl === 0)
                                 return null;
                             if (kl === 1) {
-                                if (this._client.enabledProfiles.indexOf(keys[0]) === -1 || !this._profiles.items[keys[0]].enableTriggers)
+                                if (!this._isProfileEnabled(keys[0]) || !this._profiles.items[keys[0]].enableTriggers)
                                     throw Error('No enabled profiles found!');
                                 trigger = SortItemArrayByPriority(this._profiles.items[keys[k]].triggers);
                                 trigger = trigger.find(t => {
@@ -4817,7 +4798,7 @@ export class Input extends EventEmitter {
                             }
                             else {
                                 for (; k < kl; k++) {
-                                    if (this._client.enabledProfiles.indexOf(keys[k]) === -1 || !this._profiles.items[keys[k]].enableTriggers || this._profiles.items[keys[k]].triggers.length === 0)
+                                    if (!this._isProfileEnabled(keys[k]) || !this._profiles.items[keys[k]].enableTriggers || this._profiles.items[keys[k]].triggers.length === 0)
                                         continue;
                                     trigger = SortItemArrayByPriority(this._profiles.items[keys[k]].triggers);
                                     trigger = trigger.find(t => {
@@ -7426,7 +7407,7 @@ export class Input extends EventEmitter {
                     if (kl === 0)
                         return null;
                     if (kl === 1) {
-                        if (this._client.enabledProfiles.indexOf(keys[0]) === -1 || !this._profiles.items[keys[0]].enableTriggers)
+                        if (!this._isProfileEnabled(keys[0]) || !this._profiles.items[keys[0]].enableTriggers)
                             throw Error('No enabled profiles found!');
                         sides = SortItemArrayByPriority(this._profiles.items[keys[k]].triggers);
                         sides = sides.find(t => {
@@ -7435,7 +7416,7 @@ export class Input extends EventEmitter {
                     }
                     else {
                         for (; k < kl; k++) {
-                            if (this._client.enabledProfiles.indexOf(keys[k]) === -1 || !this._profiles.items[keys[k]].enableTriggers || this._profiles.items[keys[k]].triggers.length === 0)
+                            if (!this._isProfileEnabled(keys[k]) || !this._profiles.items[keys[k]].enableTriggers || this._profiles.items[keys[k]].triggers.length === 0)
                                 continue;
                             sides = SortItemArrayByPriority(this._profiles.items[keys[k]].triggers);
                             sides = sides.find(t => {
@@ -8826,7 +8807,7 @@ export class Input extends EventEmitter {
             if (kl === 0)
                 return;
             if (kl === 1) {
-                if (this._client.enabledProfiles.indexOf(keys[0]) === -1 || !this._profiles.items[keys[0]].enableTriggers)
+                if (!this._isProfileEnabled(keys[0]) || !this._profiles.items[keys[0]].enableTriggers)
                     throw Error('No enabled profiles found!');
                 profile = this._profiles.items[keys[0]];
                 if (subTrigger) {
@@ -8845,7 +8826,7 @@ export class Input extends EventEmitter {
             }
             else {
                 for (; k < kl; k++) {
-                    if (this._client.enabledProfiles.indexOf(keys[k]) === -1 || !this._profiles.items[keys[k]].enableTriggers || this._profiles.items[keys[k]].triggers.length === 0)
+                    if (!this._isProfileEnabled(keys[k]) || !this._profiles.items[keys[k]].enableTriggers || this._profiles.items[keys[k]].triggers.length === 0)
                         continue;
                     if (subTrigger) {
                         if (!name) {
@@ -9377,5 +9358,10 @@ export class Input extends EventEmitter {
                 this.emit('item-removed', type, profile.name, selector, item);
             }
         }
+    }
+
+    private _isProfileEnabled(profile) {
+        if (!this._client || !this._client.enabledProfiles || !this._client.enabledProfiles.length) return false;
+        return this._client.enabledProfiles.indexOf(profile) !== -1;
     }
 }
