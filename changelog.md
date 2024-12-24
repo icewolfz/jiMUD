@@ -30,7 +30,7 @@
   - Update yauzl 3.1.3 to 3.2.0
   - Update yazl 3.1.0 to 3.3.1
   - Update better-sqlite3 11.5.0 to 11.7.0
-  - Update chokidar 4.0.1 to 4.0.2
+  - Update chokidar 4.0.1 to 4.0.3
 
 ## 1.5.1 2024-10-26
 
