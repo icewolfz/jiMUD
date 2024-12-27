@@ -2004,7 +2004,7 @@
                 client.options.find.location = location;
                 doUpdate(32);
             });
-            client.input.on('history-navigate', () => {
+            client._input.on('history-navigate', () => {
                 if (client.getOption('commandAutoSize') || client.getOption('commandScrollbars'))
                     resizeCommandInput();
             });
