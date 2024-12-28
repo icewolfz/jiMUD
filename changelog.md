@@ -23,6 +23,8 @@
   - Fix MXP Reset line mode
   - Fix bug in #trigger/#action when creating new trigger
   - Fix #IF and %{if} not allowing optional else argument
+  - Fix XTerm set title to properly handle other commands
+  - Remove dead protocols from url detection
 - **Changed:**
   - Change [client.sendChat](scripting.md) to parse text then send to chat window, works like #chat now
   - Update electron 32.2.2 to 33.2.1

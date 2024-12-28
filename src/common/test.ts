@@ -74,7 +74,7 @@ export class Tests extends EventEmitter {
             this.client.telnet.receivedData(Buffer.from(tmp), true, true);
             let p = new Date().getTime();
             this.client.print(`Time: ${p - i}\n`, true);
-        };        
+        };
         this.functions['testspeedfile'] = data => {
             const fs = require('fs');
             if ((this.client.getOption('echo') & 4) === 4)
@@ -240,17 +240,18 @@ export class Tests extends EventEmitter {
             this.client.print(sample, true);
         };
 
-        this.functions['testxterm'] = function (title) {
+        this.functions['testxterm'] = function (data) {
             let r;
             let g;
             let b;
             let c;
             let sample = '';
-            if (typeof title !== 'undefined' && title.length > 0) {
+
+            if (data && data.args && data.args.length) {
                 sample += 'Set Title: ';
-                sample += title;
+                sample += data.args.join(' ');
                 sample += '\x1B]0;';
-                sample += title;
+                sample += data.args.join(' ');
                 sample += '\u0007\n';
             }
             sample += 'System colors:\n';
