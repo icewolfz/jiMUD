@@ -1,6 +1,7 @@
 {
   "name": "jimud",
   "productName": "jiMUD",
+  "desktopName": "com.electron.jiMUD",
   "icon": "./assets/icons/png/64x64.png",
   "website": "https://github.com/icewolfz/jiMUD",
   "homepage": "https://github.com/icewolfz/jiMUD",
