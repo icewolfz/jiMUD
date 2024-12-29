@@ -156,6 +156,9 @@
     "flatpak": {
       "baseVersion": 23.08,
       "runtimeVersion": 23.08
+    },
+    "deb": {
+      "afterInstall": "afterInstall.sh"
     }
   },
   "dependencies": {
