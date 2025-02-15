@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.6.0
+## 1.6.0 2025-02-15
 
 - **New:**
   - Add [client.sendChatRaw](scripting.md) to send raw text to chat window
