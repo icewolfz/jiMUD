@@ -1,9 +1,11 @@
 # Changelog
 
+## 1.6.1
+
 ## 1.6.0 2025-02-15
 
 - **New:**
-  - Add [client.sendChatRaw](scripting.md) to send raw text to chat window
+  - Add [client.sendChatRaw](docs/scripting.md) to send raw text to chat window
   - Add [#UNMACRO/#UNKEY](docs/commands/UNMACRO.md) to delete macros from command input
   - Status: Add color aura's to reflect buffer/fortify state
   - Composer now properly checks if you are in edit mode to avoid sending mail
@@ -26,7 +28,7 @@
   - Fix XTerm set title to properly handle other commands
   - Remove dead protocols from url detection
 - **Changed:**
-  - Change [client.sendChat](scripting.md) to parse text then send to chat window, works like #chat now
+  - Change [client.sendChat](docs/scripting.md) to parse text then send to chat window, works like #chat now
   - Update electron 32.2.2 to 34.2.0
   - Update mathjs 13.2.0 to 14.2.0
   - Update yauzl 3.1.3 to 3.2.0
