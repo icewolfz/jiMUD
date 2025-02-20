@@ -2,6 +2,11 @@
 
 ## 1.6.1
 
+- **Fixed:**
+  - Code editor:
+    - Fix paste not working due to updates to chrome permission system
+    - Fix insert color over selected text
+
 ## 1.6.0 2025-02-15
 
 - **New:**

@@ -399,9 +399,11 @@
                     id: 'editor.action.clipboardPasteAction',
                     label: 'Paste',
                     run: () => {
-                        editor?.focus()
-                        document.execCommand('paste')
+                        doPaste();
                     },
+                    keybindings: [
+                        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV
+                    ],                    
                 });
 
         }
@@ -2353,6 +2355,11 @@
         }
         return false;
     });
+
+    window.addEventListener('keydown', (event) => {
+        if (event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey && event.key === 'v')
+            doPaste();
+    });    
 
     outputDisplay.on('cut', (e) => {
         e.preventDefault();
