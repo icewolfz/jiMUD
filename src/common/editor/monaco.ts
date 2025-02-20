@@ -848,6 +848,7 @@ export class MonacoCodeEditor extends EditorBase {
     public decorations;
     public rawDecorations;
     private $spellchecking;
+    private $selections;
 
     constructor(options?: EditorOptions) {
         super(options);
@@ -1270,6 +1271,7 @@ export class MonacoCodeEditor extends EditorBase {
                     {
                         label: '&Insert Color...',
                         click: () => {
+                            this.$selections = this.$editor.getSelections();
                             const _colorDialog: any = createColorDialog();
                             /*
                             _colorDialog.addEventListener('DOMContentLoaded', () => {
@@ -1479,6 +1481,7 @@ export class MonacoCodeEditor extends EditorBase {
                         {
                             label: '&Insert Color...',
                             click: () => {
+                                this.$selections = this.$editor.getSelections();
                                 const _colorDialog: any = createColorDialog();
                                 /*
                                 _colorDialog.addEventListener('DOMContentLoaded', () => {
@@ -1763,11 +1766,11 @@ export class MonacoCodeEditor extends EditorBase {
     }
 
     public insert(text) {
-        const selections = this.$editor.getSelections();
+        if(!this.$selections || this.$selections.length === 0) this.$selections = this.$editor.getSelections();
         const commands: monaco.editor.ICommand[] = [];
-        const len = selections.length;
+        const len = this.$selections.length;
         for (let i = 0; i < len; i++) {
-            const selection = selections[i];
+            const selection = this.$selections[i];
             if (selection.isEmpty()) {
                 const cursor = selection.getStartPosition();
                 commands.push(new ReplaceCommand(new monaco.Range(cursor.lineNumber, cursor.column, cursor.lineNumber, cursor.column), text));
