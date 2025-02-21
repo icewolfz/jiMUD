@@ -6,6 +6,9 @@
   - Code editor:
     - Fix paste not working due to updates to chrome permission system
     - Fix insert color over selected text
+- **Changed:**
+  - Update electron-updater 6.5.0 to 6.6.0
+
 
 ## 1.6.0 2025-02-15
 
