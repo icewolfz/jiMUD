@@ -68,9 +68,9 @@
     "@types/jquery": "^3.5.32",
     "@types/node": "^20.17.19",
     "electron": "^34.2.0",
-    "electron-builder": "^26.0.7",
+    "electron-builder": "^26.0.8",
     "electron-rebuild": "^3.2.9",
-    "eslint": "^9.20.1",
+    "eslint": "^9.21.0",
     "eslint-plugin-html": "^8.1.2",
     "sass": "^1.85.0",
     "terser": "^5.39.0"

@@ -17,6 +17,7 @@ declare global {
     let isWordMisspelled;
     let webFrame;
     let clipboard;
+    let remote;
 }
 
 //based on monaco-loader(https://github.com/felixrieseberg/monaco-loader), inlined to reduce load times
@@ -1134,7 +1135,10 @@ export class MonacoCodeEditor extends EditorBase {
     public paste() {
         if (!this.$editor) return;
         this.$selections = this.$editor.getSelections();
-        this.insert(clipboard.readText('selection') || clipboard.readText() || '');
+        if(remote && remote.getCurrentWebContents())
+            remote.getCurrentWebContents().paste();
+        else
+            this.insert(clipboard.readText('selection') || clipboard.readText() || '');
         //this.$editor.getAction('editor.action.clipboardPasteAction').run();
     }
     public delete() { /**/ }
