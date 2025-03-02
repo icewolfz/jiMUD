@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.2
+
+- **Changed:**
+  - Update electron 34.2.0 to 34.3.0
+  - Update mathjs 14.2.0 to 14.3.0
+
 ## 1.6.1 2025-02-23
 
 - **Fixed:**
@@ -8,7 +14,6 @@
     - Fix insert color over selected text
 - **Changed:**
   - Update electron-updater 6.5.0 to 6.6.0
-
 
 ## 1.6.0 2025-02-15
 
