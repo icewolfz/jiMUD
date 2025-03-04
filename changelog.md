@@ -1,12 +1,12 @@
 # Changelog
 
-## 1.6.2
+## 1.7.0
 
 
 - **Fixed:**
-  - Code editor: Fix pasting into find text box
+  - Code editor: Fix find text context menu
 - **Changed:**
-  - Update electron 34.2.0 to 34.3.0
+  - Update electron 34.2.0 to 35.0.0
   - Update mathjs 14.2.0 to 14.3.0
   - Update electron-updater 6.6.0 to 6.6.1
 

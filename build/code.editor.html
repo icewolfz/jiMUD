@@ -403,7 +403,7 @@
                     },
                     keybindings: [
                         monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV
-                    ],                    
+                    ],
                 });
 
         }
@@ -2359,7 +2359,7 @@
     window.addEventListener('keydown', (event) => {
         if (event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey && event.key === 'v')
             doPaste();
-    });    
+    });
 
     outputDisplay.on('cut', (e) => {
         e.preventDefault();
@@ -10903,7 +10903,50 @@
                 //seems if you change the lang to en-GB it will work, seems en-US is broken
                 //const curr = remote.getCurrentWindow().webContents.session.getSpellCheckerLanguages() || [];
                 //remote.getCurrentWindow().webContents.session.setSpellCheckerLanguages(['en-GB'])
-                let word = editor.getModel().getWordAtPosition(e.target.position);
+                //Custom find context as the default one breaks due to focus issues when pasting
+                if (e.target.detail === 'editor.contrib.findWidget') {
+                    let el = document.activeElement;
+                    e.returnValue = false;
+                    e.event.browserEvent.preventDefault();
+                    const inputMenu = Menu.buildFromTemplate([
+                        { role: 'undo' },
+                        { role: 'redo' },
+                        { type: 'separator' },
+                        {
+                            label: 'Cut',
+                            click: () => {
+                                el.focus();
+                                remote.getCurrentWebContents().cut();
+                            }
+                        },
+                        {
+                            label: 'Copy',
+                            click: () => {
+                                el.focus();
+                                remote.getCurrentWebContents().copy();
+                            }
+                        },
+                        {
+                            label: 'Paste',
+                            click: () => {
+                                el.focus();
+                                doPaste();
+                            }
+                        },
+                        { type: 'separator' },
+                        {
+                            label: 'Select All',
+                            click: () => {
+                                el.focus();
+                                remote.getCurrentWebContents().selectAll();
+                            }
+                        },
+                    ]);
+                    //
+                    inputMenu.popup({ window: remote.getCurrentWindow() });
+                    return false;
+                };
+                let word = e.target.position ? editor.getModel().getWordAtPosition(e.target.position) : null;
                 if (p.spellcheck && word && word.word.length !== 0) {
                     //let words = word.word.split('_');
                     let words = word.word.split(/(_)|(?=[A-Z])|(\d+)/g);
