@@ -55,6 +55,7 @@
     "release:win": "npm run compile && npm run package:win",
     "release:linux": "npm run compile && npm run package:linux",
     "release:linux-slim": "npm run compile && npm run package:linux64",
+    "release:linux-sys": "npm run compile && npm run package:linux64-sys && npm run package:flatpak && npm run package:snap-classic",
     "release:mac": "npm run compile && npm run package:mac",
     "clean:code": "del /q .\\out\\*.js && del /q .\\out\\editor\\*.js && del /q .\\build\\js\\*.js && del /q .\\build\\js\\editor\\*.js",
     "clean:css": "del /q .\\build\\css\\*.css",
