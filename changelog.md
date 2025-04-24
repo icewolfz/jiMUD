@@ -5,7 +5,7 @@
 - **Fixed:**
   - Code editor: Fix find text context menu
 - **Changed:**
-  - Update electron 34.2.0 to 35.1.5
+  - Update electron 34.2.0 to 35.2.1
   - Update mathjs 14.2.0 to 14.4.0
   - Update electron-updater 6.6.0 to 6.6.2
   - Update better-sqlite3 11.8.1 to 11.9.1
