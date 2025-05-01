@@ -2,6 +2,8 @@
 
 ## 1.7.0
 
+- **New:**
+  - Allow about dialog to be resized
 - **Fixed:**
   - Code editor: Fix find text context menu
 - **Changed:**

@@ -5486,7 +5486,7 @@ function openAbout(parent) {
     if (window && !window.isDestroyed())
         window.focus();
     else {
-        window = createDialog({ show: true, parent: parent, url: path.join(__dirname, 'about.html'), title: 'About jiMUD', bounds: { width: 500, height: 560 } });
+        window = createDialog({ show: true, parent: parent, url: path.join(__dirname, 'about.html'), title: 'About jiMUD', bounds: { width: 500, height: 560 }, resize: true });
         window.on('closed', () => {
             idMap.delete('about');
             stateMap.delete(window);
