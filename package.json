@@ -69,13 +69,13 @@
   "devDependencies": {
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.5.32",
-    "@types/node": "^20.17.32",
-    "electron": "^36.1.0",
+    "@types/node": "^20.17.46",
+    "electron": "^36.2.0",
     "electron-builder": "^26.0.12",
     "electron-rebuild": "^3.2.9",
     "eslint": "^9.26.0",
     "eslint-plugin-html": "^8.1.2",
-    "sass": "^1.87.0",
+    "sass": "^1.88.0",
     "terser": "^5.39.0"
   },
   "build": {
@@ -163,7 +163,7 @@
   },
   "dependencies": {
     "@electron/remote": "^2.1.2",
-    "better-sqlite3": "^11.9.1",
+    "better-sqlite3": "^11.10.0",
     "buzz": "^1.2.1",
     "chokidar": "^4.0.3",
     "electron-updater": "^6.6.2",
