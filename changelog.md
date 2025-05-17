@@ -6,6 +6,7 @@
   - Allow about dialog to be resized
 - **Fixed:**
   - Code editor: Fix find text context menu
+  - Fix resizing command input when status or button bar are hidden/shown
 - **Changed:**
   - Update electron 34.2.0 to 36.2.0
   - Update mathjs 14.2.0 to 14.4.0

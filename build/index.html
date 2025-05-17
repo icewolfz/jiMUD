@@ -2336,7 +2336,9 @@
                     _nextClear = Date.now() + 3600000;
                 }
             });
-
+            _status.on('updated-interface', () => {
+                doUpdate(1024 | 2048);
+            });
             _status.on('set-title', (title, lag) => {
                 //TODO Add setting to control empty/defaults
                 if (client.getOption('autoCreateCharacter'))
