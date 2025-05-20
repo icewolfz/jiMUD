@@ -8,7 +8,7 @@
   - Code editor: Fix find text context menu
   - Fix resizing command input when status or button bar are hidden/shown
 - **Changed:**
-  - Update electron 34.2.0 to 36.2.0
+  - Update electron 34.2.0 to 36.2.1
   - Update mathjs 14.2.0 to 14.4.0
   - Update electron-updater 6.6.0 to 6.6.2
   - Update better-sqlite3 11.8.1 to 11.9.1
