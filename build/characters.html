@@ -139,7 +139,7 @@
         <div id="content" class="panel panel-default" style="position: absolute;left:206px;right: 2px;top: 2px;bottom:2px;margin:0">
             <div class="panel-heading" style="position: relative;">
                 <span id="title"></span>
-                <div style="position: absolute; right: 0;right: 15px;top: 10px;">
+                <div style="position: absolute;right: 15px;top: 10px;">
                     Unique ID:
                     <span id="character-id"></span>
                 </div>
@@ -1279,44 +1279,43 @@
         }
 
         function importData() {
-            if (isFileSync(parseTemplate(path.join('{data}', 'map.sqlite'))))
-                dialog.showOpenDialog({
-                    title: 'Import file...',
-                    defaultPath: path.join(parseTemplate('{data}'), 'characters.json'),
-                    filters: [
-                        { name: 'JSON files (*.json)', extensions: ['json'] },
-                        { name: 'Sqlite files (*.db, *.sqlite)', extensions: ['db', 'sqlite'] },
-                        { name: 'All files (*.*)', extensions: ['*'] },
-                    ]
-                }).then(result => {
-                    if (result.filePaths === undefined || result.filePaths.length === 0) {
-                        return;
+            dialog.showOpenDialog({
+                title: 'Import file...',
+                defaultPath: path.join(parseTemplate('{data}'), 'characters.json'),
+                filters: [
+                    { name: 'JSON files (*.json)', extensions: ['json'] },
+                    { name: 'Sqlite files (*.db, *.sqlite)', extensions: ['db', 'sqlite'] },
+                    { name: 'All files (*.*)', extensions: ['*'] },
+                ]
+            }).then(result => {
+                if (result.filePaths === undefined || result.filePaths.length === 0) {
+                    return;
+                }
+                updateCurrent();
+                dialog.showMessageBox({
+                    type: 'info',
+                    title: 'Import data',
+                    message: 'Import does not import setting, map or note files and assumes any files are in character data folder.',
+                }).then(() => {
+                    if (path.extname(result.filePaths[0]) !== 'json') {
+                        dialog.showMessageBox({
+                            type: 'question',
+                            title: 'Import characters',
+                            message: 'Import as new characters?',
+                            buttons: ['Yes', 'No'],
+                            defaultId: 1,
+                            noLink: true
+                        }).then((resultConfirm) => {
+                            if (resultConfirm.response === 0)
+                                ipcRenderer.send('import-characters', result.filePaths[0], null, null, true);
+                            else
+                                ipcRenderer.send('import-characters', result.filePaths[0]);
+                        });
                     }
-                    updateCurrent();
-                    dialog.showMessageBox({
-                        type: 'info',
-                        title: 'Import data',
-                        message: 'Import does not import setting, map or note files and assumes any files are in character data folder.',
-                    }).then(() => {
-                        if (path.extname(result.filePaths[0]) !== 'json') {
-                            dialog.showMessageBox({
-                                type: 'question',
-                                title: 'Import characters',
-                                message: 'Import as new characters?',
-                                buttons: ['Yes', 'No'],
-                                defaultId: 1,
-                                noLink: true
-                            }).then((resultConfirm) => {
-                                if (resultConfirm.response === 0)
-                                    ipcRenderer.send('import-characters', result.filePaths[0], null, null, true);
-                                else
-                                    ipcRenderer.send('import-characters', result.filePaths[0]);
-                            });
-                        }
-                        else
-                            ipcRenderer.send('import-characters', result.filePaths[0]);
-                    });
+                    else
+                        ipcRenderer.send('import-characters', result.filePaths[0]);
                 });
+            });
         }
 
         function showProgressDialog() {
