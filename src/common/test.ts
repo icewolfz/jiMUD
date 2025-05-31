@@ -240,13 +240,12 @@ export class Tests extends EventEmitter {
             this.client.print(sample, true);
         };
 
-        this.functions['testxterm'] = function (data) {
+        this.functions['testxterm'] = data => {
             let r;
             let g;
             let b;
             let c;
             let sample = '';
-
             if (data && data.args && data.args.length) {
                 sample += 'Set Title: ';
                 sample += data.args.join(' ');
@@ -356,7 +355,7 @@ export class Tests extends EventEmitter {
             sample += 'map          <send showmap><image 48x48.png URL="./../assets/icons/png/" ismap w=48 h=48></send>\n';
             sample += '<STAT Hp version Test>';
             sample += '<GAUGE Hp version Test>';
-            sample += '\x1B[0z';
+            sample += '\x1B[3z';
             this.client.print(sample, true);
         };
 
@@ -399,6 +398,9 @@ export class Tests extends EventEmitter {
         //spell-checker:enable
         this.functions['testmxpexpire'] = () => {
             this.client.print('\t\x1B[6z<SEND "sample" PROMPT EXPIRE=prompt>Expire sample</SEND> <SEND "sample" PROMPT EXPIRE=prompt2>Expire sample2</SEND><EXPIRE prompt> <SEND "sample" PROMPT EXPIRE=prompt>Expire sample3</SEND>\x1B[0z\n', true);
+            this.client.print('\t\x1B[6z\x1b[36m<SEND "sample" PROMPT EXPIRE=prompt>Expire sample</SEND> <SEND "sample" PROMPT EXPIRE=prompt2>Expire sample2</SEND><EXPIRE prompt> <SEND "sample" PROMPT EXPIRE=prompt>Expire sample3</SEND>\x1B[0z\x1b[0m\n', true);
+            this.client.print('\t\x1B[6z\x1b[46;30m<SEND "sample" PROMPT EXPIRE=prompt>Expire sample</SEND> <SEND "sample" PROMPT EXPIRE=prompt2>Expire sample2</SEND><EXPIRE prompt> <SEND "sample" PROMPT EXPIRE=prompt>Expire sample3</SEND>\x1B[0z\x1b[0m\n', true);
+            this.client.print('\t\x1B[6z<SEND "sample" PROMPT EXPIRE=prompt>Expire \x1b[36msample\x1b[0m</SEND> <SEND "sample" PROMPT EXPIRE=prompt2>Expire \x1b[36msample2\x1b[0m</SEND><EXPIRE prompt> <SEND "sample" PROMPT EXPIRE=prompt>Expire \x1b[36msample3\x1b[0m</SEND>\x1B[0z\n', true);
         };
 
         this.functions['testmxpcolors'] = () => {
@@ -479,7 +481,7 @@ export class Tests extends EventEmitter {
             this.client.print(sample, true);
         };
 
-        this.functions['testmxpLines'] = () => {
+        this.functions['testmxplines'] = () => {
             let sample = '\x1B[6z';
             sample += '<!ELEMENT Auction \'<FONT COLOR=red>\' TAG=20 OPEN>';
             sample += '\x1B[20zA nice shiny sword is being auctioned.\n';
@@ -627,6 +629,106 @@ export class Tests extends EventEmitter {
             });
         };
 
+        this.functions['teststatus'] = data => {
+            this.client.emit('received-GMCP', 'Char.Base', {
+                name: 'Tester',
+                class: 'fighter',
+                subclass: 'None',
+                race: 'human',
+                level: 1,
+                gender: 'male'
+            });
+            this.client.emit('received-GMCP', 'Char.Vitals', {
+                hp: 75,
+                hpmax: 100,
+                sp: 50,
+                spmax: 100,
+                mp: 25,
+                mpmax: 100
+            });
+            this.client.emit('received-GMCP', 'Char.Experience', {
+                current: 50,
+                need: 100,
+                needPercent: 50,
+                earned: 200,
+                banked: 300
+            });
+            this.client.emit('received-GMCP', 'oMUD.limb', {
+                head: 10,
+                torso: 20,
+                'left arm': 30,
+                'right arm': 40,
+                'left hand': 50,
+                'right hand': 60,
+                'left leg': 70,
+                'right leg': 80,
+                'right foot': 90,
+                'left foot': 100,
+                'left wing': 90,
+                'right wing': 80,
+                tail: 70
+            });
+            this.client.emit('received-GMCP', 'oMUD.ac', {
+                head: 0,
+                torso: 1,
+                'left arm': 2,
+                'right arm': 3,
+                'left hand': 3.5,
+                'right hand': 4,
+                'left leg': 4.5,
+                'right leg': 5,
+                'right foot': 5.5,
+                'left foot': 6,
+                'left wing': 6.5,
+                'right wing': 5,
+                tail: 4,
+                overall: 4
+            });
+            this.client.emit('received-GMCP', 'oMUD.weapons', {
+                'right hand': { 'name': 'knife', 'type': 'knife', 'subtype': 'dagger', 'material': 'iron', 'quality': 'poor', 'dominant': 1 },
+                'left hand': { 'name': 'club', 'type': 'blunt', 'subtype': 'club', 'material': 'wood', 'quality': 'ordinary', 'dominant': 0 }
+            });
+            if (data && data.args && data.args.indexOf('night') !== -1)
+                this.client.emit('received-GMCP', 'oMUD.Environment', { tod: 'night', moons: ['waning', 'full', 'waxing'] });
+            else
+                this.client.emit('received-GMCP', 'oMUD.Environment', { 'tod': 'day' });
+            this.client.emit('received-GMCP', 'oMUD.skill', { skill: 'knife', percent: 60 });
+            this.client.emit('received-GMCP', 'oMUD.skill', { skill: 'knife', amount: 100, bonus: 5, category: 'weapon' });
+            this.client.emit('received-GMCP', 'oMUD.skill', { skill: 'small sword', percent: 100 });
+            let found = false;
+            this.client.emit('received-GMCP', 'oMUD.skill', { skill: 'small sword', amount: 1150, bonus: 0, category: 'weapon' });
+            if (data && data.args && data.args.length) {
+                data.args.forEach(arg => {
+                    if (arg.startsWith('party:')) {
+                        found = true;
+                        let s = parseInt(arg.split(':')[1], 10);
+                        for (let m = 0; m < s; m++)
+                            this.client.emit('received-GMCP', 'oMUD.party', { 'action': 'update', 'name': 'Party ' + (m + 1), 'hp': 50, race: 'human', 'id': m });
+                    }
+                });
+            }
+            if (!found) {
+                this.client.emit('received-GMCP', 'oMUD.party', { 'action': 'update', 'name': 'Elf', 'hp': 50, race: 'elf', 'id': 1 });
+                this.client.emit('received-GMCP', 'oMUD.party', { 'action': 'update', 'name': 'Dwarf', 'hp': 100, race: 'dwarf', 'id': 2 });
+            }
+            found = false
+            if (data && data.args && data.args.length) {
+                data.args.forEach(arg => {
+                    if (arg.startsWith('monster:')) {
+                        found = true;
+                        let s = parseInt(arg.split(':')[1], 10);
+                        for (let m = 0; m < s; m++)
+                            this.client.emit('received-GMCP', 'oMUD.combat', { 'action': 'update', 'name': 'Monster ' + (m + 1), 'hp': 50, race: 'orc', 'id': m, order: 0 });
+                    }
+                });
+            }
+            if (!found) {
+                this.client.emit('received-GMCP', 'oMUD.combat', { 'action': 'update', 'name': 'Monster', 'hp': 50, race: 'orc', 'id': 3, order: 0 });
+                this.client.emit('received-GMCP', 'oMUD.combat', { 'action': 'update', 'name': "Monster 2", 'hp': 100, race: 'dragon', 'id': 4, order: 1 });
+                this.client.emit('received-GMCP', 'oMUD.combat', { 'action': 'update', 'name': 'Monster with extra super long name to test', 'hp': 100, race: 'dragon', 'id': 5, order: 2 });
+            }
+        };
+
         this.functions['testfansi'] = () => {
             let sample = '';
             let i;
@@ -736,7 +838,7 @@ export class Tests extends EventEmitter {
             const sample = [];
             const commands = this.client.getOption('commandChar') + ['testmxpcolors', 'testmxp', 'testcolors', 'testcolorsdetails', 'testxterm', 'testxtermrgb'].join('\n' + this.client.getOption('commandChar'));
             const e = this.client.getOption('enableCommands');
-            this.client.options.enableCommands = true;
+            this.client.setOption('enableCommands', true);
             let avg = 0;
             let max = 0;
             let min = 0;
@@ -756,7 +858,7 @@ export class Tests extends EventEmitter {
             sample.push(`Min - ${min}`);
             sample.push(`Max - ${max}`);
             this.client.print(sample.join('\n') + '\n', true);
-            this.client.options.enableCommands = e;
+            this.client.setOption('enableCommands', e);
         };
 
         this.functions['testperiod'] = () => {
@@ -769,11 +871,11 @@ export class Tests extends EventEmitter {
             window['period'] = 0;
             window['periodID'] = setInterval(() => {
                 if (window['period'] % 3 === 1)
-                    client.sendCommand('#testcolors');
+                    this.client.sendCommand('#testcolors');
                 else if (window['period'] % 3 === 2)
-                    client.sendCommand('#testxterm');
+                    this.client.sendCommand('#testxterm');
                 else
-                    client.sendCommand('#testlist');
+                    this.client.sendCommand('#testlist');
                 window['period']++;
             }, 2000);
         };
@@ -802,7 +904,7 @@ Devanagari
         this.functions['testunicodeemoji'] = () => {
             let sample = '';
             //https://apps.timwhitlock.info/emoji/tables/unicode
-            var emojiRange = [
+            let emojiRange = [
                 [0x1F601, 0x1F64F],//Emoticons ( 1F601 - 1F64F ) 
                 [0x2702, 0x27B0], //Dingbats ( 2702 - 27B0 ) 
                 [0x1F680, 0x1F6C0], //Transport and map symbols ( 1F680 - 1F6C0 ) 
@@ -811,10 +913,10 @@ Devanagari
                 [0x1F681, 0x1F6C5], //Additional transport and map symbols ( 1F681 - 1F6C5 ) 
                 [0x1F30D, 0x1F567] //Other additional symbols ( 1F30D - 1F567 ) 
             ];
-            var n = 0;
-            for (var i = 0; i < emojiRange.length; i++) {
-                var range = emojiRange[i];
-                for (var x = range[0]; x < range[1]; x++) {
+            let n = 0;
+            for (let i = 0; i < emojiRange.length; i++) {
+                let range = emojiRange[i];
+                for (let x = range[0]; x < range[1]; x++) {
                     sample += String.fromCodePoint(x);
                     n++;
                     if (n == 36) {
@@ -854,6 +956,13 @@ Devanagari
                 sample += `Line: ${h}, LineID: ${id + h}\n`;
             this.client.print(sample, true);
         };
+        this.functions['testscreen'] = () => {
+            let sample = 'Window innerWidth: ' + window.innerWidth;
+            sample += '\nWindow innerHeight: ' + window.innerHeight;
+            sample += '\nDocument clientWidth: ' + document.body.clientWidth;
+            sample += '\nDocument clientHeight: ' + document.body.clientHeight;
+            this.client.print(sample, true);
+        }
     }
 
     /**
