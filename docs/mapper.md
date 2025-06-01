@@ -10,11 +10,57 @@
 
 ## Menu
 
+### File
+
+- `Open map` Open a map file overriding the set character map file
+- `Open default map` Open the map file linked to loaded character or global map
+- `Reload` Reload the current map losing any unsaved data
+- `Set map for character` Set the map file for character to the opened map file, this will update the map file listed in the character manager
+- `Set map for connection` Set the map file for connection to the opened map file, this will only changed the current tab state data and will not effect the character manager data
+- `Enabled` whether mapper is enabled or not, it not enabled will not add new rooms as you move
+- `Export` Export map data
+  - `Export as image` Export the map as a image file
+  - `Export current view as image` Export the current visible map as an image
+  - `Export current area` Export the current selected area as a json data file
+  - `Export all` Export all map data as a json data file
+- `Import` Import data into current map
+  - `Import and replace` Import data and clear current data
+  - `Import and merge` Import and merge with current data
+- `Close` Close mapper window, **note** even if closed mapper may still be hidden in background to process in coming mapper data
+
 ### Edit
 
 - `Copy path` Copy the current highlighted path, if none highlighted copy from current room to selected room
 - `Copy path as stacked` Same as copy path but in command stack format
 - `Copy path as speedpath` Same as copy path but in speedpath compressed format
+- `Remove selected room` remove the currently selected room from the map
+- `Remove current room` remove the current room from the map
+- `Remove current area` remove all rooms from the area selected from the area navigator
+- `Remove all` remove all rooms from the map
+- `Compact map` will compact the map database, will displays a busy progress dialog while compacting
+- `Reset map` Reset map to empty default map
+
+### View
+
+- `Legend` Toggle showing the legend in the top right corner of the mapper window
+- `Room properties` show the room properties editor, allows you to edit or adjust rooms and mark down notes
+- `Split areas` determines how the map will layout display, when enabled it will only draw rooms related to the current area, if disabled will attempt all rooms with the same z coordinate and matching zone
+- `Fill walls` will attempt to draw walls around areas
+- `Toggle Developer Tools` Open or close developer tools for window
+- `Actual Size` Reset zoom level to default
+- `Zoom in` Zoom into the map
+- `Zoom out` Zoom out of the map
+- `Toggle full screen` Toggle window fullscreen mode
+
+### Actions
+
+- `Follow` whether the map follows you as you move around the mud and centers on your current room
+- `Focus on current room` will center the map on the current room
+- `Set selected as current` will set currently selected room as current room
+- `Highlight path` hight light a walkable path from current room to selected room
+- `Clear path` clear highlighted path
+- `Walk path` walk the path from current room to selected room
+- `Walk highlighted path` walk the highlighted path which may be different then the current path
 
 ## Keyboard shortcuts
 
@@ -69,6 +115,7 @@
 - `Highlight path` hight light a walkable path from current room to selected room
 - `Clear path` clear highlighted path
 - `Walk path` walk the path from current room to selected room
+- `Zoom` Control the current zoom level for map
 
 ## Navigation
 

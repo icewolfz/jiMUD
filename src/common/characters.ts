@@ -349,6 +349,7 @@ export class Characters extends EventEmitter {
                 this.ready = true;
                 if (callback) callback();
                 this._changed = false;
+                this.emit('saved');
             }
             catch (err) {
                 this.emit('error', err);
@@ -413,6 +414,7 @@ export class Characters extends EventEmitter {
                         });
                     }
                     oldCharacters = null;
+                    this.emit('import-complete');
                     this.save();
                 }
                 // Rename the file old file as no longer needed just in case
@@ -449,6 +451,7 @@ export class Characters extends EventEmitter {
                         DETACH DATABASE Disk
                     `);
                 this.ready = true;
+                this.emit('import-complete');
                 this.save();
             }
             catch (err) {

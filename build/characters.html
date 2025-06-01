@@ -259,7 +259,9 @@
         const fs = require('fs');
         const crypto = require('crypto');
         const moment = require('moment');
-        var archiver, archive;
+        var tmp;
+        var archiver, archive, unarchiver;
+        var _importTemp = [];
         var _charactersDataGrid;
         var dragging = false;
 
@@ -674,6 +676,19 @@
             updateCurrent();
             //fs.writeFileSync(charactersFile, JSON.stringify(characters));
             //ipcRenderer.send('reload-characters');
+        }
+
+        // eslint-disable-next-line no-unused-vars
+        function importComplete() {
+            if (_importTemp.length) {
+                _importTemp.forEach(file => {
+                    let t = _importTemp.name;
+                    _importTemp.removeCallback();
+                    if (isFileSync(t))
+                        fs.unlinkSync(t);
+                });
+                _importTemp = [];
+            }
         }
 
         // eslint-disable-next-line no-unused-vars
@@ -1242,9 +1257,11 @@
             archiver = archiver || require('yazl');
             var data = parseTemplate('{data}');
             archive = new archiver.ZipFile();
-
+            archive.addBuffer(Buffer.from(`{ "version": 1, "name": "jiMUD.backup", "timestamp": ${Date.now()} }`), "meta.json");
             if (isFileSync(path.join(data, 'characters.json.bak')))
                 archive.addFile(path.join(data, 'characters.json.bak'), 'characters.json.bak');
+            if (isFileSync(path.join(data, 'characters.json')))
+                archive.addFile(path.join(data, 'characters.json'), 'characters.json');
             if (isFileSync(path.join(data, 'characters.sqlite')))
                 archive.addFile(path.join(data, 'characters.sqlite'), 'characters.sqlite');
             if (isFileSync(path.join(data, 'map.sqlite')))
@@ -1269,12 +1286,31 @@
                     archive.addFile(file, file.substring(data.length + 1).replace(/\\/g, '/'));
                 });
             }
-
-            archive.outputStream.pipe(fs.createWriteStream(file)).on('close', function () {
+            var stream = fs.createWriteStream(file);
+            archive.outputStream.pipe(stream).on('close', function () {
                 closeProgressDialog();
+                stream.end();
             });
             archive.end(() => {
                 closeProgressDialog();
+            });
+        }
+
+        function saveZippedFile(zipFile, entry, dest) {
+            zipFile.openReadStream(entry, (err2, readStream) => {
+                if (err2)
+                    throw err2;
+                readStream.on('data', (chunk) => {
+                    fs.appendFileSync(chunk);
+                });
+                readStream.on('end', () => {
+                    zipFile.readEntry();
+                    //if settings or map file send a reload event
+                    if (entry.fileName === 'settings.json' || (path.extname === '.json' && entry.fileName.startsWith('characters/')))
+                        ipcRenderer.send('reload-options', dest);
+                    else if (entry.fileName === 'map.sqlite' || (path.extname === '.map' && entry.fileName.startsWith('characters/')))
+                        ipcRenderer.send('reload-map', dest);
+                });
             });
         }
 
@@ -1283,8 +1319,10 @@
                 title: 'Import file...',
                 defaultPath: path.join(parseTemplate('{data}'), 'characters.json'),
                 filters: [
+                    { name: 'Supported files (*.json, *.db, *.sqlite, *.zip)', extensions: ['json', 'db', 'json', 'zip'] },
                     { name: 'JSON files (*.json)', extensions: ['json'] },
                     { name: 'Sqlite files (*.db, *.sqlite)', extensions: ['db', 'sqlite'] },
+                    { name: 'Zip files (*.zip)', extensions: ['zip'] },
                     { name: 'All files (*.*)', extensions: ['*'] },
                 ]
             }).then(result => {
@@ -1292,29 +1330,98 @@
                     return;
                 }
                 updateCurrent();
-                dialog.showMessageBox({
-                    type: 'info',
-                    title: 'Import data',
-                    message: 'Import does not import setting, map or note files and assumes any files are in character data folder.',
-                }).then(() => {
-                    if (path.extname(result.filePaths[0]) !== 'json') {
-                        dialog.showMessageBox({
-                            type: 'question',
-                            title: 'Import characters',
-                            message: 'Import as new characters?',
-                            buttons: ['Yes', 'No'],
-                            defaultId: 1,
-                            noLink: true
-                        }).then((resultConfirm) => {
-                            if (resultConfirm.response === 0)
-                                ipcRenderer.send('import-characters', result.filePaths[0], null, null, true);
-                            else
-                                ipcRenderer.send('import-characters', result.filePaths[0]);
+                if (path.extname(result.filePaths[0]) === '.zip') {
+                    unarchiver = unarchiver || require('yauzl');
+                    let dataPath = parseTemplate(path.join('{data}'));
+                    let all = false;
+                    unarchiver.open(result.filePaths[0], { lazyEntries: true }, (err, zipFile) => {
+                        if (err) throw err;
+                        zipFile.readEntry();
+                        zipFile.on('error', (err2) => {
+                            throw err2;
                         });
-                    }
-                    else
-                        ipcRenderer.send('import-characters', result.filePaths[0]);
-                });
+                        zipFile.on('entry', entry => {
+                            //skip meta data for now
+                            if (entry.fileName === 'meta.json') {
+                                zipFile.readEntry();
+                                return;
+                            }
+                            //filter file types for security
+                            if (entry.fileName !== 'characters.json.bak' && !['.sqlite', '.json', '.layout', '.map', '.notes'].includes(path.extname(entry.fileName))) {
+                                zipFile.readEntry();
+                                return;
+                            }
+                            let file = path.join(dataPath, entry.fileName);
+                            if (isFileSync(file)) {
+                                if (entry.fileName === 'characters.sqlite') {
+                                    //generate tmp name
+                                    if (!tmp) {
+                                        tmp = require('tmp');
+                                        tmp.setGracefulCleanup();
+                                    }
+                                    let tFile = tmp.fileSync({ prefix: 'jiMUD-char' });
+                                    _importTemp.push(tFile);
+                                    ipcRenderer.send('import-characters', tFile);
+                                }
+                                else {
+                                    if (all === 3)
+                                        zipFile.readEntry();
+                                    else if (all === 2) {
+                                        ipcRenderer.sendSync('trash-item-sync', file);
+                                        saveZippedFile(zipFile, entry, file);
+                                    }
+                                    else
+                                        dialog.showMessageBox({
+                                            type: 'question',
+                                            title: 'Replace?',
+                                            message: `File '${entry.fileName}' exists, replace?\nAny loaded or changed data will be lost.`,
+                                            buttons: ['Yes', 'No', 'Replace All', 'Skip all'],
+                                            defaultId: 1,
+                                            noLink: true
+                                        }).then((resultConfirm) => {
+                                            if (resultConfirm.response === 0 || resultConfirm.response === 2) {
+                                                all = resultConfirm.response;
+                                                ipcRenderer.sendSync('trash-item-sync', file);
+                                                saveZippedFile(zipFile, entry, file);
+                                            }
+                                            else {
+                                                all = resultConfirm.response;
+                                                zipFile.readEntry();
+                                            }
+                                        });
+                                }
+                            }
+                            else
+                                saveZippedFile(zipFile, entry, file);
+                        }).once('end', () => {
+                            ipcRenderer.send('reload-profiles');
+                        }).once('close', () => { });
+                    });
+                }
+                else
+                    dialog.showMessageBox({
+                        type: 'info',
+                        title: 'Import data',
+                        message: 'Import does not import setting, map or note files and assumes any files are in character or profile data folders.',
+                    }).then(() => {
+                        if (path.extname(result.filePaths[0]) !== 'json') {
+                            dialog.showMessageBox({
+                                type: 'question',
+                                title: 'Import characters',
+                                message: 'Import as new characters?',
+                                buttons: ['Yes', 'No'],
+                                defaultId: 1,
+                                noLink: true
+                            }).then((resultConfirm) => {
+                                if (resultConfirm.response === 0)
+                                    ipcRenderer.send('import-characters', result.filePaths[0], null, null, true);
+                                else
+                                    ipcRenderer.send('import-characters', result.filePaths[0]);
+                            });
+                        }
+                        else
+                            ipcRenderer.send('import-characters', result.filePaths[0]);
+                    });
             });
         }
 

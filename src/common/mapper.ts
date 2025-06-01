@@ -653,6 +653,12 @@ export class Mapper extends EventEmitter {
         this.emit('refresh');
     }
 
+    public reload() {
+        this._db.close();
+        this.initializeDatabase();
+        this.doUpdate(UpdateType.draw);
+    }
+
     public focusCurrentRoom() {
         if (this.current.ID) {
             this.setActive(copy(this.current));

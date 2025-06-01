@@ -6,10 +6,13 @@
   - Allow about dialog to be resized
   - Add [#TESTSTATUS](docs/commands/commands.md#teststatus) to send commands to test the status display bar
   - Add [#TESTSCREEN](docs/commands/commands.md#testscreen) to display basic display data
+  - Character manger: Add support to import zipped data file from export system
+  - Mapper: Add option to reload map
 - **Fixed:**
   - Code editor: Fix find text context menu
   - Fix resizing command input when status or button bar are hidden/shown
   - Character manger: Do not check for map database when trying to import character database
+  - Mapper: Fix import merge/replace menu items as they where reversed function
 - **Changed:**
   - Update electron 34.2.0 to 36.3.2
   - Update mathjs 14.2.0 to 14.5.2

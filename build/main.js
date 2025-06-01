@@ -2189,6 +2189,11 @@ ipcMain.on('reload-options', (events, preferences, clientId) => {
     }
 });
 
+ipcMain.on('reload-map', (events, file) => {
+    for (id in clients)
+        clients[id].view.webContents.send('reload-map', file, file === global.mapFile);
+});
+
 ipcMain.on('get-client-id', (event, name) => {
     if (name)
         event.returnValue = names[name];
@@ -4506,7 +4511,7 @@ function createMenu(window) {
                 },
                 {
                     type: 'separator'
-                },                
+                },
                 {
                     label: 'Select All',
                     accelerator: 'CmdOrCtrl+A',

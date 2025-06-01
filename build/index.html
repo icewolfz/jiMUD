@@ -3167,8 +3167,10 @@
         });
 
         ipcRenderer.on('characters-imported', event => {
-            if (_windows['characters.html'])
+            if (_windows['characters.html']) {
+                _windows['characters.html'].importComplete();
                 _windows['characters.html'].refresh();
+            }
         });
 
         ipcRenderer.on('reload-profiles', () => {
@@ -3188,6 +3190,11 @@
 
         ipcRenderer.on('reload-options', (event, settings, global) => {
             reloadOptions(settings, global);
+        });
+
+        ipcRenderer.on('reload-map', (event, file) => {
+            if (_windows['mapper.html'])
+                _windows['mapper.html'].reloadMap(file);
         });
 
         function reloadOptions(settings, global) {

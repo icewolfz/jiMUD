@@ -190,7 +190,28 @@
                     },
                     { type: 'separator' },
                     {
-                        label: 'Set map for character',
+                        label: '&Reload',
+                        id: 'reloadMap',
+                        click: () => {
+                            clearButton('export');
+                            dialog.showMessageBox({
+                                type: 'question',
+                                title: 'Reload?',
+                                message: `Reload map, this will cause any unsaved changes to be lost.`,
+                                buttons: ['Yes', 'No'],
+                                defaultId: 1,
+                                noLink: true
+                            }).then((resultConfirm) => {
+                                if (resultConfirm.response === 0) {
+                                    reloadMap()
+                                }
+                            });
+                        },
+                        accelerator: 'CmdOrCtrl+F5'
+                    },
+                    { type: 'separator' },
+                    {
+                        label: '&Set map for character',
                         id: 'character',
                         enabled: false,
                         click: () => {
@@ -201,7 +222,7 @@
                         }
                     },
                     {
-                        label: 'Set map for connection',
+                        label: 'Set &map for connection',
                         id: 'connection',
                         enabled: false,
                         click: () => {
@@ -221,18 +242,18 @@
                     {
                         label: '&Export',
                         submenu: [
-                            { label: 'Export as image', click: () => save(exportImage) },
-                            { label: 'Export current view as image', click: exportCurrentImage },
+                            { label: 'Export as &image', click: () => save(exportImage) },
+                            { label: 'Export &current view as image', click: exportCurrentImage },
                             { type: 'separator' },
-                            { label: 'Export current area', click: exportCurrentArea },
-                            { label: 'Export all', click: exportAll },
+                            { label: 'Export current a&rea', click: exportCurrentArea },
+                            { label: 'Export &all', click: exportAll },
                         ]
                     },
                     {
                         label: '&Import',
                         submenu: [
-                            { label: 'Import and replace', click: importMerge },
-                            { label: 'Import and merge', click: importReplace },
+                            { label: 'Import and &replace', click: importReplace },
+                            { label: 'Import and &merge', click: importMerge },
                         ]
                     },
                     { type: 'separator' },
@@ -287,13 +308,16 @@
             {
                 label: '&View',
                 submenu: [
-                    { label: 'Legend', type: 'checkbox', click: toggleLegend },
-                    { label: 'Room Properties', type: 'checkbox', click: toggleRooms },
+                    { label: '&Legend', type: 'checkbox', click: toggleLegend },
+                    { label: 'Room &Properties', type: 'checkbox', click: toggleRooms },
                     { type: 'separator' },
-                    { label: 'Split areas', type: 'checkbox', click: toggleSplitArea },
-                    { label: 'Fill walls', type: 'checkbox', click: toggleFillWalls },
+                    { label: '&Split areas', type: 'checkbox', click: toggleSplitArea },
+                    { label: '&Fill walls', type: 'checkbox', click: toggleFillWalls },
                     { type: 'separator' },
-                    { label: 'Refresh', click: refreshMap },
+                    { 
+                        label: '&Refresh',
+                        click: refreshMap,
+                        accelerator: 'F5' },
                     {
                         type: 'separator'
                     },
@@ -307,17 +331,17 @@
                         type: 'separator'
                     },
                     {
-                        label: 'Actual Size',
+                        label: '&Actual Size',
                         click: () => { zoomMap(100); },
                         accelerator: 'CmdOrCtrl+0'
                     },
                     {
-                        label: 'Zoom In',
+                        label: 'Zoom &In',
                         click: () => { zoomMap(mapper.scale + 5); },
                         accelerator: 'CmdOrCtrl+Shift+='
                     },
                     {
-                        label: 'Zoom Out',
+                        label: 'Zoom &Out',
                         click: () => { zoomMap(mapper.scale - 5); },
                         accelerator: 'CmdOrCtrl+-'
                     },
@@ -1678,6 +1702,12 @@
                 mapper.refresh();
                 updateAreas();
             }
+        }
+
+        function reloadMap(map) {
+            if (map && map !== mapper.mapFile) return;
+            mapper.reload();
+            updateAreas();
         }
 
         function openMap() {
