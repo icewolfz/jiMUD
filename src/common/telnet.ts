@@ -1823,7 +1823,7 @@ export class Telnet extends EventEmitter {
     * @returns {object} returns null
     */
     private _fireReceiveOption(option, verb, val) {
-        const data: TelnetOption = { telnet: this, option: option, verb: 250, value: val, handled: false };
+        const data: TelnetOption = { telnet: this, option: option, verb: verb, value: val, handled: false };
         this.emit('received-option', data);
         return data.handled;
     }

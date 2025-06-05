@@ -13,6 +13,7 @@
   - Fix resizing command input when status or button bar are hidden/shown
   - Character manger: Do not check for map database when trying to import character database
   - Mapper: Fix import merge/replace menu items as they where reversed function
+  - Fix MSP telnet protocol from not working
 - **Changed:**
   - Update electron 34.2.0 to 36.3.2
   - Update mathjs 14.2.0 to 14.5.2
