@@ -5147,7 +5147,7 @@ export class Input extends EventEmitter {
                 setMapFile(tmp, p === 'true' || p === 'yes', true);
                 return null;
             case 'fullscreen':
-            case 'fu':
+            case 'full':
                 this._echoRaw(raw);
                 //#region fullscreen
                 if (args.length === 0) {
