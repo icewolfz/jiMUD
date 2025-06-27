@@ -3,6 +3,7 @@
 ## 1.7.0
 
 - **New:**
+  - Add [#FULLSCREEN](docs/commands.md#display) Enable fullscreen mode, if state is omitted it will toggle fullscreen, if state is 0 or false it will disable fullscreen, if state is anything else it will enable fullscreen
   - Allow about dialog to be resized
   - Add [#TESTSTATUS](docs/commands/commands.md#teststatus) to send commands to test the status display bar
   - Add [#TESTSCREEN](docs/commands/commands.md#testscreen) to display basic display data

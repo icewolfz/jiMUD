@@ -23,6 +23,9 @@
 <u>#FR</u>EEZE *state*
 >Scroll lock the display, if state is omitted it will toggle the scroll lock, if state is 0 or false it will disable scroll lock, if state is anything else it will lock the scroll back
 
+<u>#FU</u>LLSCREEN *state*
+>Enable fullscreen mode, if state is omitted it will toggle fullscreen, if state is 0 or false it will disable fullscreen, if state is anything else it will enable fullscreen
+
 <u>#HI</u>GHLIGHT *pattern*
 >make last line or line with matching pattern bold or brighter color if already bold, or makes the color brighter
 

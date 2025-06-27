@@ -5146,6 +5146,93 @@ export class Input extends EventEmitter {
                     p = '';
                 setMapFile(tmp, p === 'true' || p === 'yes', true);
                 return null;
+            case 'fullscreen':
+            case 'fu':
+                this._echoRaw(raw);
+                //#region fullscreen
+                if (args.length === 0) {
+                    //@ts-ignore
+                    if (document.fullscreenElement || document.webkitFullscreenElement || document.webkitCurrentFullScreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
+                        // If already in fullscreen, exit fullscreen
+                        if (document.exitFullscreen) {
+                            document.exitFullscreen();
+                            //@ts-ignore
+                        } else if (document.msExitFullscreen) {
+                            //@ts-ignore
+                            document.msExitFullscreen();
+                            //@ts-ignore
+                        } else if (document.mozCancelFullScreen) {
+                            //@ts-ignore
+                            document.mozCancelFullScreen();
+                            //@ts-ignore
+                        } else if (document.webkitExitFullscreen) {
+                            //@ts-ignore
+                            document.webkitExitFullscreen();
+                        }
+                    } else {
+                        // If not in fullscreen, request fullscreen for the specified element
+                        if (document.documentElement.requestFullscreen) {
+                            document.documentElement.requestFullscreen();
+                            //@ts-ignore
+                        } else if (document.documentElement.mozRequestFullScreen) { // Firefox
+                            //@ts-ignore
+                            document.documentElement.mozRequestFullScreen();
+                            //@ts-ignore
+                        } else if (document.documentElement.webkitRequestFullscreen) { // Chrome, Safari, Edge
+                            //@ts-ignore
+                            document.documentElement.webkitRequestFullscreen();
+                            //@ts-ignore
+                        } else if (document.documentElement.msRequestFullscreen) { // IE/Edge
+                            //@ts-ignore
+                            document.documentElement.msRequestFullscreen();
+                        }
+                    }
+                }
+                else if (args.length === 1) {
+                    if (args[0] === '0' || args[0] === 'false') {
+                        //@ts-ignore
+                        if (document.fullscreenElement || document.webkitFullscreenElement || document.webkitCurrentFullScreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
+                            if (document.exitFullscreen) {
+                                document.exitFullscreen();
+                                //@ts-ignore
+                            } else if (document.msExitFullscreen) {
+                                //@ts-ignore
+                                document.msExitFullscreen();
+                                //@ts-ignore
+                            } else if (document.mozCancelFullScreen) {
+                                //@ts-ignore
+                                document.mozCancelFullScreen();
+                                //@ts-ignore
+                            } else if (document.webkitExitFullscreen) {
+                                //@ts-ignore
+                                document.webkitExitFullscreen();
+                            }
+                        }
+                    }
+                    //@ts-ignore
+                    else if (!(document.fullscreenElement || document.webkitFullscreenElement || document.webkitCurrentFullScreenElement || document.mozFullScreenElement || document.msFullscreenElement)) {
+                        // If not in fullscreen, request fullscreen for the specified element
+                        if (document.documentElement.requestFullscreen) {
+                            document.documentElement.requestFullscreen();
+                            //@ts-ignore
+                        } else if (document.documentElement.mozRequestFullScreen) { // Firefox
+                            //@ts-ignore
+                            document.documentElement.mozRequestFullScreen();
+                            //@ts-ignore
+                        } else if (document.documentElement.webkitRequestFullscreen) { // Chrome, Safari, Edge
+                            //@ts-ignore
+                            document.documentElement.webkitRequestFullscreen();
+                            //@ts-ignore
+                        } else if (document.documentElement.msRequestFullscreen) { // IE/Edge
+                            //@ts-ignore
+                            document.documentElement.msRequestFullscreen();
+                        }
+                    }
+                }
+                else if (args.length > 1)
+                    throw new Error('Invalid syntax use \x1b[4m' + cmdChar + 'fr\x1b[0;-11;-12meeze \x1b[3mnumber\x1b[0;-11;-12m');
+                //#endregion   
+                return null;
         }
         if (fun.match(/^[-|+]?\d+$/)) {
             this._echoRaw(raw);
