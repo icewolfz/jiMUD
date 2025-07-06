@@ -16,6 +16,8 @@
   - Mapper: Fix import merge/replace menu items as they where reversed function
   - Fix MSP telnet protocol from not working
   - Fix telnet encoding of single \n
+  - Fix issues with window menu bar and fullscreen toggling
+  - Fix issue when no echo and sitting at telnet prompt
 - **Changed:**
   - Update electron 34.2.0 to 37.1.0
   - Update mathjs 14.2.0 to 14.5.2

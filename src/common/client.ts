@@ -1429,12 +1429,15 @@ export class Client extends EventEmitter {
     }
 
     public send(data, echo?: boolean) {
+        let p = this.telnet.prompt;
         this.telnet.sendData(data);
         this.lastSendTime = Date.now();
         if (echo && this.telnet.echo && this.getOption('commandEcho'))
             this.echo(data);
         else if (echo)
             this.echo('\n');
+        else //was at a prompt lets restore it so next text correctly handles it
+            this.telnet.prompt = p;
     }
 
     public sendRaw(data) {

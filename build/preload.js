@@ -12,6 +12,9 @@ window.setProgressBar = (value, mode) => { ipcRenderer.invoke("window", "setProg
 window.toggleDevTools = () => { ipcRenderer.invoke('window', 'toggleDevTools'); }
 window.isVisible = () => { return ipcRenderer.sendSync('window-info', 'isVisible'); }
 window.isMinimized = () => { return ipcRenderer.sendSync('window-info', 'isMinimized'); }
+window.isFullscreen = () => { return ipcRenderer.sendSync('window-info', 'isFullscreen'); }
+window.toggleFullscreen = () => { ipcRenderer.invoke("window", "toggleFullscreen"); }
+window.setFullscreen = (state) => { ipcRenderer.invoke("window", "setFullscreen", state); };
 window.showContext = (template, options, show, close) => ipcRenderer.invoke('show-context', template, options, show, close);
 window.getGlobal = (variable) => ipcRenderer.sendSync('get-global', variable);
 window.setGlobal = (variable, value) => ipcRenderer.send('set-global', variable, value);
@@ -25,9 +28,9 @@ window.addContext = func => ipcRenderer.addListener('context-menu', func);
 window.removeContext = func => ipcRenderer.removeListener('context-menu', func);
 
 window.prompt = function (prompt, val, mask) {
-    if(typeof prompt === 'object')
+    if (typeof prompt === 'object')
         return ipcRenderer.sendSync('prompt', prompt);
-    return ipcRenderer.sendSync('prompt', { prompt: prompt, val: val, mask: mask});
+    return ipcRenderer.sendSync('prompt', { prompt: prompt, val: val, mask: mask });
 }
 
 dialog = {

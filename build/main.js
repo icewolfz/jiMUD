@@ -295,6 +295,7 @@ function createWindow(options) {
         show: false,
         icon: path.join(__dirname, options.icon || '../assets/icons/png/64x64.png'),
         skipTaskbar: !getSetting('showInTaskBar'),
+        autoHideMenuBar: false,
         webPreferences: {
             nodeIntegration: true,
             nodeIntegrationInWorker: true,
@@ -499,7 +500,8 @@ function createWindow(options) {
             }
             //prevent double calling the events
             window.removeAllListeners('close');
-            window.close();
+            if (!window.isDestroyed())
+                window.close();
         }
     });
 
@@ -1681,6 +1683,16 @@ ipcMain.handle('window', (event, action, ...args) => {
         updateAll(...args);
     else if (action === 'setProgress' || action === 'setProgressBar')
         current.setProgressBar(...args);
+    else if (action === 'setFullscreen') {
+        current.setFullScreen(...args);
+        current.setMenuBarVisibility(true);
+        current.setAutoHideMenuBar(false);
+    }
+    else if (action === 'toggleFullscreen') {
+        current.setFullScreen(!current.isFullScreen())
+        current.setMenuBarVisibility(true);
+        current.setAutoHideMenuBar(false);        
+    }
 });
 
 ipcMain.handle('parent-window', (event, action, ...args) => {
@@ -1730,6 +1742,10 @@ ipcMain.handle('parent-window', (event, action, ...args) => {
         updateAll(...args);
     else if (action === 'setProgress' || action === 'setProgressBar')
         current.setProgressBar(...args);
+    else if (action === 'setFullscreen')
+        current.setFullScreen(...args);
+    else if (action === 'toggleFullscreen')
+        current.setFullScreen(!current.isFullScreen())
 });
 
 ipcMain.handle('contents', (event, action, ...args) => {
@@ -1785,6 +1801,10 @@ ipcMain.on('window-info', (event, info, id, ...args) => {
     else if (info === 'isMinimized') {
         var current = windowFromContents(event.sender);
         event.returnValue = current ? current.isMinimized() : 0;
+    }
+    else if (info === 'isFullscreen') {
+        var current = windowFromContents(event.sender);
+        event.returnValue = current ? current.isFullScreen() : 0;
     }
     else {
         logError('Invalid window-info: ' + info);
@@ -4283,8 +4303,11 @@ function restoreWindowState(window, state, showType) {
         window.hide();
     else if (!showType !== 1)
         window.show();
-    if (state.fullscreen)
+    if (state.fullscreen) {
         window.setFullScreen(state.fullscreen);
+        window.setMenuBarVisibility(true);
+        window.setAutoHideMenuBar(false);
+    }
     if (global.debug && showType !== 2)
         openDevtools(window.webContents, { mode: 'detach', activate: false });
     else if (state.devTools && showType !== 2)
