@@ -1437,7 +1437,7 @@ export class Client extends EventEmitter {
         else if (echo)
             this.echo('\n');
         else //was at a prompt lets restore it so next text correctly handles it
-            this.telnet.prompt = p;
+            this.telnet.prompt = p;``
     }
 
     public sendRaw(data) {
