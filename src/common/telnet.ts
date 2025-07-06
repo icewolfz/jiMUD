@@ -1741,8 +1741,11 @@ export class Telnet extends EventEmitter {
             ba.push(data[idx]);
             if (data[idx] === 255)
                 ba.push(255);
-            else if (data[idx] === 13 && dl === 1)
+            else if (data[idx] === 13 && dl === 1) {
+                ba.pop();
                 ba.push(10);
+                ba.push(13);
+            }
             else if (data[idx] === 10 && dl === 1) {
                 ba.push(13);
                 ba.push(0);
