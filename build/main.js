@@ -1691,7 +1691,7 @@ ipcMain.handle('window', (event, action, ...args) => {
     else if (action === 'toggleFullscreen') {
         current.setFullScreen(!current.isFullScreen())
         current.setMenuBarVisibility(true);
-        current.setAutoHideMenuBar(false);        
+        current.setAutoHideMenuBar(false);
     }
 });
 
@@ -1742,10 +1742,16 @@ ipcMain.handle('parent-window', (event, action, ...args) => {
         updateAll(...args);
     else if (action === 'setProgress' || action === 'setProgressBar')
         current.setProgressBar(...args);
-    else if (action === 'setFullscreen')
+    else if (action === 'setFullscreen') {
         current.setFullScreen(...args);
-    else if (action === 'toggleFullscreen')
+        current.setMenuBarVisibility(true);
+        current.setAutoHideMenuBar(false);
+    }
+    else if (action === 'toggleFullscreen') {
         current.setFullScreen(!current.isFullScreen())
+        current.setMenuBarVisibility(true);
+        current.setAutoHideMenuBar(false);
+    }
 });
 
 ipcMain.handle('contents', (event, action, ...args) => {
@@ -4908,7 +4914,15 @@ function createMenu(window) {
                     }
                 },
                 {
-                    role: 'togglefullscreen'
+                    //role: 'togglefullscreen'
+                    label: 'Toggle &Full Screen',
+                    accelerator: 'F11',
+                    click: (item, mWindow) => {
+                        (window || mWindow).setFullScreen(!(window || mWindow).isFullScreen());
+                        (window || mWindow).setMenuBarVisibility(true);
+                        (window || mWindow).setAutoHideMenuBar(false);
+
+                    }
                 }
             ]
         },
