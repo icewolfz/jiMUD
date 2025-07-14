@@ -19,12 +19,13 @@
   - Fix issues with window menu bar and fullscreen toggling
   - Fix issue when no echo and sitting at telnet prompt
 - **Changed:**
-  - Update electron 34.2.0 to 37.2.0
+  - Update electron 34.2.0 to 37.2.1
   - Update mathjs 14.2.0 to 14.5.3
   - Update electron-updater 6.6.0 to 6.6.2
   - Update better-sqlite3 11.8.1 to 12.2.0
   - Update yargs-parser 21.1.1 to 22.0.0
   - Update ace-editor 1.35.0 to 1.41.0
+  - Update @electron/remote 2.1.2 to 2.1.3
 
 ## 1.6.1 2025-02-23
 
