@@ -10,7 +10,9 @@
   - Character manger: Add support to import zipped data file from export system
   - Mapper: Add option to reload map
 - **Fixed:**
-  - Code editor: Fix find text context menu
+  - Code editor:
+    - Fix find text context menu
+    - Fix some drop downs being positioned wrong in dialogs
   - Fix resizing command input when status or button bar are hidden/shown
   - Character manger: Do not check for map database when trying to import character database
   - Mapper: Fix import merge/replace menu items as they where reversed function

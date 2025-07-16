@@ -607,8 +607,10 @@ export class TextValueEditor extends ValueEditor {
         if (Math.abs(left) + width > c.width)
             left = c.width - Math.abs(left);
         //extends past bottom so open up
-        if (top + 150 > c.height)
-            top = b.top - 150;
+        //if (top + 150 > c.height)
+        let h = this.container.tagName === 'DIALOG' ? document.body.clientHeight : c.height;
+        if (top + 150 > h)
+            top = b.top - 150 - c.top;
 
         this.$dropdown.style.left = left + 'px';
         this.$dropdown.style.width = width + 'px';
@@ -637,8 +639,10 @@ export class TextValueEditor extends ValueEditor {
         if (Math.abs(left) + width > c.width)
             left = c.width - Math.abs(left);
         //extends past bottom so open up
-        if (top + 150 > c.height)
-            top = b.top - 150;
+        let h = this.container.tagName === 'DIALOG' ? document.body.clientHeight : c.height;
+        if (top + 150 > h)
+            //if (top + 150 > c.height)
+            top = b.top - 150 - c.top;
 
         this.$ac.style.left = left + 'px';
         this.$ac.style.width = width + 'px';
@@ -1059,8 +1063,10 @@ export class FlagValueEditor extends ValueEditor {
             left = c.width - Math.abs(left);
         //extends past bottom so open up
         height = height || this.$dropdown.offsetHeight;
-        if (top + height > c.height)
-            top = b.top - height;
+        let h = this.container.tagName === 'DIALOG' ? document.body.clientHeight : c.height;
+        if (top + height > h)
+        //if (top + height > c.height)
+            top = b.top - height - c.top;
 
         this.$dropdown.style.left = left + 'px';
         this.$dropdown.style.width = width + 'px';
@@ -1336,8 +1342,10 @@ export class DropDownEditValueEditor extends ValueEditor {
             left = c.width - Math.abs(left);
         height = height || this.$dropdown.offsetHeight;
         //extends past bottom so open up
-        if (top + height > c.height)
-            top = b.top - height;
+        //if (top + height > c.height)
+        let h = this.container.tagName === 'DIALOG' ? document.body.clientHeight : c.height;
+        if (top + height > h)
+            top = b.top - height - c.top;
 
         this.$dropdown.style.left = left + 'px';
         this.$dropdown.style.width = width + 'px';
@@ -2804,8 +2812,10 @@ export class CodeValueEditor extends ValueEditor {
         if (Math.abs(left) + width > c.width)
             left = c.width - Math.abs(left);
         //extends past bottom so open up
-        if (top + 150 > c.height)
-            top = b.top - 150;
+        //if (top + 150 > c.height)
+        let h = this.container.tagName === 'DIALOG' ? document.body.clientHeight : c.height;
+        if (top + 150 > h)
+            top = b.top - 150 - c.top;
 
         this.$dropdown.style.left = left + 'px';
         this.$dropdown.style.width = width + 'px';
