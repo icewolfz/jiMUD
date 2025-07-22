@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.7.0
+## 1.7.0 2025-07-22
 
 - **New:**
   - Add [#FULLSCREEN](docs/commands.md#display) Enable fullscreen mode, if state is omitted it will toggle fullscreen, if state is 0 or false it will disable fullscreen, if state is anything else it will enable fullscreen
