@@ -2,6 +2,10 @@
 
 ## 1.7.1
 
+- **Changed:**
+  - Update electron 34.2.3 to 37.2.5
+  - Update mathjs 14.5.3 to 14.6.0
+
 ## 1.7.0 2025-07-22
 
 - **New:**
