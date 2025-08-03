@@ -9905,14 +9905,14 @@ export class AreaDesigner extends EditorBase {
                                     let sum = '';
                                     for (const prop in data) {
                                         if (!data.hasOwnProperty(prop)) continue;
-                                        if(prop === 'obj-canBait' && data[prop]) continue;
-                                        if(prop === 'obj-bait' && !data[prop]) continue;
-                                        if(prop === 'obj-baitStrength' && data[prop] === 1) continue;
-                                        if(prop === 'obj-baitUses' && data[prop] === 5) continue;
-                                        if(prop === 'obj-enchantment' && data[prop] === 0) continue;
-                                        if(prop === 'obj-maxWearable' && data[prop] === 0) continue;
-                                        if(prop === 'obj-value' && data[prop] === 0) continue;
-                                        if(prop === 'obj-limbsOptional' && !data[prop]) continue;
+                                        if (prop === 'obj-canBait' && data[prop]) continue;
+                                        if (prop === 'obj-bait' && !data[prop]) continue;
+                                        if (prop === 'obj-baitStrength' && data[prop] === 1) continue;
+                                        if (prop === 'obj-baitUses' && data[prop] === 5) continue;
+                                        if (prop === 'obj-enchantment' && data[prop] === 0) continue;
+                                        if (prop === 'obj-maxWearable' && data[prop] === 0) continue;
+                                        if (prop === 'obj-value' && data[prop] === 0) continue;
+                                        if (prop === 'obj-limbsOptional' && !data[prop]) continue;
                                         if (Array.isArray(data[prop])) {
                                             if (!Object.hasOwn(defaults, prop.substr(4))) {
                                                 if (data[prop].length)
@@ -9927,7 +9927,7 @@ export class AreaDesigner extends EditorBase {
                                         }
                                         else if (typeof data[prop] === 'string') {
                                             if (!Object.hasOwn(defaults, prop.substr(4))) {
-                                                if(data[prop].length)
+                                                if (data[prop].length)
                                                     sum += '<div><span style="font-weight:bold">' + (prop === 'obj-subType' ? 'Type' : capitalize(prop.substr(4))) + ':</span> ' + ellipse(data[prop]) + '</div>';
                                             }
                                             else if (data[prop] != defaults[prop.substr(4)])
@@ -10727,7 +10727,38 @@ export class AreaDesigner extends EditorBase {
     public paste() {
         switch (this.$view) {
             case View.map:
-                if (!clipboard.has('jiMUD/Area')) return;
+                if (clipboard.has('jiMUD/DataGrid')) {
+                    const grid = JSON.parse(Buffer.from(clipboard.readBuffer('jiMUD/DataGrid')).toString());
+                    switch (grid.format) {
+                        case 'Item:Description':
+                            if (grid.data.length) {
+                                const selected = this.$roomEditor.objects;
+                                let sl = selected.length;
+                                const oldValues = [];
+                                const mx = this.$mouse.rx;
+                                const my = this.$mouse.ry;
+                                while (sl--) {
+                                    const curr = selected[sl];
+                                    const old = this.getRoom(curr.x, curr.y, curr.z);
+                                    oldValues[sl] = copy(old.items);
+                                    curr.items = curr.items.concat(grid.data.map(item => {
+                                        return {
+                                            item: item.data.item,
+                                            description: item.data.description
+                                        }
+                                    }))
+                                    this.RoomChanged(curr, old, true);
+                                    old.items = copy(curr.items);
+                                }
+                                this.pushUndo(undoAction.edit, undoType.room, { property: 'items', values: oldValues, rooms: selected.map(m => [m.x, m.y, m.z]) });
+                                this.refreshEditor();
+                                this.UpdatePreview(selected[0]);
+                            }
+                        default:
+                            return;
+                    }
+                }
+                else if (!clipboard.has('jiMUD/Area')) return;
                 let or;
                 if (this.$focusedRoom && this.$selectedRooms.indexOf(this.$focusedRoom) === -1)
                     or = this.$focusedRoom.clone();
@@ -11423,7 +11454,7 @@ export class AreaDesigner extends EditorBase {
             case 'paste':
                 switch (this.$view) {
                     case View.map:
-                        return clipboard.has('jiMUD/Area');
+                        return clipboard.has('jiMUD/Area') || clipboard.has('jiMUD/DataGrid');
                     case View.monsters:
                         return false;
                     case View.objects:

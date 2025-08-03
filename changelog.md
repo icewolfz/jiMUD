@@ -2,6 +2,10 @@
 
 ## 1.7.1
 
+- **New:**
+  - Code editor: Area designer: Allow pasting of items to selected room with out needing to open item dialog
+- **Fixed:**
+  - Code editor: Fix double paste bug
 - **Changed:**
   - Update electron 34.2.3 to 37.2.5
   - Update mathjs 14.5.3 to 14.6.0

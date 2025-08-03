@@ -2357,7 +2357,7 @@
     });
 
     window.addEventListener('keydown', (event) => {
-        if (event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey && event.key === 'v')
+        if (event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey && event.key === 'v' && event.currentTarget !== global)
             doPaste();
     });
 
