@@ -1065,7 +1065,7 @@ export class FlagValueEditor extends ValueEditor {
         height = height || this.$dropdown.offsetHeight;
         let h = this.container.tagName === 'DIALOG' ? document.body.clientHeight : c.height;
         if (top + height > h)
-        //if (top + height > c.height)
+            //if (top + height > c.height)
             top = b.top - height - c.top;
 
         this.$dropdown.style.left = left + 'px';
@@ -1510,7 +1510,8 @@ export class CollectionValueEditor extends ValueEditor {
             dg.enterMoveFirst = this.options ? this.options.enterMoveFirst : true;
             dg.enterMoveNext = this.options ? this.options.enterMoveNext : true;
             dg.enterMoveNew = this.options ? this.options.enterMoveNew : true;
-            dg.clipboardPrefix = `jiMUD/${this.property}/`;
+            dg.clipboardPrefix = `jiMUD/`;
+            dg.clipboardMetaData = this.property;
             if (this.options && this.options.columns) {
                 dg.columns = this.options.columns.map(c => {
                     if (!c.editor)

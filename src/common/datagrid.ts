@@ -113,6 +113,7 @@ export class DataGrid extends EventEmitter {
 
     public selectionSearchField;
     public clipboardPrefix = '';
+    public clipboardMetaData = null;
     private $enterMoveNext: boolean | Function = true;
     private $enterMoveFirst: boolean | Function = true;
     private $enterMoveNew: boolean | Function = true;
@@ -741,7 +742,8 @@ export class DataGrid extends EventEmitter {
         if (e.preventDefault) return;
         clipboard.writeBuffer(this.clipboardPrefix + 'DataGrid', Buffer.from(JSON.stringify({
             format: e.format,
-            data: e.data
+            data: e.data,
+            meta: this.clipboardMetaData
         })));
         this.clearSelection();
 
@@ -872,7 +874,8 @@ export class DataGrid extends EventEmitter {
         if (e.preventDefault) return;
         clipboard.writeBuffer(this.clipboardPrefix + 'DataGrid', Buffer.from(JSON.stringify({
             format: this.columns.map(c => c.label).join(':'),
-            data: e.data
+            data: e.data,
+            meta: this.clipboardMetaData
         })));
     }
 

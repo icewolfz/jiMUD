@@ -10727,11 +10727,11 @@ export class AreaDesigner extends EditorBase {
     public paste() {
         switch (this.$view) {
             case View.map:
-                if (clipboard.has('jiMUD/items/DataGrid')) {
-                    const grid = JSON.parse(Buffer.from(clipboard.readBuffer('jiMUD/items/DataGrid')).toString());
+                if (clipboard.has('jiMUD/DataGrid')) {
+                    const grid = JSON.parse(Buffer.from(clipboard.readBuffer('jiMUD/DataGrid')).toString());
                     switch (grid.format) {
                         case 'Item:Description':
-                            if (grid.data.length) {
+                            if (grid.data.length && grid.meta === 'items') {
                                 const selected = this.$roomEditor.objects;
                                 let sl = selected.length;
                                 const oldValues = [];
@@ -11454,7 +11454,7 @@ export class AreaDesigner extends EditorBase {
             case 'paste':
                 switch (this.$view) {
                     case View.map:
-                        return clipboard.has('jiMUD/Area') || clipboard.has('jiMUD/items/DataGrid');
+                        return clipboard.has('jiMUD/Area') || clipboard.has('jiMUD/DataGrid');
                     case View.monsters:
                         return false;
                     case View.objects:
