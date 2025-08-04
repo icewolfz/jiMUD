@@ -1510,7 +1510,7 @@ export class CollectionValueEditor extends ValueEditor {
             dg.enterMoveFirst = this.options ? this.options.enterMoveFirst : true;
             dg.enterMoveNext = this.options ? this.options.enterMoveNext : true;
             dg.enterMoveNew = this.options ? this.options.enterMoveNew : true;
-            dg.clipboardPrefix = 'jiMUD/';
+            dg.clipboardPrefix = `jiMUD/${this.property}/`;
             if (this.options && this.options.columns) {
                 dg.columns = this.options.columns.map(c => {
                     if (!c.editor)
