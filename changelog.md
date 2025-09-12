@@ -5,9 +5,11 @@
 - **New:**
   - Code editor: Area designer: Allow pasting of items to selected room with out needing to open item dialog
 - **Fixed:**
-  - Code editor: Fix double paste bug
+  - Code editor:
+    - Fix double paste bug
+    - Fix formatting for single line if statements
 - **Changed:**
-  - Update electron 37.2.3 to 38.0.0
+  - Update electron 37.2.3 to 38.1.0
   - Update mathjs 14.5.3 to 14.7.0
   - Update tmp 0.2.3 to 0.2.5
   - Update fs-extra 11.3.0 to 11.3.1

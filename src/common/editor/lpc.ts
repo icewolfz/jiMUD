@@ -1939,7 +1939,7 @@ export class LPCFormatter extends EventEmitter {
                         p--;
                         if (p === 0) {
                             t2 = t + 1;
-                            if (t2 < tll && tokenLine[t2].type !== FormatTokenType.newline && tokenLine[t].type !== FormatTokenType.parenLBrace && tokenLine[t].type !== FormatTokenType.keyword && tokenLine[t].type === FormatTokenType.commentInline) {
+                            if (t2 < tll && tokenLine[t2].type !== FormatTokenType.newline && tokenLine[t].type !== FormatTokenType.parenLBrace && tokenLine[t].type !== FormatTokenType.keyword && tokenLine[t].type !== FormatTokenType.commentInline) {
                                 while (tokenLine[t2].type === FormatTokenType.whitespace) {
                                     t++;
                                     e++;
