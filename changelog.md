@@ -12,7 +12,7 @@
   - Update electron 37.2.3 to 38.1.0
   - Update mathjs 14.5.3 to 14.7.0
   - Update tmp 0.2.3 to 0.2.5
-  - Update fs-extra 11.3.0 to 11.3.1
+  - Update fs-extra 11.3.0 to 11.3.2
 
 ## 1.7.0 2025-07-22
 
