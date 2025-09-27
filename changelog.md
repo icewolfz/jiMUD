@@ -9,10 +9,11 @@
     - Fix double paste bug
     - Fix formatting for single line if statements
 - **Changed:**
-  - Update electron 37.2.3 to 38.1.0
-  - Update mathjs 14.5.3 to 14.7.0
+  - Update electron 37.2.3 to 38.1.2
+  - Update mathjs 14.5.3 to 14.8.1
   - Update tmp 0.2.3 to 0.2.5
   - Update fs-extra 11.3.0 to 11.3.2
+  - Update better-sqlite3 12.2.0 to 12.4.1
 
 ## 1.7.0 2025-07-22
 
