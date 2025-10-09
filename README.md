@@ -35,7 +35,7 @@ Required modules or packages to build different installer types: https://www.ele
 #### Flatpak Prerequisites
 
 1. Ensure flatpak and flatpak-builder are installed on build system
-1. Ensure the platform and sdk runtimes are installed: flatpak install flathub org.freedesktop.Platform//23.08 org.freedesktop.Sdk//23.08 org.electronjs.Electron2.BaseApp//23.08
+1. Ensure the platform and sdk runtimes are installed: flatpak install flathub org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08 org.electronjs.Electron2.BaseApp//25.08
 
 ### Clone repository or use archive zip
 

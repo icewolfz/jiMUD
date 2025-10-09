@@ -157,8 +157,8 @@
       "summary": "MUD client coded in javascript."
     },
     "flatpak": {
-      "baseVersion": 23.08,
-      "runtimeVersion": 23.08
+      "baseVersion": 25.08,
+      "runtimeVersion": 25.08
     }
   },
   "dependencies": {
