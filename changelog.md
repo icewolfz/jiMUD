@@ -8,6 +8,7 @@
   - Code editor:
     - Fix double paste bug
     - Fix formatting for single line if statements
+  - Immortal tools: Fix drag and drop path issues
 - **Changed:**
   - Update electron 37.2.3 to 38.2.2
   - Update mathjs 14.5.3 to 14.8.2
