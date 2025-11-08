@@ -10,8 +10,8 @@
     - Fix formatting for single line if statements
   - Immortal tools: Fix drag and drop path issues
 - **Changed:**
-  - Update electron 37.2.3 to 38.3.0
-  - Update mathjs 14.5.3 to 15.0.0
+  - Update electron 37.2.3 to 39.1.1
+  - Update mathjs 14.5.3 to 15.1.0
   - Update tmp 0.2.3 to 0.2.5
   - Update fs-extra 11.3.0 to 11.3.2
   - Update better-sqlite3 12.2.0 to 12.4.1
