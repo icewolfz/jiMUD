@@ -10,12 +10,13 @@
     - Fix formatting for single line if statements
   - Immortal tools: Fix drag and drop path issues
 - **Changed:**
-  - Update electron 37.2.3 to 39.2.3
+  - Update electron 37.2.3 to 39.2.4
   - Update mathjs 14.5.3 to 15.1.0
   - Update tmp 0.2.3 to 0.2.5
   - Update fs-extra 11.3.0 to 11.3.2
-  - Update better-sqlite3 12.2.0 to 12.4.5
+  - Update better-sqlite3 12.2.0 to 12.5.0
   - Update fswin 3.24.829 to 3.25.1108
+  - Update chokidar 4.0.3 to 5.0.0
 
 ## 1.7.0 2025-07-22
 
