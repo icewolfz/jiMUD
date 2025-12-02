@@ -21,6 +21,10 @@ A mud client using electron for [ShadowMUD](http://www.shadowmud.com) based on i
   To build jiMUD you must have nodejs 20 LTS or >=22, npm, typescript 2.3+, cPython installed
   Steps to build:
 
+### Docker
+
+  See [Docker docs](docs/docker.md)
+
 ### Prerequisites
 
 Install or download Node: https://nodejs.org/en/download/
