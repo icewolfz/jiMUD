@@ -33,6 +33,8 @@ electronuserland/builder
 The script will check if docker daemon is started, attempt to start it then
 run docker with all the correct settings.
 
+Before running the script ensure you have run `npm install` in the jiMUD folder to ensure all node modules are downloaded and installed, you may also run it at the docker prompt but you may have permissions errors if you use them outside of docker.
+
 Once at the docker prompt run `npm install && npm run release:linux64` to build base packages, `npm install && npm run release:snap-classic` to build snap classic package, or `npm install && npm run release:linux` to build base, flatpak, and snap packages.
 
 See build notes in [README](README.md) for more detailed build steps
@@ -61,8 +63,15 @@ These commands will add the flatpak repos, install the builder tools, and the re
 
 Once installed you just need to run `npm install && npm run release:linux` to build all linux packages or `npm install && npm run release:flatpak` for flatpak only package.
 
+## Saving docker image changes
+
+Depending on docker settings you may have to reinstall flatpak tools each time run unless you save the changed docker image using `docker commit [running container id] my-saved-name:latest`, note you have to commit before you exiting the running container, once commited you use the new `my-saved-name:latest` in the above script as the new image name
+
+To get container id using `sudo docker ps`
+
 ## Trouble shooting
 
 - If you get permission denied errors ensure the user is added to the group by running `sudo usermod -aG docker $USER` then log out and back in or use `newgrp docker`
 - Errors running linux release, ensure all required build tools are installed, in most cases the flatpak tools are missing and the default linux build script will try and build flatpak, ensure flatpak tools are installed in docker image, or use `release:linux64` instead of `release:linux`
 - Errors building windows, ensure you are using `electronuserland/builder:wine` in the script or docker load line
+- `tsc not found` means the image is missing typescript, run `npm install typescript -g` then save the docker image changes, or you can `npm install typescript` and save locally to jiMUD node_modules but it may be lost or cause errors when using git pull to update.
