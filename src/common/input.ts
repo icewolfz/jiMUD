@@ -34,7 +34,8 @@ let _mathjs;
  * @type {object}
  * @constant
  */
-const buzz = require('buzz');
+//const buzz = require('buzz');
+import buzz from 'buzz';
 /**
  * Node path object
  * @type {object}

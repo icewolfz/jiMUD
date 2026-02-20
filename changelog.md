@@ -20,6 +20,7 @@
   - Update monaco-editor 0.50.0 to 0.55.1
   - Update electron-updater 6.6.2 to 6.8.3
   - Update markdown-it 14.1.0 to 14.1.1
+  - Update buzz 1.2.0 to 2.0.0
 
 ## 1.7.0 2025-07-22
 

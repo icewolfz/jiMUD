@@ -4,7 +4,8 @@
 // https://www.gammon.com.au/forum/bbshowpost.php?bbsubject_id=783
 // http://www.gammon.com.au/forum/?id=12542&reply=6#reply6
 // spell-checker:ignore fname
-const buzz = require('buzz');
+//const buzz = require('buzz');
+import buzz from 'buzz';
 //const path = require('path');
 //const fs = require('fs');
 import { EventEmitter } from 'events';
@@ -145,7 +146,7 @@ class SoundState extends EventEmitter {
     public async open() {
         this.close();
         return new Promise((resolve, reject) => {
-            this.sound = new buzz.sound(this.url + this._file);
+            this.sound = new (buzz.sound as any)(this.url + this._file);
             this.sound.bind('loadeddata', (e) => {
                 this.emit('playing', { file: this._file, sound: this.sound, state: this, duration: buzz.toTimer(this.sound.getDuration()) });
                 resolve(1);
