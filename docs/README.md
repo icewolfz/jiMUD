@@ -145,7 +145,7 @@ Usage: `jiMUD [arguments...]`
 ## Known Issues
 
 - Linux:
-  - Child windows on wayland are not correctly set to always on top of parent due to how wayland handles them, you can try setting to always on top for windows that support it
+  - Child windows on wayland are not correctly set to always on top of parent due to how wayland handles them, you can try setting to always on top for windows that support it, temp fix is to force x11 mode using `--ozone-platform=x11` command line argument
   - Tray icon: When app indicator is used on Linux, the click event is ignored, see [Electron docs for more limits](https://www.electronjs.org/docs/api/tray)
   - Auto updating is only supported by AppImage, DEB or RPM
   - Show in task bar is no longer supported because Electron removed support due to wayland
