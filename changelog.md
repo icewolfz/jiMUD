@@ -10,7 +10,7 @@
     - Fix formatting for single line if statements
   - Immortal tools: Fix drag and drop path issues
 - **Changed:**
-  - Update electron 37.2.3 to 40.6.0
+  - Update electron 37.2.3 to 40.6.1
   - Update mathjs 14.5.3 to 15.1.1
   - Update tmp 0.2.3 to 0.2.5
   - Update fs-extra 11.3.0 to 11.3.3

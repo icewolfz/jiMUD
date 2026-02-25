@@ -69,12 +69,12 @@
   "devDependencies": {
     "@electron/rebuild": "^4.0.3",
     "@types/bootstrap": "^3.4.0",
-    "@types/jquery": "^3.5.33",
+    "@types/jquery": "^3.5.34",
     "@types/node": "^22.19.11",
-    "electron": "^40.6.0",
+    "electron": "^40.6.1",
     "electron-builder": "^26.8.1",
     "esbuild": "^0.27.3",
-    "eslint": "^10.0.0",
+    "eslint": "^10.0.2",
     "eslint-plugin-html": "^8.1.4",
     "sass": "^1.97.3",
     "terser": "^5.46.0"
