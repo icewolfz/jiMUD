@@ -6310,6 +6310,6 @@ function readyToShow(window, event) {
     });
     window.webContents.once('did-finish-load', () => {
         if (shown) return;
-        dialogWindow.emit('ready-to-show');
+        window.emit('ready-to-show');
     });
 }
