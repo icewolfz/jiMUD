@@ -6303,6 +6303,7 @@ ipcMain.on('file-exist-dialog', (event, source, target, options) => {
 //linux wayland hack as ready-to-show does not always fire for some reason
 function readyToShow(window, event) {
     let shown = false;
+    if (!window || !event) return;
     window.once('ready-to-show', () => {
         if (shown) return;
         shown = true;
