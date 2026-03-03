@@ -13,7 +13,7 @@
   - Update electron 37.2.3 to 40.6.1
   - Update mathjs 14.5.3 to 15.1.1
   - Update tmp 0.2.3 to 0.2.5
-  - Update fs-extra 11.3.0 to 11.3.3
+  - Update fs-extra 11.3.0 to 11.3.4
   - Update better-sqlite3 12.2.0 to 12.5.0
   - Update fswin 3.24.829 to 3.25.1108
   - Update chokidar 4.0.3 to 5.0.0
