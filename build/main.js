@@ -695,12 +695,20 @@ function createDialog(options) {
             protocol: 'file:',
             slashes: true
         }));
-
+    let shown = false;
     window.once('ready-to-show', () => {
+        if (shown) return;
         if (options.show)
             window.show();
         if (global.debug)
             openDevtools(window.webContents, { activate: false });
+        shown = true;
+    });
+
+    //linux wayland hack as ready-to-show does not always fire for some reason
+    window.webContents.once('did-finish-load', () => {
+        if (shown) return;
+        window.emit('ready-to-show');
     });
     addInputContext(window, getSetting('spellchecking'));
     return window;
@@ -2741,7 +2749,11 @@ function initializeChildWindow(window, link, details, noClose) {
         file = file.substring(URL.pathToFileURL(__dirname).href.length + 1);
     require("@electron/remote/main").enable(window.webContents);
     window.removeMenu();
+
+    let shown = false;
     window.once('ready-to-show', () => {
+        if (shown) return;
+        shown = true;
         if (details.options.overlayIcon)
             window.setOverlayIcon(details.options.overlayIcon, details.options.overlayTip || details.options.title || '');
         //exclude the -ID when loading scripts
@@ -2758,6 +2770,12 @@ function initializeChildWindow(window, link, details, noClose) {
         if (global.debug)
             openDevtools(window.webContents, { activate: false });
     });
+    //linux wayland hack as ready-to-show does not always fire for some reason
+    window.webContents.once('did-finish-load', () => {
+        if (shown) return;
+        window.emit('ready-to-show');
+    });
+
     window.webContents.on('render-process-gone', (event, goneDetails) => {
         logError(`${link} render process gone, reason: ${goneDetails.reason}, exitCode ${goneDetails.exitCode}\n`, true);
     });

@@ -9,6 +9,7 @@
     - Fix double paste bug
     - Fix formatting for single line if statements
   - Immortal tools: Fix drag and drop path issues
+  - Dialogs should now be more reliable when used under wayland on linux
 - **Changed:**
   - Update electron 37.2.3 to 40.6.1
   - Update mathjs 14.5.3 to 15.1.1
