@@ -463,7 +463,8 @@ function createWindow(options) {
     }
     else
         stateMap.set(window, saveWindowState(window));
-    window.once('ready-to-show', () => {
+
+    readyToShow(window, () => {
         loadWindowScripts(window, options.script || path.basename(options.file, '.html'));
 
         if (options.data && options.data.data)
@@ -695,20 +696,11 @@ function createDialog(options) {
             protocol: 'file:',
             slashes: true
         }));
-    let shown = false;
-    window.once('ready-to-show', () => {
-        if (shown) return;
+    readyToShow(window, () => {
         if (options.show)
             window.show();
         if (global.debug)
             openDevtools(window.webContents, { activate: false });
-        shown = true;
-    });
-
-    //linux wayland hack as ready-to-show does not always fire for some reason
-    window.webContents.once('did-finish-load', () => {
-        if (shown) return;
-        window.emit('ready-to-show');
     });
     addInputContext(window, getSetting('spellchecking'));
     return window;
@@ -2749,11 +2741,7 @@ function initializeChildWindow(window, link, details, noClose) {
         file = file.substring(URL.pathToFileURL(__dirname).href.length + 1);
     require("@electron/remote/main").enable(window.webContents);
     window.removeMenu();
-
-    let shown = false;
-    window.once('ready-to-show', () => {
-        if (shown) return;
-        shown = true;
+    readyToShow(window, () => {
         if (details.options.overlayIcon)
             window.setOverlayIcon(details.options.overlayIcon, details.options.overlayTip || details.options.title || '');
         //exclude the -ID when loading scripts
@@ -2770,12 +2758,6 @@ function initializeChildWindow(window, link, details, noClose) {
         if (global.debug)
             openDevtools(window.webContents, { activate: false });
     });
-    //linux wayland hack as ready-to-show does not always fire for some reason
-    window.webContents.once('did-finish-load', () => {
-        if (shown) return;
-        window.emit('ready-to-show');
-    });
-
     window.webContents.on('render-process-gone', (event, goneDetails) => {
         logError(`${link} render process gone, reason: ${goneDetails.reason}, exitCode ${goneDetails.exitCode}\n`, true);
     });
@@ -3901,7 +3883,7 @@ async function newClientWindow(caller, connection, data, name) {
                 //clients[clientId].view.setVisible(false);
             });
         }
-        window.window.once('ready-to-show', () => {
+        readyToShow(window.window, () => {
             window.window.webContents.send('set-clients', window.clients.map(x => {
                 return {
                     id: x,
@@ -5565,7 +5547,7 @@ function openProgress(parent, title, modal) {
             stateMap.delete(window);
             progressMap.delete(parent);
         });
-        window.once('ready-to-show', () => {
+        readyToShow(window, () => {
             window.webContents.send('progress', 'title', title);
         });
         progressMap.set(parent, window);
@@ -6281,7 +6263,7 @@ ipcMain.on('prompt', (event, options) => {
         promptWindow = null;
         ipcMain.removeListener('prompt-response', promptResponseEvent);
     });
-    promptWindow.once('ready-to-show', () => {
+    readyToShow(promptWindow, () => {
         executeScript(`setValue('${options.val}',${options.mask && typeof options.mask === 'string' ? ('\'' + options.mask + '\'') : options.mask});
         setPrompt(${(options.prompt || options.title) ? '\'' + (options.prompt || options.title) + '\'' : 0});
         document.title = '${options.title || options.prompt || ''}';`, promptWindow);
@@ -6312,8 +6294,22 @@ ipcMain.on('file-exist-dialog', (event, source, target, options) => {
         dialogWindow = null;
         ipcMain.removeListener('file-exist-response', dialogResponseEvent);
     });
-    dialogWindow.once('ready-to-show', () => {
+    readyToShow(dialogWindow, () => {
         executeScript(`setData(${JSON.stringify(source)}, ${JSON.stringify(target)}, ${JSON.stringify(options)});`, dialogWindow);
     });
     ipcMain.on('file-exist-response', dialogResponseEvent);
 });
+
+//linux wayland hack as ready-to-show does not always fire for some reason
+function readyToShow(window, event) {
+    let shown = false;
+    window.once('ready-to-show', () => {
+        if (shown) return;
+        shown = true;
+        event();
+    });
+    window.webContents.once('did-finish-load', () => {
+        if (shown) return;
+        dialogWindow.emit('ready-to-show');
+    });
+}
