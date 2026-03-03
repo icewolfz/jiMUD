@@ -114,6 +114,7 @@
       "!node_modules/**/benchmark/*",
       "!node_modules/**/browser/*",
       "!node_modules/monaco-editor/!(min)/*",
+      "!node_modules/@types/trusted-types/*",
       "!node_modules/moment/locale/*",
       "!node_modules/moment/min/*",
       "!node_modules/spellchecker/vendor/hunspell/*",
