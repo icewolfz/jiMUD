@@ -11,7 +11,7 @@
   - Immortal tools: Fix drag and drop path issues
   - Dialogs should now be more reliable when used under wayland on linux
 - **Changed:**
-  - Update electron 37.2.3 to 40.6.1
+  - Update electron 37.2.3 to 40.7.0
   - Update mathjs 14.5.3 to 15.1.1
   - Update tmp 0.2.3 to 0.2.5
   - Update fs-extra 11.3.0 to 11.3.4
