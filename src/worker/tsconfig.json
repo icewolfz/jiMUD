@@ -3,12 +3,13 @@
     "compilerOptions": {
         "incremental": true,
         "target": "es2017",
-        "module": "none",
-        "moduleResolution": "node",
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
         "sourceMap": false,
         "noImplicitAny": false,
         "allowJs": true,
         "outDir": "../../out",
+        "rootDir": "../worker",
         "rootDirs": [
             "../common",
             "../worker"

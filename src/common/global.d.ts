@@ -38,6 +38,9 @@ declare let $characterid: number;
 interface JQuery {
 	treeview: any;
 	selectpicker: any
+	dropdown: any;
+	tab: any;
+	tooltip: any;
 }
 
 interface Window {

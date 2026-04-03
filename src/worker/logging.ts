@@ -75,6 +75,7 @@ interface LogOptions {
     format?: string;
     timestamp?: boolean;
     timestampFormat?: string;
+    enableFlashing?: boolean;
 }
 
 let options: LogOptions = {
@@ -88,7 +89,9 @@ let options: LogOptions = {
     what: Log.Html,
     debug: false,
     timestamp: false,
-    timestampFormat: '[[]MM-DD HH:mm:ss.SSS[]] '
+    timestampFormat: '[[]MM-DD HH:mm:ss.SSS[]] ',
+    enableFlashing: false
+
 };
 
 let connected: boolean = false;
@@ -100,11 +103,11 @@ let writingHeader = false;
 let colors = {};
 let colorsCnt = 0;
 let backgrounds = {};
-let backgroundsCnt = 0;
+let backgroundsCnt: number = 0;
 let buffer = {};
 let fd = {};
 let flushBuffer;
-let colorTable = null;
+let colorTable: string[];
 
 self.addEventListener('message', (e: MessageEvent) => {
     let c;
@@ -233,7 +236,7 @@ self.addEventListener('message', (e: MessageEvent) => {
                 flushBuffer.file = currentFile;
                 flushBuffer.connected = connected;
                 flushBuffer.offline = options.offline;
-                flushBuffer.what = options.what;
+                flushBuffer.what = options.what ?? Log.None;
                 flushBuffer.gagged = data.gagged || (options.gagged && data.gagged);
                 return;
             }
@@ -241,14 +244,14 @@ self.addEventListener('message', (e: MessageEvent) => {
             flushBuffer = null;
             if (!logging || (!options.offline && !connected)) return;
             if (data.gagged && !options.gagged) return;
-            if ((options.what & Log.Html) === Log.Html)
+            if (((options.what ?? Log.None) & Log.Html) === Log.Html)
                 writeHtml(createLine({ text: data.line, formats: data.formats, timestamp: data.timestamp || Date.now() }));
-            if ((options.what & Log.Text) === Log.Text || options.what === Log.None) {
+            if (((options.what ?? Log.None) & Log.Text) === Log.Text || options.what === Log.None) {
                 if (options.timestamp)
                     writeText(moment(data.timestamp).format(options.timestampFormat));
                 writeText(data.line + '\n');
             }
-            if ((options.what & Log.Raw) === Log.Raw) {
+            if (((options.what ?? Log.None) & Log.Raw) === Log.Raw) {
                 if (options.timestamp)
                     writeText('\x1b[-7;-8m' + moment(data.timestamp).format(options.timestampFormat) + '\x1b[0m');
                 writeRaw(data.raw);
@@ -264,21 +267,21 @@ function fileChanged() {
     buildFilename();
     //same info so move on
     if (pFile === currentFile) return;
-    if ((options.what & Log.Html) === Log.Html) {
+    if (((options.what ?? Log.None) & Log.Html) === Log.Html) {
         const f = pFile + '.htm';
         if (isFileSync(f))
             fs.renameSync(f, currentFile + '.htm');
         if (options.debug)
             postMessage({ event: 'debug', args: 'File changed: "' + f + '" to "' + currentFile + '.htm"' });
     }
-    if ((options.what & Log.Raw) === Log.Raw) {
+    if (((options.what ?? Log.None) & Log.Raw) === Log.Raw) {
         const f = pFile + '.raw.txt';
         if (isFileSync(f))
             fs.renameSync(f, currentFile + '.raw.txt');
         if (options.debug)
             postMessage({ event: 'debug', args: 'File changed: "' + f + '" to "' + currentFile + '.raw.txt"' });
     }
-    if ((options.what & Log.Text) === Log.Text || options.what === Log.None) {
+    if (((options.what ?? Log.None) & Log.Text) === Log.Text || options.what === Log.None) {
         const f = pFile + '.txt';
         if (isFileSync(f))
             fs.renameSync(f, currentFile + '.txt');
@@ -349,7 +352,7 @@ function appendFileSync(file, data) {
 function writeHeader() {
     if (!currentFile || currentFile.length === 0)
         buildFilename();
-    if (!isFileSync(currentFile + '.htm') && (options.what & Log.Html) === Log.Html && !writingHeader) {
+    if (!isFileSync(currentFile + '.htm') && ((options.what ?? Log.None) & Log.Html) === Log.Html && !writingHeader) {
         colors = {};
         colorsCnt = 0;
         backgrounds = {};
@@ -429,15 +432,15 @@ function start(lines: any[], fragment: boolean) {
     }
     buildFilename();
     if (options.prepend && lines && lines.length > 0) {
-        if ((options.what & Log.Html) === Log.Html)
+        if (((options.what ?? Log.None) & Log.Html) === Log.Html)
             writeHtml(createLines(lines || []));
-        if ((options.what & Log.Text) === Log.Text || options.what === Log.None) {
+        if (((options.what ?? Log.None) & Log.Text) === Log.Text || options.what === Log.None) {
             if (options.timestamp)
                 writeText(lines.map(l => moment(l.timestamp).format(options.timestampFormat) + l.text).join('\n') + (fragment || lines.length === 0 ? '' : '\n'));
             else
                 writeText(lines.map(l => l.text).join('\n') + (fragment || lines.length === 0 ? '' : '\n'));
         }
-        if ((options.what & Log.Raw) === Log.Raw) {
+        if (((options.what ?? Log.None) & Log.Raw) === Log.Raw) {
             if (options.timestamp)
                 writeText(lines.map(l => '\x1b[-7;-8m' + moment(l.timestamp).format(options.timestampFormat) + '\x1b[0m' + l.raw).join(''));
             else
@@ -465,7 +468,7 @@ function toggle() {
 }
 
 function createLines(lines: any[]) {
-    const text = [];
+    const text: string[] = [];
     const ll = lines.length;
     for (let l = 0; l < ll; l++)
         text.push(createLine(lines[l]));
@@ -478,12 +481,12 @@ function getClassName(str) {
 }
 
 function createLine(line) {
-    const parts = [];
+    const parts: string[] = [];
     let offset = 0;
     let fCls;
     const formats = line.formats;
     const len = formats.length;
-    const styles = [];
+    const styles: string[] = [];
     const text = line.text;
     if (options.timestamp) {
         fCls = [];
@@ -577,7 +580,7 @@ function createLine(line) {
                 if ((format.style & FontStyle.DoubleUnderline) === FontStyle.DoubleUnderline)
                     fCls.push(' du');
                 if ((format.style & FontStyle.Rapid) === FontStyle.Rapid || (format.style & FontStyle.Slow) === FontStyle.Slow) {
-                    if (this.enableFlashing)
+                    if (options.enableFlashing)
                         fCls.push(' ansi-blink');
                     else if ((format.style & FontStyle.DoubleUnderline) !== FontStyle.DoubleUnderline && (format.style & FontStyle.Underline) !== FontStyle.Underline)
                         fCls.push(' u');
@@ -614,7 +617,7 @@ function createLine(line) {
             parts.push('<span class="ansi', ...fCls, '">', htmlEncode(text.substring(offset, end)), '</span>');
         }
         else if (format.formatType === FormatType.MXPSend) {
-            parts.push('<a draggable="false" class="MXPLink" href="javascript:void(0);" title="', format.hint.replace(/"/g, '&quot;'), '" onmouseover="doMXPTooltip(this);" onclick="doMXPSend(event||window.event, this, ', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ', ', format.prompt ? 1 : 0, ', ', format.tt.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ');return false;">');
+            parts.push('<a draggable="false" class="MXPLink" href="javascript:void(0);" title="', format.hint.replace(/"/g, '&quot;'), '" onmouseover="doMXPTooltip(this);" onclick="doMXPSend(event||window.event, this, ', format.href.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ', ', format.prompt ? '1' : '0', ', ', format.tt.replace(/\\/g, '\\\\').replace(/"/g, '&quot;'), ');return false;">');
             if (end - offset === 0) continue;
             parts.push('<span class="ansi', ...fCls, '">', htmlEncode(text.substring(offset, end)), '</span>');
         }
@@ -682,7 +685,7 @@ function htmlEncode(text) {
 function isFileSync(aPath) {
     try {
         return fs.statSync(aPath).isFile();
-    } catch (e) {
+    } catch (e: any) {
         if (e.code === 'ENOENT') {
             return false;
         } else {

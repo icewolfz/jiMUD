@@ -1,21 +1,24 @@
 {
     "compileOnSave": true,
     "compilerOptions": {
+        "strict": false,
         "incremental": true,
         "target": "es2022",
-        "module": "commonjs",
-        "moduleResolution": "node",
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
         "sourceMap": false,
         "noImplicitAny": false,
         "allowJs": true,
         "outDir": "./out",
+        "rootDir": "./src/common",
         "rootDirs": [
             "./src/common",
             "./src/workers"
         ],
         "newLine": "LF",
         "checkJs": true,
-        "useDefineForClassFields": false
+        "useDefineForClassFields": false,
+        "types": ["jquery"]
     },
     "exclude": [
         "./node_modules",
