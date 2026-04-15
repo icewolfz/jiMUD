@@ -18,7 +18,8 @@
         "newLine": "LF",
         "checkJs": true,
         "useDefineForClassFields": false,
-        "types": ["jquery"]
+        "types": ["jquery"],
+        "tsBuildInfoFile": "./out/common.tsbuildinfo"
     },
     "exclude": [
         "./node_modules",

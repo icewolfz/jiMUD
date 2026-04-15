@@ -23,7 +23,8 @@
         ],
         "types": [
             "node"
-        ]
+        ],
+        "tsBuildInfoFile": "../../out/worker.tsbuildinfo"
     },
     "exclude": [
         "../common/**/*.ts",
