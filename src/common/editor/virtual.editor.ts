@@ -6,7 +6,7 @@ import { PropertyGrid } from '../propertygrid';
 import { EditorType, ValueEditor } from '../value.editors';
 import { DataGrid } from '../datagrid';
 import { copy, formatString, isFileSync, capitalize, leadingZeros, Cardinal, resetCursor, enumToString, pinkfishToHTML, offset } from '../library';
-import * as RGBColor from 'rgbcolor';
+import RGBColor from 'rgbcolor';
 const { clipboard } = require('electron');
 const remote = require('@electron/remote');
 const { Menu, MenuItem } = remote;
