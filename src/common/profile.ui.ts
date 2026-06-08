@@ -774,6 +774,8 @@ export function UpdateButtonSample() {
         button.html('<i class="glyphicon ' + icon + '"></i>');
     else if (icon.startsWith('.'))
         button.html('<i class="fa button-icon ' + icon.substring(1) + '"></i>');
+    else if (icon.startsWith('ra-'))
+        button.html('<i class="ra ' + icon + '"></i>');
     else if (icon.length > 0)
         button.html('<img src="' + parseTemplate(icon) + '" />');
     else

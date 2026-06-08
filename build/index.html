@@ -10,6 +10,7 @@
     <link href="css/ansi.css" rel="stylesheet" type="text/css" />
     <link href="css/monsters.css" rel="stylesheet" type="text/css" />
     <link href="../lib/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <link href="../lib/rpg-awesome/css/rpg-awesome.min.css" rel="stylesheet" type="text/css" />
     <link href="css/theme.css" rel="stylesheet" type="text/css" />
     <link id="theme" rel="stylesheet" href="themes/default.css" type="text/css" />
     <script type="text/javascript">window.loadTheme();</script>
@@ -2889,6 +2890,8 @@
                         button.innerHTML = '<i class="glyphicon ' + item.icon + '"></i>';
                     else if (item.icon.startsWith('.'))
                         button.innerHTML = '<i class="fa button-icon ' + item.icon.substring(1) + '"></i>';
+                    else if (item.icon.startsWith('ra-'))
+                        button.innerHTML = '<i class="ra ' + item.icon + '"></i>';                        
                     else if (item.icon.length > 0)
                         button.innerHTML = '<img src="' + parseTemplate(item.icon) + '" /><div class="overlay"></div>';
                     else

@@ -172,7 +172,9 @@ Temporary states will be removed from the trigger after being executed and shift
 - `Preview` - a preview of how the button will look
 - `Enable` enable/disable button
 - `Caption` The button caption to display for tooltip
-- `Icon` A path to an icon to display, may pick from build in icons or from a file - [Predefined variables for paths](faq.md#what-predefined-variables-can-be-use-for-paths)
+- `Icon` A path to an icon to display, may pick from built in icons or from a file - [Predefined variables for paths](faq.md#what-predefined-variables-can-be-use-for-paths)
+  - `fontawesome` Buttons support any fontawesome 4.7 icon by using fa-NAME, see [Fontawesome 4.7 cheat sheet](https://fontawesome.com/v4/cheatsheet/) for list of icon names
+  - `rpgawesome` Buttons support any rpgawesome icon by using ra-NAME, see[rpgawsome](https://nagoshiashumari.github.io/Rpg-Awesome/) for list of icon names
 - `Style` how the value is processed
   - `Text` send value as is
   - `Parse` do standard parsing
@@ -189,7 +191,7 @@ Temporary states will be removed from the trigger after being executed and shift
 - `Preview` - a preview of how the icon will look
 - `Enable` enable/disable context item
 - `Caption` The context menu caption to display for tooltip
-- `Icon` A path to an icon to display, may pick from build in icons or from a file - [Predefined variables for paths](faq.md#what-predefined-variables-can-be-use-for-paths)
+- `Icon` A path to an icon to display, may pick from built in icons or from a file - [Predefined variables for paths](faq.md#what-predefined-variables-can-be-use-for-paths)
 - `Style` how the value is processed
   - `Text` send value as is
   - `Parse` do standard parsing
