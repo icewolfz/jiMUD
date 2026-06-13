@@ -70,13 +70,13 @@
     "@electron/rebuild": "^4.0.4",
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.5.34",
-    "@types/node": "^22.19.20",
-    "electron": "^41.7.1",
-    "electron-builder": "^26.15.2",
-    "esbuild": "^0.28.0",
-    "eslint": "^10.4.1",
+    "@types/node": "^22.19.21",
+    "electron": "^42.4.0",
+    "electron-builder": "^26.15.3",
+    "esbuild": "^0.28.1",
+    "eslint": "^10.5.0",
     "eslint-plugin-html": "^8.1.4",
-    "sass": "^1.100.0",
+    "sass": "^1.101.0",
     "terser": "^5.48.0"
   },
   "build": {
@@ -165,7 +165,7 @@
   },
   "dependencies": {
     "@electron/remote": "^2.1.3",
-    "better-sqlite3": "^12.10.0",
+    "better-sqlite3": "^12.10.1",
     "buzz": "^2.0.0",
     "chokidar": "^5.0.0",
     "electron-updater": "^6.8.9",
@@ -185,7 +185,7 @@
   },
   "allowScripts": {
     "better-sqlite3": true,
-    "esbuild@0.28.0": true,
+    "esbuild": true,
     "electron-winstaller@5.4.0": true,
     "electron": true
   }
