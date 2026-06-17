@@ -148,7 +148,8 @@
     "linux": {
       "maintainer": "icewolfz",
       "category": "Game;Network;",
-      "synopsis": "MUD client coded in javascript."
+      "synopsis": "MUD client coded in javascript.",
+      "icon": "./assets/icons/png/512x512.png"
     },
     "mac": {
       "category": "public.app-category.role-playing-games",
