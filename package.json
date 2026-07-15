@@ -67,17 +67,17 @@
     "rebuild": "electron-rebuild -p"
   },
   "devDependencies": {
-    "@electron/rebuild": "^4.0.4",
+    "@electron/rebuild": "^4.2.0",
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.5.34",
-    "@types/node": "^22.19.21",
-    "electron": "^42.4.1",
+    "@types/node": "^22.20.1",
+    "electron": "^43.1.1",
     "electron-builder": "^26.15.3",
     "esbuild": "^0.28.1",
-    "eslint": "^10.5.0",
+    "eslint": "^10.7.0",
     "eslint-plugin-html": "^8.1.4",
     "sass": "^1.101.0",
-    "terser": "^5.48.0"
+    "terser": "^5.49.0"
   },
   "build": {
     "appId": "jiMUD",
@@ -170,10 +170,10 @@
     "buzz": "^2.0.0",
     "chokidar": "^5.0.0",
     "electron-updater": "^6.8.9",
-    "fs-extra": "^11.3.5",
+    "fs-extra": "^11.3.6",
     "fswin": "^3.25.1108",
     "lz-string": "^1.5.0",
-    "markdown-it": "^14.2.0",
+    "markdown-it": "^14.3.0",
     "mathjs": "^15.2.0",
     "moment": "^2.30.1",
     "monaco-editor": "^0.55.1",
