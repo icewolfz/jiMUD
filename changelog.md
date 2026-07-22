@@ -18,7 +18,7 @@
   - Update better-sqlite3 12.2.0 to 13.0.1
   - Update fswin 3.24.829 to 3.25.1108
   - Update chokidar 4.0.3 to 5.0.0
-  - Update monaco-editor 0.50.0 to 0.55.1
+  - Update monaco-editor 0.50.0 to 0.56.0
   - Update electron-updater 6.6.2 to 6.8.9
   - Update markdown-it 14.1.0 to 14.3.0
   - Update buzz 1.2.0 to 2.0.0
