@@ -31,6 +31,7 @@ Install or download Node: https://nodejs.org/en/download/
   - Npm comes with most node installs, if not see: https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
 Install or download Typescript: https://www.typescriptlang.org/download/
   - easiest to just use npm globally
+  - see known issues below if troubles installing or updating
 
 ### Electron builder:
 
@@ -39,7 +40,7 @@ Required modules or packages to build different installer types: https://www.ele
 #### Flatpak Prerequisites
 
 1. Ensure flatpak and flatpak-builder are installed on build system
-1. Ensure the platform and sdk runtimes are installed: flatpak install flathub org.freedesktop.Platform//23.08 org.freedesktop.Sdk//23.08 org.electronjs.Electron2.BaseApp//23.08
+1. Ensure the platform and sdk runtimes are installed: flatpak install flathub org.freedesktop.Platform//25.08 org.freedesktop.Sdk//25.08 org.electronjs.Electron2.BaseApp//25.08
 
 ### Clone repository or use archive zip
 
@@ -53,7 +54,7 @@ Required modules or packages to build different installer types: https://www.ele
 ### Linux
 
 1. npm install - install all the node modules, **Note** you will need to rerun this only if modules have been updated in the package.json
-1. npm run release:linux - build tar, deb, appImage, and rpm packages
+1. npm run release:linux - build tar, deb, appImage, rpm, and flatpak packages
 
 #### Linux Slim - Build without flatpak
 
@@ -144,6 +145,8 @@ Usage: `jiMUD [arguments...]`
 
 ## Known Issues
 
+- NPM:
+  - When updating or install and you get `npm error code EALLOWGIT` you need to append -allow-git=all to the install/update command, `npm config set allow-git all --global` to set globaly for all, effects npm 12+
 - Linux:
   - Child windows on wayland are not correctly set to always on top of parent due to how wayland handles them, you can try setting to always on top for windows that support it, temp fix is to force x11 mode using `--ozone-platform=x11` command line argument
   - Tray icon: When app indicator is used on Linux, the click event is ignored, see [Electron docs for more limits](https://www.electronjs.org/docs/api/tray)
