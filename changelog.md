@@ -20,7 +20,7 @@
   - Update chokidar 4.0.3 to 5.0.0
   - Update monaco-editor 0.50.0 to 0.56.0
   - Update electron-updater 6.6.2 to 6.8.9
-  - Update markdown-it 14.1.0 to 14.3.0
+  - Update markdown-it 14.1.0 to 15.0.0
   - Update buzz 1.2.0 to 2.0.0
   - Update yauzl 3.2.0 to 3.4.0
 

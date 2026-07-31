@@ -173,7 +173,7 @@
     "fs-extra": "^11.4.0",
     "fswin": "^3.25.1108",
     "lz-string": "^1.5.0",
-    "markdown-it": "^14.3.0",
+    "markdown-it": "^15.0.0",
     "mathjs": "^15.2.0",
     "moment": "^2.30.1",
     "monaco-editor": "^0.56.0",
