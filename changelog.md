@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.7.1
+## 1.8.0 2026-07-31
 
 - **New:**
   - Code editor: Area designer: Allow pasting of items to selected room with out needing to open item dialog
