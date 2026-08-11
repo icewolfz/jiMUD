@@ -73,8 +73,8 @@
     "@types/node": "^22.20.1",
     "electron": "^43.3.0",
     "electron-builder": "^26.15.7",
-    "esbuild": "^0.28.1",
-    "eslint": "^10.8.0",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.8.1",
     "eslint-plugin-html": "^8.1.4",
     "sass": "^1.102.0",
     "terser": "^5.49.2"
