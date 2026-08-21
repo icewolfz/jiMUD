@@ -3,7 +3,7 @@
 ## 1.8.1
 
 - **Changed:**
-  - Update electron 43.2.0 to 43.4.0
+  - Update electron 43.2.0 to 43.4.1
   - Update better-sqlite3 13.0.2 to 13.0.3
 
 ## 1.8.0 2026-07-31

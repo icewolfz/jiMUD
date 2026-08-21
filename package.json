@@ -71,12 +71,12 @@
     "@types/bootstrap": "^3.4.0",
     "@types/jquery": "^3.5.34",
     "@types/node": "^22.20.1",
-    "electron": "^43.4.0",
+    "electron": "^43.4.1",
     "electron-builder": "^26.15.7",
     "esbuild": "^0.28.2",
-    "eslint": "^10.8.1",
+    "eslint": "^10.9.0",
     "eslint-plugin-html": "^8.1.4",
-    "sass": "^1.102.0",
+    "sass": "^1.103.1",
     "terser": "^5.50.0"
   },
   "build": {
