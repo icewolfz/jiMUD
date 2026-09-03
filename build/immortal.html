@@ -24,7 +24,7 @@
         //spell-checker:ignore keypress, haspopup, labelledby, tabindex, tablist, tabpanel
         const { IED, ItemState } = require('./js/ied');
         const { TempType, IEDCmdStatus, IEDError } = require('./js/types');
-        const { ipcRenderer, shell, clipboard, webUtils } = require('electron');
+        const { ipcRenderer, shell, webUtils } = require('electron');
         const remote = require('@electron/remote');
         const { Menu, MenuItem } = remote;
         const { parseTemplate, existsSync, formatSize, walk } = require('./js/library');
@@ -145,8 +145,7 @@
                                 label: '&Copy full path',
                                 click: () => {
                                     var selected = localTable.rows({ selected: true }).data().pluck('path');
-                                    clipboard.writeText(selected.join('\n'), 'selection');
-                                    clipboard.writeText(selected.join('\n'));
+                                    eClipboard.writeTextBoth(selected.join('\n'));
                                 }
                             },
                             { type: 'separator' },
@@ -301,8 +300,7 @@
                                 enabled: false,
                                 click: () => {
                                     var selected = remoteTable.rows({ selected: true }).data().pluck('path');
-                                    clipboard.writeText(selected.join('\n'), 'selection');
-                                    clipboard.writeText(selected.join('\n'));
+                                    eClipboard.writeTextBoth(selected.join('\n'));
                                 }
                             },
                             { type: 'separator' },
@@ -2694,8 +2692,7 @@
                     label: 'Copy full path',
                     click: () => {
                         var selected = localTable.rows({ selected: true }).data().pluck('path');
-                        clipboard.writeText(selected.join('\n'), 'selection');
-                        clipboard.writeText(selected.join('\n'));
+                        eClipboard.writeTextBoth(selected.join('\n'));
                     }
                 }));
                 c.append(new MenuItem({ type: 'separator' }));
@@ -2815,8 +2812,7 @@
                     label: 'Copy full path',
                     click: () => {
                         var selected = remoteTable.rows({ selected: true }).data().pluck('path');
-                        clipboard.writeText(selected.join('\n'), 'selection');
-                        clipboard.writeText(selected.join('\n'));
+                        eClipboard.writeTextBoth(selected.join('\n'));
                     }
                 }));
                 c.append(new MenuItem({ type: 'separator' }));

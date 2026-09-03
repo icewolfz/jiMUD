@@ -25,7 +25,7 @@
         //spell-checker:ignore smtextcolor, rgbcolor, noflash, dblunderline, shadowfore, shadowback, textcolor, cmdfont, editorcontent
         //spell-checker:ignore BOLDOFF ITALICOFF UNDERLINEOFF FLASHOFF INVERSEOFF STRIKEOUTOFF OVERLINEOFF hellip, selectall, strikethrough, nocolor, forecolor, hilitecolor, backcolor, splitbutton, nonbreaking, sendraw, onpostrender, insertdatetime
         /* global tinymce */
-        const { ipcRenderer, webFrame, nativeImage, clipboard } = require('electron');
+        const { ipcRenderer, webFrame, nativeImage } = require('electron');
         const remote = require('@electron/remote');
         const { Menu, MenuItem } = remote;
         const { stripHTML, htmlEncode, invert, parseTemplate, getColors, createColorDialog, pinkfishToHTML } = require('./js/library');
@@ -217,8 +217,7 @@
 
         function copyFormatted() {
             var text = getFormattedSelection().replace(/(?:\r)/g, '');
-            clipboard.writeText(text || '');
-            clipboard.writeText(text || '', 'selection');
+            eClipboard.writeTextBoth(text || '');
         }
 
         function insertFormatted(text) {
@@ -630,14 +629,14 @@
                             label: 'Paste formatted',
                             icon: path.join(__dirname, '../assets/icons/png/pasteformatted.png'),
                             click: () => {
-                                insertFormatted(clipboard.readText('selection') || '');
+                                insertFormatted(eClipboard.readTextSelection() || '');
                             }
                         }));
                         cMenu.append(new MenuItem({
                             label: 'Paste as text',
                             icon: path.join(__dirname, '../assets/icons/png/pastetext.png'),
                             click: () => {
-                                tinymce.activeEditor.execCommand('mceInsertContent', false, (clipboard.readText('selection') || '').replace(/(\r\n|\r|\n)/g, '<br/>').replaceAll('  ', '&nbsp;&nbsp;'));
+                                tinymce.activeEditor.execCommand('mceInsertContent', false, (eClipboard.readTextSelection() || '').replace(/(\r\n|\r|\n)/g, '<br/>').replaceAll('  ', '&nbsp;&nbsp;'));
                             }
                         }));
                     }
@@ -857,12 +856,12 @@
                 editor.ui.registry.addButton('pasteformatted', {
                     icon: 'pasteformatted',
                     tooltip: 'Paste formatted',
-                    onAction: buttonApi => insertFormatted(clipboard.readText('selection') || '')
+                    onAction: buttonApi => insertFormatted(eClipboard.readTextSelection() || '')
                 });
                 editor.ui.registry.addButton('pasteastext', {
                     icon: 'paste-text',
                     tooltip: 'Paste as text',
-                    onAction: buttonApi => tinymce.activeEditor.execCommand('mceInsertContent', false, (clipboard.readText('selection') || '').replace(/(\r\n|\r|\n)/g, '<br/>').replaceAll('  ', '&nbsp;&nbsp;'))
+                    onAction: buttonApi => tinymce.activeEditor.execCommand('mceInsertContent', false, (eClipboard.readTextSelection() || '').replace(/(\r\n|\r|\n)/g, '<br/>').replaceAll('  ', '&nbsp;&nbsp;'))
                 });
                 editor.ui.registry.addToggleButton('overline', {
                     icon: 'overline',
@@ -1217,10 +1216,10 @@
                 init_instance_callback: function (editor) {
                     editor.shortcuts.add('ctrl+shift+c', 'Copy formatted', copyFormatted);
                     editor.shortcuts.add('ctrl+shift+p', 'Paste formatted', () => {
-                        insertFormatted(clipboard.readText('selection') || '');
+                        insertFormatted(eClipboard.readTextSelection() || '');
                     });
                     editor.shortcuts.add('ctrl+alt+p', 'Paste as text', () => {
-                        tinymce.activeEditor.execCommand('mceInsertContent', false, (clipboard.readText('selection') || '').replace(/(\r\n|\r|\n)/g, '<br/>').replaceAll('  ', '&nbsp;&nbsp;'));
+                        tinymce.activeEditor.execCommand('mceInsertContent', false, (eClipboard.readTextSelection() || '').replace(/(\r\n|\r|\n)/g, '<br/>').replaceAll('  ', '&nbsp;&nbsp;'));
                     });
                     editor.on('PastePreProcess', function (e) {
                         if (getOption('enableDebug'))

@@ -16,7 +16,6 @@ declare global {
     }
     let isWordMisspelled;
     let webFrame;
-    let clipboard;
     let remote;
 }
 
@@ -1138,7 +1137,7 @@ export class MonacoCodeEditor extends EditorBase {
         if(remote && remote.getCurrentWebContents())
             remote.getCurrentWebContents().paste();
         else
-            this.insert(clipboard.readText('selection') || clipboard.readText() || '');
+            this.insert(eClipboard.readText('selection') || eClipboard.readText() || '');
         //this.$editor.getAction('editor.action.clipboardPasteAction').run();
     }
     public delete() { /**/ }

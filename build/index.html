@@ -354,7 +354,7 @@
 
         Object.defineProperty(window, '$copied', {
             get: function () {
-                return clipboard.readText('selection') || '';
+                return eClipboard.readText('selection') || '';
             },
             configurable: true
         });
@@ -457,7 +457,7 @@
         //const Client = require('./js/client.js').Client;
         //const Status = require('./js/status.js').Status;
         //const Backup = require('./js/backup.js').Backup;
-        const { shell, clipboard, ipcRenderer, webFrame, nativeImage } = require('electron');
+        const { shell, ipcRenderer, webFrame, nativeImage } = require('electron');
         const remote = require('@electron/remote');
         const { Menu, MenuItem } = remote;
         const { parseTemplate, templatePath, setSelectionRange, decrypt, offset, insertValue } = require('./js/library.js');
@@ -1258,7 +1258,7 @@
                                     context.globalCompositeOperation = "screen";
                                     context.clearRect(0, 0, canvas.width, canvas.height);
                                     context.drawImage(base_image, 0, 0);
-                                    clipboard.writeImage(nativeImage.createFromDataURL(canvas.toDataURL()));
+                                    eClipboard.writeImage(canvas.toDataURL());
                                     setTimeout(() => {
                                         if (client.getOption('CommandonClick'))
                                             client.commandInput.focus();
@@ -2571,22 +2571,15 @@
             client.display.enableBell = false;
             window.client = client;
             window.OoMUD = client;
-            window.readClipboard = () => { return clipboard.readText('selection') || clipboard.readText() || ''; };
+            window.readClipboard = () => { return eClipboard.readTextSelection() || eClipboard.readText() || ''; };
             window.writeClipboard = (txt, html) => {
-                if (html) {
-                    clipboard.write({
+                if (html)
+                    eClipboard.writeBoth({
                         text: txt || '',
                         html: html || ''
                     });
-                    clipboard.write({
-                        text: txt || '',
-                        html: html || ''
-                    }, 'selection');
-                }
-                else {
-                    clipboard.writeText(txt || '');
-                    clipboard.writeText(txt || '', 'selection');
-                }
+                else
+                    eClipboard.writeTextBoth(txt || '');
             };
             client.readClipboard = window.readClipboard;
             client.writeClipboard = window.writeClipboard;
@@ -2661,7 +2654,7 @@
                 }
             };
 
-            window.readClipboardHTML = () => { return clipboard.readHTML('selection') || clipboard.readHTML() || ''; };
+            window.readClipboardHTML = () => { return eClipboard.readHTMLSelection() || eClipboard.readHTML() || ''; };
             client.readClipboardHTML = window.readClipboardHTML;
 
             client.host = ('host' in _windowState.data) ? (_windowState.data.host || 'www.shadowmud.com') : 'www.shadowmud.com';
@@ -3877,7 +3870,7 @@
         }
 
         function pasteSpecial(noDialog) {
-            if (clipboard.readText().length === 0)
+            if (eClipboard.readText().length === 0)
                 return;
             if (!noDialog) {
                 document.getElementById('pasteSpecial-prefix').disabled = !client.getOption('pasteSpecialPrefixEnabled');
@@ -3921,9 +3914,9 @@
             var replace = client.getOption('pasteSpecialReplaceEnabled') ? client.getOption('pasteSpecialReplace') : 0;
 
             //changed while in dialog so bail
-            if (clipboard.readText().length === 0)
+            if (eClipboard.readText().length === 0)
                 return;
-            var txt = clipboard.readText().replace(/\r/, '');
+            var txt = eClipboard.readText().replace(/\r/, '');
 
             if (replace && replace.length)
                 txt = txt.replace(/\n/g, replace);
@@ -3944,11 +3937,11 @@
         }
 
         function paste() {
-            if (clipboard.readText().length === 0)
+            if (eClipboard.readText().length === 0)
                 return;
             client.commandInput.selectionStart = parseInt(client.commandInput.dataset.selStart, 10);
             client.commandInput.selectionEnd = parseInt(client.commandInput.dataset.selEnd, 10);
-            insertValue(client.commandInput, clipboard.readText());
+            insertValue(client.commandInput, eClipboard.readText());
             setTimeout(() => {
                 if (client.getOption('CommandonClick'))
                     client.commandInput.focus();

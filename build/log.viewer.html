@@ -74,7 +74,7 @@
     if (window.module) module = window.module;
     //spellchecker:ignore dockmanager prefs ismap yazl
     const { DockManager } = require('./js/dockmanager');
-    const { ipcRenderer, clipboard } = require('electron');
+    const { ipcRenderer } = require('electron');
     const remote = require('@electron/remote');
     const { Menu } = remote;
     const { Menubar } = require('./js/menubar');
@@ -357,8 +357,7 @@
         temp.push({
             label: '&Copy path',
             click: () => {
-                clipboard.writeText(e.panel.file || '');
-                clipboard.writeText(e.panel.file || '', 'selection');
+                eClipboard.writeTextBoth(e.panel.file || '');
             }
         });
         temp.push({ type: 'separator' });
@@ -942,8 +941,7 @@
         if (manager.active && manager.active.viewer) {
             var ow = manager.active.viewer.ownerDocument.defaultView;
             var text = ow.getSelection().toString() || '';
-            clipboard.writeText(text);
-            clipboard.writeText(text);
+            eClipboard.writeTextBoth(text);
         }
         if (manager.active && manager.active.viewer) manager.active.viewer.focus();
     }

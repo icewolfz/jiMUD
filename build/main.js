@@ -1,7 +1,7 @@
 //spell-checker:words submenu, pasteandmatchstyle, statusvisible, taskbar, colorpicker, mailto, forecolor, tinymce, unmaximize
 //spell-checker:ignore prefs, partyhealth, combathealth, commandinput, limbsmenu, limbhealth, selectall, editoronly, limbarmor, maximizable, minimizable
 //spell-checker:ignore limbsarmor, lagmeter, buttonsvisible, connectbutton, charactersbutton, Editorbutton, zoomin, zoomout, unmaximize, resizable
-const { app, BrowserWindow, WebContentsView, shell, screen, Tray, dialog, Menu, MenuItem, ipcMain, systemPreferences, nativeImage } = require('electron');
+const { app, BrowserWindow, WebContentsView, shell, screen, Tray, dialog, Menu, MenuItem, ipcMain, systemPreferences, nativeImage, clipboard, ClipboardItem } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const URL = require('url');
@@ -6236,6 +6236,78 @@ function onContentsLoaded(contents) {
     })
 }
 
+ipcMain.on('clipboard', (event, action, ...args) => {
+    switch (action) {
+        case 'read':
+            clipboard.read().then(items => {
+                event.returnValue = items;
+            });
+            break;
+        case 'readText':
+            clipboard.readText().then(text => {
+                event.returnValue = text;
+            });
+            break;
+        case 'readTextSelection':
+            clipboard.selection.readText().then(text => {
+                event.returnValue = text;
+            });
+            break;
+        case 'readSelection':
+            clipboard.selection.read().then(items => {
+                event.returnValue = items;
+            });
+            break;
+        case 'readBuffer':
+            readBuffer(...args).then(ret => event.returnValue = ret);
+            break;
+        case 'readHTML':
+            readHTML().then(ret => event.returnValue = ret);
+            break;
+        case 'readHTMLSelection':
+            readHTML('selection').then(ret => event.returnValue = ret);
+            break;
+        case 'write':
+            clipboard.write(...args);
+            break;
+        case 'writeText':
+            clipboard.writeText(...args);
+            break;
+        case 'writeHTML':
+            writeHTML(...args);
+            break;
+        case 'writeHtmlSelection':
+            writeHTML(...args, 'selection');
+            break;
+        case 'writeBuffer':
+            if (args && args.length === 2)
+                clipboard.write([new ClipboardItem({
+                    [`electron application/osclipboard;format="${args[0]}"`]: new Blob([args[1]])
+                })]).then(() => event.returnValue = true);
+            break;
+        case 'writeSelection':
+            clipboard.selection.write(...args);
+            break;
+        case 'writeTextSelection':
+            clipboard.selection.writeText(...args);
+            break;
+        case 'clear':
+            clipboard.clear();
+            break;
+        case 'clearSelection':
+            clipboard.selection.clear();
+        case 'has':
+            clipboard.has(...args).then(ret => event.returnValue = ret);
+            break;
+        case 'hasSelection':
+            clipboard.selection.has(...args).then(ret => event.returnValue = ret);
+            break;
+        case 'writeImage':
+            writeImage(nativeImage.createFromDataURL(...args));
+            break;
+    }
+});
+
 /**
  * Prompt dialog
  * 
@@ -6313,4 +6385,131 @@ function readyToShow(window, event) {
         if (shown) return;
         window.emit('ready-to-show');
     });
+}
+
+function getClipboardToUse(clipboardType) {
+    if (clipboardType === 'selection') {
+        return clipboard.selection
+    } else {
+        return clipboard
+    }
+}
+
+async function readClipboard(format, clipboardType) {
+    const clipboardToUse = getClipboardToUse(clipboardType)
+    const clipboardItems = await clipboardToUse.read()
+    const foundItem = clipboardItems.find(clipboardItem => {
+        return clipboardItem.types.includes(format)
+    })
+    if (foundItem) {
+        // getType() resolves to a Blob; read it back as text.
+        const blob = await foundItem.getType(format)
+        return blob.text()
+    }
+}
+
+async function writeClipboard(format, text, clipboardType) {
+    const clipboardToUse = getClipboardToUse(clipboardType)
+    return clipboardToUse.write([
+        new ClipboardItem({
+            [format]: text
+        })
+    ])
+}
+
+async function readBuffer(format, clipboardType) {
+    const clipboardToUse = getClipboardToUse(clipboardType)
+    const clipboardItems = await clipboardToUse.read()
+    let foundItem = clipboardItems.find(clipboardItem => {
+        return clipboardItem.types.includes(format)
+    });
+    if (foundItem) {
+        // getType() resolves to a Blob; convert it to a Buffer.
+        const blob = await foundItem.getType(format)
+        return Buffer.from(await blob.arrayBuffer())
+    }
+    foundItem = clipboardItems.find(clipboardItem => {
+        return clipboardItem.types.includes(`electron application/osclipboard;format="${format}"`)
+    });
+    if (foundItem) {
+        // getType() resolves to a Blob; convert it to a Buffer.
+        const blob = await foundItem.getType(`electron application/osclipboard;format="${format}"`)
+        return Buffer.from(await blob.arrayBuffer())
+    }
+}
+
+async function writeBuffer(format, buffer, clipboardType) {
+    const clipboardToUse = getClipboardToUse(clipboardType)
+    return clipboardToUse.write([
+        new ClipboardItem({
+            [format]: new Blob([buffer])
+        })
+    ])
+}
+
+async function availableFormats(clipboardType) {
+    const clipboardToUse = getClipboardToUse(clipboardType)
+    const clipboardItems = await clipboardToUse.read()
+    const clipboardFormats = []
+    for (const clipboardItem of clipboardItems) {
+        for (const type of clipboardItem.types) {
+            if (!clipboardFormats.includes(type)) {
+                clipboardFormats.push(type)
+            }
+        }
+    }
+    return clipboardFormats
+}
+
+/*
+async function has(format, clipboardType, isRawFormat) {
+    const clipboardToUse = getClipboardToUse(clipboardType)
+    let mimeType = format
+    if (isRawFormat) {
+        mimeType = `electron application/osclipboard;format="${format}"`
+    }
+    return clipboardToUse.has(mimeType)
+}
+*/
+const HTML_MIME_TYPE = 'text/html'
+async function readHTML(clipboardType) {
+    return readClipboard(HTML_MIME_TYPE, clipboardType)
+}
+
+async function writeHTML(markup, clipboardType) {
+    return writeClipboard(HTML_MIME_TYPE, markup, clipboardType)
+}
+
+const PNG_MIME_TYPE = 'image/png'
+const JPEG_MIME_TYPE = 'image/jpeg'
+async function readImage(clipboardType) {
+    const clipboardToUse = getClipboardToUse(clipboardType)
+    const clipboardItems = await clipboardToUse.read()
+    // Look for PNG first
+    let foundItem = clipboardItems.find(clipboardItem => {
+        return clipboardItem.types.includes(PNG_MIME_TYPE)
+    })
+    if (!foundItem) {
+        foundItem = clipboardItems.find(clipboardItem => {
+            return clipboardItem.types.includes(JPEG_MIME_TYPE)
+        })
+    }
+    if (foundItem) {
+        const mimeType = foundItem.types.includes(PNG_MIME_TYPE)
+            ? PNG_MIME_TYPE
+            : JPEG_MIME_TYPE
+        // getType() resolves to a Blob; convert it to a Buffer for nativeImage.
+        const blob = await foundItem.getType(mimeType)
+        const buffer = Buffer.from(await blob.arrayBuffer())
+        return nativeImage.createFromBuffer(buffer)
+    }
+}
+
+async function writeImage(image, clipboardType) {
+    const clipboardToUse = getClipboardToUse(clipboardType)
+    return clipboardToUse.write([
+        new ClipboardItem({
+            'image/png': new Blob([image.toPNG()], { type: 'image/png' })
+        })
+    ])
 }

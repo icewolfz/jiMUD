@@ -9,7 +9,6 @@ import { PropertyGrid } from '../propertygrid';
 import { EditorType } from '../value.editors';
 import { DataGrid } from '../datagrid';
 import { copy, formatString, isFileSync, capitalize, Cardinal, pinkfishToHTML, stripPinkfish, consolidate, parseTemplate, initEditDropdown, capitalizePinkfish, addSlashes, isDirSync, isArrayEqual } from '../library';
-const { clipboard } = require('electron');
 const path = require('path');
 const fs = require('fs-extra');
 const util = require('util');
@@ -10653,7 +10652,7 @@ export class AreaDesigner extends EditorBase {
             case View.map:
                 if (this.$selectedRooms.length === 0) return;
                 const rooms = this.$selectedRooms.map(r => r.clone());
-                clipboard.writeBuffer('jiMUD/Area', Buffer.from(JSON.stringify({
+                eClipboard.writeBuffer('jiMUD/Area', Buffer.from(JSON.stringify({
                     rooms: rooms
                 })));
                 this.startUndoGroup();
@@ -10700,7 +10699,7 @@ export class AreaDesigner extends EditorBase {
                     const n = r.clone();
                     return n;
                 });
-                clipboard.writeBuffer('jiMUD/Area', Buffer.from(JSON.stringify({
+                eClipboard.writeBuffer('jiMUD/Area', Buffer.from(JSON.stringify({
                     rooms: rooms
                 })));
                 this.emit('supports-changed');
@@ -10727,8 +10726,8 @@ export class AreaDesigner extends EditorBase {
     public paste() {
         switch (this.$view) {
             case View.map:
-                if (clipboard.has('jiMUD/DataGrid')) {
-                    const grid = JSON.parse(Buffer.from(clipboard.readBuffer('jiMUD/DataGrid')).toString());
+                if (eClipboard.has('jiMUD/DataGrid')) {
+                    const grid = JSON.parse(Buffer.from(eClipboard.readBuffer('jiMUD/DataGrid')).toString());
                     switch (grid.format) {
                         case 'Item:Description':
                             if (grid.data.length && grid.meta === 'items') {
@@ -10758,13 +10757,13 @@ export class AreaDesigner extends EditorBase {
                             return;
                     }
                 }
-                else if (!clipboard.has('jiMUD/Area')) return;
+                else if (!eClipboard.has('jiMUD/Area')) return;
                 let or;
                 if (this.$focusedRoom && this.$selectedRooms.indexOf(this.$focusedRoom) === -1)
                     or = this.$focusedRoom.clone();
                 else
                     or = this.selectedFocusedRoom.clone();
-                const data = JSON.parse(Buffer.from(clipboard.readBuffer('jiMUD/Area')).toString());
+                const data = JSON.parse(Buffer.from(eClipboard.readBuffer('jiMUD/Area')).toString());
                 const osX = data.rooms[0].x - or.x;
                 const osY = data.rooms[0].y - or.y;
                 const osZ = data.rooms[0].z - or.z;
@@ -11454,7 +11453,7 @@ export class AreaDesigner extends EditorBase {
             case 'paste':
                 switch (this.$view) {
                     case View.map:
-                        return clipboard.has('jiMUD/Area') || clipboard.has('jiMUD/DataGrid');
+                        return eClipboard.has('jiMUD/Area') || eClipboard.has('jiMUD/DataGrid');
                     case View.monsters:
                         return false;
                     case View.objects:

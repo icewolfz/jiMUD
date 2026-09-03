@@ -34,6 +34,7 @@ declare let $action: string;
 declare let $trigger: string;
 declare let $caption: string;
 declare let $characterid: number;
+declare let eClipboard:any;
 
 interface JQuery {
 	treeview: any;
@@ -49,6 +50,7 @@ interface Window {
 	$copied: string;
 	$character: string;
 	ResizeObserver: ResizeObserver;
+	eClipboard: any;
 }
 
 interface CanvasRenderingContext2D {

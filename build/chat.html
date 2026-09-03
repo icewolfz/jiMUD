@@ -23,7 +23,7 @@
     <script src="../lib/bootstrap-select.min.js"></script>
     <script type="text/javascript">
         if (window.module) module = window.module;
-        const { clipboard, webFrame } = require('electron');
+        const { webFrame } = require('electron');
         const { parseTemplate } = require('./js/library.js');
         const { Settings } = require('./js/settings');
         const { Display } = require('./js/display');
@@ -258,14 +258,14 @@
         // eslint-disable-next-line no-unused-vars
         function doCopy() {
             if (display.hasSelection) {
-                clipboard.write({
+                eClipboard.write({
                     text: display.selection,
                     html: display.selectionAsHTML
                 });
-                clipboard.write({
+                eClipboard.writeSelection({
                     text: display.selection,
                     html: display.selectionAsHTML
-                }, 'selection');
+                });
             }
         }
 

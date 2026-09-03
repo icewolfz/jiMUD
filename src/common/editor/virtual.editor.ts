@@ -7,7 +7,6 @@ import { EditorType, ValueEditor } from '../value.editors';
 import { DataGrid } from '../datagrid';
 import { copy, formatString, isFileSync, capitalize, leadingZeros, Cardinal, resetCursor, enumToString, pinkfishToHTML, offset } from '../library';
 import RGBColor from 'rgbcolor';
-const { clipboard } = require('electron');
 const remote = require('@electron/remote');
 const { Menu, MenuItem } = remote;
 const path = require('path');
@@ -5069,7 +5068,7 @@ export class VirtualEditor extends EditorBase {
                         description: r.terrain >= 0 && r.terrain < this.$descriptions.length ? this.$descriptions[r.terrain] : null
                     }
                 );
-                clipboard.writeBuffer('jiMUD/VirtualArea', Buffer.from(JSON.stringify({
+                eClipboard.writeBuffer('jiMUD/VirtualArea', Buffer.from(JSON.stringify({
                     rooms: rooms,
                     details: details,
                     file: this.file
@@ -5137,7 +5136,7 @@ export class VirtualEditor extends EditorBase {
                         description: r.terrain >= 0 && r.terrain < this.$descriptions.length ? this.$descriptions[r.terrain] : null
                     }
                 );
-                clipboard.writeBuffer('jiMUD/VirtualArea', Buffer.from(JSON.stringify({
+                eClipboard.writeBuffer('jiMUD/VirtualArea', Buffer.from(JSON.stringify({
                     rooms: rooms,
                     details: details,
                     file: this.file
@@ -5166,13 +5165,13 @@ export class VirtualEditor extends EditorBase {
     public paste() {
         switch (this.$view) {
             case View.map:
-                if (!clipboard.has('jiMUD/VirtualArea')) return;
+                if (!eClipboard.has('jiMUD/VirtualArea')) return;
                 let or;
                 if (this.$focusedRoom && this.$selectedRooms.indexOf(this.$focusedRoom) === -1)
                     or = this.$focusedRoom.clone();
                 else
                     or = this.selectedFocusedRoom.clone();
-                const data = JSON.parse(Buffer.from(clipboard.readBuffer('jiMUD/VirtualArea')).toString());
+                const data = JSON.parse(Buffer.from(eClipboard.readBuffer('jiMUD/VirtualArea')).toString());
                 const osX = data.rooms[0].x - or.x;
                 const osY = data.rooms[0].y - or.y;
                 const osZ = data.rooms[0].z - or.z;
@@ -6006,7 +6005,7 @@ export class VirtualEditor extends EditorBase {
             case 'paste':
                 switch (this.$view) {
                     case View.map:
-                        return clipboard.has('jiMUD/VirtualArea');
+                        return eClipboard.has('jiMUD/VirtualArea');
                     case View.terrains:
                         return this.$descriptionGrid.canPaste;
                     case View.items:
@@ -10180,8 +10179,8 @@ export class FileOpenValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
-            if(document.activeElement && document.activeElement.tagName === 'BODY')
-                this.control.clearEditor(e);            
+            if (document.activeElement && document.activeElement.tagName === 'BODY')
+                this.control.clearEditor(e);
             setTimeout(() => this.control.clearEditor(e));
         });
         this.$editor.addEventListener('keyup', (e) => {
@@ -10287,7 +10286,7 @@ export class FileBrowseValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
-            if(document.activeElement && document.activeElement.tagName === 'BODY')
+            if (document.activeElement && document.activeElement.tagName === 'BODY')
                 this.control.clearEditor(e);
             setTimeout(() => this.control.clearEditor(e));
         });
@@ -10390,7 +10389,7 @@ export class ExternalExitValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
-            if(document.activeElement && document.activeElement.tagName === 'BODY')
+            if (document.activeElement && document.activeElement.tagName === 'BODY')
                 this.control.clearEditor(e);
             setTimeout(() => this.control.clearEditor(e));
         });
@@ -10765,8 +10764,8 @@ export class ItemsValueEditor extends ValueEditor {
             }
             if (this.control.parent === e.relatedTarget)
                 return;
-            if(document.activeElement && document.activeElement.tagName === 'BODY')
-                this.control.clearEditor(e);            
+            if (document.activeElement && document.activeElement.tagName === 'BODY')
+                this.control.clearEditor(e);
             setTimeout(() => this.control.clearEditor(e));
         });
         this.$editor.addEventListener('keyup', (e) => {
