@@ -2,6 +2,8 @@
 
 ## 1.8.1
 
+- **New:**
+  - Command input now hides text when echo off is enabled making it more secure to enter passwords or hidden text
 - **Fixed:**
   - Recoded clipboard api to work with electron 44+
 - **Changed:**

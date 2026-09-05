@@ -583,8 +583,8 @@ export class Telnet extends EventEmitter {
                             if (verb === 253) {
                                 if (this.options.ECHO) {
                                     if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WILL><ECHO>');
-                                    this.replyToOption(i, 251, verb);
                                     this.echo = false;
+                                    this.replyToOption(i, 251, verb);
                                 }
                                 else {
                                     if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><ECHO>');
@@ -594,14 +594,14 @@ export class Telnet extends EventEmitter {
                             }
                             else if (verb === 254) {
                                 if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><WONT><ECHO>');
-                                this.replyToOption(i, 252, verb);
                                 this.echo = true;
+                                this.replyToOption(i, 252, verb);
                             }
                             else if (verb === 251) {
                                 if (this.options.ECHO) {
                                     if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DO><ECHO>');
-                                    this.replyToOption(i, 253, verb);
                                     this.echo = false;
+                                    this.replyToOption(i, 253, verb);
                                 }
                                 else {
                                     if (this.enableDebug) this.emit('debug', 'REPLY: <IAC><DONT><ECHO>');
