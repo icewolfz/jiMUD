@@ -7,9 +7,10 @@
 - **Fixed:**
   - Recoded clipboard api to work with electron 44+
 - **Changed:**
-  - Update electron 43.2.0 to 44.3.0
+  - Update electron 43.2.0 to 44.4.1
   - Update better-sqlite3 13.0.2 to 13.0.3
-  - Update markdown-it 15.0.0 to 15.0.1
+  - Update markdown-it 15.0.0 to 15.0.2
+  - Update moment 2.30.1 to 2.31.0
 
 ## 1.8.0 2026-07-31
 
