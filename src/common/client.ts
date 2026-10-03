@@ -1034,7 +1034,7 @@ export class Client extends EventEmitter {
                     this.error(err.code + ': ' + msg.join(', '));
                 else
                     this.error(msg.join(', '));
-                if (err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT' || err.code === 'ENOTFOUND')
+                if (err.code === 'ENETUNREACH' || err.code === 'EAI_AGAIN' || err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT' || err.code === 'ENOTFOUND' || msg.join(', ') === 'Closed due to transmission error')
                     this.close();
                 else
                     this.emit('reconnect');
@@ -1437,7 +1437,7 @@ export class Client extends EventEmitter {
         else if (echo)
             this.echo('\n');
         else //was at a prompt lets restore it so next text correctly handles it
-            this.telnet.prompt = p;``
+            this.telnet.prompt = p; ``
     }
 
     public sendRaw(data) {
