@@ -3,6 +3,7 @@
 ## 1.8.1
 
 - **New:**
+  - `Force auto connect on error` Force an auto connect even when connection is refused
   - Command input now hides text when echo off is enabled making it more secure to enter passwords or hidden text
 - **Fixed:**
   - Recoded clipboard api to work with electron 44+

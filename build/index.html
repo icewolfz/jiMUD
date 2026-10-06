@@ -2500,7 +2500,8 @@
         client.on("reconnect", () => {
           if (client.connected) return;
           resetConnection();
-          if (client.errored) return;
+          if (client.errored && !client.getOption("forceAutoConnectOnError"))
+            return;
           doDisconnect();
         });
 
@@ -5502,11 +5503,12 @@
       }
 
       function autoConnect() {
+        if (client.errored && !client.getOption("forceAutoConnectOnError"))
+          return;
         if (
           !autoConnectID &&
           client.getOption("autoConnect") &&
-          !client.connected &&
-          !client.errored
+          !client.connected
         )
           autoConnectID = setTimeout(function () {
             client.connect();
