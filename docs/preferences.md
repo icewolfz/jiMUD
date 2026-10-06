@@ -348,6 +348,7 @@ Controls what is captured into the chat window
 - `Keep alive delay` The number of seconds for initial keep alive delay
 - `Enable allow Half Open sockets` Indicates whether half-opened TCP connections are allowed
 - `Force auto connect on error` Force an auto connect even when connection is refused
+- `Auto connect max timer` Set the max amount the auto connect timer can reach, 0 continues to double evrey fail.
 
 ## Advanced > Profiles
 

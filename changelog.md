@@ -3,6 +3,7 @@
 ## 1.8.1
 
 - **New:**
+  - `Auto connect max timer` Set the max amount the auto connect timer can reach, 0 continues to double evrey fail.
   - `Force auto connect on error` Force an auto connect even when connection is refused
   - Command input now hides text when echo off is enabled making it more secure to enter passwords or hidden text
 - **Fixed:**

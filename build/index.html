@@ -5852,7 +5852,9 @@
 
             if (_disconnectCounter === 0) _disconnectTimer = 10;
             else if (_disconnectCounter === 10) _disconnectTimer = 30;
+            else if (client.getOption("autoConnectMaxTimer") > 0 && _disconnectCounter >= client.getOption("autoConnectMaxTimer")) _disconnectTimer = client.getOption("autoConnectMaxTimer");
             else _disconnectTimer *= 2;
+
             _disconnectCounter = _disconnectTimer;
             _disconnectTimerID = setInterval(() => {
               _disconnectTimer--;
